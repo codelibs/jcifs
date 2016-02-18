@@ -1,0 +1,2735 @@
+<?xml version="1.0"?>
+
+<proj>
+
+<title>JCIFS</title>
+<short>The Java CIFS Client Library</short>
+<desc>
+JCIFS is an <a href="http://www.opensource.org/docs/definition_plain.php">Open Source</a> client library that implements the CIFS/SMB networking protocol in 100% Java. CIFS is the standard file sharing protocol on the Microsoft Windows platform (e.g. Map Network Drive ...). This client is used extensively in production on large Intranets.
+</desc>
+<news>
+
+<!-- entry>
+<title></title>
+<sub></sub>
+<desc>
+</desc>
+</entry-->
+
+<entry>
+<title>jcifs-1.3.18 released / Minor Fixes</title>
+<sub>posted by Mike, October 29, 2014</sub>
+<desc>
+This release includes minor fixes such as for a <code>ConcurrentModificationException</code> that could occur when initializing JCIFS classes.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-krb5-1.3.17 released / Kerberos Package Update</title>
+<sub>posted by Mike, November 11, 2011</sub>
+<desc>
+The Kerberos package been updated to 1.3.17. Special thanks to Mr. Shun for contributing this package.
+</desc>
+</entry>
+
+<entry>
+<title>jcifs-1.3.17 released / SO_TIMEOUT Fixed, Connect Timeout Control Added</title>
+<sub>posted by Mike, October 18, 2011</sub>
+<desc>
+The <code>jcifs.smb.client.soTimeout</code> property, which controls how long the client will wait to read data from a server, was broken in the previous release (1.3.16). Not only was it broken but no SO_TIMEOUT was specified at all meaning if a server became unresponsive, JCIFS could hang for an uncontrollably long time. This behavior of this property has been restored.
+<p/>
+Additionally, a new <code>jcifs.smb.client.connTimeout</code> has been added which specifies the number of milliseconds that the client will wait to connect to a server (how long it will wait for a response to the TCP SYN). This can be very useful when trying to communicate with many servers in parallel.
+</desc>
+</entry>
+
+<entry>
+<title>jcifs-1.3.16 released / SO_TIMEOUT, Disconnect Improvements, copyTo() Exceptions and more</title>
+<sub>posted by Mike, June 25, 2011</sub>
+<desc>
+This release includes the following minor fixes and improvements:
+<ul>
+<li>
+JCIFS now uses the InetSocketAddress class to explicitly bind and set the SO_TIMEOUT on client sockets before they are connected. This makes the SO_TIMEOUT effective when the target server socket is not listening and the client OS socket implementation takes a long time for the dropped SYN to timeout. This may significantly reduce resource consumption in applications that use multiple threads to constantly query servers that may not be listening.
+</li><li>
+When disconnecting a transport, new clauses have been added to better reset transport state whereas previously transports could get stuck in a disconnected state for unnecessarily long periods of time.
+</li><li>
+A new property jcifs.smb.client.ignoreCopyToException has been added. When set to "true" (the default), the SmbFile.copyTo() method will ignore (but log) exceptions trying to copy individual files or directories (such as because of a permissions error). To maintain backward compatibility, the default value of this property is "true" (exceptions are ignored). Setting this property to "false" will cause any exception that occurs trying to copy an individual file or directory to be thrown out of copyTo and abort the copy operation at the point of failure. 
+</li><li>
+If an authentication exception occurs trying to connect to a server that has multiple IP addresses, JCIFS will not attempt to connect to more than one IP addresses because doing so could result in an account lockout.
+</li><li>
+The SID resolver code incorrectly resolved SIDs of an ACE in blocks of at most 10 where it should have used a limit of 64. This performance issue has been fixed.
+</li><li>
+JCIFS will not throw the artifical "Access is denied" error if the special NtlmPasswordCredential.ANONYMOUS credential is used explicitly (whereas normally JCIFS will deliberately throw an SmbAuthException if a login results in a guest login or if the anonymous identity is used).
+</li><li>
+The NetrServerEnum2 RAP call used incorrect parameter descriptiors which could result in "SmbException: 2320" errors trying to list domains and servers from the local NetBIOS browse service.
+</li><li>
+The NTLMSSP AUTHENTICATE_MESSAGE (aka "Type 2 Message") encoding routine incorrectly left out the TargetName field (although this had no effect on CIFS client behavior).
+</li>
+</ul>
+<p/>
+The JCIFS Team would like to thank IOPLEX Software for contributing to this work.
+</desc>
+</entry>
+
+<entry>
+<title>jcifs-1.3.15 released / Minor DcerpcHandle Locking Adjustments</title>
+<sub>posted by Mike, October 7</sub>
+<desc>
+Minor adjustments have been applied to DcerpcHandle locking routines in the SID class to fix sporadic occurances of "All pipe instances are busy" errors under high load.
+<p/>
+The JCIFS Team would like to thank Vivísimo, Inc. for supporting this work. Vivísimo provides enterprises with innovative search solutions to find, access, and manipulate all content. For consumer web searches, Vivísimo offers Clusty.com.
+</desc>
+</entry>
+
+<entry>
+<title>jcifs-1.3.14 released / NetBIOS Node Status Disabled and Named Pipe Errors</title>
+<sub>posted by Mike, February 11, 2010</sub>
+<desc>
+JCIFS will no longer do a NetBIOS Node Status to determine the server hostname because it seems some servers no longer respond to it. Under high load "All pipe instances are busy" errors could occur. This has been fixed by adding a lock to ensure that the MSRPC bind and pipe open request are performed together.
+</desc>
+</entry>
+
+<entry>
+<title>jcifs-1.3.13 released / Deadlock Fixed, OSX Snow Leopard, and EMC</title>
+<sub>posted by Mike, January 5, 2010</sub>
+<desc>
+Locking throughout the transport layer has been rewritten. This should fix the long standing deadlock that has been reported in the past. Note that these are significant changes to the I/O layer. The package should be tested carefully before being deployed.
+<p/>The size of the transient input buffer used to read the SMB_COM_NEGOTIATE response has been doubled to accommodate a security blob (as observed with OSX Snow Leopard). A signing issue reading data from an EMC server has been fixed. NTLMSSP logging has been improved.
+<p/>
+The JCIFS Team would like to thank Stoneware, Inc. for supporting this work. Stoneware, Inc. provides innovative software that enables organizations to build their own 'private' cloud for simplified access to all of their web, Windows or hosted applications and services.
+</desc>
+</entry>
+
+<entry>
+<title>JCIFS U.S. Export Control Classification Numbers (ECCN)</title>
+<sub>posted by Mike, August 27, 2009</sub>
+<desc>
+JCIFS uses cryptography including RC4 128 (for NTLMv2) and AES 256 (for Kerberos) for authentication, digital signatures and encryption.
+Products that use cryptography and which are exported from the U.S. to other countries are supposed to obtain an export classification.
+The United States Department of Commerce Bureau of Industry and Security (BIS) has issued two ECCNs for the JCIFS package:
+<blockquote>
+5D002.C.1 License Exception TSU<br/>
+5D992.C (for binary only distribution of "mass market" software)
+</blockquote>
+For commercial products that ship JCIFS in binary form, you will need to reference the second ECCN in your export classification requests.
+For further information such as CCATS numbers, please contact ioplex<i style="font-style: normal;">@</i>gmail.com.
+<p/>
+The JCIFS Team would like to thank BIS for their excellent service and patience.
+</desc>
+</entry>
+
+<entry>
+<title>jcifs-1.3.12 released / Two NullPointerExceptions Fixed and DFS</title>
+<sub>posted by Mike, August 14, 2009</sub>
+<desc>
+If NtlmPasswordAuthentication.ANONYMOUS was used, CAP_EXTENDED_SECURITY could be incorrectly turned off resulting in a NullPointerException. If a DFS server did not return any referrals, a NullPointerException could occur. Both of these exceptions have been corrected. Also, JCIFS could become confused when connecting to a server that also happened to be a DFS root server. This issue has been fixed.
+</desc>
+</entry>
+
+<entry>
+<title>jcifs-1.3.11 released / NTLMv2 Calculation Correction</title>
+<sub>posted by Mike, July 21, 2009</sub>
+<desc>
+The nTOWFv2 computation for NTLMv2 authentication was slightly wrong in that it upper-cased the domain. This had no effect on JCIFS but it has been corrected for technical accuracy.
+</desc>
+</entry>
+
+<entry>
+<title>jcifs-1.3.10 released / Bugfix for SmbException: The parameter is incorrect</title>
+<sub>posted by Mike, June 4, 2009</sub>
+<desc>
+This release fixes a bug that could sporadically trigger a "The parameter is incorrect" error.
+<p/>
+The JCIFS Team would like to thank IOPLEX Software for contributing to this work.
+IOPLEX Software has many years of experience with HTTP Single Sign-On, Kerberos, NTLM, Active Directory, MSRPC and related networking protocols.
+</desc>
+</entry>
+
+<entry>
+<title>jcifs-1.3.9 released / Robust Retry of Replicated DFS Targets, copyTo Fix, UTF-16LE, and More</title>
+<sub>posted by Mike, May 30, 2009</sub>
+<desc>
+This package adds the following fixes:
+<ul>
+<li>
+JCIFS will now iteratively try multiple replicated DFS targets if some are not enabled (whereas previously JCIFS would quit if the first root target was not accessible)
+</li>
+<li>
+Fixed "Invalid operation for ????? service" error when querying DFS
+</li>
+<li>
+SmbFile.copyTo will now copy files larger than 4GB
+</li>
+<li>
+All instances of UnicodeLittleUnmarked have been changed to UTF-16LE (for platforms like Android)
+</li>
+</ul>
+<p/>
+The JCIFS Team would like to thank MetaCarta, Inc. for supporting this work. MetaCarta, Inc., a provider of geographic intelligence solutions, offers users map-driven geographic search, geographic referencing, and data visualization capabilities.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-1.3.8 released / RC4 Implemented, Java 1.4 Now Supported Again</title>
+<sub>posted by Mike, Mar 29, 2009</sub>
+<desc>
+RC4 has been implemented and therefore JCIFS no longer requires Java 1.5 update 7 or an implementation that provides RC4. Java 1.4 should work as well as it did prior to JCIFS 1.3.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-1.3.7 released / Share Security Fixed</title>
+<sub>posted by Mike, Mar 18, 2009</sub>
+<desc>
+Share security was broken in both 1.2 and 1.3. It has been fixed. Note that share security is considered deprecated and is only supported by older software like Windows 98 and Samba 3.0.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-1.3.5 released / Stand-alone DFS with IP Address Hostname Issue Fixed</title>
+<sub>posted by Mike, Mar 12, 2009</sub>
+<desc>
+Stand-alone DFS did not work properly if the hostname used in the SMB URL was an IP address and not a DNS or NetBIOS hostname. This issue has been fixed.
+<p/>
+The JCIFS Team would like to thank Vivísimo, Inc. for supporting this work. Vivísimo provides enterprises with innovative search solutions to find, access, and manipulate all content. For consumer web searches, Vivísimo offers Clusty.com.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-1.3.4 released / Parameter Words, Status Codes and Minor Fixes</title>
+<sub>posted by Mike, Mar 9, 2009</sub>
+<desc>
+This release includes some minor protocol adjustments and the addition of some more common status code text.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-1.3.3 released / NTLMv2 Requirements, "Invalid parameter" Error, and NetBIOS Broadcast Lookup Timeouts</title>
+<sub>posted by Mike, Jan 25, 2009</sub>
+<desc>
+NTLMv2 support requires the RC4 cipher. Note that Sun's Java did not include RC4 until Java 1.5 update 7.
+<p/>
+If the above mentioned RC4 cipher was not available, an "Invalid parameter" error would occur. Logic has been corrected so that the more informative "Cannot find any provider supporting RC4" error is reported instead.
+<p/>
+To date, JCIFS has always tried NetBIOS broadcast lookups in favor of DNS which frequently resulted in a 6 second delay if the <tt>jcifs.resolveOrder</tt> property was not adjusted. This behavior has been changed to try DNS before NetBIOS broadcast lookups which should result in much less frequent delays when using default settings. To restore the old behavior, simply set <tt>jcifs.resolveOrder=LMHOSTS,BCAST,DNS</tt>.
+<p/>
+The NTLMSSP code would not fallback to ASCII if Cp850 was not available (which is the case with stock JREs). This issue has been fixed.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-krb5-1.3.1 released / Kerberos 5 Package Updated</title>
+<sub>posted by Mike, Dec 22, 2008</sub>
+<desc>
+The Kerberos package been updated to 1.3.1. The KerberosAuthExample.java example has been independently verified to work. Special thanks to Mr. Shun for contributing this package.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-1.3.2 released / Samba DFS</title>
+<sub>posted by Mike, Dec 22, 2008</sub>
+<desc>
+Accessing a DFS link on Samba directly could result in an error. This issue has been fixed. Samba 3.0.x does not support raw NTLMSSP and therefore the new default JCIFS settings that use NTLMSSP break JCIFS and Samba 3.0.x compatibility. To work-around, turn off extended security and use NTLMv1 by setting <tt>jcifs.smb.client.useExtendedSecurity=false</tt> and <tt>jcifs.smb.lmCompatibility=0</tt>.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-1.3.1 released / NTLM HTTP Filter Fixed, DFS Adjustments and More</title>
+<sub>posted by Mike, Nov 30, 2008</sub>
+<desc>
+The NTLM HTTP Filter was broken in 1.3.0. Setting jcifs.smb.client.useExtendedSecurity to false fixes the issue. This property has been changed in the Filter init method. Some minor DFS changes have been applied that users claim prevent issues in certain DFS scenarios. The NTLMv2 code has been refined in several ways (in particular the getNTLMv2Response method has changed). The NtlmPasswordAuthentication constructor will now split the username if it appears to be composed of a domain and username.
+</desc>
+</entry>
+
+<entry>
+<title>jcifs-1.3.0 released / NTLMv2 Support</title>
+<sub>posted by Mike, Oct 25, 2008</sub>
+<desc>
+NTLMv2 has been fully implemented and will be used by default.
+<p/>
+To emulate the old behavior you must set <tt>jcifs.lmCompatibility = 0</tt> and <tt>jcifs.smb.client.useExtendedSecurity = false</tt> (new defaults are <tt>3</tt> and <tt>true</tt> respectively).
+<p/>
+NTLMv2 and NTLMv1 over NTLMSSP has been fairly well tested with and without SMB signing negotiated and various NTLMSSP flags (e.g. <tt>NTLMSSP_NEGOTIATE_NTLM2</tt>).
+<p/>
+Note: The NTLM HTTP Filter does not and can never support NTLMv2 as it uses a main-in-the-middle technique that is broken by NTLMSSP's "target information" used in computing password hashes. However, the existing Filter should continue to work.
+<p/>
+The JCIFS Team would like to thank MetaCarta, Inc. for supporting this work. MetaCarta, Inc., a provider of geographic intelligence solutions, offers users map-driven geographic search, geographic referencing, and data visualization capabilities.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-1.2.25 released / ArrayIndexOutOfBoundsException, copyTo and IBM iSeries Fixes</title>
+<sub>posted by Mike, Oct 20, 2008</sub>
+<desc>
+An ArrayIndexOutOfBoundsException could occur listing a large number of shares (DCERPC response larger than 65535 bytes). The <tt>copyTo</tt> method could deadlock if the server was disconnected during a copy. The IBM iSeries server can send the NativeFileSystem field in ASCII even though Unicode was negotiated and it requires the '?????' service string (and not 'A:'). These issues have been fixed.
+<p/>
+The JCIFS Team would like to thank MetaCarta, Inc. for supporting this work. MetaCarta, Inc., a provider of geographic intelligence solutions, offers users map-driven geographic search, geographic referencing, and data visualization capabilities.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-1.2.24 released / Stand-Alone DFS Fixed</title>
+<sub>posted by Mike, Jul 23, 2008</sub>
+<desc>
+The recent domain-based DFS work broke stand-alone DFS. This has been fixed. Both stand-alone and domain-based DFS should work properly now.
+<p/>
+Note: The 1.2.23 was a dud - it did not really contain the said fix.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-1.2.22 released / InterruptedIOExceptions, Invalid parameter Exceptions, DFS and more</title>
+<sub>posted by Mike, Jun 25, 2008</sub>
+<desc>
+The SmbFileInputStream methods will now throw InterruptedIOExceptions where apppropriate whereas previously they would throw SmbExceptions with a root cause of TransportException with a root cause of InterruptedException.
+<p/>
+If SmbSession.send() threw an exception it could trigger "Invalid parameter" exceptions on subsequent requests.
+<p/>
+An InterruptedException in the NameServiceClient was being caught and ignored. It will now be re-thrown as an IOException so that all threads used with/by JCIFS can be triggered to return immediately.
+<p/>
+A jcifs.smb.client.dfs.disabled property has been added to disable domain based DFS so that JCIFS can be configured not to try and fail to resolve paths as domain paths in non-domain environments (e.g. on the local machine).
+<p/>
+The getSecurity and getShareSecurity methods will now return null if no DACL is present on a file whereas previously it would return an empty array. This allows the caller to distinguish between an object that has a DACL with no elements and one that has no DACL at all.
+<p/>
+The JCIFS Team would like to thank MetaCarta, Inc. for supporting this work. MetaCarta, Inc., a provider of geographic intelligence solutions, offers users map-driven geographic search, geographic referencing, and data visualization capabilities.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-1.2.21 released / DFS Cache Bugfix</title>
+<sub>posted by Mike, May 28, 2008</sub>
+<desc>
+The DFS cache was not properly synchronized. This has been fixed.
+The trusted domains are now looked up with &lt;1C&gt; NetBIOS lookups to speed discovery.
+<p/>
+Thanks to Ronny S. for reporting these issues.
+<p/>
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-1.2.19 released / DFS Roots on non-Domain Controllers</title>
+<sub>posted by Mike, Apr 6, 2008</sub>
+<desc>
+This release adds proper support for domain based DFS roots. Previously JCIFS could not see DFS roots that were not hosted on domain controllers. JCIFS will now properly discover and cache DFS topology information using a series of referrals.
+The new code also eliminates the now-obsolete behavior of building a merged list of shares across hosts.
+A new NetrDfsEnumEx RPC has been added.
+Two new properties have been added: jcifs.smb.client.dfs.ttl and jcifs.smb.client.dfs.strictView.
+Two SmbComOpenAndX parameters were incorrectly swapped which could cause failure on Windows 98.
+<p/>
+The JCIFS Team would like to thank MetaCarta, Inc. for supporting this work. MetaCarta, Inc., a provider of geographic intelligence solutions, offers users map-driven geographic search, geographic referencing, and data visualization capabilities.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-1.2.18 released / DCERPC, Robust Recovery, URL Decoding, NPEs and Much More</title>
+<sub>posted by Mike, Feb 18, 2008</sub>
+<desc>
+This release includes a few significant fixes for DCERPC related issues. It also includes numerous minor fixes for issues that have accumulated over time. The issues that have been fixed are as follows:
+
+<ul>
+<li>
+The SID.getServerSid() method could fail with NetApp servers due to a "generic" mask values. The mask has been changed to 0x00000001 which corresponds to an LsaOpenPolicy mask of POLICY_VIEW_LOCAL_INFORMATION.
+</li><li>
+The LsaPolicyHandle class would not throw an error if the LsarOpenPolicy2 call failed. This has been fixed.
+</li><li>
+If a share was unshared while JCIFS was in the middle of reading files from it, the transport could enter an error state from which it could not immediately recover if the share was subsequently restored. A small change to SmbTransport.doRecv() fixes this problem.
+</li><li>
+The SmbFile constructor could inappropriately URL decode the authority component of SMB URLs.
+</li><li>
+The NTLM HTTP Filter documentation has been updated.
+</li><li>
+An Invalid state: 4 error has been fixed.
+</li><li>
+A NetBIOS name service issue caused by Jetdirect printers has been fixed.
+</li><li>
+An ArrayIndexOutOfBounds exception in the SmbException class has been fixed.
+</li><li>
+A NullPointerException in SmbSession.getChallengeForDomain() has been fixed.
+</li><li>
+A NullPointerException in NbtAddress related to hosts without adequate localhost address configuration has been fixed.
+</li><li>
+An ArrayIndexOutOfBounds exception could be thrown if a server requires NTLMv2. This exception has been replaced with a more informative one.
+</li><li>
+The SmbSessionSetup constructor will now compare the challenge and encryptionKey using Arrays.equals instead of == to satisfy unforseen use-cases that otherwise trigger an NT_STATUS_ACCESS_VIOLATION.
+</li>
+</ul>
+
+The JCIFS Team would like to thank Vivísimo, Inc. for supporting this work. Vivísimo provides enterprises with innovative search solutions to find, access, and manipulate all content. For consumer web searches, Vivísimo offers Clusty.com.
+<p/>
+The JCIFS Team would like to thank IOPLEX Software for contributing to this work.
+IOPLEX Software has many years of experience with HTTP Single Sign-On, Kerberos, NTLM, Active Directory, MSRPC and related networking protocols.
+IOPLEX Software's Plexcel extension for PHP provides unmatched integration with Active Directory for PHP applications.
+</desc>
+</entry>
+
+<entry old="true">
+<title>Alfresco releases Java CIFS server under GPL</title>
+<sub>posted by Mike, Nov 2, 2007</sub>
+<desc>
+<a href="http://www.alfresco.com/">Alfresco</a> have announced the release of the <i>JLAN Shared File Drive Interface</i> under the terms of the Gnu General Public License (GPL). JLAN includes a CIFS server written in Java, as well as several other Java-based network components. 
+<p/>
+"I am very excited about this Open Source contribution", said Chris Hertel, Samba Team member and co-founder the jCIFS project.  "Every Open Source CIFS implementation adds to the community's understanding, and to the utility of the protocol itself."
+<p/>Their <a href="http://www.alfresco.com/media/releases/2007/10/jlan1007/">press release</a> has a link to the source code at the bottom of the page.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-1.2.17 released / Minor Fix</title>
+<sub>posted by Mike, Aug 15, 2007</sub>
+<desc>
+A try / catch clause that was accidentally introduced in a previous release has been removed.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-1.2.16 released / Domain-Based DFS Support</title>
+<sub>posted by Mike, Aug 2, 2007</sub>
+<desc>
+With this release, JCIFS now supports domain-based DFS. With domain-based DFS, clients access DFS roots under the DNS domain name like \\example.com\dfs\foo so that users do not need to remember server names. However, for clients to work with these DFS roots they have to be prepared to connect to each domain controller as necessary to find the target share and successfully authenticate. JCIFS now includes this retry logic. JCIFS will also do something that it seems even Windows clients do not do - if you list the shares of a domain (e.g. <tt>(new SmbFile("smb://example.com/")).listFiles()</tt>), JCIFS will build a merged list of all shares on all domain controllers.
+<p/>
+Note that these changes are fairly significant. Whenever JCIFS tries to connect to a server this new logic is used. So if anyone notices anything out of the ordinary please report it to the JCIFS mailing list.
+<p/>
+The JCIFS Team would like to thank MetaCarta, Inc. for supporting this work. MetaCarta, Inc., a provider of geographic intelligence solutions, offers users map-driven geographic search, geographic referencing, and data visualization capabilities.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-1.2.15 released / NetApp Compatibility, SMB signing with DFS and More</title>
+<sub>posted by Mike, Jul 16, 2007</sub>
+<desc>
+This release includes some significant changes. Most of these changes are related to NetApp compatibility. The changes in this release include the following:
+<ul>
+<li>An SMB signing failure related to DFS that could result in "Access denied" errors has been fixed.</li>
+<li>The DCERPC bind did not exactly mimic Windows which uses SMB_COM_{WRITE,READ}_ANDX. We were using TransactNmPipe throughout which could result in an 'Incorrect function' error when querying the LSA on a NetApp server. JCIFS now implements the bind exactly like Windows to help ensure compatibility with other servers.</li>
+<li>Other changes related to NetApp compatibility include falling back to SamrConnect2 if a DCERPC_FAULT_OP_RNG_ERROR error occurs, more closely mimicking the SMB_COM_NT_CREATE_ANDX "extended" response, adjusting various RPC handle operation access masks, uncommenting some padding code that was commented out for what appeared to be a NetWare problem, disabling some logic to use port 139 if the jcifs.netbios.hostname was set and finally adding code to include LsarQosInfo structures in the MSRPC bind.</li>
+<li>Some new error code information has been added.</li>
+<li>Constants for common SIDs have been added to the SID class.</li>
+<li>The SID.getGroupMemberSids() method will now return an empty SID array if the SID is not of type SID_TYPE_DOM_GRP or SID_TYPE_ALIAS.</li>
+<li>A minor performance flaw in the DCERPC code was found and fixed.</li>
+</ul>
+<p/>
+The JCIFS Team would like to thank Simple Groupware Solutions and the Leibniz Computing Centre Munich (LRZ) for supporting this work.
+<p/>
+The JCIFS Team would like to thank Vivísimo, Inc. for supporting this work. Vivísimo provides enterprises with innovative search solutions to find, access, and manipulate all content. For consumer web searches, Vivísimo offers Clusty.com.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-1.2.14 released / SID.getGroupMemberSids() and the SAMR Interface</title>
+<sub>posted by Mike, Jun 20, 2007</sub>
+<desc>
+A new <tt>SID.getGroupMemberSids()</tt> method has been added that will return the local group membership of SID (aka it's aliases). The SAMR interface has been added to the dcerpc code with the <tt>SamrEnumerateAliasesInDomain</tt> RPC and numerous other calls necessary to negotiate the various handles.
+<p/>
+The JCIFS Team would like to thank Vivísimo, Inc. for supporting this work. Vivísimo provides enterprises with innovative search solutions to find, access, and manipulate all content. For consumer web searches, Vivísimo offers Clusty.com.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-krb5-1.2.13 released / Kerberos Authentication Support Update</title>
+<sub>posted by Mike, Feb 8, 2007</sub>
+<desc>
+The stock jcifs-1.2.13 package has been patched by a third party to support Kerberos 5 / SPNEGO extended security authentication. Additionally, SMB signing and DFS issues that existed in jcifs-krb5-1.2.9 have been fixed.
+<p/>
+The JCIFS team has compiled the package and confirmed that it works with at least the one test case provided (<tt>examples/KerberosAuthExample.java</tt>) but otherwise the code should be used with caution.
+<p/>
+Great thanks again to Mr. Shun from Japan for contributing this work.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-1.2.13 released / Share ACLs, DFS Fixes and NoRouteToHostException Fallback</title>
+<sub>posted by Mike, Jan 22, 2007</sub>
+<desc>
+A new <tt>SmbFile.getShareSecurity()</tt> method that uses a new <tt>MsrpcShareGetInfo/ShareInfo502</tt> RPC has been added. This will return the ACL for a share as opposed to the ACL for the directory shared. See the API documentation for details. Several DFS issues have been identified and fixed. If JCIFS receives a <tt>NoRouteToHostException</tt> on port 445 it will now try to fallback to port 139. This code has been tested fairly well already. There have been no changes since b4.
+<p/>
+The JCIFS Team would like to thank MetaCarta, Inc. for supporting this work. MetaCarta, Inc., a provider of geographic intelligence solutions, offers users map-driven geographic search, geographic referencing, and data visualization capabilities.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-1.2.12 released / NtTransQuerySecurityDesc, DFS Bugfixs and SID Adjustments</title>
+<sub>posted by Mike, Dec 27, 2006</sub>
+<desc>
+The <tt>NtTransQuerySecurityDesc</tt> request could specify a data buffer that could be too small for the response. As a result the response was not decoded properly and an error would occur. The response will now be decoded properly if the buffer is too small and the buffer size has been increased from 4096 to 32768.
+<p/>
+The <tt>getSecurity()</tt> method did not work over DFS. A very small but potentially significant change has been made to the DFS code. I do not have a sophisticated DFS test environment so please pay special attention to JCIFS with DFS and report any problems to the JCIFS mailing list.
+<p/>
+The <tt>toString()</tt> method of the SID class has been changed back to the old behavior of returning only the numeric SID representation. This was done not only for backward compatibility with previous versions of JCIFS but because conceptually the textual representation of a SID is not it's resolved account name. A new <tt>toDisplayString</tt> method has been added to return the resolved Windows ACL editor text (as <tt>toString()</tt> did in the 1.2.11 release). The <tt>toSidString()</tt> method has been removed. The <tt>getDomainName()</tt> and <tt>getAccountName()</tt> methods have not changed.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-1.2.11 released / SID Class Adjustments</title>
+<sub>posted by Mike, Dec 9, 2006</sub>
+<desc>
+The 1.2.11 release is now final. No serious problems have been reported with the new SID resolution code however some minor adjustments have been made with respect to values returned when a SID has not been resolved (e.g. the associated account was deleted). The SID class API documentation has been updated accordingly.
+<p/>
+The JCIFS Team would like to thank Vivísimo, Inc. for supporting this work. Vivísimo provides enterprises with innovative search solutions to find, access, and manipulate all content. For consumer web searches, Vivísimo offers Clusty.com.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-1.2.11b released / SID Resolution</title>
+<sub>posted by Mike, Nov 30, 2006</sub>
+<desc>
+This release significantly expands the SID and ACE classes by using the new MSRPC infrastructure to resolve SIDs to their associated account names. A new <tt>SmbFile.getSecurity()</tt> method has been added which if called with a boolean value of <tt>true</tt> will resolve the SIDs returned within the <tt>ACE[]</tt> array such that <tt>SID.toString()/getDomainName()/getAccountName()</tt> will return text about the account associated with that SID suitable for display to users (e.g. <tt>MYDOM\alice</tt>, <tt>SYSTEM</tt>, etc). Documentation for all associated methods and classes has been added.
+<p/>
+A fix for a <tt>NullPointerException</tt> within <tt>DcerpcPipeHandle</tt> has been applied.
+</desc>
+</entry>
+
+<entry old="true">
+<title>midlc-0.6.1 released / JCIFS MSRPC Stub Support</title>
+<sub>posted by Mike, Nov 30, 2006</sub>
+<desc>
+The midlc MIDL compatible IDL compiler has been updated to emit stubs for the new JCIFS MSRPC infrastructure. For your convenience the libmba library is included and the Makefile will build a static binary (i.e. you no longer need to install libmba separately). For JCIFS MSRPC stubs use the <tt>-t jcifs</tt> option (the behavior of <tt>-t java</tt> for Jarapac remains).
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-1.2.10 released / Minor Adjustments</title>
+<sub>posted by Mike, Nov 24, 2006</sub>
+<desc>
+The 1.2.10 release is now final. A NetBIOS name service lookup bug has been fixed in addition to several other harmless adjustments.
+<p/>
+The JCIFS Team would like to thank MetaCarta, Inc. for supporting this work. MetaCarta, Inc., a provider of geographic intelligence solutions, offers users map-driven geographic search, geographic referencing, and data visualization capabilities.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-1.2.10b released / MSRPC Support, Long Unicode Share Name Enumeration and Critical Bugfixes</title>
+<sub>posted by Mike, Nov 13, 2006</sub>
+<desc>
+This release contains the following new functionality and fixes:
+<ul>
+<li>Long Unicode Share Enumeration - The SmbFile.list* methods will now try to use MSRPC to enumerate shares if the target is a server. If the operation should fail for any reason, the client will fall back to trying the older RAP method. This should permit enumerating shares with names that use charsets other than the negotiated OEM "ASCII" encoding, share names that are longer than 12 characters, and arbirarily large lists of shares.</li>
+<li>MSRPC Support - MSRPC support has been integrated into JCIFS directly. It should now be possible to add new RPCs (AT jobs, SID/group name resolution, service management, regedit, etc) relatively easily with little knowledge of MSRPC protocols. Look at the jcifs/dcerpc/msrpc/MsrpcShareEnum.java class for an example and ask the mailing list for further instructions.</li>
+<li>Apr 24 bugfix - A NullPointerException caused by an error in logic has been fixed.</li>
+<li>May 10 bugfix - The client will now detect if the JRE supports Cp850 and set the default jcifs.encoding to US-ASCII if it does not. This will eliminate some NullPointerExceptions that were occuring as a result.</li>
+<li>A small update about keep-alives has been added to the NTLM HTTP Authentication document.</li>
+<li>Jun 21 bugfix - CLOSE-WAIT sockets left over by read errors have been fixed.</li>
+<li>Jul 19 bugfix - Errors caused by using UnicodeLittle as opposed to UnicodeLittleUnmarked have been fixed by ensuring UnicodeLittleUnmarked is used throughout the codebase.</li>
+<li>Oct 3 bugfix - Invalid state errors from Transport classes have been fixed. It should be safe to interrupt() JCIFS operations now.</li>
+<li>Oct 20 bugfix - Uncontrolled looping due to invalid Transport logic has been fixed.</li>
+<li>Oct 25 bugfix - Logic has been added to make domain controller lookups more robust.</li>
+<li>Oct 27 bugfix - Failure when using SmbFile.renameTo() with jcifs.smb.client.ssnLimit=1 has been fixed.</li>
+<li>Oct 31 bugfix - Endless looping when all WINS servers in a list are unavailable has been fixed.</li>
+</ul>
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-krb5-1.2.9 released / Kerberos Authentication Support</title>
+<sub>posted by Mike, Sep 13, 2006</sub>
+<desc>
+This package is stock jcifs-1.2.9 modified to support Kerberos 5 / SPNEGO extended security authentication. Please note that this has no impact on the HTTP Filter which still only supports NTLM.
+<p/>
+The <tt>examples/KerberosAuthExample.java</tt> is included to demonstrate using this package however note that this example initializes a logon context from a username and password. In the steady-state it is more likely that the user will already have a credential (e.g. via kinit) in which case your application code would be different. You will need to familiarize yourself with JGSS and it's <tt>Krb5LogonModule</tt> to fully utilitize this new feature.
+<p/>
+WARNING: This package has been reported to work by several users however the code has not been examined carefully by jCIFS maintainers and therefore should be considered highly experimental.
+<p/>
+Note: This package has been compiled with Java 1.5. It may work with eariler versions of Java but you will need to recompile and experiment to determine what the precise requirements are.
+<p/>
+Great thanks to Mr. Shun from Japan for contributing this work. Ever notice Japan always get's new stuff first?
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-1.2.9 released / Java 1.5 Issue, jcifs.encoding Documentation</title>
+<sub>posted by Mike, Apr 4, 2006</sub>
+<desc>
+The 1.2.8 release was compiled with Java 1.5.0_06 which under certain conditions could cause the following error: <tt>java.lang.LinkageError: ... Unsupported major.minor version 49.0</tt>. I have rebuilt the entire package using the compiler I used previously (1.4.2_08). Also, the documentation regarding the <tt>jcifs.encoding</tt> property has been updated to clarify the implications of using a non-Internationalized version of the Java runtime.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-1.2.8 released / Deadlock Fix, ACLs, DFS, NTLM HTTP Filter, and More</title>
+<sub>posted by Mike, Mar 24, 2006</sub>
+<desc>
+There are several significant changes in this release. These include:
+<ul>
+<li>A deadlock could occur if the client tried to logoff and logon at the same instant. This has been fixed.</li>
+<li>It was discovered that in at least some cases "preauthentication" did not work properly. A very simple logical error would cause the wrong signing digest to be installed. This has been fixed.</li>
+<li>The ACL patch has been integrated. The <tt>SmbFile.getSecurity()</tt> method is now available.</li>
+<li>The <tt>jcifs.smb.client.responseTimeout</tt> and <tt>jcifs.smb.client.soTimeout</tt> values have been increased from 10000ms and 15000ms to 30000ms and 35000ms respectively. Users with crawler type applications will almost certainly want to reduce these values.</li>
+<li>Several logical errors in DFS referral handling have been fixed (still no fix for the mystery preemtive behavior observed by Windows clients).</li>
+<li>Documentation has been updated significantly.</li>
+</ul>
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-1.2.7 released / Transport Error, Filter Changes, Integer Overflow, User Contributed Patches, and More</title>
+<sub>posted by Mike, Nov 18, 2005</sub>
+<desc>
+This release consists of the following changes. Happy Thanksgiving.
+<ul>
+<li>Some debugging printlns left over from the last release have been removed.</li>
+<li>Added setContentLength(0) to two other places for the NTLM HTTP Filter. This is required for HTTP 1.0 clients (e.g. Google appliance servers).</li>
+<li>The name service code will now properly resolve DNS names that begin with digits.</li>
+<li>Several instances of possible integer overflow have been fixed.</li>
+<li>A patch for large read and write support has been added to the patches directory. A patch for reading security descriptors has been added to the patches directory.</li>
+<li>If a transport was in error due to a connection timeout it could remain in the error state indefinitely. This issue has been fixed.</li>
+</ul>
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-1.2.6 released / Session Management and Filter Fix</title>
+<sub>posted by Mike, Oct 7, 2005</sub>
+<desc>
+It was discovered that redundant sessions could be created. This problem has been fixed but the fix is to simply <i>not</i> remove sessions from the list of sessions for a transport which is a waste of memory after time (although most users should not case as the number of sessions is proportional to the number of distinct credentials used). This will probably need to be revisited in the future. It has been advised that the Filter should call <tt>setStatus()</tt> <i>before</i> <tt>setContentLength(0)</tt>. This change has been implemented. 
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-1.2.5 released / Filter Exceptions, Stressing the Transport Layer, and DFS Deadlock Fixed</title>
+<sub>posted by Mike, Oct 1, 2005</sub>
+<desc>
+This release of the JCIFS client consists of the following changes.
+<ul>
+<li>It was discovered that a flaw in session expiration could cause sessions to expire prematurely. This has been repaired.</li>
+<li>If the <tt>jcifs.netbios.hostname</tt> property is set, the client will communicate using only NetBIOS over port 139. This is required for environments that implement a policy restricting users to logging in from certain computers.</li>
+<li>Under stress the client could incorrectly attempt to use the invalid "NULL" transport. This has been fixed.</li>
+<li>Filter users could experience exceptions due to using the port 0 rather than the default CIFS port.</li>
+<li>The client should now handle partial reads and socket exceptions more gracefully.</li>
+<li>Under stress, the DFS referral query could cause the client to deadlock. This has been fixed.</li>
+</ul>
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-1.2.4 released / Timedout Waiting for Response Exception, Bogus Signature Error, and More</title>
+<sub>posted by Mike, Sep 21, 2005</sub>
+<desc>
+A NetBIOS keep-alive message (received after ~10 minutes) would break message processesing with a <i>timedout waiting for response</i> Exception. This has been fixed.
+<p/>
+JCIFS would fail to validate responses with a status that is not zero. Assuming we are calculating the verfication signature correctly I can only assume the affected servers choose not to generate the correct signature for error responses (perhaps for DOS reasons). Because JCIFS checked the signature before the message status, an error response would fail with "signature verification failure". This behavior has been changed so that signatures are not verified if the status is non zero.
+<p/>
+It was discovered that the new transport (as of 1.2.x) could not cleanly recover from temporary server failure (e.g. a restart). This has been fixed. Methods will still throw Exceptions but the moment the server comes back online the client should gracefully recover.
+</desc>
+</entry>
+
+<entry old="true">
+<title>
+jcifs-1.2.3 released / Port 445 Fixed</title>
+<sub>posted by Mike, Aug 24, 2005</sub>
+<desc>
+A mistake in the 1.2.2 release broke port 445 communication entirely. It has been fixed. The exact error (with a sufficiently high loglevel) was "Invalid payload size: 1".
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-1.2.2 released / Exception "cannot assign requested address" Fixed, Clusters, NetApp Filer, and More</title>
+<sub>posted by Mike, Aug 19, 2005</sub>
+<desc>
+There have been a number of small fixes. These are:
+<ul>
+<li>The "cannot assign requested address" exception caused by trying to bind the local address 127.0.0.1 has been fixed.</li>
+<li>In a cluster environment the NTLM HTTP Filter could fail with "account currently disabled" or "Access denied" errors due to a deserialization issue of "preauthentication" credentials stored in the <tt>HttpSession</tt>. The initialization of default credentials has been changed however it is not clear that the change will have any effect as I do not have a clustered environment in which to test.</li>
+<li>The combination of plain text passwords and Unicode (largely specific to Samba 3) has been fixed.</li>
+<li>A bogus debugging statement has been discovered and removed. Who left that in there?!</li>
+<li>A <tt>Socket.shutdownOutput()</tt> call has been added to <tt>doDisconnect</tt> as it is believed to reduce spurrious RST frames observed when abruptly shutting down transports. These are believed to be harmless but they have been associated with unsightly messages in Samba log files.</li>
+<li>The <tt>copyTo()</tt> method will now check to see if the source path is a child, parent or equal to the destination path and if so throw a <i>Source and destination paths overlap</i> exception.</li>
+<li>An additional debugging statement has been added to the NTLM HTTP Filter domain controller interrogation code.</li>
+<li>The <tt>getDiskFreeSpace</tt> call could fail with NetApp Filer. It has been repaired.</li>
+</ul>
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-1.2.1 released / Signing, setAttributes, getType, and More</title>
+<sub>posted by Mike, Jul 4, 2005</sub>
+<desc>
+The SMB signing code was totally broken in the last release makeing 1.2.0 useless in many environments. It has been reparied.
+The setAttributes method did not work on directories. This has been fixed and the masks used to filter attributes been optimized to allow getting and setting all possible attributes based on observed XP behavior.
+The getType() method would always return TYPE_SHARE if the SmbFiles were obtained through the listFiles() method. This issue has been fixed - getType() may now also return TYPE_PRINTER and TYPE_NAMEDPIPE (this has been broken for a long time BTW). There have been a variety of other subtle fixes. 
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-1.2.0 released / New Transport Layer, Port 445, getDiskFreeSpace</title>
+<sub>posted by Mike, May 22, 2005</sub>
+<desc>
+The transport layer (the code that multiplexes requests from muliple threads over sockets) has occasionally caused trouble over the years. In general it was too complex. To remedy this problem the transport was rewritten and a forked 1.1.19 was released as the "trans" branch. This branch appears to be at stable enough that it is being released as 1.2.
+<p/>
+The biggest change in this release should not be visible to users (hopefully) although some new features have managed to sneak in as a result of this merger. These new features are:
+<ul>
+<li>The client will now attempt to connect to port 445 as opposed to port 139. If this connection fails the client will fall-back to port 139.</li>
+<li>If a share was disabled while jCIFS was connected an error would occur even if the share was reenabled before the client tried to access it. This has been fixed so that the client will reconnect and complete the current operation transparently.</li>
+<li>The getDiskFreeSpace() method could report the wrong value for very large volumes. This has been fixed by adding a new info-level.</li>
+<li>Named pipes were broken by changes for DCE/RPC transactions. They have been repaired.</li>
+<li>The NetBIOS name resolution code will now use the <i>last</i> resource record in a name query response rather than the first. This appears to be more correct (at least with WMWare adapters on my XP workstation).</li>
+<li>The client is generally faster because the transport is simpler. The amount of code for the transport is less than half of what it used to be.</li>
+</ul> 
+Developers writing Java network clients may want to look at the <tt>jcifs.util.transport.*</tt> classes.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-1.1.11 released / File Corruption Bugfix</title>
+<sub>posted by Mike, May 4, 2005</sub>
+<desc>
+If a file is opened with <tt>SmbFileOutputStream</tt>, written to, and then the client waits for <tt>jcifs.smb.client.soTimeout</tt> without any communication to the target, a subsequent write could zero the contents of the file before the current file index resulting in file corruption. This problem has been fixed. And alternative to upgrading is to use <tt>RandomAccessFile</tt> which does not have this problem.
+<p/>
+Also in the download area is the "trans" release. This version has a completely rewritten transport layer, proper port 445+139 support as well as the beginnings of new features destined for 2.0. Use with caution - it's green.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-1.1.10 released / DC Lookup Rewrite</title>
+<sub>posted by Mike, Apr 17, 2005</sub>
+<desc>
+The code used by the NTLM HTTP Filter to lookup and rotate through domain controllers has been considerably simplified. The <code>NtlmChallenge</code> class is now <code>Serializeable</code>, the timeout for rebuilding the filters DC list has been increased from 20 minutes to 10 hours, and the <code>jcifs.netbios.lookupRespLimit</code> default has been reduced to 3.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-1.1.9 released / Read Error</title>
+<sub>posted by Mike, Feb 28, 2005</sub>
+<desc>
+When multiplexing I/O, if socket buffers fill up such that packets can be read in fragments (i.e. high load), it was possible for the 4 byte NetBIOS header to be read incorrectly resulting in a bogus <code>unexpected EOF reading netbios session header</code> exception. This problem has been fixed. Also, some small javadoc updates have been applied.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-1.1.8 released / Blocked Threads Again, DC Lookups, Name Service, and More </title>
+<sub>posted by Mike, Feb 11, 2005</sub>
+<desc>
+The blocked thread bug wasn't quite fixed in the last release. A lookup exception (e.g. caused by an unresponsive domain controller) could leave a thread blocked if many requests are being processed simultaneously. Similarly the fix for the DC lookup code wasn't complete enough to handle the unusual scenario where all DCs are unresponsive. Also, a malfomed NetBIOS name query response could cause the name service thread to exit incorrectly. These issues have been fixed. Finally, the URL handling of <tt>smb://@/</tt> (meaning "null" credentials) has been fixed.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-1.1.7 released / Blocked Threads, DC Lookups, Signatures, and Other Fixes </title>
+<sub>posted by Mike, Jan 16, 2005</sub>
+<desc>
+A bug introduced in a recent release that could cause threads to wait indefinately has been fixed. After time many threads could be blocked resulting in wasted resources. The DC lookup code has been modified to gracefully handle WINS returning an empty list (e.g. due to temporary network failure). A simple fix has been applied that premits SMB signatures to work without specifying preauthentication credentials. The <tt>getAttributes()</tt> method will now return 31 bits of attributes whereas previously it would mask the lower 6 bits that JCIFS actually uses. A bug has been fixed that under certain conditions prevented <tt>copyTo()</tt> from copying entire shares. A try/catch block has been added to <tt>copyTo()</tt> to permit the copy to continue if an error occurs. 
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-1.1.6 released / Minor Adjustments</title>
+<sub>posted by Mike, Dec 27, 2004</sub>
+<desc>
+If a variable length 8 bit encoding such as Big5 was used the NTCreateAndX command could fail. This bug has been fixed. If an <tt>SmbFile{Input,Output}Stream</tt> was closed, a subsequent operation could cause the file to be reopened. This behavior is now blocked such that operations performed on a stream after it has been closed will generate an IOException (to conform to java.io streams behavior). Some transport layer synchronization has been adjusted. A <tt>getPrincipal</tt> method has been added to <tt>SmbFile</tt> that will return the <tt>NtlmPasswordAuthentication</tt> object used as credentials for the file or pipe. An adjustment has been made to the <tt>NbtAddress.firstCalledName</tt> method that streamlines communication with domain controllers. The documentation has been updated regarding transparent NTLM authentication in Mozilla and the <tt>available()</tt> method of <tt>SmbFileInputStream</tt>.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-1.1.5 released / ArrayIndexOutOfBoundsException</title>
+<sub>posted by Santa, Dec 17, 2004</sub>
+<desc>
+It was discovered that an <tt>ArrayIndexOutOfBoundsException</tt> could occur if the list of domain controllers returned by <tt>NbtAddress.getAllByName</tt> was shorter than the list returned in the previous call (possibly because the WINS query timed out and switched to an alternate WINS server). All NTLM HTTP Authentication Filter users should upgrade to prevent this error. Also, the value of <tt>jcifs.netbios.cachePolicy</tt> set by the NTLM HTTP Filter if it is not specified has been doubled to 20 minutes. Finally, some log levels have been increased such that running with <tt>jcifs.util.loglevel = 3</tt> temporarily is actually reasonable in a production environment (must use loglevel > 3 to see individual SMB messages and loglevel > 5 to get hexdumps). 
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-1.1.4 released / LMv2 Fix</title>
+<sub>posted by Mike, Dec 7, 2004</sub>
+<desc>
+Two bugs regarding the upcasing of domain and username fields with LMv2 authentication (used with lmCompatibility = 3) have been fixed. Additionally the firstCalledName/nextCalledName methods changed in 1.1.0 have been changed back to the old behavior. The change was not warranted as it did not emulate Windows behavior. 
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-1.1.3 released / Concurrency Error Fixed</title>
+<sub>posted by Mike, Nov 30, 2004</sub>
+<desc>
+A concurrency error that was introduced with the <tt>getChallengeForDomain()</tt> code used by the NTLM HTTP Filter has been repaired.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-1.1.2 released / Bogus Debugging Statement</title>
+<sub>posted by Mike, Nov 2, 2004</sub>
+<desc>
+Opps! A harmless println statement that found it's way into the last release has been removed.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-1.1.1 released / logonShare and DCE Pipe Fixes</title>
+<sub>posted by Casper, Oct 31, 2004</sub>
+<desc>
+The <tt>jcifs.smb.client.logonShare</tt> (and thus the JCIFSACL NTLM HTTP Filter example) did not work. It would not restrict users to those found in the ACL and would instead permit all authenticated users. This has been fixed. A bug was discovered and fixed in the named pipe code. If a specific sequence of reads were performed the pipe could become corrupted. This fix is necessary for multi-pdu DCE requests to work. A small bug in the new <tt>NbtAddress.getAllByName()</tt> method has been repaired. It will now broadcast for a name if a WINS address was not provided. 
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-1.1.0 released / NTLM HTTP Authentication Improvements</title>
+<sub>posted by Mike, Oct 1, 2004</sub>
+<desc>
+There have been significant changes that should improve the reliability and overall behavior of JCIFS particularly for users of the <tt>NtlmHttpFilter</tt>.
+<ul>
+<li>NbtAddress.get<b>All</b>ByName - The <tt>NbtAddress.getAllByName()</tt> method has been implemented that will return all RDATA records for a NetBIOS name. Thus, you can now retrieve the full list of domain controllers with <tt>NbtAddress.getByName( "MYDOM", 0x1C, null, null )</tt>. The old behavior of returning a random entry from the <tt>getByName</tt> method has been eliminated.</li>
+<li>SYN Timeout - The socket code has been modified to employ the transport thread when opening a new connection. This eliminates the annoying 1min+ hang that occurs trying to connect to a non-existant but routable addresss (i.e. the single threaded <tt>SmbCrawler</tt> example is relatively fast now).</li>
+<li>SmbSession.getChallengeForDomain - A new method has been added to retrieve an object that encapsulates both the server session key (a.k.a. challenge) and the <tt>UniAddress</tt> from which it came. This method is used solely by the NTLM HTTP Authentication Filter to eliminate the possibility for a different domain controller to be queried in the middle of client nogotiation. Prior to this release this could result in temporary authentication failures. This code uses the new <tt>getAllByName</tt> method to build a list of domain controllers suitable for authenticating web clients. The clent will rotate evenly through the list and remove entries that are unresponsive. This makes the filter very resilent to domain controller failures.</li>
+<li>Session Expiration - because of the above changes the client will now proactively close idle sessions. This is particularly pertainent to the NTLM HTTP Filter which really only touches the session when it is first created as the resulting credentials are cached in the user's HTTP session.</li>
+<li>Read Bug - A read bug in JCIFS that affected EMC Celera servers has been fixed.</li>
+<li>NetBIOS CalledName - The <tt>firstCalledName/nextCalledName</tt> methods have been modified to try <tt>SMBSERVER*</tt> first and fall back to other names. This should eliminate a round trip during session establishment in newer environments.</li>
+</ul>
+Finally, I have updated the sample <a href="view-source:http://jcifs.samba.org/src/examples/web.xml">web.xml</a>. It should be used as a stationary in all production environments.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-1.0.1 released / Guest Account Broken</title>
+<sub>posted by Mike, Sep 6, 2004</sub>
+<desc>
+The guest account fix released 6 hours ago broke guest access entirely. The original fix has been re-applied but with the bad test condition corrected.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-1.0.0 released / 5 Years and Beyond</title>
+<sub>posted by Mike, Sep 6, 2004</sub>
+<desc>
+According to the <a href="http://freshmeat.net/projects/jcifs/">freshmeat page</a>, JCIFS is 5 years old today (vote for us!). The project has come a long way in those years. Its features now include:
+<ul>
+<li>
+The <a href="src/docs/ntlmhttpauth.html">NTLM HTTP Authentication Filter</a>, which adds easy Single Sign On (SSO) functionality to Java Servlet containers, is clearly the most popular feature of JCIFS. Eric did a great job of deciphering the details of <a href="http://davenport.sourceforge.net/ntlm.html">that protocol</a>. The filter is mind-numbingly easy to install as all it requires is the JCIFS jar and a filter section in your <a href="view-source:http://jcifs.samba.org/src/examples/web.xml">web.xml</a> with two or three init parameters [1].
+</li><li>
+The performance of JCIFS is one of its more surprising achievements. Consider the client can enumerate 5GB of files and directories in less than 10 seconds [2]. To reduce memory usage and increase concurrency JCIFS automatically reuses existing transports and sessions. One nice artifact of this design is that the NTLM HTTP Authentication Filter scales to thousands of active clients. And because the negotiated credentials are cached in the user's HTTP session the number of concurrent user's supported can be many times greater than that.
+</li><li>
+The <a href="src/docs/api/jcifs/smb/SmbFile.html#copyTo(jcifs.smb.SmbFile)">SmbFile.copyTo()</a> method is a venerable feature in itself. All file and directory attributes and timestamps are mirrored perfectly [3]. It employs an extra thread to write data while the next read operation is in progress. This optimization makes JCIFS the fastest client available for copying large trees of files and directories across hosts (neither of which needs to be the local machine).
+</li><li>
+Accessing DFS volumes (sub-trees of files and directories that actually reside on another host) is fully transparent to the user. The client may be redirected multiple times in the middle of any operation. After a redirection has occurred the mapping is cached but the cache is only queried for transports that indicate they host DFS volumes.
+</li><li>
+SMB signing is robust and negotiated automatically with servers that require it.
+</li><li>
+The <a href="src/docs/api/jcifs/smb/SmbRandomAccessFile.html">SmbRandomAccessFile</a> implementation is a complete drop in replacement for the standard java.io.RandomAccessFile. When opened with SmbFile.FILE_NO_SHARE share access this class is a legitimate database API.
+</li><li>
+Named Pipes of all types are fully supported. TransactNamedPipe, CallNamedPipe, and standard file I/O style pipes are all supported using a <a href="http://jcifs.samba.org/src/docs/pipes.html">single generic API</a> that conforms to the InputStream/OutputStream model.
+</li><li>
+JCIFS' <a href="src/docs/resolver.html">name resolution capability</a> is very sophisticated. WINS, DNS, NetBIOS broadcast queries, and remote lmhosts files are supported well. Which services and the order in which each service is queried is fully configurable. The name service cache policy is also adjustable.
+</li><li>
+JCIFS implements the <a href="http://www.ietf.org/internet-drafts/draft-crhertel-smb-url-07.txt">SMB URL Draft Specification V07</a> and processes all SMB URLs through an SMB URL proticol handler. This same handler is used to build standard java.net.URL objects which means once the protocol handler is registered SMB URLs can be used with any application that uses URLs (e.g. -Djava.rmi.server.codebase=smb://mymachine/c/download/myapp.jar).
+</li>
+</ul>
+Other features include NTLM and LMv2 Authentication [4], optimal request batching, <a href="ntstatus.txt">NT STATUS codes</a>, full transactions, large file support, Unicode support from the ground up [5], NTLM HTTP <a href="src/docs/httpclient.html">authentication wrappers for HTTP and HTTPS clients</a>, a simple logging facility, and extensive documentation. If that's not enough, there's always <a href="http://sourceforge.net/projects/jcifs-ext/">jcifs-ext</a> where bleeding edge JCIFS extensions live.
+<p/>
+But the best feature of JCIFS is the simplicity of <a href="src/docs/api/">the API</a> itself. We have diligently resisted "feature creep". The SMB URL allows addressing resources with wonderful ease. The SmbFile class is a drop in replacement for java.io.File so if you know how to use that, you know how to use JCIFS.
+<p/>
+JCIFS is now one of the most sophisticated and powerful CIFS clients available free or otherwise. It is used in production environments by many large commercial organizations and the Open Source model has worked well for us as these users have contibuted valuable feekback that has made JCIFS rock solid.
+<p/>
+To commemorate these achievements we are proud to release JCIFS 1.0. Aside from fixing broken links and a few packaging tweaks it is not different from 0.9.8 and we hope it stays that way. Moving forward, the 1.0 branch will only receive critical fixes.
+<p/>
+In recent weeks a MIDL compatible IDL compiler was developed. Coupled with the <a href="http://sourceforge.net/projects/jarapac/">Jarapac DCE/RPC framework</a> for Java it is now practical to make <a href="http://msdn.microsoft.com/library/default.asp?url=/library/en-us/rpc/rpc/overviews.asp">MSRPC</a> calls. This means that the Microsoft network management API functions are very close to being incorporated into JCIFS. IDL files need to be written and APIs need to be devised but we will soon be able to create users, edit groups, control NT services, reboot machines, edit the registry, execute programs on a remote host, and much much more. This will open up an entirely new level of integration between Java and Microsoft environments.
+<p/>
+Finally, thanks goes out to Eric and Chris and everyone else that has contributed their time. JCIFS is truely a great product because we have taken full advantage of the Open Source model. We would not have made nearly as much progress without the code, bug fixes, problem reports, and solutions provided by our users.
+<p/>
+<small>
+[1] although running through web servers that <i>also</i> try to negotiate NTLM HTTP or do not properly support keep-alives is problematic<br/>
+[2] Client Host: 500MHz Debian Linux "testing" Java 1.4 JCIFS 1.0.0; Target Workstation: 2.7GHz 5.77GB Windows NT 4 sp6; Nework: 100 Mbps full-duplex switched; Test Program: examples/T2Crawler.java with println statements commented out, default properties, ran 3 times to load up target workstation cache; Results: $ time java -Djcifs.properties=../miallen.prp T2Crawler smb://myworksta/c$/ 3 1000, real 0m<b>9.929s</b> user 0m5.580s sys 0m0.600s<br/>
+[3] although currently extended attributes are not copied<br/>
+[4] NTLMv2 is not fully supported but LMv2 permits the client to operate in NTLMv2 environments<br/>
+[5] Unicode share names are not supported but will be soon now that RPCs are underway<br/>
+</small>
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.9.8 released / Guest Account Again and Minor Adjustments</title>
+<sub>posted by Mike, Sep 3, 2004</sub>
+<desc>
+If the "guest" account on a server was not disabled as it normally is it would be possible for a user to use an invalid username to access an SMB resource or website protected with the NtlmHttpFilter. JCIFS will no longer successfully authenticate the "guest" account at all (even if the guest account is enabled and the user enters "guest"). A log message will now be generated for all SmbAuthExceptions in the NtlmHttpFilter if the <tt>jcifs.util.loglevel</tt> property is set to 2 or greater. Behavior regarding accessing System properties has been curbed to accomodate more restrictive environments. Finally a benign exception that could occur if the client was misconfigured has been fixed.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jarapac-0.3.4 and idlc-0.3.6 released / DCE RPC Working</title>
+<sub>posted by Mike, Aug 28, 2004</sub>
+<desc>
+After several weeks of hard work on our MIDL compatible IDL compiler, MS-RPC calls are now working with the Jarapac DCE framework. Currently only the ncacn_np transport in Jarapac works but other transports (e.g. TCP port 135) should work without too much trouble. The process is very easy now -- write IDL, compile with idlc, write Jarapac driver program, and go. The Jarapac examples directory has the beginnings of lsarpc, samr, and srvsvc interfaces. This should unlock a whole new set of functionality for integrating Java into Windows networks. Eat your heart out Microsoft!
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.9.7 released / Minor Adjustments</title>
+<sub>posted by Mike, Aug 11, 2004</sub>
+<desc>
+The NTLM HTTP Filter will no longer set Connection: close, a new SmbFile constructor has been added and a rogue debugging statement has been removed. 
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.9.6 released / copyTo Bug and Many Other Fixes</title>
+<sub>posted by Mike, Jul 23, 2004</sub>
+<desc>
+A bug in <tt>copyTo()</tt> has been found and fixed that could result in the operation failing and timing out. The default <tt>jcifs.smb.client.snd_buf_size</tt> has been changed from 5000 to 16644. When copying data between larger servers with <tt>copyTo()</tt> (servers that negotiate larger buffer sizes) the result is a noticable preformance increase. Adjustments have been made regarding a null pointer exception triggered by an internal method during certain error scenarios. The client will now failover to a <tt>jcifs.smb.client.domain</tt> controller for browser information if the LMB query fails. Methods have been added to <tt>SmbSession</tt> that support the specification of alternative port. Some incorrect debugging output has been fixed. A clause has been added to <tt>SmbFile.delete()</tt> to subvert an exception caused exclusively by the Oracle FilesOnline CIFS implementation. The NTLM HTTP Authentication documentation has been slightly updated.
+</desc>
+</entry>
+
+<entry old="true">
+<title>SMB URL IETF Draft Version 7</title>
+<sub>posted by Chris, Jul 8, 2004</sub>
+<desc>
+The latest <a href="http://www.ietf.org/internet-drafts/draft-crhertel-smb-url-07.txt">SMB URL Draft</a> has been posted. JCIFS tries to conform to this SMB URL specification as closely as possible.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.9.5 released / Workgroup Server Enum Fix and updated NtlmHttpURLConnection</title>
+<sub>posted by Mike, Jul 2, 2004</sub>
+<desc>
+A bug introduced in 0.9.3 could result in an infinite loop that exhausts all memory in the VM when enumerating workgroups and servers. This issue has been fixed. Also included is an updated to the NtlmHttpURLConnection (now works with org.apache.xmlrpc.XmlRpcClient).
+</desc>
+</entry>
+
+<entry old="true">
+<title>JCIFS Extensions for SPNEGO Filter and RAP Functions</title>
+<sub>posted by Eric, Jul 1, 2004</sub>
+<desc>
+A project for jCIFS extensions called <a href="http://sourceforge.net/projects/jcifs-ext/">jcifs-ext</a> has been established on Sourceforge. Currently this project hosts the latest versions of the SPNEGO HTTP Filter and the RAP function library.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.9.4 released / Credential Propagation and NTLM for HTTP Clients</title>
+<sub>posted by Mike, Jun 30, 2004</sub>
+<desc>
+Credentials were not being propogated to files returned by <tt>listFiles()</tt> or to parent files used in <tt>mkdirs()</tt>. This could result in inappropriate authentication exceptions. Also NTLM HTTP support for HTTP <i>clients</i> (<tt>NtlmHttpURLConnection</tt>) has been updated to support NTLM negotiation using the POST method.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.9.3 released / The SMB URL Port Field and Full Enumeration of Workgroups and Servers</title>
+<sub>posted by Mike, Jun 29, 2004</sub>
+<desc>
+A bug has been fixed that will now permit jCIFS to enumerate all workgroups and servers. Also included is a fix for the SMB URL port field that was previously being ignored.
+</desc>
+</entry>
+
+<entry old="true">
+<title>Davenport 0.9.9 released</title>
+<sub>posted by Eric, Jun 29, 2004</sub>
+<desc>
+This release includes some session serialization fixes as well as other minor items noted during testing.
+</desc>
+</entry>
+
+<entry old="true">
+<title>Davenport 0.9.9b released</title>
+<sub>posted by Eric, Jun 18, 2004</sub>
+<desc>
+The latest version of <a href="http://davenport.sourceforge.net/">Davenport</a> adds support for URL rewriting based on a context base, per-server authentication caching, disabling closing of HTTP connections upon request for authentication, support for pluggable error handlers and logging, the ability to specify anonymous credentials, and a file filter framework. The jCIFS library bundled with Davenport has also been updated to 0.9.2.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.9.2 released / Deadlock in copyTo</title>
+<sub>posted by Mike, Jun 8, 2004</sub>
+<desc>
+An initialization race in the <tt>SmbFile.copyTo()</tt> method has been discovered and fixed. Also the documentation work continues.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.9.1 released / Security Update</title>
+<sub>posted by Mike, Jun 1, 2004</sub>
+<desc>
+If the "guest" account is enabled on a CIFS server it is possible for jCIFS to successfully authenticate even with an invalid username. Windows networks virtually always disable this account but apparently it is not difficult to enable this condition when using Samba. NTLM HTTP Filter users that are not certain the "guest" account is disabled should upgrade. This release eliminates the possability of authenticating anyone without a valid username. Specifically, a small clause has been added that throws an <tt>SmbAuthException</tt> if the server responds with the "is logged in as guest" bit on.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.9.0 released / Documentation</title>
+<sub>posted by Mike, May 28, 2004</sub>
+<desc>
+There have been no reports of problems so the aside from a very minor adjustment to the code all changes in this release are to the documentation. In particular the NTLM HTTP Authentication documentation has been significantly improved. The API documentation still needs work but it is believed to be accurate.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.9.0b released / General Cleanup and Minor Enhancements</title>
+<sub>posted by Mike, May 14, 2004</sub>
+<desc>
+And thus begins the 0.9 series. This should solidify fairly quickly although there have been some pervasive changes. The details are as follows:
+<ul>
+<li>PropertiesTree has been removed. Thus properties must now be specified using the full name only.</li>
+<li>Multiple WINS servers may now be specified using a comma separated list of IPs (i.e. <tt>jcifs.netbios.wins=192.168.2.10,172.21.1.1,10.44.55.66</tt>).</li>
+<li>The <tt>NtlmHttpFilter</tt> has been modified to support "preauthentication" such that if the <tt>jcifs.smb.client.{domain,username,password}</tt> properties are supplied as init parameters, all transports will be initialized with these credentials. This is the ideal setup for domain controllers that require SMB signatures (although it has been observed that NT 4.0 at least does not check the signatures of authentication requests).</li>
+<li>NT status codes are now used in favor or DOS error codes even if DOS error codes are negotiated (mapped to NT status codes immediately after being decoded). You can <a href="ntstatus.txt">lookup NT status codes here</a>. The package used to generate this file and the jCIFS code tables is in the download area.</li>
+<li>The <tt>NetServerEnum3</tt> operation has been added (thanks Gary) such that large lists of workgroups and servers may now be enumerated (doesn't help with large numbers of shares).</li>
+<li>Fixed some incorrect path handling in the DFS referral code.</li>
+<li>It is now NOT possible for a session setup to be transmitted if the <tt>NtlmPasswordAuthentication</tt> object's hashes were created with a server challenge that does not match the current <tt>encryptionKey</tt> of the transport. If this condition occurs and <tt>SmbAuthException</tt> with an NT status of <tt>NT_STATUS_ACCESS_VIOLATION</tt> will be thrown. The NTLM HTTP Filter and NetworkExplorer servlet have both been modified to catch this exception and issue an HTTP redirect to the original URL to reinitiate the NTLM negotiation.</li>
+<li>The <tt>jcifs.smb.client.ssnLimit</tt> property will now open redundant transports if the limit is reached. The old behavior of closing 10% of the oldest sessions has been eliminated.</li>
+<li>Several SMB signing fixes. The SMB signature code has been mostly moved into the <tt>SigningDigest</tt> class.</li>
+<li>Additional checks in the initial connection code have been added to reduce/eliminate lingering <tt>CLOSE_WAIT</tt> sockets.</li>
+<li>If <tt>PIPE_TYPE_TRANSACT</tt> and <tt>PIPE_TYPE_CALL</tt> are <i>not</i> specified a <tt>TRANS_WAIT_NAMED_PIPE</tt> will be issued before the open call to emulate <tt>WaitNamedPipe</tt> followed by <tt>CreateFile</tt> behavior.</li>
+<li>All access specifiers have been reviewed and changed to private, static, final, etc wherever appropriate.</li>
+<li>The queue used to manage MIDs has been removed in favor of something considerably simplier. Performance should be improved.</li>
+<li>The NetBIOS socket OutputStream has been simplified to remove a potential copy of data. Performance should be improved.</li>
+<li>The NBT header length is now checked after decoding an SMB to detect and skip incorrect byte counts. This should bypass the OS/400 bug reported.</li>
+<li>Property defaults for <tt>jcifs.smb.client.listCount</tt> and <tt>jcifs.smb.client.listSize</tt> have changed from 15 to 200 and from 1200 to 65535 repspectively. High latency networks should set these values back to the old values.</li>
+</ul>
+Bare in mind the documentation has not been updated. That's next.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.8.3 released / Write Corruption with HotSpot VM on Linux</title>
+<sub>posted by Mike, Apr 20, 2004</sub>
+<desc>
+A bug in Sun's HotSpot VM can cause jCIFS to incorrectly encode file offsets in write requests resulting in massive file corruption. Once the error occurs it cannot be stopped without restarting the VM. If you are using the java <tt>-server</tt> option on Linux with a long lived multithreaded application that uses jCIFS to write files it is strongly recommended that you upgrade to 0.8.3. This release eliminates some redundent code that was ultimately triggering the bug in the HotSpot VM.
+<p/>
+Big thanks to Richard Heap for diagnosing and fixing this very elusive problem.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.8.2 released / DST and getParent Fixes</title>
+<sub>posted by Mike, Mar 15, 2004</sub>
+<desc>
+The daylight savings time adjustement does not appear to work correctly. Commenting out the adjustment appears to exibit the desired behavior but the issue may need further tuning. The problem regarding <tt>SmbFile.getParent()</tt> returning unexpected results has been fixed.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.8.1 released / Listing Adjustments</title>
+<sub>posted by Mike, Feb 26, 2004</sub>
+<desc>
+All list methods will now return <tt>ATTR_HIDDEN</tt> files unless specifically filtered. It was decided that hiding hidden files is the job of a UI and not the API. Several bugs have also been fixed regarding attribute caching, the <tt>createNewFile</tt> method and <tt>setLastModified</tt> invalidating the create time.
+</desc>
+</entry>
+
+<entry old="true">
+<title>Davenport 0.9.8 relesed</title>
+<sub>posted by Eric, Feb 13, 2004</sub>
+<desc>
+A bug introduced in 0.9.7 (observed against Windows 2000 and Gnome Nautilus clients) has been fixed.
+</desc>
+</entry>
+
+<entry old="true">
+<title>Davenport 0.9.7 relesed</title>
+<sub>posted by Eric, Feb 12, 2004</sub>
+<desc>
+A bug involving redirects for directories not ending in "/" as well as various bugs involving incorrect WebDAV properties have been fixed. Additional localization support has been added.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.8.0 released</title>
+<sub>posted by Mike, Feb 11, 2004</sub>
+<desc>
+The 0.8 beta cycle is now over. There is no technical difference between this release and 0.8.0b1.
+</desc>
+</entry>
+
+<entry old="true">
+<title>Davenport 0.9.6 released</title>
+<sub>posted by Eric, Feb 9, 2004</sub>
+<desc>
+This release provides minor bugfixes and enhancements; most notably, configuration options have been established to allow interoperability with Windows 2003 servers in the presence of SMB signing. See the <a href="http://davenport.sourceforge.net/">Davenport project page</a> for details.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-rap-0.8.0b1 released / Remote Administration Protocol (RAP) Branch</title>
+<sub>posted by Mike, Feb 6, 2004</sub>
+<desc>
+Eric has created a modified version of jCIFS that supports the following RAP functions:
+<ul>
+<li>NetGroupAdd -- Creates a global (domain) group on a DC</li>
+<li>NetGroupDel -- Deletes a global group on a DC</li>
+<li>NetGroupAddUser -- Adds a user to a global group on a DC</li>
+<li>NetGroupDelUser -- Removes a user from a global group on a DC</li>
+<li>NetGroupEnum -- Enumerates the global groups on a DC</li>
+<li>NetGroupGetUsers -- Enumerates the members of a global group on a DC</li>
+</ul>
+<ul>
+<li>NetServerEnum -- Enumerates servers in a domain/workgroup (reimplementation)</li>
+<li>NetServerGetInfo -- Gets server information</li>
+</ul>
+<ul>
+<li>NetShareAdd -- Adds a share to a server</li>
+<li>NetShareDel -- Removes a share from a server</li>
+<li>NetShareEnum -- Enumerates the shares on a server (reimplementation)</li>
+</ul>
+<ul>
+<li>NetUserAdd -- Creates a domain or machine-local user</li>
+<li>NetUserDel -- Deletes a domain or machine-local user</li>
+<li>NetUserEnum -- Enumerates the users on a domain or machine</li>
+<li>NetUserGetGroups -- Enumerates the global groups to which a user belongs</li>
+<li>SamOemChangePassword -- Changes a user's password</li>
+</ul>
+He claims:
+<p/>
+"There are also GroupUtilities, ServerUtilities, ShareUtilities, and 
+UserUtilities classes which provide simplified versions of the primary 
+functionality.
+<p/>
+Most of the group-related stuff needs to be run against a DC, as it only 
+works with global domain groups rather than machine local; that requires 
+RPC, from what I gather.  None of this has been tested extensively, so 
+results may vary.  But I figured you might like to play with it; it's 
+fairly interesting stuff."
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.8.0b1 released / DFS with NetworkExplorer</title>
+<sub>posted by Mike, Feb 3, 2004</sub>
+<desc>
+Some work has gone into getting DFS to work with NetworkExplorer
+and all fixes from the 0.7 series since 0.7.15 have been incorporated.
+Otherwise, the 0.8.0 series seems quite stable so far.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.7.19 released / SMB Signing Fixes</title>
+<sub>posted by Mike, Jan 19, 2004</sub>
+<desc>
+SMB signature varification was not working properly. There have been several fixes but <a href="https://lists.samba.org/archive/jcifs/2004-January/002905.html">one problem remains</a>. If there is a quick succession of reads and writes with the same host (i.e. copying a file) signing can fail. The source of the problem has not yet been identified.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.7.18 released / NTLM HTTP Filter Fixes</title>
+<sub>posted by Mike, Jan 7, 2004</sub>
+<desc>
+The NTLM HTTP Authentication Filter should now work with domain controllers
+that  negotiate signing without generating the benign "exception
+reading  from socket input" error. Also, the <tt>NtlmPasswordAuthentication</tt>
+class  is  now  Serializable to increase compatability with certain Servlet 
+containers. 
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.7.17 released / "exception reading from socket input" Exception No More</title>
+<sub>posted by Mike, Dec 23, 2003</sub>
+<desc>
+JCIFS  will  now suppress the harmess "exception reading from socket input"
+message  being  written  to  the log.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.7.16 released / NetWare 6 Fix</title>
+<sub>posted by Mike, Dec 9, 2003</sub>
+<desc>
+An issue regarding writing to NetWare 6 servers has been resolved.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.8.0b released / Lots of New Features</title>
+<sub>posted by Mike, Nov 24, 2003</sub>
+<desc>
+This  is  the  first  beta  release  of  the  0.8  series.  There have been
+significant  additions  to  this  package. The most noteable is Distributed
+FileSystem  (DFS)  support. This client fully supports DFS with deep paths,
+multiple  redirects,  you  name  it.  This functionality required pervasive
+changes so DFS users should proceed with caution and report any problems to
+the  mailing list. Support for setting file attributes has been added as is
+the long awaited RandomAccessFile. 
+<p/>
+Here is a more specific breakdown:
+<ul>
+<li> DFS  -  DFS  support  is  thorough.  All  DFS  operations  are completely
+transparent.  It  Just  Works.  The  client can be redirected an infinate
+number  of  times.  It  will reuse mappings established by other callers.
+Components of a path that do not fall within the DFS space and deep paths
+are  handled  properly. Also, note the new <tt>getDfsPath</tt> method can
+be  used  to  determine  if a file or directory falls within a DFS space.
+This  support  required pervasive changes so proceed with caution and run
+your  unit  tests  with  files  that  span DFS volumes. Please report any
+problems to the jCIFS mailing list.
+</li>
+<li> Random  Access  Files  -  The <a href="src/docs/api/jcifs/smb/SmbRandomAccessFile.html"><tt>SmbRandomAccessFile</tt></a> class has been
+added.  All  features  of the analygous <tt>java.io.RandomAccessFile</tt>
+class  are supported and should function as a drop in replacement. Notice
+it   is   now   possible   to   set   the   size   of  a  file  with  the
+<tt>SmbRandomAccessFile.setLength()</tt>    method.    Also   check   out
+<tt>SmbTableFile.java</tt>   in   the  examples  directory  for  a  nifty
+persistant  storage  class. When used with <tt>SmbFile.FILE_NO_SHARE</tt>
+this might serve as a reasonable poor man's database. 
+</li>
+<li> File    Filters    -    Support    for   <tt>SmbFilenameFilter</tt>   and
+<tt>SmbFileFilter</tt>  is  complete.  Because  CIFS  servers  can accept
+attributes  and a wildcard expression for filtering entries on the server
+side,  a  <a href="src/docs/api/jcifs/smb/DosFileFilter.html"><tt>DosFileFilter</tt></a>  is  provided  that  will  accept  these
+parameters  and  pass  them to the server. The <tt>DosFileFilter</tt> can
+also  be  extended  to  create  highly  sophisticated  and efficient file
+filters.  Because of this work the <tt>list()</tt> and <tt>listFiles</tt>
+methods have been refactored and actually reduced in size.
+</li>
+<li> Complete copyTo - The <tt>SmbFile.copyTo</tt> operation will now copy all
+file  attributes  as  well  as  create  and last write times. Directories
+copied  using  this  method should be indistinquishable from the original
+minus  ACLs.  This  method  can now copy entire shares whereas previously
+only sud-directories could be specified.
+</li>
+<li> Setting Attributes and Times - It is now possible to set file attribites,
+the  create  time,  and  last  write  time  in a variety of ways. The new
+methods     are     <tt>setCreateTime</tt>,     <tt>setLastModified</tt>,
+<tt>getAttributes</tt>, <tt>setAttributes</tt>, <tt>setReadOnly</tt>, and
+<tt>setReadWrite</tt>.
+</li>
+<li> Complete   Delete   -   The  <tt>SmbFile.delete()</tt>  method  will  now
+completely  delete  directories  regardless  of wheather or not there are
+read-only files in them.
+</li>
+<li> The createNewFile Method - An <tt>SmbFile.createFile</tt> method has been
+added. 
+</li>
+</ul>
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.7.15 released / Load Balancing Across Domain Controllers</title>
+<sub>posted by Mike, Oct 23, 2003</sub>
+<desc>
+The name service code has been modified to return a different response with
+each  0x1C  domain controller query. The range of servers is limited to the
+top  <tt>jcifs.netbios.lookupRespLimit</tt>  entries  in  the  NetBIOS response. The
+effect  that this will have is that the <tt>NtlmHttpFilter</tt> and <tt>NtlmServlet</tt> will
+rotate  through  domain  controllers when authenticating WWW clients. Also,
+because  different  transports are used, fewer sessions will be multiplexed
+over  each  resulting  in  an  increase  in scalability proportional to the
+number  of  domain  controllers  used.  This  behavior can be turned off by
+setting the <tt>jcifs.http.loadBalance</tt> property to false (the default is true).
+<p/>
+The  <tt>jcifs.smb.client.ssnLimit</tt>  property  default value has been changed to
+250 from 100. 
+</desc>
+</entry>
+
+
+<entry old="true">
+<title>jcifs-0.7.14 released / Fixes</title>
+<sub>posted by Mike, Oct 6, 2003</sub>
+<desc>
+An from Eric that improves (corrects) LMv2 support has been merged. There is some uncertainty surrounding
+the signing of SMBs if guest credentials are negotiated.
+A minor syncronization issue has been recified.
+Finally there has been
+a  straight  forward  but potentially dangerous change in <tt>SmbFile</tt>. All list
+operations  now  build  a  list  of names or files using an <tt>ArrayList</tt>. This
+assisted  in  fixing  another  problem  where <tt>NetServerEnum2</tt> responses were
+observed    to   return   server   names   of   0   length which caused
+<tt>ArrayIndexOutOfBounds</tt> exceptions. These entries are now ignored. 
+</desc>
+</entry>
+
+
+<entry old="true">
+<title>jcifs-0.7.13 released / SMB Signing Support</title>
+<sub>posted by Mike, Sep 17, 2003</sub>
+<desc>
+JCIFS  now  supports SMB signing. If a server requires SMB signing (Windows
+2003  requires  it  by  default)  or if the server supports signing and the
+<tt>jcifs.smb.client.signingPreferred</tt> property   is   true  signing  will  be
+negotiated  and  used.  Signing does not work with NTLM HTTP authentication
+because  the  original  password  hashes  are  required to generate the MAC
+signing  key.  There  have  also been some adjustments to <tt>SmbFile.hashCode()</tt>.
+Previously  jCIFS  did  not precisely exhibit the behavior described in the
+comments for <tt>hashCode()</tt> and <tt>equals()</tt>. 
+</desc>
+</entry>
+
+
+<entry old="true">
+<title>jcifs-0.7.12 released / ERRSVR/90 Fix</title>
+<sub>posted by Mike, Sep 1, 2003</sub>
+<desc>
+CIFS  permits  multiple  users  to  be  logged  in  over the same transport
+(socket).  JCIFS  takes  advantage  of  this and reuses existing transports
+wherever  possible.  It  was  reported  that  a user using the NTLM Servlet
+Filter  was  getting  <tt>ERRSRV/90</tt>  which  means "Too many Uids active on this
+session". So it looks like the limit is ~150 sessions per transport. I have
+added    code    to    logoff    1/10th    of    the    sessions   if   the
+jcifs.smb.client.ssnLimit propery is exceeded (default 100). <i>update: this value was later reported to be low and has been increased to 250.</i> 
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.7.11 released / LMv2 Authentication Support</title>
+<sub>posted by Mike, Jul 10, 2003</sub>
+<desc>
+Support  for  LMv2  authentication has been added. See the Overview page in
+the  API  documentation  regarding  the <tt>jcifs.smb.lmCompatibility</tt> property.
+Some  additonal  "cleanup"  has  also  been performed. One side-effect that
+might be noticed is that the default domain/username/password can no longer
+be  set  at runtime. Once the client is initialized the default credentials
+are  fixed.  Setting  default  credentials are runtime was always an unsafe
+operation. Create an <tt>NtlmPasswordAuthentication</tt> object instead. 
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.7.10 released / NTLM Protocol Documentation</title>
+<sub>posted by Mike, Jul 3, 2003</sub>
+<desc>
+There  have  been  two small bug fixes in the SMB layer; the count field in
+the  <tt>SMB_COM_WRITE_ANDX</tt>  response  was  being ignored. Apparently the count
+specified  in the request is always honored or we would have seen plenty of
+file corruption by now. Second, the <tt>list()</tt> and <tt>listFiles()</tt> did not properly
+handle  Transaction  buffering  with  certain  values  for the <tt>listSize</tt> and
+<tt>listCount</tt>  properties  (if  multipart transaction responses are send). Also
+removed  a  few  obnoxious warnings getting logged during file transfers if
+<tt>Log.WARNINGS</tt> is set. 
+<p/>
+Regarding  NTLM  HTTP Authentication; there have been additions and updates
+to  the  documentation  on the NTLM flags, a fix to <tt>NtlmSsp</tt> to only provide
+the  target when requested by the client via the NTLM "request target" flag
+(this   is   the   correct  behavior),  and  a  bugfix  to  <tt>NtlmSsp</tt> regarding
+<tt>Base64.encodeBytes</tt>
+Eric has prepared excellent
+documentation detailing his analysis of the NTLM protocol: 
+<p/>
+<a href="http://davenport.sourceforge.net/ntlm.html">http://davenport.sourceforge.net/ntlm.html</a>
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.7.9 released / Important Fix</title>
+<sub>posted by Mike, Jun 12, 2003</sub>
+<desc>
+It  was  discovered  that if a server responds to the NBT session setup but
+not  to  the  <tt>SMB_COM_NEGOTIATE</tt>  request the client will hang indefinately.
+This  is not a likely thing to occur because servers usually respond or not
+at  all.  Regardless  it  has  been  fixed.  The  client will timeout after
+<tt>jcifs.netbios.soTimeout</tt> in this situation. 
+<p/>
+Some tweeking of the NTLM http code has been performed.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.7.8 released</title>
+<sub>posted by Mike, May 28, 2003</sub>
+<desc>
+A bug in the new ntlm http client code was identified and fixed.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.7.7 released</title>
+<sub>posted by Mike, May 27, 2003</sub>
+<desc>
+A  deadlock  was  identified  in <tt>SmbTransport.java</tt> very similar to the last one found
+about a year ago.  A simple but significant  change  has  been made that greatly simplifies
+synchronization in the transport layer. It eliminates this issue as well as 
+the  extra synchronization introduced to fix the previous problem. It is an
+elemental change however so proceed with caution (<i>Update Jun 1: Reports are good; no problems</i>).
+<p/>
+Two  new  packages  have  been  introduced.  The  <tt>jcifs.ntlmssp</tt> package now
+contains some NTLMSSP base classes. This code is used by the <tt>NtlmHttpFilter</tt> as
+well  as  the  new  <tt>NtlmHttpURLConnection</tt> class for transparently enabling
+your  HTTP and HTTPS client to negotiate NTLM authentication with IIS, the jCIFS Filter, Sqiud proxy, etc.
+The other new
+package  is  <tt>jcifs.https</tt>  which  just  contains  the HTTPS protocol handler 
+necesary for proper protocol handler registration.
+Please read the document entitled <a href="src/docs/httpclient.html">Using JCIFS NTLM Authentication for HTTP Connections</a> for important information about this new functionality.
+<p/>
+Some open flags internal to <tt>SmbFileOutputStream</tt> have been changed to permit <a href="http://lists.samba.org/pipermail/jcifs/2003-May/002168.html">unusual named pipe modes</a> to be used that previously were not considered.
+<p/>
+Previously it was possible for jCIFS to report incorrect (old)
+file size and modification time values after writing to the file. The attribute expiration period is now reset in <tt>SmbFileOutputStream.write()</tt> to prevent this problem. It is also possible to work around the problem by setting <tt>jcifs.smb.client.attrExpirationPeriod = 0</tt> although doing so may impact performace.
+<p/>
+Previously using the <tt>SmbFileInputStream.skip()</tt> method meant data would be read and then discarded.
+This implementation of this  method  has  been changed so that data is not read; there will be no IO to the server.
+This might be useful to applications that wish to resume a large download from a certain offset within a file in the event of a network failure.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.7.6 released</title>
+<sub>posted by Mike, Apr 16, 2003</sub>
+<desc>
+The  <tt>SmbFile.isDirectory()</tt> method has been changed to return <tt>false</tt> if the target does
+not  exist.  Previously  this  would return <tt>true</tt> which is inconsistent with
+<tt>java.io.File</tt>. 
+</desc>
+</entry>
+
+
+<entry old="true">
+<title>jcifs-0.7.5 released</title>
+<sub>posted by Mike, Apr 2, 2003</sub>
+<desc>
+More  refinement  to  the  NTLM  HTTP authentication code has been applied.
+There  is  also  a fix for listing hosts from Windows ME/98/95 local master
+browsers.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.7.4 released</title>
+<sub>posted by Mike, Mar 26, 2003</sub>
+<desc>
+Some <tt>NtlmHttpFilter</tt> issues were reported by several users with Windows 98 clients.
+Eric  has  provided  a  new  <tt>NtlmSsp.java</tt>  that permits the Filter to work correctly with these
+clients.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.7.3 released</title>
+<sub>posted by Mike, Feb 12, 2003</sub>
+<desc>
+Under certain conditions the <tt>SmbSession.logon()</tt> method could
+accept an incorrect password because of how <tt>SmbSession</tt>
+objects are shared internally. This mehtod will now <i>always</i>
+throw a <tt>SmbAuthException</tt> if incorrect credentials are
+supplied. A minor change has also been made to the behavior of the
+<tt>NtlmHttpFilter</tt> and <tt>NetworkExplorer</tt> servlet that
+provokes the Network Password dialog to be redisplayed repeatedly
+until correct credentials are entered by the user.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.7.2 released</title>
+<sub>posted by Mike, Feb 5, 2003</sub>
+<desc>
+A serious bug was found that causes an
+<tt>ArrayIndexOutOfBoundsException</tt> to be thrown if the <tt>len</tt>
+parameter of <tt>SmbFileOutputStream.write()</tt> is 1501, 1502, or
+1503. Also, the <tt>FILE_SHARE_READ</tt>, <tt>FILE_SHARE_WRITE</tt>,
+<tt>FILE_SHARE_DELETE</tt>, and <tt>FILE_NO_SHARE</tt> constants have
+been exposed in <tt>SmbFile</tt> to specify a <tt>shareAccess</tt>
+parameter to <tt>SmbFileOutputStream</tt> and <tt>SmbFile</tt> to
+restrict other processes from accessing files opened by jCIFS. The
+<tt>SmbFileOutputStream</tt> now supports offsets greater than 4GB.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.7.1 released</title>
+<sub>posted by Mike, Jan 16, 2003</sub>
+<desc>
+Three bugs have been fixed, regarding filenames with '#' signs in them, the <tt>getInputStream()</tt>, <tt>getLastModified()</tt>, <tt>getDate()</tt>, and <tt>getContentLength()</tt> methods of the <tt>URLConnection</tt> implementation, and <tt>isExists()</tt> incorrectly returning false.
+</desc>
+</entry>
+
+<entry old="true">
+<title>Updated SMB URL Internet Draft</title>
+<sub>posted by Chris, Jan 15, 2003</sub>
+<desc>
+Revision 04 of the <A
+HREF="http://www.ietf.org/internet-drafts/draft-crhertel-smb-url-04.txt">SMB
+URL draft specification</A> is now available.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.7.0 released</title>
+<sub>posted by Mike, Jan 8, 2003</sub>
+<desc>
+<A HREF="http://freshmeat.net/screenshots/4774"><IMG SRC="http://images.freshmeat.net/screenshots/4774_thumb.png" BORDER="0" ALT="" ALIGN="RIGHT"/></A>
+
+This release of the jCIFS client includes new functionality specifically targeting Web applications
+as well as some critical SMB URL fixes and feature improvements. They are outlined in greater detail below. Enjoy!
+
+<UL>
+<LI> The new <tt>jcifs.http</tt> package is very handy when building
+Web applications that need to integrate with MS corporate intranets. Adding
+a hyperlink to a document on a network drive is easy with Network
+Explorer (pictured right) and will transparently negotiate credentials
+with MSIE to browse SMB resources (really, no password dialog necessary). This package also boasts an <A
+HREF="src/docs/ntlmhttpauth.html">NTLM HTTP Authentication</A> servlet Filter
+for authenticating MSIE clients. These are useful features because many of
+the tasks surrounding user management now fall back to computer support
+and HR. It is not necessary to add and remove users as they join and
+leave the company. Perhaps most important from the user's perspective;
+they do not need to enter a username or password if their workstation
+is a member of an NT domain. The password hashes generated when they
+logged on to their workstation will be negotiated during the initial
+request for a session, passed through jCIFS, and validated against a
+PDC or BDC. This also makes the user's domain, username, and password
+available for managing session information, profiles, preferences, etc.
+</LI>
+<LI> The functionality used to authenticate and manage
+arbitrary credentials has been exposed in the <a href="src/docs/api/jcifs/smb/SmbSession.html">SmbSession</a> and <a
+href="src/docs/api/jcifs/smb/NtlmPasswordAuthentication.html">NtlmPasswordAuthentication</a>
+classes. This permits NTLM password authentication to be integrated
+into applications without requiring Microsoft components or JNI.
+</LI>
+<LI> With the introduction of the <A HREF="src/docs/api/overview-summary.html#scp"><tt>jcifs.encoding</tt></A> property the client is now truly internationalized. It has been used successfully on OS/390 with native
+EBCDIC character encoding. See the Sun JRE documentation for a list of <A
+HREF="http://java.sun.com/j2se/1.3/docs/guide/intl/encoding.doc.html">supported
+encodings</A>.
+</LI>
+<LI> The URL issues remaining in the 0.6 series have been
+fixed in 0.7 by converting all SMB URL handling internally to use the
+<tt>java.net.URL</tt> class (<i>Note: directories must now have a
+trailing slash and Java 1.3 is required</i>). Also a deadlock in the
+name service code was identified and fixed (repaired in 0.6.8 as well).
+</LI>
+<LI> A <tt>copyTo()</tt> method has
+been added to <tt>SmbFile</tt> that is <A
+HREF="http://lists.samba.org/pipermail/jcifs/2002-August/002357.html"><i>very
+fast</i></A> at copying large directories across hosts.
+</LI>
+</UL>
+There have been numerous other changes including the <tt>mkdirs()</tt>
+and <tt>getType()</tt> methods, plain text password support (disabled
+by default), the <tt>available()</tt> method and <tt>close()</tt>
+fix for Named Pipes, reading files larger than 4 GB, the
+<tt>NtlmAuthenticator</tt> class, and more.
+
+<p/> All documentation has been completely reviewed. See the links under Developer Information at the top of the list to the left.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.6.8 released</title>
+<sub>posted by Mike, Thu Dec 19, 2002</sub>
+<desc>
+This release fixes a name service deadlock.  It was thought to have
+been fixed in the previous release but an update was accidentally
+lost.  This is the same name service deadlock described in both the
+stable and beta series for the past two releases.  It should really be
+gone now.
+</desc>
+</entry>
+
+<entry old="true">
+<title>Java 1.3 Now Required</title>
+<sub>posted by Mike, Wed Nov 12, 2002</sub>
+<desc>
+Java 1.3 is now required with jcifs-0.7.0b4 or later. This is because
+we are now using the Java 1.3 variant of <tt>java.net.URL.set()</tt> for
+all URL handling internally and the 1.2 implementation does not support
+our requirements. Attempting to use Java 1.2 or below will result in an
+error message printed to <tt>System.err</tt> and <tt>unknown protocol:
+smb</tt> exceptions. If you must use Java 1.2 or 1.1 jcifs-0.6.8
+will work great as usual minus The URL Bug.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.7.0b5 released</title>
+<sub>posted by Mike, Tue Oct 22, 2002</sub>
+<desc>
+To resolve URL issues, jcifs now uses <tt>java.net.URL</tt> internally
+throughout. This has changed the behavior of the client in very
+significant ways and it will undoubtedly break older code. These
+issues are:
+<ul>
+<li><b>URLs that represent workgroups, servers, shares, or directories
+must have a trailing slash '/'.</b></li>
+<li>Canonicalization does not exceed the host component of the
+URL. So <tt>smb://host/share/path/</tt> + <tt>../../../../foo/</tt> is
+canonicalized to <tt>smb://host/foo/</tt> whereas previously the client
+would have reduced this to <tt>smb://foo/</tt>.</li>
+<li>For constructors that accept a second parameter, that parameter can
+no longer be <tt>null</tt>.</li>
+<li>Composing a URL with a workgroup and a second parameter like
+<tt>smb://workgroup/</tt> + <tt>server/share/path/</tt> used to
+be intelligent enough to eliminate <tt>workgroup</tt>. This
+will now blindly compose the two arguments to give
+<tt>smb://workgroup/server/share/path/</tt> which is an illegal SMB URL.</li>
+</ul>
+See <a href="src/CHANGES.txt">CHANGES.txt</a> for a more detailed explanation.
+<p/>
+The <tt>NtlmHttpFilter</tt> and <tt>NetworkExplorer</tt> should
+now work whereas before some users (largely Tomcat users) were
+experiencing problems. The NTLM HTTP Authentication code is now
+stateless and has been verified to work with both Resin and Tomcat
+at least. An <tt>NtlmServlet</tt> has been contributed that can
+negotiated NTLM SSP using older pre-2.3 servlet containers. Previously,
+negotiated credentials could not be used to access SMB resources
+with <tt>NetworkExplorer</tt>. This works now, and it is remarkably
+fast, however you cannot filter <tt>NetworkExplorer</tt> with the
+<tt>NtlmHttpFilter</tt>. The <a href="src/docs/ntlmhttpauth.html">NTLM
+HTTP Authentication document</a> has been updated.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.6.6 released</title>
+<sub>posted by Mike, Thu Sep 26, 2002</sub>
+<desc>
+There's a nasty bug in Win2K that causes jCIFS to hang. The
+<tt>PrimaryDomain</tt> field in the <tt>SMB_COM_SESSION_SETUP_ANDX</tt>
+response is not properly terminated with <i>two</i> zeros like it
+should be when Unicode is negotiated. I have patched jCIFS to only
+look for one zero which should eliminate this problem.
+<P/>
+Unfortunately there are three other bugs that have not been attended
+to as they all relate to the rather complicated issue of the SMB URL:
+<ul>
+<li>The URL protocol handler is not reentrant. It will produce
+inconsistent results if <tt>java.net.URL</tt>s are created concurrently.</li>
+<li>Full SMB URLs with an '@' in the path will misinterpret the
+string following the '@' as the server component. This problem will
+not occur if an <tt>SmbFile</tt> is composed with the two parameter
+constructor or if user credentials are supplied.</li>
+<li>There have been reports of a '/' being left out of SMB URLs being
+created with the <tt>java.net.URL</tt> class. I have not been able to
+reproduce this issue.</li>
+</ul>
+These issues will be resolved all together with a new simpler State
+Machine parser and properly integrated with the <tt>java.net.URL</tt>
+class. I am not aware of any other bugs in 0.6.6 so please let us know
+if you see otherwise.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.7.0b12 released</title>
+<sub>posted by Mike, Tue Dec 31, 2002</sub>
+<desc>
+Changes have been made that should eliminate the "<tt>unknown
+protocol: smb</tt>" exceptions experienced when trying to install
+jCIFS in environments using custom class loaders and restrictive
+security policies (application servers). URL decoding of the
+<tt>domain;user:password</tt> component of SMB URLs is in place. There
+were a few other minor adjustments.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.7.0b11 released</title>
+<sub>posted by Mike, Fri Dec 20, 2002</sub>
+<desc>
+A debugging statement at <tt>jcifs/UniAddress.java:173</tt> was printing
+useless information to <tt>System.out</tt> when listing <tt>smb://</tt>
+and <tt>smb://workgroup/</tt> URLs. This has been fixed.
+<p/>
+Although it remains to be seen how exactly jCIFS should be installed
+for those using the <tt>jcifs.http</tt> package there do not appear to
+be any issues remaining in the core. This will likely be the last beta.
+<p/>
+Happy Holidays!
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.6.8 released</title>
+<sub>posted by Mike, Thu Dec 19, 2002</sub>
+<desc>
+This release fixes a name service deadlock.  It was thought to have
+been fixed in the previous release but an update was accidentally
+lost.  This is the same name service deadlock described in both the
+stable and beta series for the past two releases.  It should really be
+gone now.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.7.0b10 released</title>
+<sub>posted by Mike, Fri Dec 13, 2002</sub>
+<desc>
+Please read the <a href="src/docs/faq.html">FAQ</a>. It now covers issues surrounding
+the following Exception:
+<pre>
+Exception MalformedURLException: unknown protocol: smb
+at java.net.URL.&lt;init&gt;(URL.java:480)
+at java.net.URL.&lt;init&gt;(URL.java:376)
+at java.net.URL.&lt;init&gt;(URL.java:330)
+at jcifs.smb.SmbFile.&lt;init&gt;(SmbFile.java:355)
+...
+</pre>
+Two deadlocks have been fixed (one serious one thought to have been
+fixed in 0.7.0b7), minor adjustments to <tt>jcifs.Config</tt> have been
+made to assist with the above exception, and the <tt>jcifs.encoding</tt>
+property will now be read properly whereas previously it was not.
+<P/>
+Also, notice there's an <a href="old.html">Old News ...</a> link at
+the bottom of the news section now. It's hard to believe it's been
+less than three years since jcifs-0.1.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.7.0b9 released</title>
+<sub>posted by Mike, Fri Nov 22, 2002</sub>
+<desc>
+An issue with <tt>getType()</tt> returning incorrect values and an issue
+with the <tt>close()</tt> method of Named Pipe input and output streams
+have been fixed. The NtlmAuthenticator has been reimplemented allowing
+the SmbShell example to be restored to working order.
+<pre>
+$ java -Djcifs.properties=../miallen.prp SmbShell smb://storage15/
+storage15/&gt; cd admin$/
+Access denied for smb://storage15/admin$/
+username: nyrsch\Administrator
+password: fretos
+admin$/&gt;
+</pre>
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.7.0b8 released</title>
+<sub>posted by Mike, Wed Nov 13, 2002</sub>
+<desc>
+Several bugs have been fixed regarding the <tt>getUncPath()</tt>
+method not including the share name, failure connecting to Windows
+98 via the Node Status call, and a <tt>NullPointerException</tt> in
+<tt>UniAddress</tt>. The <tt>Authenticator</tt> functionality has not
+be reimplemented but will in a later release.
+</desc>
+</entry>
+
+<entry old="true">
+<title>Java 1.3 Now Required</title>
+<sub>posted by Mike, Wed Nov 12, 2002</sub>
+<desc>
+Java 1.3 is now required with jcifs-0.7.0b4 or later. This is because
+we are now using the Java 1.3 variant of <tt>java.net.URL.set()</tt> for
+all URL handling internally and the 1.2 implementation does not support
+our requirements. Attempting to use Java 1.2 or below will result in an
+error message printed to <tt>System.err</tt> and <tt>unknown protocol:
+smb</tt> exceptions. If you must use Java 1.2 or 1.1 jcifs-0.6.8
+will work great as usual minus The URL Bug.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.6.7 released</title>
+<sub>posted by Mike, Wed Nov 6, 2002</sub>
+<desc>
+It's not clear that the name service deadlock can be provoked on the
+0.6 series but I have applied the fix just to be safe. That's the
+only change.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.7.0b7 released</title>
+<sub>posted by Mike, Mon Nov 4, 2002</sub>
+<desc>
+A  deadlock  in  the  name  service  code  was  found  and  eliminated. The
+<tt>SmbFiles</tt>   created  with  <tt>listFiles()</tt>  on  a  workgroup
+resource    like    <tt>smb://workgroup/</tt>    were    invalid    (e.g.
+<tt>smb://workrgoup/server/</tt>).  The  old  correct  behavior  has been
+restored.  An  issue  regarding  <tt>InetAddress</tt>  mistaking  certain
+pathological  names as IP addresses like the name '1' yielding IP 0.0.0.1
+has been fixed.
+</desc>
+</entry>
+
+
+<entry old="true">
+<title>jcifs-0.7.0b6 released</title>
+<sub>posted by Mike, Mon Oct 28, 2002</sub>
+<desc>
+All encoding and decoding of 8 bit strings being read from or written to
+a server will use an arbitrary encoding specified with the new
+<tt>jcifs.encoding</tt> property. These changes will permit the client
+to operate in any environment regardless of locale settings such as
+OS/390 with a native EBCDIC <tt>file.encoding</tt>.
+<P/>
+With the 0.7 series a bug was introduced that prevented workgroups,
+servers of a workgroup, and shares of a server from being enumerated
+using anonymous credentials.  A concurrency issue with <tt>copyTo</tt>
+was also identified. Both issues have been fixed.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.6.6 released</title>
+<sub>posted by Mike, Thu Sep 26, 2002</sub>
+<desc>
+There's a nasty bug in Win2K that causes jCIFS to hang. The
+<tt>PrimaryDomain</tt> field in the <tt>SMB_COM_SESSION_SETUP_ANDX</tt>
+response is not properly terminated with <i>two</i> zeros like it
+should be when Unicode is negotiated. I have patched jCIFS to only
+look for one zero which should eliminate this problem.
+<P/>
+Unfortunately there are three other bugs that have not been attended
+to as they all relate to the rather complicated issue of the SMB URL:
+<ul>
+<li>The URL protocol handler is not reentrant. It will produce
+inconsistent results if <tt>java.net.URL</tt>s are created concurrently.</li>
+<li>Full SMB URLs with an '@' in the path will misinterpret the
+string following the '@' as the server component. This problem will
+not occur if an <tt>SmbFile</tt> is composed with the two parameter
+constructor or if user credentials are supplied.</li>
+<li>There have been reports of a '/' being left out of SMB URLs being
+created with the <tt>java.net.URL</tt> class. I have not been able to
+reproduce this issue.</li>
+</ul>
+These issues will be resolved all together with a new simpler State
+Machine parser and properly integrated with the <tt>java.net.URL</tt>
+class. I am not aware of any other bugs in 0.6.6 so please let us know
+if you see otherwise.
+</desc>
+</entry>
+
+<entry old="true">
+<title>SNIA CIFS Technical Reference Back Online</title>
+<sub>posted by Chris, Mon Sep 9, 2002</sub>
+<desc>
+Following the restructuring of the <B>S</B>torage <B>N</B>etworking
+<B>I</B>ndustry <B>A</B>ssociation (SNIA) website, the <A
+HREF="http://www.snia.org/tech_activities/CIFS/">CIFS Technical
+Reference</A> disappeared for a while.  A new home has been found and
+the document is now back online.  In the next few months, work will
+begin on a <A HREF="http://twiki.org/">TWiki</A><small><SUP>[TM]</SUP></small>-based comment forum so that interested
+folk can annotate the SNIA CIFS doc.
+</desc>
+</entry>
+
+
+<entry old="true">
+<title>jcifs-0.7.0b3 released</title>
+<sub>posted by Mike, Sun Aug 25, 2002</sub>
+<desc>
+As usual Chris found a couple of bugs testing in the interop
+lab at the CIFS conferance. I fixed the graceful-reconnect
+issue. Countless bugs have been fixed in Network Explorer. The NTLM HTTP
+Authentication/Network Explorer docucumentation has been overhauled
+again. Implemented <tt>mkdirs()</tt>, <tt>available()</tt> for Named
+Pipes, and <tt>copyTo()</tt> will now attempt to maintain the last
+modified time (although NT clearly doesn't support it). Quite a few
+other issues fixed including one quite serious bug.
+</desc>
+</entry>
+
+<entry old="true">
+<title>NTLM HTTP Authentication and the New <tt>jcifs.http</tt> Package</title>
+<sub>posted by Mike, Wed Aug 8, 2002</sub>
+<desc>
+With the release of the 0.7.0 series, we are introducing a new
+package; <tt>jcifs.http</tt>. The jCIFS client is proving to be quite
+useful for adding functionality to websites on corporate intranets.
+Adding a link to a document on your LAN for example is a trivial
+exercise with jCIFS. In the <tt>jcifs.http</tt> package we will be
+providing Servlets and CGIs that do this and more.
+<P/>
+To inaugurate this package, we have implemented NTLM HTTP
+Authentication which allow MSIE clients to authenticate against a domain
+controller. This is a useful feature because many of the tasks
+surrounding user management now fall back to computer support and HR. It
+is not necessary to add and remove users as they join and leave the
+company. Perhaps most important from a user's perspective; they do not
+need to enter a username or password if their workstation is a member of
+the domain. The password hashes generated when they logged on to their
+workstation will be negotiated during the initial request for a session,
+passed through jCIFS, and validated against a PDC or BDC. This also
+makes the users domain, username, and password available for managing
+session information, profiles, preferences, etc.
+<P/>
+For complete details, please read <a href="src/docs/ntlmhttpauth.html">Authenticating MSIE Clients using NTLM HTTP Authentication and jCIFS</a>.
+<P/>
+We would be delighted to see popular application servers use the now
+public <a href="src/docs/api/jcifs/smb/SmbSession.html">SmbSession</a>
+class's <tt>getChallenge()</tt> and <tt>logon()</tt> methods to
+integrate this functionality into their products in a way that is
+consistent with other authentication schemes such as <tt>BASIC_AUTH</tt>
+so that <tt>getRemoteUser()</tt> works expectedly or provide for NTLM
+HTTP Authentication protected &#34;Relms&#34; in Tomcat.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.7.0b released</title>
+<sub>posted by Mike, Wed Aug 8, 20002</sub>
+<desc>
+New features:
+<ul>
+<li>NTLM HTTP Authentication.  Thanks to Jason Pugsley for his code and
+bringing us up to speed on this. I know this will be a popular feature.
+See above message for details.</li>
+<li>A <tt>jcifs.smb.client.codepage</tt> property has been added to
+specify an 8 bit character encoding to use for &#34;ASCII&#34; strings.
+If your workgroup, server, and share names are not rendered properly you
+may wish to explore this.  See <a href="src/CHANGES.txt">CHANGES.txt</a>
+for details.  This should resolve the issue reported by Dmitry Khlonin
+about using <tt>codepage=Cp866</tt> on his Russian LAN.  See the <a
+href="http://java.sun.com/j2se/1.3/docs/guide/intl/encoding.doc.html">Supported
+Encodings</a> page in the Sun JRE documentation for a list of valid
+identifiers.</li>
+<li>Added an <tt>SmbFile.getType()</tt> which will return one of the
+following type identifiers:
+<pre>
+SmbFile.TYPE_WORKGROUP
+SmbFile.TYPE_SERVER
+SmbFile.TYPE_SHARE
+SmbFile.TYPE_NAMED_PIPE
+SmbFile.TYPE_PRINTER
+SmbFile.TYPE_FILESYSTEM
+</pre>
+<TT>isWorkgroup()</TT> is now deprecated.</li>
+<li>Added a "lookup" table to <tt>jcifs.netbios.NbtAddress</tt> like the
+one in <tt>java.net.InetAddress</tt> to prevent redundant queries from
+reaching the wire.</li>
+
+<li>Plain text passwords have been implemented but must be enabled with
+<tt>jcifs.smb.client.disablePlainTextPasswords=false</tt>.  This is
+<tt>true</tt> by default and will generate a "Plain text passwords are
+disabled" <tt>RuntimeException</tt> exception if you try to use it.</li>
+
+<li>The <tt>SmbFile.length()</tt> method now returns the capacity of the
+disk for a share. So <tt>getType()</tt> must be
+<tt>SmbFile.TYPE_SHARE</tt>.</li>
+
+<li>Added an <tt>SmbFile.freeDiskSpace()</tt> method that reports the
+amount of free disk space in bytes on a disk exported by a share.</li>
+
+<li>Added an <tt>SmbFile.copyTo()</tt> method. This method can copy
+directories across hosts <i>very quickly</i> however at the moment it
+does not mirror file attributes. See the end of <a
+href="http://lists.samba.org/pipermail/jcifs/2002-August/002357.html">this
+message</a> for details.</li>
+
+<li>Replaced the <tt>AuthHandler</tt> interface and <tt>AuthInfo</tt>
+with the abstract <tt>NtlmAuthenticator</tt> and
+<tt>NtlmPasswordAuthentication</tt> classes to be consistent with the
+<tt>Authenticator</tt> and <tt>PasswordAuthentication</tt> classes from
+the <tt>java.net</tt> package.  The underlying behavior remains the same
+however it has not been tested thoroughly.</li>
+</ul>
+</desc>
+</entry>
+
+
+<entry old="true">
+<title>jcifs-0.6.5 released</title>
+<sub>posted by Chris, Sun Jun 2, 2002</sub>
+<desc>
+A file corruption bug, which occurred only when writing to Novell's CIFS
+implementation for NetWare, was found and fixed.  (Novell has been
+notified about this problem; good work Mike and Tony!)  Also fixed was a
+file truncation bug introduced in 0.6.2 (with the return -1 fix).
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.6.3 released</title>
+<sub>posted by Mike, Fri May 3, 2002</sub>
+<desc>
+The SMB URL issues with reserved characters and Unicode (e.g. Japanese)
+have been resolved. It is no longer necessary to URL encode or decode
+pathnames. Instead, these characters must be encoded for the authority
+component (actually just '&#064;' with '&#037;40'). A problem with
+passwords longer than 14 characters has also been fixed.
+</desc>
+</entry>
+
+
+<entry old="true">
+<title>SNIA CIFS Technical Reference 1.0 Released</title>
+<sub>posted by Chris, Wed Apr 3, 2002</sub>
+<desc>
+According to <A HREF="http://lists.samba.org/pipermail/samba-technical/2002-April/035876.html">a
+message on the Samba Technical mailing list</A>, the <A HREF="http://www.snia.org/">Storage Network Industry Association</A>
+will soon release version 1.0 of their SMB/CIFS Technical Reference.
+Version 0.9 has been available for quite some time.  The new release
+contains several corrections and updates.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.6.2 released</title>
+<sub>posted by Mike, Thu Mar 21, 2002</sub>
+<desc>
+Two minor bugs have been fixed. Please see <a href="src/CHANGES.txt">CHANGES.txt</a> for details.
+</desc>
+</entry>
+
+<entry old="true">
+<title>New version of jCIFS-based SMB-Browse for MacOS X</title>
+<sub>posted by Chris, Tue Mar 5, 2002</sub>
+<desc>
+Version 0.8:
+<UL>
+<LI>Mounting of shares with spaces in the share name now works,</LI>
+<LI>German and French version are now included,</LI>
+<LI>Domain and Workgroup logins are now working correctly.</LI>
+</UL>
+
+See: <A HREF="http://www.shukwit.com/main.php">http://www.shukwit.com/main.php</A>
+</desc>
+</entry>
+
+<entry old="true">
+<title>Serious Bug Fixed: jcifs-0.6.1 released</title>
+<sub>posted by Mike, Thu Feb 21, 2002</sub>
+<desc>
+A bug has been found that affects all previous versions of jCIFS. Users
+are advised to upgrade to 0.6.1 immediately. If a file is retrieved
+using the <code>SmbFileInputStream</code> class, the file's size is
+precisely a multiple of 4096 and the <code>byte[] b</code> and <code>int
+len</code> parameters used in a <code>read()</code> operation are both
+larger than 4096, the <code>read( byte[] b )</code> and <code>read(
+byte[] b, int off, int len )</code> methods will return <code>-1</code>.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.6.0 released</title>
+<sub>posted by Mike, Wed Feb 20, 2002</sub>
+<desc>
+The jcifs-0.6.0 package is ready. The most significant improvement since 0.5 is performance.
+<p/>
+<b>Performance:</b>
+<p/>
+The performance improvements leading up to the 0.6 release have proven
+to be significant. Raw transfer rates have not changed but listing
+large directories, crawling over several hosts with multiple threads,
+querying attributes on lists of files, and otherwise IO and multiplexing
+intense operations have improved 800%+ in some cases. This release illustrates how a
+carefully considered design can greatly improve the performance of an application. These
+speed improvements are the result of reorganizing how buffers are used
+(now only two per VM rather than per connection), elimination of
+unnecessary network messages with smarter driver logic,
+attribute caching, and analyzing spots where objects were being created
+and destroyed frequently. This new client can crawl over every file
+on my NT workstation in a hair over 10 seconds.
+<p/>
+Even though the focus for 0.6.0 was cleanup, refactoring, and
+performance, there are a few new features worth mentioning. Here's
+a breakdown.
+<p/>
+<b>New Features:</b>
+
+<ul>
+<li>The <code>listFiles</code> methods have been added which offer
+a significant speed boost for operations that intensively query the
+attributes of each file in the list.</li>
+<li>Many of the <a href="src/docs/api/jcifs/smb/SmbFile.html"><code>SmbFile</code></a>
+methods throw the now public
+<a href="src/docs/api/jcifs/smb/SmbException.html"><code>SmbException</code></a>.</li>
+<li>An <a href="src/docs/api/jcifs/util/AuthHandler.html"><code>AuthHandler</code></a>
+interface and
+<a href="src/docs/api/jcifs/smb/SmbAuthException.html"><code>SmbAuthException</code></a>
+have been introduced for handling authentication related error
+conditions.</li>
+<li>The name service code has been generalized to handle
+both DNS and NetBIOS name services much more smoothly
+(0.5 handles this incorrectly actually) using the new
+<a href="src/docs/api/jcifs/UniAddress.html"><code>UniAddress</code></a>.</li>
+<li>The client can now list the hosts of a workgroup/ntdomain on remote
+networks; you can enumerate an entire WAN.</li>
+<li>The client is a lot smarter about how to ultimately service requests.</li>
+<li>Graceful reconnect.</li>
+<li>Support for Novell NetWare.</li>
+</ul>
+</desc>
+</entry>
+
+
+<entry old="true">
+<title>Related Projects of Note</title>
+<sub>posted by Chris, Tue Feb 12, 2002</sub>
+<desc>
+These are project related, in various ways, to the work we are doing
+with jCIFS:
+<UL>
+<LI>The <A HREF="http://xamba.sourceforge.net/index.shtml">Xamba Network
+Integration Project</A> focuses on integration between Macintoshes
+and SMB/CIFS networks.</LI>
+</UL>
+<P/>
+<UL>
+<LI><A HREF="http://shukwit.com/main.php">SMB Browse</A> allows browsing
+of the Network Neighborhood from a Mac OSX system.  The software is
+written in Cocoa-Java, and uses jCIFS to provide access to the SMB
+browse list.</LI>
+</UL>
+
+Version 0.6 of <A HREF="http://shukwit.com/main.php">SMB Browse</A>
+has been released, with 0.7 planned soon.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.6b9 released</title>
+<sub>posted by Mike, Wed Feb 6, 2002</sub>
+<desc>
+There have been two bug fixes, some unnecessary code has been removed,
+logic preventing certain invlid operations (e.g. <code>list()</code>
+on <code>IPC$</code>) has been added, and the documentation has been
+updated. The API documentation still needs a little more work, but
+we think that should be it for this long string of betas. Thanks to
+everyone who provided feedback.
+</desc>
+</entry>
+
+<entry old="true">
+<title>New Mirror</title>
+<sub>posted by Chris, Sun Jan 20, 2002</sub>
+<desc>
+We have started <A HREF="src/">mirroring the source archive</A> here on
+the root server.  This should reduce the problems we've had in the past
+when one or the other server is down or unreachable.  The mirror is
+updated once daily.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.6b8 realeased</title>
+<sub>posted by Mike, Sat Jan 12, 2002</sub>
+<desc>
+I forgot to convert the delete operation to use <TT>listFiles</TT>.
+<P/>
+Beta8 handles this properly on NT as well as Win98 and probably most
+other servers including NetWare.  Deleting directories should also be
+faster.  I also fixed an issue where testing <TT>exists()</TT> on a
+newly created directory would incorrectly return false. I just needed to
+manually expire the <TT>attrExpiration</TT> after the <TT>mkdir</TT>
+call to cause the client to check the server again.
+</desc>
+</entry>
+
+<entry old="true">
+<title>Updated SMB URL Internet Draft</title>
+<sub>posted by Chris, Sat Jan 12, 2002</sub>
+<desc>
+The <A HREF="http://search.ietf.org/internet-drafts/draft-crhertel-smb-url-02.txt">SMB
+URL Internet Draft</A> has been updated.  The new draft includes support
+for the <TT>:port</TT> field, and the use of query strings to specify
+NBT context (WINS server, Called Name, etc.)  The document provides a
+fixed set of keywords that may be used within the query section of the
+URL string.  It would be nice to have a third-party authority placed in
+charge of accepting updates to the keyword list.  Unfortunately, the
+keywords <I>must</I> be interpreted by the client rather than the
+server, so adding new keywords without some sort of public comment
+process would cause some clients to break.
+<P/>
+The new draft does <I>not</I> include any support for SMB over native
+TCP (port 445 semantics).  This is still an area for discussion.  While
+it is clear that adding support for non-NBT file services would be easy,
+no one yet (including myself) has provided a mechanism for efficiently
+browsing services within a W2K Domain via the SMB URL.  This may turn
+out to be trivial, but it won't go into the specification until it is
+shown that it <I>can</I> be done.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.6b7 released</title>
+<sub>posted by Mike, Fri Jan 11, 2002</sub>
+<desc>
+The introduction of <code>listFiles</code> in a previous beta created
+an issue with caching file attributes and enumerating workgroups
+and hosts of a workgroup. There was a compilation problem with
+<code>URLDecoder</code> and a possible <code>NullPointerException</code>
+in the graceful reconnect code. Generally the last beta was a flop. We
+strongly advise that you erase it and use this release. We have high
+hopes for it. The good news is <code>listFiles</code> has turned out
+to be quite a screamer on regular directories. I can list every file
+on my NT machine with <code>T2Crawler</code> in 10.095 seconds (yes,
+over the network).
+</desc>
+</entry>
+
+
+<entry old="true">
+<title>jcifs-0.6b6 released</title>
+<sub>posted by Mike, Mon Jan 7, 2002</sub>
+<desc>
+There have been quite a few bug fixes. The <code>listFiles()</code>
+methods no longer throw <code>MalformedURLException</code> or
+<code>UnknownHostException</code>. The client can now recover from
+a server being restarted or unavailable between calls (and might
+solve your invalid UID problem TN). A URL decoding issue, some
+unnecessary <code>AuthException</code>s, and Win98's preference for
+capitalized share names have also been fixed. Lot's of detail in the
+<a href="http://auditorymodels.org:81/jcifs/src/README.txt">README.txt</a>
+if you're interested.
+</desc>
+</entry>
+
+
+<entry old="true">
+<title>jcifs-0.6b5 released</title>
+<sub>posted by Mike, Wed Dec 19, 2001</sub>
+<desc>
+Dispite being in the middle of a beta cycle we have implemented a new
+freqently requested feature. The <code>SmbFile</code> class now has two
+<code>listFiles</code> methods. The normal <code>java.io.File</code>
+like <code>listFiles</code> method will return an array of
+<code>SmbFile</code>s. The other will take a DOS "wildcard" expression
+with '?' and '*' meta characters. The <code>SmbShell</code> example
+now sports pretty formatted output to complement this feature:
+<blockquote><pre>
+winnt> ls c?o*
+clock.avi                  -rw--      82944 Mon Oct 14 1996 1:38 AM
+Cookies                    drw--          0 Fri Nov 13 1998 9:42 PM
+2 items in 5ms
+</pre></blockquote>
+I have written a document on <a
+href="http://auditorymodels.org/jcifs/src/docs/authhandler.html">Exceptions
+and the AuthHandler Interface </a>. The auditorymodels.org site appears
+to have stablized. It has a new static IP so we should be able to use
+that as our download area once again.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.6b4 released</title>
+<sub>posted by Mike, Sat Dec 15, 2001</sub>
+<desc>
+This beta 4 fixes a serious bug that caused <code>exists()</code> and
+the several methods that called it to return erroneous results. There
+have also been quite a few other smaller bug fixes. This release should
+be fairly stable. The example and test programs have been updated
+and retested without incedent.
+<P/>
+It has recently been decided that the next beta will introduce
+the <code>listFiles</code> methods. This will prolong the beta
+cycle however the issue has been raised enough that it is now
+considered a bug. A wildcard <code>FilenameFilter</code> and possibly
+<code>FileFilter</code> will also be implemented.
+</desc>
+</entry>
+
+
+<entry old="true">
+<title>jcifs-0.6b3 and auditorymodels.org</title>
+<sub>posted by Mike, Wed Nov 28, 2001</sub>
+<desc>
+The beta 2 release has a deadlock in it so you might want to
+try jcifs-0.6b3. This code should prove to be even faster
+than the first beta.  I have changed from using two buffers for
+each transport to two buffers for all transports with a main
+<code>synchronized(buf)</code> around it. This serializes reads
+and writes for all sockets but, surprisingly, it appears to be
+even faster. I've been tweaking the crawler example to use as a
+benchmark. There's a new example <code>T2Crawler</code> that can
+enumerate every share on a segment in a matter of seconds.
+<P/>
+You may have noticed that the auditorymodels.org site is not available.
+AT&amp;T switched IP's on that cable modem. Looks like it might take
+a while. I've mirrored everything over to my ISP's account for
+now. Please let me know if you find any bad links.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.6b2 released</title>
+<sub>posted by Mike, Wed Nov 21, 2001</sub>
+<desc>
+Previously, jCIFS could not enumerate hosts of a
+workgroup/domain if that workgroup/domain was on a different
+network segment. This problem has fixed. This beta of the
+jCIFS client can enumerate the complete hierarchy of an entire WAN <a
+href="http://www.microsoft.com/windows2000/en/server/help/sag_WINS_und_BrowsingWithWins.htm">provided
+your network supports it</a>. Two trivial bugs have also been fixed.
+</desc>
+</entry>
+
+
+<entry old="true">
+<title>jcifs-0.6b released</title>
+<sub>posted by Mike, Fri Nov 16, 2001</sub>
+<desc>
+There have been significant changes under the hood and to
+the API. The name service bug has been fixed, most of the
+top level code has been re-written to be <i>much</i> smarter, and most
+of <code>SmbFile</code>'s methods throw the now public <a
+href="http://auditorymodels.org/jcifs/src/docs/api/jcifs/smb/SmbException.html"><code>SmbException</code></a>.
+This refactoring has resulted in marked performace
+improvements (100%+ in some cases). See the <a
+href="http://auditorymodels.org/jcifs/src/README.txt">README.txt</a>
+for important details about how to modify your code. Keep in mind the
+sooner you find the bugs the sooner they get fixed so we can move on.
+</desc>
+</entry>
+
+
+<entry old="true">
+<title>Bug in Mixed Mode DNS/NetBIOS Name Resolution Code</title>
+<sub>posted by Mike, Thu Oct 18, 2001</sub>
+<desc>
+If a DNS name longer than 15 characters is used with a
+<code>resolveOrder</code> that has <code>DNS</code> <i>after</i>
+<code>WINS</code> or <code>BCAST</code> (the default of
+<code>resolveOrder=LMHOSTS,WINS,BCAST,DNS</code> qualifies) the
+name will incorrectly get truncated to 15 characters. In short,
+the name query will fail and jCIFS will not be able to connect to
+the host. The only solution at the moment is to use <code>DNS</code>
+before <code>WINS</code> and <code>BCAST</code> or do not use both
+types of resolution simultaniously.
+<P/>
+This has prompted a bit of refactoring, reducing, rewriting, general
+cleanup, comments ... etc (everywhere, not just in the above mentioned
+resolver code). The result will be 0.6. This means no new features
+but it will mean a more robust, leaner, and faster jCIFS. This release
+will also break bytecode compatabilty.
+<P/>
+If you think of anything you consider to be &#34;broken&#34; in
+jCIFS, even if it is not technically a bug, now is the time to
+<a href="mailto:jcifs@samba.org">send a message</a> to the <a
+href="https://lists.samba.org/mailman/listinfo/jcifs">jCIFS mailing list</a>
+with an explaination of the issue.
+</desc>
+</entry>
+
+
+<entry old="true">
+<title>jcifs-0.5.1 released</title>
+<sub>posted by Mike, Mon Aug 27, 2001</sub>
+<desc>
+Chris found three minor bugs while testing in the CIFS Conference
+Interoperabilty Lab. A detailed description of these issues and their
+resolutions is posted <a href="http://lists.samba.org/pipermail/jcifs/2001-August/001428.html">here</a>.
+These packages will also now work with both Java 1.1 as well as Java2.
+</desc>
+</entry>
+
+<entry old="true">
+<title>Success at the CIFS Conference</title>
+<sub>posted by Chris, Sun Aug 25, 2001</sub>
+<desc>
+<A HREF="http://www.cifs2001.org/"><IMG SRC="images/CIFS_Banner.gif" BORDER="0" ALT="" ALIGN="RIGHT"/></A>
+I <A HREF="presentations/cifs2001/index.html">presented jCIFS</A> at
+the <A HREF="http://www.cifs2001.org/">2001 CIFS Conference and
+PlugFest</A>, which was held August 20 - 24 in <A
+HREF="http://maps.yahoo.com/py/pmap.py?Pyt=Tmap&amp;addr=&amp;csz=Bellevue,+WA&amp;city=Bellevue&amp;state=WA&amp;slt=47.610600&amp;sln=-122.199501&amp;mlt=47.634700&amp;mln=-122.169000&amp;zip=&amp;country=us&amp;BFCat=&amp;BFClient=&amp;mag=7&amp;cs=7&amp;name=&amp;desc=">Bellevue,
+Washington</A> (a suburb of Redmond).
+<P/>
+I met up with the Australian contingent of the Samba Team on Sunday,
+the day before the PlugFest started.  We all went out to the hotel pool
+on what proved to be the only warm and sunny day of the week.  The plan
+was to relax and spend some time swimming, but Tridge got the idea of
+setting up a Wireless Access Point so we could all sit by the pool with
+our laptops.  I think we spent five hours trying to get the modem in the
+Apple Airport to dial out and authenticate properly.  We never did get
+it working (and I never got into that pool).  Eventually, we used
+Tridge's Linux Laptop to dial in, hard-wired that to the Airport, and
+used the Airport's DHCP service to hand out unrouted IPs.  It was a bit
+of a hack but it worked.
+<P/>
+The PlugFest started Monday.  Many CIFS vendors were present,
+including some new faces, and I was able to test jCIFS against a large
+variety of servers.  Some jCIFS bugs were discovered (and squashed) and
+I was also able to demonstrate the utility of jCIFS as a test client.
+The ease with which new torture tests can be written makes jCIFS an
+excellent tool for server verification.
+<P/>
+A number of issues were discussed at the Conference, including the
+current status of the <A HREF="http://www.snia.org/English/Work_Groups/NAS/CIFS/WG_CIFS_Docs.html">SNIA
+CIFS document</A> which has been downgraded from a Specification to a
+Technical Reference.  The <A HREF="http://www.snia.org">SNIA</A> is also
+looking for CIFS compatibility testing tools to help CIFS implementors
+verify their products, so (as time permits...and it typically doesn't) I
+will be looking at writing and documenting some more formal jCIFS test
+suites.
+</desc>
+</entry>
+
+<entry old="true">
+<title>Java 2 No Longer Required</title>
+<sub>posted by Mike, Thu Aug 9, 2001</sub>
+<desc>
+Actually, it never was. I just never bothered to try. I had to comment
+out one (1) line.  Oops.
+<P/>
+It has been built with the <A HREF="http://www.blackdown.org/">Blackdown</A> jdk_1.1.6-v2, however any
+1.1 version should work fine.  For your convenience, I have uploaded a
+<A HREF="http://auditorymodels.org/jcifs/src/jcifs-0.5jdk116.jar">jar</A>.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.5b2 released</title>
+<sub>posted by Mike, Fri Jul 13, 2001</sub>
+<desc>
+Some flags specified when opening files were not optimal. Trying
+to open the same file twice would fail even though the file
+was opened only for reading. This has been fixed. Also, a
+new <code>Log.CRITICAL_EXCEPTIONS</code> mask has been added
+to turn off common non-critical exceptions from
+being printed to the console. See the second to last line of <code><a
+href="http://auditorymodels.org/jcifs/src/examples/ThreadedSmbCrawler.java">examples/ThreadedSmbCrawler.java</a></code>
+for an example of how to set this mask.
+</desc>
+</entry>
+
+
+<entry old="true">
+<title>jCIFS 0.5 is Now Final</title>
+<sub>posted by Mike, Sun Jul 29, 2001</sub>
+<desc>
+The 0.5 series is complete. This is the most stable and
+full featured CIFS client library that that we have to
+offer. There are no known bugs and it has been tested very
+thoroughly. A minor bug in <code>SmbFile.renameTo()</code>
+has been fixed (did not return false when it should have)
+and <a href="http://auditorymodels.org/jcifs/src/docs/api/">API
+Documentation</a> improvements have been added. Thanks deserved to
+everyone who helped.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.5b2 released</title>
+<sub>posted by Mike, Fri Jul 13, 2001</sub>
+<desc>
+Some flags specified when opening files were not optimal. Trying
+to open the same file twice would fail even though the file
+was opened only for reading. This has been fixed. Also, a
+new <code>Log.CRITICAL_EXCEPTIONS</code> mask has been added
+to turn off common non-critical exceptions from
+being printed to the console. See the second to last line of <code><a
+href="http://auditorymodels.org/jcifs/src/examples/ThreadedSmbCrawler.java">examples/ThreadedSmbCrawler.java</a></code>
+for an example of how to set this mask.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.5b released</title>
+<sub>posted by Mike, Fri Jun 29, 2001</sub>
+<desc>
+The 0.5 series is now beta. New features include the proper fix for the <code>SmbFile.list()</code> bug, share, server, and workgroup enumeration, <a href="http://auditorymodels.org/jcifs/src/docs/pipes.html">Named Pipes</a>, a complete implementation of the <a href="http://www.ietf.org/internet-drafts/draft-crhertel-smb-url-00.txt">SMB Filesharing URL Scheme</a> IETF draft, and more. See the <a href="http://auditorymodels.org/jcifs/src/README.txt">README</a> for details. This release is already been through a stable iteration and there are no known bugs.
+</desc>
+</entry>
+
+<entry old="true">
+<title>CIFS Conference!</title>
+<sub>posted by Chris, Fri Jun 22, 2001</sub>
+<desc>
+<A HREF="http://www.cifs2001.org/"><IMG SRC="images/CIFS_Banner.gif" BORDER="0" ALT="" ALIGN="RIGHT"/></A>
+The 2001 <A HREF="http://www.cifs2001.org/">CIFS Conference and Plugfest</A>
+will be held August 20 - 24 in <A
+HREF="http://maps.yahoo.com/py/pmap.py?Pyt=Tmap&amp;addr=&amp;csz=Bellevue,+WA&amp;city=Bellevue&amp;state=WA&amp;slt=47.610600&amp;sln=-122.199501&amp;mlt=47.634700&amp;mln=-122.169000&amp;zip=&amp;country=us&amp;BFCat=&amp;BFClient=&amp;mag=7&amp;cs=7&amp;name=&amp;desc=">Bellevue,
+Washington</A> (a suburb of Redmond).  There will be a <A
+HREF="http://www.cifs2001.org/English/Conference/Companies.html">bigbunch</A>
+of CIFS developer's present.  This is <I>the</I> main event for the CIFS
+community.
+</desc>
+</entry>
+
+
+<entry old="true">
+<title>jcifs-0.5dev3 released</title>
+<sub>posted by Mike, Thu Jun 21, 2001</sub>
+<desc>
+No new features. Just many sorely needed bug fixes. The jcifs-0.5dev2
+release has some pretty serious problems. This release should be
+<i>much better</i>. It passes all my torture tests anyway. There
+is some documentation on using jCIFS with Win32 Named Pipes <a
+href="http://auditorymodels.org/jcifs/src/docs/pipes.html">here</a>. I
+have also writtin a crude <a
+href="http://auditorymodels.org/jcifs/src/examples/ThreadedSmbCrawler.java">SmbCrawler</a>
+program that might help admins map out their network. Use
+
+<blockquote><pre>
+java -Djcifs.properties=my.prp ThreadedSmbCrawler smb://myworkgroup 2 10
+</pre></blockquote>
+
+to enumerate over all servers and their shares (depth 2) with 10 threads.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.5dev2 released</title>
+<sub>posted by Mike, Mon May 21, 2001</sub>
+<desc>
+Lots of new stuff including <a
+href="http://auditorymodels.org/jcifs/src/docs/resolver.html">enhanced
+server name resolution</a> with DNS, lmhosts files, specifying a
+"resolve order", Named Pipes (Paul) and Transact Named Pipes,
+a daylight savings time bugfix and time encoding bugfix (Urban),
+documentation improvements, Unicode alignment proper (fixes the
+<code>smb://</code>, <code>smb://name</code> enumeration problem with
+Samba), <code>SmbFile</code> method behavior finalization, quick exit
+of programs (used to hang for 15sec), and more. Of course this is all
+totally untested so try it out and let us know how it goes.
+</desc>
+</entry>
+
+
+<entry old="true">
+<title>Bug in jcifs-0.4 SmbFile.list() Method</title>
+<sub>posted by Mike, Fri May 11, 2001</sub>
+<desc>
+There is a serious bug in NT and NT Server that can
+cause the <code>SmbFile.list()</code> method to get
+caught in an endless loop consuming major cpu cycles
+and bandwidth. The problem is described in more detail <a
+href="http://lists.samba.org/pipermail/jcifs/2001-March/001095.html">here</a>.
+<P/>
+There is no fix except to not call <code>SmbFile.list()</code>. Do not
+use jcifs-0.4 in a production environment if your application uses this
+method. The bug has been properly fixed in jcifs-0.5dev1, however this
+version is highly experimental and has known bugs of it's own.  We are
+sorry for any inconvenience this may have caused.
+</desc>
+</entry>
+
+
+<entry old="true">
+<title>jcifs-0.5dev1 released</title>
+<sub>posted by Mike, Sun Apr 8, 2001</sub>
+<desc>
+We now embark on the first experimental series of
+what will become jcifs-0.5. New features include the
+Transactions API, batching, and workgroup, server,
+share enumeration. Tunable batching, which is described <a
+href="http://auditorymodels.org/jcifs/src/docs/batching.html">here</a>,
+should only be of interest to CIFS developers. What should
+intrest most people is that jCIFS now has the ability to enumerate
+workgroups of a network, servers of a workgroup, and shares of a
+server with <code>smb://</code>, <code>smb://workgroup</code>,
+and <code>smb://server</code> URLs respectively. For example
+the url <code>smb://storage15</code> will list the shares
+available on the server <code>storage15</code>. This makes <a
+href="http://auditorymodels.org/jcifs/src/examples/SmbShell.java">SmbShell</a>
+start to look pretty slick because you can <code>cd</code> all around
+your network.
+</desc>
+</entry>
+
+
+<entry old="true">
+<title>New CIFS Draft Specification Posted</title>
+<sub>posted by Chris, Wed, Apr 4, 2001</sub>
+<desc>
+The Storage Network Industry Association (<A
+HREF="http://www.snia.org">SNIA</A>) has posted a <A
+HREF="http://www.snia.org/English/Work_Groups/NAS/CIFS/WG_CIFS_Docs_FS.html">draft
+specification for the SMB/CIFS protocol</A>.  This draft is based on
+earlier work by Paul Leach and Dilip Naik of Microsoft, but has been
+updated.  The draft is currently in 30-day review.
+</desc>
+</entry>
+
+
+<entry old="true">
+<title>jCIFS Demonstrated at Connectathon 2001</title>
+<sub>posted by Chris, Sat Mar 31, 2001</sub>
+<desc>
+<A HREF="http://www.connectathon.org/"><IMG SRC="images/cthonlogo.gif" BORDER="0" ALT="" ALIGN="RIGHT"/></A>
+jCIFS 0.4-final was demonstrated and tested at <A
+HREF="http://www.connectathon.org/">Connectathon 2001</A> with
+overall good results.  Some problems were discovered, of course, and
+solutions are planned for 0.5.
+<P/>
+The jCIFS Team is interested in continued testing against commercial
+SMB/CIFS implementations, particularly derivatives of Advanced Server
+for Unix.  Please let us know if you can generate sniffer output for
+us to look at.  (TCPdump and/or Microsoft NetMon formats for input into
+<A HREF="http://www.ethereal.com/">Ethereal</A> are preferred.)
+</desc>
+</entry>
+
+<entry old="true">
+<title>jCIFS 0.4 is Now Final</title>
+<sub>posted by Mike, Fri Feb 16, 2001</sub>
+<desc>
+The jCIFS 0.4 series is now final. All of the idiosyncrasies of the
+various platforms have been worked out and overall performace is
+good. There are no known bugs but a couple of minor ones have
+been fixed.
+</desc>
+</entry>
+
+
+<entry old="true">
+<title>jcifs-0.4b3 released</title>
+<sub>posted by Mike, Sat Feb 10, 2001</sub>
+<desc>
+Heavily threaded torture test programs have revealed elusive
+reentrance problems and prompted total retooling of lower io
+layers. The name service code was particularly troubled. Special
+thanks to Paul for his help with this. There are also several
+other minor bug fixes and general spit and polish. See the <a
+href="http://auditorymodels.org/jcifs/src/README.txt">README</a>
+for details.
+</desc>
+</entry>
+
+
+<entry old="true">
+<title>More Bugs Fixed: jcifs-0.4b2 released</title>
+<sub>posted by Mike, Sat Jan 20, 2001</sub>
+<desc>
+More bug's have been revieled and squashed. Thanks to all who have helped
+with beta testing this. It should be pretty stable at this point. See
+the README for details but you should upgrade regardless.
+</desc>
+</entry>
+
+<entry old="true">
+<title>Bug Fixed: jcifs-0.4b1 released</title>
+<sub>posted by Mike, Wed Jan 4, 2001</sub>
+<desc>
+A serious bug was discovered and fixed. The new packages are
+in the download directory. If two different host names where
+queried quickly back to back the returned names could get mixed
+up because the transaction id used to coordinate concurrent name
+service queries was not being incremented. Thank's to the <a
+href="http://jakarta.apache.org/ant/index.html">Ant build tool</a>
+new packages where built and up in no time flat.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.4b released</title>
+<sub>posted by Mike, Wed Jan 3, 2001</sub>
+<desc>
+The jcifs client is now stable and ready for use. This is not
+"infrastructure" anymore. It _should_ work flawlessly. I got
+rid of quiet a bit of fat such as that "Demultiplexer" thing I
+preached for two months :~) I took Chris' advice and created our
+own normalized abstraction based on the java.io.File class for
+the API. There's no XFile accessor but the URL protocol handler
+is in place. This is NOT alpha code and it will only be beta
+until I get some confirmation that it works for everybody. If you
+have any problems get on the mailing list. Eveything's in the <a
+href="http://auditorymodels.org/jcifs/src/">src directory</a>. Happy
+New Year!
+</desc>
+</entry>
+
+<entry old="true">
+<title>Licensing Model</title>
+<sub>posted by Chris, Mon Jul 24, 2000</sub>
+<desc>
+After much debate, we have decided to use the GNU <A
+HREF="http://www.gnu.org/copyleft/lesser.html">LGPL</A> to license the
+jCIFS class library.  There are <A
+HREF="http://www.gjt.org/info/policy/license/policy.shtml">issues</A> to
+consider when using the regular <A
+HREF="http://www.gnu.org/copyleft/gpl.html">GPL</A> to license Java code.
+See also <A HREF="http://www.gnu.org/software/java/">GNU's Java pages</A>.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.3a released</title>
+<sub>posted by Mike, Thu Jul 20, 2000</sub>
+<desc>
+Lotta plumbing, finalized the server message block infrastructure,
+implemented some of XFileAccessor as well as URLStreamHandler,
+batching works great, replaced NbtSession with NbtSocket class that
+extends java.net.Socket(this is the way it should have been done), and
+more. Feel free to <a href='http://auditorymodels.org/jcifs/src/'>browse
+the source</a> as usual. Still alpha code.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.2a released</title>
+<sub>posted by Mike, Sun Jun 18, 2000</sub>
+<desc>
+Quite a range of new things but still just preliminary code(ie
+can't transfer a file). Mainly the new packet construction/deconstruction
+code has been implemented throughout(a joy to work with now). There's also
+some smb foundation code, server componentry and much more.
+</desc>
+</entry>
+
+<entry old="true">
+<title>jcifs-0.1 released</title>
+<sub>posted by Mike, Wed Mar 15, 2000</sub>
+<desc>
+The NetBIOS client implementation is complete.
+</desc>
+</entry>
+
+</news>
+<links>
+
+<a href="src/">Download</a>
+<a href="src/docs/ntlmhttpauth.html">JCIFS NTLM HTTP Authentication</a>
+<a href="src/docs/faq.html">The FAQ</a>
+<a href="http://news.gmane.org/gmane.network.samba.java">Mailing List Archive (GMANE)</a>
+<a href="src/docs/capture.html">Obtaining a Network Packet Capture</a>
+
+<group>
+<title>Developer Information</title>
+
+<a href="src/docs/api/">JCIFS API Documentation</a>
+<a href="src/docs/api/overview-summary.html#scp">Setting Client Properties</a>
+<a href="src/docs/resolver.html">Setting Name Resolution Properties</a>
+<a href="src/docs/pipes.html">Using JCIFS to Connect to Win32 Named Pipes</a>
+<a href="src/docs/authhandler.html">JCIFS Exceptions and NtlmAuthenticator</a>
+<a href="src/docs/httpclient.html">Using JCIFS NTLM Authentication for HTTP Connections</a>
+<a href="http://www.gnu.org/licenses/lgpl-2.1.txt">JCIFS is Licensed Under the LGPL</a>
+</group>
+
+<group>
+<title>Related Java Projects</title>
+<!--
+<desc>Listings here are not necessarily an endorsement by The JCIFS Project</desc>
+<a href="http://www.ioplex.com/jespa.html">Jespa library - NTLMv2 Servlet Filter and more</a>
+-->
+
+<a href="http://sourceforge.net/projects/j-interop/">j-interop - Java COM Interop (uses Jarapac)</a>
+<a href="http://sharehound.sourceforge.net/">sharehound - CIFS network search engine</a>
+<a href="http://sourceforge.net/projects/webdisk/">IntegraTUM WebDisk - HTTP to CIFS gateway</a>
+<a href="http://sourceforge.net/projects/jcifs-ext/">jcifs-ext - JCIFS Extensions</a>
+<a href="http://sourceforge.net/projects/jarapac/">Jarapac - DCE/RPC in Java</a>
+<a href="http://danadler.com/jacob/">The Jacob Project - Java/COM Bridge</a>
+<a href="http://www.jnbridge.com/">JNBridge - Java/.NET Bridge</a>
+<a href="http://j-integra.intrinsyc.com/j-integra/info/">J-Integra - DCE/RPC in Java</a>
+<a href="http://sourceforge.net/projects/davenport/">Davenport - WebDAV to CIFS gateway</a>
+<a href="http://sourceforge.net/project/showfiles.php?group_id=143373&amp;package_id=248550">Alfresco JLAN Shared File Drive Interface</a>
+</group>
+
+<group>
+<title>CIFS Authorities</title>
+
+<a href="http://www.samba.org/">http://www.samba.org/</a>
+<a href="http://www.samba-tng.org/">http://www.samba-tng.org/</a>
+</group>
+
+<group>
+<title>Other CIFS Utilities and Tools</title>
+
+<a href="http://www.amigasamba.org/">Samba for Amiga</a>
+<a href="http://www.obdev.at/products/sharity-light/">Sharity-Lite</a>
+<a href="http://shukwit.com/main.php">SMB Browse for MacOSX</a>
+<a href="http://xamba.sourceforge.net/index.shtml">Xamba Network Integration Project</a>
+</group>
+
+<group>
+<title>MSRPC</title>
+<a href="http://www.bindview.com/Support/RAZOR/Utilities/Windows/rpctools1.0-readme.cfm">Rpcdump utility for querying RPC servers</a>
+<a href="http://www.opengroup.org/onlinepubs/9629399/">OpenGroup DCE/RPC Specification</a>
+<a href="http://www.opengroup.org/onlinepubs/9629399/chap14.htm">OpenGroup DCE/RPC Specification - NDR</a>
+<a href="http://msdn.microsoft.com/library/default.asp?url=/archive/en-us/dnarolegen/html/msdn_aboutole.asp">What OLE Is Really About</a>
+</group>
+
+<group>
+<title>Kerberos</title>
+<a href="http://www.ietf.org/rfc/rfc1510.txt">RFC1510 - Kerberos V5 Specification</a>
+<a href="http://www.serverwatch.com/tutorials/article.php/2176201">How a Kerberos Logon Works in Win2K</a>
+<a href="http://www-106.ibm.com/developerworks/java/library/j-gss-sso/">JGSS Example</a>
+<a href="http://www.microsoft.com/technet/prodtechnol/windows2000serv/maintain/security/kerberos.mspx">Kerberos Explained</a>
+<a href="http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dnkerb/html/msdn_pac.asp">W2K PAC Specification</a>
+</group>
+
+<group>
+<title>Technical Documentation</title>
+
+<a href="http://ubiqx.org/cifs/">&#34;Implementing CIFS&#34; (complete online book)</a>
+<a href="http://ubiqx.org/cifs/rfc-draft/draft-leach-cifs-v1-spec-02.html"><i>Annotated</i> CIFS Specification: draft-leach-cifs-v1-spec-02.html</a>
+<a href="http://www.snia.org/tech_activities/CIFS/">SNIA CIFS Technical Reference (V1.0)</a>
+<a href="http://davenport.sourceforge.net/ntlm.html">The NTLM Authentication Protocol</a>
+<a href="http://www.pluralsight.com/keith/book/">A .NET Developer's Guide to Windows Security</a>
+<a href="http://msdn.microsoft.com/library/en-us/debug/base/system_error_codes__0-499_.asp">Windows System Error Codes</a>
+<a href="http://msdn.microsoft.com/library/en-us/netmgmt/netmgmt/network_management_error_codes.asp">Windows Network Management Error Codes</a>
+<a href="http://ubiqx.org/cifs/rfc-draft/rfc1001.html">rfc1001 - NetBIOS Concepts and Methods</a>
+<a href="http://ubiqx.org/cifs/rfc-draft/rfc1002.html">rfc1002 - NetBIOS Detailed Specifications</a>
+<a href="http://www.codefx.com/whitepapers.htm">CIFS Explained <small>(A whitepaper by John Kleven)</small></a>
+<a href="http://www.ietf.org/internet-drafts/draft-crhertel-smb-url-07.txt">SMB URL draft specification V07</a>
+<a href="http://ourworld.compuserve.com/homepages/timothydevans/nbf.htm">NetBIOS, NetBEUI, NBF, SMB, CIFS networking links page</a>
+<a href="http://msdn.microsoft.com/library/backgrnd/html/msdn_winswp.htm">Microsoft Writeup on WINS behavior</a>
+<a href="http://msdn.microsoft.com/library/backgrnd/html/msdn_winsoverview.htm">Microsoft Writeup on WINS under W2K</a>
+<a href="http://www.microsoft.com/windows2000/en/server/help/sag_WINS_und_BrowsingWithWins.htm">Microsoft Server Documentation on Browsing WANs using WINS</a>
+<a href="http://www.windowsitlibrary.com/Documents/Book.cfm?DocumentID=386">Windows IT Library: NT Network Plumbing</a>
+<a href="http://www.thursby.com/CIFS/">Thursby Software's CIFS pages</a>
+<a href="http://www.linux-mag.com/cgi-bin/printer.pl?issue=2001-05&amp;article=smb">Linux Mag: Understanding the Network Neighborhood</a>
+</group>
+
+<group>
+<title>Other</title>
+
+<a href="https://lists.samba.org/listinfo/jcifs">Join the JCIFS Mailing List</a>
+<a href="src/src/jcifs/">Browse the Source</a>
+<a href="src/docs/batching.html">Batching</a>
+<a href="http://www.gnu.org/">http://www.gnu.org/</a>
+<a href="http://www.opensource.org/">http://www.opensource.org/</a>
+<a href="http://discuss.microsoft.com/archives/cifs.html">Microsoft's CIFS Mailing List Archives</a>
+</group>
+
+</links>
+</proj>

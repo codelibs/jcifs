@@ -1,0 +1,41 @@
+TODO
+
+Possible UNC path issue related to DFS as described by Thomas Bley 29 Apr 2006 13:57:28 +0200.
+
+Integrate Kerberos patch (requires SPENGO rewrite)
+
+Implement full NTLMv2 support.
+
+Change the NTLM HTTP code, NtlmPasswordAuthentication and SmbTransport so that closing a transport invalidates any challenges. When this happends, trying to use the NPA will throw an SmbAuthException. An NPA with an invalid challenge should NEVER be used to access SMB resources (as it does now). This is also key to getting DFS to work with NetworkExplorer and Davenport.
+
+Replace UCS2-LE encoding/decoding with custom fast methods. Implement the changes in a way such that the language functions are not necessary. Test the client with j2me (although after 5 minutes on java.sun.com I was not able to find it).
+
+Switch to using "Buffer.java" style (provided there is no copying) like much of Eric's code. Already started to do this in 2.x (which was never released).
+
+Add more SMB URL support such as QUERY_STRING parameters.
+
+Interesting note: If you run examples/TransactNamedPipe.java against the IPC$/srvsvc it successfully echos the data (README.txt). Odd.
+
+Create ResourceBundle with internationalized error messages.
+
+Update NTLM HTTP Filter document.
+
+DONE(but not supported by NT) Specify last modified time in SMB_COM_CLOSE
+
+Implement these other methods?
+
+  getParentFile()
+  isAbsolute()
+  getAbsolutePath()
+  getAbsoluteFile()
+  getCanonicalFile()
+  deleteOnExit()
+  listRoots() - doesn't apply really
+  createTempFile()
+
+Correct for Unicode alignment in Trans2FindFirst2Response from NT with
+useUnicode=no bug? This incongruentcey between MS servers and their
+support for Unicode is the source of problems (e.g. the way short names
+are returned in SMB_COM_TRANS2_FIND_FIRST2 responses from NT with Unicode
+on/off. Is this still true?
+

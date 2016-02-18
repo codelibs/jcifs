@@ -1,0 +1,131 @@
+diff -Naur ../jcifs_1.2.6_org/src/jcifs/smb/SmbConstants.java src/jcifs/smb/SmbConstants.java
+--- ../jcifs_1.2.6_org/src/jcifs/smb/SmbConstants.java  Fri Oct 07 17:56:54 2005
++++ src/jcifs/smb/SmbConstants.java Tue Oct 18 12:16:06 2005
+@@ -13,7 +13,7 @@
+     static final int DEFAULT_RESPONSE_TIMEOUT = 10000;
+     static final int DEFAULT_SO_TIMEOUT = 15000;
+     static final int DEFAULT_RCV_BUF_SIZE = 60416;
+-    static final int DEFAULT_SND_BUF_SIZE = 16644;
++    static final int DEFAULT_SND_BUF_SIZE = 60416;
+     static final int DEFAULT_SSN_LIMIT = 250;
+ 
+     static final InetAddress LADDR = Config.getLocalHost();
+@@ -61,6 +61,8 @@
+     static final int CAP_LOCK_AND_READ    = 0x0100;
+     static final int CAP_NT_FIND          = 0x0200;
+     static final int CAP_DFS              = 0x1000;
++    static final int CAP_LARGE_READX      = 0x4000;
++    static final int CAP_LARGE_WRITEX     = 0x8000;
+ 
+     // file attribute encoding
+     static final int ATTR_READONLY   = 0x01;
+@@ -117,7 +119,10 @@
+                 ( USE_NTSMBS ? CAP_NT_SMBS : 0 ) |
+                 ( USE_NTSTATUS ? CAP_STATUS32 : 0 ) |
+                 ( USE_UNICODE ? CAP_UNICODE : 0 ) |
+-                CAP_DFS;
++                CAP_DFS |
++               CAP_LARGE_READX |
++               CAP_LARGE_WRITEX;
++
+     static final int FLAGS2 = Config.getInt( "jcifs.smb.client.flags2", DEFAULT_FLAGS2 );
+     static final int CAPABILITIES = Config.getInt( "jcifs.smb.client.capabilities", DEFAULT_CAPABILITIES );
+     static final boolean TCP_NODELAY = Config.getBoolean( "jcifs.smb.client.tcpNoDelay", false );
+diff -Naur ../jcifs_1.2.6_org/src/jcifs/smb/SmbFileInputStream.java src/jcifs/smb/SmbFileInputStream.java
+--- ../jcifs_1.2.6_org/src/jcifs/smb/SmbFileInputStream.java    Fri Oct 07 17:56:54 2005
++++ src/jcifs/smb/SmbFileInputStream.java   Wed Oct 19 14:00:24 2005
+@@ -32,6 +32,7 @@
+ 
+     private long fp;
+     private int readSize, openFlags;
++    private int readSizeFile;
+     private byte[] tmp = new byte[1];
+ 
+     SmbFile file;
+@@ -73,6 +74,12 @@
+         }
+         readSize = Math.min( file.tree.session.transport.rcv_buf_size - 70,
+                             file.tree.session.transport.server.maxBufferSize - 70 );
++
++        if(file.tree.session.transport.hasCapability(SmbConstants.CAP_LARGE_READX)) {
++            readSizeFile = Math.min(SmbConstants.RCV_BUF_SIZE - 70, 0xF000);
++        } else {
++            readSizeFile = readSize;
++        }
+     }
+ 
+ /**
+@@ -143,7 +150,9 @@
+ 
+         int r, n;
+         do {
+-            r = len > readSize ? readSize : len;
++            int blockSize = (file.getType() == SmbFile.TYPE_FILESYSTEM) ? readSizeFile : readSize;
++            
++            r = len > blockSize ? blockSize : len;
+ 
+             if( file.log.level > 2 )
+                 file.log.println( "read: len=" + len + ",r=" + r + ",fp=" + fp );
+diff -Naur ../jcifs_1.2.6_org/src/jcifs/smb/SmbFileOutputStream.java src/jcifs/smb/SmbFileOutputStream.java
+--- ../jcifs_1.2.6_org/src/jcifs/smb/SmbFileOutputStream.java   Fri Oct 07 17:56:54 2005
++++ src/jcifs/smb/SmbFileOutputStream.java  Wed Oct 19 13:57:14 2005
+@@ -34,6 +34,7 @@
+     private SmbFile file;
+     private boolean append, useNTSmbs;
+     private int openFlags, writeSize;
++    private int writeSizeFile;
+     private long fp;
+     private byte[] tmp = new byte[1];
+     private SmbComWriteAndX reqx;
+@@ -138,7 +139,14 @@
+         }
+         file.open( openFlags, SmbFile.ATTR_NORMAL, 0 );
+         this.openFlags &= ~(SmbFile.O_CREAT | SmbFile.O_TRUNC); /* in case close and reopen */
+-        writeSize = file.tree.session.transport.snd_buf_size - 70;
++        writeSize = Math.min( file.tree.session.transport.snd_buf_size - 70,
++                              file.tree.session.transport.server.maxBufferSize - 70 );
++        
++        if(file.tree.session.transport.hasCapability(SmbConstants.CAP_LARGE_WRITEX)) {
++            writeSizeFile = Math.min(SmbConstants.SND_BUF_SIZE - 70, 0xF000);
++        } else {
++            writeSizeFile = writeSize;
++        }
+ 
+         useNTSmbs = file.tree.session.transport.hasCapability( ServerMessageBlock.CAP_NT_SMBS );
+         if( useNTSmbs ) {
+@@ -217,7 +225,9 @@
+ 
+         int w;
+         do {
+-            w = len > writeSize ? writeSize : len;
++            int blockSize = (file.getType() == SmbFile.TYPE_FILESYSTEM) ? writeSizeFile : writeSize;
++            
++            w = len > blockSize ? blockSize : len;
+             if( useNTSmbs ) {
+                 reqx.setParam( file.fid, fp, len - w, b, off, w );
+                 file.send( reqx, rspx );
+diff -Naur ../jcifs_1.2.6_org/src/jcifs/smb/SmbRandomAccessFile.java src/jcifs/smb/SmbRandomAccessFile.java
+--- ../jcifs_1.2.6_org/src/jcifs/smb/SmbRandomAccessFile.java   Fri Oct 07 17:56:54 2005
++++ src/jcifs/smb/SmbRandomAccessFile.java  Wed Oct 19 14:20:45 2005
+@@ -54,8 +54,20 @@
+             throw new IllegalArgumentException( "Invalid mode" );
+         }
+         file.open( openFlags, SmbFile.ATTR_NORMAL, options );
+-        readSize = file.tree.session.transport.rcv_buf_size - 70;
+-        writeSize = file.tree.session.transport.snd_buf_size - 70;
++        
++        if(file.tree.session.transport.hasCapability(SmbConstants.CAP_LARGE_READX)) {
++            readSize = Math.min(SmbConstants.RCV_BUF_SIZE - 70, 0xF000);
++        } else {
++            readSize = file.tree.session.transport.rcv_buf_size - 70;
++        }
++        
++        if(file.tree.session.transport.hasCapability(SmbConstants.CAP_LARGE_WRITEX)) {
++            writeSize = Math.min(SmbConstants.SND_BUF_SIZE - 70, 0xF000);
++        } else {
++            writeSize = Math.min( file.tree.session.transport.snd_buf_size - 70,
++                                  file.tree.session.transport.server.maxBufferSize - 70 );
++        }
++        
+         fp = 0L;
+     }

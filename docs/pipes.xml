@@ -1,0 +1,125 @@
+<?xml version="1.0"?>
+
+<topic>
+
+<title>Using JCIFS to Connect to Win32 Named Pipes</title>
+
+The Named Pipe client functions of the Windows SDK have been implemented with jCIFS (Named Pipes are implemented over SMB) allowing Java programs to directly communicate with Win32 Named Pipe server processes.
+<p/>
+<i><b>Note:</b> Named Pipes are slow and less portable compared to sockets. There are few reasons why one might write a new application to use Win32 Named Pipes opposed to explicit network programming with Sockets.</i>
+<p/>
+There are several Win32 functions for sending and receiving data with Named Pipes all of which have been normalized into the Java <tt>XxxputStream</tt> interface however a different <tt>SmbNamedPipe</tt> constructor parameter is necessary depending on which style of messaging is to be used on the wire. These differences can be summarized by the type of Win32 functions that would be used had the client code been written for the Windows platform. The type of Named Pipe and it's attributes are specified when a server Named Pipe is created with a <tt>CreateNamedPipe</tt> Win32 call.
+<ul>
+<li><tt>CallNamedPipe</tt> To use the <tt>CallNamedPipe</tt> style of messaging use the <tt>SmbFile.PIPE_TYPE_CALL</tt> flag.</li>
+<li><tt>TransactNamedPipe</tt> To use the <tt>TransactNamedPipe</tt> style of messaging use the <tt>SmbFile.PIPE_TYPE_TRANSACT</tt> flag.</li>
+<li><tt>CreateFile</tt> The traditional file I/O oriented Named Pipe messaging used by the <tt>CreateFile</tt>, <tt>WriteFile</tt>, and <tt>ReadFile</tt> Win32 functions is used when the <tt>SmbNamedPipe</tt> constructor is <i>not</i> passed either of the above mentioned flags.</li>
+</ul>
+
+<p/>See also:
+<ul>
+<li><a href="http://msdn.microsoft.com/library/default.asp?url=/library/en-us/ipc/base/pipes.asp">Microsoft's Named Pipes SDK Documentation</a></li>
+<li><a href="api/jcifs/smb/SmbNamedPipe.html">JCIFS SmbNamedPipe API Documentation</a></li>
+<li><a href="../examples/pipes/">Win32 Named Pipe Example Utilities</a></li>
+<li><a href="../examples/">JCIFS SmbNamedPipe Example Programs</a></li>
+</ul>
+
+<h2>CallNamedPipe and TransactNamedPipe Style Named Pipes</h2>
+
+There are several ways to obtain an <tt>InputStream</tt> and/or <tt>OutputStream</tt> with a Win32 Named Pipe server process. First, the open flags and mode of the server Named Pipe must be known. If for example, the following Win32 call was issued to create the server Named Pipe:
+
+<pre>
+h = CreateNamedPipe("\\\\.\\PIPE\\foo",
+        PIPE_ACCESS_DUPLEX,
+        PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
+        10, bufferSize, bufferSize, NMPWAIT_WAIT_FOREVER, NULL);
+</pre>
+
+This would create a Transact oriented Named Pipe. To connect to this type of Named Pipe, the corresponding jCIFS code could be used:
+
+<pre>
+SmbNamedPipe pipe = new SmbNamedPipe( "<b>smb://server/IPC$/PIPE/foo</b>",
+        SmbNamedPipe.PIPE_TYPE_RDWR | <b>SmbNamedPipe.PIPE_TYPE_CALL</b> );
+OutputStream out = pipe.getNamedPipeOutputStream();
+InputStream in = pipe.getNamedPipeInputStream();
+</pre>
+
+If a message is written to the <tt>OutputStream</tt>, it's response can then be read from the <tt>InputStream</tt>. Take care that the same <tt>SmbNamedPipe</tt> instance is used with <tt>getNamedPipeOutputStream</tt> and <tt>getNamedPipeInputStream</tt> or the streams will not be connected to the same Named Pipe server instance.
+<p/>
+An alternative sample of jCIFS code that would provoke the <tt>TransactNamedPipe</tt> style of I/O would look like:
+
+<pre>
+SmbNamedPipe pipe = new SmbNamedPipe( "<b>smb://server/IPC$/foo</b>",
+        SmbNamedPipe.PIPE_TYPE_RDWR | <b>SmbNamedPipe.PIPE_TYPE_TRANSACT</b> );
+OutputStream out = pipe.getNamedPipeOutputStream();
+InputStream in = pipe.getNamedPipeInputStream();
+</pre>
+
+Again, writing to the <tt>OutputStream</tt> obtained from this pipe will result in data being available in it's <tt>InputStream</tt>. Also, note the lack of "/PIPE" in this SMB URL.
+
+<h2>File I/O Style Named Pipes</h2>
+
+The other type of Named Pipe can be created on the server by <i>not</i> specifying a pipe mode of <tt>PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE</tt> with the <tt>CreateNamedPipe</tt> Win32 function. With this file I/O oriented Named Pipe, the corresponding jCIFS code could be used:
+
+<pre>
+SmbNamedPipe pipe = new SmbNamedPipe( "<b>smb://server/IPC$/foo</b>",
+        SmbNamedPipe.PIPE_TYPE_RDWR );
+InputStream in = pipe.getNamedPipeInputStream();
+OutputStream out = pipe.getNamedPipeOutputStream();
+</pre>
+
+Notice that for file I/O oriented Named Pipes the <tt>PIPE_TYPE_TRANSACT</tt> parameter is not specified and there is no <tt>PIPE</tt> in the URL. Incedentally, <tt>SmbFileInputStream</tt> or <tt>SmbFileOutputStream</tt> may be used to read or write to this type of Named Pipe as one might do with a regular file. However you cannot read and write to the same Named Pipe server instance without using <tt>SmbNamedPipe</tt> to associate the streams.
+<p/>
+Finally, if the server process is not ready to process the request a "All pipe instances are busy" error may result in which case it will be necessary to sleep momentarily and try again.
+
+<h2>Running the CallNamedPipe.java Example Program</h2>
+
+The <tt>examples/CallNamedPipe.java</tt> program and <tt>examples/pipes/createnp.exe</tt> utility can be used to explore Named Pipes and the jCIFS Named Pipe client functionality. They, along with several other Named Pipe example programs and Win32 utility programs, were used to test the jCIFS implementation of Named Pipes. Users trying to write their own jCIFS Named Pipe clients might consult these programs to gain a better understanding of how jCIFS works with respect to Named Pipes.
+<p/>
+To run the <tt>CallNamedPipe</tt> example, which issues a Transact style Named Pipe call, create a Transact oriented Named Pipe with the <tt>createnp.exe</tt> utility like:
+
+<pre>
+C:\TEMP&gt; createnp
+dwOpenMode
+  0x00000003 PIPE_ACCESS_DUPLEX
+  0x00000001 PIPE_ACCESS_INBOUND
+  0x00000002 PIPE_ACCESS_OUTBOUND
+  0x80000000 FILE_FLAG_WRITE_THROUGH
+  0x40000000 FILE_FLAG_OVERLAPPED
+  0x00040000 WRITE_DAC
+  0x00080000 WRITE_OWNER
+  0x01000000 ACCESS_SYSTEM_SECURITY
+dwPipeMode
+  0x00000000 PIPE_TYPE_BYTE
+  0x00000004 PIPE_TYPE_MESSAGE
+  0x00000000 PIPE_READMODE_BYTE
+  0x00000002 PIPE_READMODE_MESSAGE
+  0x00000000 PIPE_WAIT
+  0x00000001 PIPE_NOWAIT
+defaults
+  inFile     = &lt;read from pipe input&gt;
+  outFile    = &lt;write to pipe output&gt;
+  dwOpenMode = PIPE_ACCESS_DUPLEX
+  dwPipeMode = PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT
+  bufferSize = 65535
+
+createnp \\.\pipe\name /I inFile /O outFile /M mode /P pmode /B bufferSize
+
+C:\TEMP&gt; createnp \\.\pipe\foo /P 0x6
+</pre>
+
+The <tt>0x6</tt> for the <tt>dwPipeMode</tt> parameter was determined by <tt>OR</tt>ing together the hexadecimal values for <tt>PIPE_TYPE_MESSAGE</tt> (<tt>0x4</tt>) and <tt>PIPE_READMODE_MESSAGE</tt> (<tt>0x2</tt>). The Windows Calculator program in Scientific mode can help you with generating these values. See the <a href="http://msdn.microsoft.com/library/en-us/ipc/base/createnamedpipe.asp">CreateNamedPipe</a> Win32 SDK Documentation for the exact meaning of these parameters.
+<p/>
+Now compile and run the <tt>CallNamedPipe.java</tt> program like:
+
+<pre>
+$ java -Djcifs.properties=my.prp CallNamedPipe smb://server/IPC$/PIPE/foo in out
+</pre>
+
+This will read a buffer full of the file <tt>in</tt> which will be echoed by the <tt>createnp</tt> server process and written to the <tt>out</tt> file. The <tt>createnp</tt> program will exit and report success:
+
+<pre>
+C:\TEMP&gt; createnp \\.\pipe\foo /P 0x6
+Success: operation performed successfully
+</pre>
+
+</topic>

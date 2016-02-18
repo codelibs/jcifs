@@ -1,0 +1,100 @@
+<?xml version="1.0"?>
+
+<topic>
+<title>Using JCIFS NTLM Authentication for HTTP Connections</title>
+
+Using jCIFS, support for the NTLM authentication protocol can be added to HTTP connections. This functionality was added to Java 1.4.2 for Windows; jCIFS extends this feature to all supported platforms, as well as older Java environments. This allows Java-based HTTP clients to connect to web sites which use the "NTLM" or "Negotiate" authentication schemes, providing easy integration with domain user accounts.
+
+<p/>
+
+<i><b>Important:</b> Sun's Java 1.4 for Windows has NTLM and Negotiate authentication support builtin. Because the JCIFS NtlmHttpURLConnection class is really just a wrapper for the default HTTP client, any authentication is intercepted by Sun's client thereby preventing JCIFS from be used to authenticate HTTP connections. If you wish to use the credentials of the current user you should not care but if alternative credentials are to be used, you will encounter this problem. Currently we do not know of a way to disable HTTP authentication in the Sun client.</i>
+
+<i><b>Note:</b> This functionality is a non-conformant extension to HTTP conceived entirely by Microsoft. It inappropriately uses HTTP headers and therefore may not work with all Java environments or HTTP connection implementation. Also, this flavor of password encryption is not very secure so under no circumstances should it be used to authenticate clients on the Internet.</i>
+<p/>
+<i><b>Note:</b> Currently, installing the jCIFS HTTP protocol handler will prevent HTTP PUT requests from working with or without NTLM HTTP authentication.</i>
+
+<h2>Installation and Setup</h2>
+
+The jCIFS NTLM support is implemented as a URLStreamHandler for HTTP connections. This handler "wraps" the default handler provided by your Java environment to add support for NTLM authentication.  There are two ways to install the handler:
+
+<ul>
+<li>
+<b>Add the "jcifs" package to the list of protocol handler packages</b>.
+The "java.protocol.handler.pkgs" property is a pipe-separated ("|") list of packages which supply protocol handlers to Java.  The "jcifs" package should be added to this list; this would typically be done by adding "<tt>-Djava.protocol.handler.pkgs=jcifs</tt>" to the command line when starting the application.
+</li>
+<li>
+<b>Register the handler using jcifs.Config.registerSmbURLHandler()</b>.
+As an alternative to the above, the static method <tt>registerSmbURLHandler</tt> in <tt>jcifs.Config</tt> will automatically install the jCIFS URL handlers. <b>Note that this method must be called prior to creating HTTP URL objects</b>. This would typically be done within the application's <tt>main</tt> method.
+</li>
+</ul>
+
+After the handler is installed, NTLM support is transparently available to your application.  To create a connection to an NTLM-protected site, you would simply do something like:
+
+<pre>
+URL myUrl = new URL("http://server/index.html");
+InputStream stream = myUrl.openStream();
+</pre>
+
+Authentication information is obtained from jCIFS properties (outlined below).  Authentication information for a particular connection can also be explicitly provided within the URL itself, using the form:
+
+<pre>
+http://DOMAIN%5Cuser:password@server/index.html
+</pre>
+
+<h2>JCIFS Properties Meaningful to NTLM HTTP Clients</h2>
+
+The table below outlines the properties which directly affect the use of NTLM for HTTP connections.  These can be passed via system properties, or set explicitly within an application using the <tt>jcifs.Config.setProperty</tt> method. <b>These properties must be set before jCIFS classes are used</b>. For a complete list of jCIFS properties refer to the <a href="api/index.html" target="_top">overview page of the API documentation</a>.
+
+<p/>
+<table>
+<tr>
+    <td width="20%"><b>http.auth.ntlm.domain</b></td>
+    <td>
+        The default authentication domain in which the user is a member.
+        This is the property used by Sun's implementation of NTLM in JDK 1.4.2;
+        if set, it will override <tt>jcifs.smb.client.domain</tt> (to ensure
+        consistent operation across platforms).
+        This is only used if authentication information is not provided within
+        the URL itself.
+    </td>
+</tr>
+<tr>
+    <td width="20%"><b>jcifs.smb.client.domain</b></td>
+    <td>
+        The default authentication domain in which the user is a member.
+        This is used if authentication information is not provided within the
+        URL itself.
+    </td>
+</tr>
+<tr>
+    <td width="20%"><b>jcifs.smb.client.username</b></td>
+    <td>
+        The default username used if not specified within the URL itself.
+    </td>
+</tr>
+<tr>
+    <td width="20%"><b>jcifs.smb.client.password</b></td>
+    <td>
+        The default password used if not specified within the URL itself.
+    </td>
+</tr>
+<tr>
+    <td width="20%"><b>jcifs.netbios.hostname</b></td>
+    <td>
+        During NTLM authentication, the client's NetBIOS hostname is presented
+        to the server.  This property can be used to specify a particular name.
+        If not provided, a generic name will be dynamically generated
+        (i.e. <tt>JCIFS35_177_E6</tt>).
+    </td>
+</tr>
+</table>
+
+<h2>Compatibility Notes</h2>
+
+The functionality provided requires that the underlying HTTP implementation
+supports keep-alive connections.  This has been tested successfully under Sun's
+JDK 1.3.1_02, 1.3.1_06, 1.3.1_07, 1.4.0_01, and 1.4.2-beta.  It is known NOT to
+work on JDK 1.3, as well as the initial release of JDK 1.3.1.  Results on other
+JDK versions, as well as other vendor implementations, may vary.
+
+</topic>

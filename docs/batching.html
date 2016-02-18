@@ -1,0 +1,92 @@
+<html><head><title>Batching</title></head><body bgcolor="#ffffff">
+<table width="600"><tr><td>
+
+<h1>Batching</h1>
+
+The CIFS protocol provides a mechanism for issuing several commands in a single message. This performance enhancement is called "batching" or "chaining". For example an <code>SMB_COM_TREE_CONNECT_ANDX</code> is often batched "inside" an <code>SMB_COM_SESSION_SETUP_ANDX</code>. Furthermore, an <code>SMB_COM_QUERY_INFORMATION</code> might be batched in the <code>SMB_COM_TREE_CONNECT_ANDX</code> resulting in three commands being issued to the server in one message. There are of course many more permutations that can occur.
+
+<h2>Tuning Batched Requests</h2>
+
+Do not change batch level properties. They are considered advanced properties and should not be changed unless instructed to do so or if you <i>really</i> know what your doing. Setting a batch level property may result in commands failing on one machine and not on another in mysterious ways.
+
+<p>This library can optimally batch any request with any other although it is prevented from doing so in accordance with the CIFS specification. The CIFS specification does not, however, specify <i>how many</i> commands may be batched together in a given message. Below is a list of jcifs property identifiers that may be used to tune the "batch level" a command may assume relative to it's precedent command. For example the <code>SessionSetupAndX</code> may be followed by a <code>TreeConnectAndX</code> (that is to say the <code>TreeConnectAndX</code> is batched in the <code>SessionSetupAndX</code>) as indicated by it's subcategorized placement under <code>SessionSetupAndX</code> in the below list.
+
+<blockquote><pre>
+
+SessionSetupAndX
+    TreeConnectAndX
+
+TreeConnectAndX
+    CheckDirectory
+    CreateDirectory
+    Delete
+    DeleteDirectory
+    OpenAndX
+    Rename
+    Transaction
+    QueryInformation
+
+OpenAndX
+    ReadAndX
+
+NTCreateAndX
+    ReadAndX
+
+ReadAndX
+    Close
+
+WriteAndX
+    ReadAndX
+    Close
+
+</pre></blockquote>
+
+By default all commands are permitted to batch with their parent only one level deep. So at most only two commands may be issued in one message. To instruct jcifs to restrict a command from being batched at all or enable a command to be at most the second, third, or the Nth place command one might set a property like:
+
+<blockquote><pre>
+jcifs.smb.client.TreeConnectAndX.QueryInformation = 2
+</pre></blockquote>
+
+Batch level properties begin with <code>jcifs.smb.client</code> followed by one of the parent commands in the list above (<code>AndX</code> commands) and the command to be batched (must be listed under the the parent). The value must be an integer indicating the "batch level". The above example would instruct jcifs that the <code>QueryInformation</code> command may be batched with the <code>TreeConnectAndX</code> command only if it is the second command or less in a series of batched commands. So for example a <code>SessionSetupAndX</code> followed by a <code>TreeConnectAndX</code> followed by a <code>QueryInformation</code> may batch in the same message because by default the <code>TreeConnectAndX</code> may be the first in a series and, according to the example property above, the <code>QueryInformation</code> may be the second of a series, which in this case it is. If however this property read:
+
+<blockquote><pre>
+jcifs.smb.client.TreeConnectAndX.QueryInformation = 0
+</pre></blockquote>
+
+the above scenario would result in the <code>SessionSetupAndX</code> and <code>TreeConnectAndX</code> commands being issued to the server first followed by the <code>QueryInformation</code> by itself in a separate message. IOW the zero would specifies that <code>QueryInformation</code> may not be batched with <code>TreeConnectAndX</code> at all.
+
+<h2>Potential Problems</h2>
+
+Unfortunately it appears as though most(if not all) servers allow for batching on a message by message basis. Meaning it is not uniformly supported. For example NT will allow the <code>QueryInformation</code> to appear as the second command (double batched) of a <code>SessionSetupAndX</code> and <code>TreeConnectAndX</code>  whereas Samba will only allow the single batch. It is generally assumed that all messages indicated in the CIFS specification as batchable may be single batched.
+
+<h2>Why Should Batching Behavior Be Changed?</h2>
+
+Again, in all likelyhood you would not want to change these properties. However there are at least three reasons why one might want to change batching behavior. One is if a special message is manually constructed to perform a specific function and batch all messages together must be enabled. For example <code>SessionSetupAndX</code>, <code>TreeConnectAndX</code>, <code>OpenAndX</code>, <code>ReadAndX</code>, and <code>Close</code> might all be batched together so that a small file could be read in one message. Under certain conditions this might prove to be a huge performace benifit(if you read 100 files on 100 different servers quickly for example). However it is highly unlikely that any server would support batching to this degree.
+
+<p>Contrarily, it might be discovered that a particular server does not support batching in one form or another in which case it can be turned off. This can be occomplished by specifying a batch level of 0 for the errant command(s) or more easily by simply setting the <code>jcifs.smb.client.useBatching</code> property to <code>false</code>.
+
+<p>Another reason might be that a CIFS developer is tesing/developing a server's batching functionality.
+
+<blockquote><pre>
+
+jcifs.smb.client.SessionSetupAndX.TreeConnectAndX = 1
+jcifs.smb.client.TreeConnectAndX.CheckDirectory = 1
+jcifs.smb.client.TreeConnectAndX.CreateDirectory = 1
+jcifs.smb.client.TreeConnectAndX.Delete = 1
+jcifs.smb.client.TreeConnectAndX.DeleteDirectory = 1
+jcifs.smb.client.TreeConnectAndX.Delete = 1
+jcifs.smb.client.TreeConnectAndX.OpenAndX = 1
+jcifs.smb.client.TreeConnectAndX.OpenAndX = 1
+jcifs.smb.client.TreeConnectAndX.Rename = 1
+jcifs.smb.client.TreeConnectAndX.Transaction = 1
+jcifs.smb.client.TreeConnectAndX.QueryInformation = 1
+jcifs.smb.client.OpenAndX.ReadAndX = 1
+jcifs.smb.client.NTCreateAndX.ReadAndX = 1
+jcifs.smb.client.ReadAndX.Close = 1
+jcifs.smb.client.WriteAndX.ReadAndX = 1
+jcifs.smb.client.WriteAndX.Close = 1
+
+</pre></blockquote>
+
+</td></tr></table>
+</body></html>

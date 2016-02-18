@@ -1,0 +1,69 @@
+diff -Nuarw old/src/jcifs/http/NtlmHttpFilter.java new/src/jcifs/http/NtlmHttpFilter.java
+--- old/src/jcifs/http/NtlmHttpFilter.java  2006-12-12 15:00:14.000000000 -0800
++++ new/src/jcifs/http/NtlmHttpFilter.java  2007-04-03 14:37:25.000000000 -0700
+@@ -24,7 +24,7 @@
+ 
+ import java.io.*;
+ import java.util.Enumeration;
+-import java.net.UnknownHostException;
++import java.net.*;
+ import javax.servlet.*;
+ import javax.servlet.http.*;
+ import jcifs.*;
+@@ -72,8 +72,26 @@
+                 Config.setProperty( name, filterConfig.getInitParameter( name ));
+             }
+         }
++        
+         defaultDomain = Config.getProperty("jcifs.smb.client.domain");
+         domainController = Config.getProperty( "jcifs.http.domainController" );
++        if (domainController != null) {
++           String[] domainControllerList = domainController.split(",");
++            
++            if (domainControllerList.length > 1) {
++                String controllerTimeout = Config.getProperty( "jcifs.http.controllerTimeout");
++                String controllerPort = Config.getProperty("jcifs.http.controllerPort");
++                int controllerPortInt = controllerPort == null ? 139 : Integer.parseInt(controllerPort);
++
++                domainController = findActiveController(
++                        domainControllerList, 
++                        Integer.parseInt(controllerTimeout), 
++                        controllerPortInt);
++            } else {
++                domainController = domainControllerList[0];
++            }
++        }    
++
+         if( domainController == null ) {
+             domainController = defaultDomain;
+             loadBalance = Config.getBoolean( "jcifs.http.loadBalance", true );
+@@ -118,6 +136,28 @@
+         chain.doFilter( new NtlmHttpServletRequest( req, ntlm ), response );
+     }
+ 
++    protected String findActiveController( String[] controllerList,
++                int controllerTimeout,
++                int controllerPort) {
++        String activeController = "";
++      
++        for (int x = 0; x < controllerList.length; x++) {
++            try {
++               activeController = controllerList[x];
++               InetSocketAddress addr = new InetSocketAddress(activeController, controllerPort);
++               Socket controller = new Socket();
++               controller.connect(addr, controllerTimeout);
++               controller.setSoLinger(true,1);
++               controller.close();
++               break; 
++            } catch (Exception e) {
++                continue;
++            } 
++        }
++        
++        return activeController;
++    }
++ 
+     /**
+      * Negotiate password hashes with MSIE clients using NTLM SSP
+      * @param req The servlet request
+

@@ -1,0 +1,12 @@
+"for my opinion, jcifs is one of the best supported open source projects!" - paul
+
+"Hi there, I was very impressed to stumble across jcifs. I was so excited, I did a little dance. I have configured Tomcat with the jcifs.http.NtlmHttpFilter, and it is working beautifully." - Andrew S.
+
+"It is a fine library indeed." - Bren C.
+
+"Btw. jCIFS is great product - we use this in production (0.7.8) - in next 2 weeks we will test 0.7.14 with about 2000 concurrent users in our intranet." - Sylwester L.
+
+"thanks alot i find want i want and am writing my program which shows the shared directories and downloads by clicking them. thank you a alot! with my best wishes............" - spawnnn
+
+"Many thanks for an excellent product -- I've been using it for a while now and it rocks!" - Persona Non Grata
+

@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+
+<topic>
+<title>WINS vs NBNS</title>
+
+The Windows Internet Naming Service(WINS) is Microsoft's implementation of the NetBIOS Name Server(NBNS). This product and it's name is so pervasive in the industry that the term NBNS is not widely known. It is for this reason that the term 'WINS' has been chosen in favor if the more formal 'NBNS' for use in documentation, property names, etc. 
+
+</topic>

@@ -1,0 +1,7 @@
+
+thread.0.from.url = smb://dom\;usr:pas@svr1/shr/dir/
+thread.0.to.url = smb://dom\;usr:pas@svr2/shr/dir/
+thread.1.from.url = smb://dom\;usr:pas@svr1/shr/dir/
+thread.1.to.url = smb://dom\;usr:pas@svr2/shr/dir/
+thread.2.from.url = smb://dom\;usr:pas@svr1/shr/dir/
+thread.2.to.url = smb://dom\;usr:pas@svr2/shr/dir/

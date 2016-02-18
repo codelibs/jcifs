@@ -1,0 +1,86 @@
+<?xml version="1.0"?>
+
+<topic>
+<title>Obtaining a Network Packet Capture</title>
+
+A packet capture is a recording of network traffic. These can be extremely useful when trying to decipher problems with network capable softare.
+If for example, you are having a problem with the <a href="http://jcifs.samba.org">jCIFS</a> client that you do not understand you might send a message to the <a href="http://lists.samba.org/listinfo/jcifs">jCIFS mailing list</a> with an explaination of the problem, which version of jCIFS you're using, etc.
+Depending on the problem it is desireable to also have a packet capture of the errant traffic and, for maximum results, a packet capture of the analygous operation succeeding (preferrably with a Windows 2000 client which is what jCIFS tries to emulate as closely as possible). Do not send packet captures to public mailing lists if you are not certain it does not contain personal information such as password hashes. If the captures are required a developers will instruct you to send them directly.
+
+<h2>How to Obtain a Packet Capture</h2>
+
+To take a packet capture of network traffic it is necessary to run special software on a machine that is capable of receiving the traffic of interest. There are many programs that can do this. Three popular ones are:
+
+<ul>
+<li><b>Tcpdump</b> is a command line utility for UNIX (there's also a windump for Windows). Tcpdump is virtually guaranteed to be distributed with your favorite Linux distribution. Otherwise you will need to find a package for your machine/architecture.</li>
+<li><b>Ethereal</b> is a GUI based application that will capture packets as well as display the individial fields within packets. Ethereal is also probably distributed with your favorite Linux distobution. Otherwise it can be obtained at <a href="http://www.ethereal.com/">http://www.ethereal.com</a>. It runs on UNIX as well and even Windows with an additional packet capture driver.</li>
+<li><b>NetMon</b> is a Windows application that will capture packets as well as display some information within packets (not as much as Ethereal). NetMon is usually bundled with other networking oriented packages such as SMS.</li>
+</ul>
+
+The packet capture program will need to run on the server (e.g. CIFS server), client (e.g. machine from which you are running the jCIFS client), or a machine connected to the same network as the server or client <i>without a switch in between</i>. For example if you insert a simple hub between the client and server a workstation or laptop plugged into the hub should also be able to capture traffic of any client connected to the hub.
+
+<h2>Tcpdump</h2>
+Tcpdump is a commandline packet capture program for Linux and UNIX. Here is some sample output:
+
+<pre>
+[root@miallen3 root]# tcpdump 'port 137 || 138 || 139 || 445'
+tcpdump: listening on eth0
+00:35:54.713969 miallen3.foo.net.54090 &gt; wins.netbios-ns: NBT UDP PACKET(137): QUERY; REQUEST; UNICAST (DF)
+00:35:55.110033 wins.netbios-ns &gt; miallen3.foo.net.54090: NBT UDP PACKET(137): QUERY; POSITIVE; RESPONSE; UNICAST
+00:35:55.237285 miallen3.foo.net.46250 &gt; MIALLEN2.foo.net.netbios-ssn: S 781540350:781540350(0) win 5840 &lt;mss 1460,sackOK,timestamp 294697799 0,nop,wscale 0&gt; (DF)
+00:35:55.237426 MIALLEN2.foo.net.netbios-ssn &gt; miallen3.foo.net.46250: S 30250517:30250517(0) ack 781540351 win 64512 &lt;mss 1460&gt; (DF)
+00:35:55.237457 miallen3.foo.net.46250 &gt; MIALLEN2.foo.net.netbios-ssn: . ack 1 win 5840 (DF)
+00:35:55.247119 miallen3.foo.net.46250 &gt; MIALLEN2.foo.net.netbios-ssn: P 1:73(72) ack 1 win 5840NBT Packet (DF)
+00:35:55.247296 MIALLEN2.foo.net.netbios-ssn &gt; miallen3.foo.net.46250: P 1:5(4) ack 73 win 64440NBT Packet (DF)
+00:35:55.247340 miallen3.foo.net.46250 &gt; MIALLEN2.foo.net.netbios-ssn: . ack 5 win 5840 (DF)
+00:35:55.257196 miallen3.foo.net.46250 &gt; MIALLEN2.foo.net.netbios-ssn: P 73:124(51) ack 5 win 5840NBT Packet (DF)
+00:35:55.257374 MIALLEN2.foo.net.netbios-ssn &gt; miallen3.foo.net.46250: P 5:102(97) ack 124 win 64389NBT Packet (DF)
+00:35:55.293769 miallen3.foo.net.46250 &gt; MIALLEN2.foo.net.netbios-ssn: . ack 102 win 5840 (DF)
+00:35:55.323760 miallen3.foo.net.46250 &gt; MIALLEN2.foo.net.netbios-ssn: P 124:336(212) ack 102 win 5840NBT Packet (DF)
+00:35:55.386059 MIALLEN2.foo.net.netbios-ssn &gt; miallen3.foo.net.46250: P 102:254(152) ack 336 win 64177NBT Packet (DF)
+00:35:55.386090 miallen3.foo.net.46250 &gt; MIALLEN2.foo.net.netbios-ssn: . ack 254 win 5840 (DF)
+00:35:55.395819 miallen3.foo.net.46250 &gt; MIALLEN2.foo.net.netbios-ssn: P 336:462(126) ack 254 win 5840NBT Packet (DF)
+00:35:55.399767 MIALLEN2.foo.net.netbios-ssn &gt; miallen3.foo.net.46250: P 254:361(107) ack 462 win 64051NBT Packet (DF)
+00:35:55.403169 miallen3.foo.net.46250 &gt; MIALLEN2.foo.net.netbios-ssn: P 462:588(126) ack 361 win 5840NBT Packet (DF)
+00:35:55.403585 MIALLEN2.foo.net.netbios-ssn &gt; miallen3.foo.net.46250: P 361:468(107) ack 588 win 63925NBT Packet (DF)
+00:35:55.427905 miallen3.foo.net.46250 &gt; MIALLEN2.foo.net.netbios-ssn: P 588:704(116) ack 468 win 5840NBT Packet (DF)
+00:35:55.428252 MIALLEN2.foo.net.netbios-ssn &gt; miallen3.foo.net.46250: P 468:532(64) ack 704 win 63809NBT Packet (DF)
+00:35:55.432571 miallen3.foo.net.46250 &gt; MIALLEN2.foo.net.netbios-ssn: P 704:749(45) ack 532 win 5840NBT Packet (DF)
+00:35:55.432825 MIALLEN2.foo.net.netbios-ssn &gt; miallen3.foo.net.46250: P 532:571(39) ack 749 win 63764NBT Packet (DF)
+00:35:55.448894 miallen3.foo.net.46250 &gt; MIALLEN2.foo.net.netbios-ssn: F 749:749(0) ack 571 win 5840 (DF)
+00:35:55.449059 MIALLEN2.foo.net.netbios-ssn &gt; miallen3.foo.net.46250: F 571:571(0) ack 750 win 63764 (DF)
+00:35:55.449110 miallen3.foo.net.46250 &gt; MIALLEN2.foo.net.netbios-ssn: . ack 572 win 5840 (DF)
+
+25 packets received by filter
+0 packets dropped by kernel
+</pre>
+
+The above is not a full packet capture. It just prints summary output to the terminal window. Each line represents one network packet. The columns can differ depending on the protocol of the packet but the first three columns are the time the packet was received, the source host and port, and the destination host and port. Sometimes hostnames are used instead of IP addresses and ports can be substituted with the service name from /etc/services (e.g. 'netbios-ssn' over which CIFS/SMB traffic is transferred is port 139).
+
+<p/>
+
+To obtain a full packet capture with tcpdump you need to use '-s 0' to prevent the payload from being stipped and direct the ouput to a file like the following:
+
+<pre>
+[root@miallen3 root]# <b><font color="#F00000">tcpdump -s 0 -w mycapture.pcap 'port 137 || 138 || 139 || 445'</font></b>
+tcpdump: listening on eth0
+
+38 packets received by filter
+0 packets dropped by kernel
+</pre>
+
+Notice you must be root to run any packet capture software. This is because the networking card needs to be switched into "promiscuous mode". Sometimes a computer will beep when this happends to indicate to adminstrative personnel that someone is actively capturing traffic. The expression at the end of the commandline above instructs tcpdump to listen for packets on ports 137, 138, 139, and 445. These are the ports of interest for the CIFS/SMB protocol. If no expression is provided all traffic will be captured.
+
+<h2>Ethereal</h2>
+
+Ethereal is a packet capture program but it also has a very nice user interface for examining the contents of packets. For example, the jCIFS client was developed almost entirely from viewing Ethereal packet captures. Ethereal will also understand NetMon and tcpdump packet captures.
+
+<p/>
+
+To capture packets using Ethereal start it as root by just typing 'ethereal'. This will launch the UI. Select Capture &gt; Start and change the Interface to 'any'. Enter a filter if necessary. For example, to capture jCIFS traffic enter a filter of 'port 137 || 138 || 139 || 445' (and maybe add '|| port 8080' for NTLM HTTP traffic or whatever port your Servlet container is servicing clients on). Click on Ok to start capturing packets. Now perform the operation you wish to capture and hit stop. See if the traffic of interest has been captured and use File &gt; Save As to save it as libpcap format. I recommend using a file extension of '.pcap' for Ethereal captures to distinquish between libpcap captures and NetMon captures which use filename extensions of '.cap'.
+
+<h2>Microsoft NetMon</h2>
+
+If you do not have root access to Linux or UNIX machine with packet capture software on the network of interest try to get a copy of NetMon for Windows. NetMon is also a GUI. It isn't as nice as Ethereal but it will permit you get capture packets just the same. NetMon is usually packaged as an add-on for other software like SMS.
+
+</topic>

@@ -1,0 +1,6 @@
+C:\tmp>ktpass /princ HTTP/www.foo.net@WIN.NET /ptype KRB5_NT_PRINCIPAL /desonly /pass asj7j112233hh4455 /mapuser test2
+Targeting domain controller: ts0.win.net
+Using legacy password setting method
+Successfully mapped HTTP/www.foo.net to test2.
+Key created.
+Account test2 has been set for DES-only encryption.

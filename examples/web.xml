@@ -1,0 +1,35 @@
+<web-app id='/'>
+
+<filter
+    filter-name='ntlm'
+    filter-class='jcifs.http.NtlmHttpFilter'>
+
+    <init-param>
+        <param-name>jcifs.netbios.wins</param-name>
+        <param-value>164.152.78.10,164.152.4.22</param-value>
+    </init-param>
+
+    <init-param>
+        <param-name>jcifs.smb.client.domain</param-name>
+        <param-value>NYC-USERS</param-value>
+    </init-param>
+
+    <init-param>
+        <param-name>jcifs.smb.client.username</param-name>
+        <param-value>jcifssvcacct</param-value>
+    </init-param>
+    <init-param>
+        <param-name>jcifs.smb.client.password</param-name>
+        <param-value>VeRYr@nDoMpa$sW0rD</param-value>
+    </init-param>
+
+    <init-param>
+        <param-name>jcifs.util.loglevel</param-name>
+        <param-value>2</param-value>
+    </init-param>
+</filter>
+<filter-mapping
+    url-pattern='/*'
+    filter-name='ntlm'/>
+
+</web-app>

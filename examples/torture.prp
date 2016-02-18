@@ -1,0 +1,9 @@
+
+torture.src.url = smb://dom\;miallen:pass@server/pub/
+torture.dst.domain = dom
+torture.dst.username = miallen
+torture.dst.password = pass
+torture.dst.server = server/
+torture.dst.share = share52/
+torture.dst.directory = torture1/
+

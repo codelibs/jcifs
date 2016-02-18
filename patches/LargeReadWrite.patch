@@ -1,0 +1,141 @@
+### Eclipse Workspace Patch 1.0
+#P jcifs
+Index: src/jcifs/smb/SmbFileOutputStream.java
+===================================================================
+--- src/jcifs/smb/SmbFileOutputStream.java  (revision 54857)
++++ src/jcifs/smb/SmbFileOutputStream.java  (working copy)
+@@ -33,7 +33,7 @@
+ 
+     private SmbFile file;
+     private boolean append, useNTSmbs;
+-    private int openFlags, access, writeSize;
++    private int openFlags, writeSizeFile, access, writeSize;
+     private long fp;
+     private byte[] tmp = new byte[1];
+     private SmbComWriteAndX reqx;
+@@ -142,6 +142,11 @@
+         file.open( openFlags, access | SmbConstants.FILE_WRITE_DATA, SmbFile.ATTR_NORMAL, 0 );
+         this.openFlags &= ~(SmbFile.O_CREAT | SmbFile.O_TRUNC); /* in case close and reopen */
+         writeSize = file.tree.session.transport.snd_buf_size - 70;
++        if((file.tree.session.transport.server.capabilities & SmbConstants.CAP_LARGE_WRITEX) == SmbConstants.CAP_LARGE_WRITEX) {
++            writeSizeFile = Math.min(SmbConstants.RCV_BUF_SIZE - 70, 0xFFFF - 70);
++        } else {
++            writeSizeFile = writeSize;
++        }
+ 
+         useNTSmbs = file.tree.session.transport.hasCapability( ServerMessageBlock.CAP_NT_SMBS );
+         if( useNTSmbs ) {
+@@ -233,15 +238,17 @@
+ 
+         int w;
+         do {
+-            w = len > writeSize ? writeSize : len;
++            int blockSize = (file.getType() == SmbFile.TYPE_FILESYSTEM) ? writeSizeFile : writeSize;
++            w = len > blockSize ? blockSize : len;
++
+             if( useNTSmbs ) {
+                 reqx.setParam( file.fid, fp, len - w, b, off, w );
+-if ((flags & 1) != 0) {
+-    reqx.setParam( file.fid, fp, len, b, off, w );
+-    reqx.writeMode = 0x8;
+-} else {
+-    reqx.writeMode = 0;
+-}
++            if ((flags & 1) != 0) {
++                reqx.setParam( file.fid, fp, len, b, off, w );
++                reqx.writeMode = 0x8;
++            } else {
++                reqx.writeMode = 0;
++            }
+                 file.send( reqx, rspx );
+                 fp += rspx.count;
+                 len -= rspx.count;
+Index: src/jcifs/smb/SmbRandomAccessFile.java
+===================================================================
+--- src/jcifs/smb/SmbRandomAccessFile.java  (revision 54857)
++++ src/jcifs/smb/SmbRandomAccessFile.java  (working copy)
+@@ -55,8 +55,19 @@
+             throw new IllegalArgumentException( "Invalid mode" );
+         }
+         file.open( openFlags, access, SmbFile.ATTR_NORMAL, options );
+-        readSize = file.tree.session.transport.rcv_buf_size - 70;
+-        writeSize = file.tree.session.transport.snd_buf_size - 70;
++        
++      if((file.tree.session.transport.server.capabilities & SmbConstants.CAP_LARGE_READX) == SmbConstants.CAP_LARGE_READX) {
++            readSize = Math.min(SmbConstants.RCV_BUF_SIZE - 70, 0xFFFF -70);
++        } else {
++            readSize = file.tree.session.transport.rcv_buf_size - 70;
++        }
++        
++        if((file.tree.session.transport.server.capabilities & SmbConstants.CAP_LARGE_WRITEX) == SmbConstants.CAP_LARGE_WRITEX) {
++            writeSize = Math.min(SmbConstants.SND_BUF_SIZE - 70, 0xFFFF - 70);
++        } else {
++            writeSize = Math.min( file.tree.session.transport.snd_buf_size - 70,
++                                  file.tree.session.transport.server.maxBufferSize - 70 );
++        }
+         fp = 0L;
+     }
+ 
+Index: src/jcifs/smb/SmbConstants.java
+===================================================================
+--- src/jcifs/smb/SmbConstants.java (revision 54857)
++++ src/jcifs/smb/SmbConstants.java (working copy)
+@@ -12,8 +12,8 @@
+     static final int DEFAULT_MAX_MPX_COUNT = 10;
+     static final int DEFAULT_RESPONSE_TIMEOUT = 30000;
+     static final int DEFAULT_SO_TIMEOUT = 35000;
+-    static final int DEFAULT_RCV_BUF_SIZE = 60416;
+-    static final int DEFAULT_SND_BUF_SIZE = 16644;
++   static final int DEFAULT_RCV_BUF_SIZE = 0xFFFF;
++   static final int DEFAULT_SND_BUF_SIZE = 0xFFFF;
+     static final int DEFAULT_SSN_LIMIT = 250;
+ 
+     static final InetAddress LADDR = Config.getLocalHost();
+@@ -61,7 +61,9 @@
+     static final int CAP_LEVEL_II_OPLOCKS = 0x0080;
+     static final int CAP_LOCK_AND_READ    = 0x0100;
+     static final int CAP_NT_FIND          = 0x0200;
+-    static final int CAP_DFS              = 0x1000;
++    static final int CAP_DFS              = 0x1000;
++   static final int CAP_LARGE_READX = 0x4000;
++   static final int CAP_LARGE_WRITEX = 0x8000;
+     static final int CAP_EXTENDED_SECURITY = 0x80000000;
+ 
+     // file attribute encoding
+Index: src/jcifs/smb/SmbFileInputStream.java
+===================================================================
+--- src/jcifs/smb/SmbFileInputStream.java   (revision 54857)
++++ src/jcifs/smb/SmbFileInputStream.java   (working copy)
+@@ -34,7 +34,7 @@
+ public class SmbFileInputStream extends InputStream {
+ 
+     private long fp;
+-    private int readSize, openFlags, access;
++    private int readSize, readSizeFile, openFlags, access;
+     private byte[] tmp = new byte[1];
+ 
+     SmbFile file;
+@@ -76,7 +76,12 @@
+             file.connect0();
+         }
+         readSize = Math.min( file.tree.session.transport.rcv_buf_size - 70,
+-                            file.tree.session.transport.server.maxBufferSize - 70 );
++                            file.tree.session.transport.server.maxBufferSize - 70 );
++        if((file.tree.session.transport.server.capabilities & SmbConstants.CAP_LARGE_READX) == SmbConstants.CAP_LARGE_READX) {
++            readSizeFile = Math.min(SmbConstants.RCV_BUF_SIZE - 70, 0xFFFF - 70);
++        } else {
++            readSizeFile = readSize;
++        }
+     }
+ 
+     protected IOException seToIoe(SmbException se) {
+@@ -168,7 +173,8 @@
+ 
+         int r, n;
+         do {
+-            r = len > readSize ? readSize : len;
++            int blockSize = (file.getType() == SmbFile.TYPE_FILESYSTEM) ? readSizeFile : readSize;
++            r = len > blockSize ? blockSize : len;
+ 
+             if( file.log.level >= 4 )
+                 file.log.println( "read: len=" + len + ",r=" + r + ",fp=" + fp );

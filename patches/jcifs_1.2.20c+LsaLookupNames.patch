@@ -1,0 +1,328 @@
+diff -ruNd --strip-trailing-cr jcifs_1.2.20c/src/jcifs/dcerpc/msrpc/MsrpcLookupNames.java jcifs_1.2.20c+LsaLookupNames/src/jcifs/dcerpc/msrpc/MsrpcLookupNames.java
+--- jcifs_1.2.20c/src/jcifs/dcerpc/msrpc/MsrpcLookupNames.java  1970-01-01 01:00:00.000000000 +0100
++++ jcifs_1.2.20c+LsaLookupNames/src/jcifs/dcerpc/msrpc/MsrpcLookupNames.java   2008-04-21 23:54:24.000000000 +0200
+@@ -0,0 +1,16 @@
++package jcifs.dcerpc.msrpc;
++
++
++public class MsrpcLookupNames extends lsarpc.LsarLookupNames {
++    public MsrpcLookupNames(LsaPolicyHandle policyHandle, String names[]) {
++   super(
++       policyHandle,
++       names,
++       (short)1,
++       0
++   );
++
++        ptype = 0;
++        flags = DCERPC_FIRST_FRAG | DCERPC_LAST_FRAG;
++    }
++}
+diff -ruNd --strip-trailing-cr jcifs_1.2.20c/src/jcifs/dcerpc/msrpc/lsarpc.java jcifs_1.2.20c+LsaLookupNames/src/jcifs/dcerpc/msrpc/lsarpc.java
+--- jcifs_1.2.20c/src/jcifs/dcerpc/msrpc/lsarpc.java    2008-04-25 19:34:39.000000000 +0200
++++ jcifs_1.2.20c+LsaLookupNames/src/jcifs/dcerpc/msrpc/lsarpc.java 2008-05-23 16:44:42.000000000 +0200
+@@ -1,5 +1,7 @@
+ package jcifs.dcerpc.msrpc;
+ 
++import java.nio.charset.Charset;
++
+ import jcifs.dcerpc.*;
+ import jcifs.dcerpc.ndr.*;
+ 
+@@ -848,6 +850,93 @@
+             retval = (int)_src.dec_ndr_long();
+         }
+     }
++    public static class LsarLookupNames extends DcerpcMessage {
++   protected static final Charset csULU   = Charset.forName("UnicodeLittleUnmarked");
++
++   public int getOpnum() { return 0x0e; }
++
++   public int retval;
++   public rpc.policy_handle handle;
++   public String names[];
++   public LsarRefDomainList domains;
++   public LsarTransSidArray sids;
++   public short level;
++   public int count;
++
++   public LsarLookupNames(
++       rpc.policy_handle handle,
++       String names[],
++       short level,
++       int count
++   ) {
++       this.handle = handle;
++       this.names = names;
++       this.level = level;
++       this.count = count;
++   }
++
++   public void encode_in(NdrBuffer _dst) throws NdrException {
++       handle.encode(_dst);
++
++       _dst.align(4);
++
++       _dst.enc_ndr_long(names.length);
++       _dst.enc_ndr_long(names.length);
++
++       for(int i = 0; i < names.length; ++i) {
++       int wlen = 2 * names[i].length();
++
++       _dst.enc_ndr_short(wlen);
++       _dst.enc_ndr_short(wlen);
++       _dst.enc_ndr_long(1);
++       }
++
++       // Encode names
++       for(int i = 0; i < names.length; ++i) {
++       String name = names[i];
++       int len = name.length();
++
++       _dst.enc_ndr_long(len);
++       _dst.enc_ndr_long(0);
++       _dst.enc_ndr_long(len);
++
++       System.arraycopy(
++           name.getBytes(csULU), 0,
++           _dst.buf, _dst.index,
++           2 * len
++       );
++       _dst.advance(2 * len);
++
++       _dst.align(4);
++       }
++
++       _dst.enc_ndr_long(0);   // num_trans_entries
++       _dst.enc_ndr_long(0);   // ptr_trans_sids
++
++       _dst.enc_ndr_short(level);  // lookup_level
++       _dst.align(4);
++
++       _dst.enc_ndr_long(count);   // mapped_count
++   }
++
++   public void decode_out(NdrBuffer _src) throws NdrException {
++            _src.align(4);
++
++       int _domainsp = _src.dec_ndr_long();
++       if(_domainsp != 0) {
++       if(domains == null) /* YOYOYO */
++           domains = new LsarRefDomainList();
++       domains.decode(_src);
++       }
++
++       if(sids == null)
++       sids = new LsarTransSidArray();
++       sids.decode(_src);
++
++       count = (int)_src.dec_ndr_long();
++       retval = (int)_src.dec_ndr_long();
++   }
++    }
+     public static class LsarOpenPolicy2 extends DcerpcMessage {
+ 
+         public int getOpnum() { return 0x2c; }
+diff -ruNd --strip-trailing-cr jcifs_1.2.20c/src/jcifs/smb/SID.java jcifs_1.2.20c+LsaLookupNames/src/jcifs/smb/SID.java
+--- jcifs_1.2.20c/src/jcifs/smb/SID.java    2008-04-25 19:34:39.000000000 +0200
++++ jcifs_1.2.20c+LsaLookupNames/src/jcifs/smb/SID.java 2008-05-23 16:42:24.000000000 +0200
+@@ -696,5 +696,198 @@
+             }
+         }
+     }
+-}
+ 
++    /**
++     * <p>This function maps the array of domain object names <b>names</b> to their
++     * equivalent <b>SID</b>s.</p>
++     *
++     * <p>Note that the LsaPolicyHandle passed to this function must be created at least
++     * with access 0x00000800 (POLICY_LOOKUP_NAMES), otherwise it will throw an
++     * IOException.</p>
++     *
++     * <p>On success, the returned <b>SID</b>s are named according the content of the
++     * <b>names</b> array. Thereby, the case of their <b>acctName</b> fields may
++     * be incorrect since names are mapped ignoring their case. If you want to
++     * obtain the <b>acctName</b> exactly as it is stored in the server, you need
++     * to issue a <b>resolve()</b> call on the <b>SID</b>, or use one of the
++     * various <b>resolveSids()</b> variants. However, the domain part of the names
++     * is always correct, since the server communicates it in its response.</p>
++     *
++     * <p>Also note that any unresolved name will map to a null value in the related
++     * entry in the returned SIDs array. No exception will be thrown.</p>
++     *
++     * @param handle The <b>DcerpcHandle</b> object to use to communicate with the
++     * LSA service
++     * @param policyHandle The <b>LsaPolicyHandle</b> to use in order to get
++     *  authorized by the LSA service.
++     * @param names An array of strings containing the domain's object names to map.
++     * @return An array of <b>SID</b>s one-to-one related with the given <b>names</b>.
++     * @throws IOException if anything goes wrong
++     * @author Giampaolo Tomassoni &lt;giampaolo at tomassoni dot biz&gt;
++     */
++    public static SID[] getFromNames(
++   DcerpcHandle handle,
++   LsaPolicyHandle policyHandle,
++   String names[]
++    ) throws IOException {
++   SID outputSids[] = new SID[names.length];
++   if(names.length > 0) {
++       MsrpcLookupNames rpc = new MsrpcLookupNames(policyHandle, names);
++       handle.sendrecv(rpc);
++       switch (rpc.retval) {
++       case 0:
++       case NtStatus.NT_STATUS_NONE_MAPPED:
++       case 0x00000107: // NT_STATUS_SOME_NOT_MAPPED
++       break;
++
++       default:
++       throw new SmbException(rpc.retval, false);
++       }
++
++       SID domainSids[] = new SID[rpc.domains.count];
++       for(int i = 0; i < domainSids.length; ++i) {
++       SID domainSid = new SID(
++           rpc.domains.domains[i].sid,
++           SID_TYPE_DOMAIN,
++           (new UnicodeString(rpc.domains.domains[i].name, false)).toString(),
++           null,
++           false
++       );
++
++       domainSids[i] = domainSid;
++       }
++
++       for(int i = 0; i < rpc.sids.count; ++i) {
++       SID sid;
++       switch(rpc.sids.sids[i].sid_type) {
++       case SID_TYPE_DOMAIN:
++           sid = domainSids[rpc.sids.sids[i].sid_index];
++           break;
++
++       case SID_TYPE_INVALID:
++       case SID_TYPE_UNKNOWN:
++           // Probably the result of an attempt to resolve an
++           // not existent or bad name
++           sid = null;
++           break;
++
++       default:
++           SID domainSid = domainSids[rpc.sids.sids[i].sid_index];
++           sid = new SID(domainSid, rpc.sids.sids[i].rid);
++           sid.type = rpc.sids.sids[i].sid_type;
++           sid.domainName = domainSid.domainName;
++
++           // If the specified name includes domain data, this must be
++           // removed from acctName.
++           sid.acctName = names[i].substring(names[i].indexOf('\\') + 1);
++       }
++
++       outputSids[i] = sid;
++       }
++   }
++
++   return(outputSids);
++    }
++
++    /**
++     * <p>This function maps the array of domain object names <b>names</b> to their
++     * equivalent <b>SID</b>s.</p>
++     *
++     * <p>On success, the returned <b>SID</b>s are named according the content of the
++     * <b>names</b> array. Thereby, the case of their <b>acctName</b> fields may
++     * be incorrect since names are mapped ignoring their case. If you want to
++     * obtain the <b>acctName</b> exactly as it is stored in the server, you need
++     * to issue a <b>resolve()</b> call on the <b>SID</b>, or use one of the
++     * various <b>resolveSids()</b> variants. However, the domain part of the names
++     * is always correct, since the server communicates it in its response.</p> 
++     *
++     * <p>Also note that any unresolved name will map to a null value in the related
++     * entry in the returned SIDs array. No exception will be thrown.</p>
++     * 
++     * @param authorityServerName The name or address of the authority server to
++     * contact to resolve the names.
++     * @param auth The <b>NtlmPasswordAuthentication</b> to use in order to get
++     *  authorized by the server.
++     * @param names An array of strings containing the domain's object names to map.
++     * @return An array of <b>SID</b>s one-to-one related with the given <b>names</b>.
++     * @throws IOException if anything goes wrong
++     * @author Giampaolo Tomassoni &lt;giampaolo at tomassoni dot biz&gt;
++     */
++    public static SID[] getFromNames(
++   String authorityServerName,
++   NtlmPasswordAuthentication auth,
++   String names[]
++    ) throws IOException {
++   DcerpcHandle handle = DcerpcHandle.getHandle(
++       "ncacn_np:" + authorityServerName + "[\\PIPE\\lsarpc]",
++       auth
++   );
++   try {
++       int dot = authorityServerName.indexOf('.');
++
++       String serverName;
++       if(dot > 0 && !Character.isDigit(authorityServerName.charAt(0)))
++       serverName = authorityServerName.substring(0, dot);
++       else
++       serverName = authorityServerName;
++
++       LsaPolicyHandle policyHandle = new LsaPolicyHandle(
++       handle,
++       "\\\\" + serverName,
++       0x00000800  // POLICY_LOOKUP_NAMES
++       );
++            try { return(getFromNames(handle, policyHandle, names)); }
++            finally { policyHandle.close(); }
++        } finally { handle.close(); }
++    }
++
++    /**
++     * <p>This function is like the <b>getFromNames()</b> one, except that it maps a
++     * single name to its <b>SID</b> equivalent.</p>
++     *
++     * <p>If you have more than one name to map, <b>getFromNames()</b> is much more
++     * efficient.</p>
++     *
++     * @param handle The <b>DcerpcHandle</b> object to use to communicate with the
++     * LSA service
++     * @param policyHandle The <b>LsaPolicyHandle</b> to use in order to get
++     *  authorized by the LSA service.
++     * @param name A string containing the domain's object name to map.
++     * @return The <b>SID</b>s mapped to the given <b>name</b>.
++     * @throws IOException if anything goes wrong
++     * @author Giampaolo Tomassoni &lt;giampaolo at tomassoni dot biz&gt;
++     */
++    public static SID getFromName(
++   DcerpcHandle handle,
++   LsaPolicyHandle policyHandle,
++   String name
++    ) throws IOException {
++   SID sids[] = getFromNames(handle, policyHandle, new String[] { name });
++   return(sids == null || sids.length == 0 ? null : sids[0]);
++    }
++
++    /**
++     * <p>This function is like the <b>getFromNames()</b> one, except that it maps a
++     * single name to its <b>SID</b> equivalent.</p>
++     *
++     * <p>If you have more than one name to map, <b>getFromNames()</b> is much more
++     * efficient.</p>
++     *
++     * @param authorityServerName The name or address of the authority server to
++     * contact to resolve the names.
++     * @param auth The <b>NtlmPasswordAuthentication</b> to use in order to get
++     *  authorized by the server.
++     * @param name A string containing the domain's object name to map.
++     * @return The <b>SID</b>s mapped to the given <b>name</b>.
++     * @throws IOException if anything goes wrong
++     * @author Giampaolo Tomassoni &lt;giampaolo at tomassoni dot biz&gt;
++     */
++    public static SID getFromName(
++   String authorityServerName,
++   NtlmPasswordAuthentication auth,
++   String name
++    ) throws IOException {
++   SID sids[] = getFromNames(authorityServerName, auth, new String[] { name });
++   return(sids == null || sids.length == 0 ? null : sids[0]);
++    }
++}

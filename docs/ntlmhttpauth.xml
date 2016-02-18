@@ -1,0 +1,403 @@
+<?xml version="1.0"?>
+
+<topic>
+<title>JCIFS NTLM HTTP Authentication</title>
+
+<span style="color: #00f;"> 
+IMPORTANT: All HTTP related code and corresponding documentation in JCIFS is not supported, no longer maintained and will be removed because it is broken and obsolete (and because HTTP has nothing to do with CIFS). This page remains only for informational purposes and for legacy users.
+<p/>
+The HTTP "filter" in particular uses a "man in the middle" technique that cannot support NTLMv2. Since late 2008, users have started to report that client security policy is requiring NTLMv2 and that this solution no longer works. For this reason and others described in <a href="http://lists.samba.org/archive/jcifs/2008-October/008227.html">this post</a>, this feature will be removed from the JCIFS package.
+<p/>
+Currently we recommend using <a href="http://www.ioplex.com/jespa.html">Jespa</a> which <i>properly</i> implements NLTMv2 server side authentication and includes an advanced NTLMv2 HTTP SSO Servlet Filter. 
+</span>
+<p/>
+A common requirement of websites on corporate Intranets is NTLM HTTP authentication also sometimes referred to as Single Sign On (SSO).  Microsoft Internet Explorer has the ability to negotiate NTLM password hashes over an HTTP session using base 64 encoded NTLMSSP messages. This is a staple feature of IIS but Java application servers too can use jCIFS to authenticate MSIE clients against a domain controller. This is a useful feature because many of the tasks surrounding user management now fall back to computer support and HR. It is not necessary to add and remove users as they join and leave the company. Perhaps most important from a user's perspective; they do not need to enter a username or password if their workstation is a member of the domain. The password hashes generated when they logged on to their workstation will be negotiated during the initial request for a session, passed through jCIFS, and validated against a PDC or BDC. This also makes the users domain and username available for managing session information, profiles, preferences, etc. Using the jCIFS Servlet Filter it is trivial to add NTLM HTTP authentication support to your site. It is also possible to build custom authentication modules using the <tt>NtlmSsp</tt> classes directly. This Filter scales very well primarily because sessions are multiplexed over transports. But this functionality is not without caveats.
+
+<ul>
+<li><a href="#install">Installation and Setup</a></li>
+<li><a href="#basic">Non MSIE Clients and "Basic" Authentication</a></li>
+<li><a href="#props">JCIFS Properties Meaningful to NTLM HTTP Authentication</a></li>
+<li><a href="#restart">Must Restart The Container</a></li>
+<li><a href="#tomcat">Tomcat</a></li>
+<li><a href="#url">MalformedURLException: unknown protocol: smb</a></li>
+<li><a href="#transparent">Transparent Authentication and the Network Password Dialog</a></li>
+<li><a href="#adpolicy">Personal Workstation AD Security Policy</a></li>
+<li><a href="#post">HTTP POST and Protecting Sub-Content</a></li>
+<li><a href="#signing">SMB Signatures and Windows 2003</a></li>
+<li><a href="#proto">NTLM HTTP Authentication Protocol Details</a></li>
+</ul>
+
+<i><b>Note:</b> This functionality is a non-conformant extension to HTTP conceived entirely by Microsoft. It inappropriately uses HTTP headers and therefore may not work with all Servlet containers or may stop working with a new release of your application server. Also, this flavor of password encryption is not very secure so under no circumstances should it be used to authenticate clients on the Internet.</i>
+<p/>
+<i><b>Note:</b> Don't forget to restart the container after changing jCIFS init-parameters. JCIFS must use the container class loader and jCIFS properties are only read once when jCIFS classes are initialized.</i>
+
+<a name="install"/>
+<h2>Installation and Setup</h2>
+
+Put the <a href="http://jcifs.samba.org/src/">latest jCIFS jar</a> file in the <tt>lib/</tt> directory of your webapp [1]. Because jCIFS properties are loaded once when the jCIFS classes are first accessed, it is necessary to actually stop and restart the container if any jCIFS properties have been changed. Create a filter section in your web.xml. Some example web.xml filter sections follow.
+
+<h3>Production web.xml Example</h3>
+
+A minimalistic web.xml file with <tt>filter</tt> and <tt>filter-mapping</tt> directives might look like the following:
+
+<pre>
+&lt;filter&gt;
+    &lt;filter-name&gt;NtlmHttpFilter&lt;/filter-name&gt;
+    &lt;filter-class&gt;jcifs.http.NtlmHttpFilter&lt;/filter-class&gt;
+
+    &lt;init-param&gt;
+        &lt;param-name&gt;jcifs.netbios.wins&lt;/param-name&gt;
+        &lt;param-value&gt;10.169.10.77,10.169.10.66&lt;/param-value&gt;
+    &lt;/init-param&gt;
+    &lt;init-param&gt;
+        &lt;param-name&gt;jcifs.smb.client.domain&lt;/param-name&gt;
+        &lt;param-value&gt;NYC-USERS&lt;/param-value&gt;
+    &lt;/init-param&gt;
+    &lt;init-param&gt;
+        &lt;param-name&gt;jcifs.smb.client.username&lt;/param-name&gt;
+        &lt;param-value&gt;somenycuser&lt;/param-value&gt;
+    &lt;/init-param&gt;
+    &lt;init-param&gt;
+        &lt;param-name&gt;jcifs.smb.client.password&lt;/param-name&gt;
+        &lt;param-value&gt;AReallyLoooongRandomPassword&lt;/param-value&gt;
+    &lt;/init-param&gt;
+&lt;/filter&gt;
+
+&lt;filter-mapping&gt;
+    &lt;filter-name&gt;NtlmHttpFilter&lt;/filter-name&gt;
+    &lt;url-pattern&gt;/*&lt;/url-pattern&gt;
+&lt;/filter-mapping&gt;
+</pre>
+
+The above will authenticate users accessing all content against the domain <tt>NYC-USERS</tt>. The WINS server <tt>10.169.10.77</tt> will be queried to resolve <tt>NYC-USERS</tt> to an IP address of a domain controller. If that WINS server is not responding, <tt>10.169.10.66</tt> will be queried. This example is suitable for large numbers of concurrent users because jCIFS will cycle through domain controllers and use an alternate WINS servers if necessary. In combination with the domain property, if a username and password are specified then <a href="#signing">preauthentication</a> will be used. Preauthentication is necessary to initialize the SMB signing digest (see section on SMB signatures).
+
+<p/>
+Note: If you do not use WINS you must use the <i>Explicit Domain Controller web.xml Example</i> below or apply and use the DnsSrv.patch in the <a href="http://jcifs.samba.org/src/patches/">patches directory</a> which uses JNDI to perform DNS SRV lookups for domain controllers.
+
+<h3>Explicit Domain Controller web.xml Example</h3>
+
+The below example filter section illistrates how to specify a specific domain controller using the <tt>jcifs.http.domainController</tt> property. The domainContoller property supercedes the domain property when looking for a domain controller however it must still be specified if preauthentication is to be used for SMB signing.
+
+<pre>
+&lt;filter&gt;
+    &lt;filter-name&gt;NtlmHttpFilter&lt;/filter-name&gt;
+    &lt;filter-class&gt;jcifs.http.NtlmHttpFilter&lt;/filter-class&gt;
+
+    &lt;init-param&gt;
+        &lt;param-name&gt;jcifs.http.domainController&lt;/param-name&gt;
+        &lt;param-value&gt;192.168.2.15&lt;/param-value&gt;
+    &lt;/init-param&gt;
+
+    &lt;!--
+        always needed for preauthentication / SMB signatures
+    --&gt;
+    &lt;init-param&gt;
+        &lt;param-name&gt;jcifs.smb.client.domain&lt;/param-name&gt;
+        &lt;param-value&gt;NYC-USERS&lt;/param-value&gt;
+    &lt;/init-param&gt;
+    &lt;init-param&gt;
+        &lt;param-name&gt;jcifs.smb.client.username&lt;/param-name&gt;
+        &lt;param-value&gt;somenycuser&lt;/param-value&gt;
+    &lt;/init-param&gt;
+    &lt;init-param&gt;
+        &lt;param-name&gt;jcifs.smb.client.password&lt;/param-name&gt;
+        &lt;param-value&gt;AReallyLoooongRandomPassword&lt;/param-value&gt;
+    &lt;/init-param&gt;
+&lt;/filter&gt;
+
+&lt;filter-mapping&gt;
+    &lt;filter-name&gt;NtlmHttpFilter&lt;/filter-name&gt;
+    &lt;url-pattern&gt;/*&lt;/url-pattern&gt;
+&lt;/filter-mapping&gt;
+</pre>
+
+<i>Note: This example will only work with with jcifs-1.2.8 or above. Prior to this version there was a logical bug in the preauthentication code that would cause signatures to fail resulting in repeated Access denied errors which in turn would cause the Network Password Dialog to appear regardless of what credentials were entered.</i>
+
+<h3>Logon Share web.xml Example</h3>
+
+This example illustrates the <tt>jcifs.smb.client.logonShare</tt> property. This will cause jCIFS to attempt to access the resource <tt>\\192.168.2.15\JcifsAcl</tt> when authenticating users. By creating that share and changing the Access Control List only certain users or groups of users will have access to your website.
+
+<pre>
+&lt;filter&gt;
+    &lt;filter-name&gt;NtlmHttpFilter&lt;/filter-name&gt;
+    &lt;filter-class&gt;jcifs.http.NtlmHttpFilter&lt;/filter-class&gt;
+
+    &lt;init-param&gt;
+        &lt;param-name&gt;jcifs.http.domainController&lt;/param-name&gt;
+        &lt;param-value&gt;192.168.2.15&lt;/param-value&gt;
+    &lt;/init-param&gt;
+
+    &lt;!--
+        permissions on \\192.168.2.15\JcifsAcl share gate web access
+    --&gt;
+    &lt;init-param&gt;
+        &lt;param-name&gt;jcifs.smb.client.logonShare&lt;/param-name&gt;
+        &lt;param-value&gt;JcifsAcl&lt;/param-value&gt;
+    &lt;/init-param&gt;
+
+    &lt;!--
+        always needed for preauthentication / SMB signatures
+    --&gt;
+    &lt;init-param&gt;
+        &lt;param-name&gt;jcifs.smb.client.domain&lt;/param-name&gt;
+        &lt;param-value&gt;NYC-USERS&lt;/param-value&gt;
+    &lt;/init-param&gt;
+    &lt;init-param&gt;
+        &lt;param-name&gt;jcifs.smb.client.username&lt;/param-name&gt;
+        &lt;param-value&gt;somenycuser&lt;/param-value&gt;
+    &lt;/init-param&gt;
+    &lt;init-param&gt;
+        &lt;param-name&gt;jcifs.smb.client.password&lt;/param-name&gt;
+        &lt;param-value&gt;AReallyLoooongRandomPassword&lt;/param-value&gt;
+    &lt;/init-param&gt;
+&lt;/filter&gt;
+
+&lt;filter-mapping&gt;
+    &lt;filter-name&gt;NtlmHttpFilter&lt;/filter-name&gt;
+    &lt;url-pattern&gt;/*&lt;/url-pattern&gt;
+&lt;/filter-mapping&gt;
+</pre>
+
+<i>Note: Do not use a share that has files in it. JCIFS tries to list the contents of the share to determine if the user has access so it is more efficient if there's nothing in it.</i>
+
+
+Running the <tt>NtlmHttpAuthExample.java</tt> example should be a suitable test of the Filter.
+
+<blockquote>
+<h2>NTLM HTTP Authentication Example</h2>
+NYC-USERS\MIALLEN successfully logged in
+<h3>Please submit some form data using POST</h3>
+<form action="javascript:alert('No, this isn\'t a real example. Set up your own.')" method="post">
+<input type="text" name="field1" size="20" value="hello"/>
+<input type="submit"/>
+</form>
+field1 = hello
+</blockquote>
+
+<small>The significance of the POST test is that after negotiating NTLM HTTP Authentication once, IE will not POST any form data until it has negotiated the password hashes again (more about this below).</small>
+
+<p/>
+
+If the NTLM HTTP Authentication Filter is not enabled something like the following will be displayed:
+<blockquote>
+null successfully logged in
+</blockquote>
+
+Notice the user was permitted access. Unlike this example, developers might add an additional check to make sure <tt>getRemoteUser</tt> does not return <tt>null</tt>.
+
+
+<a name="basic"/>
+<h2>Non MSIE Clients and "Basic" Authentication</h2>
+
+Both IE and FF can transparently negotiate NTLM HTTP authentication although IE needs the domain to be added to the IntrAnet security zone and FF requires configuration as described on the <a href="http://www.mozilla.org/projects/netlib/integrated-auth.html">Integrated Authentication</a> page. For other clients it is possible to use basic authentication to pass NTLM password credentials. This is strongly discouraged if SSL is not being used because it sends these credentials in plain text. It would not be difficult for another user to download and install a program to "snoop" LAN traffic and obtain other user's passwords.
+
+<p/>
+
+Regardless, this functionality has been added to the <tt>NtlmHttpFilter</tt> and <tt>NtlmServlet</tt> (for pre 2.3 servlet containers) although it is disabled by default. To enable this capability set the <tt>jcifs.http.basicRealm</tt>, <tt>jcifs.http.enableBasic</tt>, and <tt>jcifs.http.insecureBasic</tt> properties described in the table below.
+
+
+<a name="props"/>
+<h2>JCIFS Properties Meaningful to NTLM HTTP Authentication</h2>
+
+All parameters that begin with 'jcifs.' will be set as jCIFS properties which means that any jCIFS properties may be used as init parameters. <b>These properties must be set before jCIFS classes are used</b>.
+For a complete list of jCIFS properties refer to the <a href="api/index.html" target="_top">overview page of the API documentation</a>. Here is a select subset of jCIFS properties with additional notes in the context of NTLM HTTP Authentication.
+
+<p/>
+
+<table>
+
+<tr><td width="20%"><b>jcifs.smb.client.domain</b></td><td>
+The NT domain against which clients should be authenticated. Generally it is necessary to also set the <tt>jcifs.netbios.wins</tt> parameter or a domain controller may not be found. This parameter will be ignored for NTLM HTTP authentication purposes if a <tt>jcifs.http.domainController</tt> property is specified (although they can be used together for "preauthenctication" as described in the <a href="#signing">SMB Signatures and Windows 2003</a> section below).
+</td></tr>
+
+<tr><td width="20%"><b>jcifs.http.domainController</b></td><td>
+The IP address of any SMB server that should be used to authenticate HTTP clients with the <tt>NtlmHttpFilter</tt> class. If this is not specified the <tt>jcifs.smb.client.domain</tt> 0x1C NetBIOS group name will be queried. If these queries fail an <tt>UnknownHostException</tt> will be thrown. It is not necessary for this to specify a real domain controller. The IP address of a workstation will do for simple purposes. You can also use a DNS name however if you do this you should also set <tt>jcifs.resolveOrder=DNS</tt>. Otherwise, the client may waste time trying to resolve the name using WINS.
+</td></tr>
+
+<tr><td width="20%"><b>jcifs.http.basicRealm</b></td><td>
+The realm for basic authentication. This property defaults to 'jCIFS'.
+</td></tr>
+
+<tr><td width="20%"><b>jcifs.http.enableBasic</b></td><td>
+Setting this property to <tt>true</tt> enables basic authentication over HTTPS only.
+</td></tr>
+
+<tr><td width="20%"><b>jcifs.http.insecureBasic</b></td><td>
+Setting this property to <tt>true</tt> enables basic authentication over plain HTTP. This configuration passes user credentials in plain text over the network. It should not be used in environment where security is required.
+</td></tr>
+
+<tr><td width="20%"><b>jcifs.http.loadBalance</b></td><td>
+If a <tt>jcifs.smb.client.domain</tt> property is specified (and <tt>domainController</tt> is <i>not</i> specified) the <tt>NtlmHttpFilter</tt> will query for domain controllers by name. If this property is <tt>true</tt> the Filter will rotate through the list of domain controllers when authenticating users. The default value is <tt>true</tt>. The <tt>jcifs.netbios.lookupRespLimit</tt> property can also be used to limit the number of domain controllers used.
+</td></tr>
+
+<tr><td width="20%"><b>jcifs.netbios.lookupRespLimit</b></td><td>
+The 0x1C NetBIOS name query returns a list of domain controllers. It is believed that the servers at the top of this list should be favored. This property limits the range of servers returned by name queries. The default value is 5 meaning the top 5 domain controllers will be used.
+</td></tr>
+
+<tr><td width="20%"><b>jcifs.netbios.wins</b></td><td>
+The IP address of the WINS server. This is required when accessing hosts on different subnets (like a domain controller by name) and it is highly recommended if a wins server is available.
+</td></tr>
+
+<tr><td width="20%"><b>jcifs.smb.client.laddr</b></td><td>
+The ip address of the local interface the client should bind to if it is different from the default. For example if jCIFS is used to authenticate clients on one interface and the domain controller for those clients is accessible only on another interface of a webserver with two NICs it may be necessary to specify which interface jCIFS should use.
+</td></tr>
+
+<tr><td width="20%"><b>jcifs.netbios.laddr</b></td><td>
+The ip address of the local interface the client should bind to for name queries if it is different from the default. Likely set to the same as the above property.
+</td></tr>
+
+<tr><td width="20%"><b>jcifs.smb.client.attrExpirationPeriod</b></td><td>
+Attributes of a file are cached for <code>attrExpirationPeriod</code> milliseconds. The default is 5000 but the <tt>NetworkExplorer</tt> servlet will attempt to set this property to 120000. Otherwise, when listing large directories, the attributes of <tt>SmbFiles</tt> may expire within the default period resulting in a large number of additional network messages and severe performance degradation.
+</td></tr>
+
+<tr><td width="20%"><b>jcifs.smb.client.soTimeout</b></td><td>
+To prevent the client from holding server resources unnecessarily, sockets are closed after this time period if there is no activity. This time is specified in milliseconds. The default is 35000 however when NTLM HTTP Authentication is used, the <tt>NtlmHttpFilter</tt> will attempt to set this value to 5 minutes so that frequent calls to <tt>SmbSession.logon()</tt> do not provoke redundant messages being submitted to the domain controller. If it is not desirable to cache password hashes set this value back to 35000.
+</td></tr>
+
+<tr><td width="20%"><b>jcifs.netbios.cachePolicy</b></td><td>
+When a NetBIOS name is resolved with the NbtAddress class it is cached to reduce redundant name queries. This property controls how long, in seconds, these names are cached. The default is 30 seconds, 0 is no caching, and -1 is forever. When NTLM HTTP Authentication is used, <tt>NtlmHttpFilter</tt> will attempt to set this value to 20 minutes so that frequent queries for a domain controller will be cached.
+</td></tr>
+
+<tr><td width="20%"><b>jcifs.util.loglevel</b></td><td>
+A value that indicates the detail of logging messages. Values are approxamitly as follows:
+<tt>
+  0: Nothing
+  1: Critical [default]
+  2: Basic info. (Can be logged under load)
+  3: Detailed info. (Highest recommended level for production use)
+  4: Individual smb messages
+  6: Hex dumps
+</tt>
+</td></tr>
+
+</table>
+
+
+<a name="restart"/>
+<h2>Must Restart The Container</h2>
+
+If you change any jcifs properties or replace an existing jcifs jar file with a different one, the container must be restarted. This is because most jcifs properties are retrieved only once when classes are first loaded.
+
+
+<a name="tomcat"/>
+<h2>Tomcat</h2>
+
+Tomcat may try to persist session objects when restarted. This can cause authentication failures if a user's creadentials are persisted because they will be invalid when deserialized. The solution is to either ask the affected user's to restart their browser or disable session persistance in part or in whole. The following will disable session persistence in Tomcat:
+
+<pre>
+&lt;Context&gt;
+...
+&lt;Manager pathname=""/&gt; &lt;!-- disable session persistence --&gt;
+&lt;/Context&gt;
+</pre>
+
+Tomcat requires that all filter directives be adjacent to one another, all filter-mapping directives appear adjacent to one another, all servlet directives ... and so on. This is because Tomcat validates the web.xml against the deployment descriptor DTD (why the DTD would require such a thing I don't know).
+
+
+<a href="#url"/>
+<h2>MalformedURLException: unknown protocol: smb</h2>
+
+If you get the following exception try upgrading to jcifs-0.7.0b12 or later. Also read the <a href="faq.html">FAQ</a>.
+<pre>
+Exception MalformedURLException: unknown protocol: smb
+      at java.net.URL.(URL.java:480)
+      at java.net.URL.(URL.java:376)
+      at java.net.URL.(URL.java:330)
+      at jcifs.smb.SmbFile.(SmbFile.java:355)
+      ...
+</pre>
+
+
+<a name="transparent"/>
+<h2>Transparent Authentication and the Network Password Dialog</h2>
+
+If the Filter is working properly the Network Password Dialog should never appear. However there are several requirements that must be met for a web browser to transparently negotiate credentials using NTLM HTTP authenication. If any of these requirements are not met, the default behavior is to present the user with the Network Password dialog. The requirements are:
+<p/>
+<ol>
+<li>
+The client must be logged into the Windows NT domain identified by the jcifs.smb.client.domain parameter (or the domain of the host identified by the jcifs.smb.client.domainController parameter if it is used instead). The client may also be logged into a domain that has a trust relationship with the target domain. Indeed it is not uncommon to configure workstations to join a different domain from those of users. Note that Windows 95/98/ME systems cannot really join a domain but can be configured to do so enough to participate in transparent NTLM HTTP authentication.
+</li><li>
+By default, only Internet Explorer will negotiate NTLM HTTP authentication transparently. Mozilla must be configured to authenticate transparently. See these links for details:
+<p/>
+<a href="http://kb.mozillazine.org/Network.automatic-ntlm-auth.trusted-uris">http://kb.mozillazine.org/Network.automatic-ntlm-auth.trusted-uris</a><br/>
+<a href="http://www.mozilla.org/projects/netlib/integrated-auth.html">http://www.mozilla.org/projects/netlib/integrated-auth.html</a><br/>
+<p/>
+</li><li>
+Either the target URL must contain a server in the local domain (e.g. ws1.mycompany.com) or the client's security settings must be changed (e.g. Tools > Internet Options > Security > Local Intranet > Sites > Advanced > add your site). If the URL does not contain a URL in the defined IntrAnet zone (e.g. not an IP address), Internet Explorer will assume that the server is in the IntErnet zone and present the user with the Network Password dialog. It would be very bad if a server on the Internet could convince IE to send it your NTLM password hashes. These hashes are easily cracked with brute force dictionary attacks. To prevent this scenario, IE tries to distinguish between Intranet sites and Internet sites. Here are some important notes to consider when deploying a site with NTLM HTTP Authentication regardless of whether or not jCIFS is used to do it.
+<ul>
+<li> Internet Explorer May Prompt You for a Password<br/>
+<a href="http://support.microsoft.com/default.aspx?scid=kb;en-us;Q258063">http://support.microsoft.com/default.aspx?scid=kb;en-us;Q258063</a></li>
+<li> How to Use Security Zones in Internet Explorer<br/>
+<a href="http://support.microsoft.com/default.aspx?scid=kb;en-us;Q174360">http://support.microsoft.com/default.aspx?scid=kb;en-us;Q174360</a></li>
+<li> An Intranet Site Is Identified as an Internet Site When You Use an FQDN or IP Address<br/>
+<a href="http://support.microsoft.com/default.aspx?scid=kb;en-us;Q303650">http://support.microsoft.com/default.aspx?scid=kb;en-us;Q303650</a></li>
+</ul>
+</li><li>
+The user's credentials must be valid. For example if the account has expired, been disabled or is locked out the Network Password dialog will appear. To determine which error was at fault it will be necessary to modify the NtlmHttpFilter to inspect the SmbAuthException in doFilter.
+</li><li>
+The jCIFS client must support the lmCompatibility level necessary for communication with the domain controller. If the server does not permit NTLMv1 try to set jcifs.smb.lmCompatibility = 3.
+</li>
+</ol>
+
+Another reason for the Network Password Dialog appearing unexpectedly is if your web server has keep-alive turned off (e.g. KeepAlive directive in Apache http.conf).
+
+<a name="adpolicy"/>
+<h2>Personal Workstation AD Security Policy</h2>
+
+If your Active Directory security policy requires that users only log into the domain from their 
+personal workstations JCIFS will fail to authenticate and the server security log will have entries like "\\JCIFS10_40_4A cannot be authorized".
+This occurs because the domain controller is failing to resolve the dynamically generated "calling name" 
+submitted by the client during protocol negotiation. To get around this it is necessary to set the 
+<tt>jcifs.netbios.hostname</tt> property to a valid NetBIOS name that can be resolved by the NetBIOS name service (e.g. WINS) 
+and add that name to the AD security policy as a permitted client.
+<p/>
+For example, you can set this property using an init-paremeter in the web.xml file for the NTLM HTTP filter as 
+follows:
+<pre>
+&lt;init-parameter&gt;
+    &lt;parameter-name&gt;jcifs.netbios.hostname&lt;/parameter-name&gt;
+    &lt;parameter-value&gt;MYHOSTNAME&lt;/parameter-value&gt;
+&lt;/init-parameter&gt;
+</pre>
+
+
+<a name="post"/>
+<h2>HTTP POST and Protecting Sub-Content</h2>
+
+Once IE has negotiated NTLM HTTP authentication it will proactively renegotiate NTLM for POST requests for all content associated with the server (based on IP?). Therefore when using HTTP POST requests it is not possible to restrict access to some content on the server as IE will attempt and fail to negotiate NTLM (standard IE error page?).
+<p/>
+Note that there is a registry key that will instruct IE to stop initiating NTLMSSP unless instructed by the server.
+
+<pre>
+ Type: DWORD
+  Key: HKEY_CURRENT_USER/Software/Microsoft/Windows/CurrentVersion/Internet Settings/DisableNTLMPreAuth
+Value: 1
+</pre>
+
+<a name="signing"/>
+<h2>SMB Signatures and Windows 2003</h2>
+
+If the domain controller against which you are authenticating clients requires SMB signatures (Windows 2003 does by default), it is recommended that you provide init-parameters for the <tt>jcifs.smb.client.{domain,username,password}</tt> properties to perform "preauthentication" for each transport to a domain contoller so that a proper SMB signing key can be generated.
+<p></p>
+An alternative solution is to change the
+<tt>jcifs.smb.client.ssnLimit</tt> to 1. This will require that every
+authentication uses a separate transport. Because the MAC signing key is
+only used on SMB communication occuring after the initial authentication,
+signing will be effectively ignored. However, this solution will
+significantly reduce scalability as each authentication will open it's
+own transport. For this reason preauthenticating transports is considered the superior method
+and should be used by default for servers that requires signatures.
+
+
+<a name="proto"/>
+<h2>NTLM HTTP Authentication Protocol Details</h2>
+
+The NTLM HTTP Authentication process is described well in these documents:
+<p>
+<a href="http://davenport.sourceforge.net/ntlm.html">http://davenport.sourceforge.net/ntlm.html</a><br/>
+<a href="http://www.innovation.ch/java/ntlm.html">http://www.innovation.ch/java/ntlm.html</a>
+</p>
+The process can be summarized as a 3 request/response "handshake". So <tt>doGet()</tt> will be called three times. The first is the initial request. A <tt>401 Unauthorized</tt> is sent back to which IE submits a special message encoded in a header. Another <tt>401 Unauthorized</tt> is sent back after which IE submits the password hashes. This is where jCIFS comes in. The password hashes alone are useless. You must check their authenticity against the password database on a server somewhere (actually you can specify the IP of a plain workstation or any other SMB server). Otherwise a user who's workstation is not a member of the domain will get a password dialog into which they could put anything and it would let them in. This is what pretty much all the examples seen in various forums do. Don't be fooled.
+<p/>
+<small>[1] Due to restrictions in how protocol handlers are loaded, if the SMB URL protocol handler is to be used (meaning you want to access SMB resources with smb:// URLs) within your application it is necessary for the jCIFS jar to be loaded by the <tt>System</tt> class loader. This can usually be achived by placing it in the container <tt>lib/</tt> directory. However, for containers that load servlet classes in a child classloaders (Tomcat) this too will cause problems as jCIFS will not be able to load <tt>javax.servlet.*</tt> classes. To get the filter and the URL protocol handler to operate together requires some experimentation and depends on the container being used.</small>
+</topic>

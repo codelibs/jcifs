@@ -1,0 +1,388 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<HEAD>
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<STYLE TYPE="text/css">
+        BODY {
+            background-color: #808080;
+        }
+        H1 {
+            font-family: verdana, arial;
+            font-size: normal;
+            color: #000000;
+        }
+        H2 {
+            font-family: arial, verdana;
+            font-size: normal;
+            color: #000000;
+        }
+        H3 {
+            font-family: arial, verdana;
+            font-size: small;
+            color: #000080;
+        }
+        A {
+            font-family: arial, verdana;
+            font-weight: bold;
+            color: #000080;
+        }
+        A:HOVER {
+            text-decoration: none;
+        }
+        BIG {
+            color: #000080;
+            font-family: arial, verdana;
+            font-weight: bold;
+            font-size: 50px;
+        }
+        EM {
+            color: #000080;
+            font-family: Times New Roman;
+            font-weight: bold;
+            font-size: 20px;
+        }
+        PRE {
+            font-family: monospaced, courier;
+            border: 1px lightgrey dotted;
+            white-space: pre; 
+            color: black;
+            padding: 4px;
+            background-color: #f0f0f0; 
+        }
+        TABLE {
+            border-collapse: collapse;
+        }
+        TH, TD {
+            font-family: verdana, arial;
+            font-size: small;
+        }
+        .mainpane {
+            background-color: #ffffff;
+            padding: 10px;
+        }
+        .leftpane {
+            background-color: #e0e0FF;
+            padding: 10px;
+        }
+        .middlepane {
+            background-color: #ffffff;
+            padding: 10px;
+        }
+        .footer {
+            background-color: #808080;
+        }
+    </STYLE>
+<TITLE>JCIFS</TITLE>
+</HEAD>
+<BODY>
+<TABLE>
+<TR>
+<TD colspan="2" class="mainpane">
+<center>
+<img src="jcifs.png" alt="JCIFS"><H2>The Java CIFS Client Library</H2>
+</center>
+<P></P>
+JCIFS is an <a href="http://www.opensource.org/docs/definition_plain.php">Open Source</a> client library that implements the CIFS/SMB networking protocol in 100% Java. CIFS is the standard file sharing protocol on the Microsoft Windows platform (e.g. Map Network Drive ...). This client is used extensively in production on large Intranets.
+</TD>
+</TR>
+<TR>
+<TD valign="top" width="350" class="leftpane">
+<h1>Links</h1>
+<a href="src/">Download</a>
+<br>
+<a href="src/docs/ntlmhttpauth.html">JCIFS NTLM HTTP Authentication</a>
+<br>
+<a href="src/docs/faq.html">The FAQ</a>
+<br>
+<a href="http://news.gmane.org/gmane.network.samba.java">Mailing List Archive (GMANE)</a>
+<br>
+<a href="src/docs/capture.html">Obtaining a Network Packet Capture</a>
+<br>
+<h2>Developer Information</h2>
+<a href="src/docs/api/">JCIFS API Documentation</a>
+<br>
+<a href="src/docs/api/overview-summary.html#scp">Setting Client Properties</a>
+<br>
+<a href="src/docs/resolver.html">Setting Name Resolution Properties</a>
+<br>
+<a href="src/docs/pipes.html">Using JCIFS to Connect to Win32 Named Pipes</a>
+<br>
+<a href="src/docs/authhandler.html">JCIFS Exceptions and NtlmAuthenticator</a>
+<br>
+<a href="src/docs/httpclient.html">Using JCIFS NTLM Authentication for HTTP Connections</a>
+<br>
+<a href="http://www.gnu.org/licenses/lgpl-2.1.txt">JCIFS is Licensed Under the LGPL</a>
+<br>
+<h2>Related Java Projects</h2>
+<a href="http://sourceforge.net/projects/j-interop/">j-interop - Java COM Interop (uses Jarapac)</a>
+<br>
+<a href="http://sharehound.sourceforge.net/">sharehound - CIFS network search engine</a>
+<br>
+<a href="http://sourceforge.net/projects/webdisk/">IntegraTUM WebDisk - HTTP to CIFS gateway</a>
+<br>
+<a href="http://sourceforge.net/projects/jcifs-ext/">jcifs-ext - JCIFS Extensions</a>
+<br>
+<a href="http://sourceforge.net/projects/jarapac/">Jarapac - DCE/RPC in Java</a>
+<br>
+<a href="http://danadler.com/jacob/">The Jacob Project - Java/COM Bridge</a>
+<br>
+<a href="http://www.jnbridge.com/">JNBridge - Java/.NET Bridge</a>
+<br>
+<a href="http://j-integra.intrinsyc.com/j-integra/info/">J-Integra - DCE/RPC in Java</a>
+<br>
+<a href="http://sourceforge.net/projects/davenport/">Davenport - WebDAV to CIFS gateway</a>
+<br>
+<a href="http://sourceforge.net/project/showfiles.php?group_id=143373&amp;package_id=248550">Alfresco JLAN Shared File Drive Interface</a>
+<br>
+<h2>CIFS Authorities</h2>
+<a href="http://www.samba.org/">http://www.samba.org/</a>
+<br>
+<a href="http://www.samba-tng.org/">http://www.samba-tng.org/</a>
+<br>
+<h2>Other CIFS Utilities and Tools</h2>
+<a href="http://www.amigasamba.org/">Samba for Amiga</a>
+<br>
+<a href="http://www.obdev.at/products/sharity-light/">Sharity-Lite</a>
+<br>
+<a href="http://shukwit.com/main.php">SMB Browse for MacOSX</a>
+<br>
+<a href="http://xamba.sourceforge.net/index.shtml">Xamba Network Integration Project</a>
+<br>
+<h2>MSRPC</h2>
+<a href="http://www.bindview.com/Support/RAZOR/Utilities/Windows/rpctools1.0-readme.cfm">Rpcdump utility for querying RPC servers</a>
+<br>
+<a href="http://www.opengroup.org/onlinepubs/9629399/">OpenGroup DCE/RPC Specification</a>
+<br>
+<a href="http://www.opengroup.org/onlinepubs/9629399/chap14.htm">OpenGroup DCE/RPC Specification - NDR</a>
+<br>
+<a href="http://msdn.microsoft.com/library/default.asp?url=/archive/en-us/dnarolegen/html/msdn_aboutole.asp">What OLE Is Really About</a>
+<br>
+<h2>Kerberos</h2>
+<a href="http://www.ietf.org/rfc/rfc1510.txt">RFC1510 - Kerberos V5 Specification</a>
+<br>
+<a href="http://www.serverwatch.com/tutorials/article.php/2176201">How a Kerberos Logon Works in Win2K</a>
+<br>
+<a href="http://www-106.ibm.com/developerworks/java/library/j-gss-sso/">JGSS Example</a>
+<br>
+<a href="http://www.microsoft.com/technet/prodtechnol/windows2000serv/maintain/security/kerberos.mspx">Kerberos Explained</a>
+<br>
+<a href="http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dnkerb/html/msdn_pac.asp">W2K PAC Specification</a>
+<br>
+<h2>Technical Documentation</h2>
+<a href="http://ubiqx.org/cifs/">"Implementing CIFS" (complete online book)</a>
+<br>
+<a href="http://ubiqx.org/cifs/rfc-draft/draft-leach-cifs-v1-spec-02.html"><i>Annotated</i> CIFS Specification: draft-leach-cifs-v1-spec-02.html</a>
+<br>
+<a href="http://www.snia.org/tech_activities/CIFS/">SNIA CIFS Technical Reference (V1.0)</a>
+<br>
+<a href="http://davenport.sourceforge.net/ntlm.html">The NTLM Authentication Protocol</a>
+<br>
+<a href="http://www.pluralsight.com/keith/book/">A .NET Developer's Guide to Windows Security</a>
+<br>
+<a href="http://msdn.microsoft.com/library/en-us/debug/base/system_error_codes__0-499_.asp">Windows System Error Codes</a>
+<br>
+<a href="http://msdn.microsoft.com/library/en-us/netmgmt/netmgmt/network_management_error_codes.asp">Windows Network Management Error Codes</a>
+<br>
+<a href="http://ubiqx.org/cifs/rfc-draft/rfc1001.html">rfc1001 - NetBIOS Concepts and Methods</a>
+<br>
+<a href="http://ubiqx.org/cifs/rfc-draft/rfc1002.html">rfc1002 - NetBIOS Detailed Specifications</a>
+<br>
+<a href="http://www.codefx.com/whitepapers.htm">CIFS Explained <small>(A whitepaper by John Kleven)</small></a>
+<br>
+<a href="http://www.ietf.org/internet-drafts/draft-crhertel-smb-url-07.txt">SMB URL draft specification V07</a>
+<br>
+<a href="http://ourworld.compuserve.com/homepages/timothydevans/nbf.htm">NetBIOS, NetBEUI, NBF, SMB, CIFS networking links page</a>
+<br>
+<a href="http://msdn.microsoft.com/library/backgrnd/html/msdn_winswp.htm">Microsoft Writeup on WINS behavior</a>
+<br>
+<a href="http://msdn.microsoft.com/library/backgrnd/html/msdn_winsoverview.htm">Microsoft Writeup on WINS under W2K</a>
+<br>
+<a href="http://www.microsoft.com/windows2000/en/server/help/sag_WINS_und_BrowsingWithWins.htm">Microsoft Server Documentation on Browsing WANs using WINS</a>
+<br>
+<a href="http://www.windowsitlibrary.com/Documents/Book.cfm?DocumentID=386">Windows IT Library: NT Network Plumbing</a>
+<br>
+<a href="http://www.thursby.com/CIFS/">Thursby Software's CIFS pages</a>
+<br>
+<a href="http://www.linux-mag.com/cgi-bin/printer.pl?issue=2001-05&amp;article=smb">Linux Mag: Understanding the Network Neighborhood</a>
+<br>
+<h2>Other</h2>
+<a href="https://lists.samba.org/listinfo/jcifs">Join the JCIFS Mailing List</a>
+<br>
+<a href="src/src/jcifs/">Browse the Source</a>
+<br>
+<a href="src/docs/batching.html">Batching</a>
+<br>
+<a href="http://www.gnu.org/">http://www.gnu.org/</a>
+<br>
+<a href="http://www.opensource.org/">http://www.opensource.org/</a>
+<br>
+<a href="http://discuss.microsoft.com/archives/cifs.html">Microsoft's CIFS Mailing List Archives</a>
+<br>
+</TD><TD valign="top" class="middlepane">
+<h1>News</h1>
+<EM>jcifs-1.3.18 released / Minor Fixes</EM>
+<BR>
+<SMALL><B>posted by Mike, October 29, 2014</B></SMALL>
+<BR>
+This release includes minor fixes such as for a <code>ConcurrentModificationException</code> that could occur when initializing JCIFS classes.
+<P></P>
+<EM>jcifs-1.3.17 released / SO_TIMEOUT Fixed, Connect Timeout Control Added</EM>
+<BR>
+<SMALL><B>posted by Mike, October 18, 2011</B></SMALL>
+<BR>
+The <code>jcifs.smb.client.soTimeout</code> property, which controls how long the client will wait to read data from a server, was broken in the previous release (1.3.16). Not only was it broken but no SO_TIMEOUT was specified at all meaning if a server became unresponsive, JCIFS could hang for an uncontrollably long time. This behavior of this property has been restored.
+<p></p>
+Additionally, a new <code>jcifs.smb.client.connTimeout</code> has been added which specifies the number of milliseconds that the client will wait to connect to a server (how long it will wait for a response to the TCP SYN). This can be very useful when trying to communicate with many servers in parallel.
+<P></P>
+<EM>jcifs-1.3.16 released / SO_TIMEOUT, Disconnect Improvements, copyTo() Exceptions and more</EM>
+<BR>
+<SMALL><B>posted by Mike, June 25, 2011</B></SMALL>
+<BR>
+This release includes the following minor fixes and improvements:
+<ul>
+
+<li>
+JCIFS now uses the InetSocketAddress class to explicitly bind and set the SO_TIMEOUT on client sockets before they are connected. This makes the SO_TIMEOUT effective when the target server socket is not listening and the client OS socket implementation takes a long time for the dropped SYN to timeout. This may significantly reduce resource consumption in applications that use multiple threads to constantly query servers that may not be listening.
+</li>
+<li>
+When disconnecting a transport, new clauses have been added to better reset transport state whereas previously transports could get stuck in a disconnected state for unnecessarily long periods of time.
+</li>
+<li>
+A new property jcifs.smb.client.ignoreCopyToException has been added. When set to "true" (the default), the SmbFile.copyTo() method will ignore (but log) exceptions trying to copy individual files or directories (such as because of a permissions error). To maintain backward compatibility, the default value of this property is "true" (exceptions are ignored). Setting this property to "false" will cause any exception that occurs trying to copy an individual file or directory to be thrown out of copyTo and abort the copy operation at the point of failure. 
+</li>
+<li>
+If an authentication exception occurs trying to connect to a server that has multiple IP addresses, JCIFS will not attempt to connect to more than one IP addresses because doing so could result in an account lockout.
+</li>
+<li>
+The SID resolver code incorrectly resolved SIDs of an ACE in blocks of at most 10 where it should have used a limit of 64. This performance issue has been fixed.
+</li>
+<li>
+JCIFS will not throw the artifical "Access is denied" error if the special NtlmPasswordCredential.ANONYMOUS credential is used explicitly (whereas normally JCIFS will deliberately throw an SmbAuthException if a login results in a guest login or if the anonymous identity is used).
+</li>
+<li>
+The NetrServerEnum2 RAP call used incorrect parameter descriptiors which could result in "SmbException: 2320" errors trying to list domains and servers from the local NetBIOS browse service.
+</li>
+<li>
+The NTLMSSP AUTHENTICATE_MESSAGE (aka "Type 2 Message") encoding routine incorrectly left out the TargetName field (although this had no effect on CIFS client behavior).
+</li>
+
+</ul>
+
+<p></p>
+The JCIFS Team would like to thank IOPLEX Software for contributing to this work.
+<P></P>
+<EM>jcifs-1.3.15 released / Minor DcerpcHandle Locking Adjustments</EM>
+<BR>
+<SMALL><B>posted by Mike, October 7</B></SMALL>
+<BR>
+Minor adjustments have been applied to DcerpcHandle locking routines in the SID class to fix sporadic occurances of "All pipe instances are busy" errors under high load.
+<p></p>
+The JCIFS Team would like to thank Viv&iacute;simo, Inc. for supporting this work. Viv&iacute;simo provides enterprises with innovative search solutions to find, access, and manipulate all content. For consumer web searches, Viv&iacute;simo offers Clusty.com.
+<P></P>
+<EM>jcifs-1.3.14 released / NetBIOS Node Status Disabled and Named Pipe Errors</EM>
+<BR>
+<SMALL><B>posted by Mike, February 11, 2010</B></SMALL>
+<BR>
+JCIFS will no longer do a NetBIOS Node Status to determine the server hostname because it seems some servers no longer respond to it. Under high load "All pipe instances are busy" errors could occur. This has been fixed by adding a lock to ensure that the MSRPC bind and pipe open request are performed together.
+<P></P>
+<EM>jcifs-1.3.13 released / Deadlock Fixed, OSX Snow Leopard, and EMC</EM>
+<BR>
+<SMALL><B>posted by Mike, January 5, 2010</B></SMALL>
+<BR>
+Locking throughout the transport layer has been rewritten. This should fix the long standing deadlock that has been reported in the past. Note that these are significant changes to the I/O layer. The package should be tested carefully before being deployed.
+<p></p>The size of the transient input buffer used to read the SMB_COM_NEGOTIATE response has been doubled to accommodate a security blob (as observed with OSX Snow Leopard). A signing issue reading data from an EMC server has been fixed. NTLMSSP logging has been improved.
+<p></p>
+The JCIFS Team would like to thank Stoneware, Inc. for supporting this work. Stoneware, Inc. provides innovative software that enables organizations to build their own 'private' cloud for simplified access to all of their web, Windows or hosted applications and services.
+<P></P>
+<EM>JCIFS U.S. Export Control Classification Numbers (ECCN)</EM>
+<BR>
+<SMALL><B>posted by Mike, August 27, 2009</B></SMALL>
+<BR>
+JCIFS uses cryptography including RC4 128 (for NTLMv2) and AES 256 (for Kerberos) for authentication, digital signatures and encryption.
+Products that use cryptography and which are exported from the U.S. to other countries are supposed to obtain an export classification.
+The United States Department of Commerce Bureau of Industry and Security (BIS) has issued two ECCNs for the JCIFS package:
+<blockquote>
+5D002.C.1 License Exception TSU<br>
+5D992.C (for binary only distribution of "mass market" software)
+</blockquote>
+For commercial products that ship JCIFS in binary form, you will need to reference the second ECCN in your export classification requests.
+For further information such as CCATS numbers, please contact ioplex<i style="font-style: normal;">@</i>gmail.com.
+<p></p>
+The JCIFS Team would like to thank BIS for their excellent service and patience.
+<P></P>
+<EM>jcifs-1.3.12 released / Two NullPointerExceptions Fixed and DFS</EM>
+<BR>
+<SMALL><B>posted by Mike, August 14, 2009</B></SMALL>
+<BR>
+If NtlmPasswordAuthentication.ANONYMOUS was used, CAP_EXTENDED_SECURITY could be incorrectly turned off resulting in a NullPointerException. If a DFS server did not return any referrals, a NullPointerException could occur. Both of these exceptions have been corrected. Also, JCIFS could become confused when connecting to a server that also happened to be a DFS root server. This issue has been fixed.
+<P></P>
+<EM>jcifs-1.3.11 released / NTLMv2 Calculation Correction</EM>
+<BR>
+<SMALL><B>posted by Mike, July 21, 2009</B></SMALL>
+<BR>
+The nTOWFv2 computation for NTLMv2 authentication was slightly wrong in that it upper-cased the domain. This had no effect on JCIFS but it has been corrected for technical accuracy.
+<P></P>
+<EM>jcifs-1.3.10 released / Bugfix for SmbException: The parameter is incorrect</EM>
+<BR>
+<SMALL><B>posted by Mike, June 4, 2009</B></SMALL>
+<BR>
+This release fixes a bug that could sporadically trigger a "The parameter is incorrect" error.
+<p></p>
+The JCIFS Team would like to thank IOPLEX Software for contributing to this work.
+IOPLEX Software has many years of experience with HTTP Single Sign-On, Kerberos, NTLM, Active Directory, MSRPC and related networking protocols.
+<P></P>
+<EM>jcifs-1.3.9 released / Robust Retry of Replicated DFS Targets, copyTo Fix, UTF-16LE, and More</EM>
+<BR>
+<SMALL><B>posted by Mike, May 30, 2009</B></SMALL>
+<BR>
+This package adds the following fixes:
+<ul>
+
+<li>
+JCIFS will now iteratively try multiple replicated DFS targets if some are not enabled (whereas previously JCIFS would quit if the first root target was not accessible)
+</li>
+
+<li>
+Fixed "Invalid operation for ????? service" error when querying DFS
+</li>
+
+<li>
+SmbFile.copyTo will now copy files larger than 4GB
+</li>
+
+<li>
+All instances of UnicodeLittleUnmarked have been changed to UTF-16LE (for platforms like Android)
+</li>
+
+</ul>
+
+<p></p>
+The JCIFS Team would like to thank MetaCarta, Inc. for supporting this work. MetaCarta, Inc., a provider of geographic intelligence solutions, offers users map-driven geographic search, geographic referencing, and data visualization capabilities.
+<P></P>
+<EM>jcifs-1.3.0 released / NTLMv2 Support</EM>
+<BR>
+<SMALL><B>posted by Mike, Oct 25, 2008</B></SMALL>
+<BR>
+NTLMv2 has been fully implemented and will be used by default.
+<p></p>
+To emulate the old behavior you must set <tt>jcifs.lmCompatibility = 0</tt> and <tt>jcifs.smb.client.useExtendedSecurity = false</tt> (new defaults are <tt>3</tt> and <tt>true</tt> respectively).
+<p></p>
+NTLMv2 and NTLMv1 over NTLMSSP has been fairly well tested with and without SMB signing negotiated and various NTLMSSP flags (e.g. <tt>NTLMSSP_NEGOTIATE_NTLM2</tt>).
+<p></p>
+Note: The NTLM HTTP Filter does not and can never support NTLMv2 as it uses a main-in-the-middle technique that is broken by NTLMSSP's "target information" used in computing password hashes. However, the existing Filter should continue to work.
+<p></p>
+The JCIFS Team would like to thank MetaCarta, Inc. for supporting this work. MetaCarta, Inc., a provider of geographic intelligence solutions, offers users map-driven geographic search, geographic referencing, and data visualization capabilities.
+<P></P>
+</TD>
+</TR>
+<TR>
+<TD colspan="2" class="footer">
+<hr noshade>
+<small>
+        Last updated Oct 29, 2014<BR>jcifs-1.3.18<BR>
+        Copyright &copy; 2014 The JCIFS Project<BR>
+<a href="http://validator.w3.org/check/referer" style="color: black;">validate this page</a></small></TD>
+</TR>
+</TABLE>
+</BODY>
+</HTML>

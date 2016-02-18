@@ -1,0 +1,138 @@
+<?xml version="1.0"?>
+
+<topic>
+<title>Setting Name Resolution Properties</title>
+
+Server names can be resolved using NetBIOS broadcast queries, WINS queries, lmhosts files, or DNS. The individual methods as well as the order in which they will be used can be set using the <code>jcifs.resolveOrder</code> property. Several other properties are important to how server names are resolved and are discussed below.
+
+<p/>
+<table>
+<tr><th colspan="2">Name Resolution Properties</th></tr>
+
+<tr><td width="20%"><b>jcifs.netbios.wins</b></td><td>
+The IP address of the WINS server(or more formally <a href="wins.html">NBNS</a>). This is only required when accessing hosts on different subnets although it is recomended if a WINS server is being used.
+</td></tr>
+
+<tr><td width="20%"><b>jcifs.netbios.baddr</b></td><td>
+The local network's broadcast address. It may be necessary to set this for certain network configurations because the default of 255.255.255.255 may otherwise throw a "Network is unreachable" <code>IOException</code>. For example if the local host's IP address is 192.168.1.15, the broadcast address would likely be 192.168.1.255.
+</td></tr>
+
+<tr><td width="20%"><b>jcifs.resolveOrder</b></td><td>
+A comma separated list of name resolution method identifiers that specify which methods will be used and in what order to resolve hostnames. The possible identifiers are <code>LMHOSTS</code>, <code>WINS</code>, <code>BCAST</code>, and <code>DNS</code>.
+</td></tr>
+
+<tr><td width="20%"><b>jcifs.netbios.lmhosts</b></td><td>
+The path to an lmhosts file containing a map of IP addresses to hostnames. The format of this file is identical to that of the Windows lmhosts file format with a few exceptions noted below.
+</td></tr>
+
+<tr><td width="20%"><b>jcifs.netbios.scope</b></td><td>
+This is rare but NetBIOS provides for a "scope id" to be used in a attempt to conceal groups of machines on the same network. Ask your network administrator if scope id is used. If so, it must be set using this property or name queries will fail.
+</td></tr>
+</table>
+
+<h2>The resolveOrder Property</h2>
+
+The <code>resolveOrder</code> property specifies a comma separated list of name resolution methods to use as well as the order in which they should be used. The method names are <code>LMHOSTS</code>, <code>WINS</code>, <code>BCAST</code>, and <code>DNS</code>. The default order is:
+
+<pre>
+resolveOrder=LMHOSTS,WINS,DNS,BCAST
+</pre>
+
+or if the <code>jcifs.netbios.wins</code> property is not defined the default will be just
+
+<pre>
+resolveOrder=LMHOSTS,DNS,BCAST
+</pre>
+
+<small>Note: The above defaults were changed in 1.3.3 from <code>LMHOSTS,WINS,BCAST,DNS</code> and <code>LMHOSTS,BCAST,DNS</code> respectively. Meaning <code>BCAST</code> was moved to <i>after</i> <code>DNS</code>.</small>
+
+Both the <tt>UniAddress</tt> and <tt>NbtAddress</tt> classes honor the <tt>jcifs.resolveOrder</tt> property but the <tt>UniAddress</tt> class is used almost exclusively by jCIFS internally whereas the <tt>NbtAddress</tt> class will ignore the "DNS" token.
+<p/>
+The <code>DNS</code> method uses <code>java.net.InetAddress.getByName()</code>. So the operating systems default name resolution mechanism is responsible for resolving DNS names(i.e. if you wish to specify a DNS server you must modify the DNS configuration of the system on which jCIFS will be running). To resolve a server name, each method is queried in order. If at any point the name is successfully resolved no further methods are queried.
+
+<p/>
+As an example:
+
+<pre>
+resolveOrder=DNS,BCAST
+</pre>
+
+This would result in DNS being queried first. If the DNS query fails, a NetBIOS name query will be broadcast on 255.255.255.255 or the address specified by the <tt>jcifs.netbios.baddr</tt> property. Should this broadcast query fail, an <code>UnknownHostException</code> will result. The lmhosts file and WINS methods will not be attempted regardless of whether or not the <code>jcifs.netbios.lmhosts</code> or <code>jcifs.netbios.wins</code> properties are set.
+
+<p/>
+
+It is noteworthy that failed <code>BCAST</code> queries take 6 seconds to timeout (by default <code>retryTimeout</code> is 3000 and <code>retryCount</code> is 2). Therefore it is advantageous to specify a <code>resolveOrder</code> of:
+
+<pre>
+resolveOrder=LMHOSTS,WINS,DNS
+</pre>
+
+without the <code>BCAST</code> method if it is expected that all hosts should be resolved by WINS or DNS. This is much faster if queries are anticipated to occasionally fail (e.g. an SMB crawler program will run <i>much</i> faster without <code>BCAST</code>).
+
+<h2>The lmhosts Property</h2>
+
+The optional <code>lmhosts</code> property specifies the path to an lmhosts file. This file should contain IP address to server name mappings. When the <code>LMHOSTS</code> name resolution method is queried, these entries will be consulted. Generally lmhosts files are used to allow access to hosts on different networks if a WINS server is not provided. It is analogous to the <code>/etc/hosts</code> file on a UNIX system.
+
+<p/>
+
+The format of this file is identical to that of the Microsoft Windows lmhosts file. A simple lmhosts file might look like:
+
+<pre>
+# This is a comment
+192.168.1.15  nano
+192.168.1.16 angus
+</pre>
+
+Where each entry is just an IP address followed by the server name for that host. A more sophisticated example might look like:
+
+<pre>
+# This is a comment
+150.34.26.16 freto #PRE
+#INCLUDE \\FRETO\TEMP\nlmhosts
+
+192.168.1.15 nano
+</pre>
+
+The <code>#PRE</code> tag is ignored by jCIFS because they are not necessary. It indicates that a name should be pre-loaded into the server lookup table. However because jCIFS provides for specifying a <code>resolveOrder</code> where an lmhosts file might be queried <i>after</i> a different method it is not desirable to explicitly populate the lookup table. Entries are loaded as they are encountered in the file however so names are effectively always pre-loaded.
+
+<p/>
+
+The <code>#INCLUDE</code> tag is <i>not</i> ignored by jCIFS. Where encountered, jCIFS will retrieve the file associated with this UNC name and parse it's contents as if the file were included at that location.
+
+<p/>
+
+<code>#DOM</code> tags are ignored but the <code>#BEGIN_ALTERNATE</code> / <code>#END_ALTERNATE</code> blocks are fully supported. The only incompatability with the Windows lmhosts file <i>format</i> is that quoted strings and <code>\0xnn</code> non-printable escape characters are not supported.
+
+<p/>
+
+The format for this file was chosen to be compatible with the Windows lmhosts file because it is conceivable that an existing system or network lmhosts file might be used. To use a systems existing lmhosts file one might set the <code>jcifs.netbios.lmhosts</code> property to point to the system lmhosts file for Windows NT with:
+
+<pre>
+lmhosts=C:\WINNT\system32\drivers\etc\lmhosts
+</pre>
+
+or on other Windows systems with perhaps:
+
+<pre>
+lmhosts=C:\WINDOWS\lmhosts
+</pre>
+
+To read a network lmhosts file, set the <code>jcifs.netbios.lmhosts</code> property like:
+
+<pre>
+lmhosts=conf/mylmhosts
+</pre>
+
+and create that file with contents such as:
+
+<pre>
+# Address of server hosting network lmhosts file
+192.168.1.16  freto
+#INCLUDE \\freto\netcfg\nlmhosts
+</pre>
+
+Ask your network administrator if lmhosts files are used and if you should use one in the context of your application.
+
+<p/>Note: It so happens that DNS names may be specified in a jCIFS lmhosts file. But DNS names are <i>not</i> valid if the lmhosts file is to be read by Windows systems.
+
+</topic>

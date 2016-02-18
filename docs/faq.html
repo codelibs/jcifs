@@ -1,0 +1,342 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<HEAD>
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<STYLE TYPE="text/css">
+        BODY {
+            font-family: verdana, arial;
+            font-size: small;
+            background-color: #ffffff;
+        }
+        H1 {
+            font-family: verdana, arial;
+            font-size: normal;
+            color: #000000;
+        }
+        H2 {
+            font-family: arial, verdana;
+            font-size: normal;
+            color: #000000;
+        }
+        H3 {
+            font-family: arial, verdana;
+            font-size: small;
+            color: #000080;
+        }
+        A {
+            font-family: arial, verdana;
+            font-weight: bold;
+            color: #000080;
+        }
+        A:HOVER {
+            text-decoration: none;
+        }
+        BIG {
+            color: #000080;
+            font-family: arial, verdana;
+            font-weight: bold;
+            font-size: 50px;
+        }
+        EM {
+            color: #000080;
+            font-family: Times New Roman;
+            font-weight: bold;
+            font-size: 20px;
+        }
+        PRE {
+            font-family: monospaced, courier;
+            border: 1px lightgrey dotted;
+            white-space: pre; 
+            color: black;
+            padding: 4px;
+            background-color: #f0f0f0; 
+        }
+        TABLE {
+            border-collapse: collapse;
+            border: 1px lightgrey solid;
+        }
+        TH {
+            font-family: verdana, arial;
+            border: 1px lightgrey solid;
+            background-color: #f0f0f0;
+        }
+        TD {
+            font-family: verdana, arial;
+            font-size: small;
+            border: 1px lightgrey solid;
+        }
+    </STYLE>
+<TITLE></TITLE>
+</HEAD>
+<BODY>
+
+<H1>JCIFS Frequently Asked Questions</H1>
+
+
+<ol>
+
+<li>
+<a href="#ntlmhttpauth">How do I do NTLM HTTP authentication (a.k.a Single Sign On) for my website?</a>
+</li>
+
+<li>
+<a href="#ntlmv2">Does jCIFS support NTLMv2?</a>
+</li>
+
+<li>
+<a href="#ukproto">Why is java.net.URL throwing unknown protocol: smb Exceptions?</a>
+</li>
+
+<li>
+<a href="#ukhost">I'm getting these UnknownHostExceptions right from the start. What am I doing wrong?</a>
+</li>
+
+<li>
+<a href="#netunreach">Why do I get these "Network is unreachable" IOExceptions?</a>
+</li>
+
+<li>
+<a href="#auth">How can I authenticate arbitrary user credentials from an application or web clients against Active Directory?</a>
+</li>
+
+</ol>
+
+
+<a name="ntlmhttpauth"></a>
+<em>Q:</em> How do I do NTLM HTTP authentication (a.k.a Single Sign On) for my website?
+<p></p>
+
+<em>A:</em> See "Jespa":
+<blockquote>
+
+<a href="http://www.ioplex.com/jespa.html">http://www.ioplex.com/jespa.html</a>
+
+</blockquote>
+Jespa is a <i>complete</i> NTLM implementation in 100% Java that properly implements both the server and client side of NTLMv2, NTLMv1, NTLM2 Session Security and Key Exchange.
+Of particular interest to users of the old JCIFS SSO Filter, Jespa can properly authenticate NTLMv2 clients just like a Windows server does (using the NetrLogonSamLogon DCERPC call over NETLOGON w/ Secure Channel) and it includes an HTTP SSO Servlet Filter.
+<p></p>
+Note: Jespa uses JCIFS for DCERPC transport and some basic client side NTLM calculations. Jespa is not Open Source (although it is free for up to 25 users). Please contact IOPLEX Software support if you have any questions regarding Jespa.
+<p></p>
+Note: The old SSO Filter that used to be included with JCIFS used a "man in the middle" technique that cannot support NTLMv2 and has therefore been removed from the JCIFS package. See the following post for details:
+<p></p>
+
+<blockquote>
+
+<a href="http://lists.samba.org/archive/jcifs/2008-October/008227.html">http://lists.samba.org/archive/jcifs/2008-October/008227.html</a>
+
+</blockquote>
+
+<p></p>
+
+<!-- * * * * * * * * -->
+
+
+<a name="ntlmv2"></a>
+<em>Q:</em> Does jCIFS support NTLMv2?
+<p></p>
+
+<em>A:</em> Yes. As of 1.3.0, JCIFS fully supports NTLMv2 and uses it by default.
+<p></p>
+Note: The NTLM HTTP SSO Filter that used to be included with JCIFS cannot support NTLMv2. See <a href="#ntlmhttpauth">the above question</a> for details.
+<p></p>
+
+<!-- * * * * * * * * -->
+
+
+<a name="ukproto"></a>
+<em>Q:</em> Why is java.net.URL throwing unknown protocol: smb Exceptions?
+<pre>
+Exception in thread "main" java.net.MalformedURLException: unknown protocol: smb
+        at java.net.URL.&lt;init&gt;(URL.java:480)
+        at java.net.URL.&lt;init&gt;(URL.java:376)
+        at java.net.URL.&lt;init&gt;(URL.java:330)
+        at jcifs.smb.SmbFile.&lt;init&gt;(SmbFile.java:355)
+        ...
+</pre>
+
+<em>A:</em> The SMB URL protocol handler is not being successfully installed. In short, the jCIFS jar must be loaded by the <tt>System</tt> class loader. The problem is reported frequently with servlet containers that load the jCIFS jar using a more restricted class loader (i.e. placing the jar in <tt>WEB-INF/lib</tt> is not adequate). In this case the solution is to add the jar to the servlet container's <tt>CLASSPATH</tt> (for Resin this is simply a matter of placing it in the top level lib directory).
+<p></p>
+More specifically, the SMB URL protocol handler (<tt>jcifs.smb.Handler</tt>) is used by the <tt>java.net.URL</tt> class to provide the Java "smb://" URL implementation. There are two possible reasons why this handler is not being recognized.
+<ol>
+
+<li>
+The current security policy is preventing jCIFS from setting the <tt>java.protocol.handler.pkgs</tt> system property which is required to install the SMB URL protocol handler. For example, some servlet containers install a security manager or restrictive policy file. In this case, add the jCIFS jar file to the container's <tt>CLASSPATH</tt> because servlet containers usually associate a policy file with the class files of web applications. Otherwise, the specific (minimum) grant required by jCIFS to successfully install the SMB URL protocol handler is:
+<pre>
+permission java.util.PropertyPermission "java.protocol.handler.pkgs", "read, write";
+</pre>
+If jCIFS is not permitted to write this system property, the <tt>SecurityException</tt> throw will be caught and a message will be printed to <tt>System.err</tt>. Alternatively the property can also be set using a VM command line parameter:
+<pre>
+java -Djava.protocol.handler.pkgs=jcifs ...
+</pre>
+This should permit the URL protocol handler to be installed regardless of what security policy is installed (however this isn't recommended as it will override other protocol handlers).
+</li>
+<li>
+The jCIFS jar file is not in a suitable location. Even if the <tt>java.protocol.handler.pkgs</tt> property is set successfully, the <tt>java.net.URL</tt> class must then access the <tt>jcifs.smb.Handler</tt> class. But if the jCIFS classes are loaded by a different class loader this handler will not be found and again, you will get the "unknown protocol: smb" exception. It is very common for servlet containers to load classes from a class loader other than the <tt>System</tt> class loader. Like the first scenario, the solution is to add the jCIFS jar file to the container's <tt>CLASSPATH</tt> and <i>not</i> the <tt>WEB-INF/lib</tt> directory of the web app.
+</li>
+
+</ol>
+
+<!-- * * * * * * * * -->
+
+
+<a name="ukhost"></a>
+<em>Q:</em> I'm getting these UnknownHostExceptions right from the start. What am I doing wrong?
+<pre>
+$ java List smb://server/share/
+Exception in thread "main" java.net.UnknownHostException: SERVER&lt;20&gt;
+        at jcifs.netbios.NbtAddress.doNameQuery(NbtAddress.java, Compiled Code)
+        at jcifs.netbios.NbtAddress.getByName(NbtAddress.java, Compiled Code)
+        at jcifs.smb.SmbFile.&lt;init&gt;(SmbFile.java, Compiled Code)
+        at jcifs.smb.SmbFile.&lt;init&gt;(SmbFile.java, Compiled Code)
+        at List.main(List.java, Compiled Code)
+</pre>
+
+<p></p>
+
+<em>A:</em> In a nutshell, this is what happens when jCIFS cannot even find the target host.
+<p></p>
+For jCIFS to access another computer's files and services the target must be running a CIFS server over a NetBIOS LAN. This is exactly the case with 90% of MS Windows networks as CIFS over NetBIOS is MS's native networking setup.  In this environment jCIFS should work flawlessly.  However the above <tt>UnknownHostException</tt> is occurring because the name of the target computer cannot be resolved.  There could be many reasons why this is happening.
+
+<h3>Breakdown of Possible Name Resolution Problems:</h3>
+
+
+<ul>
+
+<li>
+<b>The name really doesn't exist.</b> The computer name is misspelled or the machine is off. Doah!
+
+</li>
+<li>
+<b>The target is on a different subnet and the name service properties are not set correctly.</b> Larger computer networks are divided up into "subnets".  In this case a WINS server is required to resolve hostnames (although fully qualified DNS names will work just as well).  The <tt>jcifs.netbios.wins</tt> property must be set to the IP address of the WINS server for your network.
+<p></p>
+See the <a href="api/overview-summary.html#scp">Setting Client Properties</a> page for information on how to set jCIFS properties.  Also see the <a href="resolver.html">Setting Name Resolution Properties</a> page for more detail about resolver properties and what they do.  You might also ask your network administrator about what NetBIOS name services are available or check the Network Settings of a nearby MS Windows host for this information.
+
+</li>
+<li>
+<b>The target computer is not running a CIFS server.</b> Not all operating systems have CIFS servers running. Generally Windows NT, Windows 95/98/ME/2000/XP, Samba on UNIX, and possibly OS/2 should work fine (although you can run jCIFS <b>from</b> any computer with an adequate version of Java). The best way to confirm that the target is in fact running a CIFS server is to try to "share" a folder on the target machine and access files on it from another machine (see Diagnostics below). Otherwise you may need to configure it to run a CIFS server ( e.g. Samba on Linux) or get third party software (e.g. Thursby Software's Dave for MacOS). Note, Windows 95/98/ME do not have the CIFS server running by default -- you must "Allow others access to my files" under <tt>Control Panel &gt; Network Settings</tt> first.
+
+</li>
+<li>
+<b>You are using the NetBIOS "scope id".</b> This is rarely encountered but you may need to set the <tt>jcifs.netbios.scope</tt> property.  Ask your network administrator if a NetBIOS scope id is being used and look at the Network Settings of nearby machines.  It will just be a string like '<tt>CHEM_BLDNG</tt>' or '<tt>scope.com</tt>' or similar. See the <a href="resolver.html">Setting Name Resolution Properties</a> page for more information about scope and other properties that control hostname resolution.
+
+</li>
+<li>
+<b>Your hostname is resolving to 127.0.0.1.</b> It is not uncommon on Linux for an /etc/hosts file to map the hostname to 127.0.0.1 such as:
+<pre>
+127.0.0.1      nano   localhost.localdomain    localhost
+</pre>
+Taking the host name (e.g. <tt>nano</tt>) out of the localhost line should solved the problem.
+
+</li>
+<li>
+<b>JCIFS is not reading the properties file.</b> If you are using the <tt>-Djcifs.properties=&lt;filename.prp&gt;</tt> command line option, make sure you spell it correctly or the properties file will silently be ignored, including any important name service properties within it.
+</li>
+
+</ul>
+
+In general, if jCIFS is producing unwarranted <tt>UnknownHostException</tt>s, you will need to find out a little more about your network. Be sure to read the <a href="api/overview-summary.html#scp">Setting Client Properties</a> section from the <a href="api/index.html">API Documentation</a> and pay close attention to the <tt>jcifs.netbios.wins</tt> property.  Connecting to Windows machines on the local subnet should work even without setting the WINS property. To connect to a machine on another subnet you can use the IP address of the host (eg. <tt>smb://192.168.1.15/someshare/</tt>) or set the <tt>jcifs.netbios.wins</tt> property and use NetBIOS server names. Below are some diagnostics that might help.
+
+<h3>Diagnosis:</h3>
+Personally I much prefer to take a packet capture when trying to diagnose networking issues. See <a href="capture.html">Obtaining a Network Packet Capture</a> for instructions on how to do that.
+<p></p>
+Otherwise, first check to see if your local hostname reverse-resolves properly. On UNIX you should look at your /etc/hosts file to make sure it's not mapped to 127.0.0.1. Otherwise just try pinging yourself. The below shows a problem. It should really be resolving to the real IP.
+<pre>
+[miallen@nano jcifs]$ ping nano
+PING nano (<b>127.0.0.1</b>) from 127.0.0.1 : 56(84) bytes of data.    // 127.0.0.1 INCORRECT
+64 bytes from nano (127.0.0.1): icmp_seq=0 ttl=255 time=0.1 ms
+...
+[miallen@bogus jcifs]$ ping bogus
+PING bogus.research.ml.com (<b>172.32.29.134</b>) from 172.32.29.134 : 56(84) bytes of data. // Real IP is CORRECT
+64 bytes from bogus.research.ml.com (172.32.29.134): icmp_seq=1 ttl=255 time=0.090 ms
+</pre>
+
+There are many ways to test the machines on your network for the necessary NetBIOS name services. If you have a Windows machine available you can use <tt>nbtstat</tt> and <tt>ipconfig</tt>.  On Linux and UNIX you can use <tt>ifconfig</tt> and <tt>nmblookup</tt> (nmblookup is from the Samba package). More specifically try:
+<pre>
+C:\&gt; ipconfig
+or
+C:\&gt; ipconfig /all
+to confirm your IP address(e.g. 192.168.1.15) and then do:
+C:\&gt; nbtstat -A 192.168.1.15
+</pre>
+You should get the netbios hostname of the machine as well as some other useful information. You can now do this on other hosts as well provided you know their IP addresses. If this is working and the necessary properties are set correctly jCIFS should work flawlessly.
+<p></p>
+The Samba suite has a similar tool that you can use on Linux and UNIX. Again, first verify your IP address with:
+<pre>
+$ /sbin/ifconfig
+$ nmblookup -A 192.168.1.15
+</pre>
+If any of the above fails you need to look closer at your network settings or have a discussion with your network administrator. But if you determine that the NetBIOS service is in fact listening on the targets of interest you can use the <tt>net</tt> command on Windows, <tt>smbclient</tt> on Linux/UNIX, or jCIFS to test connecting to services:
+<pre>
+C:\&gt; net use * \\servername\share
+</pre>
+or on UNIX with
+<pre>
+$ smbclient -L //servername
+$ smbclient //servername/share
+$ smbclient //servername/share -W research
+                            // -W required for domain auth
+</pre>
+If the above works the below <tt>List</tt> example (in the examples directory) should work as well. Try it with <tt>-Djcifs.util.loglevel=10</tt> to see detailed log messages.
+<pre>
+$ java -Djcifs.util.loglevel=10 List smb://server/share/
+</pre>
+
+<!-- * * * * * * * * -->
+
+
+<a name="netunreach"></a>
+<em>Q:</em> Why do I get these "Network is unreachable" IOExceptions?
+<pre>
+java.io.IOException: Network is unreachable
+at java.net.PlainDatagramSocketImpl.send(Native Method)
+at java.net.DatagramSocket.send(DatagramSocket.java, Compiled Code)
+at jcifs.netbios.NameServiceClient.send(NameServiceClient.java, Compiled Code)
+...
+</pre>
+
+
+<em>A:</em>
+Most likely you need to set the broadcast address that jCIFS should use to broadcast name query requests. The Java Language does not provide a way to extract this information from a host so we simply try to use '255.255.255.255'.  This will work with most network configurations, however this will fail under certain conditions producing the above exception.
+<p></p>
+To set the broadcast address, use the <tt>jcifs.netbios.baddr</tt> property such as adding <tt>jcifs.netbios.baddr=192.168.1.255</tt> or similar to your properties or use <tt>-Djcifs.netbios.baddr=192.168.1.255</tt> on the commandline. You can determine your proper broadcast address by running the <tt>ipconfig</tt> command on Windows or <tt>/sbin/ifconfig</tt> on Unix (Linux at least).  See the <a href="api/overview-summary.html#scp">Setting JCIFS Properties</a> page for details.
+<pre>
+C:\&gt; ipconfig
+C:\&gt; ipconfig /all
+or on Linux:
+$ /sbin/ifconfig
+</pre>
+Another cause of this is if your host does not have a suitable network interface over which to communicate (e.g. laptops with certain power management facilities can switch the NIC to powersave mode if theres nothing plugged into it).
+<p></p>
+
+<!-- * * * * * * * * -->
+
+
+<a name="auth"></a>
+<em>Q:</em> How can I authenticate arbitrary user credentials from an application or web clients against Active Directory?
+<p></p>
+
+<em>A:</em> There are two ways to do this. One is to use the <tt>jcifs.smb.Session.logon()</tt> method to perform an <tt>SMB_COM_SESSION_SETUP_ANDX</tt> like:
+<pre>
+UniAddress mydomaincontroller = UniAddress.getByName( "192.168.1.15" );
+NtlmPasswordAuthentication mycreds = new NtlmPasswordAuthentication( "ntdom", "user", "pass" );
+try {
+    SmbSession.logon( mydomaincontoller, mycreds );
+    // SUCCESS
+    return true;
+} catch( SmbAuthException sae ) {
+    // AUTHENTICATION FAILURE
+    return false;
+} catch( SmbException se ) {
+    // NETWORK PROBLEMS?
+    se.printStackTrace();
+}
+</pre>
+
+However, just like using an LDAP "bind" to validate credentials, the above method is a mild abuse of the protocol and can cause issues (e.g. with personal workstation AD security policy). The only way to <i>properly</i> validate NTLM credentials is with a NetrLogonSamLogon DCERPC call with the NETLOGON service. The only 100% Java solution that does that is <a href="http://www.ioplex.com/jespa.html">Jespa</a>.
+<HR noshade="noshade">
+<SMALL>
+    Last updated Mar 18, 2009<BR>jcifs-1.3.7<BR>
+    Copyright &copy; 2004 The JCIFS Project<BR>
+<a style="color: black;" href="http://validator.w3.org/check/referer">validate this page</a></SMALL>
+</BODY>
+</HTML>

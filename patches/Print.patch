@@ -1,0 +1,115 @@
+diff -Nuar old-src/jcifs/smb/SmbTree.java src/jcifs/smb/SmbTree.java
+--- old-src/jcifs/smb/SmbTree.java  2007-01-16 06:00:31.231245500 -0500
++++ src/jcifs/smb/SmbTree.java  2007-01-16 05:55:40.148493000 -0500
+@@ -90,6 +90,8 @@
+                             throw new SmbException( "Invalid operation for " + service + " service" );
+                     }
+                     break;
++                case ServerMessageBlock.SMB_COM_WRITE:
++                    if (service.equals("LPT1:")) break;
+                 default:
+                     throw new SmbException( "Invalid operation for " + service + " service" + request );
+             }
+diff -Nuar old-examples/PrintHtml.java examples/PrintHtml.java
+--- old-examples/PrintHtml.java 1969-12-31 19:00:00.000000000 -0500
++++ examples/PrintHtml.java 2007-01-16 06:07:11.461278000 -0500
+@@ -0,0 +1,99 @@
++import java.awt.Dimension;
++import java.awt.Graphics;
++import java.awt.Graphics2D;
++
++import java.awt.print.PageFormat;
++import java.awt.print.Printable;
++
++import java.io.BufferedReader;
++import java.io.FileReader;
++import java.io.OutputStream;
++import java.io.PrintWriter;
++import java.io.StringWriter;
++
++import javax.print.Doc;
++import javax.print.DocFlavor;
++import javax.print.DocPrintJob;
++import javax.print.PrintService;
++import javax.print.SimpleDoc;
++import javax.print.StreamPrintServiceFactory;
++
++import javax.swing.JEditorPane;
++import javax.swing.JFrame;
++import javax.swing.RepaintManager;
++
++import javax.swing.text.html.HTMLEditorKit;
++
++import jcifs.Config;
++
++import jcifs.smb.SmbFileOutputStream;
++
++public class PrintHtml {
++
++    public static void main(String[] args) throws Exception {
++        Config.setProperty("jcifs.smb.client.useNTSmbs", "false");
++        String htmlFile = args[0];
++        String printerUrl = args[1];
++        StringWriter collector = new StringWriter();
++        PrintWriter writer = new PrintWriter(collector);
++        BufferedReader reader = new BufferedReader(new FileReader(htmlFile));
++        String line;
++        while ((line = reader.readLine()) != null) writer.println(line);
++        writer.flush();
++        String content = collector.toString();
++        final JEditorPane pane = new JEditorPane();
++        pane.setEditorKit(new HTMLEditorKit());
++        pane.setText(content);
++        JFrame frame = new JFrame();
++        frame.getContentPane().add(pane);
++        frame.pack();
++        Printable printable = new Printable() {
++            public int print(Graphics g, PageFormat format, int pageIndex) {
++                RepaintManager currentManager =
++                        RepaintManager.currentManager(pane);
++                boolean doubleBuffering =
++                        currentManager.isDoubleBufferingEnabled();
++                if (doubleBuffering) {
++                    currentManager.setDoubleBufferingEnabled(false);
++                }
++                try {
++                    Dimension size = pane.getSize();
++                    double panelWidth = size.width;
++                    double panelHeight = size.height;
++                    double pageHeight = format.getImageableHeight();
++                    double pageWidth = format.getImageableWidth();
++                    double scale = pageWidth / panelWidth;
++                    int totalNumPages = (int)
++                            Math.ceil(scale * panelHeight / pageHeight);
++                    if (pageIndex >= totalNumPages) {
++                        return Printable.NO_SUCH_PAGE;
++                    }
++                    Graphics2D g2 = (Graphics2D) g;
++                    g2.translate(format.getImageableX(),
++                            format.getImageableY());
++                    g2.translate(0f, -pageIndex * pageHeight);
++                    g2.scale(scale, scale);
++                    pane.paint(g2);
++                    return Printable.PAGE_EXISTS;
++                } finally {
++                    if (doubleBuffering) {
++                        currentManager.setDoubleBufferingEnabled(true);
++                    }
++                }
++            }
++        };
++        DocFlavor flavor = DocFlavor.SERVICE_FORMATTED.PRINTABLE;
++        Doc doc = new SimpleDoc(printable, flavor, null);
++        StreamPrintServiceFactory[] factories =
++                StreamPrintServiceFactory.lookupStreamPrintServiceFactories(
++                        null, "application/postscript");
++        OutputStream output = new SmbFileOutputStream(printerUrl);
++        PrintService service = factories[0].getPrintService(output);
++        DocPrintJob job = service.createPrintJob();
++        job.print(doc, null);
++        output.flush();
++        output.close();
++        System.exit(0);
++    }
++
++}

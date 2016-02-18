@@ -1,0 +1,101 @@
+--- jcifs_1.3.12/src/jcifs/smb/SmbFile.java
++++ jcifs/src/jcifs/smb/SmbFile.java
+@@ -2564,6 +2564,21 @@
+         attrExpiration = 0;
+     }
+ 
++    void setPathInformation( int attrs, long ctime, long atime, long mtime ) throws SmbException {
++    int f, dir;
++
++    exists();
++    dir = attributes & ATTR_DIRECTORY;
++
++    f = open0( O_RDONLY, FILE_WRITE_ATTRIBUTES,
++    dir, dir != 0 ? 0x0001 : 0x0040 );
++    send( new Trans2SetFileInformation( f, attrs | dir, ctime, atime, mtime ),
++    new Trans2SetFileInformationResponse() );
++    close( f, 0L );
++
++    attrExpiration = 0;
++    }
++
+ /**
+  * Set the create time of the file. The time is specified as milliseconds
+  * from Jan 1, 1970 which is the same as that which is returned by the
+@@ -2581,6 +2596,22 @@
+         setPathInformation( 0, time, 0L );
+     }
+ /**
++ * Set the access time of the file. The time is specified as milliseconds
++ * from Jan 1, 1970 which is the same as that which is returned by the
++ * <tt>createTime()</tt> method.
++ * <p/>
++ * This method does not apply to workgroups, servers, or shares.
++ *
++ * @param time the create time as milliseconds since Jan 1, 1970
++ */
++    public void setAccessTime( long time ) throws SmbException {
++        if( getUncPath0().length() == 1 ) {
++            throw new SmbException( "Invalid operation for workgroups, servers, or shares" );
++        }
++
++        setPathInformation( 0, 0L, time, 0L );
++    }
++/**
+  * Set the last modified time of the file. The time is specified as milliseconds
+  * from Jan 1, 1970 which is the same as that which is returned by the
+  * <tt>lastModified()</tt>, <tt>getLastModified()</tt>, and <tt>getDate()</tt> methods.
+--- jcifs_1.3.12/src/jcifs/smb/Trans2SetFileInformation.java
++++ jcifs/src/jcifs/smb/Trans2SetFileInformation.java
+@@ -25,6 +25,7 @@
+     private int fid;
+     private int attributes;
+     private long createTime, lastWriteTime;
++    private long accessTime;
+ 
+     Trans2SetFileInformation( int fid, int attributes, long createTime, long lastWriteTime ) {
+         this.fid = fid;
+@@ -38,6 +39,19 @@
+         maxSetupCount = (byte)0x00;
+     }
+ 
++     Trans2SetFileInformation( int fid, int attributes, long createTime, long accessTime, long lastWriteTime ) {
++        this.fid = fid;
++        this.attributes = attributes;
++        this.accessTime = accessTime;
++        this.createTime = createTime;
++        this.lastWriteTime = lastWriteTime;
++        command = SMB_COM_TRANSACTION2;
++        subCommand = TRANS2_SET_FILE_INFORMATION;
++        maxParameterCount = 6;
++        maxDataCount = 0;
++        maxSetupCount = (byte)0x00;
++    }
++
+     int writeSetupWireFormat( byte[] dst, int dstIndex ) {
+         dst[dstIndex++] = subCommand;
+         dst[dstIndex++] = (byte)0x00;
+@@ -58,13 +72,22 @@
+     int writeDataWireFormat( byte[] dst, int dstIndex ) {
+         int start = dstIndex;
+ 
++        // create time
+         writeTime( createTime, dst, dstIndex ); dstIndex += 8;
+-        writeInt8( 0L, dst, dstIndex ); dstIndex += 8;
++
++        // access time
++        writeInt8( accessTime, dst, dstIndex ); dstIndex += 8;
++
++        // last write time [modification]
+         writeTime( lastWriteTime, dst, dstIndex ); dstIndex += 8;
++
++        // change time
+         writeInt8( 0L, dst, dstIndex ); dstIndex += 8;
++
+ /* Samba 2.2.7 needs ATTR_NORMAL
+  */
+         writeInt2( 0x80 | attributes, dst, dstIndex ); dstIndex += 2; 
++
+                                         /* 6 zeros observed with NT */
+         writeInt8( 0L, dst, dstIndex ); dstIndex += 6;
+ 

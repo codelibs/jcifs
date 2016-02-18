@@ -1,0 +1,202 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<HEAD>
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<STYLE TYPE="text/css">
+        BODY {
+            font-family: verdana, arial;
+            font-size: small;
+            background-color: #ffffff;
+        }
+        H1 {
+            font-family: verdana, arial;
+            font-size: normal;
+            color: #000000;
+        }
+        H2 {
+            font-family: arial, verdana;
+            font-size: normal;
+            color: #000000;
+        }
+        H3 {
+            font-family: arial, verdana;
+            font-size: small;
+            color: #000080;
+        }
+        A {
+            font-family: arial, verdana;
+            font-weight: bold;
+            color: #000080;
+        }
+        A:HOVER {
+            text-decoration: none;
+        }
+        BIG {
+            color: #000080;
+            font-family: arial, verdana;
+            font-weight: bold;
+            font-size: 50px;
+        }
+        EM {
+            color: #000080;
+            font-family: Times New Roman;
+            font-weight: bold;
+            font-size: 20px;
+        }
+        PRE {
+            font-family: monospaced, courier;
+            border: 1px lightgrey dotted;
+            white-space: pre; 
+            color: black;
+            padding: 4px;
+            background-color: #f0f0f0; 
+        }
+        TABLE {
+            border-collapse: collapse;
+            border: 1px lightgrey solid;
+        }
+        TH {
+            font-family: verdana, arial;
+            border: 1px lightgrey solid;
+            background-color: #f0f0f0;
+        }
+        TD {
+            font-family: verdana, arial;
+            font-size: small;
+            border: 1px lightgrey solid;
+        }
+    </STYLE>
+<TITLE></TITLE>
+</HEAD>
+<BODY>
+
+<H1>JCIFS Exceptions and NtlmAuthenticator</H1>
+
+This document describes how jCIFS communicates server errors to callers and how authentication related exceptions may be handled differently from regular exceptions. How jCIFS can be used to authenticate arbitrary user credentials is not discussed although it is in the <a href="faq.html">FAQ</a>.
+
+<h2>SmbException</h2>
+
+There are hundreds of error codes that may be returned by a CIFS server. It would be unacceptable to have an Exception class for each so the jCIFS client represents all of these using the <a href="api/jcifs/smb/SmbException.html"><tt>SmbException</tt></a> class. The NT STATUS code for an <tt>SmbException</tt> may be retrieved using it's <tt>getNtStatus()</tt> method.
+<p></p>
+All of the methods of <tt>SmbFile</tt> that generate network IO can potentially throw an <tt>SmbException</tt>. Under normal operation it is not necessary to catch and interrogate each exception however this mechanism provides the developer with an opportunity to make an application more sophisticated and robust in the event of an error. Consider the following example:
+
+<pre>
+while( retry-- ) {
+    try {
+        ...
+        d = f.lastModified();
+        ...
+    } catch( SmbException se ) {
+        if( se.getNtStatus() == SmbException.NT_STATUS_DEVICE_NOT_READY ) {
+            // The tape drive is not ready yet, let's wait a little while
+            Thread.sleep( retryPeriod );
+        } else {
+            throw se;
+        }
+    }
+</pre>
+
+In this example (some kind of backup utility that accesses a shared tape drive perhaps) the developer knows that accessing this device will return an <tt>NT_STATUS_DEVICE_NOT_READY</tt> status code if the tape has not finished rewinding. The <tt>SmbException</tt> is caught and examined for this condition so that the program may sleep for a predefined amount of time while waiting for the drive to become ready. Otherwise exceptions with status codes <i>other</i> than <tt>NT_STATUS_DEVICE_NOT_READY</tt> are re-thrown. Adding this kind of support to your application usually requires some experimentation to determine what types of error codes will be returned by a server and in general the technique is not portable.
+
+<p></p>
+
+The <tt>SmbException</tt> class has text messages associated with the more common status codes. The <tt>SmbExcption</tt> for <tt>NT_STATUS_DEVICE_NOT_READY</tt> will generate the familiar "The device is not ready" message you get when trying to access a CDROM drive without a disk in it. Of course not all of the various error codes have associated text messages and the ones that do are in English at the moment.
+
+<p></p>
+
+Note: Eventually there may be a <tt>java.util.ResourceBundle</tt> to manage common text messages in various languages.
+
+<h2>SmbAuthException</h2>
+
+One rather common not-so-exceptional set of exceptions are the authentication related exceptions. For example, if an ordinary user attempts to read a file which may only be accessed by a user with "Backup Operator" permissions, the server will return a status code of <tt>NT_STATUS_ACCESS_DENIED</tt> (at least NT with NTFS will). Similarly if the user is restricted to accessing a server during a prescribed time period, the server may return an <tt>NT_STATUS_INVALID_LOGON_HOURS</tt> status code. To catch these exceptions (perhaps to ask the user for alternative credentials), using only the mechanism described above, a switch block like the following would be necessary:
+
+<pre>
+switch( se.getNtStatus() ) {
+    case SmbException.NT_STATUS_OK:
+        break;
+    case SmbException.NT_STATUS_ACCESS_DENIED:
+    case SmbException.NT_STATUS_WRONG_PASSWORD:
+    case SmbException.NT_STATUS_LOGON_FAILURE:
+    case SmbException.NT_STATUS_ACCOUNT_RESTRICTION:
+    case SmbException.NT_STATUS_INVALID_LOGON_HOURS:
+    case SmbException.NT_STATUS_INVALID_WORKSTATION:
+    case SmbException.NT_STATUS_PASSWORD_EXPIRED:
+    case SmbException.NT_STATUS_ACCOUNT_DISABLED:
+    case SmbException.NT_STATUS_ACCOUNT_LOCKED_OUT:
+        // get new authentication credentials and try again
+}
+</pre>
+
+This is cumbersome. Fortunately, jCIFS provides a mechanism to do the equivalent of the above internally and throw an <a href="api/jcifs/smb/SmbAuthException.html"><tt>SmbAuthException</tt></a> instead of the more generic <tt>SmbException</tt>. <tt>SmbAuthException</tt> extends <tt>SmbException</tt> but provides no additional functionality other than being a different class to catch:
+
+<pre>
+} catch( SmbAuthException sae ) {
+    // handle authentication related issue here
+} catch( SmbException se ) {
+    // any special SMB related exception handling
+}
+</pre>
+
+This is useful by itself but there's an addition facility for handing these exceptions.
+
+<h2>NtlmAuthenticator and NtlmAuthenticator.setDefault( NtlmAuthenticator )</h2>
+
+Like <tt>java.net.Authenticator</tt> the <a href="api/jcifs/smb/NtlmAuthenticator.html"><tt>NtlmAuthenticator</tt></a> class can be extended by an application and registered with the <a href="api/jcifs/smb/NtlmAuthenticator.html#setDefault( NtlmAuthenticator a )"><tt>NtlmAuthenticator.setDefault(jcifs.smb.NtlmAuthenticator)</tt></a> method to add sophisticated authentication handing to an application. When an <tt>SmbAuthException</tt> occurs the <tt>NtlmAuthenticator</tt>'s <tt>getNtlmPasswordAuthentication()</tt> implementation will be called. The <tt>NtlmPasswordAuthentication</tt> object returned will be used to resubmit the request. <i>The developer need not worry about retrying the operation</i>. The authenticator will be called repeatedly until <tt>null</tt> is returned. Only one <tt>NtlmAuthenticator</tt> may be registered.
+
+<p></p>
+
+The <tt>SmbShell</tt> example illustrates the use of <tt>NtlmAuthenticator</tt>:
+
+<pre>
+
+<b>public class SmbShell extends NtlmAuthenticator {</b>
+
+    <b>protected NtlmPasswordAuthentication getNtlmPasswordAuthentication() {</b>
+        System.out.println( getRequestingException().getMessage() +
+                    " for " + getRequestingURL() );
+        System.out.print( "username: " );
+        try {
+            int i;  
+            String username = readLine();
+            String domain = null, password;
+
+            if(( i = username.indexOf( '\\' )) != -1 ) {
+                domain = username.substring( 0, i ); 
+                username = username.substring( i + 1 );
+            }
+            System.out.print( "password: " );
+            password = readLine();
+            if( password.length() == 0 ) {
+                return null;
+            }       
+            <b>return new NtlmPasswordAuthentication( domain, username, password );</b>
+        } catch( Exception e ) {
+        }       
+        return null;
+    }
+
+    public SmbShell( String start ) {
+        this.start = start;
+        <b>NtlmAuthenticator.setDefault( this );</b>
+    }
+</pre>
+
+When the <tt>SmbShell</tt> user tries to access a resource for which they do not have adequate permissions the <tt>SmbAuthException</tt> will be trapped and the above <tt>getNtlmPasswordAuthentication</tt> method will be called upon to supply alternative credentials. The commandline dialog of this might look like:
+
+<pre>
+$ java -Djcifs.netbios.wins=192.168.1.15 SmbShell smb://myworkgroup/
+myworkgroup/&gt; cd storage0605/c$/
+The user account has expired for smb://storage0605/c$/
+username: mydomain\miallen
+password: fretos
+c$/&gt;
+</pre>
+
+
+<HR noshade="noshade">
+<SMALL>
+    Last updated Mar 18, 2009<BR>jcifs-1.3.7<BR>
+    Copyright &copy; 2004 The JCIFS Project<BR>
+<a style="color: black;" href="http://validator.w3.org/check/referer">validate this page</a></SMALL>
+</BODY>
+</HTML>

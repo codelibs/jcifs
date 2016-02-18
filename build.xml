@@ -1,0 +1,252 @@
+<project name="jcifs" default="usage" basedir=".">
+
+    <property name="version" value="1.3.18"/>
+    <property name="reldate" value="Oct 29, 2014"/>
+
+    <target name="usage">
+        <echo>
+Available Build Targets:
+
+dependencies: Checks that all class dependencies are met.
+     compile: Builds the jCIFS classes.
+         jar: Packages the jCIFS classes into a .jar file.
+        docs: XSLT generated website pages
+     javadoc: Creates the Javadoc API documentation.
+         all: Performs all of the above.
+
+       clean: Removes build artifacts.
+    allclean: Removes distribution and build artifacts.  This
+              includes the .jar file, .class files, and
+              the Javadoc API documentation.
+
+       jcifs: Builds the "all" target, followed by "clean".  This
+              reproduces the distribution package contents.
+     distrib: Builds the "jcifs" target, and additionally
+              recreates the .zip and .tgz downloadable
+              distributions.
+    checksum: Creates MD5 checksums of the .zip and .tgz
+              distributions.
+
+       usage: Displays this message.</echo>
+    </target>
+
+    <target name="hasServlet" unless="hasServlet">
+        <fail>
+
+    The Java Servlet API classes could not be found.  These files can be
+    obtained from:
+
+        http://java.sun.com/products/servlet/download.html
+        </fail>
+    </target>
+
+    <target name="dependencies">
+        <available classname="javax.servlet.Servlet" property="hasServlet"/>
+        <antcall target="hasServlet"/>
+    </target>
+
+    <target name="compile" depends="dependencies">
+        <mkdir dir="build"/>
+        <javac srcdir="src"
+            destdir="build"
+            source="1.5"
+            target="1.5"
+            fork="yes"
+            executable="/usr/local/java5/bin/javac"
+            compiler="javac1.5"
+            debug="on">
+<!--
+            <compilerarg line="-Xlint:deprecation -Xlint:unchecked"/>
+-->
+        </javac>
+        <copy file="src/jcifs/util/mime.map" tofile="build/jcifs/util/mime.map" overwrite="yes"/>
+        <copy file="src/jcifs/http/ne.css" tofile="build/jcifs/http/ne.css" overwrite="yes"/>
+    </target>
+
+    <target name="jar" depends="compile">
+        <jar jarfile="jcifs-${version}.jar">
+            <manifest>
+                <attribute name="Bundle-Version" value="${version}"/>
+                <attribute name="Bundle-Name" value="jcifs"/>
+                <attribute name="Bundle-ManifestVersion" value="2"/>
+                <attribute name="Bundle-SymbolicName" value="jcifs"/>
+                <attribute name="Export-Package" value="jcifs, jcifs.dcerpc, jcifs.dcerpc.msrpc, jcifs.http, jcifs.https, jcifs.netbios, jcifs.ntlmssp, jcifs.smb, jcifs.util, jcifs.util.transport"/>
+            </manifest>
+            <fileset dir="build"/>
+        </jar>
+    </target>
+
+    <target name="javadoc">
+        <delete dir="docs/api" quiet="true"/>
+        <mkdir dir="docs/api"/>
+        <javadoc destdir="docs/api" overview="docs/overview.html" author="true" version="true" use="true" windowtitle="JCIFS API">
+            <fileset dir="src">
+                <include name="jcifs/Config.java"/>
+                <include name="jcifs/UniAddress.java"/>
+                <include name="jcifs/netbios/NbtAddress.java"/>
+                <include name="jcifs/smb/ACE.java"/>
+                <include name="jcifs/smb/DosFileFilter.java"/>
+                <include name="jcifs/smb/NtlmAuthenticator.java"/>
+                <include name="jcifs/smb/NtlmContext.java"/>
+                <include name="jcifs/smb/NtlmPasswordAuthentication.java"/>
+                <include name="jcifs/smb/SID.java"/>
+                <include name="jcifs/smb/SmbAuthException.java"/>
+                <include name="jcifs/smb/SmbException.java"/>
+                <include name="jcifs/smb/SmbFileFilter.java"/>
+                <include name="jcifs/smb/SmbFileInputStream.java"/>
+                <include name="jcifs/smb/SmbFile.java"/>
+                <include name="jcifs/smb/SmbFilenameFilter.java"/>
+                <include name="jcifs/smb/SmbFileOutputStream.java"/>
+                <include name="jcifs/smb/SmbNamedPipe.java"/>
+                <include name="jcifs/smb/SmbRandomAccessFile.java"/>
+                <include name="jcifs/util/LogStream.java"/>
+                <include name="jcifs/util/RC4.java"/>
+                <include name="jcifs/util/HMACT64.java"/>
+                <include name="jcifs/util/Base64.java"/>
+            </fileset>
+            <classpath>
+                <pathelement path="${java.class.path}"/>
+                <fileset dir=".">
+                    <include name="**/*.jar"/>
+                </fileset>
+            </classpath>
+        </javadoc>
+        <!--copy file="docs/allclasses-frame.html" tofile="docs/api/allclasses-frame.html" overwrite="yes"/-->
+    </target>
+
+    <target name="all" depends="jar,docs,javadoc"/>
+
+    <target name="clean">
+        <delete dir="build" quiet="true"/>
+    </target>
+
+    <target name="allclean" depends="clean">
+        <delete quiet="true">
+            <fileset dir=".">
+                <include name="jcifs-${version}.zip"/>
+                <include name="jcifs-${version}.zip.MD5"/>
+                <include name="jcifs-${version}.tgz"/>
+                <include name="jcifs-${version}.tgz.MD5"/>
+                <include name="jcifs-${version}.jar"/>
+            </fileset>
+        </delete>
+        <delete dir="docs/api" quiet="true"/>
+        <delete quiet="true">
+            <fileset dir="docs">
+                <include name="index.html"/>
+                <include name="pipes.html"/>
+                <include name="faq.html"/>
+                <include name="wins.html"/>
+                <include name="capture.html"/>
+                <include name="httpclient.html"/>
+                <include name="resolver.html"/>
+                <include name="authhandler.html"/>
+                <include name="ntlmhttpauth.html"/>
+            </fileset>
+        </delete>
+    </target>
+
+    <target name="jcifs" depends="all,clean"/>
+
+    <target name="distrib" depends="jcifs">
+        <delete dir="dist_tmp" quiet="true"/>
+        <copy todir="dist_tmp/jcifs_${version}">
+            <fileset dir=".">
+                <include name="build.xml"/>
+                <include name="jcifs-${version}.jar"/>
+                <include name="README.txt"/>
+                <include name="LICENSE.txt"/>
+                <include name="docs/**"/>
+                <include name="examples/**"/>
+                <include name="src/**"/>
+                <include name="patches/**"/>
+            </fileset>
+        </copy>
+        <fixcrlf srcdir="dist_tmp" tab="remove" tablength="4">
+            <include name="**/*.java"/>
+            <include name="**/*.c"/>
+            <include name="**/*.h"/>
+            <include name="**/*.css"/>
+            <include name="**/*.html"/>
+            <include name="**/*.xml"/>
+            <include name="**/*.txt"/>
+            <include name="**/*.jav"/>
+            <include name="**/*.bak"/>
+            <include name="**/*.prp"/>
+            <include name="**/*.map"/>
+            <include name="**/*.patch"/>
+        </fixcrlf>
+        <fixcrlf srcdir="dist_tmp" eol="crlf">
+            <include name="**/*.java"/>
+            <include name="**/*.c"/>
+            <include name="**/*.h"/>
+            <include name="**/*.css"/>
+            <include name="**/*.html"/>
+            <include name="**/*.xml"/>
+            <include name="**/*.txt"/>
+            <include name="**/*.jav"/>
+            <include name="**/*.bak"/>
+            <include name="**/*.prp"/>
+            <include name="**/*.map"/>
+            <include name="**/*.patch"/>
+            <include name="**/Makefile"/>
+        </fixcrlf>
+        <zip zipfile="jcifs-${version}.zip" basedir="dist_tmp"/>
+        <fixcrlf srcdir="dist_tmp" eol="lf">
+            <include name="**/*.java"/>
+            <include name="**/*.c"/>
+            <include name="**/*.h"/>
+            <include name="**/*.css"/>
+            <include name="**/*.html"/>
+            <include name="**/*.xml"/>
+            <include name="**/*.txt"/>
+            <include name="**/*.jav"/>
+            <include name="**/*.bak"/>
+            <include name="**/*.prp"/>
+            <include name="**/*.map"/>
+            <include name="**/*.patch"/>
+            <include name="**/Makefile"/>
+        </fixcrlf>
+        <tar tarfile="jcifs-${version}.tar" basedir="dist_tmp"/>
+        <delete dir="dist_tmp" quiet="true"/>
+        <gzip src="jcifs-${version}.tar" zipfile="jcifs-${version}.tgz"/>
+        <delete file="jcifs-${version}.tar" quiet="true"/>
+    </target>
+
+    <target name="checksum">
+        <checksum file="jcifs-${version}.zip"/>
+        <checksum file="jcifs-${version}.tgz"/>
+    </target>
+
+    <target name="docs">
+        <style basedir="docs" destdir="docs" extension=".html" style="plain.xsl"
+                includes="pipes.xml,faq.xml,wins.xml,capture.xml,httpclient.xml,resolver.xml,authhandler.xml,ntlmhttpauth.xml">
+            <param name="date" expression="${reldate}"/>
+            <param name="lib" expression="jcifs-${version}"/>
+            <param name="title" expression="JCIFS"/>
+            <param name="copyright" expression="The JCIFS Project"/>
+            <param name="edge" expression="#808080"/>
+            <param name="mainpane" expression="#ffffff"/>
+            <param name="leftpane" expression="#FFD700"/>
+            <param name="middlepane" expression="#ffffff"/>
+            <param name="footer" expression="#808080"/>
+            <param name="text1" expression="#000000"/>
+            <param name="text2" expression="#000080"/>
+        </style>
+        <style basedir="docs" destdir="docs" extension=".html" style="proj.xsl"
+                includes="index.xml">
+            <param name="date" expression="${reldate}"/>
+            <param name="lib" expression="jcifs-${version}"/>
+            <param name="title" expression="JCIFS"/>
+            <param name="copyright" expression="The JCIFS Project"/>
+            <param name="edge" expression="#808080"/>
+            <param name="mainpane" expression="#ffffff"/>
+            <param name="leftpane" expression="#e0e0FF"/>
+            <param name="middlepane" expression="#ffffff"/>
+            <param name="footer" expression="#808080"/>
+            <param name="text1" expression="#000000"/>
+            <param name="text2" expression="#000080"/>
+        </style>
+    </target>
+
+</project>

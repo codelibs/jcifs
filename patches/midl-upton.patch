@@ -1,0 +1,106 @@
+diff -wNaur origsrc/emit_dec_java.c src/emit_dec_java.c
+--- origsrc/emit_dec_java.c 2008-05-01 11:06:13.000000000 -0700
++++ src/emit_dec_java.c 2008-05-01 12:13:17.000000000 -0700
+@@ -114,8 +114,8 @@
+            if (!is_ref) {
+                print(idl, indent, "if (_%sp != 0) {\n", name);
+                if (!IS_PRIMATIVE(sym) && !IS_ARRAY(sym) && !IS_UNION(sym)) {
+-                   print(idl, indent + 4, "if (%s == null) { /* YOYOYO */\n", name);
+-                   print(idl, indent + 8, "%s = new %s();\n", name, sym->out_type);
++                   print(idl, indent + 4, "if (%s == null) { /* YOYOYO */\n", sym->name);
++                   print(idl, indent + 8, "%s = new %s();\n", sym->name, sym->out_type);
+                    print(idl, indent + 4, "}\n");
+                }
+            }
+diff -wNaur origsrc/emit_enc_java.c src/emit_enc_java.c
+--- origsrc/emit_enc_java.c 2008-05-01 11:06:13.000000000 -0700
++++ src/emit_enc_java.c 2008-05-01 12:13:43.000000000 -0700
+@@ -76,7 +76,7 @@
+                linkedlist_iterate(siblings, &iter);
+                while ((mem = linkedlist_next(siblings, &iter))) {
+                    if (strcmp(mem->name, tmp) == 0) {
+-                       if (memcmp(mem->out_type, "Ndr", 3) == 0) {
++                       if (mem->out_type != NULL && memcmp(mem->out_type, "Ndr", 3) == 0) {
+                            bp += sprintf(bp, ".value");
+                        }
+                        break;
+@@ -151,7 +151,15 @@
+ 
+            buf[0] = '\0';
+            if (strcmp(sym->name, sym->orig->name) != 0) {
+-               sprintf(buf, "%s.", sym->parent->name);
++               sprintf(buf, "%s.", sym->name);
++               int i;
++               // Remove the last component of the name
++               for (i = strlen(buf) - 2; i >= 0; i--) {
++                   if (buf[i] == '.') {
++                       buf[i+1] = 0;
++                       break;
++                   }
++               }
+            }
+ 
+            if (length_is) {
+--- origsrc/parse.c 2008-05-01 11:06:13.000000000 -0700
++++ src/parse.c 2008-05-01 09:50:45.000000000 -0700
+@@ -39,7 +39,7 @@
+    for ( ;; ) {
+        if (!retok) {
+            if ((n = tokget(in, tok, tok + TOKMAX)) == -1) {
+-               AMSG("");
++               AMSG("Unexpected end of file");
+                return -1;
+            } else if (n == 0) {
+                break;
+@@ -75,8 +75,16 @@
+                    }
+                } else if (ch == '(') {
+                    int i;
++                   // Count the open we already saw
++                   int nestedOpen = 1;
+ 
+-                   for (i = 0; (ch = fgetc(in->in)) != ')' && ch != EOF; i++) {
++                   for (i = 0; (ch = fgetc(in->in)) != EOF; i++) {
++                       if (ch == '(') {
++                           nestedOpen++;
++                       } else if (ch == ')') {
++                           if (--nestedOpen == 0)
++                               break;
++                       }
+                        tok[i] = ch;
+                    }
+                    tok[i] = '\0';
+@@ -117,11 +125,11 @@
+                        s->idl_type = "import";
+                        s->name = dupstr(tok, idl->al);
+                        s->noemit = 1;
+-                       symaddmem(sym->parent, s);
++                       symaddmem(sym, s);
+                    }
+ 
+                    if (idl_process_file(idl, dupstr(buf, idl->al), &iface) == -1) {
+-                       AMSG("");
++                       AMSG("Failed to process import file %s", sym->filename);
+                        return -1;
+                    }
+                }
+@@ -291,7 +299,7 @@
+                    s->parent = sym;
+                    n = parse(idl, in, s);
+                    if (n == -1) {
+-                       AMSG("");
++                       AMSG("Recursive parse failed");
+                        return -1;
+                    } else if (n == 0 || n == 3) {
+                        symdel(s);
+@@ -305,7 +313,7 @@
+ 
+                        do {
+                            if ((m = tokget(in, stok, stok + TOKMAX)) < 1) {
+-                               AMSG("");
++                               AMSG("Unexpected end of tokens");
+                                return m;
+                            }
+                            sch = stok[0];
+
+
