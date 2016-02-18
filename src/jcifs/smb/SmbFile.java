@@ -18,25 +18,26 @@
 
 package jcifs.smb;
 
-import java.net.URLConnection;
-import java.net.URL;
-import java.net.MalformedURLException;
-import java.net.UnknownHostException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.net.UnknownHostException;
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.security.Principal;
-import jcifs.Config;
-import jcifs.util.LogStream;
-import jcifs.UniAddress;
-import jcifs.netbios.NbtAddress;
-import jcifs.dcerpc.*;
-import jcifs.dcerpc.msrpc.*;
 
-import java.util.Date;
+import jcifs.Config;
+import jcifs.UniAddress;
+import jcifs.dcerpc.DcerpcHandle;
+import jcifs.dcerpc.msrpc.MsrpcDfsRootEnum;
+import jcifs.dcerpc.msrpc.MsrpcShareEnum;
+import jcifs.dcerpc.msrpc.MsrpcShareGetInfo;
+import jcifs.netbios.NbtAddress;
+import jcifs.util.LogStream;
 
 /**
  * This class represents a resource on an SMB network. Mainly these
@@ -2976,6 +2977,40 @@ if (this instanceof SmbNamedPipe) {
  */
     public ACE[] getSecurity() throws IOException {
         return getSecurity(false);
+    }
+
+    public SID getOwnerUser() throws IOException {
+
+        int f = open0(O_RDONLY, READ_CONTROL, 0, isDirectory() ? 1 : 0);
+
+        /*
+         * NtTrans Query Security Desc Request / Response
+         */
+        NtTransQuerySecurityDesc request = new NtTransQuerySecurityDesc(f, 0x01);
+        NtTransQuerySecurityDescResponse response = new NtTransQuerySecurityDescResponse();
+        send(request, response);
+
+        close(f, 0L);
+
+        response.securityDescriptor.owner_user.resolve(getServerWithDfs(), auth);
+        return response.securityDescriptor.owner_user;
+    }
+
+    public SID getOwnerGroup() throws IOException {
+
+        int f = open0(O_RDONLY, READ_CONTROL, 0, isDirectory() ? 1 : 0);
+
+        /*
+         * NtTrans Query Security Desc Request / Response
+         */
+        NtTransQuerySecurityDesc request = new NtTransQuerySecurityDesc(f, 0x02);
+        NtTransQuerySecurityDescResponse response = new NtTransQuerySecurityDescResponse();
+        send(request, response);
+
+        close(f, 0L);
+
+        response.securityDescriptor.owner_group.resolve(getServerWithDfs(), auth);
+        return response.securityDescriptor.owner_group;
     }
 
 }

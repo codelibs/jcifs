@@ -22,6 +22,7 @@ import java.io.IOException;
 
 public class SecurityDescriptor {
 
+    SID owner_user, owner_group;
     public int type;
     public ACE[] aces;
 
@@ -37,27 +38,39 @@ public class SecurityDescriptor {
         bufferIndex++;
         type = ServerMessageBlock.readInt2(buffer, bufferIndex);
         bufferIndex += 2;
-        ServerMessageBlock.readInt4(buffer, bufferIndex); // offset to owner sid
+        int ownerUOffset = ServerMessageBlock.readInt4(buffer, bufferIndex); // offset to owner sid
         bufferIndex += 4;
-        ServerMessageBlock.readInt4(buffer, bufferIndex); // offset to group sid
+        int ownerGOffset = ServerMessageBlock.readInt4(buffer, bufferIndex); // offset to group sid
         bufferIndex += 4;
-        ServerMessageBlock.readInt4(buffer, bufferIndex); // offset to sacl
+        int saclOffset = ServerMessageBlock.readInt4(buffer, bufferIndex); // offset to sacl
         bufferIndex += 4;
         int daclOffset = ServerMessageBlock.readInt4(buffer, bufferIndex);
 
+        if (ownerUOffset > 0) {
+            bufferIndex = start + ownerUOffset;
+            owner_user = new SID(buffer, bufferIndex);
+            bufferIndex += 28; // ???
+        }
+
+        if (ownerGOffset > 0) {
+            bufferIndex = start + ownerGOffset;
+            owner_group = new SID(buffer, bufferIndex);
+            bufferIndex += 28; // ???
+        }
+
         bufferIndex = start + daclOffset;
 
-        bufferIndex++; // revision
-        bufferIndex++;
-        int size = ServerMessageBlock.readInt2(buffer, bufferIndex);
-        bufferIndex += 2;
-        int numAces = ServerMessageBlock.readInt4(buffer, bufferIndex);
-        bufferIndex += 4;
-
-        if (numAces > 4096)
-            throw new IOException( "Invalid SecurityDescriptor" );
-
         if (daclOffset != 0) {
+            bufferIndex++; // revision
+            bufferIndex++;
+            int size = ServerMessageBlock.readInt2(buffer, bufferIndex);
+            bufferIndex += 2;
+            int numAces = ServerMessageBlock.readInt4(buffer, bufferIndex);
+            bufferIndex += 4;
+
+            if (numAces > 4096)
+                throw new IOException( "Invalid SecurityDescriptor" );
+
             aces = new ACE[numAces];
             for (int i = 0; i < numAces; i++) {
                 aces[i] = new ACE();
