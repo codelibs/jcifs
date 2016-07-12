@@ -22,9 +22,14 @@ import java.io.IOException;
 
 import jcifs.dcerpc.*;
 
+import jcifs.smb.SmbException;
+
 public class SamrPolicyHandle extends rpc.policy_handle {
 
+    DcerpcHandle handle;
+
     public SamrPolicyHandle(DcerpcHandle handle, String server, int access) throws IOException {
+        this.handle = handle;
         if (server == null)
             server = "\\\\";
         MsrpcSamrConnect4 rpc = new MsrpcSamrConnect4(server, access, this);
@@ -40,6 +45,10 @@ public class SamrPolicyHandle extends rpc.policy_handle {
     }
 
     public void close() throws IOException {
+        MsrpcSamrCloseHandle rpc = new MsrpcSamrCloseHandle(this);
+        handle.sendrecv(rpc);
+        if (rpc.retval != 0)
+            throw new SmbException(rpc.retval, false);
     }
 }
 

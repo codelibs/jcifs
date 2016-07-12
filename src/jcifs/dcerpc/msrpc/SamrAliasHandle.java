@@ -26,10 +26,13 @@ import jcifs.dcerpc.*;
 
 public class SamrAliasHandle extends rpc.policy_handle {
 
+    DcerpcHandle handle;
+
     public SamrAliasHandle(DcerpcHandle handle,
                 SamrDomainHandle domainHandle,
                 int access,
                 int rid) throws IOException {
+        this.handle = handle;
         MsrpcSamrOpenAlias rpc = new MsrpcSamrOpenAlias(domainHandle, access, rid, this);
         handle.sendrecv(rpc);
         if (rpc.retval != 0)
@@ -37,6 +40,10 @@ public class SamrAliasHandle extends rpc.policy_handle {
     }
 
     public void close() throws IOException {
+        MsrpcSamrCloseHandle rpc = new MsrpcSamrCloseHandle(this);
+        handle.sendrecv(rpc);
+        if (rpc.retval != 0)
+            throw new SmbException(rpc.retval, false);
     }
 }
 
