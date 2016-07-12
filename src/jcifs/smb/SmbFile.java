@@ -2904,13 +2904,17 @@ if (this instanceof SmbNamedPipe) {
 
         try {
             send( request, response );
+            aces = response.securityDescriptor.aces;
+            if (aces != null)
+                processAces(aces, resolveSids);
         } finally {
-            close( f, 0L );
+            try {
+                close( f, 0L );
+            } catch(SmbException se) {
+                if (log.level >= 1)
+                    se.printStackTrace(log);
+            }
         }
-
-        aces = response.securityDescriptor.aces;
-        if (aces != null)
-            processAces(aces, resolveSids);
 
         return aces;
     }
