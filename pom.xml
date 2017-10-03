@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.codelibs</groupId>
   <artifactId>jcifs</artifactId>
-  <version>1.3.18.3-SNAPSHOT</version>
+  <version>1.3.19-SNAPSHOT</version>
   <packaging>jar</packaging>
   <name>jCIFS</name>
   <url>http://jcifs.samba.org</url>

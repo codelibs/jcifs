@@ -318,11 +318,17 @@ public class SmbTransport extends Transport implements SmbConstants {
         try {
             negotiate( port, resp );
         } catch( ConnectException ce ) {
-            port = (port == 0 || port == DEFAULT_PORT) ? 139 : DEFAULT_PORT;
-            negotiate( port, resp );
+            // Try an alternate port if there was an issue communicating to the server
+            // Only set the alternate port to the port property if it was successful
+            int altPort = (port == 0 || port == DEFAULT_PORT) ? 139 : DEFAULT_PORT;
+            negotiate( altPort, resp );
+            port = altPort;
         } catch( NoRouteToHostException nr ) {
-            port = (port == 0 || port == DEFAULT_PORT) ? 139 : DEFAULT_PORT;
-            negotiate( port, resp );
+            // Try an alternate port if there was an issue communicating to the server
+            // Only set the alternate port to the port property if it was successful
+            int altPort = (port == 0 || port == DEFAULT_PORT) ? 139 : DEFAULT_PORT;
+            negotiate( altPort, resp );
+            port = altPort;
         }
 
         if( resp.dialectIndex > 10 ) {
