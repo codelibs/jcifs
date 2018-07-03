@@ -65,8 +65,6 @@ public interface Address {
      * Guess called name to try for session establishment. These
      * methods are used by the smb package.
      * 
-     * @param tc
-     * 
      * @return guessed name
      */
     String firstCalledName ();
