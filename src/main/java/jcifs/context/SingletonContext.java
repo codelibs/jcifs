@@ -120,10 +120,13 @@ public class SingletonContext extends BaseContext implements CIFSContext {
      */
     public static void registerSmbURLHandler () {
         String pkgs;
-        float ver = Float.parseFloat(Runtime.class.getPackage().getSpecificationVersion());
-        String vendor = System.getProperty("java.vendor.url");
-        if ( ! ( vendor != null && vendor.startsWith("http://www.android.com") ) && ver < 1.7f ) {
-            throw new RuntimeCIFSException("jcifs-ng requires Java 1.7 or above. You are running " + ver);
+        String specVersion = Runtime.class.getPackage().getSpecificationVersion();
+        if ( specVersion != null ) {
+            float ver = Float.parseFloat(specVersion);
+            String vendor = System.getProperty("java.vendor.url");
+            if ( ! ( vendor != null && vendor.startsWith("http://www.android.com") ) && ver < 1.8f ) {
+                throw new RuntimeCIFSException("jcifs requires Java 8 or above. You are running " + ver);
+            }
         }
 
         SingletonContext.getInstance();
