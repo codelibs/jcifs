@@ -68,6 +68,127 @@
 					</links>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.felix</groupId>
+				<artifactId>maven-bundle-plugin</artifactId>
+				<extensions>true</extensions>
+
+				<configuration>
+					<instructions>
+						<Bundle-Version>${osgi.version}</Bundle-Version>
+						<Bundle-License>LGPL</Bundle-License>
+						<Bundle-Vendor>CodeLibs</Bundle-Vendor>
+						<Bundle-SymbolicName>org.codelibs.jcifs</Bundle-SymbolicName>
+						<Export-Package>
+							jcifs.internal*;version="${osgi.pkg.version}";x-internal:=true,
+							jcifs*;version="${osgi.pkg.version}",
+						</Export-Package>
+						<Private-Package />
+						<Import-Package>
+							javax.servlet*;resolution:=optional,
+							com.sun.security.jgss;resolution:=optional,
+							org.bouncycastle*;version="1.54",
+							!jcifs.internal*,
+							*
+						</Import-Package>
+					</instructions>
+					<addDependenciesToRepository>true</addDependenciesToRepository>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>clirr-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>check-compatibility</id>
+						<goals>
+							<goal>check</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<ignored>
+						<difference>
+							<!-- seems to be a clirr bug that it cannot handle the different inherited 
+								return types -->
+							<className>**</className>
+							<differenceType>7006</differenceType>
+							<method>*</method>
+							<from>*</from>
+							<to>*</to>
+						</difference>
+					</ignored>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<includes>
+						<include>**/**Test.java</include>
+					</includes>
+					<systemPropertyVariables>
+						<networkaddress.cache.ttl>-1</networkaddress.cache.ttl>
+						<networkaddress.cache.negative.ttl>-1</networkaddress.cache.negative.ttl>
+					</systemPropertyVariables>
+					<properties>
+						<property>
+							<name>listener</name>
+							<value>jcifs.tests.PrintingRunListener</value>
+						</property>
+					</properties>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.rat</groupId>
+				<artifactId>apache-rat-plugin</artifactId>
+				<executions>
+					<execution>
+						<phase>verify</phase>
+						<goals>
+							<goal>check</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<addDefaultLicenseMatchers>true</addDefaultLicenseMatchers>
+					<excludes>
+						<exclude>pom.xml</exclude>
+						<exclude>breaking-changes.xml</exclude>
+						<exclude>README.md</exclude>
+						<exclude>build.properties</exclude>
+						<exclude>src/test/resources/**</exclude>
+						<exclude>**/*.idl</exclude>
+						<exclude>**/*.css</exclude>
+						<exclude>.*</exclude>
+						<exclude>.*/**</exclude>
+						<exclude>META-INF/**</exclude>
+						<exclude>src/main/java/jcifs/dcerpc/msrpc/netdfs.java</exclude>
+						<exclude>src/main/java/jcifs/dcerpc/msrpc/srvsvc.java</exclude>
+						<exclude>src/main/java/jcifs/dcerpc/msrpc/samr.java</exclude>
+						<exclude>src/main/java/jcifs/dcerpc/msrpc/lsarpc.java</exclude>
+						<exclude>src/main/java/jcifs/dcerpc/rpc.java</exclude>
+					</excludes>
+					<licenses>
+						<license
+							implementation="org.apache.rat.analysis.license.SimplePatternBasedLicense">
+							<licenseFamilyCategory>LGPL</licenseFamilyCategory>
+							<licenseFamilyName>GNU Lesser General Public License</licenseFamilyName>
+							<notes />
+							<patterns>
+								<pattern>This library is free software; you can redistribute it</pattern>
+								<pattern>GNU Lesser General Public License</pattern>
+							</patterns>
+						</license>
+					</licenses>
+					<licenseFamilies>
+						<licenseFamily
+							implementation="org.apache.rat.license.SimpleLicenseFamily">
+							<familyName>GNU Lesser General Public License</familyName>
+						</licenseFamily>
+					</licenseFamilies>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 	<dependencies>
