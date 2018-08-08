@@ -107,6 +107,7 @@
 					</execution>
 				</executions>
 				<configuration>
+					<failOnError>false</failOnError>
 					<ignored>
 						<difference>
 							<!-- seems to be a clirr bug that it cannot handle the different inherited 
