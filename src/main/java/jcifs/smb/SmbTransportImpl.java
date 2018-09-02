@@ -952,7 +952,7 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
 
                     try {
                         long timeout = getResponseTimeout(chain);
-                        if ( !params.contains(RequestParam.NO_TIMEOUT) ) {
+                        if ( params.contains(RequestParam.NO_TIMEOUT) ) {
                             this.credits.acquire(cost);
                         }
                         else {
@@ -973,7 +973,9 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
                         break;
                     }
                     catch ( InterruptedException e ) {
-                        throw new InterruptedIOException("Failed to acquire credits, exzessive parallelism?");
+                        InterruptedIOException ie = new InterruptedIOException("Interrupted while acquiring credits");
+                        ie.initCause(e);
+                        throw ie;
                     }
                 }
                 else {
@@ -1237,7 +1239,8 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
                 throw new IOException("Invalid payload size: " + size);
             }
             int errorCode = Encdec.dec_uint32le(buffer, 9) & 0xFFFFFFFF;
-            if ( resp.getCommand() == ServerMessageBlock.SMB_COM_READ_ANDX && ( errorCode == 0 || errorCode == NtStatus.NT_STATUS_BUFFER_OVERFLOW ) ) {
+            if ( resp.getCommand() == ServerMessageBlock.SMB_COM_READ_ANDX
+                    && ( errorCode == 0 || errorCode == NtStatus.NT_STATUS_BUFFER_OVERFLOW ) ) {
                 // overflow indicator normal for pipe
                 SmbComReadAndXResponse r = (SmbComReadAndXResponse) resp;
                 int off = SMB1_HEADER_LENGTH;
@@ -1418,13 +1421,12 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
             // checkReferral always throws and exception but put break here for clarity
             break;
         case NtStatus.NT_STATUS_BUFFER_OVERFLOW:
-            if (resp instanceof Smb2ReadResponse) {
+            if ( resp instanceof Smb2ReadResponse ) {
                 break;
             }
             if ( resp instanceof Smb2IoctlResponse ) {
-                int ctlCode = ((Smb2IoctlResponse) resp).getCtlCode();
-                if (ctlCode == Smb2IoctlRequest.FSCTL_PIPE_TRANSCEIVE ||
-                        ctlCode == Smb2IoctlRequest.FSCTL_PIPE_PEEK) {
+                int ctlCode = ( (Smb2IoctlResponse) resp ).getCtlCode();
+                if ( ctlCode == Smb2IoctlRequest.FSCTL_PIPE_TRANSCEIVE || ctlCode == Smb2IoctlRequest.FSCTL_PIPE_PEEK ) {
                     break;
                 }
             }
