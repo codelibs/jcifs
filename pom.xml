@@ -6,7 +6,7 @@
 	<version>2.1.2-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>jCIFS</name>
-	<url>http://jcifs.samba.org</url>
+	<url>https://github.com/codelibs/jcifs</url>
 	<description>JCIFS is an Open Source client library that implements the CIFS/SMB networking protocol in 100% Java</description>
 	<licenses>
 		<license>
