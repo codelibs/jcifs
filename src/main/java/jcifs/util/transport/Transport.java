@@ -26,6 +26,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -95,6 +97,7 @@ public abstract class Transport implements Runnable, AutoCloseable {
 
     protected final Object inLock = new Object();
     protected final Object outLock = new Object();
+    private Lock threadLock = new ReentrantLock();
 
     protected final Map<Long, Response> response_map = new ConcurrentHashMap<>(10);
     private final AtomicLong usageCount = new AtomicLong(1);
@@ -575,7 +578,8 @@ public abstract class Transport implements Runnable, AutoCloseable {
             t.setDaemon(true);
             this.thread = t;
 
-            synchronized ( this.thread ) {
+            threadLock.lock();
+            try {
                 t.start();
                 t.wait(timeout); /* wait for doConnect */
 
@@ -600,6 +604,8 @@ public abstract class Transport implements Runnable, AutoCloseable {
                 default:
                     return false;
                 }
+            } finally {
+                threadLock.unlock();
             }
         }
         catch ( InterruptedException ie ) {
@@ -730,29 +736,36 @@ public abstract class Transport implements Runnable, AutoCloseable {
             return;
         }
         finally {
-            synchronized ( run_thread ) {
-                if ( run_thread != this.thread ) {
-                    /*
-                     * Thread no longer the one setup for this transport --
-                     * doConnect returned too late, just ignore.
-                     */
-                    if ( ex0 instanceof SocketTimeoutException ) {
-                        log.debug("Timeout connecting", ex0);
-                    }
-                    else if ( ex0 != null ) {
-                        log.warn("Exception in transport thread", ex0); //$NON-NLS-1$
-                    }
-                    return;
-                }
-
+            if ( run_thread != this.thread ) {
+                /*
+                 * Thread no longer the one setup for this transport --
+                 * doConnect returned too late, just ignore.
+                 */
                 if ( ex0 instanceof SocketTimeoutException ) {
-                    this.te = new ConnectionTimeoutException(ex0);
+                    log.debug("Timeout connecting", ex0);
                 }
                 else if ( ex0 != null ) {
-                    this.te = new TransportException(ex0);
+                    log.warn("Exception in transport thread", ex0); //$NON-NLS-1$
                 }
-                this.state = 2; // run connected
-                run_thread.notify();
+                return;
+            }
+
+            try {
+                threadLock.lockInterruptibly();
+                try {
+                    if ( ex0 instanceof SocketTimeoutException ) {
+                        this.te = new ConnectionTimeoutException(ex0);
+                    }
+                    else if ( ex0 != null ) {
+                        this.te = new TransportException(ex0);
+                    }
+                    this.state = 2; // run connected
+                    run_thread.notify();
+                } finally {
+                    threadLock.unlock();
+                }
+            } catch (InterruptedException e) {
+                log.debug("Thread was interupted.", e);
             }
         }
 
