@@ -494,6 +494,10 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
                 this.in = this.socket.getInputStream();
             }
 
+            if ( this.credits.drainPermits() == 0 ) {
+                log.debug("It appears we previously lost some credits");
+            }
+
             if ( this.smb2 || this.getContext().getConfig().isUseSMB2OnlyNegotiation() ) {
                 log.debug("Using SMB2 only negotiation");
                 return negotiate2(null);
@@ -528,7 +532,7 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
                 return negotiate2(r);
             }
 
-            int permits = resp.getInitialCredits() - 1;
+            int permits = resp.getInitialCredits();
             if ( permits > 0 ) {
                 this.credits.release(permits);
             }
@@ -607,10 +611,6 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
 
         // further negotiation needed
         Smb2NegotiateRequest smb2neg = new Smb2NegotiateRequest(getContext().getConfig(), securityMode);
-
-        if ( this.credits.drainPermits() == 0 ) {
-            throw new IOException("No credits for negotiate");
-        }
         Smb2NegotiateResponse r = null;
         byte[] negoReqBuffer = null;
         byte[] negoRespBuffer = null;
@@ -1174,6 +1174,7 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
             System.arraycopy(this.sbuf, 4, buffer, 0, Smb2Constants.SMB2_HEADER_LENGTH);
             readn(this.in, buffer, Smb2Constants.SMB2_HEADER_LENGTH, rl - Smb2Constants.SMB2_HEADER_LENGTH);
 
+            cur.setReadSize(rl);
             int len = cur.decode(buffer, 0);
 
             if ( len > rl ) {
@@ -1207,6 +1208,7 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
                     log.debug(String.format("Compound next command %d read size %d remain %d", nextCommand, rl, size));
                 }
 
+                cur.setReadSize(rl);
                 readn(this.in, buffer, Smb2Constants.SMB2_HEADER_LENGTH, rl - Smb2Constants.SMB2_HEADER_LENGTH);
 
                 len = cur.decode(buffer, 0, true);
@@ -1388,6 +1390,7 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
         boolean cont = false;
         switch ( resp.getErrorCode() ) {
         case NtStatus.NT_STATUS_OK:
+        case NtStatus.NT_STATUS_NO_MORE_FILES:
             cont = true;
             break;
         case NtStatus.NT_STATUS_PENDING:
