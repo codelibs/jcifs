@@ -136,6 +136,7 @@
 							<value>jcifs.tests.PrintingRunListener</value>
 						</property>
 					</properties>
+					<useSystemClassLoader>false</useSystemClassLoader>
 				</configuration>
 			</plugin>
 			<plugin>
