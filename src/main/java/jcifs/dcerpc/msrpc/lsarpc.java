@@ -1,8 +1,6 @@
 package jcifs.dcerpc.msrpc;
 
 
-import javax.annotation.Generated;
-
 import jcifs.dcerpc.DcerpcMessage;
 import jcifs.dcerpc.rpc;
 import jcifs.dcerpc.ndr.NdrBuffer;
@@ -11,7 +9,6 @@ import jcifs.dcerpc.ndr.NdrObject;
 import jcifs.dcerpc.ndr.NdrSmall;
 
 
-@Generated ( "midlc" )
 @SuppressWarnings ( "all" )
 public class lsarpc {
 
