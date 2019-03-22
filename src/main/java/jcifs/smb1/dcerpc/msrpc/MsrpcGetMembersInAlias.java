@@ -19,7 +19,7 @@
 package jcifs.smb1.dcerpc.msrpc;
 
 import jcifs.smb1.dcerpc.*;
-import jcifs.smb1.smb.*;
+import jcifs.smb1.smb1.*;
 
 public class MsrpcGetMembersInAlias extends samr.SamrGetMembersInAlias {
 

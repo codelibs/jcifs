@@ -32,7 +32,7 @@ import jcifs.smb1.ntlmssp.NtlmFlags;
 import jcifs.smb1.ntlmssp.Type1Message;
 import jcifs.smb1.ntlmssp.Type2Message;
 import jcifs.smb1.ntlmssp.Type3Message;
-import jcifs.smb1.smb.NtlmPasswordAuthentication;
+import jcifs.smb1.smb1.NtlmPasswordAuthentication;
 import jcifs.smb1.util.Base64;
 
 /**

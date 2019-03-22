@@ -21,7 +21,7 @@ package jcifs.smb1.dcerpc.msrpc;
 
 import java.io.IOException;
 
-import jcifs.smb1.smb.*;
+import jcifs.smb1.smb1.*;
 import jcifs.smb1.util.Hexdump;
 
 public class MsrpcShareGetInfo extends srvsvc.ShareGetInfo {

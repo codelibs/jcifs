@@ -25,7 +25,7 @@ import javax.servlet.http.*;
 import jcifs.smb1.*;
 import jcifs.smb1.http.*;
 import jcifs.smb1.netbios.NbtAddress;
-import jcifs.smb1.smb.*;
+import jcifs.smb1.smb1.*;
 import jcifs.smb1.util.Base64;
 import jcifs.smb1.util.LogStream;
 import jcifs.smb1.util.MimeMap;
@@ -299,7 +299,7 @@ public class NetworkExplorer extends HttpServlet {
         path = dir.getCanonicalPath();
 
         if( path.length() < 7 ) {
-            out.println( "<b><big>smb://</big></b><br>" );
+            out.println( "<b><big>smb1://</big></b><br>" );
             path = ".";
         } else {
             out.println( "<b><big>" + path + "</big></b><br>" );
@@ -486,11 +486,11 @@ public class NetworkExplorer extends HttpServlet {
             SmbFile file;
 
             if( ntlm != null ) {
-                file = new SmbFile( "smb:/" + pathInfo , ntlm );
+                file = new SmbFile( "smb1:/" + pathInfo , ntlm );
             } else if( server == null ) {
-                file = new SmbFile( "smb://" );
+                file = new SmbFile( "smb1://" );
             } else {
-                file = new SmbFile( "smb:/" + pathInfo );
+                file = new SmbFile( "smb1:/" + pathInfo );
             }
 
             if( file.isDirectory() ) {

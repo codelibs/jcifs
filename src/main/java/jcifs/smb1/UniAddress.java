@@ -30,7 +30,7 @@ import jcifs.smb1.util.LogStream;
 /**
  * <p>Under normal conditions it is not necessary to use
  * this class to use jCIFS properly. Name resolusion is
- * handled internally to the <code>jcifs.smb1.smb</code> package.
+ * handled internally to the <code>jcifs.smb1.smb1</code> package.
  * <p>
  * This class is a wrapper for both {@link jcifs.smb1.netbios.NbtAddress}
  * and {@link java.net.InetAddress}. The name resolution mechanisms
@@ -390,7 +390,7 @@ import javax.naming.directory.*;
 
     /**
      * Guess first called name to try for session establishment. This
-     * method is used exclusively by the <tt>jcifs.smb1.smb</tt> package.
+     * method is used exclusively by the <tt>jcifs.smb1.smb1</tt> package.
      */
 
     public String firstCalledName() {
@@ -417,7 +417,7 @@ import javax.naming.directory.*;
 
     /**
      * Guess next called name to try for session establishment. This
-     * method is used exclusively by the <tt>jcifs.smb1.smb</tt> package.
+     * method is used exclusively by the <tt>jcifs.smb1.smb1</tt> package.
      */
 
     public String nextCalledName() {

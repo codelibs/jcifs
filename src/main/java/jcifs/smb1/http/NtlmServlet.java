@@ -34,9 +34,9 @@ import javax.servlet.http.HttpSession;
 import jcifs.smb1.Config;
 import jcifs.smb1.UniAddress;
 import jcifs.smb1.netbios.NbtAddress;
-import jcifs.smb1.smb.NtlmPasswordAuthentication;
-import jcifs.smb1.smb.SmbAuthException;
-import jcifs.smb1.smb.SmbSession;
+import jcifs.smb1.smb1.NtlmPasswordAuthentication;
+import jcifs.smb1.smb1.SmbAuthException;
+import jcifs.smb1.smb1.SmbSession;
 import jcifs.smb1.util.Base64;
 
 import javax.servlet.http.HttpServlet;
@@ -48,7 +48,7 @@ import javax.servlet.http.HttpServletResponse;
  * to protect content with NTLM HTTP Authentication. Servlets that
  * extend this abstract base class may be authenticatied against an SMB
  * server or domain controller depending on how the
- * <tt>jcifs.smb1.smb.client.domain</tt> or <tt>jcifs.smb1.http.domainController</tt>
+ * <tt>jcifs.smb1.smb1.client.domain</tt> or <tt>jcifs.smb1.http.domainController</tt>
  * properties are be specified. <b>With later containers the
  * <tt>NtlmHttpFilter</tt> should be used/b>. For custom NTLM HTTP Authentication schemes the <tt>NtlmSsp</tt> may be used.
  * <p>

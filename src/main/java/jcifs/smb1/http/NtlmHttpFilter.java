@@ -30,10 +30,10 @@ import javax.servlet.http.*;
 
 import jcifs.smb1.*;
 import jcifs.smb1.netbios.NbtAddress;
-import jcifs.smb1.smb.NtlmChallenge;
-import jcifs.smb1.smb.NtlmPasswordAuthentication;
-import jcifs.smb1.smb.SmbAuthException;
-import jcifs.smb1.smb.SmbSession;
+import jcifs.smb1.smb1.NtlmChallenge;
+import jcifs.smb1.smb1.NtlmPasswordAuthentication;
+import jcifs.smb1.smb1.SmbAuthException;
+import jcifs.smb1.smb1.SmbSession;
 import jcifs.smb1.util.Base64;
 import jcifs.smb1.util.LogStream;
 

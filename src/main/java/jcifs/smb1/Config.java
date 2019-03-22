@@ -108,7 +108,7 @@ public static int socketCount = 0;
      *     at java.net.URL.<init>(URL.java:480)
      *     at java.net.URL.<init>(URL.java:376)
      *     at java.net.URL.<init>(URL.java:330)
-     *     at jcifs.smb1.smb.SmbFile.<init>(SmbFile.java:355)
+     *     at jcifs.smb1.smb1.SmbFile.<init>(SmbFile.java:355)
      *     ...
      * </pre><blockquote>
      */

@@ -28,7 +28,7 @@ import java.io.IOException;
 import java.util.Hashtable;
 
 import jcifs.smb1.Config;
-import jcifs.smb1.smb.SmbFileInputStream;
+import jcifs.smb1.smb1.SmbFileInputStream;
 import jcifs.smb1.util.LogStream;
 
 import java.net.UnknownHostException;
@@ -91,7 +91,7 @@ public class Lmhosts {
             } else if( line.charAt( 0 ) == '#' ) {
                 if( line.startsWith( "#INCLUDE " )) {
                     line = line.substring( line.indexOf( '\\' ));
-                    String url = "smb:" + line.replace( '\\', '/' );
+                    String url = "smb1:" + line.replace( '\\', '/' );
 
                     if( alt > 0 ) {
                         try {

@@ -24,7 +24,7 @@ import java.net.*;
 import java.security.Principal;
 
 import jcifs.smb1.dcerpc.ndr.NdrBuffer;
-import jcifs.smb1.smb.NtlmPasswordAuthentication;
+import jcifs.smb1.smb1.NtlmPasswordAuthentication;
 import jcifs.smb1.util.Hexdump;
 
 public abstract class DcerpcHandle implements DcerpcConstants {
@@ -142,7 +142,7 @@ synchronized (this) {
 
         isDirect = true;
 
-        stub = jcifs.smb1.smb.BufferCache.getBuffer();
+        stub = jcifs.smb1.smb1.BufferCache.getBuffer();
         try {
             int off, tot, n;
 
@@ -243,7 +243,7 @@ synchronized (this) {
             buf = new NdrBuffer(stub, 0);
             msg.decode(buf);
         } finally {
-            jcifs.smb1.smb.BufferCache.releaseBuffer(stub);
+            jcifs.smb1.smb1.BufferCache.releaseBuffer(stub);
         }
 
         if ((de = msg.getResult()) != null)

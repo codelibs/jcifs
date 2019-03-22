@@ -21,7 +21,7 @@ package jcifs.smb1.dcerpc;
 
 import java.io.*;
 
-import jcifs.smb1.smb.WinError;
+import jcifs.smb1.smb1.WinError;
 import jcifs.smb1.util.Hexdump;
 
 public class DcerpcException extends IOException implements DcerpcError, WinError {

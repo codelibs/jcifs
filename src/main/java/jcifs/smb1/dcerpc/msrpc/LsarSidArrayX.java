@@ -1,6 +1,6 @@
 package jcifs.smb1.dcerpc.msrpc;
 
-import jcifs.smb1.smb.SID;
+import jcifs.smb1.smb1.SID;
 
 class LsarSidArrayX extends lsarpc.LsarSidArray {
 

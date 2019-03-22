@@ -22,7 +22,7 @@ package jcifs.smb1.dcerpc.msrpc;
 import java.io.IOException;
 
 import jcifs.smb1.dcerpc.*;
-import jcifs.smb1.smb.SmbException;
+import jcifs.smb1.smb1.SmbException;
 
 public class LsaPolicyHandle extends rpc.policy_handle {
 

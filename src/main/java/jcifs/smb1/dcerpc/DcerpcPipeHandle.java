@@ -22,7 +22,7 @@ package jcifs.smb1.dcerpc;
 import java.net.*;
 
 import jcifs.smb1.dcerpc.ndr.NdrBuffer;
-import jcifs.smb1.smb.*;
+import jcifs.smb1.smb1.*;
 import jcifs.smb1.util.*;
 
 import java.io.*;
@@ -38,7 +38,7 @@ public class DcerpcPipeHandle extends DcerpcHandle {
                 NtlmPasswordAuthentication auth)
                 throws UnknownHostException, MalformedURLException, DcerpcException {
         binding = DcerpcHandle.parseBinding(url);
-        url = "smb://" + binding.server + "/IPC$/" + binding.endpoint.substring(6);
+        url = "smb1://" + binding.server + "/IPC$/" + binding.endpoint.substring(6);
 
         String params = "", server, address;
         server = (String)binding.getOption("server");

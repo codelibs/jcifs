@@ -30,7 +30,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 import jcifs.smb1.Config;
 import jcifs.smb1.netbios.NbtAddress;
-import jcifs.smb1.smb.NtlmPasswordAuthentication;
+import jcifs.smb1.smb1.NtlmPasswordAuthentication;
 import jcifs.smb1.util.HMACT64;
 import jcifs.smb1.util.MD4;
 import jcifs.smb1.util.RC4;
