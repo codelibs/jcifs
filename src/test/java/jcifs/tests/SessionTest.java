@@ -260,8 +260,13 @@ public class SessionTest extends BaseCIFSTest {
             assertTrue(creds instanceof NtlmPasswordAuthenticator);
             NtlmPasswordAuthenticator ntcreds = (NtlmPasswordAuthenticator) creds;
 
+            assertNotNull(ntcreds.getUsername());
             assertEquals(user, ntcreds.getUsername());
-            assertEquals(dom, ntcreds.getUserDomain());
+            assertNotNull(ntcreds.getUserDomain());
+            if ( dom != null ) {
+                assertEquals(dom, ntcreds.getUserDomain());
+            }
+            assertNotNull(ntcreds.getPassword());
             assertEquals(pass, ntcreds.getPassword());
 
             f.exists();

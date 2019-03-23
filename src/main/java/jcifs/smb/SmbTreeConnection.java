@@ -23,6 +23,7 @@ import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
@@ -501,7 +502,7 @@ class SmbTreeConnection {
                     log.debug("Tree is " + t);
                 }
 
-                if ( loc.getShare().equals(t.getShare()) ) {
+                if ( Objects.equals(loc.getShare(), t.getShare()) ) {
                     try ( SmbSessionImpl session = t.getSession() ) {
                         targetDomain = session.getTargetDomain();
                         if ( !session.isFailed() ) {
@@ -573,7 +574,7 @@ class SmbTreeConnection {
             }
             catch ( IOException e ) {
                 last = e;
-                log.warn("Referral failed, trying next", e);
+                log.debug("Referral failed, trying next", e);
             }
 
             if ( dr != null ) {
@@ -612,7 +613,9 @@ class SmbTreeConnection {
         catch ( SmbAuthException sae ) {
             log.debug("Authentication failed", sae);
             if ( t.getSession().getCredentials().isAnonymous() ) { // anonymous session, refresh
-                try ( SmbSessionInternal s = trans.getSmbSession(this.ctx.withAnonymousCredentials()).unwrap(SmbSessionInternal.class);
+                try ( SmbSessionInternal s = trans
+                        .getSmbSession(this.ctx.withAnonymousCredentials(), t.getSession().getTargetHost(), t.getSession().getTargetDomain())
+                        .unwrap(SmbSessionInternal.class);
                       SmbTreeImpl tr = s.getSmbTree(null, null).unwrap(SmbTreeImpl.class) ) {
                     tr.treeConnect(null, null);
                     return tr.acquire();
@@ -687,7 +690,7 @@ class SmbTreeConnection {
 
             String rpath = request != null ? request.getPath() : loc.getUNCPath();
             String rfullpath = request != null ? request.getFullUNCPath() : ( '\\' + loc.getServer() + '\\' + loc.getShare() + loc.getUNCPath() );
-            if ( !t.isPossiblyDfs() ) {
+            if ( t.isInDomainDfs() || !t.isPossiblyDfs() ) {
                 if ( t.isInDomainDfs() ) {
                     // need to adjust request path
                     DfsReferralData dr = t.getTreeReferral();

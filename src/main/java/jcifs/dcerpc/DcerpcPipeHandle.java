@@ -61,15 +61,18 @@ public class DcerpcPipeHandle extends DcerpcHandle {
         DcerpcBinding binding = getBinding();
         String url = "smb://" + binding.getServer() + "/IPC$/" + binding.getEndpoint().substring(6);
 
-        String params = "", server, address;
-        server = (String) binding.getOption("server");
-        if ( server != null )
+        String params = "";
+        String server = (String) binding.getOption("server");
+        if ( server != null ) {
             params += "&server=" + server;
-        address = (String) binding.getOption("address");
-        if ( server != null )
+        }
+        String address = (String) binding.getOption("address");
+        if ( address != null ) {
             params += "&address=" + address;
-        if ( params.length() > 0 )
+        }
+        if ( params.length() > 0 ) {
             url += "?" + params.substring(1);
+        }
 
         return url;
     }
@@ -110,7 +113,22 @@ public class DcerpcPipeHandle extends DcerpcHandle {
             throw new IOException("DCERPC pipe is no longer open");
         }
 
-        return this.handle.sendrecv(buf, off, length, inB, getMaxRecv());
+        int have = this.handle.sendrecv(buf, off, length, inB, getMaxRecv());
+
+        int fraglen = Encdec.dec_uint16le(inB, 8);
+        if ( fraglen > getMaxRecv() ) {
+            throw new IOException("Unexpected fragment length: " + length);
+        }
+
+        while ( have < fraglen ) {
+            int r = this.handle.recv(buf, have, length - have);
+            if ( r == 0 ) {
+                throw new IOException("Unexpected EOF");
+            }
+            have += r;
+        }
+
+        return have;
     }
 
 
@@ -130,7 +148,7 @@ public class DcerpcPipeHandle extends DcerpcHandle {
         }
 
         int off = this.handle.recv(buf, 0, buf.length);
-        if ( buf[ 0 ] != 5 && buf[ 1 ] != 0 ) {
+        if ( buf[ 0 ] != 5 || buf[ 1 ] != 0 ) {
             throw new IOException("Unexpected DCERPC PDU header");
         }
 
@@ -140,7 +158,11 @@ public class DcerpcPipeHandle extends DcerpcHandle {
         }
 
         while ( off < length ) {
-            off += this.handle.recv(buf, off, length - off);
+            int r = this.handle.recv(buf, off, length - off);
+            if ( r == 0 ) {
+                throw new IOException("Unexpected EOF");
+            }
+            off += r;
         }
         return off;
     }

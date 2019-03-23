@@ -92,6 +92,7 @@ public abstract class DcerpcHandle implements DcerpcConstants, AutoCloseable {
                 }
                 else if ( ch == ',' || ch == ']' ) {
                     String val = str.substring(mark, si).trim();
+                    mark = si + 1;
                     if ( key == null )
                         key = "endpoint";
                     if ( binding != null ) {
@@ -147,7 +148,7 @@ public abstract class DcerpcHandle implements DcerpcConstants, AutoCloseable {
     /**
      * @return the binding
      */
-    DcerpcBinding getBinding () {
+    public DcerpcBinding getBinding () {
         return this.binding;
     }
 
@@ -243,13 +244,14 @@ public abstract class DcerpcHandle implements DcerpcConstants, AutoCloseable {
             int have = doSendReceiveFragment(out, off, msg.length, inB);
 
             if ( have != 0 ) {
-                setupReceivedFragment(buf);
-                buf.setIndex(0);
-                msg.decode_header(buf);
+                NdrBuffer hdrBuf = new NdrBuffer(inB, 0);
+                setupReceivedFragment(hdrBuf);
+                hdrBuf.setIndex(0);
+                msg.decode_header(hdrBuf);
             }
 
             NdrBuffer msgBuf;
-            if ( have == 0 || !msg.isFlagSet(DCERPC_LAST_FRAG) ) {
+            if ( have != 0 && !msg.isFlagSet(DCERPC_LAST_FRAG) ) {
                 msgBuf = new NdrBuffer(receiveMoreFragments(msg, inB), 0);
             }
             else {
