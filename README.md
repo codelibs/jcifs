@@ -33,3 +33,11 @@ Put the following block into pom.xml if using Maven:
  * A proper test suite
  * Various fixes
 
+### Building from sources
+
+Run the following to install the newest master version into your local `~/.m2/repository`:
+
+```bash
+mvn -C clean install -DskipTests -Dmaven.javadoc.skip=true -Dgpg.skip=true
+```
+
