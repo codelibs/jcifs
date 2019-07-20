@@ -471,6 +471,9 @@ public class FileLocationTest {
                 throw e;
             }
         }
+        catch ( SmbException e ) {
+            assertEquals("Failed to connect: /0:0:0:0:0:0:0:1", e.getMessage());
+        }
     }
 
     private static class TestDfsReferral implements DfsReferralData {
