@@ -616,11 +616,19 @@ class SmbTreeConnection {
         }
         catch ( SmbAuthException sae ) {
             log.debug("Authentication failed", sae);
-            if ( t.getSession().getCredentials().isAnonymous() ) { // anonymous session, refresh
+            return retryAuthentication(loc, share, trans, t, referral, sae);
+        }
+    }
+
+
+    private SmbTreeImpl retryAuthentication ( SmbResourceLocatorImpl loc, String share, SmbTransportInternal trans, SmbTreeImpl t,
+            DfsReferralData referral, SmbAuthException sae ) throws SmbAuthException, CIFSException {
+        try ( SmbSessionImpl treesess = t.getSession() ) {
+            if ( treesess.getCredentials().isAnonymous() ) { // anonymous session, refresh
                 try ( SmbSessionInternal s = trans
-                        .getSmbSession(this.ctx.withAnonymousCredentials(), t.getSession().getTargetHost(), t.getSession().getTargetDomain())
+                        .getSmbSession(this.ctx.withAnonymousCredentials(), treesess.getTargetHost(), treesess.getTargetDomain())
                         .unwrap(SmbSessionInternal.class);
-                      SmbTreeImpl tr = s.getSmbTree(null, null).unwrap(SmbTreeImpl.class) ) {
+                      SmbTreeImpl tr = s.getSmbTree(share, null).unwrap(SmbTreeImpl.class) ) {
                     tr.treeConnect(null, null);
                     log.debug("Anonymous retry succeeded");
                     return tr.acquire();
@@ -632,7 +640,7 @@ class SmbTreeConnection {
             }
             else if ( this.ctx.renewCredentials(loc.getURL().toString(), sae) ) {
                 log.debug("Trying to renew credentials after auth error");
-                try ( SmbSessionInternal s = trans.getSmbSession(this.ctx, t.getSession().getTargetHost(), t.getSession().getTargetDomain())
+                try ( SmbSessionInternal s = trans.getSmbSession(this.ctx, treesess.getTargetHost(), treesess.getTargetDomain())
                         .unwrap(SmbSessionInternal.class);
                       SmbTreeImpl tr = s.getSmbTree(share, null).unwrap(SmbTreeImpl.class) ) {
                     if ( referral != null ) {
