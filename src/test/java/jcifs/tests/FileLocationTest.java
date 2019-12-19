@@ -470,7 +470,7 @@ public class FileLocationTest {
             assertEquals(' ', c.getName().charAt(c.getName().length() - 1));
             assertEquals("test ", c.getName());
             try ( SmbFile t = new SmbFile(c.getLocator().getURL(), getContext()) ) {
-                assertEquals("test ", t.getName());
+                assertEquals("test%20", t.getName());
             }
         }
     }
@@ -483,7 +483,7 @@ public class FileLocationTest {
               SmbResource c = new SmbFile(r, "test?#foo") ) {
             assertEquals("test?#foo", c.getName());
             try ( SmbFile t = new SmbFile(c.getLocator().getURL(), getContext()) ) {
-                assertEquals("test?#foo", t.getName());
+                assertEquals("test%3f#foo", t.getName());
             }
         }
     }

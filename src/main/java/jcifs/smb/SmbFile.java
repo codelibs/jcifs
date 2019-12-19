@@ -489,7 +489,21 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
 
 
     private static String encodeRelativePath ( String name ) {
-        return name;
+        // workaround fix
+        if (name == null) {
+            return null;
+        }
+        if (name.endsWith(" ")) {
+            final StringBuilder suffix = new StringBuilder();
+            for (int i = name.length() - 1; i >= 0; i--) {
+                if (name.charAt(i) != ' ') {
+                    break;
+                }
+                suffix.append("%20");
+            }
+            name = name.replaceAll(" +$", suffix.toString());
+        }
+        return "URL:" + name.replace("?", "%3f");
     }
 
 
