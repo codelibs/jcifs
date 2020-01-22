@@ -108,28 +108,28 @@ public class NetworkExplorer extends HttpServlet {
     protected void doFile( HttpServletRequest req,
                 HttpServletResponse resp, SmbFile file ) throws IOException {
         byte[] buf = new byte[8192];
-        SmbFileInputStream in;
-        ServletOutputStream out;
         String url, type;
         int n;
 
-        in = new SmbFileInputStream( file );
-        out = resp.getOutputStream();
-        url = file.getPath();
+        try (SmbFileInputStream in = new SmbFileInputStream(file);
+                ServletOutputStream out = resp.getOutputStream()) {
+            url = file.getPath();
 
-        resp.setContentType( "text/plain" );
+            resp.setContentType( "text/plain" );
 
-        if(( n = url.lastIndexOf( '.' )) > 0 &&
-                ( type = url.substring( n + 1 )) != null &&
-                type.length() > 1 && type.length() < 6 ) {
-            resp.setContentType( mimeMap.getMimeType( type ));
+            if(( n = url.lastIndexOf( '.' )) > 0 &&
+                    ( type = url.substring( n + 1 )) != null &&
+                    type.length() > 1 && type.length() < 6 ) {
+                resp.setContentType( mimeMap.getMimeType( type ));
+            }
+            resp.setHeader( "Content-Length", file.length() + "" );
+            resp.setHeader( "Accept-Ranges", "Bytes" );
+
+            while(( n = in.read( buf )) != -1 ) {
+                out.write( buf, 0, n );
+            }
         }
-        resp.setHeader( "Content-Length", file.length() + "" );
-        resp.setHeader( "Accept-Ranges", "Bytes" );
-
-        while(( n = in.read( buf )) != -1 ) {
-            out.write( buf, 0, n );
-        }
+        // TODO catch IOException
     }
     protected int compareNames( SmbFile f1, String f1name, SmbFile f2 ) throws IOException {
         if( f1.isDirectory() != f2.isDirectory() ) {
