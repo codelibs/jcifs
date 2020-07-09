@@ -554,7 +554,12 @@ final class SmbSessionImpl implements SmbSessionInternal {
                 }
                 catch ( SmbException e ) {
                     Smb2SessionSetupResponse sessResponse = request.getResponse();
-                    if ( !sessResponse.isReceived() || sessResponse.isError() || ( sessResponse.getStatus() != NtStatus.NT_STATUS_OK
+                    if ( e.getNtStatus() == NtStatus.NT_STATUS_INVALID_PARAMETER ) {
+                        // a relatively large range of samba versions has a bug causing
+                        // an invalid parameter error when a SPNEGO MIC is in place and auth fails
+                        throw new SmbAuthException("Login failed", e);
+                    }
+                    else if ( !sessResponse.isReceived() || sessResponse.isError() || ( sessResponse.getStatus() != NtStatus.NT_STATUS_OK
                             && sessResponse.getStatus() != NtStatus.NT_STATUS_MORE_PROCESSING_REQUIRED ) ) {
                         throw e;
                     }
@@ -562,8 +567,12 @@ final class SmbSessionImpl implements SmbSessionInternal {
                     response = sessResponse;
                 }
 
-                if ( response.isLoggedInAsGuest() && !anonymous ) {
+                if ( !this.getConfig().isAllowGuestFallback() && response.isLoggedInAsGuest()
+                        && ! ( this.credentials.isGuest() || this.credentials.isAnonymous() ) ) {
                     throw new SmbAuthException(NtStatus.NT_STATUS_LOGON_FAILURE);
+                }
+                else if ( !this.credentials.isAnonymous() && response.isLoggedInAsGuest() ) {
+                    anonymous = true;
                 }
 
                 if ( ( response.getSessionFlags() & Smb2SessionSetupResponse.SMB2_SESSION_FLAG_ENCRYPT_DATA ) != 0 ) {
@@ -772,8 +781,12 @@ final class SmbSessionImpl implements SmbSessionInternal {
                         response = sessResponse;
                     }
 
-                    if ( response.isLoggedInAsGuest() && !anonymous ) {
+                    if ( !this.getConfig().isAllowGuestFallback() && response.isLoggedInAsGuest()
+                            && ! ( this.credentials.isGuest() || this.credentials.isAnonymous() ) ) {
                         throw new SmbAuthException(NtStatus.NT_STATUS_LOGON_FAILURE);
+                    }
+                    else if ( !this.credentials.isAnonymous() && response.isLoggedInAsGuest() ) {
+                        anonymous = true;
                     }
 
                     if ( request.getDigest() != null ) {
@@ -892,8 +905,13 @@ final class SmbSessionImpl implements SmbSessionInternal {
                     ex = se;
                 }
 
-                if ( response.isLoggedInAsGuest() && negoResp.getServerData().security != SmbConstants.SECURITY_SHARE && !anonymous ) {
+                if ( !this.getConfig().isAllowGuestFallback() && response.isLoggedInAsGuest()
+                        && negoResp.getServerData().security != SmbConstants.SECURITY_SHARE
+                        && ! ( this.credentials.isGuest() || this.credentials.isAnonymous() ) ) {
                     throw new SmbAuthException(NtStatus.NT_STATUS_LOGON_FAILURE);
+                }
+                else if ( !this.credentials.isAnonymous() && response.isLoggedInAsGuest() ) {
+                    anonymous = true;
                 }
 
                 if ( ex != null ) {
@@ -1034,6 +1052,11 @@ final class SmbSessionImpl implements SmbSessionInternal {
                     }
                     catch ( SmbException se ) {
                         ex = se;
+                        if ( se.getNtStatus() == NtStatus.NT_STATUS_INVALID_PARAMETER ) {
+                            // a relatively large range of samba versions has a bug causing
+                            // an invalid parameter error when a SPNEGO MIC is in place and auth fails
+                            ex = new SmbAuthException("Login failed", se);
+                        }
                         /*
                          * Apparently once a successful NTLMSSP login occurs, the
                          * server will return "Access denied" even if a logoff is
@@ -1049,8 +1072,12 @@ final class SmbSessionImpl implements SmbSessionInternal {
                         }
                     }
 
-                    if ( response.isLoggedInAsGuest() && !anonymous ) {
+                    if ( !getConfig().isAllowGuestFallback() && response.isLoggedInAsGuest()
+                            && ! ( this.credentials.isGuest() || this.credentials.isAnonymous() ) ) {
                         throw new SmbAuthException(NtStatus.NT_STATUS_LOGON_FAILURE);
+                    }
+                    else if ( !this.credentials.isAnonymous() && response.isLoggedInAsGuest() ) {
+                        anonymous = true;
                     }
 
                     if ( ex != null ) {
