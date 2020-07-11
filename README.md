@@ -6,17 +6,19 @@ From version 2.x, this project is forked from [jcifs-ng](https://github.com/AgNO
 
 ## Version
 
-[Versions in Maven Repository](http://central.maven.org/maven2/org/codelibs/jcifs/)
+[Versions in Maven Repository](https://repo1.maven.org/maven2/org/codelibs/jcifs/)
 
 ## Using Maven
+=======
+Latest stable release:
 
-Put the following block into pom.xml if using Maven:
-
-    <dependency>
-        <groupId>org.codelibs</groupId>
-        <artifactId>jcifs</artifactId>
-        <version>2.x.y</version>
-    </dependency>
+```
+<dependency>
+    <groupId>eu.agno3.jcifs</groupId>
+    <artifactId>jcifs-ng</artifactId>
+    <version>2.1.19</version>
+</dependency>
+```
 
 ## Changes
 
