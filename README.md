@@ -9,8 +9,6 @@ From version 2.x, this project is forked from [jcifs-ng](https://github.com/AgNO
 [Versions in Maven Repository](https://repo1.maven.org/maven2/org/codelibs/jcifs/)
 
 ## Using Maven
-=======
-Latest stable release:
 
 ```
 <dependency>
