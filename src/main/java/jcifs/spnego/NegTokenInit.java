@@ -28,16 +28,17 @@ import java.util.Enumeration;
 import org.bouncycastle.asn1.ASN1ApplicationSpecific;
 import org.bouncycastle.asn1.ASN1BitString;
 import org.bouncycastle.asn1.ASN1EncodableVector;
+import org.bouncycastle.asn1.ASN1Encoding;
 import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.ASN1Object;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.ASN1OctetString;
+import org.bouncycastle.asn1.ASN1OutputStream;
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.ASN1TaggedObject;
 import org.bouncycastle.asn1.DERApplicationSpecific;
 import org.bouncycastle.asn1.DERBitString;
 import org.bouncycastle.asn1.DEROctetString;
-import org.bouncycastle.asn1.DEROutputStream;
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.DERTaggedObject;
 
@@ -155,7 +156,7 @@ public class NegTokenInit extends SpnegoToken {
             ev.add(SPNEGO_OID);
             ev.add(new DERTaggedObject(true, 0, new DERSequence(fields)));
             ByteArrayOutputStream collector = new ByteArrayOutputStream();
-            DEROutputStream der = new DEROutputStream(collector);
+            ASN1OutputStream der = ASN1OutputStream.create(collector, ASN1Encoding.DER);
             DERApplicationSpecific derApplicationSpecific = new DERApplicationSpecific(0, ev);
             der.writeObject(derApplicationSpecific);
             return collector.toByteArray();
