@@ -1,4 +1,5 @@
 JCIFS
+[![Java CI with Maven](https://github.com/codelibs/jcifs/actions/workflows/maven.yml/badge.svg)](https://github.com/codelibs/jcifs/actions/workflows/maven.yml)
 =====
 
 JCIFS is an Open Source client library that implements the CIFS/SMB networking protocol in 100% Java.
