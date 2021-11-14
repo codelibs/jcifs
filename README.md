@@ -15,7 +15,7 @@ From version 2.x, this project is forked from [jcifs-ng](https://github.com/AgNO
 <dependency>
     <groupId>org.codelibs</groupId>
     <artifactId>jcifs</artifactId>
-    <version>2.1.19</version>
+    <version>2.1.27</version>
 </dependency>
 ```
 

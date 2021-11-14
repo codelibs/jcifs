@@ -28,6 +28,9 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.build.timestamp.format>yyyyMMddHHmm</maven.build.timestamp.format>
+		<osgi-version-qualifier>${maven.build.timestamp}</osgi-version-qualifier>
+		<osgi.version>${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}.${osgi-version-qualifier}</osgi.version>
+		<osgi.pkg.version>${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}</osgi.pkg.version>
 	</properties>
 	<build>
 		<plugins>
@@ -88,7 +91,6 @@
 							*
 						</Import-Package>
 					</instructions>
-					<addDependenciesToRepository>true</addDependenciesToRepository>
 				</configuration>
 			</plugin>
 			<plugin>
