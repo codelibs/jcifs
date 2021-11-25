@@ -34,3 +34,13 @@ From version 2.x, this project is forked from [jcifs-ng](https://github.com/AgNO
  * A proper test suite
  * Various fixes
 
+## Others
+
+### This jcifs or jcifs-ng
+
+jcifs-ng will be a proper choice for many users. 
+There are a lot of SMB devices in the world.
+Some of them only work with the old jcifs library.
+If you want to support many SMB devices, CodeLibs jcifs library will be helpful.
+For example, since [Fess](https://github.com/codelibs/fess) needs to support many SMB devices, it uses this library.
+However, if you have only a specific SMB device, you should use jcifs-ng library.
