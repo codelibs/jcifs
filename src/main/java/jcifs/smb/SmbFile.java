@@ -2071,7 +2071,7 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
 
     @Override
     public String toString () {
-        return this.url.toString().replaceFirst(SECRET_MASK_PATTERN, SECRET_MASK_REPLACE);
+        return this.url.toString().replaceFirst(SECRET_PATTERN, SECRET_MASK_REPLACE);
     }
 
 
