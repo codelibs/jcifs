@@ -238,8 +238,17 @@ public class ContextConfigTest {
             NtlmPasswordAuthenticator na = f.getContext().getCredentials().unwrap(NtlmPasswordAuthenticator.class);
             Assert.assertEquals("b@r", na.getPassword());
         }
-
-
     }
 
+    @Test
+    public void testSecretMask() throws MalformedURLException, CIFSException {
+        Config.registerSmbURLHandler();
+
+        try (SmbFile f = new SmbFile("smb://127.0.0.1/")) {
+            Assert.assertEquals("smb://127.0.0.1/", f.toString());
+        }
+        try (SmbFile f = new SmbFile("smb://foo:b%40r@127.0.0.1/")) {
+            Assert.assertEquals("smb://foo:******@127.0.0.1/", f.toString());
+        }
+    }
 }

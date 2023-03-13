@@ -38,6 +38,7 @@ import jcifs.smb1.dcerpc.msrpc.MsrpcShareEnum;
 import jcifs.smb1.dcerpc.msrpc.MsrpcShareGetInfo;
 import jcifs.smb1.netbios.NbtAddress;
 import jcifs.smb1.util.LogStream;
+import jcifs.util.Strings;
 
 /**
  * This class represents a resource on an SMB network. Mainly these
@@ -2795,7 +2796,7 @@ if (this instanceof SmbNamedPipe) {
  */
 
     public String toString() {
-        return url.toString();
+        return Strings.maskSecretValue(url.toString());
     }
 
 /* URLConnection implementation */

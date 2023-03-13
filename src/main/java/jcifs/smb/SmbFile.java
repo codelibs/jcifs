@@ -91,6 +91,7 @@ import jcifs.internal.smb2.create.Smb2CreateResponse;
 import jcifs.internal.smb2.info.Smb2QueryInfoRequest;
 import jcifs.internal.smb2.info.Smb2QueryInfoResponse;
 import jcifs.internal.smb2.info.Smb2SetInfoRequest;
+import jcifs.util.Strings;
 
 
 /**
@@ -346,10 +347,6 @@ import jcifs.internal.smb2.info.Smb2SetInfoRequest;
  */
 
 public class SmbFile extends URLConnection implements SmbResource, SmbConstants {
-    public static final String SECRET_MASK = "******";
-    private static final String SECRET_PATTERN = "^(smb.*:).*(@.*)$";
-    private static final String SECRET_MASK_REPLACE = "$1" + SECRET_MASK + "$2";
-    
     protected static final int ATTR_GET_MASK = 0x7FFF;
     protected static final int ATTR_SET_MASK = 0x30A7;
     protected static final int DEFAULT_ATTR_EXPIRATION_PERIOD = 5000;
@@ -2071,7 +2068,7 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
 
     @Override
     public String toString () {
-        return this.url.toString().replaceFirst(SECRET_PATTERN, SECRET_MASK_REPLACE);
+        return Strings.maskSecretValue(url.toString());
     }
 
 
