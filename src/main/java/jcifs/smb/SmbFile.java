@@ -2219,6 +2219,9 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
         int ai;
 
         if ( resolveSids ) {
+            if (this.fileLocator.getDfsPath() == null && this.fileLocator.getPort() != -1) {
+                server = server + ":" + this.fileLocator.getPort();
+            }
             SID[] sids = new SID[aces.length];
             for ( ai = 0; ai < aces.length; ai++ ) {
                 sids[ ai ] = aces[ ai ].getSID();
@@ -2333,6 +2336,9 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
 
             String server = this.fileLocator.getServerWithDfs();
             if ( resolve ) {
+                if (this.fileLocator.getDfsPath() == null && this.fileLocator.getPort() != -1) {
+                    server = server + ":" + this.fileLocator.getPort();
+                }
                 try {
                     ownerUser.resolve(server, getContext());
                 }
@@ -2365,6 +2371,9 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
 
             String server = this.fileLocator.getServerWithDfs();
             if ( resolve ) {
+                if (this.fileLocator.getDfsPath() == null && this.fileLocator.getPort() != -1) {
+                    server = server + ":" + this.fileLocator.getPort();
+                }
                 try {
                     ownerGroup.resolve(server, getContext());
                 }
@@ -2386,6 +2395,9 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
             String server = this.fileLocator.getServerWithDfs();
             ACE[] aces;
             MsrpcShareGetInfo rpc = new MsrpcShareGetInfo(server, th.getConnectedShare());
+            if (this.fileLocator.getDfsPath() == null && this.fileLocator.getPort() != -1) {
+                server = server + ":" + this.fileLocator.getPort();
+            }
             try ( DcerpcHandle handle = DcerpcHandle.getHandle("ncacn_np:" + server + "[\\PIPE\\srvsvc]", getContext()) ) {
                 handle.sendrecv(rpc);
                 if ( rpc.retval != 0 ) {
