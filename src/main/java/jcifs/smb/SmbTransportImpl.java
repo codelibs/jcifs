@@ -1513,7 +1513,7 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
         DfsReferralData dr = null;
         if ( !getContext().getConfig().isDfsDisabled() ) {
             try {
-                dr = getDfsReferrals(getContext(), path, req.getServer(), req.getDomain(), 1);
+                dr = getDfsReferrals(getContext(), path, req.getServer(), req.getDomain(), 0);
             }
             catch ( CIFSException e ) {
                 throw new SmbException("Failed to get DFS referral", e);
