@@ -64,6 +64,7 @@ class SmbResourceLocatorImpl implements SmbResourceLocatorInternal, Cloneable {
     private DfsReferralData dfsReferral = null; // For getDfsPath() and getServerWithDfs()
 
     private String unc; // Initially null; set by getUncPath; never ends with '/'
+    private String uncBeforeDfsReferal;
     private String canon; // Initially null; set by getUncPath; dir must end with '/'
     private String share; // Can be null
 
@@ -773,7 +774,11 @@ class SmbResourceLocatorImpl implements SmbResourceLocatorInternal, Cloneable {
         }
         this.dfsReferral = dr;
 
-        String oldUncPath = getUNCPath();
+        if (uncBeforeDfsReferal == null) {
+            uncBeforeDfsReferal = unc;
+        }
+        String oldUncPath = uncBeforeDfsReferal;
+
         int pathConsumed = dr.getPathConsumed();
         if ( pathConsumed < 0 ) {
             log.warn("Path consumed out of range " + pathConsumed);

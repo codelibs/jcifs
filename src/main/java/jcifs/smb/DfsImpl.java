@@ -189,7 +189,7 @@ public class DfsImpl implements DfsResolver {
                 try ( SmbTransportInternal trans = tf.getTransportPool().getSmbTransport(tf, domain, 0, false, false)
                         .unwrap(SmbTransportInternal.class) ) {
                     synchronized ( trans ) {
-                        DfsReferralData dr = trans.getDfsReferrals(tf.withAnonymousCredentials(), "\\" + dom, domain, dom, 1);
+                        DfsReferralData dr = trans.getDfsReferrals(tf.withAnonymousCredentials(), "\\" + dom, domain, dom, 0);
 
                         if ( dr != null ) {
                             if ( log.isDebugEnabled() ) {
@@ -691,7 +691,11 @@ public class DfsImpl implements DfsResolver {
                         ( (DfsReferralDataImpl) dr ).fixupDomain(domain);
                     }
 
-                    dr.stripPathConsumed(1 + domain.length() + 1 + root.length());
+                    DfsReferralDataInternal next = dr;
+                    do {
+                        next.stripPathConsumed(1 + domain.length() + 1 + root.length());
+                        next = next.next();
+                    } while (next != dr);
 
                     if ( dr.getPathConsumed() > ( path != null ? path.length() : 0 ) ) {
                         log.error("Consumed more than we provided");
@@ -815,7 +819,12 @@ public class DfsImpl implements DfsResolver {
          * it reflects the part of the relative path consumed and not
          * the entire path.
          */
-        dri.stripPathConsumed(1 + server.length() + 1 + share.length());
+
+        DfsReferralDataInternal next = dri;
+        do {
+            next.stripPathConsumed(1 + server.length() + 1 + share.length());
+            next = next.next();
+        } while (next != dri);
 
         if ( key.charAt(key.length() - 1) != '\\' ) {
             key += '\\';
