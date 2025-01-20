@@ -773,11 +773,13 @@ class SmbResourceLocatorImpl implements SmbResourceLocatorInternal, Cloneable {
             return this.unc;
         }
         this.dfsReferral = dr;
-
         if (uncBeforeDfsReferal == null) {
             uncBeforeDfsReferal = unc;
         }
-        String oldUncPath = uncBeforeDfsReferal;
+        if ( this.unc == null ) {
+            canonicalizePath();
+        }
+        String oldUncPath = uncBeforeDfsReferal != null ? uncBeforeDfsReferal : this.unc;
 
         int pathConsumed = dr.getPathConsumed();
         if ( pathConsumed < 0 ) {
