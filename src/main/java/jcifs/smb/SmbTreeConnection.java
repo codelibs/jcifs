@@ -499,7 +499,7 @@ class SmbTreeConnection {
      * @throws IOException
      */
     public synchronized SmbTreeHandleImpl connectHost ( SmbResourceLocatorImpl loc, String host, DfsReferralData referral ) throws IOException {
-        String targetDomain = null;
+        String targetDomain = ctx.getCredentials().getUserDomain();
         try ( SmbTreeImpl t = getTree() ) {
             if ( t != null ) {
                 if ( log.isDebugEnabled() ) {
