@@ -15,6 +15,19 @@
 			<distribution>repo</distribution>
 		</license>
 	</licenses>
+	<organization>
+		<name>CodeLibs Project</name>
+		<url>https://www.codelibs.org/</url>
+	</organization>
+	<developers>
+		<developer>
+			<id>shinsuke</id>
+			<name>Shinsuke Sugaya</name>
+			<email>shinsuke.sugaya@codelibs.co</email>
+			<organization>CodeLibs Inc.</organization>
+			<organizationUrl>https://codelibs.co</organizationUrl>
+		</developer>
+	</developers>
 	<scm>
 		<connection>scm:git:git@github.com:codelibs/jcifs.git</connection>
 		<developerConnection>scm:git:git@github.com:codelibs/jcifs.git</developerConnection>
@@ -31,7 +44,7 @@
 		<plugins>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.13.0</version>
+				<version>3.14.0</version>
 				<configuration>
 					<source>1.8</source>
 					<target>1.8</target>
@@ -40,7 +53,7 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-source-plugin</artifactId>
-				<version>3.2.1</version>
+				<version>3.3.1</version>
 				<executions>
 					<execution>
 						<id>source-jar</id>
@@ -53,7 +66,7 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>3.7.0</version>
+				<version>3.11.2</version>
 				<configuration>
 					<encoding>UTF-8</encoding>
 					<docencoding>UTF-8</docencoding>
@@ -76,7 +89,7 @@
 			<plugin>
 				<groupId>org.apache.felix</groupId>
 				<artifactId>maven-bundle-plugin</artifactId>
-				<version>5.1.9</version>
+				<version>6.0.0</version>
 				<extensions>true</extensions>
 
 				<configuration>
@@ -156,7 +169,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<version>3.3.0</version>
+				<version>3.5.0</version>
 				<configuration>
 					<includes>
 						<include>**/**Test.java</include>
@@ -177,7 +190,7 @@
 			<plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
-				<version>0.8.12</version>
+				<version>0.8.13</version>
 				<executions>
 					<execution>
 						<goals>
@@ -196,7 +209,7 @@
 			<plugin>
 				<groupId>org.apache.rat</groupId>
 				<artifactId>apache-rat-plugin</artifactId>
-				<version>0.14</version>
+				<version>0.16.1</version>
 				<executions>
 					<execution>
 						<phase>verify</phase>
@@ -295,7 +308,7 @@
 		<dependency>
 			<groupId>org.bouncycastle</groupId>
 			<artifactId>bcprov-jdk18on</artifactId>
-			<version>1.78.1</version>
+			<version>1.80</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
