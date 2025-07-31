@@ -284,7 +284,7 @@ public class Smb2EncryptionContext {
 
 
     private Cipher createGCMCipher ( boolean encrypt, byte[] nonce ) throws Exception {
-        String algorithm = getKeyLength() == 16 ? "AES" : "AES";
+        String algorithm = "AES";
         SecretKeySpec keySpec = new SecretKeySpec(encrypt ? this.encryptionKey : this.decryptionKey, algorithm);
         
         Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
