@@ -151,43 +151,6 @@ public class KerberosTest extends BaseCIFSTest {
     }
 
 
-    @Ignore("Cannot be reimplemented with public APIs because custom ticket lifetime is required")
-    @Test
-    public void testSessionExpiration () throws Exception {
-        Assume.assumeTrue(getContext().getConfig().getResolveOrder().contains(ResolverType.RESOLVER_DNS));
-        long start = System.currentTimeMillis() / 1000 * 1000;
-        // this is not too great as it depends on timing/clockskew
-        // first we need to obtain a ticket, therefor need valid credentials
-        // then we need to wait until the ticket is expired
-        int wait = 10 * 1000;
-        // Subject s = getInitiatorSubject(getTestUser(), getTestUserPassword(), getTestUserDomainRequired(), princExp);
-        Subject s = new Subject(); // This test is disabled, so this line is just for compilation
-        Kerb5Authenticator creds = new RefreshableKerb5Authenticator(s, getTestUserDomainRequired(), getTestUser(), getTestUserPassword());
-        CIFSContext ctx = getContext().withCredentials(creds);
-        try ( SmbFile f = new SmbFile(getTestShareURL(), ctx) ) {
-            try ( SmbTreeHandle th = f.getTreeHandle() ) {
-                Assume.assumeTrue("Not SMB2", th.isSMB2());
-            }
-
-            f.exists();
-            Thread.sleep(wait);
-
-            try ( SmbResource r = f.resolve("test") ) {
-                r.exists();
-            }
-        }
-        catch ( SmbUnsupportedOperationException e ) {
-            Assume.assumeTrue("Using short names", false);
-        }
-        catch ( SmbException e ) {
-            if ( ! ( e.getCause() instanceof GSSException ) ) {
-                throw e;
-            }
-            log.error("Kerberos problem", e);
-            Assume.assumeTrue("Kerberos problem, clockskew?", false);
-        }
-    }
-
     private Subject getSubjectWithJaas(String username, String password, String realm) throws LoginException {
         Configuration jaasConfig = new Configuration() {
             @Override
