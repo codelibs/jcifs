@@ -389,7 +389,7 @@ public class NameServiceClientImpl implements Runnable, NameServiceClient {
                 log.trace("NetBIOS: new data read from socket");
 
                 int nameTrnId = NameServicePacket.readNameTrnId(this.rcv_buf, 0);
-                NameServicePacket response = this.responseTable.get(new Integer(nameTrnId));
+                NameServicePacket response = this.responseTable.get(Integer.valueOf(nameTrnId));
                 if ( response == null || response.received ) {
                     continue;
                 }
@@ -431,7 +431,7 @@ public class NameServiceClientImpl implements Runnable, NameServiceClient {
                 try {
                     synchronized ( this.LOCK ) {
                         request.nameTrnId = getNextNameTrnId();
-                        nid = new Integer(request.nameTrnId);
+                        nid = Integer.valueOf(request.nameTrnId);
 
                         this.out.setAddress(request.addr);
                         this.out.setLength(request.writeWireFormat(this.snd_buf, 0));

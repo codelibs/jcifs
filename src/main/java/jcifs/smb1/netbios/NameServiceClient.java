@@ -184,7 +184,7 @@ class NameServiceClient implements Runnable {
                     log.println( "NetBIOS: new data read from socket" );
 
                 nameTrnId = NameServicePacket.readNameTrnId( rcv_buf, 0 );
-                response = (NameServicePacket)responseTable.get( new Integer( nameTrnId ));
+                response = (NameServicePacket)responseTable.get( Integer.valueOf( nameTrnId ));
                 if( response == null || response.received ) {
                     continue;
                 }
@@ -221,7 +221,7 @@ class NameServiceClient implements Runnable {
                 try {
                     synchronized( LOCK ) {
                         request.nameTrnId = getNextNameTrnId();
-                        nid = new Integer( request.nameTrnId );
+                        nid = Integer.valueOf( request.nameTrnId );
 
                         out.setAddress( request.addr );
                         out.setLength( request.writeWireFormat( snd_buf, 0 ));
