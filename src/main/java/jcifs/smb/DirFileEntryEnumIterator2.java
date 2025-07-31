@@ -74,11 +74,10 @@ public class DirFileEntryEnumIterator2 extends DirFileEntryEnumIteratorBase {
 
 
     /**
-     * @param th
-     * @param parent
-     * @param wildcard
-     * @return
-     * @throws CIFSException
+     * Opens a directory for enumeration
+     * 
+     * @return the opened directory file entry
+     * @throws CIFSException if an error occurs opening the directory
      */
     @SuppressWarnings ( "resource" )
     @Override

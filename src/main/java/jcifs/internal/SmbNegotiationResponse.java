@@ -30,10 +30,10 @@ import jcifs.util.transport.Response;
 public interface SmbNegotiationResponse extends CommonServerMessageBlock, Response {
 
     /**
+     * Check if the negotiation response is valid
      * 
-     * @param cifsContext
-     * @param singingEnforced
-     * @param request
+     * @param cifsContext the CIFS context
+     * @param request the negotiation request
      * @return whether the protocol negotiation was successful
      */
     boolean isValid ( CIFSContext cifsContext, SmbNegotiationRequest request );

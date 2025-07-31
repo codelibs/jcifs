@@ -234,7 +234,7 @@ public class Smb2CreateResponse extends ServerMessageBlock2Response implements S
     /**
      * {@inheritDoc}
      * 
-     * @throws Smb2ProtocolDecodingException
+     * @throws SMBProtocolDecodingException
      *
      * @see jcifs.internal.smb2.ServerMessageBlock2#readBytesWireFormat(byte[], int)
      */

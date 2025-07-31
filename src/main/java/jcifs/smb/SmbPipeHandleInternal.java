@@ -79,23 +79,24 @@ public interface SmbPipeHandleInternal extends SmbPipeHandle {
 
 
     /**
-     * @param buf
-     * @param off
-     * @param length
-     * @param direct
-     * @return received bytes
-     * @throws CIFSException
-     * @throws IOException
+     * Receive data from the pipe
+     * 
+     * @param buf buffer to receive data into
+     * @param off offset in the buffer
+     * @param length maximum length to receive
+     * @return number of bytes received
+     * @throws IOException if an I/O error occurs
      */
     int recv ( byte[] buf, int off, int length ) throws IOException;
 
 
     /**
-     * @param buf
-     * @param off
-     * @param length
-     * @param direct
-     * @throws IOException
+     * Send data to the pipe
+     * 
+     * @param buf buffer containing data to send
+     * @param off offset in the buffer
+     * @param length length of data to send
+     * @throws IOException if an I/O error occurs
      */
     void send ( byte[] buf, int off, int length ) throws IOException;
 

@@ -88,8 +88,8 @@ public class Smb2CloseRequest extends ServerMessageBlock2Request<Smb2CloseRespon
     /**
      * {@inheritDoc}
      *
-     * @see jcifs.internal.smb2.ServerMessageBlock2#createResponse(jcifs.Configuration,
-     *      jcifs.internal.smb2.ServerMessageBlock2)
+     * @see jcifs.internal.smb2.ServerMessageBlock2Request#createResponse(jcifs.CIFSContext,
+     *      jcifs.internal.smb2.ServerMessageBlock2Request)
      */
     @Override
     protected Smb2CloseResponse createResponse ( CIFSContext tc, ServerMessageBlock2Request<Smb2CloseResponse> req ) {

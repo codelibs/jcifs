@@ -239,8 +239,11 @@ public abstract class ServerMessageBlock2Request <T extends ServerMessageBlock2R
 
 
     /**
-     * @param config2
-     * @return
+     * Create the response object for this request
+     * 
+     * @param tc the CIFS context
+     * @param req the request object
+     * @return the response object
      */
     protected abstract T createResponse ( CIFSContext tc, ServerMessageBlock2Request<T> req );
 
