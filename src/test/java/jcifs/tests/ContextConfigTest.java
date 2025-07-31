@@ -149,7 +149,8 @@ public class ContextConfigTest {
         prop1.setProperty("jcifs.smb.client.minVersion", "SMB302");
         PropertyConfiguration p1 = new PropertyConfiguration(prop1);
         assertEquals(DialectVersion.SMB302, p1.getMinimumVersion());
-        assertEquals(DialectVersion.SMB302, p1.getMaximumVersion());
+        // maxVersion defaults to SMB311, which is >= SMB302
+        assertEquals(DialectVersion.SMB311, p1.getMaximumVersion());
 
         Properties prop2 = new Properties();
         prop2.setProperty("jcifs.smb.client.maxVersion", "SMB302");
@@ -163,8 +164,8 @@ public class ContextConfigTest {
         PropertyConfiguration p3 = new PropertyConfiguration(prop3);
         assertEquals(DialectVersion.SMB202, p3.getMinimumVersion());
 
-        // needs to be adjusted when default changes
-        assertEquals(DialectVersion.SMB210, p3.getMaximumVersion());
+        // needs to be adjusted when default changes - updated for SMB3 support
+        assertEquals(DialectVersion.SMB311, p3.getMaximumVersion());
 
     }
 
@@ -186,8 +187,8 @@ public class ContextConfigTest {
         PropertyConfiguration p2 = new PropertyConfiguration(prop2);
 
         assertEquals(DialectVersion.SMB1, p2.getMinimumVersion());
-        // needs to be adjusted when default changes
-        assertEquals(DialectVersion.SMB210, p2.getMaximumVersion());
+        // needs to be adjusted when default changes - updated for SMB3 support
+        assertEquals(DialectVersion.SMB311, p2.getMaximumVersion());
 
         Properties prop3 = new Properties();
         prop3.setProperty("jcifs.smb.client.enableSMB2", "true");
