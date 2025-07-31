@@ -54,12 +54,12 @@ import jcifs.smb1.util.Hexdump;
  * 
  *    Name               Type         Status
  * ---------------------------------------------
- * JMORRIS2        <00>  UNIQUE      Registered
- * BILLING-NY      <00>  GROUP       Registered
- * JMORRIS2        <03>  UNIQUE      Registered
- * JMORRIS2        <20>  UNIQUE      Registered
- * BILLING-NY      <1E>  GROUP       Registered
- * JMORRIS         <03>  UNIQUE      Registered
+ * JMORRIS2        &lt;00&gt;  UNIQUE      Registered
+ * BILLING-NY      &lt;00&gt;  GROUP       Registered
+ * JMORRIS2        &lt;03&gt;  UNIQUE      Registered
+ * JMORRIS2        &lt;20&gt;  UNIQUE      Registered
+ * BILLING-NY      &lt;1E&gt;  GROUP       Registered
+ * JMORRIS         &lt;03&gt;  UNIQUE      Registered
  * 
  * MAC Address = 00-B0-34-21-FA-3B
  * </blockquote></pre>

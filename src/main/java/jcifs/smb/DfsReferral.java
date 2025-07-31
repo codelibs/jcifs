@@ -40,7 +40,7 @@ public class DfsReferral extends SmbException {
 
 
     /**
-     * @param dr
+     * @param data the DFS referral data
      */
     public DfsReferral ( DfsReferralData data ) {
         this.data = data;

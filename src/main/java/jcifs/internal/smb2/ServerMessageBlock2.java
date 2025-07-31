@@ -610,10 +610,12 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
 
 
     /**
-     * @param buffer
-     * @param bufferIndex
-     * @return
-     * @throws Smb2ProtocolDecodingException
+     * Read error response from buffer
+     * 
+     * @param buffer the buffer to read from
+     * @param bufferIndex the starting index in the buffer
+     * @return the number of bytes read
+     * @throws SMBProtocolDecodingException if decoding fails
      */
     protected int readErrorResponse ( byte[] buffer, int bufferIndex ) throws SMBProtocolDecodingException {
         int start = bufferIndex;

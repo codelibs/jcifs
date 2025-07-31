@@ -152,7 +152,7 @@ public class Smb2NegotiateRequest extends ServerMessageBlock2Request<Smb2Negotia
     /**
      * {@inheritDoc}
      *
-     * @see jcifs.internal.smb2.ServerMessageBlock2Request#createResponse(jcifs.Configuration,
+     * @see jcifs.internal.smb2.ServerMessageBlock2Request#createResponse(jcifs.CIFSContext,
      *      jcifs.internal.smb2.ServerMessageBlock2Request)
      */
     @Override

@@ -240,7 +240,7 @@ public class Smb2TreeConnectResponse extends ServerMessageBlock2Response impleme
     /**
      * {@inheritDoc}
      * 
-     * @throws Smb2ProtocolDecodingException
+     * @throws SMBProtocolDecodingException
      *
      * @see jcifs.internal.smb2.ServerMessageBlock2#readBytesWireFormat(byte[], int)
      */

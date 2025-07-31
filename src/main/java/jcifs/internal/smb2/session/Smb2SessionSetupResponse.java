@@ -98,7 +98,7 @@ public class Smb2SessionSetupResponse extends ServerMessageBlock2Response {
     /**
      * {@inheritDoc}
      * 
-     * @throws Smb2ProtocolDecodingException
+     * @throws SMBProtocolDecodingException
      *
      * @see jcifs.internal.smb2.ServerMessageBlock2#readBytesWireFormat(byte[], int)
      */

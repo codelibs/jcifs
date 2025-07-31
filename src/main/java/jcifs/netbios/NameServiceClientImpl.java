@@ -778,8 +778,8 @@ public class NameServiceClientImpl implements Runnable, NameServiceClient {
 
 
     /**
+     * Get the address of the active WINS server
      * 
-     * @param tc
      * @return address of active WINS server
      */
     protected InetAddress getWINSAddress () {

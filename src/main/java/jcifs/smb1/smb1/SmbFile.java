@@ -2663,7 +2663,7 @@ if (this instanceof SmbNamedPipe) {
 
 /**
  * Turn off the read-only attribute of this file. This is shorthand for
- * <tt>setAttributes( getAttributes() & ~ATTR_READONLY )</tt>.
+ * <tt>setAttributes( getAttributes() &amp; ~ATTR_READONLY )</tt>.
  *
  * @throws SmbException
  */
@@ -2928,7 +2928,7 @@ if (this instanceof SmbNamedPipe) {
  * share. There are actually two different ACLs for shares - the ACL on
  * the share and the ACL on the folder being shared.
  * Go to <i>Computer Management</i>
- * &gt; <i>System Tools</i> &gt; <i>Shared Folders</i> &gt <i>Shares</i> and
+ * &gt; <i>System Tools</i> &gt; <i>Shared Folders</i> &gt; <i>Shares</i> and
  * look at the <i>Properties</i> for a share. You will see two tabs - one
  * for "Share Permissions" and another for "Security". These correspond to
  * the ACLs returned by <tt>getShareSecurity</tt> and <tt>getSecurity</tt>
