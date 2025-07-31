@@ -155,10 +155,7 @@ public class PACTest {
     private static void testRC4HMac ( int usage, String data, String key, String expect ) throws GeneralSecurityException, PACDecodingException {
         byte[] keyb = Hex.decode(key);
         byte[] datab = data.getBytes(StandardCharsets.US_ASCII);
-        byte[] javaMac = sun.security.krb5.internal.crypto.ArcFourHmac.calculateChecksum(keyb, usage, datab, 0, datab.length);
         byte[] mac = PacMac.calculateMacArcfourHMACMD5(usage, makeKey(keyb, 23), datab);
-        checkBytes(javaMac, mac);
-        checkBytes(Hex.decode(expect), javaMac);
         checkBytes(Hex.decode(expect), mac);
     }
 
@@ -255,34 +252,14 @@ public class PACTest {
      */
     private static void verifyAESHMAC ( int usage, String expect, String key, byte[] bytes ) throws GeneralSecurityException {
         byte[] keybytes = Hex.decode(key);
-        byte[] javaChecksum;
-        if ( keybytes.length == 16 ) {
-            javaChecksum = sun.security.krb5.internal.crypto.Aes128.calculateChecksum(keybytes, usage, bytes, 0, bytes.length);
-
-        }
-        else {
-            javaChecksum = sun.security.krb5.internal.crypto.Aes256.calculateChecksum(keybytes, usage, bytes, 0, bytes.length);
-        }
-
         byte[] mac = PacMac.calculateMacHMACAES(usage, makeKey(keybytes, keybytes.length == 16 ? 17 : 18), bytes);
-        checkBytes(javaChecksum, mac);
         checkBytes(Hex.decode(expect), mac);
     }
 
 
     private static void verifyArcfourHMAC ( int usage, String expect, String key, byte[] bytes ) throws GeneralSecurityException {
         byte[] keybytes = Hex.decode(key);
-        byte[] javaChecksum;
-        if ( keybytes.length == 16 ) {
-            javaChecksum = sun.security.krb5.internal.crypto.ArcFourHmac.calculateChecksum(keybytes, usage, bytes, 0, bytes.length);
-
-        }
-        else {
-            javaChecksum = sun.security.krb5.internal.crypto.ArcFourHmac.calculateChecksum(keybytes, usage, bytes, 0, bytes.length);
-        }
-
         byte[] mac = PacMac.calculateMacArcfourHMACMD5(usage, makeKey(keybytes, 23), bytes);
-        checkBytes(javaChecksum, mac);
         checkBytes(Hex.decode(expect), mac);
     }
 
