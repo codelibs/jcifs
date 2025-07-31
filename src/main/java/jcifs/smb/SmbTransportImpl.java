@@ -87,6 +87,8 @@ import jcifs.internal.smb2.lock.Smb2OplockBreakNotification;
 import jcifs.internal.smb2.nego.EncryptionNegotiateContext;
 import jcifs.internal.smb2.nego.Smb2NegotiateRequest;
 import jcifs.internal.smb2.nego.Smb2NegotiateResponse;
+import jcifs.internal.smb2.Smb2EncryptionContext;
+import jcifs.internal.smb2.Smb3KeyDerivation;
 import jcifs.netbios.Name;
 import jcifs.netbios.NbtException;
 import jcifs.netbios.SessionRequestPacket;
@@ -1838,29 +1840,48 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
     }
 
 
-    Cipher createEncryptionCipher ( byte[] key ) throws CIFSException {
+    /**
+     * Create encryption context for SMB3 encrypted communication
+     * 
+     * @param sessionKey the session key from GSS-API authentication
+     * @param preauthHash the pre-authentication integrity hash (SMB 3.1.1 only)
+     * @return encryption context
+     * @throws CIFSException if encryption is not supported or fails
+     */
+    Smb2EncryptionContext createEncryptionContext ( byte[] sessionKey, byte[] preauthHash ) throws CIFSException {
         if ( !this.smb2 || this.negotiated == null ) {
-            throw new SmbUnsupportedOperationException();
+            throw new SmbUnsupportedOperationException("SMB2/SMB3 required for encryption");
         }
 
         Smb2NegotiateResponse resp = (Smb2NegotiateResponse) this.negotiated;
+        DialectVersion dialect = resp.getSelectedDialect();
         int cipherId = -1;
 
-        if ( resp.getSelectedDialect().atLeast(DialectVersion.SMB311) ) {
+        if ( dialect.atLeast(DialectVersion.SMB311) ) {
             cipherId = resp.getSelectedCipher();
+            if ( cipherId == -1 ) {
+                // Default to AES-128-GCM for SMB 3.1.1 if no cipher negotiated
+                cipherId = EncryptionNegotiateContext.CIPHER_AES128_GCM;
+            }
         }
-        else if ( resp.getSelectedDialect().atLeast(DialectVersion.SMB300) ) {
+        else if ( dialect.atLeast(DialectVersion.SMB300) ) {
+            // SMB 3.0/3.0.2 only supports AES-128-CCM
             cipherId = EncryptionNegotiateContext.CIPHER_AES128_CCM;
         }
         else {
-            throw new SmbUnsupportedOperationException();
+            throw new SmbUnsupportedOperationException("SMB3 required for encryption, negotiated: " + dialect);
         }
 
-        switch ( cipherId ) {
-        case EncryptionNegotiateContext.CIPHER_AES128_CCM:
-        case EncryptionNegotiateContext.CIPHER_AES128_GCM:
-        default:
-            throw new SmbUnsupportedOperationException();
+        try {
+            // Derive encryption and decryption keys using SMB3 KDF
+            int dialectInt = dialect.getDialect();
+            byte[] encryptionKey = Smb3KeyDerivation.deriveEncryptionKey(dialectInt, sessionKey, preauthHash);
+            byte[] decryptionKey = Smb3KeyDerivation.deriveDecryptionKey(dialectInt, sessionKey, preauthHash);
+
+            return new Smb2EncryptionContext(cipherId, dialect, encryptionKey, decryptionKey);
+        }
+        catch ( Exception e ) {
+            throw new CIFSException("Failed to create encryption context", e);
         }
     }
 

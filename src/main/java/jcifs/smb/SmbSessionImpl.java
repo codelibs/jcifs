@@ -66,6 +66,7 @@ import jcifs.internal.smb2.nego.Smb2NegotiateResponse;
 import jcifs.internal.smb2.session.Smb2LogoffRequest;
 import jcifs.internal.smb2.session.Smb2SessionSetupRequest;
 import jcifs.internal.smb2.session.Smb2SessionSetupResponse;
+import jcifs.internal.smb2.Smb2EncryptionContext;
 import jcifs.util.Hexdump;
 
 
@@ -102,6 +103,7 @@ final class SmbSessionImpl implements SmbSessionInternal {
     private long sessionId;
 
     private SMBSigningDigest digest;
+    private Smb2EncryptionContext encryptionContext;
 
     private final String targetDomain;
     private final String targetHost;
@@ -584,7 +586,18 @@ final class SmbSessionImpl implements SmbSessionInternal {
                 }
 
                 if ( ( response.getSessionFlags() & Smb2SessionSetupResponse.SMB2_SESSION_FLAG_ENCRYPT_DATA ) != 0 ) {
-                    throw new SmbUnsupportedOperationException("Server requires encryption, not yet supported.");
+                    // Server requires encryption - create encryption context
+                    try {
+                        if ( log.isDebugEnabled() ) {
+                            log.debug("Server requires encryption, creating encryption context");
+                        }
+                        SmbTransportImpl transport = getTransport();
+                        this.encryptionContext = transport.createEncryptionContext(this.sessionKey, this.preauthIntegrityHash);
+                    }
+                    catch ( CIFSException e ) {
+                        log.error("Failed to create encryption context", e);
+                        throw new SmbAuthException("Failed to setup required encryption", e);
+                    }
                 }
 
                 if ( preauthIntegrity ) {
@@ -1300,6 +1313,52 @@ final class SmbSessionImpl implements SmbSessionInternal {
      */
     public boolean isFailed () {
         return this.transport.isFailed();
+    }
+
+
+    /**
+     * @return whether encryption is enabled for this session
+     */
+    public boolean isEncryptionEnabled () {
+        return this.encryptionContext != null;
+    }
+
+
+    /**
+     * @return the encryption context for this session, or null if encryption is not enabled
+     */
+    public Smb2EncryptionContext getEncryptionContext () {
+        return this.encryptionContext;
+    }
+
+
+    /**
+     * Encrypt a message using the session's encryption context
+     * 
+     * @param message the message to encrypt
+     * @return encrypted message with transform header
+     * @throws CIFSException if encryption fails or is not enabled
+     */
+    public byte[] encryptMessage ( byte[] message ) throws CIFSException {
+        if ( this.encryptionContext == null ) {
+            throw new CIFSException("Encryption not enabled for this session");
+        }
+        return this.encryptionContext.encryptMessage(message, this.sessionId);
+    }
+
+
+    /**
+     * Decrypt a message using the session's encryption context
+     * 
+     * @param encryptedMessage the encrypted message with transform header
+     * @return decrypted message
+     * @throws CIFSException if decryption fails or encryption is not enabled
+     */
+    public byte[] decryptMessage ( byte[] encryptedMessage ) throws CIFSException {
+        if ( this.encryptionContext == null ) {
+            throw new CIFSException("Encryption not enabled for this session");
+        }
+        return this.encryptionContext.decryptMessage(encryptedMessage);
     }
 
 }

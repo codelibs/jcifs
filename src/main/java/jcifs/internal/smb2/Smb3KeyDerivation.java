@@ -33,7 +33,7 @@ import org.bouncycastle.crypto.params.KDFCounterParameters;
  * @author mbechler
  *
  */
-final class Smb3KeyDerivation {
+public final class Smb3KeyDerivation {
 
     private static final byte[] SIGNCONTEXT_300 = toCBytes("SmbSign");
     private static final byte[] SIGNLABEL_300 = toCBytes("SMB2AESCMAC");
