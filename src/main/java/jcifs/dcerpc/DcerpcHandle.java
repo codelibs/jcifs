@@ -388,7 +388,7 @@ public abstract class DcerpcHandle implements DcerpcConstants, AutoCloseable {
      * @throws NdrException
      * @throws DcerpcException
      */
-    private NdrBuffer encodeMessage ( DcerpcMessage msg, byte[] out ) throws NdrException, DcerpcException {
+    protected NdrBuffer encodeMessage ( DcerpcMessage msg, byte[] out ) throws NdrException, DcerpcException {
         NdrBuffer buf = new NdrBuffer(out, 0);
 
         msg.flags = DCERPC_FIRST_FRAG | DCERPC_LAST_FRAG;

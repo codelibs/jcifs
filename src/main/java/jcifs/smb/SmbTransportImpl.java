@@ -1400,7 +1400,7 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
             resp.setErrorCode(SmbException.getStatusByCode(resp.getErrorCode()));
         }
         switch ( resp.getErrorCode() ) {
-        case NtStatus.NT_STATUS_OK:
+        case NtStatus.NT_STATUS_SUCCESS:
             cont = true;
             break;
         case NtStatus.NT_STATUS_ACCESS_DENIED:
@@ -1445,7 +1445,7 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
     boolean checkStatus2 ( ServerMessageBlock2 req, Response resp ) throws SmbException {
         boolean cont = false;
         switch ( resp.getErrorCode() ) {
-        case NtStatus.NT_STATUS_OK:
+        case NtStatus.NT_STATUS_SUCCESS:
         case NtStatus.NT_STATUS_NO_MORE_FILES:
             cont = true;
             break;

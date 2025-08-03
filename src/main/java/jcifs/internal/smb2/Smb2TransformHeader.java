@@ -263,7 +263,7 @@ public class Smb2TransformHeader implements Encodable {
      * @return byte array containing associated data
      */
     public byte[] getAssociatedData () {
-        byte[] aad = new byte[36]; // Total header size minus signature
+        byte[] aad = new byte[52]; // Use full header size to ensure all data fits
         int index = 0;
 
         // Protocol ID
@@ -289,7 +289,7 @@ public class Smb2TransformHeader implements Encodable {
         SMBUtil.writeInt2(this.flags, aad, index);
         index += 2;
 
-        // Session ID
+        // Session ID (8 bytes)
         SMBUtil.writeInt8(this.sessionId, aad, index);
 
         return aad;

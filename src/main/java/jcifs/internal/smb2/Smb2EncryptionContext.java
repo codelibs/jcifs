@@ -299,7 +299,11 @@ public class Smb2EncryptionContext {
         AEADBlockCipher cipher = new CCMBlockCipher(new AESEngine());
         
         KeyParameter keyParam = new KeyParameter(encrypt ? this.encryptionKey : this.decryptionKey);
-        AEADParameters params = new AEADParameters(keyParam, getAuthTagLength() * 8, nonce, null);
+        // CCMBlockCipher requires nonce length between 7 and 13
+        byte[] adjustedNonce = new byte[13];
+        System.arraycopy(nonce, 0, adjustedNonce, 0, Math.min(13, nonce.length));
+        
+        AEADParameters params = new AEADParameters(keyParam, getAuthTagLength() * 8, adjustedNonce, null);
         
         cipher.init(encrypt, params);
         

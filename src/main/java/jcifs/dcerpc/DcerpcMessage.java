@@ -38,6 +38,14 @@ public abstract class DcerpcMessage extends NdrObject implements DcerpcConstants
     protected int result = 0;
 
 
+    public int getPtype() {
+        return ptype;
+    }
+
+    public int getFlags() {
+        return flags;
+    }
+
     /**
      * 
      * @param flag

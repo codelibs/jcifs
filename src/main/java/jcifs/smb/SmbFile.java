@@ -1801,7 +1801,7 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
             try {
                 // make sure that the handle is closed when one of the requests fails
                 Smb2CreateResponse createResp = cr.getResponse();
-                if ( createResp.isReceived() && createResp.getStatus() == NtStatus.NT_STATUS_OK ) {
+                if ( createResp.isReceived() && createResp.getStatus() == NtStatus.NT_STATUS_SUCCESS ) {
                     th.send(new Smb2CloseRequest(th.getConfig(), createResp.getFileId()), RequestParam.NO_RETRY);
                 }
             }

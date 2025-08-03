@@ -33,4 +33,31 @@ public interface DcerpcConstants {
     public static final int DCERPC_DID_NOT_EXECUTE = 0x20;
     public static final int DCERPC_MAYBE = 0x40; /* `maybe' call semantics requested */
     public static final int DCERPC_OBJECT_UUID = 0x80; /* if true, a non-nil object UUID */
+
+    // Packet Types (ptype)
+    public static final int RPC_PT_REQUEST = 0x00;
+    public static final int RPC_PT_PING = 0x01;
+    public static final int RPC_PT_RESPONSE = 0x02;
+    public static final int RPC_PT_FAULT = 0x03;
+    public static final int RPC_PT_BIND = 0x0B;
+    public static final int RPC_PT_BIND_ACK = 0x0C;
+    public static final int RPC_PT_BIND_NAK = 0x0D;
+    public static final int RPC_PT_ALTER_CONTEXT = 0x0E;
+    public static final int RPC_PT_ALTER_CONTEXT_RESPONSE = 0x0F;
+    public static final int RPC_PT_SHUTDOWN = 0x11;
+    public static final int RPC_PT_CANCEL = 0x12;
+    public static final int RPC_PT_ACK = 0x13;
+    public static final int RPC_PT_REJECT = 0x14;
+    public static final int RPC_PT_CO_CANCEL = 0x15;
+    public static final int RPC_PT_ORPHANED = 0x16;
+
+    // RPC_C_PF_ flags (packet flags)
+    public static final int RPC_C_PF_BROADCAST = 0x01;
+    public static final int RPC_C_PF_NO_FRAGMENT = 0x02;
+    public static final int RPC_C_PF_MAYBE = 0x04;
+    public static final int RPC_C_PF_IDEMPOTENT = 0x08;
+    public static final int RPC_C_PF_BROADCAST_MAYBE = 0x10;
+    public static final int RPC_C_PF_NOT_IDEMPOTENT = 0x20;
+    public static final int RPC_C_PF_NO_AUTO_LISTEN = 0x40;
+    public static final int RPC_C_PF_NO_AUTO_RETRY = 0x80;
 }
