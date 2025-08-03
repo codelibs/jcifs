@@ -46,7 +46,7 @@ import jcifs.internal.smb2.ioctl.SrvRequestResumeKeyResponse;
  * @author mbechler
  *
  */
-final class SmbCopyUtil {
+public final class SmbCopyUtil {
 
     private static final Logger log = LoggerFactory.getLogger(SmbCopyUtil.class);
 

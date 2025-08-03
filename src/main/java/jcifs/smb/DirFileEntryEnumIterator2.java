@@ -96,7 +96,7 @@ public class DirFileEntryEnumIterator2 extends DirFileEntryEnumIteratorBase {
         }
         catch ( SmbException e ) {
             Smb2CreateResponse cr = create.getResponse();
-            if ( cr != null && cr.isReceived() && cr.getStatus() == NtStatus.NT_STATUS_OK ) {
+            if ( cr != null && cr.isReceived() && cr.getStatus() == NtStatus.NT_STATUS_SUCCESS ) {
                 try {
                     th.send(new Smb2CloseRequest(th.getConfig(), cr.getFileId()));
                 }

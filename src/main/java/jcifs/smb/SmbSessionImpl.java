@@ -569,7 +569,7 @@ final class SmbSessionImpl implements SmbSessionInternal {
                         // an invalid parameter error when a SPNEGO MIC is in place and auth fails
                         throw new SmbAuthException("Login failed", e);
                     }
-                    else if ( !sessResponse.isReceived() || sessResponse.isError() || ( sessResponse.getStatus() != NtStatus.NT_STATUS_OK
+                    else if ( !sessResponse.isReceived() || sessResponse.isError() || ( sessResponse.getStatus() != NtStatus.NT_STATUS_SUCCESS
                             && sessResponse.getStatus() != NtStatus.NT_STATUS_MORE_PROCESSING_REQUIRED ) ) {
                         throw e;
                     }
@@ -794,7 +794,7 @@ final class SmbSessionImpl implements SmbSessionInternal {
                     }
                     catch ( SmbException e ) {
                         Smb2SessionSetupResponse sessResponse = request.getResponse();
-                        if ( !sessResponse.isReceived() || sessResponse.isError() || ( sessResponse.getStatus() != NtStatus.NT_STATUS_OK
+                        if ( !sessResponse.isReceived() || sessResponse.isError() || ( sessResponse.getStatus() != NtStatus.NT_STATUS_SUCCESS
                                 && sessResponse.getStatus() != NtStatus.NT_STATUS_MORE_PROCESSING_REQUIRED ) ) {
                             throw e;
                         }

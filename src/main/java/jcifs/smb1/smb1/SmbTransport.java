@@ -537,7 +537,7 @@ public class SmbTransport extends Transport implements SmbConstants {
     void checkStatus( ServerMessageBlock req, ServerMessageBlock resp ) throws SmbException {
         resp.errorCode = SmbException.getStatusByCode( resp.errorCode );
         switch( resp.errorCode ) {
-            case NtStatus.NT_STATUS_OK:
+            case NtStatus.NT_STATUS_SUCCESS:
                 break;
             case NtStatus.NT_STATUS_ACCESS_DENIED:
             case NtStatus.NT_STATUS_WRONG_PASSWORD:

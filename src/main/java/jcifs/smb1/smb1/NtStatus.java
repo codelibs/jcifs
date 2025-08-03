@@ -24,7 +24,8 @@ public interface NtStatus {
      * block is automatically generated from the ntstatus package.
      */
 
-    public static final int NT_STATUS_OK = 0x00000000;
+    public static final int NT_STATUS_OK = 0x00000000; // TODO: Remove this constant, use NT_STATUS_SUCCESS instead.
+    public static final int NT_STATUS_SUCCESS = 0x00000000;
     public static final int NT_STATUS_UNSUCCESSFUL = 0xC0000001;
     public static final int NT_STATUS_NOT_IMPLEMENTED = 0xC0000002;
     public static final int NT_STATUS_INVALID_INFO_CLASS = 0xC0000003;
@@ -88,7 +89,7 @@ public interface NtStatus {
     public static final int NT_STATUS_IO_REPARSE_TAG_NOT_HANDLED = 0xC0000279;
 
     static final int[] NT_STATUS_CODES = {
-        NT_STATUS_OK,
+        NT_STATUS_SUCCESS,
         NT_STATUS_UNSUCCESSFUL,
         NT_STATUS_NOT_IMPLEMENTED,
         NT_STATUS_INVALID_INFO_CLASS,

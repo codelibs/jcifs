@@ -623,7 +623,7 @@ class SmbTreeImpl implements SmbTreeInternal {
                     if ( request != null && request.getResponse() != null ) {
                         // tree connect might still have succeeded
                         response = (TreeConnectResponse) request.getResponse();
-                        if ( response.isReceived() && !response.isError() && response.getErrorCode() == NtStatus.NT_STATUS_OK ) {
+                        if ( response.isReceived() && !response.isError() && response.getErrorCode() == NtStatus.NT_STATUS_SUCCESS ) {
                             if ( !transport.isDisconnected() ) {
                                 treeConnected(transport, sess, response);
                             }

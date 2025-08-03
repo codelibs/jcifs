@@ -20,10 +20,10 @@
 package jcifs.dcerpc.msrpc;
 
 @SuppressWarnings ( "javadoc" )
-public class MsrpcLookupSids extends lsarpc.LsarLookupSids {
+public class MsrpcLookupSids extends jcifs.dcerpc.msrpc.lsarpc.LsarLookupSids {
 
     public MsrpcLookupSids ( LsaPolicyHandle policyHandle, jcifs.SID[] sids ) {
-        super(policyHandle, new LsarSidArrayX(sids), new lsarpc.LsarRefDomainList(), new lsarpc.LsarTransNameArray(), (short) 1, sids.length);
+        super(policyHandle, new LsarSidArrayX(sids), new jcifs.dcerpc.msrpc.lsarpc.LsarRefDomainList(), new jcifs.dcerpc.msrpc.lsarpc.LsarTransNameArray(), (short) 1, sids.length);
         this.ptype = 0;
         this.flags = DCERPC_FIRST_FRAG | DCERPC_LAST_FRAG;
     }
