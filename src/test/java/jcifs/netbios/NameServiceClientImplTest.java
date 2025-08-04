@@ -1,0 +1,207 @@
+package jcifs.netbios;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import jcifs.Address;
+import jcifs.CIFSContext;
+import jcifs.Configuration;
+import jcifs.NetbiosAddress;
+import jcifs.NetbiosName;
+
+/**
+ * Test class for NameServiceClientImpl focusing on public API methods.
+ * This test only tests the public interface to avoid accessing private fields/methods.
+ */
+@ExtendWith(MockitoExtension.class)
+@DisplayName("NameServiceClientImpl Tests")
+class NameServiceClientImplTest {
+
+    @Mock
+    private CIFSContext mockContext;
+    
+    @Mock
+    private Configuration mockConfig;
+    
+    @Mock
+    private NetbiosAddress mockNetbiosAddress;
+    
+    @Mock
+    private Address mockAddress;
+
+    private NameServiceClientImpl nameServiceClient;
+
+    @BeforeEach
+    void setUp() {
+        // Configure mock context
+        when(mockContext.getConfig()).thenReturn(mockConfig);
+        when(mockConfig.getNetbiosSoTimeout()).thenReturn(5000);
+        when(mockConfig.getNetbiosRetryTimeout()).thenReturn(3000);
+        when(mockConfig.getNetbiosRetryCount()).thenReturn(3);
+        
+        // Create the name service client with mock context
+        nameServiceClient = new NameServiceClientImpl(mockContext);
+    }
+
+    @Test
+    @DisplayName("Should get local host name")
+    void testGetLocalName() {
+        // When
+        NetbiosName localName = nameServiceClient.getLocalName();
+        
+        // Then
+        assertNotNull(localName, "Local name should not be null");
+        assertTrue(localName.getName().length() > 0, "Local name should not be empty");
+    }
+
+    @Test
+    @DisplayName("Should get unknown name")
+    void testGetUnknownName() {
+        // When
+        NetbiosName unknownName = nameServiceClient.getUnknownName();
+        
+        // Then
+        assertNotNull(unknownName, "Unknown name should not be null");
+        assertEquals("0.0.0.0", unknownName.getName(), "Unknown name should be 0.0.0.0");
+    }
+
+    @Test
+    @DisplayName("Should handle null hostname in getByName")
+    void testGetByNameWithNull() {
+        // When/Then
+        assertThrows(UnknownHostException.class, () -> {
+            nameServiceClient.getByName(null);
+        }, "Should throw UnknownHostException for null hostname");
+    }
+
+    @Test
+    @DisplayName("Should handle empty hostname in getByName")
+    void testGetByNameWithEmpty() {
+        // When/Then
+        assertThrows(UnknownHostException.class, () -> {
+            nameServiceClient.getByName("");
+        }, "Should throw UnknownHostException for empty hostname");
+    }
+
+    @Test
+    @DisplayName("Should handle localhost in getByName")
+    void testGetByNameWithLocalhost() throws UnknownHostException {
+        // When
+        Address address = nameServiceClient.getByName("localhost");
+        
+        // Then
+        assertNotNull(address, "Should return address for localhost");
+    }
+
+    @Test
+    @DisplayName("Should handle IP address in getByName")
+    void testGetByNameWithIPAddress() throws UnknownHostException {
+        // When
+        Address address = nameServiceClient.getByName("127.0.0.1");
+        
+        // Then
+        assertNotNull(address, "Should return address for IP address");
+        assertEquals("127.0.0.1", address.getHostAddress(), "Should return correct IP address");
+    }
+
+    @Test
+    @DisplayName("Should get all addresses by name")
+    void testGetAllByName() throws UnknownHostException {
+        // When
+        Address[] addresses = nameServiceClient.getAllByName("localhost", false);
+        
+        // Then
+        assertNotNull(addresses, "Should return addresses array");
+        assertTrue(addresses.length > 0, "Should return at least one address");
+    }
+
+    @Test
+    @DisplayName("Should handle NetBIOS name resolution")
+    void testGetNbtByName() throws UnknownHostException {
+        // When/Then - This may throw UnknownHostException for non-existent names
+        assertThrows(UnknownHostException.class, () -> {
+            nameServiceClient.getNbtByName("nonexistent");
+        }, "Should throw UnknownHostException for non-existent NetBIOS name");
+    }
+
+    @Test
+    @DisplayName("Should handle NetBIOS name with type and scope")
+    void testGetNbtByNameWithTypeAndScope() throws UnknownHostException {
+        // When/Then - This may throw UnknownHostException for non-existent names
+        assertThrows(UnknownHostException.class, () -> {
+            nameServiceClient.getNbtByName("nonexistent", 0x20, null);
+        }, "Should throw UnknownHostException for non-existent NetBIOS name with type");
+    }
+
+    @Test
+    @DisplayName("Should handle NetBIOS all by name")
+    void testGetNbtAllByName() throws UnknownHostException {
+        // When/Then - This may throw UnknownHostException for non-existent names
+        assertThrows(UnknownHostException.class, () -> {
+            nameServiceClient.getNbtAllByAddress("nonexistent");
+        }, "Should throw UnknownHostException for non-existent NetBIOS name");
+    }
+
+    @Test
+    @DisplayName("Should handle constructor with context")
+    void testConstructor() {
+        // When
+        NameServiceClientImpl client = new NameServiceClientImpl(mockContext);
+        
+        // Then
+        assertNotNull(client, "Should create client instance");
+    }
+
+    @Test
+    @DisplayName("Should handle constructor with null context")
+    void testConstructorWithNullContext() {
+        // When/Then
+        assertThrows(NullPointerException.class, () -> {
+            new NameServiceClientImpl(null);
+        }, "Should throw exception for null context");
+    }
+
+
+    @Test
+    @DisplayName("Should handle node status for mock address")
+    void testGetNodeStatus() {
+        // Given
+        when(mockNetbiosAddress.getHostAddress()).thenReturn("127.0.0.1");
+        
+        // When/Then - This may throw UnknownHostException for non-responsive addresses
+        assertThrows(UnknownHostException.class, () -> {
+            nameServiceClient.getNodeStatus(mockNetbiosAddress);
+        }, "Should throw UnknownHostException for non-responsive address");
+    }
+
+    @Test
+    @DisplayName("Should handle getByName with boolean flag")
+    void testGetByNameWithFlag() throws UnknownHostException {
+        // When
+        Address address = nameServiceClient.getByName("localhost", false);
+        
+        // Then
+        assertNotNull(address, "Should return address for localhost");
+    }
+
+    @Test
+    @DisplayName("Should validate context configuration access")
+    void testContextAccess() {
+        // When
+        NameServiceClientImpl client = new NameServiceClientImpl(mockContext);
+        
+        // Then
+        assertNotNull(client, "Client should be created successfully");
+        verify(mockContext, atLeastOnce()).getConfig();
+    }
+}
