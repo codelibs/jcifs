@@ -43,6 +43,9 @@ class SingletonContextTest {
         // Clear system properties that might affect the test
         System.clearProperty("jcifs.properties");
         System.clearProperty("java.protocol.handler.pkgs");
+        // Clear jcifs-specific properties to prevent test interference
+        System.clearProperty("jcifs.smb.client.nativeOs");
+        System.clearProperty("jcifs.smb.client.nativeLanMan");
     }
 
     @Test

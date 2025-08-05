@@ -359,31 +359,29 @@ class DelegatingConfigurationTest extends BaseTest {
         when(mockDelegate.isSigningEnabled()).thenReturn(false);
         when(mockDelegate.isSigningEnforced()).thenReturn(true);
         when(mockDelegate.isIpcSigningEnforced()).thenReturn(true);
-        when(mockDelegate.isForceExtendedSecurity()).thenReturn(true);
-        when(mockDelegate.isForceExtendedSecurity()).thenReturn(false);
+        when(mockDelegate.isForceExtendedSecurity()).thenReturn(true).thenReturn(false);
 
         // When
         boolean encryptionEnabled = delegatingConfig.isEncryptionEnabled();
         boolean signingPreferred = delegatingConfig.isSigningEnabled();
         boolean signingEnforced = delegatingConfig.isSigningEnforced();
         boolean ipcSigningEnforced = delegatingConfig.isIpcSigningEnforced();
-        boolean useExtendedSecurity = delegatingConfig.isForceExtendedSecurity();
-        boolean forceExtendedSecurity = delegatingConfig.isForceExtendedSecurity();
+        boolean firstExtendedSecurityCall = delegatingConfig.isForceExtendedSecurity();
+        boolean secondExtendedSecurityCall = delegatingConfig.isForceExtendedSecurity();
 
         // Then
         assertTrue(encryptionEnabled, "Should delegate encryption setting");
         assertFalse(signingPreferred, "Should delegate signing preferred setting");
         assertTrue(signingEnforced, "Should delegate signing enforced setting");
         assertTrue(ipcSigningEnforced, "Should delegate IPC signing enforced setting");
-        assertTrue(useExtendedSecurity, "Should delegate extended security setting");
-        assertFalse(forceExtendedSecurity, "Should delegate force extended security setting");
+        assertTrue(firstExtendedSecurityCall, "First call should return true");
+        assertFalse(secondExtendedSecurityCall, "Second call should return false");
 
         verify(mockDelegate).isEncryptionEnabled();
         verify(mockDelegate).isSigningEnabled();
         verify(mockDelegate).isSigningEnforced();
         verify(mockDelegate).isIpcSigningEnforced();
-        verify(mockDelegate).isForceExtendedSecurity();
-        verify(mockDelegate).isForceExtendedSecurity();
+        verify(mockDelegate, times(2)).isForceExtendedSecurity();
     }
 
     @Test

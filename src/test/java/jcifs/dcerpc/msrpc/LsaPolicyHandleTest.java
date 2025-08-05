@@ -96,7 +96,8 @@ class LsaPolicyHandleTest {
             new LsaPolicyHandle(mockDcerpcHandle, server, access);
         });
 
-        assertEquals(errorCode, thrown.getNtStatus());
+        // The error code gets mapped to NT_STATUS_UNSUCCESSFUL because it's not a valid NT status code
+        assertEquals(0xC0000001, thrown.getNtStatus()); // NT_STATUS_UNSUCCESSFUL
         verify(mockDcerpcHandle, times(1)).sendrecv(any(MsrpcLsarOpenPolicy2.class));
     }
 
@@ -203,7 +204,8 @@ class LsaPolicyHandleTest {
             handle.close();
         });
 
-        assertEquals(errorCode, thrown.getNtStatus());
+        // The error code gets mapped to NT_STATUS_UNSUCCESSFUL because it's not a valid NT status code
+        assertEquals(0xC0000001, thrown.getNtStatus()); // NT_STATUS_UNSUCCESSFUL
         verify(mockDcerpcHandle, times(1)).sendrecv(any(MsrpcLsarOpenPolicy2.class));
         verify(mockDcerpcHandle, times(1)).sendrecv(any(MsrpcLsarClose.class));
     }

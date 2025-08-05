@@ -26,8 +26,6 @@ import jcifs.Configuration;
 import jcifs.NameServiceClient;
 import jcifs.NetbiosAddress;
 
-import static org.mockito.Mockito.when;
-
 /**
  * Test class for NTLMSSP Type 1 Message functionality
  */
@@ -181,8 +179,34 @@ class Type1MessageTest {
 
         // Then
         assertTrue((unicodeType1.getFlags() & NtlmFlags.NTLMSSP_NEGOTIATE_UNICODE) != 0);
+        // OEM flag should not be set when default is Unicode
         assertFalse((unicodeType1.getFlags() & NtlmFlags.NTLMSSP_NEGOTIATE_OEM) != 0);
 
+        // When OEM flag is passed, it gets OR'd with default flags
+        // Since mockConfig.isUseUnicode() returns true, default flags include UNICODE
+        assertTrue((oemType1.getFlags() & NtlmFlags.NTLMSSP_NEGOTIATE_OEM) != 0);
+        assertTrue((oemType1.getFlags() & NtlmFlags.NTLMSSP_NEGOTIATE_UNICODE) != 0);
+    }
+
+    @Test
+    @DisplayName("Should handle Unicode negotiation with OEM configuration")
+    void testUnicodeNegotiationWithOEMConfig() {
+        // Given - Configure context to use OEM encoding
+        when(mockConfig.isUseUnicode()).thenReturn(false);
+        int unicodeFlags = NtlmFlags.NTLMSSP_NEGOTIATE_UNICODE;
+        int oemFlags = NtlmFlags.NTLMSSP_NEGOTIATE_OEM;
+
+        // When
+        Type1Message unicodeType1 = new Type1Message(mockContext, unicodeFlags, null, null);
+        Type1Message oemType1 = new Type1Message(mockContext, oemFlags, null, null);
+
+        // Then
+        // Unicode flag is passed explicitly, so it should be set
+        assertTrue((unicodeType1.getFlags() & NtlmFlags.NTLMSSP_NEGOTIATE_UNICODE) != 0);
+        // Default is OEM, so both flags are set due to OR operation
+        assertTrue((unicodeType1.getFlags() & NtlmFlags.NTLMSSP_NEGOTIATE_OEM) != 0);
+
+        // OEM flag is default when isUseUnicode() is false
         assertTrue((oemType1.getFlags() & NtlmFlags.NTLMSSP_NEGOTIATE_OEM) != 0);
         assertFalse((oemType1.getFlags() & NtlmFlags.NTLMSSP_NEGOTIATE_UNICODE) != 0);
     }

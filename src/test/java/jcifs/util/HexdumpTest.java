@@ -30,11 +30,7 @@ class HexdumpTest extends BaseTest {
 
         // Then
         assertNotNull(result);
-        assertTrue(result.contains("00"));
-        assertTrue(result.contains("0F"));
-        assertTrue(result.contains("FF"));
-        assertTrue(result.contains("7F"));
-        assertTrue(result.contains("80"));
+        assertEquals("000FFF7F80", result);
     }
 
     @Test
@@ -48,7 +44,7 @@ class HexdumpTest extends BaseTest {
 
         // Then
         assertNotNull(result);
-        assertEquals("", result.trim());
+        assertEquals("", result);
     }
 
     @Test
@@ -61,7 +57,7 @@ class HexdumpTest extends BaseTest {
     }
 
     @Test
-    @DisplayName("Should format hex dump with offsets")
+    @DisplayName("Should convert byte array to hex string with offset and length")
     void testHexdumpWithOffset() {
         // Given
         byte[] data = createTestData(32);
@@ -72,8 +68,9 @@ class HexdumpTest extends BaseTest {
         // Then
         assertNotNull(result);
         assertFalse(result.isEmpty());
-        // Should contain offset markers
-        assertTrue(result.contains("00000000"));
+        // Should contain hex representation of first bytes
+        assertTrue(result.startsWith("00010203"));
+        assertEquals(64, result.length()); // 32 bytes * 2 chars per byte
     }
 
     @ParameterizedTest
@@ -89,6 +86,7 @@ class HexdumpTest extends BaseTest {
         // Then
         assertNotNull(result);
         assertFalse(result.isEmpty());
+        assertEquals(size * 2, result.length()); // Each byte becomes 2 hex chars
     }
 
     @Test
@@ -105,6 +103,9 @@ class HexdumpTest extends BaseTest {
         // Then
         assertNotNull(result);
         assertFalse(result.isEmpty());
+        // Check starts with byte at offset 16 (0x10)
+        assertTrue(result.startsWith("10111213"));
+        assertEquals(64, result.length()); // 32 bytes * 2 chars per byte
     }
 
     @Test
@@ -123,7 +124,66 @@ class HexdumpTest extends BaseTest {
         });
 
         assertThrows(IndexOutOfBoundsException.class, () -> {
-            Hexdump.toHexString(data, 16, data.length);
+            Hexdump.toHexString(data, 16, 32); // offset + length > data.length
         });
+    }
+
+    @Test
+    @DisplayName("Should convert integer to hex string with padding")
+    void testIntToHexString() {
+        // Test various integer values
+        assertEquals("00000000", Hexdump.toHexString(0, 8));
+        assertEquals("000000FF", Hexdump.toHexString(255, 8));
+        assertEquals("00001000", Hexdump.toHexString(4096, 8));
+        assertEquals("FFFFFFFF", Hexdump.toHexString(-1, 8));
+        
+        // Test different sizes
+        assertEquals("00", Hexdump.toHexString(0, 2));
+        assertEquals("FF", Hexdump.toHexString(255, 2));
+        assertEquals("1234", Hexdump.toHexString(0x1234, 4));
+    }
+
+    @Test
+    @DisplayName("Should convert long to hex string with padding")
+    void testLongToHexString() {
+        // Test various long values
+        assertEquals("0000000000000000", Hexdump.toHexString(0L, 16));
+        assertEquals("00000000000000FF", Hexdump.toHexString(255L, 16));
+        assertEquals("FFFFFFFFFFFFFFFF", Hexdump.toHexString(-1L, 16));
+        
+        // Test different sizes
+        assertEquals("00000000", Hexdump.toHexString(0L, 8));
+        assertEquals("12345678", Hexdump.toHexString(0x12345678L, 8));
+    }
+
+    @Test
+    @DisplayName("Should handle special byte values correctly")
+    void testSpecialByteValues() {
+        // Test boundary values
+        byte[] data = { 
+            (byte) 0x00,  // min value
+            (byte) 0xFF,  // max value (-1 as signed byte)
+            (byte) 0x7F,  // max positive
+            (byte) 0x80   // min negative
+        };
+        
+        String result = Hexdump.toHexString(data);
+        assertEquals("00FF7F80", result);
+    }
+
+    @Test
+    @DisplayName("Should handle large byte arrays efficiently")
+    void testLargeByteArray() {
+        // Create a larger test array
+        byte[] data = createTestData(1024);
+        
+        // Test full array conversion
+        String result = Hexdump.toHexString(data);
+        assertEquals(2048, result.length()); // 1024 bytes * 2 chars
+        
+        // Test partial conversion
+        String partial = Hexdump.toHexString(data, 512, 256);
+        assertEquals(512, partial.length()); // 256 bytes * 2 chars
+        assertTrue(partial.startsWith("00010203")); // 512 % 256 = 0, so starts at 0
     }
 }

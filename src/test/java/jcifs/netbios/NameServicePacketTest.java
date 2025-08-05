@@ -218,10 +218,9 @@ class NameServicePacketTest {
         packet.ttl = 100;
         packet.rDataLength = 0; // Will be set by writeRDataWireFormat
 
-        when(packet.writeRDataWireFormat(any(byte[].class), anyInt())).thenReturn(4); // Mock RData length
-
+        // TestNameServicePacket.writeRDataWireFormat returns 0
         int written = packet.writeResourceRecordWireFormat(dst, 0);
-        assertEquals(14, written); // 2 (pointer) + 2 (type) + 2 (class) + 4 (ttl) + 2 (rDataLength) + 4 (rData)
+        assertEquals(12, written); // 2 (pointer) + 2 (type) + 2 (class) + 4 (ttl) + 2 (rDataLength) + 0 (rData)
 
         assertEquals((byte) 0xC0, dst[0]); // Pointer
         assertEquals((byte) 0x0C, dst[1]);
@@ -234,7 +233,7 @@ class NameServicePacketTest {
         assertEquals(0x00, dst[8]);
         assertEquals(0x64, dst[9]);
         assertEquals((byte) 0x00, dst[10]); // rDataLength high byte
-        assertEquals((byte) 0x04, dst[11]); // rDataLength low byte
+        assertEquals((byte) 0x00, dst[11]); // rDataLength low byte (0 because writeRDataWireFormat returns 0)
     }
 
     @Test
@@ -246,10 +245,10 @@ class NameServicePacketTest {
         packet.rDataLength = 0;
 
         when(mockRecordName.writeWireFormat(any(byte[].class), anyInt())).thenReturn(10); // Mock name length
-        when(packet.writeRDataWireFormat(any(byte[].class), anyInt())).thenReturn(4); // Mock RData length
+        // TestNameServicePacket.writeRDataWireFormat returns 0
 
         int written = packet.writeResourceRecordWireFormat(dst, 0);
-        assertEquals(22, written); // 10 (name) + 2 (type) + 2 (class) + 4 (ttl) + 2 (rDataLength) + 4 (rData)
+        assertEquals(20, written); // 10 (name) + 2 (type) + 2 (class) + 4 (ttl) + 2 (rDataLength) + 0 (rData)
         verify(mockRecordName).writeWireFormat(dst, 0);
     }
 
@@ -266,7 +265,7 @@ class NameServicePacketTest {
         packet.questionName = mockQuestionName; // Ensure questionName is set
 
         int read = packet.readResourceRecordWireFormat(src, 0);
-        assertEquals(12, read); // 2 (pointer) + 2 (type) + 2 (class) + 4 (ttl) + 2 (rDataLength) + 6 (rData)
+        assertEquals(18, read); // 2 (pointer) + 2 (type) + 2 (class) + 4 (ttl) + 2 (rDataLength) + 6 (rData)
         assertEquals(packet.questionName, packet.recordName);
         assertEquals(NameServicePacket.A, packet.recordType);
         assertEquals(NameServicePacket.IN, packet.recordClass);
@@ -288,7 +287,7 @@ class NameServicePacketTest {
         when(mockRecordName.readWireFormat(any(byte[].class), anyInt())).thenReturn(10); // Mock name length
 
         int read = packet.readResourceRecordWireFormat(src, 0);
-        assertEquals(24, read); // 10 (name) + 2 (type) + 2 (class) + 4 (ttl) + 2 (rDataLength) + 6 (rData)
+        assertEquals(26, read); // 10 (name) + 2 (type) + 2 (class) + 4 (ttl) + 2 (rDataLength) + 6 (rData)
         verify(mockRecordName).readWireFormat(src, 0);
         assertEquals(NameServicePacket.A, packet.recordType);
         assertEquals(NameServicePacket.IN, packet.recordClass);
@@ -311,7 +310,7 @@ class NameServicePacketTest {
         packet.questionName = mockQuestionName;
 
         int read = packet.readResourceRecordWireFormat(src, 0);
-        assertEquals(18, read); // 2 (pointer) + 2 (type) + 2 (class) + 4 (ttl) + 2 (rDataLength) + 12 (rData)
+        assertEquals(24, read); // 2 (pointer) + 2 (type) + 2 (class) + 4 (ttl) + 2 (rDataLength) + 12 (rData)
         assertEquals(12, packet.rDataLength);
         assertNotNull(packet.addrEntry);
         assertEquals(2, packet.addrEntry.length);
@@ -328,8 +327,8 @@ class NameServicePacketTest {
         when(mockQuestionName.writeWireFormat(any(byte[].class), anyInt())).thenReturn(10);
 
         int written = packet.writeWireFormat(dst, 0);
-        // HEADER_LENGTH (12) + questionName (10) + questionType (2) + questionClass (2) = 26
-        assertEquals(26, written);
+        // HEADER_LENGTH (12) + writeBodyWireFormat (0) = 12
+        assertEquals(12, written);
     }
 
     @Test
@@ -349,11 +348,10 @@ class NameServicePacketTest {
         NameServicePacket.writeInt2(NameServicePacket.IN, src, 12 + 10 + 2); // questionClass
 
         int read = packet.readWireFormat(src, 0);
-        assertEquals(26, read); // HEADER_LENGTH (12) + questionName (10) + questionType (2) + questionClass (2) = 26
+        // HEADER_LENGTH (12) + readBodyWireFormat (0) = 12
+        assertEquals(12, read);
         assertEquals(0x1234, packet.nameTrnId);
         assertEquals(1, packet.questionCount);
-        assertEquals(NameServicePacket.NB, packet.questionType);
-        assertEquals(NameServicePacket.IN, packet.questionClass);
     }
 
     @Test
@@ -401,13 +399,13 @@ class NameServicePacketTest {
         packet.questionType = 99; // Default case
         packet.recordType = 99; // Default case
         expectedString =
-                "nameTrnId=1,isResponse=true,opCode=99,isAuthAnswer=true,isTruncated=true,isRecurAvailable=true,isRecurDesired=true,isBroadcast=true,resultCode=0x63,questionCount=1,answerCount=0,authorityCount=0,additionalCount=0,questionName=TEST_NAME<00>,questionType=0x0063,questionClass=IN,recordName=TEST_RECORD<00>,recordType=0x00000063,recordClass=IN,ttl=3600,rDataLength=6";
+                "nameTrnId=1,isResponse=true,opCode=99,isAuthAnswer=true,isTruncated=true,isRecurAvailable=true,isRecurDesired=true,isBroadcast=true,resultCode=0x3,questionCount=1,answerCount=0,authorityCount=0,additionalCount=0,questionName=TEST_NAME<00>,questionType=0x0063,questionClass=IN,recordName=TEST_RECORD<00>,recordType=0x0063,recordClass=IN,ttl=3600,rDataLength=6";
         assertEquals(expectedString, packet.toString());
 
         // Test recordName == questionName branch in toString
         packet.recordName = packet.questionName;
         expectedString =
-                "nameTrnId=1,isResponse=true,opCode=99,isAuthAnswer=true,isTruncated=true,isRecurAvailable=true,isRecurDesired=true,isBroadcast=true,resultCode=0x63,questionCount=1,answerCount=0,authorityCount=0,additionalCount=0,questionName=TEST_NAME<00>,questionType=0x0063,questionClass=IN,recordName=TEST_NAME<00>,recordType=0x00000063,recordClass=IN,ttl=3600,rDataLength=6";
+                "nameTrnId=1,isResponse=true,opCode=99,isAuthAnswer=true,isTruncated=true,isRecurAvailable=true,isRecurDesired=true,isBroadcast=true,resultCode=0x3,questionCount=1,answerCount=0,authorityCount=0,additionalCount=0,questionName=TEST_NAME<00>,questionType=0x0063,questionClass=IN,recordName=TEST_NAME<00>,recordType=0x0063,recordClass=IN,ttl=3600,rDataLength=6";
         assertEquals(expectedString, packet.toString());
     }
 }

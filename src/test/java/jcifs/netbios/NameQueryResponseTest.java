@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Field;
 
@@ -27,6 +28,9 @@ class NameQueryResponseTest {
 
     @BeforeEach
     void setUp() {
+        // Mock the OEM encoding configuration
+        when(mockConfig.getOemEncoding()).thenReturn("UTF-8");
+        
         // Initialize NameQueryResponse before each test
         nameQueryResponse = new NameQueryResponse(mockConfig);
     }
@@ -49,14 +53,21 @@ class NameQueryResponseTest {
     }
 
     @Test
-    void readBodyWireFormat_shouldCallReadResourceRecordWireFormat() {
+    void readBodyWireFormat_shouldCallReadResourceRecordWireFormat() throws NoSuchFieldException, IllegalAccessException {
         // This method directly calls a superclass method (readResourceRecordWireFormat).
-        // To ensure coverage of this line, we simply call it and assert no exceptions occur.
-        // The actual parsing logic for the response data is in readRDataWireFormat.
+        // We need to setup fields to avoid NPE when parsing
+        
+        // Set rDataLength to skip parsing
+        Field rDataLengthField = NameServicePacket.class.getDeclaredField("rDataLength");
+        rDataLengthField.setAccessible(true);
+        rDataLengthField.set(nameQueryResponse, 0);
+        
         byte[] src = new byte[100]; // Provide dummy data
         int srcIndex = 0;
-        assertDoesNotThrow(() -> nameQueryResponse.readBodyWireFormat(src, srcIndex),
-                "readBodyWireFormat should execute without throwing an exception");
+        
+        // The method should return whatever readResourceRecordWireFormat returns
+        int result = nameQueryResponse.readBodyWireFormat(src, srcIndex);
+        assertEquals(0, result, "readBodyWireFormat should return 0 when rDataLength is 0");
     }
 
     @Test
@@ -90,6 +101,11 @@ class NameQueryResponseTest {
         Field resultCodeField = NameServicePacket.class.getDeclaredField("resultCode");
         resultCodeField.setAccessible(true);
         resultCodeField.set(nameQueryResponse, 0);
+        
+        // Initialize addrEntry to avoid NPE
+        Field addrEntryField = NameServicePacket.class.getDeclaredField("addrEntry");
+        addrEntryField.setAccessible(true);
+        addrEntryField.set(nameQueryResponse, new NbtAddress[1]);
 
         byte[] src = new byte[10];
         int srcIndex = 0;
@@ -229,7 +245,7 @@ class NameQueryResponseTest {
         String expectedEnd = ",addrEntry=]";
         String actual = nameQueryResponse.toString();
         assertTrue(actual.endsWith(expectedEnd), "toString should end with ',addrEntry=]' when addrEntry is null");
-        assertTrue(actual.startsWith("NameQueryResponse[NameServicePacket["), "toString should start with expected prefix");
+        assertTrue(actual.startsWith("NameQueryResponse["), "toString should start with expected prefix");
     }
 
     @Test
@@ -252,7 +268,7 @@ class NameQueryResponseTest {
 
         String expectedContains = ",addrEntry=[";
         String actual = nameQueryResponse.toString();
-        assertTrue(actual.startsWith("NameQueryResponse[NameServicePacket["), "toString should start with expected prefix");
+        assertTrue(actual.startsWith("NameQueryResponse["), "toString should start with expected prefix");
         assertTrue(actual.contains(expectedContains), "toString should contain the 'addrEntry' part");
         assertTrue(actual.contains("192.168.1.1"), "toString should contain the first NbtAddress string representation");
         assertTrue(actual.contains("10.0.0.5"), "toString should contain the second NbtAddress string representation");

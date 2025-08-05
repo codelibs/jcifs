@@ -57,7 +57,7 @@ class SamrPolicyHandleTest {
 
     @Test
     void testConstructor_NullServer() throws IOException {
-        // Test case: Constructor with null server, should default to "\\"
+        // Test case: Constructor with null server, should default to "\\\\"
         String server = null;
         int access = 123;
 
@@ -67,7 +67,7 @@ class SamrPolicyHandleTest {
             assertNotNull(handle);
             ArgumentCaptor<MsrpcSamrConnect4> captor = ArgumentCaptor.forClass(MsrpcSamrConnect4.class);
             verify(mockHandle).sendrecv(captor.capture());
-            assertEquals("\\", captor.getValue().system_name); // Verify server name in RPC call
+            assertEquals("\\\\", captor.getValue().system_name); // Verify server name in RPC call
         }
     }
 
@@ -184,7 +184,8 @@ class SamrPolicyHandleTest {
 
         SmbException thrown = assertThrows(SmbException.class, handle::close);
 
-        assertEquals(errorRetval, thrown.getNtStatus());
+        // SmbException constructor maps non-NT status codes to NT_STATUS_UNSUCCESSFUL
+        assertEquals(0xC0000001, thrown.getNtStatus()); // NT_STATUS_UNSUCCESSFUL
         verify(mockHandle, times(1)).sendrecv(any(MsrpcSamrCloseHandle.class));
     }
 }

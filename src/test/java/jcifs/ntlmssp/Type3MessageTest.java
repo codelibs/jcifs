@@ -12,6 +12,8 @@ import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.security.SecureRandom;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -24,6 +26,12 @@ import jcifs.CIFSContext;
 import jcifs.Configuration;
 import jcifs.NameServiceClient;
 import jcifs.NetbiosAddress;
+import jcifs.ntlmssp.av.AvFlags;
+import jcifs.ntlmssp.av.AvPair;
+import jcifs.ntlmssp.av.AvPairs;
+import jcifs.ntlmssp.av.AvSingleHost;
+import jcifs.ntlmssp.av.AvTargetName;
+import jcifs.ntlmssp.av.AvTimestamp;
 
 /**
  * Test class for NTLMSSP Type 3 Message functionality
@@ -50,10 +58,16 @@ class Type3MessageTest {
         NetbiosAddress mockHost = mock(NetbiosAddress.class);
         SecureRandom mockRandom = mock(SecureRandom.class);
         
+        // Create a machine ID (32 bytes)
+        byte[] machineId = new byte[32];
+        mockRandom.nextBytes(machineId);
+        
         lenient().when(mockConfig.getDefaultDomain()).thenReturn("TESTDOMAIN");
         lenient().when(mockConfig.isUseUnicode()).thenReturn(true);
         lenient().when(mockConfig.getOemEncoding()).thenReturn("UTF-8");
         lenient().when(mockConfig.getRandom()).thenReturn(mockRandom);
+        lenient().when(mockConfig.getLanManCompatibility()).thenReturn(3); // Default NTLMv2
+        lenient().when(mockConfig.getMachineId()).thenReturn(machineId);
         lenient().when(mockCtx.getConfig()).thenReturn(mockConfig);
         lenient().when(mockCtx.getNameServiceClient()).thenReturn(mockNameServiceClient);
         lenient().when(mockNameServiceClient.getLocalHost()).thenReturn(mockHost);
@@ -215,16 +229,17 @@ class Type3MessageTest {
     void testSessionKeyGeneration() throws Exception {
         // Given
         Type2Message type2 = createMockType2Message();
-        int flags = NtlmFlags.NTLMSSP_NEGOTIATE_NTLM | NtlmFlags.NTLMSSP_NEGOTIATE_KEY_EXCH;
+        int flags = NtlmFlags.NTLMSSP_NEGOTIATE_NTLM | NtlmFlags.NTLMSSP_NEGOTIATE_KEY_EXCH | NtlmFlags.NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY;
 
         // When
-        Type3Message type3 = new Type3Message(createMockContext(), type2, null, "password", "DOMAIN", "user", "WORKSTATION", flags);
+        // Create a mock context with LanManCompatibility level 0 or 1 to test extended session security
+        CIFSContext mockCtx = createMockContextWithLanManCompat(1);
+        Type3Message type3 = new Type3Message(mockCtx, type2, null, "password", "DOMAIN", "user", "WORKSTATION", flags);
 
         // Then
-        if ((flags & NtlmFlags.NTLMSSP_NEGOTIATE_KEY_EXCH) != 0) {
-            assertNotNull(type3.getMasterKey());
-            assertTrue(type3.getMasterKey().length > 0);
-        }
+        // Master key should always be generated with extended session security or NTLMv2
+        assertNotNull(type3.getMasterKey());
+        assertEquals(16, type3.getMasterKey().length);
     }
 
     @Test
@@ -247,7 +262,7 @@ class Type3MessageTest {
     @DisplayName("Should handle NTLMv2 authentication")
     void testNTLMv2Authentication() throws Exception {
         // Given
-        Type2Message type2 = createMockType2Message();
+        Type2Message type2 = createMockType2MessageWithTargetInfo();
         int flags = NtlmFlags.NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY | NtlmFlags.NTLMSSP_NEGOTIATE_TARGET_INFO;
 
         // When
@@ -255,7 +270,7 @@ class Type3MessageTest {
 
         // Then
         assertNotNull(type3.getNTResponse());
-        // NTLMv2 responses are typically longer
+        // NTLMv2 responses are typically longer than 24 bytes when target info is present
         assertTrue(type3.getNTResponse().length > 24);
     }
 
@@ -387,5 +402,58 @@ class Type3MessageTest {
             sb.append((char) ('A' + (i % 26)));
         }
         return sb.toString();
+    }
+
+    /**
+     * Helper method to create a mock Type 2 message with target information for NTLMv2
+     */
+    private Type2Message createMockType2MessageWithTargetInfo() {
+        // Create a Type 2 message with challenge and target info
+        byte[] challenge = new byte[8];
+        new SecureRandom().nextBytes(challenge);
+
+        int flags = NtlmFlags.NTLMSSP_NEGOTIATE_UNICODE | NtlmFlags.NTLMSSP_NEGOTIATE_NTLM | 
+                    NtlmFlags.NTLMSSP_NEGOTIATE_TARGET_INFO | NtlmFlags.NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY;
+
+        Type2Message type2 = new Type2Message(createMockContext(), flags, challenge, "TARGET");
+        
+        // Create target information with timestamp for NTLMv2
+        List<AvPair> pairs = new LinkedList<>();
+        pairs.add(new AvTargetName("TARGET"));
+        pairs.add(new AvTimestamp(System.currentTimeMillis()));
+        pairs.add(new AvFlags(0));
+        pairs.add(new AvSingleHost(new byte[48])); // Dummy single host data
+        
+        type2.setTargetInformation(AvPairs.encode(pairs));
+        
+        return type2;
+    }
+
+    /**
+     * Helper method to create a mock context with specific LanMan compatibility level
+     */
+    private CIFSContext createMockContextWithLanManCompat(int level) {
+        CIFSContext mockCtx = mock(CIFSContext.class);
+        Configuration mockConfig = mock(Configuration.class);
+        NameServiceClient mockNameServiceClient = mock(NameServiceClient.class);
+        NetbiosAddress mockHost = mock(NetbiosAddress.class);
+        SecureRandom mockRandom = mock(SecureRandom.class);
+        
+        // Create a machine ID (32 bytes)
+        byte[] machineId = new byte[32];
+        mockRandom.nextBytes(machineId);
+        
+        lenient().when(mockConfig.getDefaultDomain()).thenReturn("TESTDOMAIN");
+        lenient().when(mockConfig.isUseUnicode()).thenReturn(true);
+        lenient().when(mockConfig.getOemEncoding()).thenReturn("UTF-8");
+        lenient().when(mockConfig.getRandom()).thenReturn(mockRandom);
+        lenient().when(mockConfig.getLanManCompatibility()).thenReturn(level);
+        lenient().when(mockConfig.getMachineId()).thenReturn(machineId);
+        lenient().when(mockCtx.getConfig()).thenReturn(mockConfig);
+        lenient().when(mockCtx.getNameServiceClient()).thenReturn(mockNameServiceClient);
+        lenient().when(mockNameServiceClient.getLocalHost()).thenReturn(mockHost);
+        lenient().when(mockHost.getHostName()).thenReturn("TEST_HOSTNAME");
+        
+        return mockCtx;
     }
 }

@@ -100,12 +100,19 @@ class AvSingleHostTest {
 
     /**
      * Test with customData and machineId that are not exactly 8 and 32 bytes respectively.
-     * The constructor should still use the first 8/32 bytes.
+     * The constructor requires exact sizes, so we need to pad them manually.
      */
     @Test
     void testAvSingleHostCustomDataMachineIdConstructor_ShorterInputs() {
-        byte[] customData = { 0x01, 0x02 }; // Shorter than 8
-        byte[] machineId = { 0x10, 0x11, 0x12 }; // Shorter than 32
+        // Prepare padded arrays
+        byte[] customData = new byte[8];
+        customData[0] = 0x01;
+        customData[1] = 0x02;
+        
+        byte[] machineId = new byte[32];
+        machineId[0] = 0x10;
+        machineId[1] = 0x11;
+        machineId[2] = 0x12;
 
         AvSingleHost avSingleHost = new AvSingleHost(customData, machineId);
 
@@ -114,13 +121,13 @@ class AvSingleHostTest {
         assertNotNull(value);
         assertEquals(48, value.length);
 
-        // Verify customData part (should be padded with zeros)
+        // Verify customData part
         byte[] expectedCustomData = { 0x01, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
         byte[] actualCustomData = new byte[8];
         System.arraycopy(value, 8, actualCustomData, 0, 8);
         assertArrayEquals(expectedCustomData, actualCustomData);
 
-        // Verify machineId part (should be padded with zeros)
+        // Verify machineId part
         byte[] expectedMachineId = new byte[32];
         expectedMachineId[0] = 0x10;
         expectedMachineId[1] = 0x11;

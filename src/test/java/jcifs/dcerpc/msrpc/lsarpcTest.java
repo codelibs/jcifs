@@ -475,7 +475,7 @@ class lsarpcTest {
         verify(mockNdrBuffer).advance(1 * 6); // domain_guid.node
         verify(mockDeferredNdrBuffer, times(6)).enc_ndr_small(0); // node bytes all 0
         
-        verify(mockNdrBuffer).enc_ndr_referent(null, 1); // sid
+        // Note: enc_ndr_referent(null, 1) is already verified above with times(4)
     }
 
     @Test

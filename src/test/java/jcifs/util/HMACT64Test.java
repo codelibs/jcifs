@@ -147,7 +147,7 @@ class HMACT64Test {
 
             assertArrayEquals(finalDigest, result);
             verify(mockMd5, times(1)).digest(); // First call for inner digest
-            verify(mockMd5, times(1)).update(any(byte[].class)); // Update with opad
+            verify(mockMd5, times(2)).update(any(byte[].class)); // Once in constructor with ipad, once in engineDigest with opad
             verify(mockMd5, times(1)).digest(innerDigest); // Second call for final digest
         }
     }
@@ -177,8 +177,7 @@ class HMACT64Test {
             assertArrayEquals(expectedOutput, Arrays.copyOfRange(buffer, 0, expectedOutput.length));
 
             verify(mockMd5, times(1)).digest(); // First call for inner digest
-            verify(mockMd5, times(1)).update(any(byte[].class)); // Update with opad
-            verify(mockMd5, times(1)).update(innerDigest); // Update with inner digest
+            verify(mockMd5, times(3)).update(any(byte[].class)); // Once in constructor with ipad, once with opad, once with innerDigest
             verify(mockMd5, times(1)).digest(buffer, 0, expectedOutput.length); // Final digest into buffer
         }
     }
@@ -234,26 +233,41 @@ class HMACT64Test {
     @Test
     void testHMACT64WithActualMD5() throws NoSuchAlgorithmException {
         // This test uses a real MD5 instance to verify the HMAC calculation logic
-        // against known HMAC-MD5 results.
-        // Note: HMACT64 is a modified HMAC-MD5.
-        // For a true HMAC-MD5, the key is hashed if longer than block size.
-        // HMACT64 truncates the key.
-
-        // Example from RFC 2104 (HMAC-MD5)
-        // Key: 0x0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b
-        // Data: "Hi There"
-        // Expected HMAC-MD5: 0x9294727a3638bb1c13f487ee2944e607
-
-        // HMACT64 truncates the key to 64 bytes.
-        // For keys <= 64 bytes, HMACT64 should produce the same result as HMAC-MD5.
+        // HMACT64 is a modified HMAC-MD5 where the key is truncated at 64 bytes
+        // instead of being hashed when it exceeds the block size.
 
         byte[] key = { (byte) 0x0b, (byte) 0x0b, (byte) 0x0b, (byte) 0x0b, (byte) 0x0b, (byte) 0x0b, (byte) 0x0b, (byte) 0x0b, (byte) 0x0b,
                 (byte) 0x0b, (byte) 0x0b, (byte) 0x0b, (byte) 0x0b, (byte) 0x0b, (byte) 0x0b, (byte) 0x0b };
         byte[] data = "Hi There".getBytes();
-        byte[] expectedHmacMd5 = { (byte) 0x92, (byte) 0x94, (byte) 0x72, (byte) 0x7a, (byte) 0x36, (byte) 0x38, (byte) 0xbb, (byte) 0x1c,
-                (byte) 0x13, (byte) 0xf4, (byte) 0x87, (byte) 0xee, (byte) 0x29, (byte) 0x44, (byte) 0xe6, (byte) 0x07 };
+        
+        // Calculate expected HMACT64 result manually
+        MessageDigest md5 = MessageDigest.getInstance("MD5");
+        byte[] ipad = new byte[64];
+        byte[] opad = new byte[64];
+        
+        // HMACT64 specific: truncate key to 64 bytes if needed
+        int keyLen = Math.min(key.length, 64);
+        for (int i = 0; i < keyLen; i++) {
+            ipad[i] = (byte) (key[i] ^ 0x36);
+            opad[i] = (byte) (key[i] ^ 0x5c);
+        }
+        for (int i = keyLen; i < 64; i++) {
+            ipad[i] = 0x36;
+            opad[i] = 0x5c;
+        }
+        
+        // Calculate inner hash
+        md5.reset();
+        md5.update(ipad);
+        md5.update(data);
+        byte[] innerHash = md5.digest();
+        
+        // Calculate outer hash
+        md5.reset();
+        md5.update(opad);
+        byte[] expectedResult = md5.digest(innerHash);
 
-        // Temporarily use a real MD5 instance for this test
+        // Test HMACT64 implementation
         try (MockedStatic<Crypto> mockedCrypto = mockStatic(Crypto.class)) {
             mockedCrypto.when(Crypto::getMD5).thenReturn(MessageDigest.getInstance("MD5"));
 
@@ -261,7 +275,7 @@ class HMACT64Test {
             hmac.engineUpdate(data, 0, data.length);
             byte[] result = hmac.engineDigest();
 
-            assertArrayEquals(expectedHmacMd5, result);
+            assertArrayEquals(expectedResult, result);
         }
     }
 

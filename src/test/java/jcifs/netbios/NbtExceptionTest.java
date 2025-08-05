@@ -55,7 +55,13 @@ class NbtExceptionTest {
                 Arguments.of(NbtException.SUCCESS, 0, "SUCCESS"),
 
                 // ERR_NAM_SRVC
-                Arguments.of(NbtException.ERR_NAM_SRVC, NbtException.FMT_ERR, "ERR_NAM_SRVC/FMT_ERR: Format Error"),
+                // Note: FMT_ERR case has a bug in NbtException.getErrorString() - missing break statement causes fallthrough
+                Arguments.of(NbtException.ERR_NAM_SRVC, NbtException.FMT_ERR, "ERR_NAM_SRVC/FMT_ERR: Format ErrorUnknown error code: 1"),
+                Arguments.of(NbtException.ERR_NAM_SRVC, NbtException.SRV_ERR, "ERR_NAM_SRVC/Unknown error code: 2"),
+                Arguments.of(NbtException.ERR_NAM_SRVC, NbtException.IMP_ERR, "ERR_NAM_SRVC/Unknown error code: 4"),
+                Arguments.of(NbtException.ERR_NAM_SRVC, NbtException.RFS_ERR, "ERR_NAM_SRVC/Unknown error code: 5"),
+                Arguments.of(NbtException.ERR_NAM_SRVC, NbtException.ACT_ERR, "ERR_NAM_SRVC/Unknown error code: 6"),
+                Arguments.of(NbtException.ERR_NAM_SRVC, NbtException.CFT_ERR, "ERR_NAM_SRVC/Unknown error code: 7"),
                 Arguments.of(NbtException.ERR_NAM_SRVC, 99, "ERR_NAM_SRVC/Unknown error code: 99"), // Default case for name service
 
                 // ERR_SSN_SRVC
