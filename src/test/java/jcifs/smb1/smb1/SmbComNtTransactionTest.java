@@ -5,6 +5,9 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import jcifs.smb1.smb1.SmbComNtTransaction;
+import jcifs.smb1.smb1.ServerMessageBlock;
+
 class SmbComNtTransactionTest {
 
     private ConcreteSmbComNtTransaction smbComNtTransaction;
@@ -23,7 +26,19 @@ class SmbComNtTransactionTest {
         }
 
         @Override
-        int readParameterWordsWireFormat(byte[] buffer, int bufferIndex, int len) {
+        int writeParametersWireFormat(byte[] dst, int dstIndex) {
+            // Dummy implementation for testing
+            return 0;
+        }
+
+        @Override
+        int readParametersWireFormat(byte[] buffer, int bufferIndex, int len) {
+            return 0;
+        }
+
+        @Override
+        int writeDataWireFormat(byte[] dst, int dstIndex) {
+            // Dummy implementation for testing
             return 0;
         }
 
@@ -53,7 +68,7 @@ class SmbComNtTransactionTest {
     @Test
     void testWriteParameterWordsWireFormat_PrimaryTransaction() {
         // Test the writeParameterWordsWireFormat for a primary transaction.
-        smbComNtTransaction.command = SMB_COM_NT_TRANSACT;
+        smbComNtTransaction.command = ServerMessageBlock.SMB_COM_NT_TRANSACT;
         smbComNtTransaction.function = SmbComNtTransaction.NT_TRANSACT_QUERY_SECURITY_DESC;
         smbComNtTransaction.maxSetupCount = 1;
         smbComNtTransaction.totalParameterCount = 10;
@@ -91,7 +106,7 @@ class SmbComNtTransactionTest {
     @Test
     void testWriteParameterWordsWireFormat_SecondaryTransaction() {
         // Test the writeParameterWordsWireFormat for a secondary transaction.
-        smbComNtTransaction.command = SMB_COM_NT_TRANSACT_SECONDARY;
+        smbComNtTransaction.command = ServerMessageBlock.SMB_COM_NT_TRANSACT_SECONDARY;
         smbComNtTransaction.totalParameterCount = 10;
         smbComNtTransaction.totalDataCount = 20;
         smbComNtTransaction.parameterCount = 5;
@@ -125,7 +140,7 @@ class SmbComNtTransactionTest {
     @Test
     void testWriteParameterWordsWireFormat_ZeroCounts() {
         // Test with zero parameter and data counts to check conditional logic.
-        smbComNtTransaction.command = SMB_COM_NT_TRANSACT;
+        smbComNtTransaction.command = ServerMessageBlock.SMB_COM_NT_TRANSACT;
         smbComNtTransaction.parameterCount = 0;
         smbComNtTransaction.dataCount = 0;
         smbComNtTransaction.parameterOffset = 100;

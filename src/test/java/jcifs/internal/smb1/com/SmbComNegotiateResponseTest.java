@@ -25,6 +25,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Field;
 import java.util.Date;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -38,6 +39,7 @@ import jcifs.config.BaseConfiguration;
 import jcifs.context.BaseContext;
 import jcifs.internal.SmbNegotiationRequest;
 import jcifs.internal.smb1.ServerMessageBlock;
+import jcifs.internal.util.SMBUtil;
 import jcifs.util.Hexdump;
 
 public class SmbComNegotiateResponseTest {
@@ -49,9 +51,13 @@ public class SmbComNegotiateResponseTest {
 
     @BeforeEach
     public void setUp() {
-        BaseConfiguration config = new BaseConfiguration(false);
-        mockContext = new BaseContext(config);
-        response = new SmbComNegotiateResponse(mockContext);
+        try {
+            BaseConfiguration config = new BaseConfiguration(false);
+            mockContext = new BaseContext(config);
+            response = new SmbComNegotiateResponse(mockContext);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to set up test", e);
+        }
     }
 
     @Test
@@ -98,7 +104,7 @@ public class SmbComNegotiateResponseTest {
         buffer[bufferIndex++] = 0;
         // serverTime
         long time = new Date().getTime();
-        ServerMessageBlock.writeTime(time, buffer, bufferIndex);
+        SMBUtil.writeTime(time, buffer, bufferIndex);
         bufferIndex += 8;
         // serverTimeZone
         buffer[bufferIndex++] = (byte) 0x80;
@@ -124,8 +130,10 @@ public class SmbComNegotiateResponseTest {
     public void testReadBytesWireFormatWithoutExtendedSecurity() throws UnsupportedEncodingException {
         response.getServerData().scapabilities = 0;
         response.getServerData().encryptionKeyLength = 8;
-        response.byteCount = 8 + "DOMAIN".getBytes("UTF-16LE").length;
-        byte[] buffer = new byte[response.byteCount];
+        // Use reflection to set protected byteCount field
+        int byteCountValue = 8 + "DOMAIN".getBytes("UTF-16LE").length;
+        setByteCount(response, byteCountValue);
+        byte[] buffer = new byte[byteCountValue];
         int bufferIndex = 0;
         byte[] key = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 };
         System.arraycopy(key, 0, buffer, bufferIndex, key.length);
@@ -142,8 +150,10 @@ public class SmbComNegotiateResponseTest {
     @Test
     public void testReadBytesWireFormatWithExtendedSecurity() {
         response.getServerData().scapabilities = SmbConstants.CAP_EXTENDED_SECURITY;
-        response.byteCount = 16 + 10; // guid + token
-        byte[] buffer = new byte[response.byteCount];
+        // Use reflection to set protected byteCount field
+        int byteCountValue = 16 + 10; // guid + token
+        setByteCount(response, byteCountValue);
+        byte[] buffer = new byte[byteCountValue];
         byte[] guid = new byte[16];
         for (int i = 0; i < 16; i++) {
             guid[i] = (byte) i;
@@ -187,7 +197,8 @@ public class SmbComNegotiateResponseTest {
     @Test
     public void testIsValidWithInvalidDialect() {
         SmbNegotiationRequest request = mock(SmbNegotiationRequest.class);
-        response.setDialectIndex(11);
+        // Use reflection to set private dialectIndex field
+        setDialectIndex(response, 11);
         assertFalse(response.isValid(mockContext, request));
     }
 
@@ -204,7 +215,8 @@ public class SmbComNegotiateResponseTest {
         response.getServerData().serverTime = new Date().getTime();
         response.getServerData().serverTimeZone = -300;
         response.getServerData().encryptionKeyLength = 8;
-        response.byteCount = 8;
+        // Use reflection to set protected byteCount field
+        setByteCount(response, 8);
         response.getServerData().oemDomainName = "TEST_DOMAIN";
 
         String result = response.toString();
@@ -223,5 +235,27 @@ public class SmbComNegotiateResponseTest {
         assertTrue(result.contains("encryptionKeyLength=8"));
         assertTrue(result.contains("byteCount=8"));
         assertTrue(result.contains("oemDomainName=TEST_DOMAIN"));
+    }
+
+    // Helper method to set protected byteCount field using reflection
+    private void setByteCount(SmbComNegotiateResponse response, int byteCount) {
+        try {
+            Field field = response.getClass().getSuperclass().getDeclaredField("byteCount");
+            field.setAccessible(true);
+            field.set(response, byteCount);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to set byteCount field", e);
+        }
+    }
+
+    // Helper method to set private dialectIndex field using reflection
+    private void setDialectIndex(SmbComNegotiateResponse response, int dialectIndex) {
+        try {
+            Field field = response.getClass().getDeclaredField("dialectIndex");
+            field.setAccessible(true);
+            field.set(response, dialectIndex);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to set dialectIndex field", e);
+        }
     }
 }

@@ -1,16 +1,16 @@
 package jcifs;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
-import static org.mockito.Mockito.mock;
+
+import java.lang.reflect.Field;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.MockitoAnnotations;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 import jcifs.dcerpc.DcerpcConstants;
 import jcifs.dcerpc.msrpc.MsrpcDfsRootEnum;
@@ -18,107 +18,175 @@ import jcifs.dcerpc.msrpc.netdfs;
 import jcifs.internal.smb1.net.SmbShareInfo;
 import jcifs.smb.FileEntry;
 
-@ExtendWith(MockitoExtension.class)
 class MsrpcDfsRootEnumTest {
 
     private static final String TEST_SERVER = "testserver";
-
-    // No need to mock the superclass constructor directly.
-    // We will instantiate MsrpcDfsRootEnum and then use reflection to set its inherited fields.
+    private MsrpcDfsRootEnum dfsRootEnum;
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
+        dfsRootEnum = new MsrpcDfsRootEnum(TEST_SERVER);
     }
 
     @Test
+    @DisplayName("Constructor should initialize all fields correctly")
     void testConstructorInitialization() {
-        // Create an instance of MsrpcDfsRootEnum
-        MsrpcDfsRootEnum dfsRootEnum = new MsrpcDfsRootEnum(TEST_SERVER);
-
-        // Verify that the constructor sets the correct level and ptype/flags
-        assertEquals(200, dfsRootEnum.level, "Level should be 200");
-        assertEquals(0, dfsRootEnum.getPtype(), "Ptype should be 0");
-        assertEquals(DcerpcConstants.DCERPC_FIRST_FRAG | DcerpcConstants.DCERPC_LAST_FRAG, dfsRootEnum.getFlags(),
-                "Flags should be correctly set");
-
-        // Verify that the 'info' field (inherited from superclass)
-        // has its 'level' and 'e' fields set correctly by MsrpcDfsRootEnum's constructor.
-        assertNotNull(dfsRootEnum.info, "Info field should not be null");
-        assertEquals(dfsRootEnum.level, dfsRootEnum.info.level, "Info level should match instance level");
-        assertNotNull(dfsRootEnum.info.e, "Info.e should not be null");
-        assertTrue(dfsRootEnum.info.e instanceof netdfs.DfsEnumArray200, "Info.e should be DfsEnumArray200");
+        // Verify level is set to 200 for DFS root enumeration
+        assertEquals(200, dfsRootEnum.level);
+        
+        // Verify DCE/RPC message properties
+        assertEquals(0, dfsRootEnum.getPtype());
+        assertEquals(DcerpcConstants.DCERPC_FIRST_FRAG | DcerpcConstants.DCERPC_LAST_FRAG, dfsRootEnum.getFlags());
+        
+        // Verify DFS enumeration structure
+        assertNotNull(dfsRootEnum.info);
+        assertEquals(200, dfsRootEnum.info.level);
+        assertNotNull(dfsRootEnum.info.e);
+        assertInstanceOf(netdfs.DfsEnumArray200.class, dfsRootEnum.info.e);
+        
+        // Verify DFS name is set to server name
+        assertEquals(TEST_SERVER, dfsRootEnum.dfs_name);
+        
+        // Verify preferred max length is set to maximum
+        assertEquals(0xFFFF, dfsRootEnum.prefmaxlen);
+        
+        // Verify totalentries is initialized
+        assertNotNull(dfsRootEnum.totalentries);
     }
 
     @Test
-    void testGetEntries_emptyArray() {
-        MsrpcDfsRootEnum dfsRootEnum = new MsrpcDfsRootEnum(TEST_SERVER);
-
-        // Mock the internal DfsEnumArray200 to return an empty array
-        netdfs.DfsEnumArray200 mockArray = mock(netdfs.DfsEnumArray200.class);
-        mockArray.count = 0;
-        mockArray.s = new netdfs.DfsInfo200[0];
-
-        // Use reflection to set the 'info.e' field of the real instance
-        // This is necessary because the superclass constructor is called first,
-        // and we need to inject our mock into the inherited 'info' field.
-        try {
-            java.lang.reflect.Field infoField = netdfs.NetrDfsEnumEx.class.getDeclaredField("info");
-            infoField.setAccessible(true);
-            netdfs.DfsEnumStruct info = (netdfs.DfsEnumStruct) infoField.get(dfsRootEnum);
-
-            java.lang.reflect.Field eField = netdfs.DfsEnumStruct.class.getDeclaredField("e");
-            eField.setAccessible(true);
-            eField.set(info, mockArray);
-
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            fail("Failed to inject mock DfsEnumArray200: " + e.getMessage());
-        }
-
+    @DisplayName("getEntries should return empty array when no DFS roots exist")
+    void testGetEntries_emptyArray() throws Exception {
+        // Create empty DfsEnumArray200
+        netdfs.DfsEnumArray200 emptyArray = new netdfs.DfsEnumArray200();
+        emptyArray.count = 0;
+        emptyArray.s = new netdfs.DfsInfo200[0];
+        
+        // Replace the info.e field with our empty array
+        setDfsEnumArray(dfsRootEnum, emptyArray);
+        
+        // Test getEntries returns empty array
         FileEntry[] entries = dfsRootEnum.getEntries();
-        assertNotNull(entries, "Entries array should not be null");
-        assertEquals(0, entries.length, "Entries array should be empty");
+        assertNotNull(entries);
+        assertEquals(0, entries.length);
     }
 
     @Test
-    void testGetEntries_populatedArray() {
-        MsrpcDfsRootEnum dfsRootEnum = new MsrpcDfsRootEnum(TEST_SERVER);
-
-        // Prepare mock DfsEnumArray200 with some entries
-        netdfs.DfsEnumArray200 mockArray = mock(netdfs.DfsEnumArray200.class);
-        mockArray.count = 2;
-        mockArray.s = new netdfs.DfsInfo200[2];
-
+    @DisplayName("getEntries should return SmbShareInfo array for DFS roots")
+    void testGetEntries_populatedArray() throws Exception {
+        // Create populated DfsEnumArray200
+        netdfs.DfsEnumArray200 populatedArray = new netdfs.DfsEnumArray200();
+        populatedArray.count = 3;
+        populatedArray.s = new netdfs.DfsInfo200[3];
+        
+        // Create DFS root entries
+        String[] rootNames = {"share1", "share2", "share3"};
+        for (int i = 0; i < 3; i++) {
+            netdfs.DfsInfo200 entry = new netdfs.DfsInfo200();
+            entry.dfs_name = rootNames[i];
+            populatedArray.s[i] = entry;
+        }
+        
+        // Replace the info.e field with our populated array
+        setDfsEnumArray(dfsRootEnum, populatedArray);
+        
+        // Test getEntries returns correct SmbShareInfo objects
+        FileEntry[] entries = dfsRootEnum.getEntries();
+        assertNotNull(entries);
+        assertEquals(3, entries.length);
+        
+        // Verify each entry
+        for (int i = 0; i < 3; i++) {
+            assertInstanceOf(SmbShareInfo.class, entries[i]);
+            assertEquals(rootNames[i], entries[i].getName());
+            assertEquals(0, entries[i].getType());
+        }
+    }
+    
+    @Test
+    @DisplayName("getEntries should handle single DFS root correctly")
+    void testGetEntries_singleEntry() throws Exception {
+        // Create array with single entry
+        netdfs.DfsEnumArray200 singleArray = new netdfs.DfsEnumArray200();
+        singleArray.count = 1;
+        singleArray.s = new netdfs.DfsInfo200[1];
+        
+        netdfs.DfsInfo200 entry = new netdfs.DfsInfo200();
+        entry.dfs_name = "single_share";
+        singleArray.s[0] = entry;
+        
+        // Replace the info.e field
+        setDfsEnumArray(dfsRootEnum, singleArray);
+        
+        // Test getEntries
+        FileEntry[] entries = dfsRootEnum.getEntries();
+        assertNotNull(entries);
+        assertEquals(1, entries.length);
+        assertInstanceOf(SmbShareInfo.class, entries[0]);
+        assertEquals("single_share", entries[0].getName());
+    }
+    
+    @Test
+    @DisplayName("getEntries should handle null DFS names gracefully")
+    void testGetEntries_nullNames() throws Exception {
+        // Create array with null name entries
+        netdfs.DfsEnumArray200 arrayWithNulls = new netdfs.DfsEnumArray200();
+        arrayWithNulls.count = 2;
+        arrayWithNulls.s = new netdfs.DfsInfo200[2];
+        
         netdfs.DfsInfo200 entry1 = new netdfs.DfsInfo200();
-        entry1.dfs_name = "share1";
-        mockArray.s[0] = entry1;
-
+        entry1.dfs_name = null;
+        arrayWithNulls.s[0] = entry1;
+        
         netdfs.DfsInfo200 entry2 = new netdfs.DfsInfo200();
-        entry2.dfs_name = "share2";
-        mockArray.s[1] = entry2;
-
-        // Use reflection to set the 'info.e' field of the real instance
-        try {
-            java.lang.reflect.Field infoField = netdfs.NetrDfsEnumEx.class.getDeclaredField("info");
-            infoField.setAccessible(true);
-            netdfs.DfsEnumStruct info = (netdfs.DfsEnumStruct) infoField.get(dfsRootEnum);
-
-            java.lang.reflect.Field eField = netdfs.DfsEnumStruct.class.getDeclaredField("e");
-            eField.setAccessible(true);
-            eField.set(info, mockArray);
-
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            fail("Failed to inject mock DfsEnumArray200: " + e.getMessage());
-        }
-
+        entry2.dfs_name = "valid_share";
+        arrayWithNulls.s[1] = entry2;
+        
+        // Replace the info.e field
+        setDfsEnumArray(dfsRootEnum, arrayWithNulls);
+        
+        // Test getEntries handles nulls
         FileEntry[] entries = dfsRootEnum.getEntries();
-        assertNotNull(entries, "Entries array should not be null");
-        assertEquals(2, entries.length, "Entries array should have 2 elements");
-
-        assertTrue(entries[0] instanceof SmbShareInfo, "First entry should be SmbShareInfo");
-        assertEquals("share1", entries[0].getName(), "First entry name should match");
-
-        assertTrue(entries[1] instanceof SmbShareInfo, "Second entry should be SmbShareInfo");
-        assertEquals("share2", entries[1].getName(), "Second entry name should match");
+        assertNotNull(entries);
+        assertEquals(2, entries.length);
+        
+        assertInstanceOf(SmbShareInfo.class, entries[0]);
+        assertNull(entries[0].getName());
+        
+        assertInstanceOf(SmbShareInfo.class, entries[1]);
+        assertEquals("valid_share", entries[1].getName());
+    }
+    
+    @Test
+    @DisplayName("DCE/RPC flags should be set correctly")
+    void testDcerpcFlags() {
+        // Test individual flag checking
+        assertTrue(dfsRootEnum.isFlagSet(DcerpcConstants.DCERPC_FIRST_FRAG));
+        assertTrue(dfsRootEnum.isFlagSet(DcerpcConstants.DCERPC_LAST_FRAG));
+        
+        // Combined flags should equal FIRST_FRAG | LAST_FRAG
+        int expectedFlags = DcerpcConstants.DCERPC_FIRST_FRAG | DcerpcConstants.DCERPC_LAST_FRAG;
+        assertEquals(expectedFlags, dfsRootEnum.getFlags());
+    }
+    
+    @Test
+    @DisplayName("Multiple server names should be handled correctly")
+    void testDifferentServerNames() {
+        // Test with different server names
+        String[] serverNames = {"server1", "domain.local", "192.168.1.100", "FILESERVER"};
+        
+        for (String serverName : serverNames) {
+            MsrpcDfsRootEnum enumInstance = new MsrpcDfsRootEnum(serverName);
+            assertEquals(serverName, enumInstance.dfs_name);
+            assertEquals(200, enumInstance.level);
+            assertNotNull(enumInstance.info);
+        }
+    }
+    
+    // Helper method to set DfsEnumArray using reflection
+    private void setDfsEnumArray(MsrpcDfsRootEnum target, netdfs.DfsEnumArray200 array) throws Exception {
+        Field eField = netdfs.DfsEnumStruct.class.getDeclaredField("e");
+        eField.setAccessible(true);
+        eField.set(target.info, array);
     }
 }

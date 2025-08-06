@@ -20,10 +20,13 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.*;
+
+import jcifs.smb1.smb1.NtlmPasswordAuthentication;
 
 /**
  * Tests for NtlmPasswordAuthentication class.
@@ -105,7 +108,7 @@ class NtlmPasswordAuthenticationTest {
     @Test
     void testGetName() {
         NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication("DOMAIN", "user", "password");
-        assertEquals("DOMAIN\user", auth.getName());
+        assertEquals("DOMAIN\\user", auth.getName());
     }
     
     // Test getName method with default domain
@@ -204,36 +207,47 @@ class NtlmPasswordAuthenticationTest {
         assertEquals(expected, NtlmPasswordAuthentication.unescape(input));
     }
 
-    // Test lmCompatibility levels for getAnsiHash
-    @ParameterizedTest
-    @CsvSource({"0", "1", "2", "3", "4", "5"})
-    void testGetAnsiHashLmCompatibility(String lmCompatibility) {
-        jcifs.smb1.Config.setProperty("jcifs.smb1.smb.lmCompatibility", lmCompatibility);
+    // Test getAnsiHash always returns 24 bytes regardless of lmCompatibility
+    @Test
+    void testGetAnsiHashAlwaysReturns24Bytes() {
         NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication("DOMAIN", "user", "password");
         byte[] challenge = {1, 2, 3, 4, 5, 6, 7, 8};
         byte[] hash = auth.getAnsiHash(challenge);
         assertNotNull(hash);
-        // For lmCompatibility 2, 3, 4, 5, the length is 24
-        if (Integer.parseInt(lmCompatibility) >= 2) {
-             assertEquals(24, hash.length);
-        }
+        // getAnsiHash always returns 24 bytes for all lmCompatibility levels
+        // (getPreNTLMResponse, getNTLMResponse, or getLMv2Response all return 24 bytes)
+        assertEquals(24, hash.length);
     }
 
-    // Test lmCompatibility levels for getUnicodeHash
-    @ParameterizedTest
-    @CsvSource({"0", "1", "2", "3", "4", "5"})
-    void testGetUnicodeHashLmCompatibility(String lmCompatibility) {
-        jcifs.smb1.Config.setProperty("jcifs.smb1.smb.lmCompatibility", lmCompatibility);
+    // Test getUnicodeHash behavior based on static LM_COMPATIBILITY setting
+    @Test
+    void testGetUnicodeHashWithDefaultLmCompatibility() {
+        // With default lmCompatibility=3, getUnicodeHash returns empty array for NTLMv2
         NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication("DOMAIN", "user", "password");
         byte[] challenge = {1, 2, 3, 4, 5, 6, 7, 8};
         byte[] hash = auth.getUnicodeHash(challenge);
         assertNotNull(hash);
-        if (Integer.parseInt(lmCompatibility) <= 2) {
-            assertEquals(24, hash.length);
-        } else {
-            // For NTLMv2, this path returns an empty byte array in the current implementation
-            assertEquals(0, hash.length);
-        }
+        // For lmCompatibility 3,4,5 (NTLMv2), returns empty array
+        assertEquals(0, hash.length);
+    }
+    
+    // Test that changing lmCompatibility at runtime doesn't affect already loaded static value
+    @ParameterizedTest
+    @ValueSource(strings = {"0", "1", "2", "3", "4", "5"})
+    void testLmCompatibilityStaticInitialization(String lmCompatibility) {
+        // Attempt to change the property (won't affect static final LM_COMPATIBILITY)
+        jcifs.smb1.Config.setProperty("jcifs.smb1.smb.lmCompatibility", lmCompatibility);
+        NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication("DOMAIN", "user", "password");
+        byte[] challenge = {1, 2, 3, 4, 5, 6, 7, 8};
+        
+        // Behavior is determined by static initialization, not runtime config
+        byte[] unicodeHash = auth.getUnicodeHash(challenge);
+        byte[] ansiHash = auth.getAnsiHash(challenge);
+        
+        // Unicode hash returns empty array due to static LM_COMPATIBILITY=3
+        assertEquals(0, unicodeHash.length);
+        // ANSI hash always returns 24 bytes
+        assertEquals(24, ansiHash.length);
     }
     
     // Test ANONYMOUS constant

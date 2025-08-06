@@ -11,8 +11,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import jcifs.dcerpc.rpc.uuid_t;
-
 @ExtendWith(MockitoExtension.class)
 @DisplayName("UUID Tests")
 class UUIDTest {
@@ -37,7 +35,7 @@ class UUIDTest {
         @DisplayName("Constructor with rpc.uuid_t should copy all fields correctly")
         void testConstructorWithRpcUuidT() {
             // Arrange
-            uuid_t rpcUuid = new uuid_t();
+            rpc.uuid_t rpcUuid = new rpc.uuid_t();
             rpcUuid.time_low = TIME_LOW;
             rpcUuid.time_mid = TIME_MID;
             rpcUuid.time_hi_and_version = TIME_HI_AND_VERSION;
@@ -138,7 +136,7 @@ class UUIDTest {
         @DisplayName("Constructor with empty node array in rpc.uuid_t should handle gracefully")
         void testConstructorWithEmptyNode() {
             // Arrange
-            uuid_t rpcUuid = new uuid_t();
+            rpc.uuid_t rpcUuid = new rpc.uuid_t();
             rpcUuid.time_low = TIME_LOW;
             rpcUuid.time_mid = TIME_MID;
             rpcUuid.time_hi_and_version = TIME_HI_AND_VERSION;
@@ -164,7 +162,7 @@ class UUIDTest {
         @DisplayName("toString() should return correctly formatted UUID string")
         void testToString() {
             // Arrange
-            uuid_t rpcUuid = new uuid_t();
+            rpc.uuid_t rpcUuid = new rpc.uuid_t();
             rpcUuid.time_low = TIME_LOW;
             rpcUuid.time_mid = TIME_MID;
             rpcUuid.time_hi_and_version = TIME_HI_AND_VERSION;
@@ -213,7 +211,7 @@ class UUIDTest {
         @DisplayName("toString() should handle zero UUID correctly")
         void testToStringZeroUuid() {
             // Arrange
-            uuid_t rpcUuid = new uuid_t();
+            rpc.uuid_t rpcUuid = new rpc.uuid_t();
             rpcUuid.time_low = 0;
             rpcUuid.time_mid = 0;
             rpcUuid.time_hi_and_version = 0;
@@ -235,7 +233,7 @@ class UUIDTest {
         @DisplayName("toString() should handle maximum values correctly")
         void testToStringMaxValues() {
             // Arrange
-            uuid_t rpcUuid = new uuid_t();
+            rpc.uuid_t rpcUuid = new rpc.uuid_t();
             rpcUuid.time_low = 0xFFFFFFFF;
             rpcUuid.time_mid = (short) 0xFFFF;
             rpcUuid.time_hi_and_version = (short) 0xFFFF;

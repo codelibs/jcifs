@@ -1,12 +1,10 @@
 package jcifs.netbios;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.lenient;
 
 import java.lang.reflect.Field;
 
@@ -28,8 +26,9 @@ class NameQueryResponseTest {
 
     @BeforeEach
     void setUp() {
-        // Mock the OEM encoding configuration
-        when(mockConfig.getOemEncoding()).thenReturn("UTF-8");
+        // Mock the OEM encoding configuration with lenient stubbing
+        // since not all tests need this stub
+        lenient().when(mockConfig.getOemEncoding()).thenReturn("UTF-8");
         
         // Initialize NameQueryResponse before each test
         nameQueryResponse = new NameQueryResponse(mockConfig);
@@ -57,17 +56,42 @@ class NameQueryResponseTest {
         // This method directly calls a superclass method (readResourceRecordWireFormat).
         // We need to setup fields to avoid NPE when parsing
         
-        // Set rDataLength to skip parsing
-        Field rDataLengthField = NameServicePacket.class.getDeclaredField("rDataLength");
-        rDataLengthField.setAccessible(true);
-        rDataLengthField.set(nameQueryResponse, 0);
+        // Set recordName for parsing
+        Field recordNameField = NameServicePacket.class.getDeclaredField("recordName");
+        recordNameField.setAccessible(true);
+        Name mockRecordName = new Name(mockConfig);
+        recordNameField.set(nameQueryResponse, mockRecordName);
         
-        byte[] src = new byte[100]; // Provide dummy data
+        // Prepare a byte array with valid NetBIOS name format
+        byte[] src = new byte[100];
         int srcIndex = 0;
         
-        // The method should return whatever readResourceRecordWireFormat returns
+        // Start with compressed name pointer (0xC0) to use questionName
+        src[srcIndex] = (byte) 0xC0;
+        src[srcIndex + 1] = 0x0C; // Pointer offset
+        // recordType (2 bytes)
+        src[srcIndex + 2] = 0x00;
+        src[srcIndex + 3] = 0x20; // NB (0x0020)
+        // recordClass (2 bytes)
+        src[srcIndex + 4] = 0x00;
+        src[srcIndex + 5] = 0x01; // IN (0x0001)
+        // ttl (4 bytes)
+        src[srcIndex + 6] = 0x00;
+        src[srcIndex + 7] = 0x00;
+        src[srcIndex + 8] = 0x00;
+        src[srcIndex + 9] = 0x00;
+        // rDataLength (2 bytes)
+        src[srcIndex + 10] = 0x00;
+        src[srcIndex + 11] = 0x06; // 6 bytes of data
+        
+        // Initialize questionName to avoid NPE
+        Field questionNameField = NameServicePacket.class.getDeclaredField("questionName");
+        questionNameField.setAccessible(true);
+        questionNameField.set(nameQueryResponse, mockRecordName);
+        
+        // The method should return the number of bytes read by readResourceRecordWireFormat
         int result = nameQueryResponse.readBodyWireFormat(src, srcIndex);
-        assertEquals(0, result, "readBodyWireFormat should return 0 when rDataLength is 0");
+        assertEquals(12 + 6, result, "readBodyWireFormat should return the total bytes read");
     }
 
     @Test
@@ -92,10 +116,10 @@ class NameQueryResponseTest {
 
     @Test
     void readRDataWireFormat_shouldReturnZero_whenOpCodeIsNotQuery() throws NoSuchFieldException, IllegalAccessException {
-        // Set 'opCode' field in superclass to a value other than QUERY
+        // Set 'opCode' field in superclass to a value other than QUERY (0)
         Field opCodeField = NameServicePacket.class.getDeclaredField("opCode");
         opCodeField.setAccessible(true);
-        opCodeField.set(nameQueryResponse, 0); // Simulate an opCode that is not QUERY
+        opCodeField.set(nameQueryResponse, 7); // WACK opCode, which is not QUERY (0)
 
         // Ensure 'resultCode' is 0 for this test to isolate opCode condition
         Field resultCodeField = NameServicePacket.class.getDeclaredField("resultCode");

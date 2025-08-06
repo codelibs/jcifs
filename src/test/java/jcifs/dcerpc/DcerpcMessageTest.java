@@ -162,12 +162,14 @@ class DcerpcMessageTest {
 
             message.encode_header(mockBuffer);
 
-            // Verify that key values were written - avoid checking values that may be called multiple times
+            // Verify that key values were written
             verify(mockBuffer).enc_ndr_small(5); // RPC version
+            verify(mockBuffer, times(2)).enc_ndr_small(0); // minor version and ptype (both are 0)
+            verify(mockBuffer).enc_ndr_small(DcerpcConstants.RPC_C_PF_BROADCAST); // flags
             verify(mockBuffer).enc_ndr_long(0x00000010); // Little-endian / ASCII / IEEE
             verify(mockBuffer).enc_ndr_short(message.length);
+            verify(mockBuffer, times(1)).enc_ndr_short(0); // auth_value length
             verify(mockBuffer).enc_ndr_long(message.call_id);
-            // Note: ptype and flags may be 0, which conflicts with minor version = 0
         }
     }
 
@@ -249,12 +251,14 @@ class DcerpcMessageTest {
 
             message.encode(mockBuffer);
 
-            // Verify key operations happened - avoid values that may conflict (ptype=0, minor version=0)
+            // Verify key operations happened
             verify(mockBuffer).enc_ndr_small(5); // RPC version
             verify(mockBuffer).enc_ndr_long(0x00000010); // Little-endian / ASCII / IEEE
             verify(mockBuffer).enc_ndr_long(message.call_id);
             verify(mockBuffer).enc_ndr_short(message.getOpnum()); // opnum
             verify(mockBuffer).enc_ndr_long(12345); // From TestDcerpcMessage.encode_in
+            // Verify header encoding including ptype
+            verify(mockBuffer, times(2)).enc_ndr_small(0); // minor version and ptype (both are 0)
         }
 
         @Test
@@ -366,14 +370,14 @@ class DcerpcMessageTest {
                     .thenReturn(0); // flags
             when(mockBuffer.dec_ndr_long()).thenReturn(0x00000010) // Data representation
                     .thenReturn(1) // call_id
-                    .thenReturn(0); // result for bind_nak (ptype 13 is fault)
+                    .thenReturn(123); // result for bind_nak (ptype 13 is fault)
             when(mockBuffer.dec_ndr_short()).thenReturn(100) // length
                     .thenReturn(0); // auth_value length
 
             message.decode(mockBuffer);
 
             assertEquals(DcerpcConstants.RPC_PT_BIND_NAK, message.ptype);
-            assertEquals(0, message.result);
+            assertEquals(123, message.result); // BIND_NAK is treated as fault (ptype 13)
         }
 
         @Test

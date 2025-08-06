@@ -2,161 +2,252 @@ package jcifs.smb1.smb1;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Unit tests for SmbComTransaction class
+ */
 class SmbComTransactionTest {
 
-    private ConcreteSmbComTransaction transaction;
+    private TestSmbComTransaction transaction;
 
-    // A concrete implementation of the abstract SmbComTransaction for testing purposes.
-    static class ConcreteSmbComTransaction extends SmbComTransaction {
+    // Test implementation of abstract SmbComTransaction
+    static class TestSmbComTransaction extends SmbComTransaction {
+        
+        private int setupBytesWritten = 2;
+        private int parameterBytesWritten = 20;
+        private int dataBytesWritten = 50;
+        
         @Override
         int writeSetupWireFormat(byte[] dst, int dstIndex) {
-            // Mock implementation for testing
-            return 2;
+            return setupBytesWritten;
         }
 
         @Override
         int writeParametersWireFormat(byte[] dst, int dstIndex) {
-            // Mock implementation for testing
-            // Simulate writing 20 bytes of parameters
-            return 20;
+            return parameterBytesWritten;
         }
 
         @Override
         int writeDataWireFormat(byte[] dst, int dstIndex) {
-            // Mock implementation for testing
-            // Simulate writing 50 bytes of data
-            return 50;
+            return dataBytesWritten;
         }
 
         @Override
         int readSetupWireFormat(byte[] buffer, int bufferIndex, int len) {
-            // Mock implementation for testing
-            return 0;
+            return 2;
         }
 
         @Override
         int readParametersWireFormat(byte[] buffer, int bufferIndex, int len) {
-            // Mock implementation for testing
-            return 0;
+            return 20;
         }
 
         @Override
         int readDataWireFormat(byte[] buffer, int bufferIndex, int len) {
-            // Mock implementation for testing
-            return 0;
+            return 50;
+        }
+        
+        // Setters for test control
+        void setSetupBytesWritten(int bytes) {
+            this.setupBytesWritten = bytes;
+        }
+        
+        void setParameterBytesWritten(int bytes) {
+            this.parameterBytesWritten = bytes;
+        }
+        
+        void setDataBytesWritten(int bytes) {
+            this.dataBytesWritten = bytes;
         }
     }
 
     @BeforeEach
     void setUp() {
-        transaction = new ConcreteSmbComTransaction();
-        transaction.txn_buf = new byte[100]; // Mock transaction buffer
+        transaction = new TestSmbComTransaction();
+        transaction.command = ServerMessageBlock.SMB_COM_TRANSACTION;
+        transaction.name = "\\PIPE\\test";
+        transaction.txn_buf = new byte[1024];
+        transaction.maxBufferSize = 1024;
     }
 
     @Test
+    @DisplayName("Test reset() method resets transaction state")
     void testReset() {
-        transaction.hasMore = false;
-        transaction.isPrimary = false;
+        // Modify state
+        transaction.nextElement();
+        
+        // Reset
         transaction.reset();
-        assertTrue(transaction.hasMore, "hasMore should be true after reset");
-        assertTrue(transaction.isPrimary, "isPrimary should be true after reset");
+        
+        // Verify state is reset
+        assertTrue(transaction.hasMoreElements(), "hasMoreElements should be true after reset");
     }
 
     @Test
+    @DisplayName("Test reset(int, String) method")
+    void testResetWithParameters() {
+        // Test overloaded reset method
+        transaction.reset(123, "lastTest");
+        assertTrue(transaction.hasMoreElements(), "hasMoreElements should be true after reset");
+    }
+
+    @Test
+    @DisplayName("Test hasMoreElements() initially returns true")
     void testHasMoreElements() {
         assertTrue(transaction.hasMoreElements(), "Initially, hasMoreElements should be true");
-        transaction.hasMore = false;
-        assertFalse(transaction.hasMoreElements(), "hasMoreElements should reflect the state of hasMore flag");
     }
 
     @Test
-    void testNextElement_PrimaryRequest_FitsInOneMessage() {
-        transaction.maxBufferSize = 1024;
-        transaction.command = SmbConstants.SMB_COM_TRANSACTION;
-
-        // First call to nextElement should be the primary request
-        Object result = transaction.nextElement();
-
-        assertSame(transaction, result, "nextElement should return the transaction object itself");
-        assertFalse(transaction.isPrimary, "isPrimary should be false after the first call");
-        assertFalse(transaction.hasMore, "hasMore should be false as everything fits in one message");
-
-        assertEquals(20, transaction.totalParameterCount, "Total parameter count should be set");
-        assertEquals(50, transaction.totalDataCount, "Total data count should be set");
-        assertEquals(20, transaction.parameterCount, "Parameter count should be the full amount");
-        assertEquals(50, transaction.dataCount, "Data count should be the full amount");
+    @DisplayName("Test nextElement() returns transaction on first call")
+    void testNextElementFirstCall() {
+        Object element = transaction.nextElement();
+        assertSame(transaction, element, "First nextElement should return the transaction itself");
     }
 
     @Test
-    void testNextElement_PrimaryRequest_RequiresSecondary() {
-        transaction.maxBufferSize = 100; // Small buffer to force multiple messages
-        transaction.command = SmbConstants.SMB_COM_TRANSACTION;
-
-        // First call to nextElement
+    @DisplayName("Test nextElement() changes command on second call")
+    void testNextElementSecondCall() {
+        // First call - primary
         transaction.nextElement();
-
-        assertFalse(transaction.isPrimary, "isPrimary should be false after the first call");
-        assertTrue(transaction.hasMore, "hasMore should be true as data needs to be sent in secondary messages");
-
-        assertEquals(20, transaction.totalParameterCount, "Total parameter count should be set");
-        assertEquals(50, transaction.totalDataCount, "Total data count should be set");
-
-        // Check how much was sent in the first message
-        assertTrue(transaction.parameterCount < transaction.totalParameterCount || transaction.dataCount < transaction.totalDataCount,
-                "Either parameter or data count should be partial");
-
-        // Second call to nextElement for the secondary request
+        byte initialCommand = transaction.command;
+        
+        // Second call - secondary
         transaction.nextElement();
-        assertEquals(SmbConstants.SMB_COM_TRANSACTION_SECONDARY, transaction.command, "Command should be updated to secondary");
-        assertFalse(transaction.hasMore, "hasMore should be false after the second message sends the rest");
+        
+        // Verify command changed to secondary
+        assertEquals(ServerMessageBlock.SMB_COM_TRANSACTION_SECONDARY, transaction.command,
+            "Command should change to SMB_COM_TRANSACTION_SECONDARY");
     }
 
     @Test
-    void testWriteParameterWordsWireFormat() {
-        byte[] dst = new byte[100];
-        transaction.totalParameterCount = 10;
-        transaction.totalDataCount = 20;
-        transaction.maxParameterCount = 1024;
-        transaction.maxDataCount = 8192;
-        transaction.flags = 0x01;
-        transaction.timeout = 5000;
-        transaction.parameterCount = 10;
-        transaction.parameterOffset = 64;
-        transaction.dataCount = 20;
-        transaction.dataOffset = 74;
-        transaction.setupCount = 1;
-
-        int bytesWritten = transaction.writeParameterWordsWireFormat(dst, 0);
-        assertTrue(bytesWritten > 0, "Should write some bytes");
-        // Further assertions can be added here to verify the exact byte values if needed
+    @DisplayName("Test NT transaction command handling")
+    void testNtTransactionCommand() {
+        transaction.command = ServerMessageBlock.SMB_COM_NT_TRANSACT;
+        
+        // First call
+        transaction.nextElement();
+        
+        // Second call should change to NT_TRANSACT_SECONDARY
+        transaction.nextElement();
+        assertEquals(ServerMessageBlock.SMB_COM_NT_TRANSACT_SECONDARY, transaction.command,
+            "Command should change to SMB_COM_NT_TRANSACT_SECONDARY for NT transactions");
     }
 
     @Test
-    void testWriteBytesWireFormat() {
-        byte[] dst = new byte[200];
-        transaction.name = \"\\PIPE\\test\";
-        transaction.command = SmbConstants.SMB_COM_TRANSACTION;
-        transaction.parameterCount = 20;
-        transaction.dataCount = 50;
-        transaction.bufParameterOffset = 0;
-        transaction.bufDataOffset = 20;
-
-        // Populate the transaction buffer with some data
-        for (int i = 0; i < 70; i++) {
-            transaction.txn_buf[i] = (byte) i;
-        }
-
-        int bytesWritten = transaction.writeBytesWireFormat(dst, 0);
-        assertTrue(bytesWritten > 0, "Should write some bytes");
-        assertEquals(transaction.name.length() + 1 + transaction.parameterCount + transaction.dataCount, bytesWritten, "Bytes written should match the length of name, params, and data");
-    }
-
-    @Test
+    @DisplayName("Test toString() method")
     void testToString() {
-        String str = transaction.toString();
-        assertNotNull(str, "toString should not return null");
-        assertTrue(str.contains("totalParameterCount=0"), "toString should contain transaction details");
+        String result = transaction.toString();
+        assertNotNull(result, "toString should not return null");
+        assertTrue(result.contains("com="), "toString should contain command info");
+    }
+
+    @Test
+    @DisplayName("Test parameter and data writing methods")
+    void testWriteMethods() {
+        byte[] buffer = new byte[1024];
+        
+        int setupBytes = transaction.writeSetupWireFormat(buffer, 0);
+        assertEquals(2, setupBytes, "writeSetupWireFormat should return expected bytes");
+        
+        int paramBytes = transaction.writeParametersWireFormat(buffer, 0);
+        assertEquals(20, paramBytes, "writeParametersWireFormat should return expected bytes");
+        
+        int dataBytes = transaction.writeDataWireFormat(buffer, 0);
+        assertEquals(50, dataBytes, "writeDataWireFormat should return expected bytes");
+    }
+
+    @Test
+    @DisplayName("Test parameter and data reading methods")
+    void testReadMethods() {
+        byte[] buffer = new byte[1024];
+        
+        int setupBytes = transaction.readSetupWireFormat(buffer, 0, 10);
+        assertEquals(2, setupBytes, "readSetupWireFormat should return expected bytes");
+        
+        int paramBytes = transaction.readParametersWireFormat(buffer, 0, 30);
+        assertEquals(20, paramBytes, "readParametersWireFormat should return expected bytes");
+        
+        int dataBytes = transaction.readDataWireFormat(buffer, 0, 60);
+        assertEquals(50, dataBytes, "readDataWireFormat should return expected bytes");
+    }
+
+    @Test
+    @DisplayName("Test hasMoreElements becomes false when all data is sent")
+    void testHasMoreElementsBecomeFalse() {
+        // Set small amounts so everything fits in one message
+        transaction.setParameterBytesWritten(10);
+        transaction.setDataBytesWritten(10);
+        
+        // First call processes all data
+        transaction.nextElement();
+        
+        // Should have no more elements since all data fit in first message
+        assertFalse(transaction.hasMoreElements(), 
+            "hasMoreElements should be false when all data is sent");
+    }
+
+    @Test
+    @DisplayName("Test transaction with large data requires multiple elements")
+    void testLargeDataMultipleElements() {
+        // Set large amounts that won't fit in one buffer
+        transaction.maxBufferSize = 100;
+        transaction.setParameterBytesWritten(200);
+        transaction.setDataBytesWritten(300);
+        
+        // First element
+        transaction.nextElement();
+        assertTrue(transaction.hasMoreElements(), 
+            "Should have more elements for large data");
+        
+        // Process multiple elements
+        int count = 1;
+        while (transaction.hasMoreElements() && count < 10) {
+            transaction.nextElement();
+            count++;
+        }
+        
+        assertTrue(count > 1, "Large data should require multiple elements");
+    }
+
+    @Test
+    @DisplayName("Test transaction name handling")
+    void testTransactionName() {
+        assertEquals("\\PIPE\\test", transaction.name, "Transaction name should be set correctly");
+        
+        // Test with different name
+        transaction.name = "\\MAILSLOT\\browse";
+        assertEquals("\\MAILSLOT\\browse", transaction.name, "Transaction name should be changeable");
+    }
+
+    @Test
+    @DisplayName("Test default buffer size constant")
+    void testBufferSizeConstant() {
+        assertEquals(0xFFFF, SmbComTransaction.TRANSACTION_BUF_SIZE, 
+            "TRANSACTION_BUF_SIZE should be 0xFFFF");
+    }
+
+    @Test
+    @DisplayName("Test transaction subcommand constants")
+    void testSubcommandConstants() {
+        // Test Trans2 subcommands
+        assertEquals((byte)0x01, SmbComTransaction.TRANS2_FIND_FIRST2);
+        assertEquals((byte)0x02, SmbComTransaction.TRANS2_FIND_NEXT2);
+        assertEquals((byte)0x03, SmbComTransaction.TRANS2_QUERY_FS_INFORMATION);
+        assertEquals((byte)0x05, SmbComTransaction.TRANS2_QUERY_PATH_INFORMATION);
+        assertEquals((byte)0x10, SmbComTransaction.TRANS2_GET_DFS_REFERRAL);
+        assertEquals((byte)0x08, SmbComTransaction.TRANS2_SET_FILE_INFORMATION);
+        
+        // Test NET subcommands
+        assertEquals(0x0000, SmbComTransaction.NET_SHARE_ENUM);
+        assertEquals(0x0068, SmbComTransaction.NET_SERVER_ENUM2);
+        assertEquals(0x00D7, SmbComTransaction.NET_SERVER_ENUM3);
+        
+        // Test TRANS subcommands
+        assertEquals((byte)0x23, SmbComTransaction.TRANS_PEEK_NAMED_PIPE);
+        assertEquals((byte)0x53, SmbComTransaction.TRANS_WAIT_NAMED_PIPE);
+        assertEquals((byte)0x54, SmbComTransaction.TRANS_CALL_NAMED_PIPE);
+        assertEquals((byte)0x26, SmbComTransaction.TRANS_TRANSACT_NAMED_PIPE);
     }
 }

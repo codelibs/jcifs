@@ -61,7 +61,7 @@ class SmbTreeHandleTest {
         when(smbTreeHandle.getConnectedShare()).thenReturn("TEST_SHARE");
         when(smbTreeHandle.isSMB2()).thenReturn(true);
         when(smbTreeHandle.getRemoteHostName()).thenReturn("test-server");
-        when(smbTreeHandle.getTreeType()).thenReturn(SmbConstants.TREE_TYPE_DISK);
+        when(smbTreeHandle.getTreeType()).thenReturn(SmbConstants.TYPE_SHARE);
     }
 
     /**
@@ -200,8 +200,8 @@ class SmbTreeHandleTest {
      */
     @Test
     void testGetTreeType() {
-        assertEquals(SmbConstants.TREE_TYPE_DISK, smbTreeHandle.getTreeType(), "Tree type should be TREE_TYPE_DISK");
-        when(smbTreeHandle.getTreeType()).thenReturn(SmbConstants.TREE_TYPE_PRINTER);
-        assertEquals(SmbConstants.TREE_TYPE_PRINTER, smbTreeHandle.getTreeType(), "Tree type should be TREE_TYPE_PRINTER");
+        assertEquals(SmbConstants.TYPE_SHARE, smbTreeHandle.getTreeType(), "Tree type should be TYPE_SHARE");
+        when(smbTreeHandle.getTreeType()).thenReturn(SmbConstants.TYPE_PRINTER);
+        assertEquals(SmbConstants.TYPE_PRINTER, smbTreeHandle.getTreeType(), "Tree type should be TYPE_PRINTER");
     }
 }

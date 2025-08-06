@@ -20,6 +20,9 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import jcifs.smb1.smb1.Trans2SetFileInformationResponse;
+import jcifs.smb1.smb1.Trans2SetFileInformation;
+
 /**
  * Tests for the {@link Trans2SetFileInformationResponse} class.
  *

@@ -17,7 +17,6 @@ package jcifs.internal.smb1.com;
 
 import org.junit.jupiter.api.Test;
 
-import jcifs.CIFSContext;
 import jcifs.config.PropertyConfiguration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -35,7 +34,7 @@ public class SmbComWriteAndXResponseTest {
         // Given
         byte[] buffer = new byte[] { (byte) 0xff, (byte) 0xff, 0, 0, 0, 0, 0, 0 };
         SmbComWriteAndXResponse instance = new SmbComWriteAndXResponse(
-                new PropertyConfiguration(new Properties()).getSmb1Context());
+                new PropertyConfiguration(new Properties()));
 
         // When
         int result = instance.readParameterWordsWireFormat(buffer, 0);
@@ -52,7 +51,7 @@ public class SmbComWriteAndXResponseTest {
     public void testToString() {
         // Given
         SmbComWriteAndXResponse instance = new SmbComWriteAndXResponse(
-                new PropertyConfiguration(new Properties()).getSmb1Context());
+                new PropertyConfiguration(new Properties()));
 
         // When
         String result = instance.toString();

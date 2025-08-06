@@ -2,14 +2,12 @@ package jcifs.dcerpc;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-@ExtendWith(MockitoExtension.class)
 @DisplayName("DcerpcConstants Tests")
 class DcerpcConstantsTest {
 
@@ -288,7 +286,7 @@ class DcerpcConstantsTest {
             };
 
             for (int packetType : packetTypes) {
-                assertEquals(true, packetType >= 0x00 && packetType <= 0x16,
+                assertTrue(packetType >= 0x00 && packetType <= 0x16,
                         String.format("Packet type 0x%02X should be in valid range 0x00-0x16", packetType));
             }
         }
@@ -309,7 +307,7 @@ class DcerpcConstantsTest {
             };
 
             for (int flag : fragmentFlags) {
-                assertEquals(true, flag >= 0x00 && flag <= 0xFF,
+                assertTrue(flag >= 0x00 && flag <= 0xFF,
                         String.format("Fragment flag 0x%02X should be in valid byte range 0x00-0xFF", flag));
             }
         }
@@ -330,7 +328,7 @@ class DcerpcConstantsTest {
             };
 
             for (int flag : rpcFlags) {
-                assertEquals(true, flag >= 0x00 && flag <= 0xFF,
+                assertTrue(flag >= 0x00 && flag <= 0xFF,
                         String.format("RPC packet flag 0x%02X should be in valid byte range 0x00-0xFF", flag));
             }
         }

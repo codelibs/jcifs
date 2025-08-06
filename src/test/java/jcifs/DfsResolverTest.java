@@ -24,7 +24,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import jcifs.context.BaseContext;
 import jcifs.smb.DfsImpl;
 import jcifs.smb.SmbAuthException;
-import jcifs.smb.SmbTransportImpl;
+import jcifs.smb.SmbTransportInternal;
 
 @ExtendWith(MockitoExtension.class)
 class DfsResolverTest {
@@ -44,7 +44,7 @@ class DfsResolverTest {
     private SmbTransportPool mockTransportPool;
 
     @Mock
-    private SmbTransportImpl mockTransport;
+    private SmbTransportInternal mockTransport;
 
     @BeforeEach
     void setUp() {
@@ -122,7 +122,7 @@ class DfsResolverTest {
     void testCache_DfsDisabled() {
         when(mockConfig.isDfsDisabled()).thenReturn(true);
         DfsReferralData mockReferralData = mock(DfsReferralData.class);
-        assertDoesNotThrow(() -> dfsResolver.cache(mockContext, "\\anyServer\anyShare\anyPath", mockReferralData));
+        assertDoesNotThrow(() -> dfsResolver.cache(mockContext, "\\\\anyServer\\anyShare\\anyPath", mockReferralData));
     }
 
     @Test

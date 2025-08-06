@@ -22,7 +22,7 @@ class Trans2SetFileInformationTest {
     @Test
     void testConstructor() {
         // Then
-        assertEquals(SmbConstants.SMB_COM_TRANSACTION2, trans2SetFileInformation.command);
+        assertEquals(ServerMessageBlock.SMB_COM_TRANSACTION2, trans2SetFileInformation.command);
         assertEquals(Trans2SetFileInformation.TRANS2_SET_FILE_INFORMATION, trans2SetFileInformation.subCommand);
         assertEquals(6, trans2SetFileInformation.maxParameterCount);
         assertEquals(0, trans2SetFileInformation.maxDataCount);

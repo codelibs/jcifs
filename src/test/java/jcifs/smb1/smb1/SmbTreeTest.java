@@ -15,7 +15,8 @@
  */
 package jcifs.smb1.smb1;
 
-import jcifs.smb1.SmbException;
+import jcifs.smb1.smb1.SmbException;
+import jcifs.smb1.util.LogStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -39,7 +40,7 @@ class SmbTreeTest {
         MockitoAnnotations.openMocks(this);
         when(session.transport()).thenReturn(transport);
         when(transport.tconHostName).thenReturn("testHost");
-        when(transport.log).thenReturn(new PrintStream(System.out));
+        when(transport.log).thenReturn(new LogStream(System.out));
     }
 
     @Test
@@ -159,7 +160,7 @@ class SmbTreeTest {
         tree.connectionState = 2; // a connected tree
         tree.tid = 123;
 
-        ServerMessageBlock request = new SmbComOpenAndX();
+        ServerMessageBlock request = new SmbComOpenAndX("testfile.txt", 0x01, 0, null);
         ServerMessageBlock response = new SmbComOpenAndXResponse();
 
         tree.send(request, response);
@@ -175,8 +176,7 @@ class SmbTreeTest {
         tree.tid = 123;
         tree.inDfs = true;
 
-        ServerMessageBlock request = new SmbComOpenAndX();
-        request.path = "\testPath";
+        ServerMessageBlock request = new SmbComOpenAndX("\\testPath", 0x01, 0, null);
         ServerMessageBlock response = new SmbComOpenAndXResponse();
 
         tree.send(request, response);
@@ -193,7 +193,7 @@ class SmbTreeTest {
         tree.connectionState = 2; // a connected tree
         tree.tid = 123;
 
-        ServerMessageBlock request = new SmbComOpenAndX();
+        ServerMessageBlock request = new SmbComOpenAndX("testfile.txt", 0x01, 0, null);
         ServerMessageBlock response = new SmbComOpenAndXResponse();
 
         doThrow(new SmbException(SmbException.NT_STATUS_NETWORK_NAME_DELETED, false)).when(session).send(request, response);

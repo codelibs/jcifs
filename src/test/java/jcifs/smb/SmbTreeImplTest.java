@@ -80,7 +80,11 @@ class SmbTreeImplTest {
         SmbTreeImpl tree = new SmbTreeImpl(session, "SHARE", "A:");
         SmbTreeImpl unwrapped = tree.unwrap(SmbTreeImpl.class);
         assertEquals(tree, unwrapped);
-        assertThrows(ClassCastException.class, () -> tree.unwrap(SmbSessionImpl.class));
+        // Test unwrapping to a non-SmbTree type should fail
+        assertThrows(ClassCastException.class, () -> {
+            // Try to unwrap to Object which is not a subtype of SmbTree
+            tree.unwrap((Class) Object.class);
+        });
     }
 
     // Test case for acquire and release methods

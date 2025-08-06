@@ -1,30 +1,21 @@
 package jcifs.internal.smb2;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 import java.security.SecureRandom;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-import jcifs.Configuration;
 import jcifs.DialectVersion;
 
 /**
  * Test class for Smb2EncryptionContext.
  * Tests the available public API methods of the encryption context.
  */
-@ExtendWith(MockitoExtension.class)
 @DisplayName("Smb2EncryptionContext Tests")
 class Smb2EncryptionContextTest {
-
-    @Mock
-    private Configuration mockConfig;
 
     private byte[] testEncryptionKey;
     private byte[] testDecryptionKey;
@@ -107,46 +98,48 @@ class Smb2EncryptionContextTest {
     }
 
     @Test
-    @DisplayName("Should handle null encryption key")
+    @DisplayName("Should throw exception for null encryption key")
     void testNullEncryptionKey() {
         // When/Then
-        assertDoesNotThrow(() -> {
+        assertThrows(NullPointerException.class, () -> {
             new Smb2EncryptionContext(1, DialectVersion.SMB311, null, testDecryptionKey);
-        }, "Should handle null encryption key without throwing exception");
+        }, "Should throw NullPointerException for null encryption key");
     }
 
     @Test
-    @DisplayName("Should handle null decryption key")
+    @DisplayName("Should throw exception for null decryption key")
     void testNullDecryptionKey() {
         // When/Then
-        assertDoesNotThrow(() -> {
+        assertThrows(NullPointerException.class, () -> {
             new Smb2EncryptionContext(1, DialectVersion.SMB311, testEncryptionKey, null);
-        }, "Should handle null decryption key without throwing exception");
+        }, "Should throw NullPointerException for null decryption key");
     }
 
     @Test
-    @DisplayName("Should handle null dialect")
+    @DisplayName("Should accept null dialect during construction")
     void testNullDialect() {
         // When/Then
         assertDoesNotThrow(() -> {
-            new Smb2EncryptionContext(1, null, testEncryptionKey, testDecryptionKey);
-        }, "Should handle null dialect without throwing exception during construction");
+            Smb2EncryptionContext context = new Smb2EncryptionContext(1, null, testEncryptionKey, testDecryptionKey);
+            assertNull(context.getDialect(), "Dialect should be null");
+        }, "Should accept null dialect during construction");
     }
 
     @Test
-    @DisplayName("Should handle empty keys")
+    @DisplayName("Should accept empty keys")
     void testEmptyKeys() {
         // Given
         byte[] emptyKey = new byte[0];
         
         // When/Then
         assertDoesNotThrow(() -> {
-            new Smb2EncryptionContext(1, DialectVersion.SMB311, emptyKey, emptyKey);
-        }, "Should handle empty keys without throwing exception");
+            Smb2EncryptionContext context = new Smb2EncryptionContext(1, DialectVersion.SMB311, emptyKey, emptyKey);
+            assertNotNull(context, "Context should be created with empty keys");
+        }, "Should accept empty keys");
     }
 
     @Test
-    @DisplayName("Should handle different key sizes")
+    @DisplayName("Should accept different key sizes")
     void testDifferentKeySizes() {
         // Given
         byte[] key128 = new byte[16]; // 128-bit
@@ -156,21 +149,64 @@ class Smb2EncryptionContextTest {
         
         // When/Then
         assertDoesNotThrow(() -> {
-            new Smb2EncryptionContext(1, DialectVersion.SMB311, key128, key256);
-        }, "Should handle different key sizes");
+            Smb2EncryptionContext context = new Smb2EncryptionContext(1, DialectVersion.SMB311, key128, key256);
+            assertNotNull(context, "Context should be created with different key sizes");
+        }, "Should accept different key sizes");
     }
 
     @Test
     @DisplayName("Should be immutable after creation")
     void testImmutability() {
         // Given
-        byte[] originalKey = testEncryptionKey.clone();
+        int originalCipherId = encryptionContext.getCipherId();
+        DialectVersion originalDialect = encryptionContext.getDialect();
         
         // When - Modify the original key array
         testEncryptionKey[0] = (byte) ~testEncryptionKey[0];
         
         // Then - Context should not be affected by external modifications
-        assertEquals(1, encryptionContext.getCipherId(), "Context should not be affected by key modifications");
-        assertEquals(DialectVersion.SMB311, encryptionContext.getDialect(), "Context should remain consistent");
+        assertEquals(originalCipherId, encryptionContext.getCipherId(), "Cipher ID should remain unchanged");
+        assertEquals(originalDialect, encryptionContext.getDialect(), "Dialect should remain unchanged");
+    }
+
+    @Test
+    @DisplayName("Should generate unique nonces")
+    void testGenerateNonce() {
+        // When
+        byte[] nonce1 = encryptionContext.generateNonce();
+        byte[] nonce2 = encryptionContext.generateNonce();
+        
+        // Then
+        assertNotNull(nonce1, "First nonce should not be null");
+        assertNotNull(nonce2, "Second nonce should not be null");
+        assertEquals(16, nonce1.length, "Nonce should be 16 bytes");
+        assertEquals(16, nonce2.length, "Nonce should be 16 bytes");
+        assertFalse(java.util.Arrays.equals(nonce1, nonce2), "Consecutive nonces should be different");
+    }
+
+    @Test
+    @DisplayName("Should generate multiple unique nonces")
+    void testGenerateMultipleNonces() {
+        // Given
+        int count = 100;
+        java.util.Set<String> nonceSet = new java.util.HashSet<>();
+        
+        // When
+        for (int i = 0; i < count; i++) {
+            byte[] nonce = encryptionContext.generateNonce();
+            String nonceHex = bytesToHex(nonce);
+            nonceSet.add(nonceHex);
+        }
+        
+        // Then
+        assertEquals(count, nonceSet.size(), "All generated nonces should be unique");
+    }
+
+    private String bytesToHex(byte[] bytes) {
+        StringBuilder result = new StringBuilder();
+        for (byte b : bytes) {
+            result.append(String.format("%02x", b));
+        }
+        return result.toString();
     }
 }
