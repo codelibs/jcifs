@@ -449,12 +449,6 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
      */
     public SmbFile ( URL url, CIFSContext tc ) throws MalformedURLException {
         super(url);
-        if ( !"smb".equals(url.getProtocol()) ) {
-            throw new MalformedURLException("Invalid SMB URL protocol: " + url.getProtocol() + ". Expected 'smb'");
-        }
-        if ( url.getHost() == null || url.getHost().isEmpty() ) {
-            throw new MalformedURLException("Invalid SMB URL: missing server host: " + url);
-        }
         if ( url.getPath() != null && !url.getPath().isEmpty() && url.getPath().charAt(0) != '/' ) {
             throw new MalformedURLException("Invalid SMB URL: " + url);
         }
