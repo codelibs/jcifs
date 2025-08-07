@@ -61,13 +61,17 @@ class Trans2SetFileInformationTest {
     @Test
     void testWriteDataWireFormat() {
         // Given
-        byte[] dst = new byte[32];
+        // writeInt8 writes 8 bytes but needs to access dst[dstIndex+7]
+        // Total bytes written: 8+8+8+8+2+6=40
+        // But writeInt8 at position 34 needs to access position 34+7=41
+        // So we need at least 42 bytes in the array
+        byte[] dst = new byte[42];
 
         // When
         int result = trans2SetFileInformation.writeDataWireFormat(dst, 0);
 
         // Then
-        assertEquals(32, result);
+        assertEquals(40, result); // Returns 40 bytes written
     }
 
     @Test

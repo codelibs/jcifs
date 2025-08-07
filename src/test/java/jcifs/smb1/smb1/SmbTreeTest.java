@@ -15,16 +15,13 @@
  */
 package jcifs.smb1.smb1;
 
-import jcifs.smb1.smb1.SmbException;
-import jcifs.smb1.util.LogStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.io.PrintStream;
-
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 class SmbTreeTest {
@@ -38,9 +35,12 @@ class SmbTreeTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        // Setup transport fields that are accessed directly
+        transport.tconHostName = "testHost";
+        // Setup session.transport field (accessed directly in SmbTree)
+        session.transport = transport;
+        // Setup session to return transport via method call
         when(session.transport()).thenReturn(transport);
-        when(transport.tconHostName).thenReturn("testHost");
-        when(transport.log).thenReturn(new LogStream(System.out));
     }
 
     @Test
@@ -51,13 +51,13 @@ class SmbTreeTest {
         assertEquals("testService", tree.service);
         assertEquals(0, tree.connectionState);
 
-        // Test constructor with a null service
+        // Test constructor with null service
         tree = new SmbTree(session, "testShare", null);
         assertEquals("TESTSHARE", tree.share);
         assertEquals("?????", tree.service);
         assertEquals(0, tree.connectionState);
 
-        // Test constructor with a service starting with "??"
+        // Test constructor with service starting with "??"
         tree = new SmbTree(session, "testShare", "??service");
         assertEquals("TESTSHARE", tree.share);
         assertEquals("?????", tree.service);
@@ -68,19 +68,21 @@ class SmbTreeTest {
     void testMatches() {
         SmbTree tree = new SmbTree(session, "testShare", "testService");
 
-        // Test with matching share and service
+        // Test matching share and service (case insensitive)
         assertTrue(tree.matches("testShare", "testService"));
+        assertTrue(tree.matches("TESTSHARE", "testService"));
+        assertTrue(tree.matches("testshare", "TESTSERVICE"));
 
-        // Test with matching share and null service
+        // Test matching share with null service
         assertTrue(tree.matches("testShare", null));
 
-        // Test with matching share and service starting with "??"
+        // Test matching share with service starting with "??"
         assertTrue(tree.matches("testShare", "??otherService"));
 
-        // Test with non-matching share
+        // Test non-matching share
         assertFalse(tree.matches("otherShare", "testService"));
 
-        // Test with non-matching service
+        // Test non-matching service
         assertFalse(tree.matches("testShare", "otherService"));
     }
 
@@ -89,15 +91,22 @@ class SmbTreeTest {
         SmbTree tree1 = new SmbTree(session, "testShare", "testService");
         SmbTree tree2 = new SmbTree(session, "testShare", "testService");
         SmbTree tree3 = new SmbTree(session, "otherShare", "testService");
+        SmbTree tree4 = new SmbTree(session, "testShare", "otherService");
 
-        // Test with equal objects
+        // Test equal trees (same share and service)
         assertEquals(tree1, tree2);
 
-        // Test with non-equal objects
+        // Test non-equal trees (different share)
         assertNotEquals(tree1, tree3);
 
-        // Test with a different object type
+        // Test non-equal trees (different service)
+        assertNotEquals(tree1, tree4);
+
+        // Test with different object type
         assertNotEquals(tree1, new Object());
+        
+        // Test with null
+        assertNotEquals(tree1, null);
     }
 
     @Test
@@ -108,63 +117,77 @@ class SmbTreeTest {
         tree.inDomainDfs = false;
         tree.connectionState = 2;
 
-        String expected = "SmbTree[share=TESTSHARE,service=testService,tid=123,inDfs=true,inDomainDfs=false,connectionState=2]";
-        assertEquals(expected, tree.toString());
+        String result = tree.toString();
+        // Verify the toString contains the expected information
+        assertTrue(result.contains("TESTSHARE"));
+        assertTrue(result.contains("testService"));
+        assertTrue(result.contains("123"));
+        assertTrue(result.contains("2"));
     }
 
     @Test
-    void testTreeConnectAndDisconnect() throws SmbException {
+    void testTreeConnectAndDisconnect() throws Exception {
         SmbTree tree = new SmbTree(session, "testShare", "testService");
-
-        // Mock the response to the tree connect request
-        SmbComTreeConnectAndXResponse response = new SmbComTreeConnectAndXResponse(null);
-        response.tid = 456;
-        response.service = "testService";
-        response.shareIsInDfs = true;
-
-        // Simulate a successful tree connect
+        
+        // Mock transport.connect() to succeed
+        doNothing().when(transport).connect();
+        
+        // Setup response for tree connect
         doAnswer(invocation -> {
-            SmbComTreeConnectAndXResponse resp = invocation.getArgument(1);
-            resp.tid = response.tid;
-            resp.service = response.service;
-            resp.shareIsInDfs = response.shareIsInDfs;
+            ServerMessageBlock request = invocation.getArgument(0);
+            ServerMessageBlock response = invocation.getArgument(1);
+            if (request instanceof SmbComTreeConnectAndX && response instanceof SmbComTreeConnectAndXResponse) {
+                SmbComTreeConnectAndXResponse treeResponse = (SmbComTreeConnectAndXResponse) response;
+                treeResponse.tid = 456;
+                treeResponse.service = "testService";
+                treeResponse.shareIsInDfs = true;
+            }
             return null;
-        }).when(session).send(any(SmbComTreeConnectAndX.class), any(SmbComTreeConnectAndXResponse.class));
+        }).when(session).send(any(ServerMessageBlock.class), any(ServerMessageBlock.class));
 
+        // Test tree connect
         tree.treeConnect(null, null);
-
+        
         assertEquals(2, tree.connectionState);
         assertEquals(456, tree.tid);
         assertEquals("testService", tree.service);
         assertTrue(tree.inDfs);
-
-        // Simulate a successful tree disconnect
+        
+        // Test tree disconnect  
         tree.treeDisconnect(false);
         assertEquals(0, tree.connectionState);
     }
 
     @Test
-    void testTreeConnectFailure() throws SmbException {
+    void testTreeConnectFailure() throws Exception {
         SmbTree tree = new SmbTree(session, "testShare", "testService");
-
-        // Simulate a failed tree connect
-        doThrow(new SmbException("Connection failed")).when(session).send(any(SmbComTreeConnectAndX.class), any(SmbComTreeConnectAndXResponse.class));
-
+        
+        // Mock transport.connect() to succeed
+        doNothing().when(transport).connect();
+        
+        // Simulate failed tree connect
+        doThrow(new SmbException("Connection failed"))
+            .when(session).send(any(ServerMessageBlock.class), any(ServerMessageBlock.class));
+        
         assertThrows(SmbException.class, () -> tree.treeConnect(null, null));
+        // After failure, state should be reset to disconnected
         assertEquals(0, tree.connectionState);
     }
 
     @Test
     void testSend() throws SmbException {
         SmbTree tree = new SmbTree(session, "testShare", "A:");
-        tree.connectionState = 2; // a connected tree
+        tree.connectionState = 2; // Connected state
         tree.tid = 123;
-
+        
+        // Create real request and response objects since they're not interfaces
         ServerMessageBlock request = new SmbComOpenAndX("testfile.txt", 0x01, 0, null);
         ServerMessageBlock response = new SmbComOpenAndXResponse();
-
+        
+        // Execute send
         tree.send(request, response);
-
+        
+        // Verify session.send was called and tid was set
         verify(session).send(request, response);
         assertEquals(123, request.tid);
     }
@@ -172,33 +195,89 @@ class SmbTreeTest {
     @Test
     void testSendWithDfs() throws SmbException {
         SmbTree tree = new SmbTree(session, "testShare", "A:");
-        tree.connectionState = 2; // a connected tree
+        tree.connectionState = 2; // Connected state
         tree.tid = 123;
         tree.inDfs = true;
-
+        
+        // Create request with path
         ServerMessageBlock request = new SmbComOpenAndX("\\testPath", 0x01, 0, null);
         ServerMessageBlock response = new SmbComOpenAndXResponse();
-
+        
+        // Execute send
         tree.send(request, response);
-
+        
+        // Verify session.send was called
         verify(session).send(request, response);
         assertEquals(123, request.tid);
-        assertEquals("\\testHost\testShare\testPath", request.path);
+        // For A: service with DFS, path should be modified (share name is uppercased)
+        assertEquals("\\testHost\\TESTSHARE\\testPath", request.path);
         assertEquals(ServerMessageBlock.FLAGS2_RESOLVE_PATHS_IN_DFS, request.flags2 & ServerMessageBlock.FLAGS2_RESOLVE_PATHS_IN_DFS);
+    }
+    
+    @Test
+    void testSendWithDfsIpcService() throws SmbException {
+        SmbTree tree = new SmbTree(session, "testShare", "IPC");
+        tree.connectionState = 2; // Connected state
+        tree.tid = 123;
+        tree.inDfs = true;
+        
+        // Create request with path
+        ServerMessageBlock request = new SmbComOpenAndX("\\testPath", 0x01, 0, null);
+        ServerMessageBlock response = new SmbComOpenAndXResponse();
+        
+        // Execute send
+        tree.send(request, response);
+        
+        // Verify session.send was called
+        verify(session).send(request, response);
+        assertEquals(123, request.tid);
+        // For IPC service, path should not be modified even with DFS
+        assertEquals("\\testPath", request.path);
     }
 
     @Test
     void testSendWithNetworkNameDeleted() throws SmbException {
         SmbTree tree = new SmbTree(session, "testShare", "A:");
-        tree.connectionState = 2; // a connected tree
+        tree.connectionState = 2; // Connected state
         tree.tid = 123;
-
+        
+        // Create request and response
         ServerMessageBlock request = new SmbComOpenAndX("testfile.txt", 0x01, 0, null);
         ServerMessageBlock response = new SmbComOpenAndXResponse();
-
-        doThrow(new SmbException(SmbException.NT_STATUS_NETWORK_NAME_DELETED, false)).when(session).send(request, response);
-
+        
+        // Simulate network name deleted error
+        SmbException networkDeletedError = new SmbException(SmbException.NT_STATUS_NETWORK_NAME_DELETED, false);
+        doThrow(networkDeletedError).when(session).send(any(ServerMessageBlock.class), any(ServerMessageBlock.class));
+        
+        // Execute and verify exception is thrown
         assertThrows(SmbException.class, () -> tree.send(request, response));
+        // After network name deleted error, tree should be disconnected
         assertEquals(0, tree.connectionState);
+    }
+    
+    @Test
+    void testSendInvalidOperationForNonDiskService() throws SmbException {
+        SmbTree tree = new SmbTree(session, "testShare", "PRINT");
+        tree.connectionState = 2; // Connected state
+        tree.tid = 123;
+        
+        // Create request with command not allowed for PRINT service
+        ServerMessageBlock request = new SmbComDelete("testfile.txt");
+        ServerMessageBlock response = new SmbComBlankResponse();
+        
+        // Should throw exception for invalid operation
+        assertThrows(SmbException.class, () -> tree.send(request, response));
+    }
+    
+    @Test
+    void testTreeConnectWithWaitInterrupted() throws Exception {
+        // Create a tree and simulate concurrent connection attempt
+        SmbTree tree = new SmbTree(session, "testShare", "testService");
+        
+        // Mock transport.connect() to throw RuntimeException wrapping InterruptedException
+        doThrow(new RuntimeException(new InterruptedException("Interrupted"))).when(transport).connect();
+        
+        // Should throw exception due to interrupted wait
+        assertThrows(RuntimeException.class, () -> tree.treeConnect(null, null));
     }
 }

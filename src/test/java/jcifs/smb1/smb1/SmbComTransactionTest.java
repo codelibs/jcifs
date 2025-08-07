@@ -140,7 +140,7 @@ class SmbComTransactionTest {
     void testToString() {
         String result = transaction.toString();
         assertNotNull(result, "toString should not return null");
-        assertTrue(result.contains("com="), "toString should contain command info");
+        assertTrue(result.contains("command="), "toString should contain command info");
     }
 
     @Test

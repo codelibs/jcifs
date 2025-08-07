@@ -153,28 +153,46 @@ class NameServiceClientImplTest {
     @Test
     @DisplayName("Should handle NetBIOS name resolution")
     void testGetNbtByName() throws UnknownHostException {
-        // When/Then - This may throw UnknownHostException for non-existent names
-        assertThrows(UnknownHostException.class, () -> {
-            nameServiceClient.getNbtByName("nonexistent");
+        // When/Then - Should throw UnknownHostException for non-existent names
+        UnknownHostException exception = assertThrows(UnknownHostException.class, () -> {
+            nameServiceClient.getNbtByName("NONEXISTENT");
         }, "Should throw UnknownHostException for non-existent NetBIOS name");
+        
+        // Verify the exception message indicates name resolution failure
+        assertTrue(exception.getMessage().contains("NONEXISTENT") || 
+                   exception.getMessage().contains("unknown") ||
+                   exception.getMessage().contains("not found"),
+                   "Exception message should indicate name resolution failure");
     }
 
     @Test
     @DisplayName("Should handle NetBIOS name with type and scope")
     void testGetNbtByNameWithTypeAndScope() throws UnknownHostException {
-        // When/Then - This may throw UnknownHostException for non-existent names
-        assertThrows(UnknownHostException.class, () -> {
-            nameServiceClient.getNbtByName("nonexistent", 0x20, null);
+        // When/Then - Should throw UnknownHostException for non-existent names
+        UnknownHostException exception = assertThrows(UnknownHostException.class, () -> {
+            nameServiceClient.getNbtByName("NONEXISTENT", 0x20, null);
         }, "Should throw UnknownHostException for non-existent NetBIOS name with type");
+        
+        // Verify the exception message indicates name resolution failure
+        assertTrue(exception.getMessage().contains("NONEXISTENT") || 
+                   exception.getMessage().contains("unknown") ||
+                   exception.getMessage().contains("not found"),
+                   "Exception message should indicate name resolution failure");
     }
 
     @Test
     @DisplayName("Should handle NetBIOS all by name")
     void testGetNbtAllByName() throws UnknownHostException {
-        // When/Then - This may throw UnknownHostException for non-existent names
-        assertThrows(UnknownHostException.class, () -> {
-            nameServiceClient.getNbtAllByAddress("nonexistent");
+        // When/Then - Should throw UnknownHostException for non-existent names
+        UnknownHostException exception = assertThrows(UnknownHostException.class, () -> {
+            nameServiceClient.getNbtAllByAddress("NONEXISTENT");
         }, "Should throw UnknownHostException for non-existent NetBIOS name");
+        
+        // Verify the exception message indicates name resolution failure
+        assertTrue(exception.getMessage().contains("NONEXISTENT") || 
+                   exception.getMessage().contains("unknown") ||
+                   exception.getMessage().contains("not found"),
+                   "Exception message should indicate name resolution failure");
     }
 
     @Test

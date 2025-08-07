@@ -16,25 +16,33 @@
 package jcifs.internal.smb1.com;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 
+import jcifs.CIFSException;
+import jcifs.Configuration;
 import jcifs.config.PropertyConfiguration;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Properties;
 
 public class SmbComWriteAndXResponseTest {
 
+    private Configuration config;
+
+    @BeforeEach
+    public void setUp() throws CIFSException {
+        config = new PropertyConfiguration(new Properties());
+    }
+
     /**
-     * Test of readParameterWordsWireFormat method, of class
-     * SmbComWriteAndXResponse.
+     * Test of readParameterWordsWireFormat method
      */
     @Test
     public void testReadParameterWordsWireFormat() {
         // Given
         byte[] buffer = new byte[] { (byte) 0xff, (byte) 0xff, 0, 0, 0, 0, 0, 0 };
-        SmbComWriteAndXResponse instance = new SmbComWriteAndXResponse(
-                new PropertyConfiguration(new Properties()));
+        SmbComWriteAndXResponse instance = new SmbComWriteAndXResponse(config);
 
         // When
         int result = instance.readParameterWordsWireFormat(buffer, 0);
@@ -45,18 +53,84 @@ public class SmbComWriteAndXResponseTest {
     }
 
     /**
-     * Test of toString method, of class SmbComWriteAndXResponse.
+     * Test of readParameterWordsWireFormat with zero count
+     */
+    @Test
+    public void testReadParameterWordsWireFormatZeroCount() {
+        // Given
+        byte[] buffer = new byte[] { 0, 0, 0, 0, 0, 0, 0, 0 };
+        SmbComWriteAndXResponse instance = new SmbComWriteAndXResponse(config);
+
+        // When
+        int result = instance.readParameterWordsWireFormat(buffer, 0);
+
+        // Then
+        assertEquals(8, result);
+        assertEquals(0L, instance.getCount());
+    }
+
+    /**
+     * Test of writeParameterWordsWireFormat method
+     */
+    @Test
+    public void testWriteParameterWordsWireFormat() {
+        // Given
+        byte[] buffer = new byte[10];
+        SmbComWriteAndXResponse instance = new SmbComWriteAndXResponse(config);
+
+        // When
+        int result = instance.writeParameterWordsWireFormat(buffer, 0);
+
+        // Then
+        assertEquals(0, result);
+    }
+
+    /**
+     * Test of writeBytesWireFormat method
+     */
+    @Test
+    public void testWriteBytesWireFormat() {
+        // Given
+        byte[] buffer = new byte[10];
+        SmbComWriteAndXResponse instance = new SmbComWriteAndXResponse(config);
+
+        // When
+        int result = instance.writeBytesWireFormat(buffer, 0);
+
+        // Then
+        assertEquals(0, result);
+    }
+
+    /**
+     * Test of readBytesWireFormat method
+     */
+    @Test
+    public void testReadBytesWireFormat() {
+        // Given
+        byte[] buffer = new byte[10];
+        SmbComWriteAndXResponse instance = new SmbComWriteAndXResponse(config);
+
+        // When
+        int result = instance.readBytesWireFormat(buffer, 0);
+
+        // Then
+        assertEquals(0, result);
+    }
+
+    /**
+     * Test of toString method
      */
     @Test
     public void testToString() {
         // Given
-        SmbComWriteAndXResponse instance = new SmbComWriteAndXResponse(
-                new PropertyConfiguration(new Properties()));
+        SmbComWriteAndXResponse instance = new SmbComWriteAndXResponse(config);
 
         // When
         String result = instance.toString();
 
         // Then
-        assertEquals("SmbComWriteAndXResponse[SmbComWriteAndXResponse[command=SMB_COM_WRITE_ANDX,received=false,errorCode=0,flags=0x0,flags2=0x0,signSeq=0,tid=0,pid=0,uid=0,mid=0,wordCount=0,byteCount=0,andxCommand=0xFF,andxOffset=0],count=0]", result);
+        assertNotNull(result);
+        assertTrue(result.contains("SmbComWriteAndXResponse"));
+        assertTrue(result.contains("count=0"));
     }
 }

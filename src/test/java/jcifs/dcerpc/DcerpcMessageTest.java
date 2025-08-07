@@ -258,7 +258,7 @@ class DcerpcMessageTest {
             verify(mockBuffer).enc_ndr_short(message.getOpnum()); // opnum
             verify(mockBuffer).enc_ndr_long(12345); // From TestDcerpcMessage.encode_in
             // Verify header encoding including ptype
-            verify(mockBuffer, times(2)).enc_ndr_small(0); // minor version and ptype (both are 0)
+            verify(mockBuffer, times(3)).enc_ndr_small(0); // minor version, ptype (REQUEST=0), and flags (all are 0)
         }
 
         @Test

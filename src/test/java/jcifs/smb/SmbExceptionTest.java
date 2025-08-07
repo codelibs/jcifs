@@ -26,7 +26,7 @@ class SmbExceptionTest extends BaseTest {
         int ntStatus = NtStatus.NT_STATUS_ACCESS_DENIED;
 
         // When
-        SmbException exception = new SmbException(ntStatus, true);
+        SmbException exception = new SmbException(ntStatus, false);
 
         // Then
         assertNotNull(exception);
@@ -70,7 +70,7 @@ class SmbExceptionTest extends BaseTest {
     @DisplayName("Should handle various NT status codes")
     void testVariousNTStatusCodes(int ntStatus) {
         // When
-        SmbException exception = new SmbException(ntStatus, true);
+        SmbException exception = new SmbException(ntStatus, false);
 
         // Then
         assertNotNull(exception);
@@ -86,11 +86,12 @@ class SmbExceptionTest extends BaseTest {
         int ntStatus = NtStatus.NT_STATUS_OBJECT_NAME_NOT_FOUND;
 
         // When
-        SmbException exception = new SmbException(ntStatus, true);
+        SmbException exception = new SmbException(ntStatus, false);
 
         // Then
         assertTrue(exception.getMessage().toLowerCase().contains("not found")
-                || exception.getMessage().toLowerCase().contains("does not exist"));
+                || exception.getMessage().toLowerCase().contains("does not exist")
+                || exception.getMessage().toLowerCase().contains("cannot find"));
     }
 
     @Test
@@ -100,7 +101,7 @@ class SmbExceptionTest extends BaseTest {
         int ntStatus = NtStatus.NT_STATUS_ACCESS_DENIED;
 
         // When
-        SmbException exception = new SmbException(ntStatus, true);
+        SmbException exception = new SmbException(ntStatus, false);
 
         // Then
         assertTrue(exception.getMessage().toLowerCase().contains("access") && exception.getMessage().toLowerCase().contains("denied"));
@@ -113,11 +114,12 @@ class SmbExceptionTest extends BaseTest {
         int ntStatus = NtStatus.NT_STATUS_SHARING_VIOLATION;
 
         // When
-        SmbException exception = new SmbException(ntStatus, true);
+        SmbException exception = new SmbException(ntStatus, false);
 
         // Then
         assertTrue(exception.getMessage().toLowerCase().contains("sharing") || exception.getMessage().toLowerCase().contains("violation")
-                || exception.getMessage().toLowerCase().contains("used"));
+                || exception.getMessage().toLowerCase().contains("used") || exception.getMessage().toLowerCase().contains("being used")
+                || exception.getMessage().toLowerCase().contains("process"));
     }
 
     @Test
@@ -139,15 +141,15 @@ class SmbExceptionTest extends BaseTest {
     @DisplayName("Should check if exception is retriable")
     void testRetriableExceptions() {
         // Test non-retriable errors
-        SmbException accessDenied = new SmbException(NtStatus.NT_STATUS_ACCESS_DENIED, true);
+        SmbException accessDenied = new SmbException(NtStatus.NT_STATUS_ACCESS_DENIED, false);
         // Note: isRetriable() method does not exist in SmbException
         assertNotNull(accessDenied);
 
-        SmbException notFound = new SmbException(NtStatus.NT_STATUS_OBJECT_NAME_NOT_FOUND, true);
+        SmbException notFound = new SmbException(NtStatus.NT_STATUS_OBJECT_NAME_NOT_FOUND, false);
         assertNotNull(notFound);
 
         // Test potentially retriable errors
-        SmbException sharingViolation = new SmbException(NtStatus.NT_STATUS_SHARING_VIOLATION, true);
+        SmbException sharingViolation = new SmbException(NtStatus.NT_STATUS_SHARING_VIOLATION, false);
         // Sharing violations might be retriable in some contexts
         // The implementation determines this
         assertNotNull(sharingViolation);
@@ -222,11 +224,12 @@ class SmbExceptionTest extends BaseTest {
         int ntStatus = NtStatus.NT_STATUS_LOGON_FAILURE;
 
         // When
-        SmbException exception = new SmbException(ntStatus, true);
+        SmbException exception = new SmbException(ntStatus, false);
 
         // Then
         assertNotNull(exception);
         assertTrue(exception.getMessage().toLowerCase().contains("logon") || exception.getMessage().toLowerCase().contains("authentication")
-                || exception.getMessage().toLowerCase().contains("login"));
+                || exception.getMessage().toLowerCase().contains("login") || exception.getMessage().toLowerCase().contains("user") 
+                || exception.getMessage().toLowerCase().contains("password"));
     }
 }

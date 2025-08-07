@@ -99,7 +99,7 @@ class MsrpcDfsRootEnumTest {
         for (int i = 0; i < 3; i++) {
             assertInstanceOf(SmbShareInfo.class, entries[i]);
             assertEquals(rootNames[i], entries[i].getName());
-            assertEquals(0, entries[i].getType());
+            assertEquals(8, entries[i].getType()); // TYPE_SHARE constant value
         }
     }
     
@@ -124,6 +124,7 @@ class MsrpcDfsRootEnumTest {
         assertEquals(1, entries.length);
         assertInstanceOf(SmbShareInfo.class, entries[0]);
         assertEquals("single_share", entries[0].getName());
+        assertEquals(8, entries[0].getType()); // TYPE_SHARE constant value
     }
     
     @Test
@@ -152,9 +153,11 @@ class MsrpcDfsRootEnumTest {
         
         assertInstanceOf(SmbShareInfo.class, entries[0]);
         assertNull(entries[0].getName());
+        assertEquals(8, entries[0].getType()); // TYPE_SHARE constant value
         
         assertInstanceOf(SmbShareInfo.class, entries[1]);
         assertEquals("valid_share", entries[1].getName());
+        assertEquals(8, entries[1].getType()); // TYPE_SHARE constant value
     }
     
     @Test

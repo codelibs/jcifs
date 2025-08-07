@@ -20,7 +20,10 @@ import jcifs.CIFSContext;
 import jcifs.CIFSException;
 import jcifs.Configuration;
 import jcifs.SmbConstants;
+import jcifs.internal.smb1.com.ServerData;
+import jcifs.internal.smb1.com.SmbComNegotiateResponse;
 import jcifs.internal.smb1.com.SmbComTreeConnectAndXResponse;
+import jcifs.internal.smb2.nego.Smb2NegotiateResponse;
 import jcifs.internal.smb2.tree.Smb2TreeConnectResponse;
 
 class SmbTreeImplTest {
@@ -45,6 +48,8 @@ class SmbTreeImplTest {
         when(session.getTransport()).thenReturn(transport);
         when(session.acquire()).thenReturn(session);
         when(config.isTraceResourceUsage()).thenReturn(false);
+        when(context.getConfig()).thenReturn(config);
+        when(session.isConnected()).thenReturn(true);
     }
 
     // Test case for the constructor of SmbTreeImpl
@@ -80,10 +85,15 @@ class SmbTreeImplTest {
         SmbTreeImpl tree = new SmbTreeImpl(session, "SHARE", "A:");
         SmbTreeImpl unwrapped = tree.unwrap(SmbTreeImpl.class);
         assertEquals(tree, unwrapped);
-        // Test unwrapping to a non-SmbTree type should fail
+        // Test unwrapping to a non-assignable type should fail
         assertThrows(ClassCastException.class, () -> {
-            // Try to unwrap to Object which is not a subtype of SmbTree
-            tree.unwrap((Class) Object.class);
+            // Create a mock class that extends SmbTree but is not assignable from SmbTreeImpl
+            class CustomSmbTree extends SmbTreeImpl {
+                CustomSmbTree() {
+                    super(session, "SHARE", "A:");
+                }
+            }
+            tree.unwrap(CustomSmbTree.class);
         });
     }
 
@@ -129,11 +139,24 @@ class SmbTreeImplTest {
     @Test
     void testTreeConnectSmb1() throws CIFSException, IOException {
         when(transport.isSMB2()).thenReturn(false);
+        when(transport.getContext()).thenReturn(context);
         when(session.getTargetHost()).thenReturn("localhost");
+        
+        // Mock negotiate response for SMB1
+        SmbComNegotiateResponse nego = mock(SmbComNegotiateResponse.class);
+        ServerData serverData = new ServerData();
+        when(nego.getServerData()).thenReturn(serverData);
+        when(transport.getNegotiateResponse()).thenReturn(nego);
+        
+        // Mock config methods needed for SMB1
+        when(config.getPid()).thenReturn(1234);
+        
         SmbComTreeConnectAndXResponse response = mock(SmbComTreeConnectAndXResponse.class);
         when(response.getService()).thenReturn("A:");
         when(response.isValidTid()).thenReturn(true);
+        when(response.getTid()).thenReturn(1);
         when(session.send(any(), any())).thenReturn(response);
+        when(config.isIpcSigningEnforced()).thenReturn(false);
 
         SmbTreeImpl tree = new SmbTreeImpl(session, "SHARE", "A:");
         tree.treeConnect(null, null);
@@ -146,11 +169,19 @@ class SmbTreeImplTest {
     @Test
     void testTreeConnectSmb2() throws CIFSException, IOException {
         when(transport.isSMB2()).thenReturn(true);
+        when(transport.getContext()).thenReturn(context);
         when(session.getTargetHost()).thenReturn("localhost");
+        
+        // Mock negotiate response for SMB2
+        Smb2NegotiateResponse nego = mock(Smb2NegotiateResponse.class);
+        when(transport.getNegotiateResponse()).thenReturn(nego);
+        
         Smb2TreeConnectResponse response = mock(Smb2TreeConnectResponse.class);
         when(response.getService()).thenReturn("A:");
         when(response.isValidTid()).thenReturn(true);
+        when(response.getTid()).thenReturn(1);
         when(session.send(any(), any())).thenReturn(response);
+        when(config.isIpcSigningEnforced()).thenReturn(false);
 
         SmbTreeImpl tree = new SmbTreeImpl(session, "SHARE", "A:");
         tree.treeConnect(null, null);
@@ -163,11 +194,19 @@ class SmbTreeImplTest {
     @Test
     void testTreeDisconnect() throws CIFSException, IOException {
         when(transport.isSMB2()).thenReturn(true);
+        when(transport.getContext()).thenReturn(context);
         when(session.getTargetHost()).thenReturn("localhost");
+        
+        // Mock negotiate response for SMB2
+        Smb2NegotiateResponse nego = mock(Smb2NegotiateResponse.class);
+        when(transport.getNegotiateResponse()).thenReturn(nego);
+        
         Smb2TreeConnectResponse response = mock(Smb2TreeConnectResponse.class);
         when(response.getService()).thenReturn("A:");
         when(response.isValidTid()).thenReturn(true);
+        when(response.getTid()).thenReturn(1);
         when(session.send(any(), any())).thenReturn(response);
+        when(config.isIpcSigningEnforced()).thenReturn(false);
 
         SmbTreeImpl tree = new SmbTreeImpl(session, "SHARE", "A:");
         tree.treeConnect(null, null);

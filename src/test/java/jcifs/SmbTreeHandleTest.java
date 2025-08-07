@@ -27,11 +27,12 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 /**
  * Tests for SmbTreeHandle interface.
@@ -39,6 +40,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
  * Each method of the interface is tested to ensure it behaves as expected.
  */
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class SmbTreeHandleTest {
 
     @Mock
@@ -48,28 +50,12 @@ class SmbTreeHandleTest {
     private Configuration mockConfig;
 
     /**
-     * Set up mock behavior before each test.
-     * @throws CIFSException
-     */
-    @BeforeEach
-    void setUp() throws CIFSException {
-        // Basic setup for methods that don't throw exceptions by default
-        when(smbTreeHandle.getConfig()).thenReturn(mockConfig);
-        when(smbTreeHandle.isConnected()).thenReturn(true);
-        when(smbTreeHandle.getServerTimeZoneOffset()).thenReturn(0L);
-        when(smbTreeHandle.getOEMDomainName()).thenReturn("TEST_DOMAIN");
-        when(smbTreeHandle.getConnectedShare()).thenReturn("TEST_SHARE");
-        when(smbTreeHandle.isSMB2()).thenReturn(true);
-        when(smbTreeHandle.getRemoteHostName()).thenReturn("test-server");
-        when(smbTreeHandle.getTreeType()).thenReturn(SmbConstants.TYPE_SHARE);
-    }
-
-    /**
      * Test for getConfig() method.
      * Verifies that the method returns the expected Configuration object.
      */
     @Test
     void testGetConfig() {
+        when(smbTreeHandle.getConfig()).thenReturn(mockConfig);
         Configuration config = smbTreeHandle.getConfig();
         assertNotNull(config, "Configuration should not be null");
         assertEquals(mockConfig, config, "Should return the mock Configuration object");
@@ -104,6 +90,7 @@ class SmbTreeHandleTest {
      */
     @Test
     void testIsConnected() {
+        when(smbTreeHandle.isConnected()).thenReturn(true);
         assertTrue(smbTreeHandle.isConnected(), "isConnected() should return true");
         when(smbTreeHandle.isConnected()).thenReturn(false);
         assertFalse(smbTreeHandle.isConnected(), "isConnected() should return false after status change");
@@ -116,6 +103,7 @@ class SmbTreeHandleTest {
      */
     @Test
     void testGetServerTimeZoneOffset() throws CIFSException {
+        when(smbTreeHandle.getServerTimeZoneOffset()).thenReturn(0L);
         assertEquals(0L, smbTreeHandle.getServerTimeZoneOffset(), "Server time zone offset should be 0");
         when(smbTreeHandle.getServerTimeZoneOffset()).thenReturn(3600000L);
         assertEquals(3600000L, smbTreeHandle.getServerTimeZoneOffset(), "Server time zone offset should be 3600000");
@@ -138,6 +126,7 @@ class SmbTreeHandleTest {
      */
     @Test
     void testGetOEMDomainName() throws CIFSException {
+        when(smbTreeHandle.getOEMDomainName()).thenReturn("TEST_DOMAIN");
         assertEquals("TEST_DOMAIN", smbTreeHandle.getOEMDomainName(), "OEM domain name should be TEST_DOMAIN");
     }
 
@@ -157,6 +146,7 @@ class SmbTreeHandleTest {
      */
     @Test
     void testGetConnectedShare() {
+        when(smbTreeHandle.getConnectedShare()).thenReturn("TEST_SHARE");
         assertEquals("TEST_SHARE", smbTreeHandle.getConnectedShare(), "Connected share should be TEST_SHARE");
     }
 
@@ -180,6 +170,7 @@ class SmbTreeHandleTest {
      */
     @Test
     void testIsSMB2() {
+        when(smbTreeHandle.isSMB2()).thenReturn(true);
         assertTrue(smbTreeHandle.isSMB2(), "isSMB2() should return true");
         when(smbTreeHandle.isSMB2()).thenReturn(false);
         assertFalse(smbTreeHandle.isSMB2(), "isSMB2() should return false after status change");
@@ -191,6 +182,7 @@ class SmbTreeHandleTest {
      */
     @Test
     void testGetRemoteHostName() {
+        when(smbTreeHandle.getRemoteHostName()).thenReturn("test-server");
         assertEquals("test-server", smbTreeHandle.getRemoteHostName(), "Remote host name should be test-server");
     }
 
@@ -200,6 +192,7 @@ class SmbTreeHandleTest {
      */
     @Test
     void testGetTreeType() {
+        when(smbTreeHandle.getTreeType()).thenReturn(SmbConstants.TYPE_SHARE);
         assertEquals(SmbConstants.TYPE_SHARE, smbTreeHandle.getTreeType(), "Tree type should be TYPE_SHARE");
         when(smbTreeHandle.getTreeType()).thenReturn(SmbConstants.TYPE_PRINTER);
         assertEquals(SmbConstants.TYPE_PRINTER, smbTreeHandle.getTreeType(), "Tree type should be TYPE_PRINTER");

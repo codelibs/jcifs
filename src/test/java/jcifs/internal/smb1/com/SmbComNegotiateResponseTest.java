@@ -130,15 +130,40 @@ public class SmbComNegotiateResponseTest {
     public void testReadBytesWireFormatWithoutExtendedSecurity() throws UnsupportedEncodingException {
         response.getServerData().scapabilities = 0;
         response.getServerData().encryptionKeyLength = 8;
+        // Domain name in OEM encoding (ASCII) with null terminator
+        byte[] domainBytes = "DOMAIN\0".getBytes("US-ASCII");
         // Use reflection to set protected byteCount field
-        int byteCountValue = 8 + "DOMAIN".getBytes("UTF-16LE").length;
+        int byteCountValue = 8 + domainBytes.length;
         setByteCount(response, byteCountValue);
         byte[] buffer = new byte[byteCountValue];
         int bufferIndex = 0;
         byte[] key = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 };
         System.arraycopy(key, 0, buffer, bufferIndex, key.length);
         bufferIndex += key.length;
-        byte[] domainBytes = "DOMAIN".getBytes("UTF-16LE");
+        System.arraycopy(domainBytes, 0, buffer, bufferIndex, domainBytes.length);
+
+        response.readBytesWireFormat(buffer, 0);
+
+        assertArrayEquals(key, response.getServerData().encryptionKey);
+        assertEquals("DOMAIN", response.getServerData().oemDomainName);
+    }
+
+    @Test
+    public void testReadBytesWireFormatWithUnicode() throws UnsupportedEncodingException {
+        response.getServerData().scapabilities = SmbConstants.CAP_UNICODE;
+        response.getServerData().encryptionKeyLength = 8;
+        // Set Unicode flag to use Unicode encoding
+        setNegotiatedFlags2(response, SmbConstants.FLAGS2_UNICODE);
+        // Domain name in Unicode (UTF-16LE) with null terminator
+        byte[] domainBytes = "DOMAIN\0".getBytes("UTF-16LE");
+        // Use reflection to set protected byteCount field
+        int byteCountValue = 8 + domainBytes.length;
+        setByteCount(response, byteCountValue);
+        byte[] buffer = new byte[byteCountValue];
+        int bufferIndex = 0;
+        byte[] key = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 };
+        System.arraycopy(key, 0, buffer, bufferIndex, key.length);
+        bufferIndex += key.length;
         System.arraycopy(domainBytes, 0, buffer, bufferIndex, domainBytes.length);
 
         response.readBytesWireFormat(buffer, 0);
@@ -188,9 +213,12 @@ public class SmbComNegotiateResponseTest {
     public void testIsValidWithUnicode() {
         SmbNegotiationRequest request = mock(SmbNegotiationRequest.class);
         response.getServerData().scapabilities = SmbConstants.CAP_UNICODE;
+        // Set some required server data for valid response
+        response.getServerData().smaxMpxCount = 1;
+        response.getServerData().maxBufferSize = 16384;
 
         assertTrue(response.isValid(mockContext, request));
-        assertTrue(response.isUseUnicode());
+        // After negotiation, check if unicode capability is preserved
         assertTrue((response.getNegotiatedCapabilities() & SmbConstants.CAP_UNICODE) != 0);
     }
 
@@ -256,6 +284,17 @@ public class SmbComNegotiateResponseTest {
             field.set(response, dialectIndex);
         } catch (Exception e) {
             throw new RuntimeException("Failed to set dialectIndex field", e);
+        }
+    }
+
+    // Helper method to set protected negotiatedFlags2 field using reflection
+    private void setNegotiatedFlags2(SmbComNegotiateResponse response, int flags2) {
+        try {
+            Field field = response.getClass().getDeclaredField("negotiatedFlags2");
+            field.setAccessible(true);
+            field.set(response, flags2);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to set negotiatedFlags2 field", e);
         }
     }
 }

@@ -3,6 +3,7 @@ package jcifs.dcerpc;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doCallRealMethod;
@@ -109,16 +110,16 @@ class DcerpcPipeHandleTest {
         handleField.setAccessible(true);
         handleField.set(handle, mockSmbPipeHandleInternal);
 
-        // Setup real method calls for the methods we want to test
-        when(handle.getTransportContext()).thenCallRealMethod();
-        when(handle.getServer()).thenCallRealMethod();
-        when(handle.getServerWithDfs()).thenCallRealMethod();
-        when(handle.getSessionKey()).thenCallRealMethod();
-        when(handle.getBinding()).thenReturn(mockDcerpcBinding);
-        doCallRealMethod().when(handle).doSendReceiveFragment(any(byte[].class), anyInt(), anyInt(), any(byte[].class));
-        doCallRealMethod().when(handle).doSendFragment(any(byte[].class), anyInt(), anyInt());
-        doCallRealMethod().when(handle).doReceiveFragment(any(byte[].class));
-        doCallRealMethod().when(handle).close();
+        // Setup real method calls for the methods we want to test - use lenient to avoid unnecessary stubbing
+        lenient().when(handle.getTransportContext()).thenCallRealMethod();
+        lenient().when(handle.getServer()).thenCallRealMethod();
+        lenient().when(handle.getServerWithDfs()).thenCallRealMethod();
+        lenient().when(handle.getSessionKey()).thenCallRealMethod();
+        lenient().when(handle.getBinding()).thenReturn(mockDcerpcBinding);
+        lenient().doCallRealMethod().when(handle).doSendReceiveFragment(any(byte[].class), anyInt(), anyInt(), any(byte[].class));
+        lenient().doCallRealMethod().when(handle).doSendFragment(any(byte[].class), anyInt(), anyInt());
+        lenient().doCallRealMethod().when(handle).doReceiveFragment(any(byte[].class));
+        lenient().doCallRealMethod().when(handle).close();
         
         // Add getMaxRecv() to return correct value
         lenient().when(handle.getMaxRecv()).thenReturn(4280);
@@ -324,7 +325,7 @@ class DcerpcPipeHandleTest {
             byte[] buf = new byte[4280];  // Use maxRecv size
             
             // Mock initial receive with valid PDU header
-            when(mockSmbPipeHandleInternal.recv(buf, 0, 4280)).thenAnswer(invocation -> {
+            when(mockSmbPipeHandleInternal.recv(buf, 0, buf.length)).thenAnswer(invocation -> {
                 byte[] buffer = invocation.getArgument(0);
                 buffer[0] = 5; // Valid PDU version
                 buffer[1] = 0; // Valid PDU type
@@ -358,7 +359,7 @@ class DcerpcPipeHandleTest {
             
             byte[] buf = new byte[4280];
             
-            when(mockSmbPipeHandleInternal.recv(buf, 0, 4280)).thenAnswer(invocation -> {
+            when(mockSmbPipeHandleInternal.recv(buf, 0, buf.length)).thenAnswer(invocation -> {
                 byte[] buffer = invocation.getArgument(0);
                 buffer[0] = 1; // Invalid PDU version
                 buffer[1] = 0;
@@ -376,7 +377,7 @@ class DcerpcPipeHandleTest {
             
             byte[] buf = new byte[4280];
             
-            when(mockSmbPipeHandleInternal.recv(buf, 0, 4280)).thenAnswer(invocation -> {
+            when(mockSmbPipeHandleInternal.recv(buf, 0, buf.length)).thenAnswer(invocation -> {
                 byte[] buffer = invocation.getArgument(0);
                 buffer[0] = 5;
                 buffer[1] = 0;
@@ -395,7 +396,7 @@ class DcerpcPipeHandleTest {
             
             byte[] buf = new byte[4280];
             
-            when(mockSmbPipeHandleInternal.recv(buf, 0, 4280)).thenAnswer(invocation -> {
+            when(mockSmbPipeHandleInternal.recv(buf, 0, buf.length)).thenAnswer(invocation -> {
                 byte[] buffer = invocation.getArgument(0);
                 buffer[0] = 5;
                 buffer[1] = 0;
@@ -419,8 +420,12 @@ class DcerpcPipeHandleTest {
         void testClose_Success() throws Exception {
             DcerpcPipeHandle handle = createMockedDcerpcPipeHandle();
             
-            // Mock parent close() to do nothing
-            doNothing().when((DcerpcHandle)handle).close();
+            // Mock parent close() to do nothing - explicitly mock the super.close() behavior
+            // The close method calls super.close(), then handle.close(), then pipe.close()
+            lenient().doNothing().when((DcerpcHandle)handle).close();
+            
+            // Setup close to call real method which will then call our mocked components
+            doCallRealMethod().when(handle).close();
             
             handle.close();
             
@@ -434,13 +439,24 @@ class DcerpcPipeHandleTest {
             DcerpcPipeHandle handle = createMockedDcerpcPipeHandle();
             
             // Mock parent close() method
-            doNothing().when((DcerpcHandle)handle).close();
+            lenient().doNothing().when((DcerpcHandle)handle).close();
             
-            doThrow(new IOException("Handle close failed"))
+            IOException handleCloseException = new IOException("Handle close failed");
+            doThrow(handleCloseException)
                 .when(mockSmbPipeHandleInternal).close();
             
+            // Setup close to call real method
+            doCallRealMethod().when(handle).close();
+            
             // The finally block ensures pipe is closed even if handle close fails
-            handle.close();
+            // Since the real method will propagate the exception from handle.close(),
+            // we need to catch it to verify that pipe.close() was still called
+            try {
+                handle.close();
+                fail("Expected IOException to be thrown");
+            } catch (IOException e) {
+                assertEquals("Handle close failed", e.getMessage());
+            }
             
             verify(mockSmbPipeHandleInternal).close();
             verify(mockSmbNamedPipe).close(); // Should still be called due to finally block
