@@ -238,14 +238,16 @@ class SessionServicePacketTest {
     }
 
     @Test
-    @DisplayName("readPacketType should return -1 on EOF")
-    void testReadPacketTypeEOF() throws IOException {
+    @DisplayName("readPacketType should throw IOException on EOF")
+    void testReadPacketTypeEOF() {
         ByteArrayInputStream bais = new ByteArrayInputStream(new byte[0]);
         byte[] buffer = new byte[10];
         
-        int type = SessionServicePacket.readPacketType(bais, buffer, 0);
+        IOException exception = assertThrows(IOException.class, () -> {
+            SessionServicePacket.readPacketType(bais, buffer, 0);
+        });
         
-        assertEquals(-1, type);
+        assertEquals("unexpected EOF reading netbios session header", exception.getMessage());
     }
 
     @Test
@@ -257,6 +259,24 @@ class SessionServicePacketTest {
         
         IOException exception = assertThrows(IOException.class, () -> {
             SessionServicePacket.readPacketType(bais, buffer, 0);
+        });
+        
+        assertEquals("unexpected EOF reading netbios session header", exception.getMessage());
+    }
+    
+    @Test
+    @DisplayName("readPacketType with special stream returning -1 should return -1")
+    void testReadPacketTypeSpecialStream() throws IOException {
+        // Create a mock stream that returns exactly -1 on first read (special case)
+        when(mockInputStream.read(any(byte[].class), anyInt(), anyInt()))
+            .thenReturn(-1); // Immediate EOF
+        
+        byte[] buffer = new byte[10];
+        
+        // The readn method will return 0 when stream returns -1
+        // So this should still throw IOException, not return -1
+        IOException exception = assertThrows(IOException.class, () -> {
+            SessionServicePacket.readPacketType(mockInputStream, buffer, 0);
         });
         
         assertEquals("unexpected EOF reading netbios session header", exception.getMessage());

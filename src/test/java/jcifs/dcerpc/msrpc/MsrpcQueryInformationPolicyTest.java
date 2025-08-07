@@ -48,8 +48,8 @@ class MsrpcQueryInformationPolicyTest {
         
         // Assert
         assertNotNull(queryPolicy);
-        assertEquals(0, queryPolicy.ptype);
-        assertEquals(DcerpcConstants.DCERPC_FIRST_FRAG | DcerpcConstants.DCERPC_LAST_FRAG, queryPolicy.flags);
+        assertEquals(0, queryPolicy.getPtype());
+        assertEquals(DcerpcConstants.DCERPC_FIRST_FRAG | DcerpcConstants.DCERPC_LAST_FRAG, queryPolicy.getFlags());
     }
     
     @Test
@@ -136,7 +136,7 @@ class MsrpcQueryInformationPolicyTest {
         queryPolicy = new MsrpcQueryInformationPolicy(mockPolicyHandle, level, mockNdrObject);
         
         // Assert
-        assertEquals(0, queryPolicy.ptype);
+        assertEquals(0, queryPolicy.getPtype());
     }
     
     @Test
@@ -149,9 +149,9 @@ class MsrpcQueryInformationPolicyTest {
         queryPolicy = new MsrpcQueryInformationPolicy(mockPolicyHandle, level, mockNdrObject);
         
         // Assert
-        assertEquals(expectedFlags, queryPolicy.flags);
+        assertEquals(expectedFlags, queryPolicy.getFlags());
         // Binary check for individual flags
-        assertEquals(0x03, queryPolicy.flags); // 0x01 | 0x02 = 0x03
+        assertEquals(0x03, queryPolicy.getFlags()); // 0x01 | 0x02 = 0x03
     }
     
     @Test

@@ -52,7 +52,7 @@ class NameTest {
         String longName = "ThisIsAVeryLongNameThatExceeds15Characters";
         Name name = new Name(mockConfig, longName, 0x20, null);
         
-        assertEquals("THISISAVERYLON", name.name);
+        assertEquals("THISISAVERYLONG", name.name);
         assertEquals(15, name.name.length());
     }
     
@@ -146,9 +146,9 @@ class NameTest {
         assertEquals(0x20, dst[0]);
         
         // Check encoded name (TEST -> encoded as pairs)
-        // T = 0x54 -> upper nibble: 0x50 -> 0x45 (E), lower nibble: 0x04 -> 0x44 (D)
-        assertEquals('E', dst[1]); // (0x54 >> 4) + 0x41 = 0x45 = 'E'
-        assertEquals('E', dst[2]); // (0x54 & 0x0F) + 0x41 = 0x44 + 1 = 'E'
+        // T = 0x54 -> upper nibble: 0x5 -> 0x46 (F), lower nibble: 0x4 -> 0x45 (E)
+        assertEquals('F', dst[1]); // (0x54 >> 4) + 0x41 = 0x46 = 'F'
+        assertEquals('E', dst[2]); // (0x54 & 0x0F) + 0x41 = 0x45 = 'E'
         
         // Check padding (positions 8-30 should be 'CA' pairs for spaces)
         for (int i = 8; i < 31; i += 2) {
@@ -171,8 +171,9 @@ class NameTest {
         
         int length = name.writeWireFormat(dst, 0);
         
-        // Scope should start at position 33
-        assertEquals('.', dst[33]);
+        // Scope should start at position 33 with a length byte (not '.')
+        // The first byte after encoding would be the length of "scope"
+        assertEquals(5, dst[33]); // Length of "scope"
         
         // Verify total length includes scope
         assertEquals(33 + name.scope.length() + 2, length);
@@ -185,12 +186,16 @@ class NameTest {
         src[0] = 0x20; // First byte
         
         // Encode "TEST" (0x54 0x45 0x53 0x54)
-        src[1] = 'E'; src[2] = 'E';  // T
+        // T=0x54: upper nibble 0x5->F(0x46), lower nibble 0x4->E(0x45)
+        src[1] = 'F'; src[2] = 'E';  // T
+        // E=0x45: upper nibble 0x4->E(0x45), lower nibble 0x5->F(0x46)
         src[3] = 'E'; src[4] = 'F';  // E
-        src[5] = 'E'; src[6] = 'D';  // S
-        src[7] = 'E'; src[8] = 'E';  // T
+        // S=0x53: upper nibble 0x5->F(0x46), lower nibble 0x3->D(0x44)
+        src[5] = 'F'; src[6] = 'D';  // S
+        // T=0x54: upper nibble 0x5->F(0x46), lower nibble 0x4->E(0x45)
+        src[7] = 'F'; src[8] = 'E';  // T
         
-        // Fill padding with encoded spaces
+        // Fill padding with encoded spaces (0x20)
         for (int i = 9; i < 31; i += 2) {
             src[i] = 'C';
             src[i + 1] = 'A';
@@ -253,8 +258,8 @@ class NameTest {
         
         int length = name.writeScopeWireFormat(dst, 0);
         
-        // Should start with '.'
-        assertEquals('.', dst[0]);
+        // After processing, should start with length byte for "test" (4)
+        assertEquals(4, dst[0]);
         
         // Should end with 0x00
         assertEquals(0x00, dst[length - 1]);
@@ -424,11 +429,15 @@ class NameTest {
         byte[] src = new byte[100];
         src[0] = 0x20;
         
-        // Encode "TEST"
-        src[1] = 'E'; src[2] = 'E';  // T
+        // Encode "TEST" correctly
+        // T=0x54: upper nibble 0x5->F(0x46), lower nibble 0x4->E(0x45)
+        src[1] = 'F'; src[2] = 'E';  // T
+        // E=0x45: upper nibble 0x4->E(0x45), lower nibble 0x5->F(0x46)
         src[3] = 'E'; src[4] = 'F';  // E
-        src[5] = 'E'; src[6] = 'D';  // S
-        src[7] = 'E'; src[8] = 'E';  // T
+        // S=0x53: upper nibble 0x5->F(0x46), lower nibble 0x3->D(0x44)
+        src[5] = 'F'; src[6] = 'D';  // S
+        // T=0x54: upper nibble 0x5->F(0x46), lower nibble 0x4->E(0x45)
+        src[7] = 'F'; src[8] = 'E';  // T
         
         // Encode spaces (0x20)
         for (int i = 9; i < 31; i += 2) {
@@ -484,11 +493,15 @@ class NameTest {
         // Prepare encoded data at offset
         src[offset] = 0x20;
         
-        // Encode "TEST" at offset
-        src[offset + 1] = 'E'; src[offset + 2] = 'E';
+        // Encode "TEST" at offset correctly
+        // T=0x54: upper nibble 0x5->F(0x46), lower nibble 0x4->E(0x45)
+        src[offset + 1] = 'F'; src[offset + 2] = 'E';
+        // E=0x45: upper nibble 0x4->E(0x45), lower nibble 0x5->F(0x46)
         src[offset + 3] = 'E'; src[offset + 4] = 'F';
-        src[offset + 5] = 'E'; src[offset + 6] = 'D';
-        src[offset + 7] = 'E'; src[offset + 8] = 'E';
+        // S=0x53: upper nibble 0x5->F(0x46), lower nibble 0x3->D(0x44)
+        src[offset + 5] = 'F'; src[offset + 6] = 'D';
+        // T=0x54: upper nibble 0x5->F(0x46), lower nibble 0x4->E(0x45)
+        src[offset + 7] = 'F'; src[offset + 8] = 'E';
         
         // Fill padding
         for (int i = 9; i < 31; i += 2) {
@@ -515,12 +528,12 @@ class NameTest {
         
         int length = name.writeScopeWireFormat(dst, 0);
         
-        // First byte should be '.'
-        assertEquals('.', dst[0]);
+        // First byte should be length of "test" (4) after processing
+        assertEquals(4, dst[0]);
         
         // After processing, dots should be replaced with length markers
         // The scope processing happens backwards
-        assertTrue(length > name.scope.length());
+        assertEquals(name.scope.length() + 2, length);
     }
     
     @Test

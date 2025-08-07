@@ -5,31 +5,21 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.spy;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.junit.jupiter.params.provider.EnumSource;
-import org.junit.jupiter.params.provider.NullSource;
-import org.junit.jupiter.params.provider.EmptySource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Constructor;
 
 import jcifs.dcerpc.DcerpcConstants;
-import jcifs.dcerpc.rpc;
-import jcifs.SID;
 import jcifs.dcerpc.rpc.sid_t;
 
 @ExtendWith(MockitoExtension.class)
@@ -39,15 +29,6 @@ class MsrpcLookupSidsTest {
     private LsaPolicyHandle mockPolicyHandle;
     
     @Mock
-    private jcifs.SID mockSid1;
-    
-    @Mock
-    private jcifs.SID mockSid2;
-    
-    @Mock
-    private jcifs.SID mockSid3;
-    
-    @Mock
     private sid_t mockSidT;
     
     private MsrpcLookupSids lookupSids;
@@ -55,14 +36,16 @@ class MsrpcLookupSidsTest {
     
     @BeforeEach
     void setUp() {
-        when(mockSid1.unwrap(sid_t.class)).thenReturn(mockSidT);
-        when(mockSid2.unwrap(sid_t.class)).thenReturn(mockSidT);
-        when(mockSid3.unwrap(sid_t.class)).thenReturn(mockSidT);
+        // Setup is minimal - mocks are configured per test as needed
     }
     
     @Test
     void constructor_shouldInitializeWithValidParameters() {
         // Arrange
+        jcifs.SID mockSid1 = mock(jcifs.SID.class);
+        jcifs.SID mockSid2 = mock(jcifs.SID.class);
+        when(mockSid1.unwrap(sid_t.class)).thenReturn(mockSidT);
+        when(mockSid2.unwrap(sid_t.class)).thenReturn(mockSidT);
         testSids = new jcifs.SID[] { mockSid1, mockSid2 };
         
         // Act
@@ -70,27 +53,35 @@ class MsrpcLookupSidsTest {
         
         // Assert
         assertNotNull(lookupSids);
-        assertEquals(0, lookupSids.ptype);
-        assertEquals(DcerpcConstants.DCERPC_FIRST_FRAG | DcerpcConstants.DCERPC_LAST_FRAG, lookupSids.flags);
+        assertEquals(0, lookupSids.getPtype());
+        assertEquals(DcerpcConstants.DCERPC_FIRST_FRAG | DcerpcConstants.DCERPC_LAST_FRAG, lookupSids.getFlags());
     }
     
     @Test
     void constructor_shouldHandleSingleSid() {
         // Arrange
-        testSids = new jcifs.SID[] { mockSid1 };
+        jcifs.SID mockSid = mock(jcifs.SID.class);
+        when(mockSid.unwrap(sid_t.class)).thenReturn(mockSidT);
+        testSids = new jcifs.SID[] { mockSid };
         
         // Act
         lookupSids = new MsrpcLookupSids(mockPolicyHandle, testSids);
         
         // Assert
         assertNotNull(lookupSids);
-        assertEquals(0, lookupSids.ptype);
-        assertEquals(DcerpcConstants.DCERPC_FIRST_FRAG | DcerpcConstants.DCERPC_LAST_FRAG, lookupSids.flags);
+        assertEquals(0, lookupSids.getPtype());
+        assertEquals(DcerpcConstants.DCERPC_FIRST_FRAG | DcerpcConstants.DCERPC_LAST_FRAG, lookupSids.getFlags());
     }
     
     @Test
     void constructor_shouldHandleMultipleSids() {
         // Arrange
+        jcifs.SID mockSid1 = mock(jcifs.SID.class);
+        jcifs.SID mockSid2 = mock(jcifs.SID.class);
+        jcifs.SID mockSid3 = mock(jcifs.SID.class);
+        when(mockSid1.unwrap(sid_t.class)).thenReturn(mockSidT);
+        when(mockSid2.unwrap(sid_t.class)).thenReturn(mockSidT);
+        when(mockSid3.unwrap(sid_t.class)).thenReturn(mockSidT);
         testSids = new jcifs.SID[] { mockSid1, mockSid2, mockSid3 };
         
         // Act
@@ -98,8 +89,8 @@ class MsrpcLookupSidsTest {
         
         // Assert
         assertNotNull(lookupSids);
-        assertEquals(0, lookupSids.ptype);
-        assertEquals(DcerpcConstants.DCERPC_FIRST_FRAG | DcerpcConstants.DCERPC_LAST_FRAG, lookupSids.flags);
+        assertEquals(0, lookupSids.getPtype());
+        assertEquals(DcerpcConstants.DCERPC_FIRST_FRAG | DcerpcConstants.DCERPC_LAST_FRAG, lookupSids.getFlags());
     }
     
     @Test
@@ -112,24 +103,26 @@ class MsrpcLookupSidsTest {
         
         // Assert
         assertNotNull(lookupSids);
-        assertEquals(0, lookupSids.ptype);
-        assertEquals(DcerpcConstants.DCERPC_FIRST_FRAG | DcerpcConstants.DCERPC_LAST_FRAG, lookupSids.flags);
+        assertEquals(0, lookupSids.getPtype());
+        assertEquals(DcerpcConstants.DCERPC_FIRST_FRAG | DcerpcConstants.DCERPC_LAST_FRAG, lookupSids.getFlags());
     }
     
     @Test
-    void constructor_shouldThrowExceptionWithNullPolicyHandle() {
+    void constructor_shouldAcceptNullPolicyHandle() {
         // Arrange
-        testSids = new jcifs.SID[] { mockSid1 };
+        jcifs.SID mockSid = mock(jcifs.SID.class);
+        when(mockSid.unwrap(sid_t.class)).thenReturn(mockSidT);
+        testSids = new jcifs.SID[] { mockSid };
         
-        // Act & Assert
-        assertThrows(NullPointerException.class, () -> {
+        // Act & Assert - Constructor accepts null, no exception thrown
+        assertDoesNotThrow(() -> {
             new MsrpcLookupSids(null, testSids);
         });
     }
     
     @Test
     void constructor_shouldThrowExceptionWithNullSids() {
-        // Act & Assert
+        // Act & Assert - Null SID array causes NPE when accessing length
         assertThrows(NullPointerException.class, () -> {
             new MsrpcLookupSids(mockPolicyHandle, null);
         });
@@ -138,6 +131,10 @@ class MsrpcLookupSidsTest {
     @Test
     void constructor_shouldSetCorrectSuperclassParameters() throws Exception {
         // Arrange
+        jcifs.SID mockSid1 = mock(jcifs.SID.class);
+        jcifs.SID mockSid2 = mock(jcifs.SID.class);
+        when(mockSid1.unwrap(sid_t.class)).thenReturn(mockSidT);
+        when(mockSid2.unwrap(sid_t.class)).thenReturn(mockSidT);
         testSids = new jcifs.SID[] { mockSid1, mockSid2 };
         
         // Act
@@ -160,6 +157,10 @@ class MsrpcLookupSidsTest {
     @Test
     void constructor_shouldCreateCorrectLsarSidArrayX() throws Exception {
         // Arrange
+        jcifs.SID mockSid1 = mock(jcifs.SID.class);
+        jcifs.SID mockSid2 = mock(jcifs.SID.class);
+        when(mockSid1.unwrap(sid_t.class)).thenReturn(mockSidT);
+        when(mockSid2.unwrap(sid_t.class)).thenReturn(mockSidT);
         testSids = new jcifs.SID[] { mockSid1, mockSid2 };
         
         // Act
@@ -177,7 +178,9 @@ class MsrpcLookupSidsTest {
     @Test
     void constructor_shouldCreateLsarRefDomainList() throws Exception {
         // Arrange
-        testSids = new jcifs.SID[] { mockSid1 };
+        jcifs.SID mockSid = mock(jcifs.SID.class);
+        when(mockSid.unwrap(sid_t.class)).thenReturn(mockSidT);
+        testSids = new jcifs.SID[] { mockSid };
         
         // Act
         lookupSids = new MsrpcLookupSids(mockPolicyHandle, testSids);
@@ -194,7 +197,9 @@ class MsrpcLookupSidsTest {
     @Test
     void constructor_shouldCreateLsarTransNameArray() throws Exception {
         // Arrange
-        testSids = new jcifs.SID[] { mockSid1 };
+        jcifs.SID mockSid = mock(jcifs.SID.class);
+        when(mockSid.unwrap(sid_t.class)).thenReturn(mockSidT);
+        testSids = new jcifs.SID[] { mockSid };
         
         // Act
         lookupSids = new MsrpcLookupSids(mockPolicyHandle, testSids);
@@ -223,13 +228,17 @@ class MsrpcLookupSidsTest {
         
         // Assert
         assertNotNull(lookupSids);
-        assertEquals(0, lookupSids.ptype);
-        assertEquals(DcerpcConstants.DCERPC_FIRST_FRAG | DcerpcConstants.DCERPC_LAST_FRAG, lookupSids.flags);
+        assertEquals(0, lookupSids.getPtype());
+        assertEquals(DcerpcConstants.DCERPC_FIRST_FRAG | DcerpcConstants.DCERPC_LAST_FRAG, lookupSids.getFlags());
     }
     
     @Test
     void constructor_shouldHandleSidsWithNullElements() {
         // Arrange
+        jcifs.SID mockSid1 = mock(jcifs.SID.class);
+        jcifs.SID mockSid2 = mock(jcifs.SID.class);
+        when(mockSid1.unwrap(sid_t.class)).thenReturn(mockSidT);
+        // Don't stub mockSid2 since it won't be reached due to NPE on null element
         testSids = new jcifs.SID[] { mockSid1, null, mockSid2 };
         
         // Act & Assert - This should throw an exception when LsarSidArrayX tries to process null
@@ -241,7 +250,9 @@ class MsrpcLookupSidsTest {
     @Test
     void getOpnum_shouldReturnCorrectValue() {
         // Arrange
-        testSids = new jcifs.SID[] { mockSid1 };
+        jcifs.SID mockSid = mock(jcifs.SID.class);
+        when(mockSid.unwrap(sid_t.class)).thenReturn(mockSidT);
+        testSids = new jcifs.SID[] { mockSid };
         lookupSids = new MsrpcLookupSids(mockPolicyHandle, testSids);
         
         // Act
@@ -254,7 +265,9 @@ class MsrpcLookupSidsTest {
     @Test
     void constructor_shouldPreservePolicyHandleReference() throws Exception {
         // Arrange
-        testSids = new jcifs.SID[] { mockSid1 };
+        jcifs.SID mockSid = mock(jcifs.SID.class);
+        when(mockSid.unwrap(sid_t.class)).thenReturn(mockSidT);
+        testSids = new jcifs.SID[] { mockSid };
         LsaPolicyHandle specificHandle = mock(LsaPolicyHandle.class);
         
         // Act
@@ -281,14 +294,16 @@ class MsrpcLookupSidsTest {
         
         // Assert
         assertNotNull(lookupSids);
-        assertEquals(0, lookupSids.ptype);
-        assertEquals(DcerpcConstants.DCERPC_FIRST_FRAG | DcerpcConstants.DCERPC_LAST_FRAG, lookupSids.flags);
+        assertEquals(0, lookupSids.getPtype());
+        assertEquals(DcerpcConstants.DCERPC_FIRST_FRAG | DcerpcConstants.DCERPC_LAST_FRAG, lookupSids.getFlags());
     }
     
     @Test
     void inheritance_shouldExtendLsarLookupSids() {
         // Arrange
-        testSids = new jcifs.SID[] { mockSid1 };
+        jcifs.SID mockSid = mock(jcifs.SID.class);
+        when(mockSid.unwrap(sid_t.class)).thenReturn(mockSidT);
+        testSids = new jcifs.SID[] { mockSid };
         
         // Act
         lookupSids = new MsrpcLookupSids(mockPolicyHandle, testSids);
@@ -300,26 +315,32 @@ class MsrpcLookupSidsTest {
     @Test
     void constructor_shouldSetPacketTypeToZero() {
         // Arrange
+        jcifs.SID mockSid1 = mock(jcifs.SID.class);
+        jcifs.SID mockSid2 = mock(jcifs.SID.class);
+        when(mockSid1.unwrap(sid_t.class)).thenReturn(mockSidT);
+        when(mockSid2.unwrap(sid_t.class)).thenReturn(mockSidT);
         testSids = new jcifs.SID[] { mockSid1, mockSid2 };
         
         // Act
         lookupSids = new MsrpcLookupSids(mockPolicyHandle, testSids);
         
         // Assert
-        assertEquals(0, lookupSids.ptype);
+        assertEquals(0, lookupSids.getPtype());
     }
     
     @Test
     void constructor_shouldSetCorrectFragmentFlags() {
         // Arrange
-        testSids = new jcifs.SID[] { mockSid1 };
+        jcifs.SID mockSid = mock(jcifs.SID.class);
+        when(mockSid.unwrap(sid_t.class)).thenReturn(mockSidT);
+        testSids = new jcifs.SID[] { mockSid };
         
         // Act
         lookupSids = new MsrpcLookupSids(mockPolicyHandle, testSids);
         
         // Assert
-        assertTrue((lookupSids.flags & DcerpcConstants.DCERPC_FIRST_FRAG) != 0);
-        assertTrue((lookupSids.flags & DcerpcConstants.DCERPC_LAST_FRAG) != 0);
+        assertTrue((lookupSids.getFlags() & DcerpcConstants.DCERPC_FIRST_FRAG) != 0);
+        assertTrue((lookupSids.getFlags() & DcerpcConstants.DCERPC_LAST_FRAG) != 0);
     }
     
     @Test

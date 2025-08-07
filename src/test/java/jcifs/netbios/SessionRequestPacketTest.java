@@ -34,6 +34,8 @@ class SessionRequestPacketTest {
     void setUp() {
         MockitoAnnotations.openMocks(this);
         when(mockConfig.getNetbiosScope()).thenReturn(null);
+        // Configure OEM encoding to avoid NullPointerException
+        when(mockConfig.getOemEncoding()).thenReturn("UTF-8");
     }
 
     @Test
@@ -133,8 +135,10 @@ class SessionRequestPacketTest {
         SessionRequestPacket packet = new SessionRequestPacket(mockConfig);
         packet.length = 100; // Expect more data than available
         
+        // Create a larger buffer for reading to avoid IndexOutOfBoundsException
+        byte[] readBuffer = new byte[100];
         assertThrows(IOException.class, () -> {
-            packet.readTrailerWireFormat(bais, buffer, 0);
+            packet.readTrailerWireFormat(bais, readBuffer, 0);
         });
     }
 
@@ -147,8 +151,10 @@ class SessionRequestPacketTest {
         SessionRequestPacket packet = new SessionRequestPacket(mockConfig);
         packet.length = 100;
         
+        // Create a larger buffer for reading to avoid IndexOutOfBoundsException
+        byte[] readBuffer = new byte[100];
         IOException exception = assertThrows(IOException.class, () -> {
-            packet.readTrailerWireFormat(bais, buffer, 0);
+            packet.readTrailerWireFormat(bais, readBuffer, 0);
         });
         
         assertEquals("invalid session request wire format", exception.getMessage());
@@ -272,13 +278,14 @@ class SessionRequestPacketTest {
     }
 
     // Helper class for testing with concrete NetbiosName implementation
-    private static class TestNetbiosName implements NetbiosName {
+    private class TestNetbiosName implements NetbiosName {
         private final String name;
         private final int type;
         private final String scope;
         
         TestNetbiosName(String name, int type, String scope) {
-            this.name = name;
+            // Ensure names are uppercase and limited to 15 characters
+            this.name = name != null && name.length() > 15 ? name.substring(0, 15).toUpperCase() : (name != null ? name.toUpperCase() : "");
             this.type = type;
             this.scope = scope;
         }

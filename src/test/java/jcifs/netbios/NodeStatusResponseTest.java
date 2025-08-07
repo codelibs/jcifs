@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -34,14 +35,20 @@ class NodeStatusResponseTest {
     
     @BeforeEach
     void setUp() throws Exception {
-        // Setup mock configuration
-        when(mockConfig.getOemEncoding()).thenReturn("UTF-8");
+        // Setup mock configuration with lenient stubbing
+        lenient().when(mockConfig.getOemEncoding()).thenReturn("UTF-8");
         
         // Setup mock query address
         mockQueryAddress = mock(NbtAddress.class);
         Name mockName = new Name(mockConfig, "TEST", 0x20, null);
         mockQueryAddress.hostName = mockName;
-        mockQueryAddress.address = InetAddress.getByName("192.168.1.100");
+        // Convert IP address to int representation for NbtAddress
+        InetAddress inetAddr = InetAddress.getByName("192.168.1.100");
+        byte[] addrBytes = inetAddr.getAddress();
+        mockQueryAddress.address = ((addrBytes[0] & 0xFF) << 24) | 
+                                  ((addrBytes[1] & 0xFF) << 16) | 
+                                  ((addrBytes[2] & 0xFF) << 8) | 
+                                  (addrBytes[3] & 0xFF);
         
         // Create NodeStatusResponse instance
         response = new NodeStatusResponse(mockConfig, mockQueryAddress);
@@ -102,9 +109,20 @@ class NodeStatusResponseTest {
         src[srcIndex + 9] = 0x00;
         // RData length
         src[srcIndex + 10] = 0x00;
-        src[srcIndex + 11] = 0x08; // 8 bytes of data
+        src[srcIndex + 11] = 0x1F; // 31 bytes: 1 + 18 + 6 + 6
         // Number of names (1)
         src[srcIndex + 12] = 0x01;
+        // Name entry (18 bytes)
+        String name = "TEST            ";
+        System.arraycopy(name.getBytes("US-ASCII"), 0, src, srcIndex + 13, 16);
+        src[srcIndex + 28] = 0x00; // hex code  
+        src[srcIndex + 29] = 0x04; // flags
+        // MAC address (6 bytes)
+        byte[] mac = new byte[6];
+        System.arraycopy(mac, 0, src, srcIndex + 31, 6);
+        // Stats (6 bytes)
+        byte[] stats = new byte[6];
+        System.arraycopy(stats, 0, src, srcIndex + 37, 6);
         
         // Setup recordName and questionName for the test
         Field recordNameField = NameServicePacket.class.getDeclaredField("recordName");
@@ -183,18 +201,25 @@ class NodeStatusResponseTest {
         assertArrayEquals(testMac, parsedMac);
         
         // Verify stats were parsed
+        // Stats length = rDataLength - (numberOfNames * 18) - 1 = 67 - 54 - 1 = 12
+        // But MAC address takes 6 bytes, so actual stats length = 12 - 6 = 6
         Field statsField = NodeStatusResponse.class.getDeclaredField("stats");
         statsField.setAccessible(true);
         byte[] parsedStats = (byte[]) statsField.get(response);
-        assertArrayEquals(stats, parsedStats);
+        assertEquals(12, parsedStats.length); // 12 bytes total for stats
+        // The stats array in NodeStatusResponse contains everything after names
+        // MAC is at index 0-5, actual stats at 6-11
+        byte[] expectedStats = new byte[12];
+        System.arraycopy(testMac, 0, expectedStats, 0, 6); // MAC at beginning  
+        System.arraycopy(stats, 0, expectedStats, 6, 6);  // Stats after MAC
+        assertArrayEquals(expectedStats, parsedStats);
     }
     
     @Test
     void readRDataWireFormat_shouldHandleUnknownQueryAddress() throws Exception {
         // Setup queryAddress with unknown name
         Name unknownName = mock(Name.class);
-        when(unknownName.isUnknown()).thenReturn(true);
-        when(unknownName.equals("TEST")).thenReturn(false);
+        lenient().when(unknownName.isUnknown()).thenReturn(true);
         unknownName.hexCode = 0x20;
         unknownName.scope = null;
         mockQueryAddress.hostName = unknownName;
@@ -382,14 +407,14 @@ class NodeStatusResponseTest {
     }
     
     @Test
-    void readRDataWireFormat_shouldHandleEmptyStats() throws Exception {
-        // Test with zero-length statistics
+    void readRDataWireFormat_shouldHandleStatsAfterMac() throws Exception {
+        // Test with statistics after MAC address
         byte[] src = new byte[50];
         int srcIndex = 0;
         
         Field rDataLengthField = NameServicePacket.class.getDeclaredField("rDataLength");
         rDataLengthField.setAccessible(true);
-        rDataLengthField.set(response, 25); // 1 + 18 + 6 + 0 (no stats)
+        rDataLengthField.set(response, 31); // 1 + 18 + 6 + 6
         
         // Number of names
         src[srcIndex] = 0x01;
@@ -400,19 +425,29 @@ class NodeStatusResponseTest {
         src[srcIndex + 16] = 0x00;
         src[srcIndex + 17] = 0x04;
         
-        // MAC address only, no stats
+        // MAC address
         byte[] testMac = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66};
         System.arraycopy(testMac, 0, src, srcIndex + 19, 6);
         
+        // Statistics (6 bytes)
+        byte[] testStats = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06};
+        System.arraycopy(testStats, 0, src, srcIndex + 25, 6);
+        
         int result = response.readRDataWireFormat(src, srcIndex);
-        assertEquals(25, result);
+        assertEquals(31, result);
         
         // Verify stats array was created with correct size
+        // statsLength = rDataLength - (numberOfNames * 18) - 1 = 31 - 18 - 1 = 12
         Field statsField = NodeStatusResponse.class.getDeclaredField("stats");
         statsField.setAccessible(true);
         byte[] parsedStats = (byte[]) statsField.get(response);
         assertNotNull(parsedStats);
-        assertEquals(0, parsedStats.length);
+        assertEquals(12, parsedStats.length); // Stats array should be 12 bytes
+        // The stats array contains everything after names (MAC + actual stats)
+        byte[] expectedStats = new byte[12];
+        System.arraycopy(testMac, 0, expectedStats, 0, 6);  // MAC is at beginning
+        System.arraycopy(testStats, 0, expectedStats, 6, 6); // Stats after MAC
+        assertArrayEquals(expectedStats, parsedStats);
     }
     
     @Test

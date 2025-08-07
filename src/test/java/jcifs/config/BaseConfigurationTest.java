@@ -60,8 +60,8 @@ class BaseConfigurationTest {
         assertNotNull(configWithDefaults.getMachineId());
         assertEquals(32, configWithDefaults.getMachineId().length);
         assertNotNull(configWithDefaults.getNativeOs());
-        assertTrue(configWithDefaults.getFlags2() > 0);
-        assertTrue(configWithDefaults.getCapabilities() > 0);
+        assertTrue(configWithDefaults.getFlags2() != 0, "Flags2 should be non-zero");
+        assertTrue(configWithDefaults.getCapabilities() != 0, "Capabilities should be non-zero");
         assertNotNull(configWithDefaults.getBroadcastAddress());
         assertNotNull(configWithDefaults.getResolveOrder());
         assertNotNull(configWithDefaults.getMinimumVersion());
@@ -73,9 +73,9 @@ class BaseConfigurationTest {
     void testDefaultConstructor() throws CIFSException {
         BaseConfiguration defaultConfig = new TestableBaseConfiguration();
         
-        assertNotNull(defaultConfig.getRandom());
-        assertNotNull(defaultConfig.getLocalTimezone());
-        assertNotNull(defaultConfig.getMachineId());
+        assertNotNull(defaultConfig.getRandom(), "Random should not be null");
+        assertNotNull(defaultConfig.getLocalTimezone(), "Local timezone should not be null");
+        assertNotNull(defaultConfig.getMachineId(), "Machine ID should not be null");
     }
 
     @Test
@@ -210,7 +210,7 @@ class BaseConfigurationTest {
 
     @Test
     @DisplayName("Test getBatchLimit with custom implementation")
-    void testGetBatchLimitWithCustomImplementation() {
+    void testGetBatchLimitWithCustomImplementation() throws CIFSException {
         BaseConfiguration customConfig = new BaseConfiguration(false) {
             @Override
             protected Integer doGetBatchLimit(String cmd) {
@@ -384,8 +384,8 @@ class BaseConfigurationTest {
         assertTrue((testConfig.getFlags2() & SmbConstants.FLAGS2_LONG_FILENAMES) != 0);
         assertTrue((testConfig.getFlags2() & SmbConstants.FLAGS2_EXTENDED_ATTRIBUTES) != 0);
         
-        // Check capabilities
-        assertTrue(testConfig.getCapabilities() > 0);
+        // Check capabilities  
+        assertTrue(testConfig.getCapabilities() != 0, "Capabilities should be non-zero");
         
         // Check broadcast address
         assertNotNull(testConfig.getBroadcastAddress());
@@ -407,11 +407,15 @@ class BaseConfigurationTest {
 
     @Test
     @DisplayName("Test initDefaults with pre-set machine ID")
-    void testInitDefaultsWithPresetMachineId() throws CIFSException {
+    void testInitDefaultsWithPresetMachineId() throws Exception {
         BaseConfiguration testConfig = new BaseConfiguration(false);
         byte[] customMachineId = new byte[32];
         Arrays.fill(customMachineId, (byte) 0xFF);
-        testConfig.machineId = customMachineId;
+        
+        // Use reflection to set private field
+        java.lang.reflect.Field machineIdField = BaseConfiguration.class.getDeclaredField("machineId");
+        machineIdField.setAccessible(true);
+        machineIdField.set(testConfig, customMachineId);
         
         testConfig.initDefaults();
         
@@ -522,7 +526,7 @@ class BaseConfigurationTest {
      */
     private static class TestableBaseConfiguration extends BaseConfiguration {
         TestableBaseConfiguration() throws CIFSException {
-            super();
+            super(true);
         }
     }
 }
