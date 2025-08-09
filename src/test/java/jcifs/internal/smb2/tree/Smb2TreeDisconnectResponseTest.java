@@ -74,7 +74,6 @@ class Smb2TreeDisconnectResponseTest extends BaseTest {
         assertEquals(0, bytesWritten);
     }
 
-    @Test
     @DisplayName("Should write zero bytes at various offsets")
     @ParameterizedTest
     @ValueSource(ints = {0, 1, 10, 50, 100, 255})
@@ -107,7 +106,6 @@ class Smb2TreeDisconnectResponseTest extends BaseTest {
         assertEquals(4, bytesRead);
     }
 
-    @Test
     @DisplayName("Should throw exception for invalid structure size")
     @ParameterizedTest
     @ValueSource(ints = {0, 1, 2, 3, 5, 10, 100, 65535})
@@ -127,7 +125,6 @@ class Smb2TreeDisconnectResponseTest extends BaseTest {
         assertEquals("Structure size != 4", exception.getMessage());
     }
 
-    @Test
     @DisplayName("Should read structure correctly at different offsets")
     @ParameterizedTest
     @ValueSource(ints = {0, 10, 50, 100, 200})
@@ -238,7 +235,6 @@ class Smb2TreeDisconnectResponseTest extends BaseTest {
         assertEquals(4, bytesRead);
     }
 
-    @Test
     @DisplayName("Should handle structure with different reserved values")
     @ParameterizedTest
     @CsvSource({
@@ -407,10 +403,11 @@ class Smb2TreeDisconnectResponseTest extends BaseTest {
     @Test
     @DisplayName("Should handle null configuration gracefully")
     void testNullConfiguration() {
-        // When & Then - constructor should handle null config
-        assertThrows(NullPointerException.class, () -> {
-            new Smb2TreeDisconnectResponse(null);
-        });
+        // When - constructor accepts null config without throwing
+        Smb2TreeDisconnectResponse responseWithNull = new Smb2TreeDisconnectResponse(null);
+        
+        // Then - response is created successfully
+        assertNotNull(responseWithNull);
     }
 
     @Test

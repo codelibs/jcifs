@@ -66,15 +66,15 @@ public class SmbComTreeDisconnectTest {
      * Test constructor with null configuration
      */
     @Test
-    @DisplayName("Test constructor handles null configuration")
+    @DisplayName("Test constructor throws NullPointerException with null configuration")
     public void testConstructorWithNullConfig() {
-        // When & Then - should not throw exception
-        assertDoesNotThrow(() -> {
+        // When & Then - should throw NullPointerException since ServerMessageBlock calls config.getPid()
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> {
             smbComTreeDisconnect = new SmbComTreeDisconnect(null);
         });
         
-        // Verify command is still set correctly
-        assertEquals(ServerMessageBlock.SMB_COM_TREE_DISCONNECT, smbComTreeDisconnect.getCommand());
+        // Verify the exception message indicates the config is null
+        assertTrue(exception.getMessage().contains("config"));
     }
 
     /**
@@ -83,12 +83,16 @@ public class SmbComTreeDisconnectTest {
     @Test
     @DisplayName("Test constructor with mock configuration")
     public void testConstructorWithMockConfig() {
+        // Setup mock to return a valid PID
+        when(mockConfig.getPid()).thenReturn(1234);
+        
         // When
         smbComTreeDisconnect = new SmbComTreeDisconnect(mockConfig);
         
         // Then
         assertNotNull(smbComTreeDisconnect);
         assertEquals(ServerMessageBlock.SMB_COM_TREE_DISCONNECT, smbComTreeDisconnect.getCommand());
+        verify(mockConfig).getPid(); // Verify getPid was called
     }
 
     /**
@@ -307,13 +311,16 @@ public class SmbComTreeDisconnectTest {
     }
 
     /**
-     * Test toString method with null configuration
+     * Test toString method behavior - requires valid configuration
      */
     @Test
-    @DisplayName("Test toString with null configuration")
-    public void testToStringWithNullConfig() {
+    @DisplayName("Test toString requires valid configuration")
+    public void testToStringRequiresValidConfig() {
+        // Constructor with null config throws exception, so we can't test toString with null config
+        // Instead, test that toString works with a valid config
+        
         // Given
-        smbComTreeDisconnect = new SmbComTreeDisconnect(null);
+        smbComTreeDisconnect = new SmbComTreeDisconnect(config);
         
         // When
         String result = smbComTreeDisconnect.toString();
@@ -321,6 +328,8 @@ public class SmbComTreeDisconnectTest {
         // Then
         assertNotNull(result);
         assertTrue(result.contains("SmbComTreeDisconnect"));
+        assertTrue(result.startsWith("SmbComTreeDisconnect["));
+        assertTrue(result.endsWith("]"));
     }
 
     /**
@@ -381,13 +390,11 @@ public class SmbComTreeDisconnectTest {
             // Given
             smbComTreeDisconnect = new SmbComTreeDisconnect(config);
             
-            // When & Then - should handle gracefully or throw appropriate exception
-            assertDoesNotThrow(() -> {
-                smbComTreeDisconnect.writeParameterWordsWireFormat(null, 0);
-                smbComTreeDisconnect.writeBytesWireFormat(null, 0);
-                smbComTreeDisconnect.readParameterWordsWireFormat(null, 0);
-                smbComTreeDisconnect.readBytesWireFormat(null, 0);
-            });
+            // When & Then - operations return 0 even with null buffer (no buffer access since methods return 0)
+            assertEquals(0, smbComTreeDisconnect.writeParameterWordsWireFormat(null, 0));
+            assertEquals(0, smbComTreeDisconnect.writeBytesWireFormat(null, 0));
+            assertEquals(0, smbComTreeDisconnect.readParameterWordsWireFormat(null, 0));
+            assertEquals(0, smbComTreeDisconnect.readBytesWireFormat(null, 0));
         }
         
         @Test
@@ -431,6 +438,9 @@ public class SmbComTreeDisconnectTest {
     @Test
     @DisplayName("Test multiple instances are independent")
     public void testMultipleInstancesIndependence() {
+        // Setup mock to return a valid PID
+        when(mockConfig.getPid()).thenReturn(5678);
+        
         // Given
         SmbComTreeDisconnect instance1 = new SmbComTreeDisconnect(config);
         SmbComTreeDisconnect instance2 = new SmbComTreeDisconnect(mockConfig);

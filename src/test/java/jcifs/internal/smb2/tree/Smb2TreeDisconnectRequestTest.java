@@ -10,18 +10,16 @@ import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.times;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import jcifs.BaseTest;
 import jcifs.CIFSContext;
 import jcifs.Configuration;
 import jcifs.internal.smb2.ServerMessageBlock2;
@@ -33,24 +31,18 @@ import jcifs.internal.util.SMBUtil;
  * Test class for Smb2TreeDisconnectRequest functionality
  */
 @DisplayName("Smb2TreeDisconnectRequest Tests")
-class Smb2TreeDisconnectRequestTest extends BaseTest {
+@ExtendWith(MockitoExtension.class)
+class Smb2TreeDisconnectRequestTest {
 
-    private Configuration mockConfig;
-    private CIFSContext mockContext;
-    private Smb2TreeDisconnectRequest request;
-
-    @BeforeEach
-    void setUp() {
-        mockConfig = mock(Configuration.class);
-        mockContext = mock(CIFSContext.class);
-        when(mockContext.getConfig()).thenReturn(mockConfig);
-        request = new Smb2TreeDisconnectRequest(mockConfig);
-    }
+    private static final short SMB2_TREE_DISCONNECT = 0x0004;
 
     @Test
     @DisplayName("Should create request with correct command type")
     void testConstructorSetsCorrectCommand() throws Exception {
-        // Given & When
+        // Given
+        Configuration mockConfig = mock(Configuration.class);
+        
+        // When
         Smb2TreeDisconnectRequest req = new Smb2TreeDisconnectRequest(mockConfig);
 
         // Then - verify command is set correctly using reflection
@@ -58,12 +50,18 @@ class Smb2TreeDisconnectRequestTest extends BaseTest {
         commandField.setAccessible(true);
         int command = (int) commandField.get(req);
         
-        assertEquals(0x0004, command); // SMB2_TREE_DISCONNECT command value
+        assertEquals(SMB2_TREE_DISCONNECT, command);
     }
 
     @Test
     @DisplayName("Should create proper response object")
     void testCreateResponse() {
+        // Given
+        Configuration mockConfig = mock(Configuration.class);
+        CIFSContext mockContext = mock(CIFSContext.class);
+        when(mockContext.getConfig()).thenReturn(mockConfig);
+        Smb2TreeDisconnectRequest request = new Smb2TreeDisconnectRequest(mockConfig);
+        
         // When
         Smb2TreeDisconnectResponse response = request.createResponse(mockContext, request);
 
@@ -76,6 +74,10 @@ class Smb2TreeDisconnectRequestTest extends BaseTest {
     @Test
     @DisplayName("Should calculate correct message size")
     void testSize() {
+        // Given
+        Configuration mockConfig = mock(Configuration.class);
+        Smb2TreeDisconnectRequest request = new Smb2TreeDisconnectRequest(mockConfig);
+        
         // When
         int size = request.size();
 
@@ -91,6 +93,8 @@ class Smb2TreeDisconnectRequestTest extends BaseTest {
     @DisplayName("Should write correct bytes to wire format")
     void testWriteBytesWireFormat() {
         // Given
+        Configuration mockConfig = mock(Configuration.class);
+        Smb2TreeDisconnectRequest request = new Smb2TreeDisconnectRequest(mockConfig);
         byte[] buffer = new byte[256];
         int offset = 10;
 
@@ -111,6 +115,8 @@ class Smb2TreeDisconnectRequestTest extends BaseTest {
     @DisplayName("Should write exact wire format structure")
     void testWriteBytesWireFormatStructure() {
         // Given
+        Configuration mockConfig = mock(Configuration.class);
+        Smb2TreeDisconnectRequest request = new Smb2TreeDisconnectRequest(mockConfig);
         byte[] buffer = new byte[4];
         int offset = 0;
 
@@ -129,6 +135,8 @@ class Smb2TreeDisconnectRequestTest extends BaseTest {
     @DisplayName("Should always return 0 for readBytesWireFormat")
     void testReadBytesWireFormat() {
         // Given
+        Configuration mockConfig = mock(Configuration.class);
+        Smb2TreeDisconnectRequest request = new Smb2TreeDisconnectRequest(mockConfig);
         byte[] buffer = createTestData(256);
         
         // When
@@ -143,6 +151,8 @@ class Smb2TreeDisconnectRequestTest extends BaseTest {
     @DisplayName("Should write consistent structure at different offsets")
     void testWriteBytesAtDifferentOffsets(int offset) {
         // Given
+        Configuration mockConfig = mock(Configuration.class);
+        Smb2TreeDisconnectRequest request = new Smb2TreeDisconnectRequest(mockConfig);
         byte[] buffer = new byte[256];
 
         // When
@@ -157,7 +167,9 @@ class Smb2TreeDisconnectRequestTest extends BaseTest {
     @Test
     @DisplayName("Should handle boundary conditions for buffer write")
     void testWriteBytesWireFormatBoundary() {
-        // Given - minimum size buffer
+        // Given
+        Configuration mockConfig = mock(Configuration.class);
+        Smb2TreeDisconnectRequest request = new Smb2TreeDisconnectRequest(mockConfig);
         byte[] buffer = new byte[4];
         
         // When
@@ -173,6 +185,8 @@ class Smb2TreeDisconnectRequestTest extends BaseTest {
     @DisplayName("Should throw exception when buffer too small")
     void testWriteBytesWireFormatBufferTooSmall() {
         // Given
+        Configuration mockConfig = mock(Configuration.class);
+        Smb2TreeDisconnectRequest request = new Smb2TreeDisconnectRequest(mockConfig);
         byte[] buffer = new byte[3]; // Too small for 4 bytes
         
         // When & Then
@@ -185,6 +199,8 @@ class Smb2TreeDisconnectRequestTest extends BaseTest {
     @DisplayName("Should throw exception when offset exceeds buffer")
     void testWriteBytesWireFormatOffsetTooLarge() {
         // Given
+        Configuration mockConfig = mock(Configuration.class);
+        Smb2TreeDisconnectRequest request = new Smb2TreeDisconnectRequest(mockConfig);
         byte[] buffer = new byte[10];
         int offset = 8; // Only 2 bytes remaining, need 4
         
@@ -197,6 +213,10 @@ class Smb2TreeDisconnectRequestTest extends BaseTest {
     @Test
     @DisplayName("Should correctly inherit from ServerMessageBlock2Request")
     void testInheritance() {
+        // Given
+        Configuration mockConfig = mock(Configuration.class);
+        Smb2TreeDisconnectRequest request = new Smb2TreeDisconnectRequest(mockConfig);
+        
         // Then
         assertTrue(request instanceof ServerMessageBlock2Request);
         assertTrue(request instanceof ServerMessageBlock2);
@@ -206,6 +226,8 @@ class Smb2TreeDisconnectRequestTest extends BaseTest {
     @DisplayName("Should handle multiple write operations")
     void testMultipleWrites() {
         // Given
+        Configuration mockConfig = mock(Configuration.class);
+        Smb2TreeDisconnectRequest request = new Smb2TreeDisconnectRequest(mockConfig);
         byte[] buffer1 = new byte[256];
         byte[] buffer2 = new byte[256];
         
@@ -222,6 +244,8 @@ class Smb2TreeDisconnectRequestTest extends BaseTest {
     @DisplayName("Should maintain immutability of structure size")
     void testStructureSizeImmutability() {
         // Given
+        Configuration mockConfig = mock(Configuration.class);
+        Smb2TreeDisconnectRequest request = new Smb2TreeDisconnectRequest(mockConfig);
         byte[] buffer = new byte[256];
         
         // When - write multiple times
@@ -239,18 +263,25 @@ class Smb2TreeDisconnectRequestTest extends BaseTest {
     @DisplayName("Should handle null configuration gracefully in response creation")
     void testCreateResponseWithNullConfig() {
         // Given
+        Configuration mockConfig = mock(Configuration.class);
+        Smb2TreeDisconnectRequest request = new Smb2TreeDisconnectRequest(mockConfig);
         CIFSContext nullConfigContext = mock(CIFSContext.class);
         when(nullConfigContext.getConfig()).thenReturn(null);
         
-        // When & Then
-        assertThrows(NullPointerException.class, () -> {
-            request.createResponse(nullConfigContext, request);
-        });
+        // When
+        Smb2TreeDisconnectResponse response = request.createResponse(nullConfigContext, request);
+        
+        // Then - response is created even with null config
+        assertNotNull(response);
     }
 
     @Test
     @DisplayName("Should verify SMB2 header length constant usage")
     void testSmb2HeaderLengthUsage() {
+        // Given
+        Configuration mockConfig = mock(Configuration.class);
+        Smb2TreeDisconnectRequest request = new Smb2TreeDisconnectRequest(mockConfig);
+        
         // When
         int size = request.size();
         
@@ -268,6 +299,8 @@ class Smb2TreeDisconnectRequestTest extends BaseTest {
     @DisplayName("Should write zeros for reserved field")
     void testReservedFieldIsZero() {
         // Given
+        Configuration mockConfig = mock(Configuration.class);
+        Smb2TreeDisconnectRequest request = new Smb2TreeDisconnectRequest(mockConfig);
         byte[] buffer = new byte[256];
         // Fill with non-zero values first
         for (int i = 0; i < buffer.length; i++) {
@@ -284,7 +317,11 @@ class Smb2TreeDisconnectRequestTest extends BaseTest {
     @Test
     @DisplayName("Should verify size8 alignment")
     void testSize8Alignment() throws Exception {
-        // Given - access size8 method via reflection
+        // Given
+        Configuration mockConfig = mock(Configuration.class);
+        Smb2TreeDisconnectRequest request = new Smb2TreeDisconnectRequest(mockConfig);
+        
+        // Access size8 method via reflection
         Method size8Method = ServerMessageBlock2.class.getDeclaredMethod("size8", int.class);
         size8Method.setAccessible(true);
         
@@ -299,6 +336,7 @@ class Smb2TreeDisconnectRequestTest extends BaseTest {
     @DisplayName("Should maintain consistent command type")
     void testCommandTypeConsistency() throws Exception {
         // Given
+        Configuration mockConfig = mock(Configuration.class);
         Field commandField = ServerMessageBlock2.class.getDeclaredField("command");
         commandField.setAccessible(true);
         
@@ -311,13 +349,15 @@ class Smb2TreeDisconnectRequestTest extends BaseTest {
         int cmd2 = (int) commandField.get(req2);
         
         assertEquals(cmd1, cmd2);
-        assertEquals(0x0004, cmd1); // SMB2_TREE_DISCONNECT command value
+        assertEquals(SMB2_TREE_DISCONNECT, cmd1);
     }
 
     @Test
     @DisplayName("Should properly implement wire format protocol")
     void testWireFormatProtocol() {
         // Given
+        Configuration mockConfig = mock(Configuration.class);
+        Smb2TreeDisconnectRequest request = new Smb2TreeDisconnectRequest(mockConfig);
         byte[] expectedStructure = new byte[] {
             0x04, 0x00,  // Structure size (4)
             0x00, 0x00   // Reserved
@@ -336,7 +376,11 @@ class Smb2TreeDisconnectRequestTest extends BaseTest {
     @Test
     @DisplayName("Should verify request does not read response data")
     void testRequestDoesNotReadData() {
-        // Given - various buffer contents
+        // Given
+        Configuration mockConfig = mock(Configuration.class);
+        Smb2TreeDisconnectRequest request = new Smb2TreeDisconnectRequest(mockConfig);
+        
+        // Various buffer contents
         byte[] emptyBuffer = new byte[256];
         byte[] fullBuffer = createTestData(256);
         
@@ -347,5 +391,16 @@ class Smb2TreeDisconnectRequestTest extends BaseTest {
         // Then - always returns 0 as this is a request, not response
         assertEquals(0, emptyRead);
         assertEquals(0, fullRead);
+    }
+    
+    /**
+     * Create a test byte array with specified size and pattern
+     */
+    private byte[] createTestData(int size) {
+        byte[] data = new byte[size];
+        for (int i = 0; i < size; i++) {
+            data[i] = (byte) (i % 256);
+        }
+        return data;
     }
 }

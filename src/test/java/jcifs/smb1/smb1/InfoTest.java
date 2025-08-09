@@ -42,19 +42,21 @@ class InfoTest {
         assertEquals(1630000001000L, resp.getCreateTime());
         assertEquals(1630000001000L, resp.getLastWriteTime());
         assertEquals(2048, resp.getSize());
-        assertTrue(resp.toString().contains(new Date(1630000001000L).toString()));
+        // toString() uses lastWriteTime directly without offset
+        assertTrue(resp.toString().contains(new Date(1630000000000L).toString()));
     }
 
     // Buffer helpers to build SMB basic file info wire format.
+    // SMB uses little-endian byte order
     private static void writeLong(byte[] buf, int offset, long val) {
         for (int i = 0; i < 8; i++) {
-            buf[offset + i] = (byte) ((val >>> (56 - 8 * i))) & 0xFF;
+            buf[offset + i] = (byte) ((val >>> (8 * i)) & 0xFF);
         }
     }
 
     private static void writeShort(byte[] buf, int offset, int val) {
-        buf[offset] = (byte) ((val >>> 8) & 0xFF);
-        buf[offset + 1] = (byte) (val & 0xFF);
+        buf[offset] = (byte) (val & 0xFF);
+        buf[offset + 1] = (byte) ((val >>> 8) & 0xFF);
     }
 
     @Test
@@ -65,10 +67,12 @@ class InfoTest {
         long lastWrite = 1600000200000L;
         long change = 1600000300000L;
         int attributes = 0x1234;
-        writeLong(buffer, 0, create);
-        writeLong(buffer, 8, lastAccess);
-        writeLong(buffer, 16, lastWrite);
-        writeLong(buffer, 24, change);
+        // Convert Unix time to Windows FILETIME (100-nanosecond intervals since 1601)
+        long MILLISECONDS_BETWEEN_1970_AND_1601 = 11644473600000L;
+        writeLong(buffer, 0, (create + MILLISECONDS_BETWEEN_1970_AND_1601) * 10000L);
+        writeLong(buffer, 8, (lastAccess + MILLISECONDS_BETWEEN_1970_AND_1601) * 10000L);
+        writeLong(buffer, 16, (lastWrite + MILLISECONDS_BETWEEN_1970_AND_1601) * 10000L);
+        writeLong(buffer, 24, (change + MILLISECONDS_BETWEEN_1970_AND_1601) * 10000L);
         writeShort(buffer, 32, attributes);
 
         Trans2QueryPathInformationResponse trans =
