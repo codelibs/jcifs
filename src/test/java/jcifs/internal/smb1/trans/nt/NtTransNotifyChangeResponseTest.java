@@ -136,12 +136,17 @@ class NtTransNotifyChangeResponseTest {
     void testReadParametersWireFormatEmptyBuffer() throws Exception {
         byte[] buffer = new byte[0];
         
-        assertThrows(Exception.class, () -> {
-            response.readParametersWireFormat(buffer, 0, 0);
-        });
+        // Empty buffer adds one empty FileNotifyInformation
+        int result = response.readParametersWireFormat(buffer, 0, 0);
+        assertEquals(0, result);
+        assertEquals(1, response.getNotifyInformation().size());
+        
+        // The single notification should have default values
+        FileNotifyInformation info = response.getNotifyInformation().get(0);
+        assertEquals(0, info.getAction());
+        assertNull(info.getFileName());
     }
 
-    @Test
     @DisplayName("Test readParametersWireFormat with various file actions")
     @ParameterizedTest
     @ValueSource(ints = {

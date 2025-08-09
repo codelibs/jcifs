@@ -88,6 +88,7 @@ class SmbComNtTransactionResponseTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        when(mockConfig.getPid()).thenReturn(1234);
         when(mockConfig.getMaximumBufferSize()).thenReturn(65535);
         when(mockConfig.getMinimumVersion()).thenReturn(DialectVersion.SMB1);
         when(mockConfig.getMaximumVersion()).thenReturn(DialectVersion.SMB311);
@@ -99,7 +100,7 @@ class SmbComNtTransactionResponseTest {
     void testConstructor() {
         assertNotNull(response);
         // Verify configuration is set through parent constructor
-        verify(mockConfig, atLeastOnce()).getMaximumBufferSize();
+        verify(mockConfig, atLeastOnce()).getPid();
     }
 
     @Test
@@ -426,6 +427,7 @@ class SmbComNtTransactionResponseTest {
         int[] positions = {0, 10, 50, 100, 150};
         
         for (int pos : positions) {
+            when(mockConfig.getPid()).thenReturn(1234); // Mock getPid for each new instance
             response = new TestSmbComNtTransactionResponse(mockConfig); // Reset response
             
             // Fill buffer at position

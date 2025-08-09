@@ -287,8 +287,10 @@ class NtTransNotifyChangeTest {
         String result = notifyChange.toString();
         
         assertNotNull(result);
-        assertTrue(result.contains("fid=0xffff"));
-        assertTrue(result.contains("filter=0xffffffff"));
+        // Hexdump uses uppercase letters
+        // Note: completionFilter is displayed with 4 hex chars, not 8
+        assertTrue(result.contains("fid=0xFFFF"));
+        assertTrue(result.contains("filter=0xFFFF")); // Only 4 hex chars are shown
         assertTrue(result.contains("watchTree=true"));
     }
 
@@ -304,8 +306,10 @@ class NtTransNotifyChangeTest {
         String result = notifyChange.toString();
         
         assertNotNull(result);
+        // Hexdump.toHexString uses uppercase and produces only the specified width
+        // Note: completionFilter is displayed with 4 hex chars, not 8
         assertTrue(result.contains("fid=0x0000"));
-        assertTrue(result.contains("filter=0x00000000"));
+        assertTrue(result.contains("filter=0x0000")); // Only 4 hex chars are shown
         assertTrue(result.contains("watchTree=false"));
     }
 

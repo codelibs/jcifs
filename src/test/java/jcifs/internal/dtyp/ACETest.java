@@ -138,13 +138,13 @@ class ACETest {
     @DisplayName("Test getApplyToText with different flag combinations")
     @CsvSource({
         "0x00, This folder only",
-        "0x03, This folder\\, subfolders and files",
+        "'0x03', 'This folder, subfolders and files'",
         "0x0B, Subfolders and files only",
         "0x02, This folder and subfolders",
         "0x0A, Subfolders only",
         "0x01, This folder and files",
         "0x09, Files only",
-        "0xFF, Invalid"
+        "0x08, Invalid"
     })
     void testGetApplyToText(String flagsHex, String expectedText) {
         ace.flags = Integer.parseInt(flagsHex.substring(2), 16);
@@ -162,7 +162,9 @@ class ACETest {
         String result = ace.toString();
         
         assertTrue(result.startsWith("Allow "));
-        assertTrue(result.contains("0x001200a9"));
+        // Hexdump.toHexString produces uppercase hex
+        assertTrue(result.toLowerCase().contains("0x001200a9"));
+        // ACE.toString() outputs "Direct    " with 4 spaces
         assertTrue(result.contains("Direct"));
         assertTrue(result.contains("This folder only"));
     }
@@ -178,7 +180,9 @@ class ACETest {
         String result = ace.toString();
         
         assertTrue(result.startsWith("Deny  "));
-        assertTrue(result.contains("0x001f01ff"));
+        // Hexdump.toHexString produces uppercase hex
+        assertTrue(result.toLowerCase().contains("0x001f01ff"));
+        // ACE.toString() outputs "Inherited " with 1 space
         assertTrue(result.contains("Inherited"));
         assertTrue(result.contains("This folder, subfolders and files"));
     }

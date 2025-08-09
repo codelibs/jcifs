@@ -241,7 +241,9 @@ class FileNotifyInformationImplTest {
         assertTrue(result.contains("nextEntry="));
         assertTrue(result.contains("action="));
         assertTrue(result.contains("file=" + fileName));
-        assertTrue(result.contains("0x" + Integer.toHexString(action).toUpperCase()));
+        // Hexdump.toHexString produces 4-character padded uppercase hex
+        String expectedHex = String.format("%04X", action);
+        assertTrue(result.contains("0x" + expectedHex));
     }
 
     @Test
@@ -252,7 +254,7 @@ class FileNotifyInformationImplTest {
         assertNotNull(result);
         assertTrue(result.contains("FileNotifyInformation"));
         assertTrue(result.contains("nextEntry=0"));
-        assertTrue(result.contains("action=0x"));
+        assertTrue(result.contains("action=0x0000")); // Hexdump.toHexString produces 4-char padded hex
         assertTrue(result.contains("file=null"));
     }
 

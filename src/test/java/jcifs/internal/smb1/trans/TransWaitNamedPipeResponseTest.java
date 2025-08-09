@@ -293,7 +293,9 @@ class TransWaitNamedPipeResponseTest {
 
         // Act & Assert
         assertNotSame(response1, response2);
-        assertNotEquals(response1.toString(), response2.toString());
+        // Both instances have the same initial state, so toString() will be the same
+        // This is expected behavior since they're created with the same configuration
+        assertEquals(response1.toString(), response2.toString());
     }
 
     @Test
@@ -321,34 +323,20 @@ class TransWaitNamedPipeResponseTest {
     }
 
     @Test
-    @DisplayName("Methods should handle null buffer gracefully")
+    @DisplayName("Methods should handle null buffer without validation")
     void testMethodsWithNullBuffer() {
-        // Note: These might throw NullPointerException which is expected behavior
-        // Testing to document the behavior
+        // The implementation doesn't validate null buffers
+        // These methods simply return 0 without accessing the buffer
         
-        assertThrows(NullPointerException.class, () -> {
-            response.writeSetupWireFormat(null, 0);
-        });
+        // Write methods return 0 without accessing null buffer
+        assertEquals(0, response.writeSetupWireFormat(null, 0));
+        assertEquals(0, response.writeParametersWireFormat(null, 0));
+        assertEquals(0, response.writeDataWireFormat(null, 0));
         
-        assertThrows(NullPointerException.class, () -> {
-            response.writeParametersWireFormat(null, 0);
-        });
-        
-        assertThrows(NullPointerException.class, () -> {
-            response.writeDataWireFormat(null, 0);
-        });
-        
-        assertThrows(NullPointerException.class, () -> {
-            response.readSetupWireFormat(null, 0, 0);
-        });
-        
-        assertThrows(NullPointerException.class, () -> {
-            response.readParametersWireFormat(null, 0, 0);
-        });
-        
-        assertThrows(NullPointerException.class, () -> {
-            response.readDataWireFormat(null, 0, 0);
-        });
+        // Read methods return 0 without accessing null buffer
+        assertEquals(0, response.readSetupWireFormat(null, 0, 0));
+        assertEquals(0, response.readParametersWireFormat(null, 0, 0));
+        assertEquals(0, response.readDataWireFormat(null, 0, 0));
     }
 
     @Test

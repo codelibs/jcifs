@@ -121,6 +121,7 @@ class SmbComTransactionTest {
     void setUp() {
         MockitoAnnotations.openMocks(this);
         when(mockConfig.getTransactionBufferSize()).thenReturn(65535);
+        when(mockConfig.getOemEncoding()).thenReturn("ASCII");
         transaction = new TestSmbComTransaction(mockConfig, SmbComTransaction.SMB_COM_TRANSACTION, SmbComTransaction.TRANS2_FIND_FIRST2);
     }
 
@@ -238,6 +239,9 @@ class SmbComTransactionTest {
     void testWriteOperations() {
         byte[] dst = new byte[1024];
         
+        // Initialize transaction buffer to avoid NPE
+        transaction.setBuffer(new byte[SmbComTransaction.TRANSACTION_BUF_SIZE]);
+        
         // Test parameter words wire format
         int paramWords = transaction.writeParameterWordsWireFormat(dst, 0);
         assertTrue(paramWords >= 0);
@@ -267,7 +271,13 @@ class SmbComTransactionTest {
         String result = transaction.toString();
         
         assertNotNull(result);
-        assertTrue(result.contains("SmbComTransaction"));
+        // The toString method from parent class returns SMB_COM_TRANSACTION, not SmbComTransaction
+        assertTrue(result.contains("SMB_COM_TRANSACTION"));
+        // Also verify it contains transaction-specific details
+        assertTrue(result.contains("totalParameterCount"));
+        assertTrue(result.contains("totalDataCount"));
+        assertTrue(result.contains("maxParameterCount"));
+        assertTrue(result.contains("maxDataCount"));
     }
 
     @Test
@@ -295,6 +305,9 @@ class SmbComTransactionTest {
     @DisplayName("Test encode and decode operations")
     void testEncodeDecodeOperations() {
         byte[] buffer = new byte[1024];
+        
+        // Initialize transaction buffer to avoid NPE
+        transaction.setBuffer(new byte[SmbComTransaction.TRANSACTION_BUF_SIZE]);
         
         // Test encode
         int encodeLength = transaction.encode(buffer, 0);

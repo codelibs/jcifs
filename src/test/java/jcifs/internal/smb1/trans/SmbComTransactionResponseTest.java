@@ -62,6 +62,11 @@ class SmbComTransactionResponseTest {
         public TestSmbComTransactionResponse(Configuration config, byte command, byte subcommand) {
             super(config, command, subcommand);
         }
+        
+        // Expose errorCode setter for testing - access protected field directly
+        public void setTestErrorCode(int code) {
+            this.errorCode = code;
+        }
 
         @Override
         protected int writeSetupWireFormat(byte[] dst, int dstIndex) {
@@ -125,6 +130,7 @@ class SmbComTransactionResponseTest {
     void setUp() {
         MockitoAnnotations.openMocks(this);
         when(mockConfig.getMaximumBufferSize()).thenReturn(65535);
+        when(mockConfig.getPid()).thenReturn(1234);
         response = new TestSmbComTransactionResponse(mockConfig);
     }
 
@@ -224,8 +230,13 @@ class SmbComTransactionResponseTest {
         // Test initial state
         assertTrue(response.hasMoreElements());
         
-        // Test after setting error status
-        response.setStatus(1); // Non-zero status indicates error
+        // Test after setting error code (not status)
+        response.setTestErrorCode(1); // Non-zero errorCode indicates error
+        assertFalse(response.hasMoreElements());
+        
+        // Reset error and test hasMore flag
+        response.setTestErrorCode(0);
+        response.hasMore = false;
         assertFalse(response.hasMoreElements());
     }
 
@@ -318,14 +329,17 @@ class SmbComTransactionResponseTest {
     void testToString() {
         String result = response.toString();
         assertNotNull(result);
-        assertTrue(result.contains("SmbComTransactionResponse"));
+        // The toString method includes various parameter information
+        assertTrue(result.contains("totalParameterCount"));
+        assertTrue(result.contains("totalDataCount"));
+        assertTrue(result.contains("dataCount"));
     }
 
     @Test
     @DisplayName("Test configuration usage")
     void testConfigurationUsage() {
-        // Verify configuration is used
-        verify(mockConfig, atLeastOnce()).getMaximumBufferSize();
+        // Verify configuration is used - getPid() is called in parent constructor
+        verify(mockConfig, atLeastOnce()).getPid();
     }
 
     @Test
@@ -352,13 +366,14 @@ class SmbComTransactionResponseTest {
         response.nextElement();
         // Response behavior may change after nextElement
         
-        // Test state after error
-        response.setStatus(1);
+        // Test state after error (using errorCode, not status)
+        response.setTestErrorCode(1);
         assertFalse(response.hasMoreElements());
         
         // Test state after reset
         response.reset();
-        // State should be reset for reuse
+        // After reset, hasMore should be true again
+        assertTrue(response.hasMoreElements());
     }
 
     @Test

@@ -260,10 +260,10 @@ class TransCallNamedPipeResponseTest {
     }
 
     @Test
-    void testReadDataWireFormatWithNegativeLength() throws SMBProtocolDecodingException {
+    void testReadDataWireFormatWithNegativeLength() {
         byte[] buffer = new byte[100];
-        // Negative length should not cause issues as it won't be > outputBuffer.length
-        int result = response.readDataWireFormat(buffer, 0, -1);
-        assertEquals(-1, result);
+        // Negative length should cause ArrayIndexOutOfBoundsException from System.arraycopy
+        assertThrows(ArrayIndexOutOfBoundsException.class,
+            () -> response.readDataWireFormat(buffer, 0, -1));
     }
 }

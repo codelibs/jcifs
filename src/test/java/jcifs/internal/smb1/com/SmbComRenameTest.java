@@ -158,9 +158,17 @@ public class SmbComRenameTest {
         assertTrue(result > 0);
         assertEquals((byte)0x04, dst[0]); // First buffer format byte
         
-        // In Unicode mode, there should be an extra null byte after the second 0x04
-        int oldFileNameLengthInBytes = (oldFileName.length() + 1) * 2; // Unicode chars + null terminator
-        int secondBufferFormatIndex = 1 + oldFileNameLengthInBytes;
+        // Find the second buffer format byte by searching for it
+        // In Unicode mode, the old filename is written as Unicode, then 0x04, then an alignment byte
+        int secondBufferFormatIndex = -1;
+        for (int i = 1; i < result - 1; i++) {
+            if (dst[i] == (byte)0x04) {
+                secondBufferFormatIndex = i;
+                break;
+            }
+        }
+        
+        assertTrue(secondBufferFormatIndex > 0, "Second buffer format byte not found");
         assertEquals((byte)0x04, dst[secondBufferFormatIndex]);
         assertEquals((byte)0x00, dst[secondBufferFormatIndex + 1]); // Extra null byte for Unicode alignment
     }
@@ -267,14 +275,14 @@ public class SmbComRenameTest {
      * Test with null configuration
      */
     @Test
-    @DisplayName("Test constructor with null configuration")
+    @DisplayName("Test constructor with null configuration throws NullPointerException")
     public void testConstructorWithNullConfig() {
         // Given
         String oldFileName = "old.txt";
         String newFileName = "new.txt";
         
-        // When & Then - should not throw exception
-        assertDoesNotThrow(() -> {
+        // When & Then - should throw NullPointerException
+        assertThrows(NullPointerException.class, () -> {
             new SmbComRename(null, oldFileName, newFileName);
         });
     }

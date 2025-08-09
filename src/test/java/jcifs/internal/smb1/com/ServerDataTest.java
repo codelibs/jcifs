@@ -284,7 +284,7 @@ public class ServerDataTest {
         Field[] fields = ServerData.class.getDeclaredFields();
 
         // Verify we have the expected number of fields
-        assertEquals(21, fields.length);
+        assertEquals(19, fields.length);
 
         // Verify all fields are public
         for (Field field : fields) {

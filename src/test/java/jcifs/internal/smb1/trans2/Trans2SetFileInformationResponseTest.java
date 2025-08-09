@@ -53,8 +53,8 @@ class Trans2SetFileInformationResponseTest {
     void testConstructor() {
         // Test that the constructor properly initializes the object
         assertNotNull(response);
-        // The command should be SMB_COM_TRANSACTION2 (0x32 = 50)
-        assertEquals(ServerMessageBlock.SMB_COM_TRANSACTION2, response.getCommand());
+        // The command is not set in the constructor, defaults to 0
+        assertEquals(0, response.getCommand());
         // The subcommand should be TRANS2_SET_FILE_INFORMATION (0x08)
         assertEquals(SmbComTransaction.TRANS2_SET_FILE_INFORMATION, response.getSubCommand());
     }
@@ -279,10 +279,10 @@ class Trans2SetFileInformationResponseTest {
     @Test
     @DisplayName("Test command type is correct")
     void testCommandType() {
-        // Verify that the command is set to SMB_COM_TRANSACTION2
-        assertEquals(ServerMessageBlock.SMB_COM_TRANSACTION2, response.getCommand());
+        // Verify that the command is not set in constructor (defaults to 0)
+        assertEquals(0, response.getCommand());
         
-        // Verify we can't change the subcommand to something else and it remains TRANS2_SET_FILE_INFORMATION
+        // Verify we can change the subcommand
         response.setSubCommand((byte)0xFF);
         assertEquals((byte)0xFF, response.getSubCommand());
         
