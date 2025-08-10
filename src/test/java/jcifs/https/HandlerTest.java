@@ -3,10 +3,19 @@ package jcifs.https;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.lang.reflect.Modifier;
+import java.net.URLStreamHandler;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -126,9 +135,9 @@ class HandlerTest {
             var field = Handler.class.getField("DEFAULT_HTTPS_PORT");
 
             // Then
-            assertTrue(java.lang.reflect.Modifier.isPublic(field.getModifiers()));
-            assertTrue(java.lang.reflect.Modifier.isStatic(field.getModifiers()));
-            assertTrue(java.lang.reflect.Modifier.isFinal(field.getModifiers()));
+            assertTrue(Modifier.isPublic(field.getModifiers()));
+            assertTrue(Modifier.isStatic(field.getModifiers()));
+            assertTrue(Modifier.isFinal(field.getModifiers()));
             assertEquals(int.class, field.getType());
         }
     }
@@ -179,31 +188,43 @@ class HandlerTest {
 
         @Test
         @DisplayName("Should be thread-safe for port operations")
+        @Timeout(value = 5, unit = TimeUnit.SECONDS)
         void testThreadSafety() throws InterruptedException {
             // Given
             Handler testHandler = new Handler(mockContext);
-            int threadCount = 10;
-            int[] results = new int[threadCount];
-            Thread[] threads = new Thread[threadCount];
+            int threadCount = 100;
+            CountDownLatch startLatch = new CountDownLatch(1);
+            CountDownLatch endLatch = new CountDownLatch(threadCount);
+            AtomicBoolean allCorrect = new AtomicBoolean(true);
+            ExecutorService executor = Executors.newFixedThreadPool(10);
             
             // When
             for (int i = 0; i < threadCount; i++) {
-                final int index = i;
-                threads[i] = new Thread(() -> {
-                    results[index] = testHandler.getDefaultPort();
+                executor.submit(() -> {
+                    try {
+                        startLatch.await(); // Ensure all threads start at same time
+                        int port = testHandler.getDefaultPort();
+                        if (port != 443) {
+                            allCorrect.set(false);
+                        }
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    } finally {
+                        endLatch.countDown();
+                    }
                 });
-                threads[i].start();
             }
             
-            // Wait for all threads
-            for (Thread thread : threads) {
-                thread.join();
-            }
+            // Trigger all threads to start simultaneously
+            startLatch.countDown();
+            
+            // Wait for completion
+            assertTrue(endLatch.await(3, TimeUnit.SECONDS));
+            executor.shutdown();
             
             // Then
-            for (int result : results) {
-                assertEquals(443, result);
-            }
+            assertTrue(allCorrect.get());
+            assertTrue(executor.awaitTermination(1, TimeUnit.SECONDS));
         }
     }
 
@@ -225,6 +246,48 @@ class HandlerTest {
             assertEquals(443, httpsPort);
             assertEquals(80, httpPort);
             assertNotEquals(httpsPort, httpPort);
+        }
+    }
+
+    @Nested
+    @DisplayName("Edge Cases")
+    class EdgeCaseTests {
+
+        @Test
+        @DisplayName("Should handle reflection access to protected method")
+        void testProtectedMethodAccess() throws Exception {
+            // Given
+            Handler testHandler = new Handler(null);
+            
+            // When
+            var method = Handler.class.getDeclaredMethod("getDefaultPort");
+            
+            // Then
+            assertTrue(Modifier.isProtected(method.getModifiers()));
+            assertEquals(443, method.invoke(testHandler));
+        }
+
+        @Test
+        @DisplayName("Should maintain inheritance hierarchy")
+        void testInheritanceHierarchy() {
+            // When
+            Class<?> superclass = Handler.class.getSuperclass();
+            
+            // Then
+            assertEquals(jcifs.http.Handler.class, superclass);
+            assertEquals(URLStreamHandler.class, superclass.getSuperclass());
+        }
+
+        @Test
+        @DisplayName("Should verify class is final or non-final appropriately")
+        void testClassModifiers() {
+            // When
+            int modifiers = Handler.class.getModifiers();
+            
+            // Then
+            assertTrue(Modifier.isPublic(modifiers));
+            assertFalse(Modifier.isAbstract(modifiers));
+            assertFalse(Modifier.isInterface(modifiers));
         }
     }
 }
