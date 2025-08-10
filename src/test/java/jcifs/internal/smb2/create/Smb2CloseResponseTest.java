@@ -27,13 +27,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import jcifs.Configuration;
+import jcifs.SmbConstants;
 import jcifs.internal.SMBProtocolDecodingException;
 import jcifs.internal.smb2.ServerMessageBlock2Response;
 import jcifs.internal.util.SMBUtil;
@@ -41,6 +43,7 @@ import jcifs.internal.util.SMBUtil;
 /**
  * Test class for Smb2CloseResponse functionality
  */
+@ExtendWith(MockitoExtension.class)
 @DisplayName("Smb2CloseResponse Tests")
 class Smb2CloseResponseTest {
 
@@ -53,7 +56,6 @@ class Smb2CloseResponseTest {
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
         
         // Create a test file ID (16 bytes)
         testFileId = new byte[16];
@@ -374,10 +376,12 @@ class Smb2CloseResponseTest {
             // Then
             assertEquals(60, bytesRead);
             assertEquals(0, response.getCloseFlags());
-            assertEquals(0, response.getCreationTime());
-            assertEquals(0, response.getLastAccessTime());
-            assertEquals(0, response.getLastWriteTime());
-            assertEquals(0, response.getChangeTime());
+            // Zero Windows FileTime converts to negative Unix time
+            long expectedTime = -SmbConstants.MILLISECONDS_BETWEEN_1970_AND_1601;
+            assertEquals(expectedTime, response.getCreationTime());
+            assertEquals(expectedTime, response.getLastAccessTime());
+            assertEquals(expectedTime, response.getLastWriteTime());
+            assertEquals(expectedTime, response.getChangeTime());
             assertEquals(0, response.getAllocationSize());
             assertEquals(0, response.getEndOfFile());
             assertEquals(0, response.getFileAttributes());
@@ -435,14 +439,16 @@ class Smb2CloseResponseTest {
             byte[] buffer = new byte[60];
             SMBUtil.writeInt2(60, buffer, 0);
             
-            long creationTime = System.currentTimeMillis() * 10000L + 116444736000000000L;
-            long lastAccessTime = creationTime + 1000000L;
-            long lastWriteTime = creationTime + 2000000L;
+            // Use proper millisecond times that will be converted correctly
+            long creationTimeMs = System.currentTimeMillis();
+            long lastAccessTimeMs = creationTimeMs + 100;
+            long lastWriteTimeMs = creationTimeMs + 200;
             
-            SMBUtil.writeInt8(creationTime, buffer, 8);
-            SMBUtil.writeInt8(lastAccessTime, buffer, 16);
-            SMBUtil.writeInt8(lastWriteTime, buffer, 24);
-            SMBUtil.writeInt8(creationTime + 3000000L, buffer, 32);
+            // Write as Windows FileTime format
+            SMBUtil.writeTime(creationTimeMs, buffer, 8);
+            SMBUtil.writeTime(lastAccessTimeMs, buffer, 16);
+            SMBUtil.writeTime(lastWriteTimeMs, buffer, 24);
+            SMBUtil.writeTime(creationTimeMs + 300, buffer, 32);
             SMBUtil.writeInt8(4096, buffer, 40);
             SMBUtil.writeInt8(2048, buffer, 48);
             SMBUtil.writeInt4(0x20, buffer, 56);
@@ -452,8 +458,8 @@ class Smb2CloseResponseTest {
             
             // Then - verify interface methods
             assertEquals(response.getCreationTime(), response.getCreateTime());
-            assertEquals(lastAccessTime, response.getLastAccessTime());
-            assertEquals(lastWriteTime, response.getLastWriteTime());
+            assertEquals(lastAccessTimeMs, response.getLastAccessTime());
+            assertEquals(lastWriteTimeMs, response.getLastWriteTime());
             assertEquals(2048, response.getSize());
             assertEquals(0x20, response.getAttributes());
         }
@@ -649,16 +655,18 @@ class Smb2CloseResponseTest {
             // Given
             byte[] buffer = new byte[60];
             SMBUtil.writeInt2(60, buffer, 0);
-            // All times remain zero
+            // All times remain zero in buffer
             
             // When
             response.readBytesWireFormat(buffer, 0);
             
-            // Then
-            assertEquals(0, response.getCreationTime());
-            assertEquals(0, response.getLastAccessTime());
-            assertEquals(0, response.getLastWriteTime());
-            assertEquals(0, response.getChangeTime());
+            // Then - zero Windows FileTime converts to negative Unix time
+            // (0 / 10000L - MILLISECONDS_BETWEEN_1970_AND_1601)
+            long expectedTime = -SmbConstants.MILLISECONDS_BETWEEN_1970_AND_1601;
+            assertEquals(expectedTime, response.getCreationTime());
+            assertEquals(expectedTime, response.getLastAccessTime());
+            assertEquals(expectedTime, response.getLastWriteTime());
+            assertEquals(expectedTime, response.getChangeTime());
         }
     }
 

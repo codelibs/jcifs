@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
 import jcifs.smb1.smb1.ServerMessageBlock;
+import jcifs.smb1.smb1.SmbComOpenAndX;
 import jcifs.smb1.smb1.SmbFile;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -104,10 +105,10 @@ class SmbComOpenAndXTest {
     @Test
     void testWriteParameterWordsWireFormat() {
         smbComOpenAndX = new SmbComOpenAndX(fileName, access, 0, andx);
-        byte[] dst = new byte[24];
+        // Buffer needs 26 bytes: 2+2+2+2+4+2+4+8 = 26
+        byte[] dst = new byte[26];
         int result = smbComOpenAndX.writeParameterWordsWireFormat(dst, 0);
-        assertEquals(24, result);
-        // You can add more assertions here to check the content of the dst array
+        assertEquals(26, result);
     }
 
     /**
@@ -117,11 +118,13 @@ class SmbComOpenAndXTest {
     void testWriteBytesWireFormat_Unicode() {
         smbComOpenAndX = new SmbComOpenAndX(fileName, access, 0, andx);
         smbComOpenAndX.useUnicode = true;
-        // The actual size depends on the implementation of writeString
-        byte[] dst = new byte[fileName.length() * 2 + 2];
+        // For Unicode: 1 byte (initial null in writeBytesWireFormat) 
+        // + potential 1 byte alignment (in writeString) + fileName.length() * 2 + 2 bytes (terminating nulls)
+        // Since headerStart is 0 and dstIndex starts at 1 (after initial null), (1-0)%2=1, so alignment byte added
+        // Total: 1 + 1 + 12*2 + 2 = 28 bytes
+        byte[] dst = new byte[30]; // Use extra buffer space to avoid index errors
         int result = smbComOpenAndX.writeBytesWireFormat(dst, 0);
-        // This assertion depends on the behavior of writeString and the prepended null byte
-        assertTrue(result > fileName.length());
+        assertEquals(28, result);
     }
 
     /**

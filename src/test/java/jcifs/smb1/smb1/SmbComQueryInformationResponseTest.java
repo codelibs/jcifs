@@ -20,6 +20,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
+import jcifs.smb1.smb1.SmbComQueryInformationResponse;
+import jcifs.smb1.smb1.ServerMessageBlock;
+
 /**
  * Unit tests for the SmbComQueryInformationResponse class.
  */
@@ -113,9 +116,9 @@ public class SmbComQueryInformationResponseTest {
         // File Attributes: 0x0010 (Directory)
         buffer[0] = 0x10;
         buffer[1] = 0x00;
-        // Last Write Time (UTime): A sample timestamp
-        long sampleTime = 1672531200L; // Represents a specific date
-        ServerMessageBlock.writeUTime(sampleTime, buffer, 2);
+        // Last Write Time (UTime): A sample timestamp in milliseconds
+        long sampleTimeMillis = 1672531200000L; // Represents a specific date in milliseconds
+        ServerMessageBlock.writeUTime(sampleTimeMillis, buffer, 2);
         // File Size: 1024 bytes
         ServerMessageBlock.writeInt4(1024, buffer, 6);
 
@@ -125,8 +128,10 @@ public class SmbComQueryInformationResponseTest {
         // Should read 20 bytes as per implementation
         assertEquals(20, bytesRead);
         assertEquals(0x0010, response.getAttributes());
-        // Note: getLastWriteTime adds the offset, so we check against the raw time + offset
-        assertEquals(sampleTime * 1000L + serverTimeZoneOffset, response.getLastWriteTime());
+        // getLastWriteTime returns lastWriteTime (from readUTime) + serverTimeZoneOffset
+        // readUTime multiplies the seconds value by 1000, and writeUTime divides milliseconds by 1000
+        // So the round-trip should preserve the milliseconds value
+        assertEquals(sampleTimeMillis + serverTimeZoneOffset, response.getLastWriteTime());
         assertEquals(1024, response.getSize());
     }
     

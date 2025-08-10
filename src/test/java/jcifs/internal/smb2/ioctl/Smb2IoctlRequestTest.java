@@ -25,8 +25,9 @@ import java.util.Arrays;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import jcifs.CIFSContext;
 import jcifs.Configuration;
@@ -38,6 +39,7 @@ import jcifs.internal.smb2.Smb2Constants;
  * 
  * @author test
  */
+@ExtendWith(MockitoExtension.class)
 class Smb2IoctlRequestTest {
 
     @Mock
@@ -58,15 +60,21 @@ class Smb2IoctlRequestTest {
     
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
-        when(mockConfig.getTransactionBufferSize()).thenReturn(65536);
-        when(mockContext.getConfig()).thenReturn(mockConfig);
         Arrays.fill(TEST_FILE_ID, (byte) 0x42);
+    }
+    
+    private void setupMockConfig() {
+        when(mockConfig.getTransactionBufferSize()).thenReturn(65536);
+    }
+    
+    private void setupMockContext() {
+        when(mockContext.getConfig()).thenReturn(mockConfig);
     }
     
     @Test
     @DisplayName("Test constructor with config and control code")
     void testConstructorWithConfigAndControlCode() {
+        setupMockConfig();
         Smb2IoctlRequest request = new Smb2IoctlRequest(mockConfig, TEST_CONTROL_CODE);
         
         assertNotNull(request);
@@ -77,6 +85,7 @@ class Smb2IoctlRequestTest {
     @Test
     @DisplayName("Test constructor with config, control code and file ID")
     void testConstructorWithFileId() {
+        setupMockConfig();
         Smb2IoctlRequest request = new Smb2IoctlRequest(mockConfig, TEST_CONTROL_CODE, TEST_FILE_ID);
         
         assertNotNull(request);
@@ -87,6 +96,7 @@ class Smb2IoctlRequestTest {
     @Test
     @DisplayName("Test constructor with output buffer")
     void testConstructorWithOutputBuffer() {
+        // This constructor doesn't use getTransactionBufferSize()
         Smb2IoctlRequest request = new Smb2IoctlRequest(mockConfig, TEST_CONTROL_CODE, TEST_FILE_ID, TEST_OUTPUT_BUFFER);
         
         assertNotNull(request);
@@ -97,6 +107,7 @@ class Smb2IoctlRequestTest {
     @Test
     @DisplayName("Test setFileId method")
     void testSetFileId() {
+        setupMockConfig();
         Smb2IoctlRequest request = new Smb2IoctlRequest(mockConfig, TEST_CONTROL_CODE);
         byte[] newFileId = new byte[16];
         Arrays.fill(newFileId, (byte) 0x55);
@@ -109,6 +120,8 @@ class Smb2IoctlRequestTest {
     @Test
     @DisplayName("Test createResponse method")
     void testCreateResponse() {
+        // This constructor doesn't use getTransactionBufferSize()
+        setupMockContext();
         Smb2IoctlRequest request = new Smb2IoctlRequest(mockConfig, TEST_CONTROL_CODE, TEST_FILE_ID, TEST_OUTPUT_BUFFER);
         
         Smb2IoctlResponse response = request.createResponse(mockContext, request);
@@ -120,6 +133,7 @@ class Smb2IoctlRequestTest {
     @Test
     @DisplayName("Test setFlags method")
     void testSetFlags() {
+        setupMockConfig();
         Smb2IoctlRequest request = new Smb2IoctlRequest(mockConfig, TEST_CONTROL_CODE);
         
         request.setFlags(Smb2IoctlRequest.SMB2_O_IOCTL_IS_FSCTL);
@@ -130,6 +144,7 @@ class Smb2IoctlRequestTest {
     @Test
     @DisplayName("Test setMaxInputResponse method")
     void testSetMaxInputResponse() {
+        setupMockConfig();
         Smb2IoctlRequest request = new Smb2IoctlRequest(mockConfig, TEST_CONTROL_CODE);
         int maxInput = 2048;
         
@@ -141,6 +156,7 @@ class Smb2IoctlRequestTest {
     @Test
     @DisplayName("Test setMaxOutputResponse method")
     void testSetMaxOutputResponse() {
+        setupMockConfig();
         Smb2IoctlRequest request = new Smb2IoctlRequest(mockConfig, TEST_CONTROL_CODE);
         int maxOutput = 4096;
         
@@ -152,6 +168,7 @@ class Smb2IoctlRequestTest {
     @Test
     @DisplayName("Test setInputData method")
     void testSetInputData() {
+        setupMockConfig();
         Smb2IoctlRequest request = new Smb2IoctlRequest(mockConfig, TEST_CONTROL_CODE);
         
         request.setInputData(mockInputData);
@@ -162,6 +179,7 @@ class Smb2IoctlRequestTest {
     @Test
     @DisplayName("Test setOutputData method")
     void testSetOutputData() {
+        setupMockConfig();
         Smb2IoctlRequest request = new Smb2IoctlRequest(mockConfig, TEST_CONTROL_CODE);
         
         request.setOutputData(mockOutputData);
@@ -172,6 +190,7 @@ class Smb2IoctlRequestTest {
     @Test
     @DisplayName("Test size calculation without data")
     void testSizeWithoutData() {
+        setupMockConfig();
         Smb2IoctlRequest request = new Smb2IoctlRequest(mockConfig, TEST_CONTROL_CODE);
         
         int size = request.size();
@@ -183,6 +202,7 @@ class Smb2IoctlRequestTest {
     @Test
     @DisplayName("Test size calculation with input data")
     void testSizeWithInputData() {
+        setupMockConfig();
         Smb2IoctlRequest request = new Smb2IoctlRequest(mockConfig, TEST_CONTROL_CODE);
         when(mockInputData.size()).thenReturn(100);
         request.setInputData(mockInputData);
@@ -197,6 +217,7 @@ class Smb2IoctlRequestTest {
     @Test
     @DisplayName("Test size calculation with output data")
     void testSizeWithOutputData() {
+        setupMockConfig();
         Smb2IoctlRequest request = new Smb2IoctlRequest(mockConfig, TEST_CONTROL_CODE);
         when(mockOutputData.size()).thenReturn(50);
         request.setOutputData(mockOutputData);
@@ -211,6 +232,7 @@ class Smb2IoctlRequestTest {
     @Test
     @DisplayName("Test size calculation with both input and output data")
     void testSizeWithBothData() {
+        setupMockConfig();
         Smb2IoctlRequest request = new Smb2IoctlRequest(mockConfig, TEST_CONTROL_CODE);
         when(mockInputData.size()).thenReturn(100);
         when(mockOutputData.size()).thenReturn(50);
@@ -228,13 +250,14 @@ class Smb2IoctlRequestTest {
     @Test
     @DisplayName("Test writeBytesWireFormat without data")
     void testWriteBytesWireFormatWithoutData() {
+        setupMockConfig();
         Smb2IoctlRequest request = new Smb2IoctlRequest(mockConfig, TEST_CONTROL_CODE, TEST_FILE_ID);
         byte[] buffer = new byte[1024];
         
         int written = request.writeBytesWireFormat(buffer, 0);
         
-        // Should write 57 bytes minimum
-        assertTrue(written >= 57);
+        // Should write exactly 56 bytes (structure size without data)
+        assertEquals(56, written);
         // Check structure size (first 2 bytes should be 57)
         assertEquals(57, (buffer[0] & 0xFF) | ((buffer[1] & 0xFF) << 8));
     }
@@ -242,6 +265,7 @@ class Smb2IoctlRequestTest {
     @Test
     @DisplayName("Test writeBytesWireFormat with input data")
     void testWriteBytesWireFormatWithInputData() {
+        setupMockConfig();
         Smb2IoctlRequest request = new Smb2IoctlRequest(mockConfig, TEST_CONTROL_CODE, TEST_FILE_ID);
         when(mockInputData.encode(any(byte[].class), anyInt())).thenReturn(100);
         request.setInputData(mockInputData);
@@ -256,6 +280,7 @@ class Smb2IoctlRequestTest {
     @Test
     @DisplayName("Test writeBytesWireFormat with output data")
     void testWriteBytesWireFormatWithOutputData() {
+        setupMockConfig();
         Smb2IoctlRequest request = new Smb2IoctlRequest(mockConfig, TEST_CONTROL_CODE, TEST_FILE_ID);
         when(mockOutputData.encode(any(byte[].class), anyInt())).thenReturn(50);
         request.setOutputData(mockOutputData);
@@ -270,6 +295,7 @@ class Smb2IoctlRequestTest {
     @Test
     @DisplayName("Test writeBytesWireFormat with both data")
     void testWriteBytesWireFormatWithBothData() {
+        setupMockConfig();
         Smb2IoctlRequest request = new Smb2IoctlRequest(mockConfig, TEST_CONTROL_CODE, TEST_FILE_ID);
         when(mockInputData.encode(any(byte[].class), anyInt())).thenReturn(100);
         when(mockOutputData.encode(any(byte[].class), anyInt())).thenReturn(50);
@@ -280,8 +306,8 @@ class Smb2IoctlRequestTest {
         
         int written = request.writeBytesWireFormat(buffer, 0);
         
-        // Should write base structure + data
-        assertEquals(57 + 100 + 50, written);
+        // Should write base structure (56) + data
+        assertEquals(56 + 100 + 50, written);
         verify(mockInputData).encode(any(byte[].class), anyInt());
         verify(mockOutputData).encode(any(byte[].class), anyInt());
     }
@@ -289,6 +315,7 @@ class Smb2IoctlRequestTest {
     @Test
     @DisplayName("Test readBytesWireFormat returns 0")
     void testReadBytesWireFormat() {
+        setupMockConfig();
         Smb2IoctlRequest request = new Smb2IoctlRequest(mockConfig, TEST_CONTROL_CODE);
         byte[] buffer = new byte[1024];
         
@@ -301,6 +328,7 @@ class Smb2IoctlRequestTest {
     @Test
     @DisplayName("Test with unspecified file ID")
     void testWithUnspecifiedFileId() {
+        setupMockConfig();
         Smb2IoctlRequest request = new Smb2IoctlRequest(mockConfig, TEST_CONTROL_CODE);
         
         assertNotNull(request);
@@ -332,6 +360,7 @@ class Smb2IoctlRequestTest {
     @Test
     @DisplayName("Test configuration with different control codes")
     void testDifferentControlCodes() {
+        setupMockConfig();
         // Test with different control codes
         int[] controlCodes = {
             Smb2IoctlRequest.FSCTL_PIPE_PEEK,
@@ -364,6 +393,7 @@ class Smb2IoctlRequestTest {
     @Test
     @DisplayName("Test writeBytesWireFormat with different file IDs")
     void testWriteBytesWireFormatFileIdCopy() {
+        setupMockConfig();
         byte[] customFileId = new byte[16];
         for (int i = 0; i < 16; i++) {
             customFileId[i] = (byte) i;
@@ -378,12 +408,13 @@ class Smb2IoctlRequestTest {
         for (int i = 0; i < 16; i++) {
             assertEquals(customFileId[i], buffer[8 + i]);
         }
-        assertTrue(written >= 57);
+        assertEquals(56, written);
     }
     
     @Test
     @DisplayName("Test writeBytesWireFormat control code encoding")
     void testWriteBytesWireFormatControlCode() {
+        setupMockConfig();
         int testControlCode = 0x12345678;
         Smb2IoctlRequest request = new Smb2IoctlRequest(mockConfig, testControlCode, TEST_FILE_ID);
         byte[] buffer = new byte[1024];

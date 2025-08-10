@@ -5,6 +5,8 @@ import static org.mockito.Mockito.*;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
@@ -19,6 +21,7 @@ import jcifs.smb.NtStatus;
 /**
  * Tests for Smb2SessionSetupResponse decoding and behavior.
  */
+@ExtendWith(MockitoExtension.class)
 @DisplayName("Smb2SessionSetupResponse Tests")
 @MockitoSettings(strictness = Strictness.LENIENT)
 class Smb2SessionSetupResponseTest extends BaseTest {
@@ -103,7 +106,7 @@ class Smb2SessionSetupResponseTest extends BaseTest {
 
         byte[] buf = new byte[256];
         int headerStart = 0;
-        buildHeader(buf, headerStart, NtStatus.NT_STATUS_SUCCESS, 0x0001, 0xCAFEBABECAFEL00DL);
+        buildHeader(buf, headerStart, NtStatus.NT_STATUS_SUCCESS, 0x0001, 0xCAFEBABECAFEF00DL);
 
         int bodyStart = headerStart + Smb2Constants.SMB2_HEADER_LENGTH;
         byte[] blob = new byte[] { 1, 2, 3 };

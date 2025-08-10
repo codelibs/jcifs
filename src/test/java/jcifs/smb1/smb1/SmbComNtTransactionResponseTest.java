@@ -20,6 +20,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import jcifs.smb1.smb1.SmbComNtTransactionResponse;
+
 class SmbComNtTransactionResponseTest {
 
     private TestableSmbComNtTransactionResponse response;
@@ -65,7 +67,7 @@ class SmbComNtTransactionResponseTest {
     @Test
     void testReadParameterWordsWireFormat_bufDataStartIsZero() {
         // Test case when bufDataStart is initially 0.
-        byte[] buffer = new byte[34];
+        byte[] buffer = new byte[37]; // 3 reserved + 8*4 bytes for int4 values + 2 bytes for setupCount
         int bufferIndex = 0;
 
         // Reserved bytes
@@ -97,12 +99,13 @@ class SmbComNtTransactionResponseTest {
         // dataDisplacement = 0
         writeInt4(0, buffer, bufferIndex);
         bufferIndex += 4;
-        // setupCount = 0
+        // setupCount = 0 (1 byte + 1 padding byte)
         buffer[bufferIndex] = 0;
+        buffer[bufferIndex + 1] = 0; // padding byte
 
         int bytesRead = response.readParameterWordsWireFormat(buffer, 0);
 
-        assertEquals(35, bytesRead);
+        assertEquals(37, bytesRead); // 3 reserved + 32 (8*4) + 2 for setupCount
         assertEquals(10, response.totalParameterCount);
         assertEquals(10, response.bufDataStart); // Should be set to totalParameterCount
         assertEquals(20, response.totalDataCount);
@@ -119,7 +122,7 @@ class SmbComNtTransactionResponseTest {
     void testReadParameterWordsWireFormat_bufDataStartIsNotZero() {
         // Test case when bufDataStart is not 0.
         response.bufDataStart = 50; // Initial non-zero value
-        byte[] buffer = new byte[34];
+        byte[] buffer = new byte[37]; // 3 reserved + 8*4 bytes for int4 values + 2 bytes for setupCount
         int bufferIndex = 0;
 
         // Reserved bytes
@@ -151,12 +154,13 @@ class SmbComNtTransactionResponseTest {
         // dataDisplacement = 0
         writeInt4(0, buffer, bufferIndex);
         bufferIndex += 4;
-        // setupCount = 1
+        // setupCount = 1 (1 byte + 1 padding byte)
         buffer[bufferIndex] = 1;
+        buffer[bufferIndex + 1] = 0; // padding byte
 
         int bytesRead = response.readParameterWordsWireFormat(buffer, 0);
 
-        assertEquals(35, bytesRead);
+        assertEquals(37, bytesRead); // 3 reserved + 32 (8*4) + 2 for setupCount
         assertEquals(10, response.totalParameterCount);
         assertEquals(50, response.bufDataStart); // Should not be changed
         assertEquals(20, response.totalDataCount);

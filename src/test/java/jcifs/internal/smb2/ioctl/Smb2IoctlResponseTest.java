@@ -22,8 +22,8 @@ class Smb2IoctlResponseTest {
 
     // Helper: build a minimal SMB2 header with a given status
     private static byte[] buildHeader(int status) {
-        byte[] hdr = new byte[SMBUtil.SMB2_HEADER.length];
-        System.arraycopy(SMBUtil.SMB2_HEADER, 0, hdr, 0, SMBUtil.SMB2_HEADER.length);
+        byte[] hdr = new byte[64]; // SMB2 header is 64 bytes
+        System.arraycopy(SMBUtil.SMB2_HEADER, 0, hdr, 0, 64);
         // Write Status (little-endian) at offset 8 in the SMB2 header
         SMBUtil.writeInt4(status, hdr, 8);
         // Write Command = SMB2_IOCTL (0x000B) at offset 12
@@ -33,62 +33,73 @@ class Smb2IoctlResponseTest {
         return hdr;
     }
 
-    // Helper: assemble a full SMB2 IOCTL response with structureSize=49
+    // Helper: build SMB2 IOCTL response body (without header) with structureSize=49
     private static byte[] buildIoctlResponseBody(int ctlCode, byte[] fileId, int inputCount, byte[] inputBytes,
             int outputCount, byte[] outputBytes, int ioctlFlags) {
-        final int bodyStart = Smb2Constants.SMB2_HEADER_LENGTH;
-        final int fixed = 49; // structure size expected by decoder
-        int payloadStart = bodyStart + fixed;
-        int totalLen = payloadStart + inputCount + outputCount;
+        final int headerLen = 64; // SMB2 header is 64 bytes
+        final int bodyFixed = 48; // body size minus 1 for structure size field overlap
+        final int payloadStart = headerLen + bodyFixed;
+        final int bodyLen = bodyFixed + inputCount + outputCount;
 
-        byte[] buf = new byte[totalLen];
-        // structureSize (LE)
-        SMBUtil.writeInt2(49, buf, bodyStart);
-        // skip 2 reserved bytes (bodyStart + 2..3)
+        byte[] buf = new byte[bodyLen];
+        int pos = 0;
+        
+        // structureSize (LE) - includes 1 byte of the variable part
+        SMBUtil.writeInt2(49, buf, pos);
+        pos += 2;
+        // 2 reserved bytes
+        pos += 2;
         // ctlCode
-        SMBUtil.writeInt4(ctlCode, buf, bodyStart + 4);
+        SMBUtil.writeInt4(ctlCode, buf, pos);
+        pos += 4;
         // fileId (16 bytes)
         byte[] fid = fileId != null ? fileId : new byte[16];
-        System.arraycopy(fid, 0, buf, bodyStart + 8, 16);
+        System.arraycopy(fid, 0, buf, pos, 16);
+        pos += 16;
 
+        // Calculate offsets relative to start of SMB2 header
         int inputOffsetField = inputCount > 0 ? payloadStart : 0;
         int outputOffsetField = outputCount > 0 ? payloadStart + inputCount : 0;
 
         // inputOffset (relative to header start)
-        SMBUtil.writeInt4(inputOffsetField - 0 /* headerStart is 0 in tests */, buf, bodyStart + 24);
+        SMBUtil.writeInt4(inputOffsetField, buf, pos);
+        pos += 4;
         // inputCount
-        SMBUtil.writeInt4(inputCount, buf, bodyStart + 28);
+        SMBUtil.writeInt4(inputCount, buf, pos);
+        pos += 4;
         // outputOffset (relative to header start)
-        SMBUtil.writeInt4(outputOffsetField - 0, buf, bodyStart + 32);
+        SMBUtil.writeInt4(outputOffsetField, buf, pos);
+        pos += 4;
         // outputCount
-        SMBUtil.writeInt4(outputCount, buf, bodyStart + 36);
+        SMBUtil.writeInt4(outputCount, buf, pos);
+        pos += 4;
         // ioctlFlags
-        SMBUtil.writeInt4(ioctlFlags, buf, bodyStart + 40);
-        // reserved2 at +44 (leave zero)
+        SMBUtil.writeInt4(ioctlFlags, buf, pos);
+        pos += 4;
+        // reserved2 (4 bytes)
+        pos += 4;
 
-        // payload: input then output
-        int p = payloadStart;
+        // Write payload data: input then output
         if (inputCount > 0 && inputBytes != null) {
-            System.arraycopy(inputBytes, 0, buf, p, inputCount);
-            p += inputCount;
+            System.arraycopy(inputBytes, 0, buf, pos, inputCount);
+            pos += inputCount;
         }
         if (outputCount > 0 && outputBytes != null) {
-            System.arraycopy(outputBytes, 0, buf, p, outputCount);
+            System.arraycopy(outputBytes, 0, buf, pos, outputCount);
         }
         return buf;
     }
 
-    // Helper: build an error body with structureSize=9
+    // Helper: build an error body (without header) with structureSize=9
     private static byte[] buildErrorBody(int errorContextCount, int bc, byte[] errorData) {
-        final int bodyStart = Smb2Constants.SMB2_HEADER_LENGTH;
-        int totalLen = bodyStart + 4 /* 2 + 2 */ + 4 /* bc */ + bc;
-        byte[] buf = new byte[totalLen];
-        SMBUtil.writeInt2(9, buf, bodyStart); // structureSize
-        buf[bodyStart + 2] = (byte) errorContextCount; // ErrorContextCount
-        // one reserved byte at bodyStart + 3
-        SMBUtil.writeInt4(bc, buf, bodyStart + 4); // ByteCount
+        int bodyLen = 8 + bc; // 8 bytes fixed + variable data
+        byte[] buf = new byte[bodyLen];
+        SMBUtil.writeInt2(9, buf, 0); // structureSize
+        buf[2] = (byte) errorContextCount; // ErrorContextCount
+        // one reserved byte at position 3
+        SMBUtil.writeInt4(bc, buf, 4); // ByteCount
         if (bc > 0 && errorData != null) {
-            System.arraycopy(errorData, 0, buf, bodyStart + 8, bc);
+            System.arraycopy(errorData, 0, buf, 8, bc);
         }
         return buf;
     }
@@ -99,9 +110,9 @@ class Smb2IoctlResponseTest {
         // so readBytesWireFormat() is invoked and must delegate back to readErrorResponse() when it sees size=9.
         byte[] header = buildHeader(NtStatus.NT_STATUS_INVALID_PARAMETER);
         byte[] body = buildErrorBody(2, 3, new byte[] { (byte) 0xAA, (byte) 0xBB, (byte) 0xCC });
-        byte[] packet = new byte[header.length + (body.length - header.length)];
+        byte[] packet = new byte[header.length + body.length];
         System.arraycopy(header, 0, packet, 0, header.length);
-        System.arraycopy(body, header.length, packet, header.length, body.length - header.length);
+        System.arraycopy(body, 0, packet, header.length, body.length);
 
         BaseConfiguration config = new BaseConfiguration(true);
         Smb2IoctlResponse resp = new Smb2IoctlResponse(config);
@@ -139,9 +150,9 @@ class Smb2IoctlResponseTest {
                 0, null,
                 output.length, output,
                 0x0);
-        byte[] packet = new byte[body.length];
+        byte[] packet = new byte[header.length + body.length];
         System.arraycopy(header, 0, packet, 0, header.length);
-        System.arraycopy(body, header.length, packet, header.length, body.length - header.length);
+        System.arraycopy(body, 0, packet, header.length, body.length);
 
         BaseConfiguration config = new BaseConfiguration(true);
         byte[] outBuf = new byte[output.length];
@@ -165,9 +176,9 @@ class Smb2IoctlResponseTest {
                 0, null,
                 output.length, output,
                 0);
-        byte[] packet = new byte[body.length];
+        byte[] packet = new byte[header.length + body.length];
         System.arraycopy(header, 0, packet, 0, header.length);
-        System.arraycopy(body, header.length, packet, header.length, body.length - header.length);
+        System.arraycopy(body, 0, packet, header.length, body.length);
 
         BaseConfiguration config = new BaseConfiguration(true);
         byte[] outBuf = new byte[4]; // too small
@@ -192,9 +203,9 @@ class Smb2IoctlResponseTest {
                 0, null,
                 out.length, out,
                 0x1234);
-        byte[] packet = new byte[body.length];
+        byte[] packet = new byte[header.length + body.length];
         System.arraycopy(header, 0, packet, 0, header.length);
-        System.arraycopy(body, header.length, packet, header.length, body.length - header.length);
+        System.arraycopy(body, 0, packet, header.length, body.length);
 
         BaseConfiguration config = new BaseConfiguration(true);
         Smb2IoctlResponse resp = new Smb2IoctlResponse(config);
@@ -230,12 +241,13 @@ class Smb2IoctlResponseTest {
                 0, null,
                 out.length, out,
                 0);
-        byte[] packet = new byte[body.length];
+        byte[] packet = new byte[header.length + body.length];
         System.arraycopy(header, 0, packet, 0, header.length);
-        System.arraycopy(body, header.length, packet, header.length, body.length - header.length);
+        System.arraycopy(body, 0, packet, header.length, body.length);
 
         BaseConfiguration config = new BaseConfiguration(true);
-        Smb2IoctlResponse resp = new Smb2IoctlResponse(config);
+        // Use constructor that sets ctlCode
+        Smb2IoctlResponse resp = new Smb2IoctlResponse(config, null, Smb2IoctlRequest.FSCTL_PIPE_PEEK);
         resp.decode(packet, 0);
 
         SrvPipePeekResponse peek = resp.getOutputData(SrvPipePeekResponse.class);

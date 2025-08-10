@@ -228,8 +228,8 @@ class ValidateNegotiateInfoRequestTest {
         byte[] buffer = new byte[request.size()];
         request.encode(buffer, 0);
         
-        // Verify max capabilities value
-        assertEquals(0xFFFFFFFF, SMBUtil.readInt4(buffer, 0) & 0xFFFFFFFFL);
+        // Verify max capabilities value (comparing as unsigned long)
+        assertEquals(0xFFFFFFFFL, SMBUtil.readInt4(buffer, 0) & 0xFFFFFFFFL);
     }
 
     @Test

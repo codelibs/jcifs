@@ -24,22 +24,23 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import jcifs.internal.SMBProtocolDecodingException;
 import jcifs.internal.util.SMBUtil;
 
+@ExtendWith(MockitoExtension.class)
 class SrvCopyChunkCopyResponseTest {
 
     private SrvCopyChunkCopyResponse response;
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
         response = new SrvCopyChunkCopyResponse();
     }
 
@@ -219,9 +220,8 @@ class SrvCopyChunkCopyResponseTest {
             assertEquals(-3, response.getTotalBytesWritten());
         }
 
-        @Test
-        @DisplayName("Should decode at various offsets")
         @ParameterizedTest
+        @DisplayName("Should decode at various offsets")
         @ValueSource(ints = {0, 10, 50, 100, 200})
         void testDecodeAtVariousOffsets(int offset) throws SMBProtocolDecodingException {
             byte[] buffer = new byte[512];
