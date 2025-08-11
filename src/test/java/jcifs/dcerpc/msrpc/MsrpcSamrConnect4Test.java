@@ -9,8 +9,6 @@ import jcifs.dcerpc.DcerpcConstants;
 
 /**
  * Tests for {@link MsrpcSamrConnect4}.
- *
- * @author Shinsuke Ogawa
  */
 class MsrpcSamrConnect4Test implements DcerpcConstants {
 
