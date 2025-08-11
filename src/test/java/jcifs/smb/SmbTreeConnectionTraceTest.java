@@ -184,7 +184,7 @@ class SmbTreeConnectionTraceTest {
 
     @Test
     @DisplayName("connectWrapException: rethrows SmbException unchanged")
-    void connectWrapException_rethrowsSmbException() throws MalformedURLException, CIFSException {
+    void connectWrapException_rethrowsSmbException() throws Exception {
         // Arrange
         CIFSContext ctx = mock(CIFSContext.class);
         SmbResourceLocatorImpl loc = newLocator(ctx);

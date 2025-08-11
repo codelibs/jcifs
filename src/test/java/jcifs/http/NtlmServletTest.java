@@ -42,6 +42,7 @@ import jcifs.Address;
 import jcifs.NameServiceClient;
 import jcifs.smb.NtlmPasswordAuthentication;
 import jcifs.smb.SmbAuthException;
+import jcifs.smb.SmbException;
 import jcifs.SmbTransport;
 import jcifs.SmbTransportPool;
 
@@ -149,7 +150,7 @@ class NtlmServletTest {
      * @throws CIFSException
      */
     @Test
-    void testService_NtlmAuth_Success() throws ServletException, IOException, CIFSException {
+    void testService_NtlmAuth_Success() throws Exception {
         ntlmServlet.init(servletConfig);
         setupMocksForAuth();
 
@@ -183,14 +184,14 @@ class NtlmServletTest {
      * @throws CIFSException
      */
     @Test
-    void testService_NtlmAuth_Failure() throws ServletException, IOException, CIFSException {
+    void testService_NtlmAuth_Failure() throws Exception {
         ntlmServlet.init(servletConfig);
         setupMocksForAuth();
 
         when(request.getHeader("Authorization")).thenReturn("NTLM TlRMTVNTUAABAAAAl4II4gAAAAAAAAAAAAAAAAAAAAAGAbAdAAAADw==");
 
         // Simulate SmbAuthException during logon
-        doThrow(new SmbAuthException(1, "Login failed")).when(transportPool).logon(any(), any());
+        doThrow(new SmbException(0xC000006D, true)).when(transportPool).logon(any(), any());
 
         ntlmServlet.service(request, response);
 
@@ -207,7 +208,7 @@ class NtlmServletTest {
      * @throws CIFSException
      */
     @Test
-    void testService_BasicAuth_Success() throws ServletException, IOException, CIFSException {
+    void testService_BasicAuth_Success() throws Exception {
         ntlmServlet.init(servletConfig);
         setupMocksForAuth();
 
@@ -252,7 +253,7 @@ class NtlmServletTest {
      * Helper method to set up common mocks required for authentication tests.
      * @throws CIFSException
      */
-    private void setupMocksForAuth() throws CIFSException {
+    private void setupMocksForAuth() throws Exception {
         // This is a simplified way to get a transport context into the servlet.
         // A more robust solution might involve reflection or modifying the servlet for testability.
         try {

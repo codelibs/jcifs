@@ -47,6 +47,7 @@ import jcifs.NameServiceClient;
 import jcifs.smb.NtlmChallenge;
 import jcifs.smb.NtlmPasswordAuthentication;
 import jcifs.smb.SmbAuthException;
+import jcifs.smb.SmbException;
 import jcifs.SmbTransportPool;
 import jcifs.util.Hexdump;
 
@@ -285,21 +286,7 @@ class NtlmHttpFilterTest {
         doNothing().when(transportPool).logon(any(), any());
         when(nameServiceClient.getByName(anyString(), anyBoolean())).thenReturn(mock(jcifs.Address.class));
 
-        NtlmHttpFilter filter = new NtlmHttpFilter() {
-            @Override
-            protected CIFSContext getTransportContext() {
-                return new BaseContext(new PropertyConfiguration(props)) {
-                    @Override
-                    public SmbTransportPool getTransportPool() {
-                        return transportPool;
-                    }
-                    @Override
-                    public NameServiceClient getNameServiceClient() {
-                        return nameServiceClient;
-                    }
-                };
-            }
-        };
+        NtlmHttpFilter filter = new NtlmHttpFilter();
         
         // Re-initialize the filter with the mocked context logic
         filter.init(filterConfig);
@@ -314,26 +301,12 @@ class NtlmHttpFilterTest {
         SmbTransportPool transportPool = mock(SmbTransportPool.class);
         NameServiceClient nameServiceClient = mock(NameServiceClient.class);
 
-        // Throw SmbAuthException on logon attempt
-        SmbAuthException authException = new SmbAuthException(0xC000006D, null); // STATUS_LOGON_FAILURE
+        // Throw SmbException (SmbAuthException constructors are package-private)
+        SmbException authException = new SmbException(0xC000006D, true); // STATUS_LOGON_FAILURE
         Mockito.doThrow(authException).when(transportPool).logon(any(), any());
         when(nameServiceClient.getByName(anyString(), anyBoolean())).thenReturn(mock(jcifs.Address.class));
 
-        NtlmHttpFilter filter = new NtlmHttpFilter() {
-            @Override
-            protected CIFSContext getTransportContext() {
-                return new BaseContext(new PropertyConfiguration(props)) {
-                    @Override
-                    public SmbTransportPool getTransportPool() {
-                        return transportPool;
-                    }
-                     @Override
-                    public NameServiceClient getNameServiceClient() {
-                        return nameServiceClient;
-                    }
-                };
-            }
-        };
+        NtlmHttpFilter filter = new NtlmHttpFilter();
         
         filter.init(filterConfig);
         this.ntlmHttpFilter = filter;
@@ -351,21 +324,7 @@ class NtlmHttpFilterTest {
         when(transportPool.getChallenge(any(), any())).thenReturn(challenge);
         when(nameServiceClient.getByName(anyString(), anyBoolean())).thenReturn(mock(jcifs.Address.class));
 
-        NtlmHttpFilter filter = new NtlmHttpFilter() {
-            @Override
-            protected CIFSContext getTransportContext() {
-                return new BaseContext(new PropertyConfiguration(props)) {
-                    @Override
-                    public SmbTransportPool getTransportPool() {
-                        return transportPool;
-                    }
-                     @Override
-                    public NameServiceClient getNameServiceClient() {
-                        return nameServiceClient;
-                    }
-                };
-            }
-        };
+        NtlmHttpFilter filter = new NtlmHttpFilter();
         
         filter.init(filterConfig);
         this.ntlmHttpFilter = filter;

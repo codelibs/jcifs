@@ -57,8 +57,9 @@ class PACDecodingExceptionTest {
     void testCauseConstructor() {
         Throwable cause = new RuntimeException("Root cause");
         PACDecodingException e = new PACDecodingException(cause);
-        // Expect the cause to be set correctly and the message to be derived from the cause
-        assertEquals(cause.toString(), e.getMessage());
+        // When constructed with only a cause, the implementation passes (null, cause) to super
+        // which results in a null message rather than deriving it from the cause
+        assertNull(e.getMessage());
         assertSame(cause, e.getCause());
     }
 

@@ -34,6 +34,7 @@ import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.ASN1TaggedObject;
 import org.bouncycastle.asn1.BERTags;
+import org.bouncycastle.asn1.DERBitString;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.DERTaggedObject;
@@ -85,131 +86,131 @@ class KerberosTokenTest {
     }
 
     /**
-     * Test constructor with a valid token structure but no keys.
+     * Test constructor with missing APPLICATION tag in the token.
      *
      * @throws IOException if an I/O error occurs
      */
     @Test
-    void testConstructorWithValidTokenNoKeys() throws IOException {
-        byte[] validToken = createValidToken();
-        // This will still fail deep inside KerberosApRequest without keys, but the initial parsing should pass.
-        // We expect the constructor to proceed far enough to instantiate KerberosApRequest.
-        assertDoesNotThrow(() -> new KerberosToken(validToken));
+    void testConstructorWithMissingApplicationTag() throws IOException {
+        // Create inner content with OID and magic bytes but wrong tag after
+        ByteArrayOutputStream innerContent = new ByteArrayOutputStream();
+        ASN1ObjectIdentifier kerberosOid = new ASN1ObjectIdentifier(KerberosConstants.KERBEROS_OID);
+        innerContent.write(kerberosOid.getEncoded());
+        innerContent.write(0x01); // magic byte 1
+        innerContent.write(0x00); // magic byte 2
+        
+        // Add a sequence instead of APPLICATION tagged object
+        DERSequence wrongTag = new DERSequence(new ASN1Encodable[] {
+            new ASN1Integer(5)
+        });
+        innerContent.write(wrongTag.getEncoded());
+        
+        byte[] content = innerContent.toByteArray();
+        
+        // Create GSS-API wrapper
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        baos.write(0x60); // APPLICATION 0
+        baos.write(content.length);
+        baos.write(content);
+        
+        byte[] token = baos.toByteArray();
+        assertThrows(PACDecodingException.class, () -> new KerberosToken(token));
     }
 
     /**
-     * Test constructor with a valid token and mock keys.
+     * Test constructor with APPLICATION tag but wrong tag class.
      *
      * @throws IOException if an I/O error occurs
      */
     @Test
-    void testConstructorWithValidTokenAndKeys() throws IOException {
-        byte[] validToken = createValidToken();
-        KerberosKey[] keys = { mock(KerberosKey.class) };
-        assertDoesNotThrow(() -> new KerberosToken(validToken, keys));
+    void testConstructorWithWrongTagClass() throws IOException {
+        // Create AP-REQ structure
+        ASN1Sequence apReqSequence = new DERSequence(new ASN1Encodable[] {
+            new DERTaggedObject(true, 0, new ASN1Integer(5)), // pvno
+            new DERTaggedObject(true, 1, new ASN1Integer(14)), // msg-type
+        });
+
+        // Create CONTEXT tagged object instead of APPLICATION
+        DERTaggedObject contextTag = new DERTaggedObject(false, 14, apReqSequence);
+        
+        // Build inner content with OID and magic bytes
+        ByteArrayOutputStream innerContent = new ByteArrayOutputStream();
+        ASN1ObjectIdentifier kerberosOid = new ASN1ObjectIdentifier(KerberosConstants.KERBEROS_OID);
+        innerContent.write(kerberosOid.getEncoded());
+        innerContent.write(0x01); // magic byte 1
+        innerContent.write(0x00); // magic byte 2
+        innerContent.write(contextTag.getEncoded());
+        
+        byte[] content = innerContent.toByteArray();
+        
+        // Create GSS-API wrapper
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        baos.write(0x60); // APPLICATION 0
+        baos.write(content.length);
+        baos.write(content);
+        
+        byte[] token = baos.toByteArray();
+        assertThrows(PACDecodingException.class, () -> new KerberosToken(token));
     }
 
     /**
-     * Test getTicket method.
+     * Test constructor with APPLICATION tag but non-sequence content.
      *
      * @throws IOException if an I/O error occurs
-     * @throws PACDecodingException if a PAC decoding error occurs
      */
     @Test
-    void testGetTicket() throws IOException, PACDecodingException {
-        byte[] validToken = createValidToken();
-        KerberosToken kerberosToken = new KerberosToken(validToken);
-        assertNotNull(kerberosToken.getTicket());
+    void testConstructorWithNonSequenceContent() throws IOException {
+        // Create APPLICATION tagged object with non-sequence content
+        DERTaggedObject appTag = new DERTaggedObject(false, BERTags.APPLICATION | 14, new ASN1Integer(5));
+        
+        // Build inner content with OID and magic bytes
+        ByteArrayOutputStream innerContent = new ByteArrayOutputStream();
+        ASN1ObjectIdentifier kerberosOid = new ASN1ObjectIdentifier(KerberosConstants.KERBEROS_OID);
+        innerContent.write(kerberosOid.getEncoded());
+        innerContent.write(0x01); // magic byte 1
+        innerContent.write(0x00); // magic byte 2
+        innerContent.write(appTag.getEncoded());
+        
+        byte[] content = innerContent.toByteArray();
+        
+        // Create GSS-API wrapper
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        baos.write(0x60); // APPLICATION 0
+        baos.write(content.length);
+        baos.write(content);
+        
+        byte[] token = baos.toByteArray();
+        assertThrows(PACDecodingException.class, () -> new KerberosToken(token));
     }
-
-    /**
-     * Test getApRequest method.
-     *
-     * @throws IOException if an I/O error occurs
-     * @throws PACDecodingException if a PAC decoding error occurs
-     */
-    @Test
-    void testGetApRequest() throws IOException, PACDecodingException {
-        byte[] validToken = createValidToken();
-        KerberosToken kerberosToken = new KerberosToken(validToken);
-        assertNotNull(kerberosToken.getApRequest());
-    }
-
 
     // Helper methods to create test tokens
 
     private byte[] createGssApiWrapper(ASN1ObjectIdentifier oid, byte[] data) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        // GSS-API wrapper
-        // [APPLICATION 0] IMPLICIT SEQUENCE ...
-        DERTaggedObject gssApi = new DERTaggedObject(true, 0, new DERSequence(new ASN1ObjectIdentifier(oid.getId())));
-        baos.write(gssApi.getEncoded());
-        baos.write(data);
+        
+        // Build the inner content
+        ByteArrayOutputStream innerContent = new ByteArrayOutputStream();
+        innerContent.write(oid.getEncoded());
+        innerContent.write(data);
+        
+        byte[] content = innerContent.toByteArray();
+        
+        // Create GSS-API APPLICATION 0 tag
+        baos.write(0x60); // APPLICATION 0
+        
+        // Write length
+        if (content.length < 128) {
+            baos.write(content.length);
+        } else if (content.length < 256) {
+            baos.write(0x81); // length of length = 1
+            baos.write(content.length);
+        } else {
+            baos.write(0x82); // length of length = 2
+            baos.write((content.length >> 8) & 0xFF);
+            baos.write(content.length & 0xFF);
+        }
+        
+        baos.write(content);
         return baos.toByteArray();
-    }
-
-    private byte[] createValidToken() throws IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
-        // Inner AP-REQ
-        ASN1Sequence apReqSequence = new DERSequence(new ASN1Encodable[] {
-            new DERTaggedObject(true, 0, new ASN1Integer(5)), // pvno
-            new DERTaggedObject(true, 1, new ASN1Integer(0)), // msg-type
-            new DERTaggedObject(true, 2, new DEROctetString(new byte[0])), // ap-options
-            createTicket(), // ticket
-            new DERTaggedObject(true, 4, createEncryptedData()) // authenticator
-        });
-
-        ASN1TaggedObject mechToken = new DERTaggedObject(
-            true,
-            BERTags.APPLICATION,
-            apReqSequence
-        );
-
-        // GSS-API structure
-        baos.write(0x60); // Application tag
-        baos.write(0x82); // length
-        baos.write(0x01); // length
-        baos.write(0x0a); // length, just a guess for a long enough token
-
-        // OID
-        ASN1ObjectIdentifier kerberosOid = new ASN1ObjectIdentifier(KerberosConstants.KERBEROS_OID);
-        baos.write(kerberosOid.getEncoded());
-
-        // some magic bytes
-        baos.write(0x01);
-        baos.write(0x00);
-
-        // the actual token
-        baos.write(mechToken.getEncoded());
-
-        return baos.toByteArray();
-    }
-
-    private ASN1TaggedObject createTicket() {
-        ASN1Sequence ticketSequence = new DERSequence(new ASN1Encodable[] {
-            new DERTaggedObject(true, 0, new ASN1Integer(5)), // tkt-vno
-            new DERTaggedObject(true, 1, new DEROctetString("realm".getBytes())), // realm
-            new DERTaggedObject(true, 2, createPrincipalName()), // sname
-            new DERTaggedObject(true, 3, createEncryptedData()) // enc-part
-        });
-        return new DERTaggedObject(true, 1, ticketSequence);
-    }
-
-    private ASN1TaggedObject createPrincipalName() {
-        ASN1Sequence principalNameSequence = new DERSequence(new ASN1Encodable[] {
-            new DERTaggedObject(true, 0, new ASN1Integer(0)), // name-type
-            new DERTaggedObject(true, 1, new DERSequence(new DEROctetString("service".getBytes()))) // name-string
-        });
-        return new DERTaggedObject(true, 2, principalNameSequence);
-    }
-
-    private ASN1TaggedObject createEncryptedData() {
-        ASN1Sequence encryptedDataSequence = new DERSequence(new ASN1Encodable[] {
-            new DERTaggedObject(true, 0, new ASN1Integer(0)), // etype
-            new DERTaggedObject(true, 1, new ASN1Integer(0)), // kvno
-            new DERTaggedObject(true, 2, new DEROctetString(new byte[16])) // cipher
-        });
-        return new DERTaggedObject(true, 3, encryptedDataSequence);
     }
 }

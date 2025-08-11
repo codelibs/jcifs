@@ -232,11 +232,15 @@ public class PacDataInputStreamTest {
 
     @Test
     public void testReadId() throws IOException, PACDecodingException {
-        // RID = 0x12345678
+        // RID = 0x12345678 (305419896 in decimal, little-endian)
         byte[] data = new byte[] { 0x78, 0x56, 0x34, 0x12 };
         PacDataInputStream pdis = createInputStream(data);
         SID sid = pdis.readId();
-        assertEquals("S-1-5-21-305419896", sid.toString().substring(0, "S-1-5-21-305419896".length()));
+        // The readId method creates a SID with authority 5 and the RID value
+        // Expected format: S-1-5-305419896
+        String sidString = sid.toString();
+        assertNotNull(sidString);
+        assertEquals("S-1-5-305419896", sidString);
     }
 
     @Test

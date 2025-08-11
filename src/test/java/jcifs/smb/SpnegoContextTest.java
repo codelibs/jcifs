@@ -103,7 +103,7 @@ class SpnegoContextTest {
 
     @Test
     @DisplayName("initSecContext with null buffer and non-zero len throws NPE")
-    void testInitSecContextNullBufferNonZeroLen() {
+    void testInitSecContextNullBufferNonZeroLen() throws Exception {
         SpnegoContext ctx = newContext();
         // A null buffer with non-zero len leads to NPE while slicing input
         assertThrows(NullPointerException.class, () -> ctx.initSecContext(null, 0, 1));
@@ -158,7 +158,7 @@ class SpnegoContextTest {
 
     @Test
     @DisplayName("calculateMIC throws when context not established")
-    void testCalculateMICRequiresEstablished() {
+    void testCalculateMICRequiresEstablished() throws Exception {
         SpnegoContext ctx = newContext();
         CIFSException ex = assertThrows(CIFSException.class, () -> ctx.calculateMIC(new byte[] { 1 }));
         assertEquals("Context is not established", ex.getMessage());
@@ -167,7 +167,7 @@ class SpnegoContextTest {
 
     @Test
     @DisplayName("verifyMIC throws when context not established")
-    void testVerifyMICRequiresEstablished() {
+    void testVerifyMICRequiresEstablished() throws Exception {
         SpnegoContext ctx = newContext();
         CIFSException ex = assertThrows(CIFSException.class, () -> ctx.verifyMIC(new byte[] { 1 }, new byte[] { 2 }));
         assertEquals("Context is not established", ex.getMessage());

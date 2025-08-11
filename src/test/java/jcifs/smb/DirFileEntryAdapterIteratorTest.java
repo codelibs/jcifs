@@ -73,7 +73,7 @@ class DirFileEntryAdapterIteratorTest {
      * @throws MalformedURLException if the URL is invalid
      */
     @Test
-    void testAdapt() throws MalformedURLException {
+    void testAdapt() throws Exception {
         // Given
         String fileName = "testFile.txt";
         int attributes = SmbConstants.ATTR_ARCHIVE;

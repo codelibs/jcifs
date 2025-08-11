@@ -7,6 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -237,7 +239,7 @@ class SIDTest {
         // Create a mock RPC SID to simulate a user SID
         rpc.sid_t rpcSid = new rpc.sid_t();
         rpcSid.revision = 1;
-        rpcSid.sub_authority_count = 4;
+        rpcSid.sub_authority_count = 5;  // Fixed: should be 5 for domain SID with RID
         rpcSid.identifier_authority = new byte[] { 0, 0, 0, 0, 0, 5 };
         rpcSid.sub_authority = new int[] { 21, 123, 456, 789, 1000 };
         
@@ -257,7 +259,7 @@ class SIDTest {
         // Create a mock RPC SID to simulate a user SID
         rpc.sid_t rpcSid = new rpc.sid_t();
         rpcSid.revision = 1;
-        rpcSid.sub_authority_count = 4;
+        rpcSid.sub_authority_count = 5;  // Fixed: should be 5 for domain SID with RID
         rpcSid.identifier_authority = new byte[] { 0, 0, 0, 0, 0, 5 };
         rpcSid.sub_authority = new int[] { 21, 123, 456, 789, 1000 };
         
@@ -275,7 +277,7 @@ class SIDTest {
         // Create a mock RPC SID to simulate a domain SID
         rpc.sid_t rpcSid = new rpc.sid_t();
         rpcSid.revision = 1;
-        rpcSid.sub_authority_count = 3;
+        rpcSid.sub_authority_count = 4;  // Fixed: should be 4 to properly represent domain SID
         rpcSid.identifier_authority = new byte[] { 0, 0, 0, 0, 0, 5 };
         rpcSid.sub_authority = new int[] { 21, 123, 456, 789 };
         
@@ -344,7 +346,7 @@ class SIDTest {
         sid.resolve(server, mockContext);
 
         ArgumentCaptor<SID[]> sidArrayCaptor = ArgumentCaptor.forClass(SID[].class);
-        verify(mockResolver).resolveSids(mockContext, server, sidArrayCaptor.capture());
+        verify(mockResolver).resolveSids(eq(mockContext), eq(server), sidArrayCaptor.capture());
         assertEquals(1, sidArrayCaptor.getValue().length);
         assertEquals(sid, sidArrayCaptor.getValue()[0]);
     }
@@ -388,7 +390,7 @@ class SIDTest {
         // Create a mock RPC SID to simulate a user SID
         rpc.sid_t rpcSid = new rpc.sid_t();
         rpcSid.revision = 1;
-        rpcSid.sub_authority_count = 4;
+        rpcSid.sub_authority_count = 5;  // Fixed: should be 5 for domain SID with RID
         rpcSid.identifier_authority = new byte[] { 0, 0, 0, 0, 0, 5 };
         rpcSid.sub_authority = new int[] { 21, 123, 456, 789, 1000 };
         

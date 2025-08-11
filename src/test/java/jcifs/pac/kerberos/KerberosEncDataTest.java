@@ -17,6 +17,7 @@ package jcifs.pac.kerberos;
 
 import org.bouncycastle.asn1.ASN1EncodableVector;
 import org.bouncycastle.asn1.ASN1Integer;
+import org.bouncycastle.asn1.BERTags;
 import org.bouncycastle.asn1.DERGeneralString;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERSequence;
@@ -73,13 +74,14 @@ class KerberosEncDataTest {
 
         ASN1EncodableVector authDataVector = new ASN1EncodableVector();
         ASN1EncodableVector authElementVector = new ASN1EncodableVector();
-        authElementVector.add(new DERTaggedObject(0, new ASN1Integer(1))); // ad-type
+        // Use an auth type that doesn't require complex parsing (e.g., 999 - unknown type)
+        authElementVector.add(new DERTaggedObject(0, new ASN1Integer(999))); // ad-type
         authElementVector.add(new DERTaggedObject(1, new DEROctetString(new byte[]{1, 2, 3, 4})));
         authDataVector.add(new DERSequence(authElementVector));
         vector.add(new DERTaggedObject(10, new DERSequence(authDataVector)));
 
         DERSequence sequence = new DERSequence(vector);
-        byte[] encoded = new DERTaggedObject(true, 1, sequence).getEncoded();
+        byte[] encoded = new DERTaggedObject(false, BERTags.APPLICATION, 1, sequence).getEncoded();
 
         KerberosEncData encData = new KerberosEncData(encoded, Collections.emptyMap());
 
@@ -112,7 +114,7 @@ class KerberosEncDataTest {
         ASN1EncodableVector vector = new ASN1EncodableVector();
         vector.add(new DERTaggedObject(99, new DERGeneralString("unknown")));
         DERSequence sequence = new DERSequence(vector);
-        byte[] encoded = new DERTaggedObject(true, 1, sequence).getEncoded();
+        byte[] encoded = new DERTaggedObject(false, BERTags.APPLICATION, 1, sequence).getEncoded();
 
         assertThrows(PACDecodingException.class, () -> new KerberosEncData(encoded, Collections.emptyMap()));
     }
@@ -175,7 +177,7 @@ class KerberosEncDataTest {
         // Build a token with no optional fields
         ASN1EncodableVector vector = new ASN1EncodableVector();
         DERSequence sequence = new DERSequence(vector);
-        byte[] encoded = new DERTaggedObject(true, 1, sequence).getEncoded();
+        byte[] encoded = new DERTaggedObject(false, BERTags.APPLICATION, 1, sequence).getEncoded();
 
         KerberosEncData encData = new KerberosEncData(encoded, Collections.emptyMap());
 

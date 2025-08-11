@@ -114,24 +114,46 @@ class PacMacTest {
      */
     @Test
     void testExpandNFold() {
+        // Test basic functionality
         byte[] data = { 1, 2, 3 };
         int outlen = 5;
         byte[] expanded = PacMac.expandNFold(data, outlen);
         assertNotNull(expanded);
         assertEquals(outlen, expanded.length);
 
-        // Example from RFC 3961 Section 5.1
-        byte[] rfcData = { (byte) 0x61, (byte) 0x62, (byte) 0x63 }; // "abc"
-        int rfcOutlen = 20;
-        byte[] rfcExpected = {
-                (byte) 0x99, (byte) 0x90, (byte) 0x26, (byte) 0x41, (byte) 0x2b, (byte) 0x39, (byte) 0x99,
-                (byte) 0x90, (byte) 0x26, (byte) 0x41, (byte) 0x2b, (byte) 0x39, (byte) 0x99, (byte) 0x90,
-                (byte) 0x26, (byte) 0x41, (byte) 0x2b, (byte) 0x39, (byte) 0x99, (byte) 0x90
-        };
-        byte[] rfcResult = PacMac.expandNFold(rfcData, rfcOutlen);
-        // The RFC example output is longer than the outlen, so we compare the first
-        // `outlen` bytes.
-        assertArrayEquals(Arrays.copyOf(rfcExpected, rfcOutlen), rfcResult);
+        // Test vectors from RFC 3961 Appendix A.1
+        // 64-fold("012345")
+        verifyNfold("012345", 8, new byte[] { 
+            (byte) 0xbe, (byte) 0x07, (byte) 0x26, (byte) 0x31, 
+            (byte) 0x27, (byte) 0x6b, (byte) 0x19, (byte) 0x55 
+        });
+        
+        // 56-fold("password")
+        verifyNfold("password", 7, new byte[] { 
+            (byte) 0x78, (byte) 0xa0, (byte) 0x7b, (byte) 0x6c, 
+            (byte) 0xaf, (byte) 0x85, (byte) 0xfa 
+        });
+        
+        // 64-fold("Rough Consensus, and Running Code")
+        verifyNfold("Rough Consensus, and Running Code", 8, new byte[] { 
+            (byte) 0xbb, (byte) 0x6e, (byte) 0xd3, (byte) 0x08, 
+            (byte) 0x70, (byte) 0xb7, (byte) 0xf0, (byte) 0xe0 
+        });
+        
+        // 64-fold("kerberos")
+        verifyNfold("kerberos", 8, new byte[] { 
+            (byte) 0x6b, (byte) 0x65, (byte) 0x72, (byte) 0x62, 
+            (byte) 0x65, (byte) 0x72, (byte) 0x6f, (byte) 0x73 
+        });
+    }
+    
+    /**
+     * Helper method to verify n-fold expansion.
+     */
+    private void verifyNfold(String input, int outlen, byte[] expected) {
+        byte[] result = PacMac.expandNFold(input.getBytes(), outlen);
+        assertArrayEquals(expected, result, 
+            String.format("n-fold expansion failed for input '%s'", input));
     }
 
     /**

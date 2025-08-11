@@ -21,16 +21,26 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 import org.junit.jupiter.api.Test;
-import jcifs.pac.PACDecodingException;
 
 /**
  * Tests for the PacSignature class.
  */
 class PacSignatureTest {
+
+    /**
+     * Helper method to write integer in little-endian format.
+     */
+    private void writeLittleEndianInt(ByteArrayOutputStream baos, int value) {
+        ByteBuffer buffer = ByteBuffer.allocate(4);
+        buffer.order(ByteOrder.LITTLE_ENDIAN);
+        buffer.putInt(value);
+        baos.write(buffer.array(), 0, 4);
+    }
 
     /**
      * Test constructor with KERB_CHECKSUM_HMAC_MD5 type.
@@ -42,13 +52,12 @@ class PacSignatureTest {
     void testConstructorKerbChecksumHmacMd5() throws IOException, PACDecodingException {
         // Prepare data
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        DataOutputStream dos = new DataOutputStream(baos);
-        dos.writeInt(PacSignature.KERB_CHECKSUM_HMAC_MD5);
+        writeLittleEndianInt(baos, PacSignature.KERB_CHECKSUM_HMAC_MD5);
         byte[] checksum = new byte[16];
         for (int i = 0; i < checksum.length; i++) {
             checksum[i] = (byte) i;
         }
-        dos.write(checksum);
+        baos.write(checksum);
         byte[] data = baos.toByteArray();
 
         // Create PacSignature
@@ -69,13 +78,12 @@ class PacSignatureTest {
     void testConstructorHmacSha1Aes128() throws IOException, PACDecodingException {
         // Prepare data
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        DataOutputStream dos = new DataOutputStream(baos);
-        dos.writeInt(PacSignature.HMAC_SHA1_96_AES128);
+        writeLittleEndianInt(baos, PacSignature.HMAC_SHA1_96_AES128);
         byte[] checksum = new byte[12];
         for (int i = 0; i < checksum.length; i++) {
             checksum[i] = (byte) i;
         }
-        dos.write(checksum);
+        baos.write(checksum);
         byte[] data = baos.toByteArray();
 
         // Create PacSignature
@@ -96,13 +104,12 @@ class PacSignatureTest {
     void testConstructorHmacSha1Aes256() throws IOException, PACDecodingException {
         // Prepare data
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        DataOutputStream dos = new DataOutputStream(baos);
-        dos.writeInt(PacSignature.HMAC_SHA1_96_AES256);
+        writeLittleEndianInt(baos, PacSignature.HMAC_SHA1_96_AES256);
         byte[] checksum = new byte[12];
         for (int i = 0; i < checksum.length; i++) {
             checksum[i] = (byte) i;
         }
-        dos.write(checksum);
+        baos.write(checksum);
         byte[] data = baos.toByteArray();
 
         // Create PacSignature
@@ -123,14 +130,13 @@ class PacSignatureTest {
     void testConstructorDefaultType() throws IOException, PACDecodingException {
         // Prepare data
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        DataOutputStream dos = new DataOutputStream(baos);
         int defaultType = 99;
-        dos.writeInt(defaultType);
+        writeLittleEndianInt(baos, defaultType);
         byte[] checksum = new byte[10]; // Arbitrary length
         for (int i = 0; i < checksum.length; i++) {
             checksum[i] = (byte) i;
         }
-        dos.write(checksum);
+        baos.write(checksum);
         byte[] data = baos.toByteArray();
 
         // Create PacSignature
@@ -156,16 +162,15 @@ class PacSignatureTest {
     }
     
     /**
-     * Test constructor with malformed data (checksum too short).
+     * Test constructor with checksum too short for KERB_CHECKSUM_HMAC_MD5.
      */
     @Test
     void testConstructorChecksumTooShort() throws IOException {
         // Prepare data
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        DataOutputStream dos = new DataOutputStream(baos);
-        dos.writeInt(PacSignature.KERB_CHECKSUM_HMAC_MD5);
+        writeLittleEndianInt(baos, PacSignature.KERB_CHECKSUM_HMAC_MD5);
         // Write only 10 bytes instead of 16
-        dos.write(new byte[10]);
+        baos.write(new byte[10]);
         byte[] data = baos.toByteArray();
 
         // Verify that PACDecodingException is thrown

@@ -14,6 +14,7 @@ import javax.security.auth.kerberos.KerberosKey;
 
 import org.bouncycastle.asn1.ASN1EncodableVector;
 import org.bouncycastle.asn1.ASN1Integer;
+import org.bouncycastle.asn1.BERTags;
 import org.bouncycastle.asn1.DERGeneralString;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERSequence;
@@ -58,6 +59,7 @@ class KerberosTicketTest {
      * @param principalName Server principal name
      * @param encType Encryption type
      * @param encryptedData Encrypted data
+     * @param unknownTag Optional unknown tag number to test error handling
      * @return A byte array representing the ticket
      * @throws IOException on encoding error
      */
@@ -77,6 +79,8 @@ class KerberosTicketTest {
 
         ASN1EncodableVector encPart = new ASN1EncodableVector();
         encPart.add(new DERTaggedObject(true, 0, new ASN1Integer(encType)));
+        // Add kvno (key version number) field that is optional but expected when accessing index 2
+        encPart.add(new DERTaggedObject(true, 1, new ASN1Integer(1))); // kvno
         encPart.add(new DERTaggedObject(true, 2, new DEROctetString(encryptedData)));
         v.add(new DERTaggedObject(true, 3, new DERSequence(encPart)));
         
@@ -96,20 +100,21 @@ class KerberosTicketTest {
      */
     private byte[] createDecryptedDataBytes(String userName, String userRealm) throws IOException {
         ASN1EncodableVector v = new ASN1EncodableVector();
-        // Other fields are optional and not read by KerberosEncData constructor
         
-        // cname
+        // crealm (field 2)
+        v.add(new DERTaggedObject(true, 2, new DERGeneralString(userRealm)));
+        
+        // cname (field 3)
         ASN1EncodableVector principalNameVector = new ASN1EncodableVector();
         principalNameVector.add(new DERGeneralString(userName));
         ASN1EncodableVector principalVector = new ASN1EncodableVector();
         principalVector.add(new DERTaggedObject(true, 0, new ASN1Integer(1))); // name-type
         principalVector.add(new DERTaggedObject(true, 1, new DERSequence(principalNameVector)));
-        v.add(new DERTaggedObject(true, 2, new DERSequence(principalVector)));
+        v.add(new DERTaggedObject(true, 3, new DERSequence(principalVector)));
         
-        // crealm
-        v.add(new DERTaggedObject(true, 3, new DERGeneralString(userRealm)));
-        
-        return new DERSequence(v).getEncoded();
+        // Wrap in APPLICATION tag as expected by KerberosEncData
+        DERSequence seq = new DERSequence(v);
+        return new DERTaggedObject(false, BERTags.APPLICATION, 3, seq).getEncoded();
     }
 
 
@@ -178,11 +183,22 @@ class KerberosTicketTest {
     }
     
     @Test
-    void testConstructorWithUnrecognizedField() throws IOException {
+    void testConstructorWithUnrecognizedField() throws IOException, GeneralSecurityException {
         // Test with an unrecognized field in the ticket
+        // Note: In the actual implementation, field 99 would come after mandatory fields,
+        // so decryption happens first. We test with a mocked successful decryption.
         byte[] token = createTestTicketBytes(new BigInteger(KerberosConstants.KERBEROS_VERSION), SERVER_REALM, SERVER_PRINCIPAL_NAME, ENCRYPTION_TYPE, ENCRYPTED_DATA, 99);
-        PACDecodingException e = assertThrows(PACDecodingException.class, () -> new KerberosTicket(token, (byte) 0, keys));
-        assertEquals("Unrecognized field 99", e.getMessage());
+        byte[] decryptedData = createDecryptedDataBytes(USER_PRINCIPAL_NAME, USER_REALM);
+        
+        when(kerberosKey.getKeyType()).thenReturn(ENCRYPTION_TYPE);
+        
+        try (MockedStatic<KerberosEncData> mockedEncData = Mockito.mockStatic(KerberosEncData.class)) {
+            mockedEncData.when(() -> KerberosEncData.decrypt(ENCRYPTED_DATA, kerberosKey, ENCRYPTION_TYPE))
+                    .thenReturn(decryptedData);
+            
+            PACDecodingException e = assertThrows(PACDecodingException.class, () -> new KerberosTicket(token, (byte) 0, keys));
+            assertEquals("Unrecognized field 99", e.getMessage());
+        }
     }
 
     @Test

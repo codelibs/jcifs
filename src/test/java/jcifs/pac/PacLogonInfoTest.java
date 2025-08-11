@@ -41,9 +41,19 @@ class PacLogonInfoTest {
     private static final String USER_NAME = "testUser";
     private static final String DOMAIN_NAME = "testDomain";
     private static final String SERVER_NAME = "testServer";
-    private static final SID DOMAIN_SID = new SID("S-1-5-21-1-2-3");
-    private static final SID EXTRA_SID_1 = new SID("S-1-18-1");
-    private static final SID EXTRA_SID_2 = new SID("S-1-18-2");
+    private static SID DOMAIN_SID;
+    private static SID EXTRA_SID_1;
+    private static SID EXTRA_SID_2;
+    
+    static {
+        try {
+            DOMAIN_SID = new SID("S-1-5-21-1-2-3");
+            EXTRA_SID_1 = new SID("S-1-18-1");
+            EXTRA_SID_2 = new SID("S-1-18-2");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     /**
      * Helper to create PAC Logon Info byte array with customizable options.
@@ -167,7 +177,7 @@ class PacLogonInfoTest {
 
             // Write Domain SID
             updatePointer(baos.toByteArray(), domainIdPointerPos, currentOffset);
-            byte[] domainSidBytes = DOMAIN_SID.getBytes();
+            byte[] domainSidBytes = DOMAIN_SID.toByteArray();
             dos.write(domainSidBytes);
             currentOffset += domainSidBytes.length;
 
@@ -184,12 +194,12 @@ class PacLogonInfoTest {
                 currentOffset += 16;
 
                 updatePointer(baos.toByteArray(), sid1PointerPos, currentOffset);
-                byte[] extraSid1Bytes = EXTRA_SID_1.getBytes();
+                byte[] extraSid1Bytes = EXTRA_SID_1.toByteArray();
                 dos.write(extraSid1Bytes);
                 currentOffset += extraSid1Bytes.length;
 
                 updatePointer(baos.toByteArray(), sid2PointerPos, currentOffset);
-                byte[] extraSid2Bytes = EXTRA_SID_2.getBytes();
+                byte[] extraSid2Bytes = EXTRA_SID_2.toByteArray();
                 dos.write(extraSid2Bytes);
                 currentOffset += extraSid2Bytes.length;
             }
@@ -198,7 +208,12 @@ class PacLogonInfoTest {
             if (withResourceGroups) {
                 updatePointer(baos.toByteArray(), resourceGroupPointerPos, currentOffset);
                 dos.writeInt(Integer.reverseBytes(1)); // realResourceGroupCount
-                byte[] resourceGroupSidBytes = new SID(DOMAIN_SID, 1101).getBytes();
+                byte[] resourceGroupSidBytes;
+                try {
+                    resourceGroupSidBytes = new SID(DOMAIN_SID, 1101).toByteArray();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
                 dos.write(resourceGroupSidBytes);
                 dos.writeInt(Integer.reverseBytes(7)); // attributes
             }
