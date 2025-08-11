@@ -1,5 +1,6 @@
 package jcifs.smb1.ntlmssp;
 
+import jcifs.smb1.Config;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
@@ -164,7 +165,9 @@ class NtlmMessageTest {
         assertEquals(3, NtlmMessage.readUShort(dest, 0), "Length field must be 3");
         assertEquals(3, NtlmMessage.readUShort(dest, 2), "Length field must be 3 again");
         assertEquals(8, NtlmMessage.readULong(dest, 4), "Offset must point to payload start");
-        assertArrayEquals(payload, dest, 8, payload.length, "Payload copy must match");
+        byte[] actualPayload = new byte[payload.length];
+        System.arraycopy(dest, 8, actualPayload, 0, payload.length);
+        assertArrayEquals(payload, actualPayload, "Payload copy must match");
     }
 
     @Test

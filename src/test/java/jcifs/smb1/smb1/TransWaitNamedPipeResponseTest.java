@@ -1,15 +1,12 @@
 package jcifs.smb1.smb1;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
  * Unit tests for {@link TransWaitNamedPipeResponse}.
@@ -21,10 +18,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
  *   <li>happy‑path behaviour</li>
  *   <li>boundary arguments (e.g., negative indices, large values)</li>
  *   <li>string representation containing the class name</li>
- *   <li>interaction guarantees (no interactions for this class)</li>
+ *   <li>null buffer handling</li>
  * </ul>
  */
-@ExtendWith(MockitoExtension.class)
 final class TransWaitNamedPipeResponseTest {
 
     /**
@@ -113,25 +109,21 @@ final class TransWaitNamedPipeResponseTest {
     }
 
     /**
-     * No interactions with external collaborators are expected; verify that
-     * invoking the methods does not trigger any static behaviour that can
-     * be observed through Mockito.  This test demonstrates use of
-     * Mockito verification while staying safe for future changes.
+     * Verify that all methods can be called with null buffers without 
+     * throwing exceptions. This test ensures robustness of the implementation.
      */
     @Test
-    void noExternalInteractions() {
+    void methodsHandleNullBuffersGracefully() {
         // Arrange
         TransWaitNamedPipeResponse resp = new TransWaitNamedPipeResponse();
-        // Act
-        resp.writeSetupWireFormat(null, 0);
-        resp.writeParametersWireFormat(null, 0);
-        resp.writeDataWireFormat(null, 0);
-        resp.readSetupWireFormat(null, 0, 0);
-        resp.readParametersWireFormat(null, 0, 0);
-        resp.readDataWireFormat(null, 0, 0);
-        resp.toString();
-        // Assert – nothing to verify, method exists.
-        verifyNoInteractions();
+        // Act & Assert - no exceptions should be thrown
+        assertDoesNotThrow(() -> resp.writeSetupWireFormat(null, 0));
+        assertDoesNotThrow(() -> resp.writeParametersWireFormat(null, 0));
+        assertDoesNotThrow(() -> resp.writeDataWireFormat(null, 0));
+        assertDoesNotThrow(() -> resp.readSetupWireFormat(null, 0, 0));
+        assertDoesNotThrow(() -> resp.readParametersWireFormat(null, 0, 0));
+        assertDoesNotThrow(() -> resp.readDataWireFormat(null, 0, 0));
+        assertDoesNotThrow(() -> resp.toString());
     }
 }
 

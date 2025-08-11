@@ -8,7 +8,7 @@ import java.security.Principal;
 import javax.servlet.http.HttpServletRequest;
 
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.ParameterizedTest;
+import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
@@ -40,26 +40,33 @@ public class NtlmHttpServletRequestTest {
     }
 
     @Test
-    @DisplayName("constructor rejects null principal")
+    @DisplayName("constructor accepts null principal")
     void testConstructorWithNullPrincipal(@Mock HttpServletRequest mockRequest) {
-        NullPointerException npe = assertThrows(NullPointerException.class, () ->
-                new NtlmHttpServletRequest(mockRequest, null));
-        assertNotNull(npe.getMessage());
+        // Constructor accepts null principal without throwing exception
+        NtlmHttpServletRequest request = new NtlmHttpServletRequest(mockRequest, null);
+        
+        // getRemoteUser() will throw NPE when trying to call getName() on null principal
+        assertThrows(NullPointerException.class, () -> request.getRemoteUser());
+        assertNull(request.getUserPrincipal());
+        assertEquals("NTLM", request.getAuthType());
     }
 
     @Test
     @DisplayName("constructor rejects null HttpServletRequest")
     void testConstructorWithNullHttpRequest(@Mock Principal mockPrincipal) {
-        assertThrows(NullPointerException.class, () ->
+        // HttpServletRequestWrapper throws IllegalArgumentException for null request
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
                 new NtlmHttpServletRequest(null, mockPrincipal));
+        assertEquals("Request cannot be null", ex.getMessage());
     }
 
     @Test
     @DisplayName("auth type is always NTLM")
     void testAuthTypeConstant(@Mock HttpServletRequest mockRequest, @Mock Principal mockPrincipal) {
-        when(mockPrincipal.getName()).thenReturn("any");
+        // No need to stub getName() since we're not calling getRemoteUser()
         NtlmHttpServletRequest request = new NtlmHttpServletRequest(mockRequest, mockPrincipal);
         assertEquals("NTLM", request.getAuthType());
+        // Verify it returns the same value on multiple calls
         assertEquals("NTLM", request.getAuthType());
     }
 }

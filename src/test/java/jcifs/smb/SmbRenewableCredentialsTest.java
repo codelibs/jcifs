@@ -19,6 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import jcifs.CIFSContext;
 import jcifs.CIFSException;
+import jcifs.Credentials;
 
 /**
  * Tests for SmbRenewableCredentials interface.
@@ -56,6 +57,29 @@ public class SmbRenewableCredentialsTest {
         @Override
         public void refresh() throws CIFSException {
             // no-op for tests
+        }
+
+        @Override
+        public boolean isGuest() {
+            return false; // not guest for test purposes
+        }
+
+        @Override
+        public boolean isAnonymous() {
+            return false; // not anonymous for test purposes
+        }
+
+        @Override
+        public String getUserDomain() {
+            return "TESTDOMAIN"; // test domain for test purposes
+        }
+
+        @Override
+        public <T extends Credentials> T unwrap(Class<T> type) {
+            if (type.isInstance(this)) {
+                return type.cast(this);
+            }
+            throw new ClassCastException("Cannot unwrap to " + type.getName());
         }
     }
 

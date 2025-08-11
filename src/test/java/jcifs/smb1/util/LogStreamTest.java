@@ -2,28 +2,34 @@ package jcifs.smb1.util;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.*;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
  * Tests for {@link LogStream}.  The class is minimal so the tests focus on
  * static state handling, constructor behaviour and null‑safety.
  */
-@ExtendWith(MockitoExtension.class)
 public class LogStreamTest {
 
-    @Mock
-    private PrintStream mockPrintStream;
+    private PrintStream testPrintStream;
+    private ByteArrayOutputStream baos;
+
+    @BeforeEach
+    void setUp() {
+        // Create a real PrintStream backed by ByteArrayOutputStream for testing
+        baos = new ByteArrayOutputStream();
+        testPrintStream = new PrintStream(baos);
+    }
 
     @AfterEach
     void resetStaticState() {
         LogStream.setLevel(1);
+        // Reset the singleton instance to null to ensure clean state
+        LogStream.setInstance(System.err);
     }
 
     @Test
@@ -36,7 +42,7 @@ public class LogStreamTest {
     @Test
     void setInstanceReplacesExistingInstance() {
         LogStream oldInstance = LogStream.getInstance();
-        LogStream.setInstance(mockPrintStream);
+        LogStream.setInstance(testPrintStream);
         LogStream newInstance = LogStream.getInstance();
         assertNotSame(oldInstance, newInstance, "Instance should be replaced after setInstance");
     }
@@ -58,7 +64,28 @@ public class LogStreamTest {
     void setLevelBeforeInstanceCreationIsIndependent() {
         LogStream.setLevel(6);
         assertEquals(6, LogStream.level, "Level must persist after setLevel");
-        LogStream.setInstance(mockPrintStream);
+        LogStream.setInstance(testPrintStream);
         assertEquals(6, LogStream.level, "Level should be unaffected by setInstance");
+    }
+
+    @Test
+    void logStreamWritesToUnderlyingStream() {
+        // Test that LogStream properly delegates to the underlying PrintStream
+        LogStream.setInstance(testPrintStream);
+        LogStream logStream = LogStream.getInstance();
+        
+        String testMessage = "Test message";
+        logStream.println(testMessage);
+        logStream.flush();
+        
+        String output = baos.toString();
+        assertTrue(output.contains(testMessage), "LogStream should write to underlying stream");
+    }
+
+    @Test
+    void constructorRequiresNonNullStream() {
+        // Test that the LogStream constructor properly handles null
+        assertThrows(NullPointerException.class, () -> new LogStream(null),
+                "LogStream constructor should throw NPE for null stream");
     }
 }

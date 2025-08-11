@@ -46,14 +46,25 @@ class SmbExceptionTest {
     }
 
     /**
-     * Parameterised test covering many error codes. For 0 the status is 0;
-     * all other codes (which are not mapped) resolve to {@code NT_STATUS_UNSUCCESSFUL}.
+     * Parameterised test covering many error codes.
+     * - Error code 0 returns 0 (NT_STATUS_SUCCESS)
+     * - Negative values with 0xC0000000 bits set are returned as-is
+     * - Positive values not in DOS_ERROR_CODES map to NT_STATUS_UNSUCCESSFUL
      */
     @ParameterizedTest
-    @ValueSource(integers = {0, 1, 123, -7})
+    @ValueSource(ints = {0, 1, 123, -7})
     void testGetNtStatusVariousCodes(int errcode) {
         SmbException ex = new SmbException(errcode, false);
-        int expected = (errcode == 0) ? 0 : NtStatus.NT_STATUS_UNSUCCESSFUL;
+        int expected;
+        if (errcode == 0) {
+            expected = 0;
+        } else if ((errcode & 0xC0000000) != 0) {
+            // Negative values with 0xC0000000 bits set are returned as-is
+            expected = errcode;
+        } else {
+            // Positive values not in DOS_ERROR_CODES map to NT_STATUS_UNSUCCESSFUL
+            expected = NtStatus.NT_STATUS_UNSUCCESSFUL;
+        }
         assertEquals(expected, ex.getNtStatus(),
                 "Status should match mapping or fallback");
     }

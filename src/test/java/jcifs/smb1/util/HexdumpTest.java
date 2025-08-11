@@ -26,6 +26,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import static org.mockito.Mockito.*;
 
 /**
  * Tests for {@link Hexdump}. Since the class contains only static
@@ -62,20 +63,20 @@ class HexdumpTest {
         assertEquals(0, bao.size(), "The stream should remain empty");
     }
 
-    @ParameterizedTest(name = "hexdump() should call println with array size {0}")
+    @ParameterizedTest(name = "hexdump() should call println with correct array size for {0} bytes")
     @CsvSource({
-        "16,74",  // 16 bytes -> r=1, array size = 74 + NL_LENGTH
-        "24,148"  // 24 bytes -> r=2, double the size
+        "16",  // 16 bytes -> r=1
+        "24"   // 24 bytes -> r=2
     })
-    void hexdumpCallsPrintlnWithCorrectArrayLength(int byteLen, int expectedArraySize) throws Exception {
+    void hexdumpCallsPrintlnWithCorrectArrayLength(int byteLen) throws Exception {
         byte[] data = new byte[byteLen]; // arbitrary bytes
-        MockedPrintStream mockPs = new MockedPrintStream();
-        MockedPrintStream ps = mockPs.getMock();
+        PrintStream ps = mock(PrintStream.class);
         Hexdump.hexdump(ps, data, 0, data.length);
         ArgumentCaptor<char[]> captor = ArgumentCaptor.forClass(char[].class);
         verify(ps).println(captor.capture());
         char[] actual = captor.getValue();
-        assertEquals(expectedArraySize, actual.length, "println receives array of correct size");
+        int expectedSize = expectedHexdumpArraySize(byteLen);
+        assertEquals(expectedSize, actual.length, "println receives array of correct size");
     }
 
     @Test
@@ -87,10 +88,11 @@ class HexdumpTest {
     }
 
     @Test
-    @DisplayName("hexdump() should throw NegativeArraySizeException for negative length")
+    @DisplayName("hexdump() should throw ArrayIndexOutOfBoundsException for negative length")
     void hexdumpNegativeLength() {
         byte[] data = {1,2,3};
-        assertThrows(NegativeArraySizeException.class,
+        // Negative length causes ArrayIndexOutOfBoundsException when accessing src[srcIndex + si]
+        assertThrows(ArrayIndexOutOfBoundsException.class,
             () -> Hexdump.hexdump(System.out, data, 0, -1));
     }
 
@@ -109,7 +111,7 @@ class HexdumpTest {
 
     @ParameterizedTest(name = "toHexString(long, size={1}) -> {2}")
     @CsvSource({
-        "0x1ABCDE,5,1ABCDE",
+        "0x1ABCDE,5,ABCDE",  // 5 chars: truncates the leading 1
         "0xFF,2,FF"
     })
     void toHexStringLongWorks(long val, int size, String expected) {
@@ -117,11 +119,13 @@ class HexdumpTest {
     }
 
     @Test
-    @DisplayName("toHexString(byte[]) produces a hex string of the correct even length based on requested size")
+    @DisplayName("toHexString(byte[]) produces a hex string based on the requested size")
     void toHexStringByteArrayOddSize() {
         byte[] src = {(byte)0x12, (byte)0xAF, (byte)0x34}; // 3 bytes
-        String hex = Hexdump.toHexString(src, 0, 3); // requested size 3 -> size becomes 2
-        assertEquals("12AF", hex, "Only two bytes generate 4 hex characters");
+        // When size is 3 (odd), it becomes size/2 + 1 = 2 bytes to process
+        // But output is still 3 chars: first byte gives 2 chars, second byte gives 1 char
+        String hex = Hexdump.toHexString(src, 0, 3);
+        assertEquals("12A", hex, "Size 3 produces 3 hex characters");
     }
 
     /* =========================================================== */

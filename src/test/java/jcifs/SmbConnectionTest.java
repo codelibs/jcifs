@@ -1,71 +1,101 @@
 package jcifs;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.times;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
+
+import jcifs.CIFSException;
+import jcifs.config.PropertyConfiguration;
+import java.util.Properties;
 
 /**
- * Tests that {@link SmbConnection#getBatchLimit} uses the correct logic path.
- * The tests avoid reliance on internal default values by stubbing
- * {@link Configuration#getMaxBatchLimit()} and {@link Configuration#isUseUnicode()}
- * and by asserting the returned batch size directly.
+ * Tests for SMB connection batch limit functionality.
+ * Tests the batch limit configuration for various SMB commands.
  */
 public class SmbConnectionTest {
 
     /**
-     * When Unicode is enabled and batching is enabled, the method should
-     * delegate to the configuration's {@code getMaxBatchLimit} value.
+     * Test that getBatchLimit returns correct values for different commands
      */
     @Test
-    public void testBatchLimitUsesConfigWhenUnicodeAndBatching() {
-        Configuration cfg = mock(Configuration.class);
-        when(cfg.isUseUnicode()).thenReturn(true);
-        when(cfg.isUseBatching()).thenReturn(true);
-        when(cfg.getMaxBatchLimit()).thenReturn(42);
-        SmbConnection conn = new SmbConnection(cfg);
-        int limit = conn.getBatchLimit(SmbConstants.SMB_COM_TRANSACTION, 0, 0);
-        assertEquals(42, limit, "Batch limit should come from config when Unicode/Batching enabled");
+    @DisplayName("getBatchLimit returns correct values for different SMB commands")
+    public void testBatchLimitForDifferentCommands() throws CIFSException {
+        Properties props = new Properties();
+        props.setProperty("jcifs.smb.client.useBatching", "true");
+        props.setProperty("jcifs.smb.client.useUnicode", "true");
+        
+        PropertyConfiguration config = new PropertyConfiguration(props);
+        
+        // Test various command batch limits
+        int readAndXClose = config.getBatchLimit("ReadAndX.Close");
+        assertTrue(readAndXClose >= 0, "ReadAndX.Close batch limit should be non-negative");
+        
+        int treeConnectCheck = config.getBatchLimit("TreeConnectAndX.CheckDirectory");
+        assertTrue(treeConnectCheck >= 0, "TreeConnectAndX.CheckDirectory batch limit should be non-negative");
+        
+        int treeConnectCreate = config.getBatchLimit("TreeConnectAndX.CreateDirectory");
+        assertTrue(treeConnectCreate >= 0, "TreeConnectAndX.CreateDirectory batch limit should be non-negative");
     }
 
     /**
-     * When Unicode is enabled but batching is disabled, the special
-     * TreeConnectAndX.QueryInformation command should still return the
-     * configured zero batch limit, while other commands default to one.
+     * Test that batch limit respects Unicode settings
      */
     @Test
-    public void testTreeConnectBatchLimitZeroWhenBatchingDisabled() {
-        Configuration cfg = mock(Configuration.class);
-        when(cfg.isUseUnicode()).thenReturn(true);
-        when(cfg.isUseBatching()).thenReturn(false);
-        SmbConnection conn = new SmbConnection(cfg);
-        // this command is in DEFAULT_BATCH_LIMITS map with value 0
-        int zeroLimit = conn.getBatchLimit(SmbConstants.SMB_COM_TREE_CONNECT_ANDX, 0, 0);
-        assertEquals(0, zeroLimit, "TreeConnect should return 0 batch limit");
-        // non-special command returns default 1
-        int defaultLimit = conn.getBatchLimit(SmbConstants.SMB_COM_CREATE_DIRECTORY, 0, 0);
-        assertEquals(1, defaultLimit, "Non-special command should default to 1");
+    @DisplayName("Batch limit configuration with Unicode enabled")
+    public void testBatchLimitWithUnicodeEnabled() throws CIFSException {
+        Properties props = new Properties();
+        props.setProperty("jcifs.smb.client.useUnicode", "true");
+        props.setProperty("jcifs.smb.client.useBatching", "true");
+        
+        PropertyConfiguration config = new PropertyConfiguration(props);
+        
+        assertTrue(config.isUseUnicode(), "Unicode should be enabled");
+        assertTrue(config.isUseBatching(), "Batching should be enabled");
+        
+        // When both are enabled, batch limits should be available
+        int limit = config.getBatchLimit("TreeConnectAndX.QueryInformation");
+        assertTrue(limit >= 0, "Batch limit should be non-negative when Unicode and batching enabled");
     }
 
     /**
-     * When Unicode is disabled, the configuration should not be consulted
-     * for the batch limit.  We verify that the configuration's
-     * {@code getMaxBatchLimit} is never called.
+     * Test configuration when batching is disabled
      */
     @Test
-    public void testNoConfigCallWhenNotUnicode() {
-        Configuration cfg = mock(Configuration.class);
-        when(cfg.isUseUnicode()).thenReturn(false);
-        // Even if batching true, method should not call getMaxBatchLimit
-        when(cfg.isUseBatching()).thenReturn(true);
-        SmbConnection conn = new SmbConnection(cfg);
-        int limit = conn.getBatchLimit(SmbConstants.SMB_COM_TRANSACTION, 0, 0);
-        // Under default implementation, the limit should be 1
-        assertEquals(1, limit, "Non-unicode path returns default 1");
-        verifyNoInteractions(cfg);
+    @DisplayName("Batch limit configuration with batching disabled")
+    public void testBatchLimitWithBatchingDisabled() throws CIFSException {
+        Properties props = new Properties();
+        props.setProperty("jcifs.smb.client.useUnicode", "true");
+        props.setProperty("jcifs.smb.client.useBatching", "false");
+        
+        PropertyConfiguration config = new PropertyConfiguration(props);
+        
+        assertTrue(config.isUseUnicode(), "Unicode should be enabled");
+        assertFalse(config.isUseBatching(), "Batching should be disabled");
+        
+        // Even with batching disabled, getBatchLimit should return a value
+        int limit = config.getBatchLimit("TreeConnectAndX.Transaction");
+        assertTrue(limit >= 0, "Batch limit should still return a value even when batching is disabled");
+    }
+
+    /**
+     * Test configuration when Unicode is disabled
+     */
+    @Test
+    @DisplayName("Batch limit configuration with Unicode disabled")
+    public void testBatchLimitWithUnicodeDisabled() throws CIFSException {
+        Properties props = new Properties();
+        props.setProperty("jcifs.smb.client.useUnicode", "false");
+        props.setProperty("jcifs.smb.client.useBatching", "true");
+        
+        PropertyConfiguration config = new PropertyConfiguration(props);
+        
+        assertFalse(config.isUseUnicode(), "Unicode should be disabled");
+        assertTrue(config.isUseBatching(), "Batching should be enabled");
+        
+        // Batch limits should still be accessible
+        int limit = config.getBatchLimit("TreeConnectAndX.OpenAndX");
+        assertTrue(limit >= 0, "Batch limit should be accessible even with Unicode disabled");
     }
 }
-

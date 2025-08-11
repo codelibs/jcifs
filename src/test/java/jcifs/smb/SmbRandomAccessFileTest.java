@@ -281,7 +281,7 @@ public class SmbRandomAccessFileTest {
         doAnswer(inv -> {
             byte[] b = inv.getArgument(0);
             int off = inv.getArgument(1);
-            b[off]=0x3F; b[off+1]=0x80; b[off+2]=0x00; b[off+3]=0x00;
+            b[off]=0x3F; b[off+1]=(byte)0x80; b[off+2]=0x00; b[off+3]=0x00;
             return 4;
         }).when(raf).read(any(byte[].class), anyInt(), eq(4));
         assertEquals(1.0f, raf.readFloat(), 0.00001);

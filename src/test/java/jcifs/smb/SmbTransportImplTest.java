@@ -234,7 +234,35 @@ class SmbTransportImplTest {
         assertSame(transport, asInternal);
 
         // Invalid type should throw
-        class OtherTransport implements SmbTransport { }
+        class OtherTransport implements SmbTransport {
+            @Override
+            public String getRemoteHostName() {
+                return "test";
+            }
+            
+            @Override
+            public Address getRemoteAddress() {
+                return mock(Address.class);
+            }
+            
+            @Override
+            public CIFSContext getContext() {
+                return mock(CIFSContext.class);
+            }
+            
+            @Override
+            public <T extends SmbTransport> T unwrap(Class<T> type) {
+                if (type.isInstance(this)) {
+                    return type.cast(this);
+                }
+                throw new ClassCastException("Cannot unwrap to " + type.getName());
+            }
+            
+            @Override
+            public void close() {
+                // no-op for test
+            }
+        }
         assertThrows(ClassCastException.class, () -> transport.unwrap(OtherTransport.class));
     }
 

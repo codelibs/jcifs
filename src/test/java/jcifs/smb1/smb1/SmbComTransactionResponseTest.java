@@ -2,6 +2,7 @@ package jcifs.smb1.smb1;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+import java.lang.reflect.Field;
 
 /**
  * Unit tests for {@link SmbComTransactionResponse}.
@@ -17,6 +18,11 @@ public class SmbComTransactionResponseTest {
     private static class DummyResponse extends SmbComTransactionResponse {
         DummyResponse() {
             super();
+        }
+        
+        // Expose protected/private fields for testing
+        boolean getIsPrimary() {
+            return isPrimary;
         }
 
         // Stub implementations of the abstract methods
@@ -50,41 +56,47 @@ public class SmbComTransactionResponseTest {
             return 0;
         }
 
-        // Helper methods to expose protected fields for assertions
-        protected void setTxnBuf(byte[] buf) {
-            this.tnx_buf = buf;
+        // Helper methods to access private fields using reflection
+        protected void setFieldValue(String fieldName, Object value) {
+            try {
+                Field field = null;
+                Class<?> clazz = this.getClass();
+                while (clazz != null && field == null) {
+                    try {
+                        field = clazz.getDeclaredField(fieldName);
+                    } catch (NoSuchFieldException e) {
+                        clazz = clazz.getSuperclass();
+                    }
+                }
+                if (field == null) {
+                    throw new NoSuchFieldException(fieldName);
+                }
+                field.setAccessible(true);
+                field.set(this, value);
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to set field " + fieldName, e);
+            }
         }
-
-        protected void setBufParameterStart(int val) {
-            this.bufParameterStart = val;
-        }
-
-        protected void setBufDataStart(int val) {
-            this.bufDataStart = val;
-        }
-
-        protected void setHeaderStart(int val) {
-            this.headerStart = val;
-        }
-
-        protected void setErrorCode(int val) {
-            this.errorCode = val;
-        }
-
-        protected void setHasMore(boolean val) {
-            this.hasMore = val;
-        }
-
-        protected void setIsPrimary(boolean val) {
-            this.isPrimary = val;
-        }
-
-        protected void setParametersDone(boolean val) {
-            this.parametersDone = val;
-        }
-
-        protected void setDataDone(boolean val) {
-            this.dataDone = val;
+        
+        protected Object getFieldValue(String fieldName) {
+            try {
+                Field field = null;
+                Class<?> clazz = this.getClass();
+                while (clazz != null && field == null) {
+                    try {
+                        field = clazz.getDeclaredField(fieldName);
+                    } catch (NoSuchFieldException e) {
+                        clazz = clazz.getSuperclass();
+                    }
+                }
+                if (field == null) {
+                    throw new NoSuchFieldException(fieldName);
+                }
+                field.setAccessible(true);
+                return field.get(this);
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to get field " + fieldName, e);
+            }
         }
 
         // Accessors for protected state
@@ -109,14 +121,62 @@ public class SmbComTransactionResponseTest {
         }
 
         boolean isParametersDone() {
-            return parametersDone;
+            return (boolean) getFieldValue("parametersDone");
         }
 
         boolean isDataDone() {
-            return dataDone;
+            return (boolean) getFieldValue("dataDone");
         }
 
         boolean isHasMore() {
+            return hasMore;
+        }
+        
+        void setErrorCode(int code) {
+            errorCode = code;
+        }
+        
+        void setHasMore(boolean val) {
+            hasMore = val;
+        }
+        
+        boolean getParametersDone() {
+            return (boolean) getFieldValue("parametersDone");
+        }
+        
+        boolean getDataDone() {
+            return (boolean) getFieldValue("dataDone");
+        }
+        
+        int getBufferParameterStart() {
+            return bufParameterStart;
+        }
+        
+        int getBufferDataStart() {
+            return bufDataStart;
+        }
+        
+        byte[] getTxnBuf() {
+            return txn_buf;
+        }
+        
+        int getParameterDisplacement() {
+            return parameterDisplacement;
+        }
+        
+        int getDataDisplacement() {
+            return dataDisplacement;
+        }
+        
+        int getParameterOffset() {
+            return parameterOffset;
+        }
+        
+        int getDataOffset() {
+            return dataOffset;
+        }
+        
+        boolean getHasMore() {
             return hasMore;
         }
     }
@@ -130,22 +190,22 @@ public class SmbComTransactionResponseTest {
     @Test
     public void hasMoreElements_errorCodeNonZero_returnsFalse() {
         DummyResponse d = new DummyResponse();
-        d.setErrorCode(123); // non‑zero error
-        assertFalse(d.hasMoreElements(), "errorCode non‑zero overrides hasMore flag");
+        d.setErrorCode(123); // non-zero error
+        assertFalse(d.hasMoreElements(), "errorCode non-zero overrides hasMore flag");
     }
 
     @Test
     public void nextElement_firstCall_flipsIsPrimary() {
         DummyResponse d = new DummyResponse();
         // Initially isPrimary is true (inherited constructor)
-        SmbComTransactionResponse r1 = d.nextElement();
+        SmbComTransactionResponse r1 = (SmbComTransactionResponse) d.nextElement();
         assertSame(d, r1, "nextElement should return the same instance");
-        // After first call isPrimary should be false and hasMore becomes false
-        assertFalse(d.isPrimary, "isPrimary should be cleared after first call");
+        // After first call isPrimary should be false
+        assertFalse(d.getIsPrimary(), "isPrimary should be cleared after first call");
         // Second call keeps the same state
-        SmbComTransactionResponse r2 = d.nextElement();
+        SmbComTransactionResponse r2 = (SmbComTransactionResponse) d.nextElement();
         assertSame(d, r2, "Subsequent calls still return same instance");
-        assertFalse(d.isPrimary, "isPrimary remains false after subsequent call");
+        assertFalse(d.getIsPrimary(), "isPrimary remains false after subsequent call");
     }
 
     @Test
@@ -163,31 +223,31 @@ public class SmbComTransactionResponseTest {
     @Test
     public void readParameterWordsWireFormat_parsesHeaderCorrectly() {
         DummyResponse d = new DummyResponse();
-        // Construct a minimal wire format buffer (indices are explicit
-        // and padded so that the code path in the source file is exercised.)
+        // Construct a minimal wire format buffer
         byte[] buf = new byte[32];
         int idx = 0;
-        // Helper to write values little‑endian
+        // Write values little-endian
         buf[idx++] = 5; // totalParameterCount low byte
         buf[idx++] = 0; // totalParameterCount high byte -> value 5
         buf[idx++] = 3; // totalDataCount low
         buf[idx++] = 0; // totalDataCount high
-        idx += 4; // 4‑byte reserved field, leave zeros
-        buf[8] = 2; // parameterCount low
+        idx += 2; // 2-byte reserved field (not 4 as the code shows)
+        buf[6] = 2; // parameterCount low
+        buf[7] = 0; // high
+        buf[8] = 4; // parameterOffset low
         buf[9] = 0; // high
-        buf[10] = 4; // parameterOffset low
+        buf[10] = 6; // parameterDisplacement low
         buf[11] = 0; // high
-        buf[12] = 6; // parameterDisplacement low
+        buf[12] = 7; // dataCount low
         buf[13] = 0; // high
-        buf[14] = 7; // dataCount low
+        buf[14] = 8; // dataOffset low
         buf[15] = 0; // high
-        buf[16] = 8; // dataOffset low
+        buf[16] = 9; // dataDisplacement low
         buf[17] = 0; // high
-        buf[18] = 9; // dataDisplacement low
-        buf[19] = 0; // high
-        buf[20] = 1; // setupCount low (only one byte consumed)
+        buf[18] = 1; // setupCount (only one byte)
+        
         // Call the method under test
-        d.readParameterWordsWireFormat(buf, 0, 0);
+        d.readParameterWordsWireFormat(buf, 0);
 
         assertEquals(5, d.getTotalParameterCount(), "totalParameterCount parsed correctly");
         assertEquals(3, d.getTotalDataCount(), "totalDataCount parsed correctly");
@@ -195,7 +255,7 @@ public class SmbComTransactionResponseTest {
         assertEquals(7, d.getDataCount(), "dataCount parsed");
         assertEquals(1, d.getSetupCount(), "setupCount parsed");
         // When bufDataStart was zero it should be set to totalParameterCount
-        assertEquals(5, d.getBufferParameterStart(), "bufParameterStart inferred from totalParameterCount");
+        assertEquals(5, d.getBufferDataStart(), "bufDataStart inferred from totalParameterCount");
     }
 
     /**
@@ -205,35 +265,93 @@ public class SmbComTransactionResponseTest {
     @Test
     public void readBytesWireFormat_succeedsWithSingleRead() {
         DummyResponse d = new DummyResponse();
-        // Allocate a transaction buffer large enough for the copy.
+        // Allocate a transaction buffer large enough for the copy
         byte[] tx = new byte[100];
-        d.setTxnBuf(tx);
+        d.txn_buf = tx;
 
-        // Set up a situation where the payload is in the buffer and
-        // the counts indicate that the full packet will be read.
-        d.setBufParameterStart(0);
-        d.setBufDataStart(20);
-        d.parameterCount = 5; // number of words to read
-        d.parameterOffset = 2; // where the parameter words begin in the buffer
+        // Set up a scenario where the full transaction is read in one call
+        d.bufParameterStart = 0;
+        d.bufDataStart = 20;
+        d.totalParameterCount = 5; // Total parameter count
+        d.totalDataCount = 4; // Total data count
+        d.parameterCount = 5; // Current parameter count matches total
+        d.parameterOffset = 2; // Absolute offset in the SMB message
         d.parameterDisplacement = 0;
-        d.dataCount = 4; // number of words to read for data
-        d.dataOffset = 10; // offset for data words
+        d.dataCount = 4; // Current data count matches total
+        d.dataOffset = 10; // Absolute offset in the SMB message
         d.dataDisplacement = 0;
-        // Prepare dummy payloads
-        byte[] payload = new byte[40];
-        // Fill data section with distinguishable pattern
-        for (int i = 0; i < payload.length; i++) {
-            payload[i] = (byte) ('A' + i);
+        d.headerStart = 0; // Set headerStart (bufferIndex will be 0)
+        
+        // Prepare buffer with test data
+        byte[] buf = new byte[100];
+        for (int i = 0; i < buf.length; i++) {
+            buf[i] = (byte) ('A' + (i % 26));
         }
-        // The buffer contains parameters followed by data.  We only
-        // test that system.arraycopy copies the correct slice.
-        byte[] buf = new byte[40];
-        System.arraycopy(payload, d.parameterOffset, buf, 0, payload.length - d.parameterOffset);
-        d.readBytesWireFormat(buf, 0, payload.length, 0, 0, 0);
-        // After a full read both flags should be set and hasMore toggled
+        
+        // Call the method under test
+        d.readBytesWireFormat(buf, 0);
+        
+        // After a full read both flags should be set and hasMore should be false
         assertTrue(d.getParametersDone(), "parametersDone should be true after reading");
         assertTrue(d.getDataDone(), "dataDone should be true after reading");
-        assertTrue(d.getHasMore(), "hasMore should be true when both packets read");
+        assertFalse(d.getHasMore(), "hasMore should be false when both packets are fully read");
+    }
+
+    /**
+     * Test partial read scenario where parameters are not fully read
+     */
+    @Test
+    public void readBytesWireFormat_partialRead_doesNotSetFlags() {
+        DummyResponse d = new DummyResponse();
+        byte[] tx = new byte[100];
+        d.txn_buf = tx;
+
+        // Set up a partial read scenario
+        d.bufParameterStart = 0;
+        d.bufDataStart = 20;
+        d.totalParameterCount = 10; // Total is 10
+        d.totalDataCount = 8; // Total is 8
+        d.parameterCount = 5; // Only reading 5 of 10
+        d.parameterOffset = 2;
+        d.parameterDisplacement = 0;
+        d.dataCount = 4; // Only reading 4 of 8
+        d.dataOffset = 10;
+        d.dataDisplacement = 0;
+        d.headerStart = 0;
+        
+        byte[] buf = new byte[100];
+        d.readBytesWireFormat(buf, 0);
+        
+        // Flags should not be set for partial read
+        assertFalse(d.getParametersDone(), "parametersDone should be false for partial read");
+        assertFalse(d.getDataDone(), "dataDone should be false for partial read");
+        assertTrue(d.getHasMore(), "hasMore should remain true for partial read");
+    }
+
+    /**
+     * Test scenario with no data to read
+     */
+    @Test
+    public void readBytesWireFormat_noData_succeeds() {
+        DummyResponse d = new DummyResponse();
+        byte[] tx = new byte[100];
+        d.txn_buf = tx;
+
+        // Set up scenario with no data
+        d.bufParameterStart = 0;
+        d.bufDataStart = 20;
+        d.totalParameterCount = 0;
+        d.totalDataCount = 0;
+        d.parameterCount = 0;
+        d.dataCount = 0;
+        d.headerStart = 0;
+        
+        byte[] buf = new byte[100];
+        int result = d.readBytesWireFormat(buf, 0);
+        
+        // Should handle empty read gracefully
+        assertEquals(0, result, "Should return 0 for no data");
+        assertTrue(d.getParametersDone(), "parametersDone should be true when total is 0");
+        assertTrue(d.getDataDone(), "dataDone should be true when total is 0");
     }
 }
-

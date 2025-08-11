@@ -155,20 +155,28 @@ public class SmbTransportInternalTest {
         assertEquals(rn, rnCap.getValue());
     }
 
-    // Edge and invalid inputs for getDfsReferrals: empty and null name handling via exceptions
-    @ParameterizedTest
-    @DisplayName("getDfsReferrals handles empty/null name via CIFSException")
-    @CsvSource({
-            "", // empty path
-            "," // null represented by missing value
-    })
-    void getDfsReferrals_edgeEmptyOrNullName(String name) throws Exception {
-        // Map empty string or null to an error for this test
+    // Edge case: test with empty name
+    @Test
+    @DisplayName("getDfsReferrals handles empty name via CIFSException")
+    void getDfsReferrals_emptyName() throws Exception {
+        String emptyName = "";
         doThrow(new jcifs.CIFSException("invalid dfs name")).when(transport)
-                .getDfsReferrals(eq(ctx), eq(name), any(), any(), anyInt());
+                .getDfsReferrals(eq(ctx), eq(emptyName), any(), any(), anyInt());
 
-        assertThrows(jcifs.CIFSException.class, () -> transport.getDfsReferrals(ctx, name, "h", "d", 1));
-        verify(transport).getDfsReferrals(eq(ctx), eq(name), eq("h"), eq("d"), eq(1));
+        assertThrows(jcifs.CIFSException.class, () -> transport.getDfsReferrals(ctx, emptyName, "h", "d", 1));
+        verify(transport).getDfsReferrals(eq(ctx), eq(emptyName), eq("h"), eq("d"), eq(1));
+    }
+
+    // Edge case: test with null name
+    @Test
+    @DisplayName("getDfsReferrals handles null name via CIFSException")
+    void getDfsReferrals_nullName() throws Exception {
+        String nullName = null;
+        doThrow(new jcifs.CIFSException("invalid dfs name")).when(transport)
+                .getDfsReferrals(eq(ctx), isNull(), any(), any(), anyInt());
+
+        assertThrows(jcifs.CIFSException.class, () -> transport.getDfsReferrals(ctx, nullName, "h", "d", 1));
+        verify(transport).getDfsReferrals(eq(ctx), isNull(), eq("h"), eq("d"), eq(1));
     }
 
     // Signing modes: optional vs enforced

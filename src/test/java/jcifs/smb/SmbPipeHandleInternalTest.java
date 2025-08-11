@@ -5,6 +5,8 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -251,7 +253,25 @@ class SmbPipeHandleInternalTest {
         assertSame(handle, unwrapped2);
 
         // Invalid type
-        assertThrows(ClassCastException.class, () -> handle.unwrap(SmbNamedPipe.class));
+        class OtherPipeHandle implements SmbPipeHandle {
+            @Override
+            public SmbPipeResource getPipe() { return mock(SmbPipeResource.class); }
+            @Override
+            public InputStream getInput() throws CIFSException { return null; }
+            @Override
+            public OutputStream getOutput() throws CIFSException { return null; }
+            @Override
+            public boolean isOpen() { return false; }
+            @Override
+            public boolean isStale() { return false; }
+            @Override
+            public void close() throws CIFSException {}
+            @Override
+            public <T extends SmbPipeHandle> T unwrap(Class<T> type) { return null; }
+        }
+        assertThrows(ClassCastException.class, () -> {
+            OtherPipeHandle result = handle.unwrap(OtherPipeHandle.class);
+        });
     }
 
     @Test

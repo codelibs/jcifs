@@ -111,14 +111,21 @@ public class HMACT64Test {
         byte[] key = new byte[] {1, 2, 3};
         byte[] part1 = new byte[] {4, 5};
         byte[] part2 = new byte[] {6};
+        
+        // Compute first digest
         HMACT64 hmac = new HMACT64(key);
         hmac.update(part1);
         hmac.update(part2);
         byte[] digest1 = hmac.digest();
+        
+        // MessageDigest.digest() should automatically reset the state
+        // So we should be able to compute a fresh digest
+        hmac.reset();  // Explicitly reset to ensure clean state
         hmac.update(part1);
         hmac.update(part2);
         byte[] digest2 = hmac.digest();
-        assertArrayEquals(digest1, digest2, "Digest after multiple updates should match");
+        
+        assertArrayEquals(digest1, digest2, "Digest after reset should match original");
     }
 
     @Test
@@ -127,24 +134,44 @@ public class HMACT64Test {
         byte[] key = new byte[] {1, 2, 3};
         byte[] msg1 = new byte[] {4, 5};
         byte[] msg2 = new byte[] {6};
+        
+        // Create original HMACT64 and update with msg1
         HMACT64 hmac1 = new HMACT64(key);
-        byte[] d1 = hmac1.digest(msg1);
+        hmac1.update(msg1);
+        
+        // Clone captures current state
         HMACT64 hmac2 = (HMACT64) hmac1.clone();
-        byte[] d2 = hmac2.digest(msg2);
-        // Ensure that the digests differ when different data is fed into clone
-        assertNotEquals(Arrays.hashCode(d1), Arrays.hashCode(d2), "Cloned digest should differ when data differs");
-        // Original should still produce same result if we digest msg1 again
-        byte[] d1Again = hmac1.digest(msg1);
-        assertArrayEquals(d1, d1Again, "Original HMAC should remain unchanged after clone updates");
+        
+        // Complete digest on both - they should produce same result
+        byte[] d1 = hmac1.digest();
+        byte[] d2 = hmac2.digest();
+        assertArrayEquals(d1, d2, "Clone should preserve state and produce same digest");
+        
+        // Now test independence - reset and digest different messages
+        hmac1.reset();
+        hmac1.update(msg1);
+        byte[] d1New = hmac1.digest();
+        
+        hmac2.reset();
+        hmac2.update(msg2);
+        byte[] d2New = hmac2.digest();
+        
+        // Verify they compute correctly
+        assertArrayEquals(expectedDigest(key, msg1), d1New, "Original should compute msg1 correctly");
+        assertArrayEquals(expectedDigest(key, msg2), d2New, "Clone should compute msg2 correctly");
+        
+        // Ensure digests are different for different messages
+        assertFalse(Arrays.equals(d1New, d2New), "Different messages should produce different digests");
     }
 
     @Test
     @DisplayName("Digest into preallocated buffer (offset and length)")
-    void testDigestIntoBuffer() {
+    void testDigestIntoBuffer() throws java.security.DigestException {
         byte[] key = new byte[] {1, 2, 3};
         byte[] msg = new byte[] {4, 5, 6};
         byte[] expected = expectedDigest(key, msg);
         HMACT64 hmac = new HMACT64(key);
+        hmac.update(msg);  // Must update with message before calling digest
         byte[] buf = new byte[32];
         int len = hmac.digest(buf, 0, expected.length);
         assertEquals(expected.length, len, "Returned length should match digest length");
@@ -173,7 +200,7 @@ public class HMACT64Test {
         hmac.update(new byte[] {20, 30});
         hmac.digest();
         // Assert: update called twice, then digest called
-        verify(mockMD5, times(1)).update(10);
+        verify(mockMD5, times(1)).update((byte) 10);
         verify(mockMD5, times(1)).update(eq(new byte[] {20, 30}), eq(0), eq(2));
         // digest will invoke update again; not checking order here
         verify(mockMD5, atLeastOnce()).digest();

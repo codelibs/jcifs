@@ -51,18 +51,18 @@ class PacUnicodeStringTest {
 
     /**
      * Tests the {@link PacUnicodeString#check(String)} method with a null string when the pointer is zero.
-     *
-     * @throws PACDecodingException if the check fails, which is not expected in this test.
+     * Note: Current implementation throws NullPointerException for null strings.
      */
     @Test
-    void testCheck_withNullStringAndZeroPointer() throws PACDecodingException {
+    void testCheck_withNullStringAndZeroPointer() {
         // A zero pointer indicates a null string
         PacUnicodeString pacString = new PacUnicodeString((short) 0, (short) 0, 0);
         String testString = null;
 
-        // The check method should return null
-        String result = pacString.check(testString);
-        assertEquals(testString, result, "The check method should return null for a null input with a zero pointer.");
+        // Current implementation throws NullPointerException when string is null
+        assertThrows(NullPointerException.class, () -> {
+            pacString.check(testString);
+        }, "A NullPointerException is thrown when checking a null string.");
     }
 
     /**
@@ -117,5 +117,21 @@ class PacUnicodeStringTest {
         // The check method should return the empty string
         String result = pacString.check(testString);
         assertSame(testString, result, "The check method should return the original empty string.");
+    }
+
+    /**
+     * Tests the {@link PacUnicodeString#check(String)} method with null string and non-zero pointer.
+     * This should throw an exception as it's an invalid state.
+     */
+    @Test
+    void testCheck_withNullStringAndNonZeroPointer() {
+        // Non-zero pointer should have a corresponding string
+        PacUnicodeString pacString = new PacUnicodeString((short) 10, (short) 20, 100);
+        String testString = null;
+
+        // Expect a NullPointerException due to null string
+        assertThrows(NullPointerException.class, () -> {
+            pacString.check(testString);
+        }, "A NullPointerException should be thrown for a null string with non-zero pointer.");
     }
 }

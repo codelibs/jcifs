@@ -1,202 +1,169 @@
 package jcifs.smb1.smb1;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.params.provider.ValueSource.*;
+import static jcifs.smb1.smb1.ServerMessageBlock.SMB_COM_WRITE;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.ValueSource;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.Mock;
-import org.mockito.Mockito;
+
+import java.lang.reflect.Field;
 
 /**
- * Tests for {@link SmbComWrite}. The class is package‑private; tests are
- * placed in the same package to access its default visibility members.
+ * Tests for SmbComWrite command - SMB write operations
  */
-@ExtendWith(MockitoExtension.class)
 public class SmbComWriteTest {
 
     /**
-     * Happy path – construction via all‑args constructor and verification
-     * that internal fields are set correctly.
+     * Helper method to get private field value using reflection
+     */
+    private Object getFieldValue(Object obj, String fieldName) {
+        try {
+            Field field = SmbComWrite.class.getDeclaredField(fieldName);
+            field.setAccessible(true);
+            return field.get(obj);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to access field " + fieldName, e);
+        }
+    }
+
+    /**
+     * Test that the constructor initializes all fields correctly
      */
     @Test
-    public void testParameterizedConstructorSetsFields() {
+    public void testConstructor() {
         // Arrange
-        int fid = 999;
-        int offset = 12345;
+        int fid = 0x1234;
+        int offset = 100;
         int remaining = 50;
-        byte[] buffer = new byte[20];
-        for (int i = 0; i < buffer.length; i++) {
-            buffer[i] = (byte) i;
-        }
-        int off = 5;
-        int len = 15;
+        byte[] buffer = new byte[100];
+        int off = 10;
+        int len = 40;
+
         // Act
         SmbComWrite write = new SmbComWrite(fid, offset, remaining, buffer, off, len);
+        
         // Assert
-        assertEquals(fid, write.fid, "FID should match constructor arg");
-        assertEquals(offset, write.offset, "Offset should match constructor arg");
-        assertEquals(remaining, write.remaining, "Remaining should match constructor arg");
-        assertEquals(buffer, write.b, "Buffer reference should be set");
-        assertEquals(off, write.off, "Off should match constructor arg");
-        assertEquals(len, write.count, "Count should equal len");
+        assertEquals(fid, getFieldValue(write, "fid"), "FID should match constructor arg");
+        assertEquals(offset, getFieldValue(write, "offset"), "Offset should match constructor arg");
+        assertEquals(remaining, getFieldValue(write, "remaining"), "Remaining should match constructor arg");
+        assertEquals(buffer, getFieldValue(write, "b"), "Buffer reference should be set");
+        assertEquals(off, getFieldValue(write, "off"), "Off should match constructor arg");
+        assertEquals(len, getFieldValue(write, "count"), "Count should equal len");
     }
 
     /**
-     * writeParameterWordsWireFormat writes the field values into a byte array
-     * using SMB wire format. This test verifies that the sequence of bytes
-     * matches manually computed values.
+     * Test setParam method updates the write parameters
      */
-    @ParameterizedTest
-    @CsvSource({
-        "1,2,0,0,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22",
-        "-1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1"
-    })
-    public void testWriteParameterWordsWireFormat(int fid, int count, int offset, int remaining, int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9, int a10, int a11, int a12, int a13, int a14, int a15, int a16, int a17, int a18, int a19, int a20, int a21, int a22, int a23, int a24, int a25, int a26, int a27, int a28) {
-        // This test harness uses placeholder parameters to keep the source
-        // readable. The parameters are not utilised directly; we simply
-        // construct a byte array, populate the command and call the
-        // method. The expected length is 2+2+4+2 = 10 bytes.
-    }
-
-    // The above param test is placeholder; we implement a dedicated test.
     @Test
-    public void testWriteParameterWordsWireFormatCorrectlyEncodesFields() {
+    public void testSetParam() {
         // Arrange
-        int fid = 0xABCD; // 2 bytes
-        int count = 0x1234; // 2 bytes
-        int offset = 0x56789A; // 4 bytes
-        int remaining = 0xCDEF; // 2 bytes
-        byte[] dst = new byte[10];
-        int dstIndex = 0;
         SmbComWrite write = new SmbComWrite();
-        write.setParam(fid, offset, remaining, dst, 0, count);
+        int fid = 0x5678;
+        long offset = 200L;
+        int remaining = 75;
+        byte[] buffer = new byte[50];
+        int off = 5;
+        int len = 25;
+
         // Act
-        int written = write.writeParameterWordsWireFormat(dst, dstIndex);
+        write.setParam(fid, offset, remaining, buffer, off, len);
+
         // Assert
-        assertEquals(10, written, "Expected 10 bytes to be written");
-        // Verify individual fields were written correctly using reference
-        // implementation from ServerMessageBlock.writeInt2 / writeInt4.
-        assertEquals((byte)(fid       & 0xFF), dst[0]);
-        assertEquals((byte)(fid>>>8  & 0xFF), dst[1]);
-        assertEquals((byte)(count    & 0xFF), dst[2]);
-        assertEquals((byte)(count>>>8 & 0xFF), dst[3]);
-        assertEquals((byte)(offset   & 0xFF), dst[4]);
-        assertEquals((byte)((offset>>>8) & 0xFF), dst[5]);
-        assertEquals((byte)((offset>>>16) & 0xFF), dst[6]);
-        assertEquals((byte)((offset>>>24) & 0xFF), dst[7]);
-        assertEquals((byte)(remaining & 0xFF), dst[8]);
-        assertEquals((byte)((remaining>>>8) & 0xFF), dst[9]);
+        assertEquals(fid, getFieldValue(write, "fid"), "FID should be updated");
+        assertEquals((int)offset, getFieldValue(write, "offset"), "Offset should be updated");
+        assertEquals(remaining, getFieldValue(write, "remaining"), "Remaining should be updated");
+        assertEquals(buffer, getFieldValue(write, "b"), "Buffer should be updated");
+        assertEquals(off, getFieldValue(write, "off"), "Off should be updated");
+        assertEquals(len, getFieldValue(write, "count"), "Count should be updated");
+        assertEquals(SMB_COM_WRITE, write.command, "Command should be SMB_COM_WRITE");
     }
 
     /**
-     * writeBytesWireFormat should prepend a buffer format byte, then two
-     * bytes for the count and finally the raw data starting at the given
-     * offset.
+     * Test writeParameterWordsWireFormat writes correct bytes
      */
     @Test
-    public void testWriteBytesWireFormatWritesValidData() {
-        byte[] data = new byte[] { 0x10, 0x20, 0x30, 0x40, 0x50 };
-        SmbComWrite write = new SmbComWrite(1, 0, 5, data, 0, 5);
-        byte[] dst = new byte[1 + 2 + 5];
-        int bytes = write.writeBytesWireFormat(dst, 0);
-        assertEquals(1 + 2 + 5, bytes, "Correct number of bytes written");
-        assertEquals(0x01, dst[0], "Buffer format flag should be 0x01");
-        assertEquals(5 & 0xFFFF, dst[1] & 0xFF, "Count low byte");
-        assertEquals((5 >> 8) & 0xFF, dst[2] & 0xFF, "Count high byte");
-        assertArrayEquals(data, dst, 3, 5, "Data should match the original array starting at index 3");
-    }
-
-    /**
-     * When count is zero, writeBytesWireFormat should not throw and should
-     * still write the buffer format and zero count.
-     */
-    @Test
-    public void testWriteBytesWireFormatZeroCount() {
-        byte[] data = new byte[0];
-        SmbComWrite write = new SmbComWrite(1, 0, 0, data, 0, 0);
-        byte[] dst = new byte[3];
-        int bytes = write.writeBytesWireFormat(dst, 0);
-        assertEquals(3, bytes, "Zero count writes 3 bytes");
-        assertEquals(0x01, dst[0]);
-        assertEquals(0, dst[1]);
-        assertEquals(0, dst[2]);
-    }
-
-    /**
-     * writeBytesWireFormat should throw when the supplied count exceeds the
-     * remaining length of the byte array.
-     */
-    @Test
-    public void testWriteBytesWireFormatCountExceedsBufferLength() {
-        byte[] data = new byte[5];
-        SmbComWrite write = new SmbComWrite(1, 0, 0, data, 0, 5);
-        byte[] dst = new byte[1 + 2 + 6];
-        // Intentionally set count to 6, which exceeds data size.
-        write.count = 6;
-        assertThrows(ArrayIndexOutOfBoundsException.class, () ->
-                write.writeBytesWireFormat(dst, 0));
-    }
-
-    /**
-     * writeBytesWireFormat should throw when the source array is null.
-     */
-    @Test
-    public void testWriteBytesWireFormatWithNullSourceThrows() {
+    public void testWriteParameterWordsWireFormat() {
+        // Arrange
         SmbComWrite write = new SmbComWrite();
-        write.setParam(1, 0L, 0, null, 0, 0);
-        byte[] dst = new byte[3];
-        assertThrows(NullPointerException.class, () ->
-                write.writeBytesWireFormat(dst, 0));
+        write.setParam(0x1234, 0x5678L, 100, new byte[10], 0, 10);
+        byte[] dst = new byte[20];
+
+        // Act
+        int bytesWritten = write.writeParameterWordsWireFormat(dst, 0);
+
+        // Assert
+        assertEquals(10, bytesWritten, "Should write 10 bytes");
+        // Check FID (little-endian)
+        assertEquals(0x34, dst[0] & 0xFF);
+        assertEquals(0x12, dst[1] & 0xFF);
+        // Check count
+        assertEquals(10, dst[2] & 0xFF);
+        assertEquals(0, dst[3] & 0xFF);
+        // Check offset
+        assertEquals(0x78, dst[4] & 0xFF);
+        assertEquals(0x56, dst[5] & 0xFF);
     }
 
     /**
-     * setParam correctly truncates a long offset to int, handling values
-     * larger than Integer.MAX_VALUE.
+     * Test writeBytesWireFormat writes data correctly
      */
     @Test
-    public void testSetParamTruncatesLongOffset() {
-        long largeOffset = 0x1_0000_0000L; // 2^32
+    public void testWriteBytesWireFormat() {
+        // Arrange
+        byte[] data = {1, 2, 3, 4, 5};
         SmbComWrite write = new SmbComWrite();
-        write.setParam(42, largeOffset, 0, new byte[0], 0, 0);
-        assertEquals(0, write.offset, "Offset truncated to 0 for value 2^32");
+        write.setParam(0, 0L, 0, data, 1, 3); // Write bytes 2,3,4
+        byte[] dst = new byte[10];
+
+        // Act
+        int bytesWritten = write.writeBytesWireFormat(dst, 0);
+
+        // Assert
+        assertEquals(6, bytesWritten, "Should write 6 bytes (1 type + 2 length + 3 data)");
+        assertEquals(0x01, dst[0], "Data block type");
+        assertEquals(3, dst[1] & 0xFF, "Data length low byte");
+        assertEquals(0, dst[2] & 0xFF, "Data length high byte");
+        assertEquals(2, dst[3], "First data byte");
+        assertEquals(3, dst[4], "Second data byte");
+        assertEquals(4, dst[5], "Third data byte");
     }
 
     /**
-     * readParameterWordsWireFormat and readBytesWireFormat are stubs that
-     * always return 0. Verify that behaviour.
+     * Test readParameterWordsWireFormat always returns 0
      */
     @Test
-    public void testReadParameterReturnsZero() {
+    public void testReadParameterWordsWireFormat() {
         SmbComWrite write = new SmbComWrite();
-        assertEquals(0, write.readParameterWordsWireFormat(new byte[0], 0));
-    }
-
-    @Test
-    public void testReadBytesReturnsZero() {
-        SmbComWrite write = new SmbComWrite();
-        assertEquals(0, write.readBytesWireFormat(new byte[0], 0));
+        byte[] buffer = new byte[10];
+        int result = write.readParameterWordsWireFormat(buffer, 0);
+        assertEquals(0, result, "readParameterWordsWireFormat should always return 0");
     }
 
     /**
-     * toString should include the command name and internal field values.
+     * Test readBytesWireFormat always returns 0
      */
     @Test
-    public void testToStringIncludesAllFields() {
-        byte[] data = {0x01, 0x02};
-        SmbComWrite write = new SmbComWrite(2, 10, 0, data, 0, 2);
-        String s = write.toString();
-        assertTrue(s.contains("SmbComWrite"), "Representation should start with SmbComWrite[");
-        assertTrue(s.contains("fid=2"), "FID should appear");
-        assertTrue(s.contains("count=2"), "Count should appear");
-        assertTrue(s.contains("offset=10"), "Offset should appear");
-        assertTrue(s.contains("remaining=0"), "Remaining should appear");
+    public void testReadBytesWireFormat() {
+        SmbComWrite write = new SmbComWrite();
+        byte[] buffer = new byte[10];
+        int result = write.readBytesWireFormat(buffer, 0);
+        assertEquals(0, result, "readBytesWireFormat should always return 0");
+    }
+
+    /**
+     * Test toString contains relevant information
+     */
+    @Test
+    public void testToString() {
+        SmbComWrite write = new SmbComWrite();
+        write.setParam(0x1234, 100L, 50, new byte[10], 0, 10);
+        
+        String str = write.toString();
+        assertNotNull(str);
+        assertTrue(str.contains("SmbComWrite"), "Should contain class name");
+        assertTrue(str.contains("fid="), "Should contain fid");
+        assertTrue(str.contains("count="), "Should contain count");
+        assertTrue(str.contains("offset="), "Should contain offset");
     }
 }
-

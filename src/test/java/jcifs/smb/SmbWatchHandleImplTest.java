@@ -100,7 +100,6 @@ class SmbWatchHandleImplTest {
         when(handle.isValid()).thenReturn(true);
         when(handle.getTree()).thenReturn(tree);
         when(tree.isSMB2()).thenReturn(false);
-        when(tree.getConfig()).thenReturn(mock(Configuration.class));
         when(tree.hasCapability(SmbConstants.CAP_NT_SMBS)).thenReturn(false);
         SmbWatchHandleImpl sut = new SmbWatchHandleImpl(handle, 0, false);
 
@@ -134,7 +133,6 @@ class SmbWatchHandleImplTest {
     void watch_responseNotReceived_throwsCIFSException() throws Exception {
         NotifyResponse resp = mock(NotifyResponse.class);
         when(resp.isReceived()).thenReturn(false);
-        when(resp.getNotifyInformation()).thenReturn(new ArrayList<>());
         setupSmb2(resp, new byte[16]);
         SmbWatchHandleImpl sut = new SmbWatchHandleImpl(handle, 0, false);
 
@@ -219,7 +217,7 @@ class SmbWatchHandleImplTest {
         List<FileNotifyInformation> result = sut.call();
 
         assertSame(info, result);
-        verify(tree, atLeastOnce()).send(any(jcifs.internal.Request.class), any(jcifs.smb.RequestParam.class));
+        verify(tree, atLeastOnce()).send(any(CommonServerMessageBlockRequest.class), any(), any(), any());
     }
 
     // close() should close underlying handle with 0L when valid

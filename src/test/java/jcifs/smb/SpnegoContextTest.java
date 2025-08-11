@@ -95,7 +95,7 @@ class SpnegoContextTest {
 
         // Invalid first byte should be rejected by token parsing
         CIFSException ex = assertThrows(CIFSException.class, () -> ctx.initSecContext(new byte[] { firstByte }, 0, 1));
-        assertEquals("Invalid token type", ex.getMessage());
+        assertEquals("Invalid token", ex.getMessage());
 
         // Ensure mechContext was not engaged due to early failure
         verify(this.mechContext, never()).initSecContext(any(), anyInt(), anyInt());
@@ -178,7 +178,7 @@ class SpnegoContextTest {
     @DisplayName("isMICAvailable returns false before establishment and does not call delegate")
     void testIsMICAvailableBeforeEstablished() {
         SpnegoContext ctx = newContext();
-        when(this.mechContext.isMICAvailable()).thenReturn(true);
+        // The mock setup is unnecessary since we never call it
         assertFalse(ctx.isMICAvailable());
         verify(this.mechContext, never()).isMICAvailable();
     }
@@ -187,7 +187,7 @@ class SpnegoContextTest {
     @DisplayName("isEstablished short-circuits on not completed and does not call delegate")
     void testIsEstablishedShortCircuit() {
         SpnegoContext ctx = newContext();
-        when(this.mechContext.isEstablished()).thenReturn(true);
+        // The mock setup is unnecessary since we never call it
         assertFalse(ctx.isEstablished());
         verify(this.mechContext, never()).isEstablished();
     }
@@ -196,7 +196,7 @@ class SpnegoContextTest {
     @DisplayName("getNetbiosName returns null and does not call delegate")
     void testGetNetbiosName() {
         SpnegoContext ctx = newContext();
-        when(this.mechContext.getNetbiosName()).thenReturn("REMOTE");
+        // The mock setup is unnecessary since we never call it
         assertNull(ctx.getNetbiosName());
         verify(this.mechContext, never()).getNetbiosName();
     }
