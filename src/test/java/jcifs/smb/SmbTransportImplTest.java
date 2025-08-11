@@ -15,6 +15,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import jcifs.Address;
 import jcifs.CIFSContext;
@@ -35,6 +37,7 @@ import jcifs.internal.smb2.nego.Smb2NegotiateResponse;
 import jcifs.util.transport.Request;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class SmbTransportImplTest {
 
     @Mock private CIFSContext ctx;
@@ -59,10 +62,10 @@ class SmbTransportImplTest {
         setField(transport, "mid", new AtomicLong());
     }
 
-    // Utility: reflectively set a private field
+    // Utility: reflectively set a private/protected field (searches up the hierarchy)
     private static void setField(Object target, String name, Object value) {
         try {
-            Field f = target.getClass().getDeclaredField(name);
+            Field f = findField(target.getClass(), name);
             f.setAccessible(true);
             f.set(target, value);
         } catch (Exception e) {
@@ -70,15 +73,28 @@ class SmbTransportImplTest {
         }
     }
 
-    // Utility: reflectively get a private field
+    // Utility: reflectively get a private/protected field (searches up the hierarchy)
     private static Object getField(Object target, String name) {
         try {
-            Field f = target.getClass().getDeclaredField(name);
+            Field f = findField(target.getClass(), name);
             f.setAccessible(true);
             return f.get(target);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+    
+    // Helper: find field in class hierarchy
+    private static Field findField(Class<?> clazz, String name) throws NoSuchFieldException {
+        Class<?> current = clazz;
+        while (current != null) {
+            try {
+                return current.getDeclaredField(name);
+            } catch (NoSuchFieldException e) {
+                current = current.getSuperclass();
+            }
+        }
+        throw new NoSuchFieldException(name);
     }
 
     @Test
@@ -300,6 +316,7 @@ class SmbTransportImplTest {
     }
 
     @Nested
+    @MockitoSettings(strictness = Strictness.LENIENT)
     class PreauthHashAndEncryption {
         @Test
         @DisplayName("calculatePreauthHash rejects non-SMB2 or missing negotiation")

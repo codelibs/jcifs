@@ -16,44 +16,38 @@ import java.io.IOException;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Answers;
 
 import jcifs.CIFSContext;
+import jcifs.Configuration;
 import jcifs.Credentials;
-import jcifs.DfsReferralData;
-import jcifs.SmbTransport;
 import jcifs.SmbTransportPool;
-import jcifs.config.BaseConfiguration;
-import jcifs.context.BaseContext;
 import jcifs.internal.dfs.DfsReferralDataInternal;
 
 class DfsImplTest {
 
     private DfsImpl dfsImpl;
     private CIFSContext mockContext;
-    private BaseConfiguration mockConfig;
+    private Configuration mockConfig;
     private Credentials mockCredentials;
     private SmbTransportPool mockTransportPool;
-    private SmbTransport mockTransport;
 
     @BeforeEach
     void setUp() throws IOException {
         // Mock the CIFSContext and its dependencies
-        mockConfig = mock(BaseConfiguration.class);
+        mockContext = mock(CIFSContext.class);
+        mockConfig = mock(Configuration.class);
         mockCredentials = mock(Credentials.class);
         mockTransportPool = mock(SmbTransportPool.class);
-        mockTransport = mock(SmbTransport.class, Answers.RETURNS_DEEP_STUBS);
 
-        // Use a real BaseContext with mocked components
-        mockContext = new BaseContext(mockConfig);
-        when(mockConfig.getDfsTtl()).thenReturn(300L);
+        // Set up mock behaviors
+        when(mockContext.getConfig()).thenReturn(mockConfig);
         when(mockContext.getCredentials()).thenReturn(mockCredentials);
         when(mockContext.getTransportPool()).thenReturn(mockTransportPool);
+        when(mockConfig.getDfsTtl()).thenReturn(300L);
 
-        // Mock transport retrieval
-        when(mockTransportPool.getSmbTransport(any(CIFSContext.class), anyString(), anyInt(), anyBoolean(), anyBoolean())).thenReturn(mockTransport);
-        when(mockTransport.unwrap(SmbTransportInternal.class)).thenReturn(mock(SmbTransportInternal.class));
-
+        // Mock transport to throw IOException - simulating connection failure
+        when(mockTransportPool.getSmbTransport(any(CIFSContext.class), anyString(), anyInt(), anyBoolean(), anyBoolean()))
+            .thenThrow(new IOException("Connection failed"));
 
         // Instantiate the class under test
         dfsImpl = new DfsImpl(mockContext);
@@ -82,11 +76,11 @@ class DfsImplTest {
     }
 
     @Test
-    void testIsTrustedDomain_UntrustedDomain() throws SmbAuthException {
-        // Scenario: The domain is not in the list of trusted domains.
+    void testIsTrustedDomain_ConnectionFails() throws SmbAuthException {
+        // Scenario: Transport connection fails
         when(mockCredentials.getUserDomain()).thenReturn("authdomain.com");
-        // This will cause getTrustedDomains to return an empty map initially
-        assertFalse(dfsImpl.isTrustedDomain(mockContext, "untrusted.com"));
+        // When transport fails, it should return false
+        assertFalse(dfsImpl.isTrustedDomain(mockContext, "anydomain.com"));
     }
 
     // Tests for getDc
@@ -98,9 +92,10 @@ class DfsImplTest {
     }
 
     @Test
-    void testGetDc_NoReferral() throws SmbAuthException {
-        // Scenario: No DC referral is found for the domain.
+    void testGetDc_ConnectionFails() throws SmbAuthException {
+        // Scenario: Transport connection fails when getting DC
         when(mockCredentials.getUserDomain()).thenReturn("authdomain.com");
+        // When transport fails to connect, getDc returns null
         assertNull(dfsImpl.getDc(mockContext, "anydomain.com"));
     }
 
@@ -129,7 +124,7 @@ class DfsImplTest {
     void testCache_DfsDisabled() {
         // Scenario: DFS is disabled.
         when(mockConfig.isDfsDisabled()).thenReturn(true);
-        DfsReferralData mockReferral = mock(DfsReferralData.class);
+        DfsReferralDataInternal mockReferral = mock(DfsReferralDataInternal.class);
         // Should not throw any exception and simply return.
         assertDoesNotThrow(() -> dfsImpl.cache(mockContext, "\\\\server\\share\\path", mockReferral));
     }
@@ -145,7 +140,7 @@ class DfsImplTest {
     @Test
     void testCache_ValidPath() {
         // Scenario: A valid referral is cached.
-        DfsReferralDataInternal mockReferral = mock(DfsReferralDataInternal.class, Answers.RETURNS_DEEP_STUBS);
+        DfsReferralDataInternal mockReferral = mock(DfsReferralDataInternal.class);
         when(mockReferral.getPathConsumed()).thenReturn(15); // e.g., "\\\\server\\share".length()
         when(mockReferral.next()).thenReturn(mockReferral); // Simple loop for the do-while
         assertDoesNotThrow(() -> dfsImpl.cache(mockContext, "\\\\server\\share\\path", mockReferral));

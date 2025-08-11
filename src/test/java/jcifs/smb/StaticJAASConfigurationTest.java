@@ -98,13 +98,13 @@ class StaticJAASConfigurationTest {
     }
 
     @Test
-    @DisplayName("Null options cause NPE when retrieving entries (JAAS requires non-null options)")
+    @DisplayName("Null options cause IllegalArgumentException when retrieving entries (JAAS requires non-null options)")
     void nullOptions_throwOnAccess() {
         // Arrange
         StaticJAASConfiguration cfg = new StaticJAASConfiguration(null);
 
         // Act + Assert
-        assertThrows(NullPointerException.class, () -> cfg.getAppConfigurationEntry("any"),
+        assertThrows(IllegalArgumentException.class, () -> cfg.getAppConfigurationEntry("any"),
                 "JAAS AppConfigurationEntry requires non-null options");
     }
 
@@ -139,17 +139,23 @@ class StaticJAASConfigurationTest {
     @Test
     @DisplayName("Options map is not mutated by configuration (verify no writes)")
     void optionsMap_notMutated_verifyNoWrites() {
-        // Arrange: use a spy to detect unintended writes
+        // Arrange: create a regular map first, then spy on it
+        Map<String, Object> originalMap = new HashMap<>();
+        originalMap.put("refreshKrb5Config", "true");
+        
         @SuppressWarnings("unchecked")
-        Map<String, Object> spyOpts = spy(new HashMap<String, Object>());
-        spyOpts.put("refreshKrb5Config", "true");
+        Map<String, Object> spyOpts = spy(originalMap);
+        
+        // Reset the spy to clear any prior invocations from setup
+        reset(spyOpts);
+        
         StaticJAASConfiguration cfg = new StaticJAASConfiguration(spyOpts);
 
         // Act
         AppConfigurationEntry[] entries = cfg.getAppConfigurationEntry("ignored");
         Map<String, ?> returned = entries[0].getOptions();
 
-        // Assert: sanity and that no mutating calls were made on the original map
+        // Assert: sanity check and verify that no mutating calls were made after construction
         assertEquals("true", returned.get("refreshKrb5Config"));
         verify(spyOpts, never()).put(any(), any());
         verify(spyOpts, never()).remove(any());

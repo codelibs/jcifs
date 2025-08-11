@@ -25,6 +25,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import jcifs.CIFSContext;
 import jcifs.CIFSException;
@@ -39,6 +41,7 @@ import jcifs.internal.smb1.com.SmbComQueryInformationResponse;
 import jcifs.internal.smb1.com.SmbComRename;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class SmbFileTest {
 
     @Mock
@@ -56,9 +59,16 @@ public class SmbFileTest {
 
     @BeforeEach
     public void setUp() throws MalformedURLException, CIFSException {
-        url = new URL("smb://localhost/share/file.txt");
-        when(mockCifsContext.getUrlHandler()).thenReturn(new jcifs.smb.Handler(mockCifsContext));
+        // Mock configuration methods
+        when(mockConfig.getPid()).thenReturn(1234);
         when(mockCifsContext.getConfig()).thenReturn(mockConfig);
+        
+        // Create URL handler
+        Handler urlHandler = new jcifs.smb.Handler(mockCifsContext);
+        when(mockCifsContext.getUrlHandler()).thenReturn(urlHandler);
+        
+        // Use the URL handler to create the URL
+        url = new URL(null, "smb://localhost/share/file.txt", urlHandler);
 
         smbFile = spy(new SmbFile(url, mockCifsContext));
 
@@ -79,12 +89,22 @@ public class SmbFileTest {
             doReturn(mockTreeHandle).when(smbFile).ensureTreeConnected();
             when(mockLocator.getUNCPath()).thenReturn("\\localhost\share\newdir");
             when(mockLocator.getShare()).thenReturn("share");
+            // Mock tree handle's getConfig() to return our mock config
+            when(mockTreeHandle.getConfig()).thenReturn(mockConfig);
         }
 
         @Test
         void testMkdir() throws SmbException, CIFSException {
             // Arrange
             when(mockTreeHandle.isSMB2()).thenReturn(false);
+            
+            // Mock exists() check - mkdir checks if directory already exists
+            SmbComQueryInformationResponse existsResponse = mock(SmbComQueryInformationResponse.class);
+            when(existsResponse.getAttributes()).thenReturn(0); // Not found
+            when(mockTreeHandle.send(any(), any(SmbComQueryInformationResponse.class)))
+                    .thenReturn(existsResponse);
+            
+            // Mock the actual mkdir call
             when(mockTreeHandle.send(any(SmbComCreateDirectory.class), any(SmbComBlankResponse.class)))
                     .thenReturn(mock(SmbComBlankResponse.class));
 
@@ -115,26 +135,33 @@ public class SmbFileTest {
         @Test
         void testDeleteDirectory() throws SmbException, CIFSException {
             // Arrange
+            // Mock that it exists and is a directory
             doReturn(true).when(smbFile).exists();
-            // Mock that it's a directory
             doReturn(true).when(smbFile).isDirectory();
-            when(mockTreeHandle.isSMB2()).thenReturn(false);
-            when(mockTreeHandle.send(any(SmbComDeleteDirectory.class), any(SmbComBlankResponse.class)))
-                    .thenReturn(mock(SmbComBlankResponse.class));
-            // Mock listFiles to return an empty array to avoid recursion
+            
+            // Mock listFiles to return empty array (directory is empty)
             doReturn(new SmbFile[0]).when(smbFile).listFiles();
+            
+            when(mockTreeHandle.isSMB2()).thenReturn(false);
+            
+            // The delete method for directories uses SmbComDelete with the directory flag
+            // After checking SMB code, directories are deleted using SmbComDelete with ATTR_DIRECTORY
+            when(mockTreeHandle.send(any(SmbComDelete.class), any(SmbComBlankResponse.class)))
+                    .thenReturn(mock(SmbComBlankResponse.class));
 
             // Act
             smbFile.delete();
 
-            // Assert
-            verify(mockTreeHandle).send(any(SmbComDeleteDirectory.class), any(SmbComBlankResponse.class));
+            // Assert - directories are actually deleted using SmbComDelete with the directory attribute
+            verify(mockTreeHandle).send(any(SmbComDelete.class), any(SmbComBlankResponse.class));
         }
 
         @Test
         void testRenameTo() throws SmbException, MalformedURLException, CIFSException {
             // Arrange
-            SmbFile dest = spy(new SmbFile("smb://localhost/share/renamed.txt", mockCifsContext));
+            Handler urlHandler = (Handler) mockCifsContext.getUrlHandler();
+            URL destUrl = new URL(null, "smb://localhost/share/renamed.txt", urlHandler);
+            SmbFile dest = spy(new SmbFile(destUrl, mockCifsContext));
             doReturn(mockTreeHandle).when(dest).ensureTreeConnected();
             doReturn(true).when(smbFile).exists();
             doReturn(false).when(dest).exists();

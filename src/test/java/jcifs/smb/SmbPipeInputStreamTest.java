@@ -20,6 +20,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import jcifs.CIFSException;
+import jcifs.Configuration;
 import jcifs.internal.smb1.trans.TransPeekNamedPipe;
 import jcifs.internal.smb1.trans.TransPeekNamedPipeResponse;
 import jcifs.internal.smb2.ioctl.Smb2IoctlRequest;
@@ -33,6 +34,7 @@ class SmbPipeInputStreamTest {
     @Mock SmbNamedPipe pipe;
     @Mock SmbTreeHandleImpl tree;
     @Mock SmbFileHandleImpl fd;
+    @Mock Configuration config;
 
     private SmbPipeInputStream newStreamWithInit(boolean smb2) throws CIFSException {
         when(handle.getPipe()).thenReturn(pipe);
@@ -44,16 +46,24 @@ class SmbPipeInputStreamTest {
         return new SmbPipeInputStream(handle, tree);
     }
 
+    private SmbPipeInputStream newStreamWithMinimalStubs(boolean smb2) throws CIFSException {
+        when(handle.getPipe()).thenReturn(pipe);
+        when(tree.isSMB2()).thenReturn(smb2);
+        return new SmbPipeInputStream(handle, tree);
+    }
+
     @Test
     @DisplayName("available() on SMB2 returns peeked byte count and interacts with tree")
     void available_smb2_happyPath() throws Exception {
         // Verify SMB2 path: IOCTL peek result is returned and resources are closed
-        SmbPipeInputStream stream = newStreamWithInit(true);
+        SmbPipeInputStream stream = newStreamWithMinimalStubs(true);
 
         // Arrange mocks for available()
         when(handle.ensureOpen()).thenReturn(fd);
         when(fd.getTree()).thenReturn(tree);
         when(tree.isSMB2()).thenReturn(true);
+        when(tree.getConfig()).thenReturn(config);
+        when(config.getTransactionBufferSize()).thenReturn(65535);
 
         Smb2IoctlResponse ioResp = mock(Smb2IoctlResponse.class);
         SrvPipePeekResponse peek = mock(SrvPipePeekResponse.class);
@@ -87,9 +97,10 @@ class SmbPipeInputStreamTest {
         when(handle.ensureOpen()).thenReturn(fd);
         when(fd.getTree()).thenReturn(tree);
         when(tree.isSMB2()).thenReturn(false);
+        when(tree.getConfig()).thenReturn(config);
+        when(config.getPid()).thenReturn(1234);
 
         // Stub send to populate the provided response instance via reflection
-        when(tree.getConfig()).thenReturn(null); // not used directly in this test path
         Mockito.doAnswer(inv -> {
             Object resp = inv.getArgument(1);
             // Set private fields: status on SmbComTransactionResponse and available on TransPeekNamedPipeResponse
@@ -119,7 +130,8 @@ class SmbPipeInputStreamTest {
         when(handle.ensureOpen()).thenReturn(fd);
         when(fd.getTree()).thenReturn(tree);
         when(tree.isSMB2()).thenReturn(false);
-        when(tree.getConfig()).thenReturn(null);
+        when(tree.getConfig()).thenReturn(config);
+        when(config.getPid()).thenReturn(1234);
 
         // Set status to CONNECTION_OK and available to 42
         Mockito.doAnswer(inv -> {
@@ -143,11 +155,13 @@ class SmbPipeInputStreamTest {
     @DisplayName("available() wraps SmbException to IOException")
     void available_wrapsException() throws Exception {
         // Verify exceptions from th.send are converted to IOException via seToIoe
-        SmbPipeInputStream stream = newStreamWithInit(true);
+        SmbPipeInputStream stream = newStreamWithMinimalStubs(true);
 
         when(handle.ensureOpen()).thenReturn(fd);
         when(fd.getTree()).thenReturn(tree);
         when(tree.isSMB2()).thenReturn(true);
+        when(tree.getConfig()).thenReturn(config);
+        when(config.getTransactionBufferSize()).thenReturn(65535);
         when(tree.send(any(Smb2IoctlRequest.class), eq(RequestParam.NO_RETRY)))
                 .thenThrow(new SmbException("boom"));
 
@@ -159,7 +173,7 @@ class SmbPipeInputStreamTest {
     @DisplayName("ensureTreeConnected delegates to handle")
     void ensureTreeConnected_delegates() throws Exception {
         // Verify ensureTreeConnected() delegates to SmbPipeHandleImpl
-        SmbPipeInputStream stream = newStreamWithInit(true);
+        SmbPipeInputStream stream = newStreamWithMinimalStubs(true);
         when(handle.ensureTreeConnected()).thenReturn(tree);
 
         SmbTreeHandleImpl result = stream.ensureTreeConnected();
@@ -171,7 +185,7 @@ class SmbPipeInputStreamTest {
     @DisplayName("ensureOpen delegates to handle")
     void ensureOpen_delegates() throws Exception {
         // Verify ensureOpen() delegates to SmbPipeHandleImpl
-        SmbPipeInputStream stream = newStreamWithInit(true);
+        SmbPipeInputStream stream = newStreamWithMinimalStubs(true);
         when(handle.ensureOpen()).thenReturn(fd);
 
         SmbFileHandleImpl result = stream.ensureOpen();

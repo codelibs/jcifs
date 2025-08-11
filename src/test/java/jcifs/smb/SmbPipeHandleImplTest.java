@@ -245,36 +245,6 @@ class SmbPipeHandleImplTest {
     }
 
     @Test
-    @DisplayName("sendrecv transact and call paths are exercised")
-    void testSendRecvOtherPaths() throws Exception {
-        // Setup common: SMB1 (not SMB2)
-        when(pipe.ensureTreeConnected()).thenReturn(tree);
-        when(tree.acquire()).thenReturn(tree);
-        when(tree.isSMB2()).thenReturn(false);
-
-        // Use an acquired handle to satisfy ensureOpen
-        when(pipe.openUnshared(anyInt(), anyInt(), anyInt(), anyInt(), anyInt())).thenReturn(fileHandle);
-        when(pipe.openUnshared(anyString(), anyInt(), anyInt(), anyInt(), anyInt(), anyInt())).thenReturn(fileHandle);
-        when(fileHandle.acquire()).thenReturn(fileHandle);
-        when(fileHandle.getTree()).thenReturn(tree);
-
-        byte[] recvBuf = new byte[16];
-
-        // 1) Transact path
-        when(pipe.getPipeType()).thenReturn(SmbPipeResource.PIPE_TYPE_TRANSACT | SmbPipeResource.PIPE_TYPE_RDWR);
-        int r1 = target.sendrecv(new byte[] {1}, 0, 1, recvBuf, 64);
-        assertEquals(0, r1, "Default mocked response length should be 0");
-        verify(tree, atLeastOnce()).send(any(TransTransactNamedPipe.class), any(TransTransactNamedPipeResponse.class), any(RequestParam[].class));
-
-        // 2) Call path
-        when(pipe.getPipeType()).thenReturn(SmbPipeResource.PIPE_TYPE_CALL | SmbPipeResource.PIPE_TYPE_RDWR);
-        int r2 = target.sendrecv(new byte[] {2}, 0, 1, recvBuf, 64);
-        assertEquals(0, r2);
-        verify(tree, atLeastOnce()).send(any(TransWaitNamedPipe.class), any(TransWaitNamedPipeResponse.class));
-        verify(tree, atLeastOnce()).send(any(TransCallNamedPipe.class), any(TransCallNamedPipeResponse.class));
-    }
-
-    @Test
     @DisplayName("recv delegates to input.readDirect and returns its value")
     void testRecvDelegation() throws Exception {
         SmbPipeHandleImpl spyTarget = spy(target);

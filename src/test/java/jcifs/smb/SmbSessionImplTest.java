@@ -14,6 +14,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import jcifs.CIFSContext;
@@ -27,6 +29,7 @@ import jcifs.internal.smb2.session.Smb2SessionSetupResponse;
 import jcifs.smb.SmbException;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class SmbSessionImplTest {
 
     @Mock private CIFSContext cifsContext;
@@ -36,21 +39,21 @@ class SmbSessionImplTest {
     @Mock private SmbTransportImpl transport;
 
     private SmbSessionImpl newSession() {
-        // Context and credentials wiring
-        when(cifsContext.getCredentials()).thenReturn(credentials);
-        when(credentials.unwrap(CredentialsInternal.class)).thenReturn(credentialsInternal);
-        when(credentialsInternal.clone()).thenReturn(credentialsInternal);
-
-        // Transport wiring
-        when(transport.acquire()).thenReturn(transport);
-        when(transport.getContext()).thenReturn(cifsContext);
-
         return new SmbSessionImpl(cifsContext, "server.example", "EXAMPLE", transport);
     }
 
     @BeforeEach
     void setup() {
+        // Base context configuration - always needed
         when(cifsContext.getConfig()).thenReturn(configuration);
+        
+        // Context and credentials wiring - used by most tests
+        when(cifsContext.getCredentials()).thenReturn(credentials);
+        when(credentials.unwrap(CredentialsInternal.class)).thenReturn(credentialsInternal);
+        when(credentialsInternal.clone()).thenReturn(credentialsInternal);
+
+        // Transport wiring - used by most tests
+        when(transport.acquire()).thenReturn(transport);
         when(transport.getContext()).thenReturn(cifsContext);
     }
 

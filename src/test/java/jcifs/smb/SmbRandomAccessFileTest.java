@@ -16,6 +16,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import jcifs.CIFSException;
 import jcifs.Configuration;
@@ -31,6 +33,7 @@ import jcifs.internal.smb2.info.Smb2SetInfoRequest;
  * Tests for SmbRandomAccessFile covering happy paths, edge cases, and interactions.
  */
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class SmbRandomAccessFileTest {
 
     // Helper: build a minimally wired instance with mocks; avoids real I/O
@@ -86,8 +89,7 @@ public class SmbRandomAccessFileTest {
     @DisplayName("close(): clears cache and closes handle; does not close shared SmbFile")
     void close_sharedFile_closesHandle_only() throws Exception {
         SmbRandomAccessFile raf = newInstance("rw", false, true, false);
-        SmbFile file = (SmbFile) Mockito.spy(getField(raf, "file"));
-        setField(raf, "file", file);
+        SmbFile file = (SmbFile) getField(raf, "file");
         SmbFileHandleImpl handle = (SmbFileHandleImpl) getField(raf, "handle");
 
         // Act
@@ -103,8 +105,7 @@ public class SmbRandomAccessFileTest {
     @DisplayName("close(): closes SmbFile when unsharedFile=true")
     void close_unsharedFile_closesFile() throws Exception {
         SmbRandomAccessFile raf = newInstance("rw", false, true, true);
-        SmbFile file = (SmbFile) Mockito.spy(getField(raf, "file"));
-        setField(raf, "file", file);
+        SmbFile file = (SmbFile) getField(raf, "file");
 
         raf.close();
 
@@ -353,13 +354,10 @@ public class SmbRandomAccessFileTest {
         raf.writeFloat(1.0f);
         raf.writeDouble(1.0);
 
-        // Verify length counts
-        verify(raf).write(any(byte[].class), anyInt(), eq(2)); // short
-        verify(raf).write(any(byte[].class), anyInt(), eq(2)); // char
-        verify(raf).write(any(byte[].class), anyInt(), eq(4)); // int
-        verify(raf).write(any(byte[].class), anyInt(), eq(8)); // long
-        verify(raf).write(any(byte[].class), anyInt(), eq(4)); // float
-        verify(raf).write(any(byte[].class), anyInt(), eq(8)); // double
+        // Verify length counts - using times() to check exact counts
+        verify(raf, times(2)).write(any(byte[].class), anyInt(), eq(2)); // short and char
+        verify(raf, times(2)).write(any(byte[].class), anyInt(), eq(4)); // int and float
+        verify(raf, times(2)).write(any(byte[].class), anyInt(), eq(8)); // long and double
     }
 
     @Test

@@ -24,9 +24,18 @@ import jcifs.Configuration;
 @ExtendWith(MockitoExtension.class)
 class SmbTreeConnectionTraceTest {
 
+    // Helper to build a minimal smb URL
+    private static URL smbUrl(String spec) {
+        try {
+            return new URL(null, spec, new Handler());
+        } catch (MalformedURLException e) {
+            throw new AssertionError("Failed to create SMB URL: " + spec, e);
+        }
+    }
+
     // Utility to build a minimal locator for connect tests
-    private static SmbResourceLocatorImpl newLocator(CIFSContext ctx) throws MalformedURLException {
-        return new SmbResourceLocatorImpl(ctx, new URL("smb://server/share"));
+    private static SmbResourceLocatorImpl newLocator(CIFSContext ctx) {
+        return new SmbResourceLocatorImpl(ctx, smbUrl("smb://server/share"));
     }
 
     @Test
@@ -159,9 +168,9 @@ class SmbTreeConnectionTraceTest {
         assertThrows(NullPointerException.class, call);
     }
 
-    static java.util.stream.Stream<Arguments> wrapExceptions() throws MalformedURLException {
+    static java.util.stream.Stream<Arguments> wrapExceptions() {
         CIFSContext ctx = mock(CIFSContext.class);
-        SmbResourceLocatorImpl loc = new SmbResourceLocatorImpl(ctx, new URL("smb://server/share"));
+        SmbResourceLocatorImpl loc = new SmbResourceLocatorImpl(ctx, smbUrl("smb://server/share"));
         return java.util.stream.Stream.of(
                 Arguments.of(loc, new UnknownHostException("host not found")),
                 Arguments.of(loc, new IOException("io failed"))

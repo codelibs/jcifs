@@ -79,15 +79,18 @@ class SmbUnsupportedOperationExceptionTest {
     }
 
     @Test
-    @DisplayName("Mockito: stubbed collaborator throws and interactions are verified")
+    @DisplayName("Mockito: stubbed collaborator throws RuntimeException wrapper and interactions are verified")
     void mockInteraction_stubsThrow_andVerifiesInvocation() {
-        // Arrange: a mocked Supplier that throws our exception when invoked
+        // Arrange: Since SmbUnsupportedOperationException is a checked exception (extends IOException),
+        // we need to use a method that can throw checked exceptions or wrap it in a RuntimeException
         @SuppressWarnings("unchecked")
         Supplier<String> supplier = mock(Supplier.class);
-        when(supplier.get()).thenThrow(new SmbUnsupportedOperationException("boom"));
+        when(supplier.get()).thenThrow(new RuntimeException(new SmbUnsupportedOperationException("boom")));
 
         // Act & Assert: the exception is propagated and interaction recorded once
-        assertThrows(SmbUnsupportedOperationException.class, supplier::get);
+        RuntimeException thrown = assertThrows(RuntimeException.class, supplier::get);
+        assertInstanceOf(SmbUnsupportedOperationException.class, thrown.getCause());
+        assertEquals("boom", thrown.getCause().getMessage());
         verify(supplier, times(1)).get();
         verifyNoMoreInteractions(supplier);
     }
