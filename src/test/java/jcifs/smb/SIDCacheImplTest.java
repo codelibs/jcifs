@@ -18,6 +18,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import jcifs.BufferCache;
 import jcifs.CIFSContext;
 import jcifs.CIFSException;
 import jcifs.Configuration;
@@ -309,8 +310,11 @@ class SIDCacheImplTest {
         // This test verifies interactions with dependent public methods without invoking RPC
         CIFSContext ctx = mock(CIFSContext.class);
         Configuration config = mock(Configuration.class);
+        BufferCache bufferCache = mock(BufferCache.class);
         lenient().when(ctx.getConfig()).thenReturn(config);
         lenient().when(config.isTraceResourceUsage()).thenReturn(false);
+        lenient().when(ctx.getBufferCache()).thenReturn(bufferCache);
+        lenient().when(bufferCache.getBuffer()).thenReturn(new byte[8192]);
         SIDCacheImpl cache = Mockito.spy(new SIDCacheImpl(ctx));
 
         // Domain SID to be returned by stub
