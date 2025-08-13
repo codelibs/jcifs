@@ -22,6 +22,7 @@ import jcifs.BufferCache;
 import jcifs.CIFSContext;
 import jcifs.CIFSException;
 import jcifs.Configuration;
+import jcifs.Credentials;
 import jcifs.dcerpc.DcerpcHandle;
 import jcifs.dcerpc.UnicodeString;
 import jcifs.dcerpc.msrpc.LsaPolicyHandle;
@@ -311,10 +312,13 @@ class SIDCacheImplTest {
         CIFSContext ctx = mock(CIFSContext.class);
         Configuration config = mock(Configuration.class);
         BufferCache bufferCache = mock(BufferCache.class);
+        Credentials credentials = mock(Credentials.class);
         lenient().when(ctx.getConfig()).thenReturn(config);
         lenient().when(config.isTraceResourceUsage()).thenReturn(false);
         lenient().when(ctx.getBufferCache()).thenReturn(bufferCache);
         lenient().when(bufferCache.getBuffer()).thenReturn(new byte[8192]);
+        lenient().when(ctx.getCredentials()).thenReturn(credentials);
+        lenient().when(credentials.getUserDomain()).thenReturn("TESTDOMAIN");
         SIDCacheImpl cache = Mockito.spy(new SIDCacheImpl(ctx));
 
         // Domain SID to be returned by stub
