@@ -186,6 +186,160 @@ class MsrpcDfsRootEnumTest {
         }
     }
     
+    @Test
+    @DisplayName("getEntries should properly convert DFS roots with special characters")
+    void testGetEntries_specialCharacters() throws Exception {
+        // Create array with special character names
+        netdfs.DfsEnumArray200 specialArray = new netdfs.DfsEnumArray200();
+        specialArray.count = 3;
+        specialArray.s = new netdfs.DfsInfo200[3];
+        
+        String[] specialNames = {"share$", "admin-share", "share_with_underscore"};
+        for (int i = 0; i < 3; i++) {
+            netdfs.DfsInfo200 entry = new netdfs.DfsInfo200();
+            entry.dfs_name = specialNames[i];
+            specialArray.s[i] = entry;
+        }
+        
+        // Replace the info.e field
+        setDfsEnumArray(dfsRootEnum, specialArray);
+        
+        // Test getEntries handles special characters
+        FileEntry[] entries = dfsRootEnum.getEntries();
+        assertNotNull(entries);
+        assertEquals(3, entries.length);
+        
+        for (int i = 0; i < 3; i++) {
+            assertInstanceOf(SmbShareInfo.class, entries[i]);
+            assertEquals(specialNames[i], entries[i].getName());
+            assertEquals(8, entries[i].getType()); // TYPE_SHARE constant value
+        }
+    }
+    
+    @Test
+    @DisplayName("getEntries should handle large number of DFS roots")
+    void testGetEntries_largeNumberOfRoots() throws Exception {
+        // Create array with many entries
+        int count = 100;
+        netdfs.DfsEnumArray200 largeArray = new netdfs.DfsEnumArray200();
+        largeArray.count = count;
+        largeArray.s = new netdfs.DfsInfo200[count];
+        
+        for (int i = 0; i < count; i++) {
+            netdfs.DfsInfo200 entry = new netdfs.DfsInfo200();
+            entry.dfs_name = "share_" + i;
+            largeArray.s[i] = entry;
+        }
+        
+        // Replace the info.e field
+        setDfsEnumArray(dfsRootEnum, largeArray);
+        
+        // Test getEntries handles large arrays
+        FileEntry[] entries = dfsRootEnum.getEntries();
+        assertNotNull(entries);
+        assertEquals(count, entries.length);
+        
+        for (int i = 0; i < count; i++) {
+            assertInstanceOf(SmbShareInfo.class, entries[i]);
+            assertEquals("share_" + i, entries[i].getName());
+            assertEquals(8, entries[i].getType());
+        }
+    }
+    
+    @Test
+    @DisplayName("Constructor should use default DCE/RPC parameters")
+    void testConstructorDefaults() {
+        // Verify default parameters are set correctly
+        assertEquals(0, dfsRootEnum.getPtype());
+        assertEquals(0xFFFF, dfsRootEnum.prefmaxlen);
+        assertEquals(0, dfsRootEnum.totalentries.value);
+        
+        // Verify info structure is properly initialized
+        assertNotNull(dfsRootEnum.info);
+        assertEquals(200, dfsRootEnum.info.level);
+        assertNotNull(dfsRootEnum.info.e);
+    }
+    
+    @Test
+    @DisplayName("getEntries should return consistent results on multiple calls")
+    void testGetEntries_multipleCallsConsistency() throws Exception {
+        // Setup test data
+        netdfs.DfsEnumArray200 testArray = new netdfs.DfsEnumArray200();
+        testArray.count = 2;
+        testArray.s = new netdfs.DfsInfo200[2];
+        
+        for (int i = 0; i < 2; i++) {
+            netdfs.DfsInfo200 entry = new netdfs.DfsInfo200();
+            entry.dfs_name = "consistent_share_" + i;
+            testArray.s[i] = entry;
+        }
+        
+        setDfsEnumArray(dfsRootEnum, testArray);
+        
+        // Call getEntries multiple times
+        FileEntry[] entries1 = dfsRootEnum.getEntries();
+        FileEntry[] entries2 = dfsRootEnum.getEntries();
+        FileEntry[] entries3 = dfsRootEnum.getEntries();
+        
+        // Verify consistency
+        assertNotNull(entries1);
+        assertNotNull(entries2);
+        assertNotNull(entries3);
+        
+        assertEquals(entries1.length, entries2.length);
+        assertEquals(entries2.length, entries3.length);
+        
+        for (int i = 0; i < entries1.length; i++) {
+            assertEquals(entries1[i].getName(), entries2[i].getName());
+            assertEquals(entries2[i].getName(), entries3[i].getName());
+            assertEquals(entries1[i].getType(), entries2[i].getType());
+            assertEquals(entries2[i].getType(), entries3[i].getType());
+        }
+    }
+    
+    @Test
+    @DisplayName("Verify proper inheritance and interface implementation")
+    void testInheritance() {
+        // Verify MsrpcDfsRootEnum extends netdfs.NetrDfsEnumEx
+        assertInstanceOf(netdfs.NetrDfsEnumEx.class, dfsRootEnum);
+        
+        // Verify it's a DCE/RPC message
+        assertInstanceOf(jcifs.dcerpc.DcerpcMessage.class, dfsRootEnum);
+    }
+    
+    @Test
+    @DisplayName("getEntries should handle empty string DFS names")
+    void testGetEntries_emptyStringNames() throws Exception {
+        // Create array with empty string names
+        netdfs.DfsEnumArray200 emptyNameArray = new netdfs.DfsEnumArray200();
+        emptyNameArray.count = 2;
+        emptyNameArray.s = new netdfs.DfsInfo200[2];
+        
+        netdfs.DfsInfo200 entry1 = new netdfs.DfsInfo200();
+        entry1.dfs_name = "";
+        emptyNameArray.s[0] = entry1;
+        
+        netdfs.DfsInfo200 entry2 = new netdfs.DfsInfo200();
+        entry2.dfs_name = "normal_share";
+        emptyNameArray.s[1] = entry2;
+        
+        // Replace the info.e field
+        setDfsEnumArray(dfsRootEnum, emptyNameArray);
+        
+        // Test getEntries handles empty strings
+        FileEntry[] entries = dfsRootEnum.getEntries();
+        assertNotNull(entries);
+        assertEquals(2, entries.length);
+        
+        assertInstanceOf(SmbShareInfo.class, entries[0]);
+        assertEquals("", entries[0].getName());
+        assertEquals(8, entries[0].getType());
+        
+        assertInstanceOf(SmbShareInfo.class, entries[1]);
+        assertEquals("normal_share", entries[1].getName());
+        assertEquals(8, entries[1].getType());
+    }
+    
     // Helper method to set DfsEnumArray using reflection
     private void setDfsEnumArray(MsrpcDfsRootEnum target, netdfs.DfsEnumArray200 array) throws Exception {
         Field eField = netdfs.DfsEnumStruct.class.getDeclaredField("e");

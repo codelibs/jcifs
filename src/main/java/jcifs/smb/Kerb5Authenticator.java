@@ -369,7 +369,7 @@ public class Kerb5Authenticator extends NtlmPasswordAuthenticator {
      */
     @Override
     public String toString () {
-        return "Kerb5Authenticatior[subject=" + ( this.getSubject() != null ? this.getSubject().getPrincipals() : null ) + ",user=" + this.user
+        return "Kerb5Authenticator[subject=" + ( this.getSubject() != null ? this.getSubject().getPrincipals() : null ) + ",user=" + this.user
                 + ",realm=" + this.realm + "]";
     }
 

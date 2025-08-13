@@ -31,8 +31,8 @@ class Base64Test {
             Arguments.of(new byte[]{ (byte) 0x41 }, "QQ=="), // "A"
             Arguments.of(new byte[]{ (byte) 0x41, (byte) 0x42 }, "QUI="), // "AB"
             Arguments.of("Man".getBytes(), "TWFu"), // 3 bytes, no padding
-            Arguments.of("\u0000\u0000\u0000".getBytes(), "AAAA"), // all zeros
-            Arguments.of("\u00ff\u00ff\u00ff".getBytes(), "///w=="))
+            Arguments.of(new byte[]{ (byte) 0x00, (byte) 0x00, (byte) 0x00 }, "AAAA"), // all zeros
+            Arguments.of(new byte[]{ (byte) 0xff, (byte) 0xff, (byte) 0xff }, "////")) // all 0xFF bytes
             ;
     }
 
@@ -51,11 +51,11 @@ class Base64Test {
     static Stream<Arguments> decodeProvider() {
         return Stream.of(
             Arguments.of("", new byte[0]),
-            Arguments.of("QQ==", "A".getBytes()),
-            Arguments.of("QUI=", "AB".getBytes()),
+            Arguments.of("QQ==", new byte[]{ (byte) 0x41 }), // "A"
+            Arguments.of("QUI=", new byte[]{ (byte) 0x41, (byte) 0x42 }), // "AB"
             Arguments.of("TWFu", "Man".getBytes()),
-            Arguments.of("AAAA", "\0\0\0".getBytes()),
-            Arguments.of("///w==", "\u00ff\u00ff\u00ff".getBytes()));
+            Arguments.of("AAAA", new byte[]{ (byte) 0x00, (byte) 0x00, (byte) 0x00 }), // all zeros
+            Arguments.of("////", new byte[]{ (byte) 0xff, (byte) 0xff, (byte) 0xff })); // all 0xFF bytes
     }
 
     @ParameterizedTest(name = "decode({1}) -> {2}")

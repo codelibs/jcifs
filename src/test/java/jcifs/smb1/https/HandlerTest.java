@@ -1,4 +1,4 @@
-package jcifs.https;
+package jcifs.smb1.https;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -11,20 +11,18 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import jcifs.CIFSContext;
-
 /**
- * Test suite for jcifs.https.Handler class.
+ * Test suite for jcifs.smb1.https.Handler class.
  * Tests HTTPS URL stream handler functionality with NTLM authentication support.
  */
-@DisplayName("HTTPS Handler Tests")
+@DisplayName("SMB1 HTTPS Handler Tests")
 class HandlerTest {
 
     private Handler handler;
 
     @BeforeEach
     void setUp() {
-        handler = new Handler(null);
+        handler = new Handler();
     }
 
     @Nested
@@ -32,20 +30,20 @@ class HandlerTest {
     class ConstructorTests {
 
         @Test
-        @DisplayName("Should create handler with null context")
-        void testConstructorWithNullContext() {
+        @DisplayName("Should create handler with default constructor")
+        void testDefaultConstructor() {
             // When
-            Handler testHandler = new Handler(null);
+            Handler testHandler = new Handler();
 
             // Then
             assertNotNull(testHandler);
         }
 
         @Test
-        @DisplayName("Should extend jcifs.http.Handler")
+        @DisplayName("Should extend jcifs.smb1.http.Handler")
         void testInheritance() {
             // Then
-            assertTrue(handler instanceof jcifs.http.Handler);
+            assertTrue(handler instanceof jcifs.smb1.http.Handler);
             assertTrue(handler instanceof URLStreamHandler);
         }
     }
@@ -73,7 +71,7 @@ class HandlerTest {
 
             // Then
             assertEquals(443, httpsPort);
-            assertNotEquals(jcifs.http.Handler.DEFAULT_HTTP_PORT, httpsPort);
+            assertNotEquals(jcifs.smb1.http.Handler.DEFAULT_HTTP_PORT, httpsPort);
         }
 
         @Test
@@ -117,18 +115,6 @@ class HandlerTest {
     }
 
     @Nested
-    @DisplayName("Deprecation Tests")
-    class DeprecationTests {
-
-        @Test
-        @DisplayName("Handler class should be deprecated")
-        void testDeprecatedAnnotation() {
-            // Then
-            assertTrue(Handler.class.isAnnotationPresent(Deprecated.class));
-        }
-    }
-
-    @Nested
     @DisplayName("Integration Tests")
     class IntegrationTests {
 
@@ -136,10 +122,10 @@ class HandlerTest {
         @DisplayName("Should support NTLM over HTTPS")
         void testNtlmSupport() {
             // When
-            Handler testHandler = new Handler(null);
+            Handler testHandler = new Handler();
             
             // Then
-            assertTrue(testHandler instanceof jcifs.http.Handler);
+            assertTrue(testHandler instanceof jcifs.smb1.http.Handler);
             assertEquals(443, testHandler.getDefaultPort());
         }
 
@@ -147,9 +133,9 @@ class HandlerTest {
         @DisplayName("Should handle multiple instances")
         void testMultipleInstances() {
             // When
-            Handler handler1 = new Handler(null);
-            Handler handler2 = new Handler(null);
-            Handler handler3 = new Handler(null);
+            Handler handler1 = new Handler();
+            Handler handler2 = new Handler();
+            Handler handler3 = new Handler();
             
             // Then
             assertEquals(443, handler1.getDefaultPort());
@@ -166,11 +152,11 @@ class HandlerTest {
         @DisplayName("Should use different ports for HTTP and HTTPS")
         void testDifferentPorts() {
             // Given
-            Handler httpsHandler = new Handler(null);
+            Handler httpsHandler = new Handler();
             
             // When
             int httpsPort = httpsHandler.getDefaultPort();
-            int httpPort = jcifs.http.Handler.DEFAULT_HTTP_PORT;
+            int httpPort = jcifs.smb1.http.Handler.DEFAULT_HTTP_PORT;
             
             // Then
             assertEquals(443, httpsPort);
@@ -187,14 +173,14 @@ class HandlerTest {
         @DisplayName("Should handle reflection access to protected method")
         void testProtectedMethodAccess() throws Exception {
             // Given
-            Handler testHandler = new Handler(null);
+            Handler testHandler = new Handler();
             
             // When
             Method method = Handler.class.getDeclaredMethod("getDefaultPort");
             
             // Then
             assertTrue(Modifier.isProtected(method.getModifiers()));
-            method.setAccessible(true); // Required to invoke protected method
+            method.setAccessible(true);
             assertEquals(443, method.invoke(testHandler));
         }
 
@@ -205,7 +191,7 @@ class HandlerTest {
             Class<?> superclass = Handler.class.getSuperclass();
             
             // Then
-            assertEquals(jcifs.http.Handler.class, superclass);
+            assertEquals(jcifs.smb1.http.Handler.class, superclass);
             assertEquals(URLStreamHandler.class, superclass.getSuperclass());
         }
 

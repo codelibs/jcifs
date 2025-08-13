@@ -18,6 +18,9 @@ import java.io.IOException;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
+import jcifs.CIFSContext;
+import jcifs.RuntimeCIFSException;
+import jcifs.SidResolver;
 import jcifs.dcerpc.rpc;
 import jcifs.smb.SID;
 import jcifs.smb.SmbException;
@@ -345,7 +348,7 @@ class SIDTest {
         String server = "myserver";
         sid.resolve(server, mockContext);
 
-        ArgumentCaptor<SID[]> sidArrayCaptor = ArgumentCaptor.forClass(SID[].class);
+        ArgumentCaptor<jcifs.SID[]> sidArrayCaptor = ArgumentCaptor.forClass(jcifs.SID[].class);
         verify(mockResolver).resolveSids(eq(mockContext), eq(server), sidArrayCaptor.capture());
         assertEquals(1, sidArrayCaptor.getValue().length);
         assertEquals(sid, sidArrayCaptor.getValue()[0]);

@@ -1,219 +1,227 @@
 package jcifs.smb1.util;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.IOException;
-import java.util.stream.Stream;
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.MethodSource;
-import org.mockito.MockedConstruction;
-import org.mockito.junit.jupiter.MockitoExtension;
+import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Unit tests for {@link MimeMap}. The tests verify the mapping logic of
- * {@link MimeMap#getMimeType(String)} and the overloaded method that accepts a
- * fallback MIME type. They also check the constructor behaviour and error
- * handling for {@code null} and unknown extensions.
- */
-@ExtendWith(MockitoExtension.class)
 class MimeMapTest {
 
-    /**
-     * Helper method to simulate MimeMap behavior
-     */
-    private String getMimeTypeForTest(String extension, String def) {
-        if (extension == null) {
-            throw new NullPointerException();
+    private MimeMap mimeMap;
+
+    @BeforeEach
+    void setUp() throws IOException {
+        mimeMap = new MimeMap();
+    }
+
+    @Nested
+    @DisplayName("getMimeType with extension only")
+    class GetMimeTypeWithExtension {
+
+        @Test
+        @DisplayName("Should return correct mime type for known extensions")
+        void testKnownExtensions() throws IOException {
+            assertEquals("application/pdf", mimeMap.getMimeType("pdf"));
+            assertEquals("application/msword", mimeMap.getMimeType("doc"));
+            assertEquals("application/vnd.ms-excel", mimeMap.getMimeType("xls"));
+            assertEquals("text/html", mimeMap.getMimeType("html"));
+            assertEquals("text/html", mimeMap.getMimeType("htm"));
+            assertEquals("image/jpeg", mimeMap.getMimeType("jpg"));
+            assertEquals("image/jpeg", mimeMap.getMimeType("jpeg"));
+            assertEquals("image/gif", mimeMap.getMimeType("gif"));
+            assertEquals("image/png", mimeMap.getMimeType("png"));
         }
-        
-        String lowerExt = extension.toLowerCase();
-        
-        // Simple mappings based on test data
-        switch (lowerExt) {
-            case "txt":
-            case "ini":
-            case "log":
-            case "in":
-            case "cfg":
-            case "m4":
-            case "sh":
-                return "text/plain";
-            case "pdf":
-                return "application/pdf";
-            case "bin":
-            case "exe":
-            case "ani":
-                return "application/octet-stream";
-            case "html":
-            case "htm":
-                return "text/html";
-            case "jpg":
-            case "jpeg":
-                return "image/jpeg";
-            case "png":
-                return "image/png";
-            case "gif":
-                return "image/gif";
-            default:
-                return def;
+
+        @Test
+        @DisplayName("Should return default mime type for unknown extensions")
+        void testUnknownExtension() throws IOException {
+            assertEquals("application/octet-stream", mimeMap.getMimeType("unknownext"));
+            assertEquals("application/octet-stream", mimeMap.getMimeType("notfound"));
+            assertEquals("application/octet-stream", mimeMap.getMimeType("doesnotexist"));
+        }
+
+        @Test
+        @DisplayName("Should handle case insensitive extensions")
+        void testCaseInsensitiveExtensions() throws IOException {
+            assertEquals("application/pdf", mimeMap.getMimeType("PDF"));
+            assertEquals("application/pdf", mimeMap.getMimeType("Pdf"));
+            assertEquals("application/pdf", mimeMap.getMimeType("pDf"));
+            assertEquals("text/html", mimeMap.getMimeType("HTML"));
+            assertEquals("text/html", mimeMap.getMimeType("HtMl"));
+        }
+
+        @ParameterizedTest
+        @DisplayName("Should return correct mime type for multiple extensions")
+        @CsvSource({
+            "txt, text/plain",
+            "css, text/css",
+            "js, application/x-javascript",
+            "zip, application/zip",
+            "tar, application/x-tar",
+            "gz, application/x-gzip",
+            "tiff, image/tiff",
+            "tif, image/tiff"
+        })
+        void testVariousExtensions(String extension, String expectedMimeType) throws IOException {
+            assertEquals(expectedMimeType, mimeMap.getMimeType(extension));
+        }
+
+        @Test
+        @DisplayName("Should handle extensions with special characters")
+        void testSpecialCharacterExtensions() throws IOException {
+            // Test extensions that are definitely not in the map
+            assertEquals("application/octet-stream", mimeMap.getMimeType("file.ext"));
+            assertEquals("application/octet-stream", mimeMap.getMimeType("@#$%"));
+            assertEquals("application/octet-stream", mimeMap.getMimeType("test123abc"));
         }
     }
 
-    /**
-     * Instantiates the class under test. The constructor loads a bundled
-     * {@code mime.map} resource.
-     */
-    @Test
-    @DisplayName("constructor should not throw when resource is present")
-    void testConstructorDoesNotThrow() {
-        // Test with MockedConstruction to control constructor behavior
-        try (MockedConstruction<MimeMap> mocked = mockConstruction(MimeMap.class)) {
+    @Nested
+    @DisplayName("getMimeType with custom default")
+    class GetMimeTypeWithDefault {
+
+        @Test
+        @DisplayName("Should return custom default for unknown extensions")
+        void testCustomDefaultForUnknown() throws IOException {
+            String customDefault = "application/custom";
+            assertEquals(customDefault, mimeMap.getMimeType("unknownext", customDefault));
+            assertEquals(customDefault, mimeMap.getMimeType("notfound", customDefault));
+            assertEquals(customDefault, mimeMap.getMimeType("doesnotexist", customDefault));
+        }
+
+        @Test
+        @DisplayName("Should return actual mime type for known extensions")
+        void testKnownExtensionsWithDefault() throws IOException {
+            String customDefault = "application/custom";
+            assertEquals("application/pdf", mimeMap.getMimeType("pdf", customDefault));
+            assertEquals("text/html", mimeMap.getMimeType("html", customDefault));
+            assertEquals("image/jpeg", mimeMap.getMimeType("jpg", customDefault));
+        }
+
+        @ParameterizedTest
+        @DisplayName("Should handle various default values")
+        @ValueSource(strings = {
+            "text/unknown",
+            "application/x-unknown",
+            "custom/type",
+            ""
+        })
+        void testVariousDefaultValues(String defaultValue) throws IOException {
+            assertEquals(defaultValue, mimeMap.getMimeType("notinmap", defaultValue));
+        }
+    }
+
+    @Nested
+    @DisplayName("Edge cases and special scenarios")
+    class EdgeCases {
+
+        @Test
+        @DisplayName("Should handle multiple extensions for same mime type")
+        void testMultipleExtensionsForSameMimeType() throws IOException {
+            // Both jpg and jpeg should map to image/jpeg
+            String jpgMime = mimeMap.getMimeType("jpg");
+            String jpegMime = mimeMap.getMimeType("jpeg");
+            assertEquals(jpgMime, jpegMime);
+            assertEquals("image/jpeg", jpgMime);
+
+            // Both htm and html should map to text/html
+            String htmMime = mimeMap.getMimeType("htm");
+            String htmlMime = mimeMap.getMimeType("html");
+            assertEquals(htmMime, htmlMime);
+            assertEquals("text/html", htmMime);
+        }
+
+        @Test
+        @DisplayName("Should handle binary file extensions")
+        void testBinaryFileExtensions() throws IOException {
+            assertEquals("application/octet-stream", mimeMap.getMimeType("bin"));
+            assertEquals("application/octet-stream", mimeMap.getMimeType("exe"));
+            assertEquals("application/octet-stream", mimeMap.getMimeType("ani"));
+        }
+
+        @Test
+        @DisplayName("Should handle Microsoft Office extensions")
+        void testMicrosoftOfficeExtensions() throws IOException {
+            assertEquals("application/msword", mimeMap.getMimeType("doc"));
+            assertEquals("application/vnd.ms-excel", mimeMap.getMimeType("xls"));
+            assertEquals("application/mspowerpoint", mimeMap.getMimeType("ppt"));
+        }
+
+        @Test
+        @DisplayName("Should handle audio and video extensions")
+        void testMultimediaExtensions() throws IOException {
+            // Common audio formats
+            assertEquals("audio/x-wav", mimeMap.getMimeType("wav"));
+            // mp3 has multiple mappings, first one wins
+            assertEquals("audio/x-mpegurl", mimeMap.getMimeType("mp3"));
+            
+            // Common video formats
+            assertEquals("video/x-msvideo", mimeMap.getMimeType("avi"));
+            assertEquals("video/mpeg", mimeMap.getMimeType("mpeg"));
+            assertEquals("video/quicktime", mimeMap.getMimeType("mov"));
+        }
+
+        @Test
+        @DisplayName("Should handle empty extensions safely")
+        void testEmptyExtensions() throws IOException {
+            // Empty extension seems to match first entry in mime.map
+            String result = mimeMap.getMimeType("");
+            assertNotNull(result);
+            // With custom default, empty still returns the first match
+            String customResult = mimeMap.getMimeType("", "custom/default");
+            assertNotNull(customResult);
+        }
+    }
+
+    @Nested
+    @DisplayName("Constructor and initialization")
+    class ConstructorTests {
+
+        @Test
+        @DisplayName("Should create MimeMap instance successfully")
+        void testConstructor() {
             assertDoesNotThrow(() -> new MimeMap());
-            assertEquals(1, mocked.constructed().size());
+        }
+
+        @Test
+        @DisplayName("Should load mime.map resource properly")
+        void testResourceLoading() throws IOException {
+            MimeMap map = new MimeMap();
+            assertNotNull(map);
+            // Verify it works by testing a known mapping
+            assertEquals("application/pdf", map.getMimeType("pdf"));
         }
     }
 
-    /**
-     * Positive test for known extensions using the default fallback MIME type.
-     * The mapping file contains a case‑insensitive mapping for the tested
-     * extensions. The method should return the exact MIME type.
-     */
-    @ParameterizedTest(name = "Extension {0} maps to MIME type {1}")
-    @CsvSource({
-            "txt,text/plain",
-            "PDF,application/pdf",
-            "exe,application/octet-stream",
-            "ani,application/octet-stream" // multipart mapping
-    })
-    void testGetMimeTypeHappyPath(String extension, String expectedMime) throws IOException {
-        MimeMap mockMap = mock(MimeMap.class);
-        when(mockMap.getMimeType(anyString())).thenAnswer(invocation -> {
-            String ext = invocation.getArgument(0);
-            return getMimeTypeForTest(ext, "application/octet-stream");
-        });
-        
-        assertEquals(expectedMime, mockMap.getMimeType(extension));
-    }
+    @Nested
+    @DisplayName("Performance and concurrency")
+    class PerformanceTests {
 
-    /**
-     * Custom default MIME type should be returned when the extension is
-     * unknown.
-     */
-    @ParameterizedTest(name = "Unknown extension {0} returns custom default {1}")
-    @CsvSource({
-            "unknown,text/custom", // unknown extension
-            ".unknown,text/custom" // extension that does not match (leading dot)
-    })
-    void testGetMimeTypeWithCustomDefault(String extension, String defaultMime) throws IOException {
-        MimeMap mockMap = mock(MimeMap.class);
-        when(mockMap.getMimeType(anyString(), anyString())).thenAnswer(invocation -> {
-            String ext = invocation.getArgument(0);
-            String def = invocation.getArgument(1);
-            return getMimeTypeForTest(ext, def);
-        });
-        
-        String actual = mockMap.getMimeType(extension, defaultMime);
-        assertEquals(defaultMime, actual);
-    }
+        @Test
+        @DisplayName("Should handle multiple lookups efficiently")
+        void testMultipleLookups() throws IOException {
+            // Test that multiple lookups work correctly
+            for (int i = 0; i < 100; i++) {
+                assertEquals("application/pdf", mimeMap.getMimeType("pdf"));
+                assertEquals("text/html", mimeMap.getMimeType("html"));
+                assertEquals("image/jpeg", mimeMap.getMimeType("jpg"));
+            }
+        }
 
-    /**
-     * The original implementation does not perform a null check on the
-     * extension argument. Passing {@code null} should therefore result in a
-     * {@link NullPointerException} from the call to {@link String#toLowerCase()}.
-     */
-    @Test
-    @DisplayName("null extension triggers NullPointerException")
-    void testGetMimeTypeNullExtensionThrows() throws IOException {
-        MimeMap mockMap = mock(MimeMap.class);
-        when(mockMap.getMimeType((String) null)).thenThrow(new NullPointerException());
-        
-        assertThrows(NullPointerException.class, () -> mockMap.getMimeType((String) null));
-    }
-
-    /**
-     * An empty extension string should not match any mapping and therefore
-     * return the default MIME type.
-     */
-    @Test
-    @DisplayName("empty extension returns default MIME type")
-    void testGetMimeTypeEmptyExtension() throws IOException {
-        MimeMap mockMap = mock(MimeMap.class);
-        when(mockMap.getMimeType(anyString())).thenAnswer(invocation -> {
-            String ext = invocation.getArgument(0);
-            return getMimeTypeForTest(ext, "application/octet-stream");
-        });
-        
-        // The default is defined as application/octet-stream
-        assertEquals("application/octet-stream", mockMap.getMimeType(""));
-    }
-
-    /**
-     * Leading dot in the extension should not match any mapping since the
-     * mapping file contains extensions without a leading dot.
-     */
-    @Test
-    @DisplayName("extension with leading dot returns default MIME type")
-    void testGetMimeTypeWithLeadingDot() throws IOException {
-        MimeMap mockMap = mock(MimeMap.class);
-        when(mockMap.getMimeType(anyString(), anyString())).thenAnswer(invocation -> {
-            String ext = invocation.getArgument(0);
-            String def = invocation.getArgument(1);
-            return getMimeTypeForTest(ext, def);
-        });
-        
-        String actual = mockMap.getMimeType(".txt", "default/type");
-        assertEquals("default/type", actual);
-    }
-
-    /**
-     * MIME type look‑ups are case‑insensitive; the implementation converts
-     * the extension to lower case before comparing.
-     */
-    @Test
-    @DisplayName("uppercase extension is resolved correctly")
-    void testGetMimeTypeCaseInsensitive() throws IOException {
-        MimeMap mockMap = mock(MimeMap.class);
-        when(mockMap.getMimeType(anyString())).thenAnswer(invocation -> {
-            String ext = invocation.getArgument(0);
-            return getMimeTypeForTest(ext, "application/octet-stream");
-        });
-        
-        assertEquals("text/plain", mockMap.getMimeType("TXT"));
-    }
-
-    /**
-     * Parameterised tests for a handful of special cases: unknown extension,
-     * long unknown extension, and a short extension that cannot match a
-     * longer mapping entry.
-     */
-    @ParameterizedTest
-    @MethodSource("edgeExtensionProvider")
-    void testEdgeCaseMappings(String extension, String defaultMime, String expected) throws IOException {
-        MimeMap mockMap = mock(MimeMap.class);
-        when(mockMap.getMimeType(anyString(), anyString())).thenAnswer(invocation -> {
-            String ext = invocation.getArgument(0);
-            String def = invocation.getArgument(1);
-            return getMimeTypeForTest(ext, def);
-        });
-        
-        String actual = mockMap.getMimeType(extension, defaultMime);
-        assertEquals(expected, actual);
-    }
-
-    static Stream<Arguments> edgeExtensionProvider() {
-        return Stream.of(
-                Arguments.of("unknown", "custom/default", "custom/default"),
-                Arguments.of("ex", "custom/default", "custom/default"), // length mismatch
-                Arguments.of(".pdf", "custom/default", "custom/default"), // leading dot
-                Arguments.of("PDF", "custom/default", "application/pdf")
-        );
+        @Test
+        @DisplayName("Should handle rapid succession of different extensions")
+        void testRapidDifferentExtensions() throws IOException {
+            String[] extensions = {"pdf", "doc", "xls", "html", "jpg", "gif", "png", "txt", "xml", "css"};
+            for (String ext : extensions) {
+                assertNotNull(mimeMap.getMimeType(ext));
+            }
+        }
     }
 }

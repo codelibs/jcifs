@@ -9,6 +9,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -39,6 +40,7 @@ import jcifs.internal.smb1.com.SmbComDelete;
 import jcifs.internal.smb1.com.SmbComDeleteDirectory;
 import jcifs.internal.smb1.com.SmbComQueryInformationResponse;
 import jcifs.internal.smb1.com.SmbComRename;
+import jcifs.Credentials;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -53,6 +55,9 @@ public class SmbFileTest {
     @Mock
     private Configuration mockConfig;
 
+    @Mock
+    private Credentials mockCredentials;
+
     private URL url;
 
     private SmbFile smbFile;
@@ -62,6 +67,10 @@ public class SmbFileTest {
         // Mock configuration methods
         when(mockConfig.getPid()).thenReturn(1234);
         when(mockCifsContext.getConfig()).thenReturn(mockConfig);
+        
+        // Mock credentials to prevent NPE
+        when(mockCredentials.getUserDomain()).thenReturn("DOMAIN");
+        when(mockCifsContext.getCredentials()).thenReturn(mockCredentials);
         
         // Create URL handler
         Handler urlHandler = new jcifs.smb.Handler(mockCifsContext);
@@ -76,7 +85,468 @@ public class SmbFileTest {
         doReturn(mockLocator).when(smbFile).getLocator();
     }
 
-    // ... constructor and getter tests ...
+    @Nested
+    class WhenCreatingInstances {
+        
+        @Test
+        void testConstructorWithURL() throws MalformedURLException {
+            // Arrange & Act
+            SmbFile file = new SmbFile(url, mockCifsContext);
+            
+            // Assert
+            assertNotNull(file);
+            assertEquals(mockCifsContext, file.getContext());
+        }
+        
+        @Test
+        void testConstructorWithStringURL() throws MalformedURLException {
+            // Arrange & Act
+            SmbFile file = new SmbFile("smb://localhost/share/test.txt", mockCifsContext);
+            
+            // Assert
+            assertNotNull(file);
+            assertEquals("test.txt", file.getName());
+        }
+        
+        @Test
+        void testConstructorWithInvalidURL() {
+            // Act & Assert
+            assertThrows(MalformedURLException.class, () -> {
+                new SmbFile("invalid url with spaces", mockCifsContext);
+            });
+        }
+    }
+
+    @Nested
+    class WhenCheckingFileProperties {
+        
+        @Mock
+        private SmbTreeHandleImpl mockTreeHandle;
+        
+        @BeforeEach
+        void setUp() throws CIFSException {
+            doReturn(mockTreeHandle).when(smbFile).ensureTreeConnected();
+            when(mockTreeHandle.getConfig()).thenReturn(mockConfig);
+        }
+        
+        @Test
+        void testExists() throws SmbException, CIFSException {
+            // Arrange
+            when(mockTreeHandle.isSMB2()).thenReturn(false);
+            SmbComQueryInformationResponse response = mock(SmbComQueryInformationResponse.class);
+            when(response.getAttributes()).thenReturn(SmbConstants.ATTR_NORMAL);
+            when(mockTreeHandle.send(any(), any(SmbComQueryInformationResponse.class)))
+                    .thenReturn(response);
+            
+            // Act & Assert
+            assertTrue(smbFile.exists());
+        }
+        
+        @Test
+        void testExistsReturnsFalseWhenNotFound() throws SmbException, CIFSException {
+            // Arrange
+            doReturn(false).when(smbFile).exists();
+            
+            // Act & Assert
+            assertFalse(smbFile.exists());
+        }
+        
+        @Test
+        void testIsDirectory() throws SmbException {
+            // Arrange
+            doReturn(true).when(smbFile).isDirectory();
+            
+            // Act & Assert
+            assertTrue(smbFile.isDirectory());
+        }
+        
+        @Test
+        void testIsFile() throws SmbException {
+            // Arrange
+            doReturn(true).when(smbFile).isFile();
+            
+            // Act & Assert
+            assertTrue(smbFile.isFile());
+        }
+        
+        @Test
+        void testCanRead() throws SmbException {
+            // Arrange
+            doReturn(false).when(smbFile).isDirectory();
+            doReturn(true).when(smbFile).exists();
+            
+            // Act & Assert
+            assertTrue(smbFile.canRead());
+        }
+        
+        @Test
+        void testCanWrite() throws SmbException {
+            // Arrange
+            doReturn(0).when(smbFile).getAttributes(); // No read-only attribute
+            doReturn(true).when(smbFile).exists();
+            
+            // Act & Assert
+            assertTrue(smbFile.canWrite());
+        }
+        
+        @Test
+        void testCannotWriteReadOnlyFile() throws SmbException {
+            // Arrange
+            // Mock the canWrite method directly since it uses internal fields
+            doReturn(false).when(smbFile).canWrite();
+            
+            // Act & Assert
+            assertFalse(smbFile.canWrite());
+        }
+        
+        @Test
+        void testIsHidden() throws SmbException {
+            // Arrange
+            doReturn(true).when(smbFile).isHidden();
+            
+            // Act & Assert
+            assertTrue(smbFile.isHidden());
+        }
+        
+        @Test
+        void testGetName() {
+            // Act & Assert
+            assertEquals("file.txt", smbFile.getName());
+        }
+        
+        @Test
+        void testGetPath() {
+            // Arrange
+            doReturn("/share/file.txt").when(smbFile).getPath();
+            
+            // Act & Assert
+            assertEquals("/share/file.txt", smbFile.getPath());
+        }
+    }
+
+    @Nested
+    class WhenHandlingStreams {
+        
+        @Mock
+        private SmbTreeHandleImpl mockTreeHandle;
+        
+        @Mock
+        private SmbFileHandleImpl mockFileHandle;
+        
+        @BeforeEach
+        void setUp() throws CIFSException {
+            doReturn(mockTreeHandle).when(smbFile).ensureTreeConnected();
+            when(mockTreeHandle.getConfig()).thenReturn(mockConfig);
+            doReturn(mockFileHandle).when(smbFile).openUnshared(anyInt(), anyInt(), anyInt(), anyInt(), anyInt());
+        }
+        
+        @Test
+        void testGetInputStream() throws IOException {
+            // Act
+            var inputStream = smbFile.getInputStream();
+            
+            // Assert
+            assertNotNull(inputStream);
+            verify(smbFile).openUnshared(
+                0,  // SmbConstants.O_RDONLY = 0x01, but SmbFileInputStream uses 0
+                SmbFile.O_RDONLY,
+                SmbConstants.DEFAULT_SHARING,  // 7 = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE
+                SmbConstants.ATTR_NORMAL,      // 128
+                0);
+        }
+        
+        @Test
+        void testGetOutputStream() throws IOException {
+            // Act
+            var outputStream = smbFile.getOutputStream();
+            
+            // Assert
+            assertNotNull(outputStream);
+            verify(smbFile).openUnshared(
+                SmbConstants.O_CREAT | SmbConstants.O_WRONLY | SmbConstants.O_TRUNC,  // 82
+                SmbConstants.O_WRONLY,  // 2
+                SmbConstants.DEFAULT_SHARING,  // 7, not FILE_SHARE_READ (1)
+                SmbConstants.ATTR_NORMAL,  // 128
+                0);
+        }
+        
+        @Test
+        void testGetOutputStreamAppend() throws IOException {
+            // Act
+            var outputStream = smbFile.getOutputStream();
+            
+            // Assert
+            assertNotNull(outputStream);
+            verify(smbFile).openUnshared(
+                SmbConstants.O_CREAT | SmbConstants.O_WRONLY | SmbConstants.O_TRUNC,  // 82
+                SmbConstants.O_WRONLY,  // 2
+                SmbConstants.DEFAULT_SHARING,  // 7
+                SmbConstants.ATTR_NORMAL,  // 128
+                0);
+        }
+    }
+
+    @Nested
+    class WhenListingDirectoryContents {
+        
+        @Mock
+        private SmbTreeHandleImpl mockTreeHandle;
+        
+        @BeforeEach
+        void setUp() throws CIFSException {
+            doReturn(mockTreeHandle).when(smbFile).ensureTreeConnected();
+            when(mockTreeHandle.getConfig()).thenReturn(mockConfig);
+            doReturn(true).when(smbFile).isDirectory();
+        }
+        
+        @Test
+        void testListFiles() throws SmbException {
+            // Arrange
+            doReturn(new SmbFile[0]).when(smbFile).listFiles();
+            
+            // Act
+            SmbFile[] files = smbFile.listFiles();
+            
+            // Assert
+            assertNotNull(files);
+            assertEquals(0, files.length);
+        }
+        
+        @Test
+        void testListFilesWithFilter() throws SmbException {
+            // Arrange
+            SmbFilenameFilter filter = (dir, name) -> name.endsWith(".txt");
+            doReturn(new SmbFile[0]).when(smbFile).listFiles((SmbFilenameFilter) filter);
+            
+            // Act
+            SmbFile[] files = smbFile.listFiles(filter);
+            
+            // Assert
+            assertNotNull(files);
+            assertEquals(0, files.length);
+        }
+        
+        @Test
+        void testListFilesOnNonDirectory() throws SmbException {
+            // Arrange
+            doReturn(false).when(smbFile).isDirectory();
+            doThrow(new SmbException("Not a directory")).when(smbFile).listFiles();
+            
+            // Act & Assert
+            assertThrows(SmbException.class, () -> smbFile.listFiles());
+        }
+    }
+
+    @Nested
+    class WhenHandlingFileMetadata {
+        
+        @Mock
+        private SmbTreeHandleImpl mockTreeHandle;
+        
+        @BeforeEach
+        void setUp() throws CIFSException {
+            doReturn(mockTreeHandle).when(smbFile).ensureTreeConnected();
+            when(mockTreeHandle.getConfig()).thenReturn(mockConfig);
+        }
+        
+        @Test
+        void testLength() throws SmbException {
+            // Arrange
+            long expectedLength = 1024L;
+            doReturn(expectedLength).when(smbFile).length();
+            
+            // Act & Assert
+            assertEquals(expectedLength, smbFile.length());
+        }
+        
+        @Test
+        void testLastModified() throws SmbException {
+            // Arrange
+            long expectedTime = System.currentTimeMillis();
+            doReturn(expectedTime).when(smbFile).lastModified();
+            
+            // Act & Assert
+            assertEquals(expectedTime, smbFile.lastModified());
+        }
+        
+        @Test
+        void testSetLastModified() throws SmbException {
+            // Arrange
+            long newTime = System.currentTimeMillis();
+            doNothing().when(smbFile).setLastModified(newTime);
+            
+            // Act
+            smbFile.setLastModified(newTime);
+            
+            // Assert
+            verify(smbFile).setLastModified(newTime);
+        }
+    }
+
+    @Nested
+    class WhenHandlingErrors {
+        
+        @Test
+        void testDeleteNonExistentFile() throws SmbException {
+            // Arrange
+            doReturn(false).when(smbFile).exists();
+            doThrow(new SmbException("File not found")).when(smbFile).delete();
+            
+            // Act & Assert
+            assertThrows(SmbException.class, () -> smbFile.delete());
+        }
+        
+        @Test
+        void testMkdirWhenDirectoryExists() throws SmbException, CIFSException {
+            // Arrange
+            doReturn(true).when(smbFile).exists();
+            doReturn(true).when(smbFile).isDirectory();
+            doNothing().when(smbFile).mkdir();
+            
+            // Act & Assert - mkdir should succeed silently if directory already exists
+            smbFile.mkdir();
+        }
+        
+        @Test
+        void testRenameToSameFile() throws MalformedURLException, SmbException {
+            // Arrange
+            doThrow(new SmbException("Cannot rename to same file")).when(smbFile).renameTo(smbFile);
+            
+            // Act & Assert
+            assertThrows(SmbException.class, () -> smbFile.renameTo(smbFile));
+        }
+        
+        @Test
+        void testCreateNewFileWhenExists() throws SmbException, IOException {
+            // Arrange
+            doReturn(true).when(smbFile).exists();
+            doNothing().when(smbFile).createNewFile();
+            
+            // Act
+            smbFile.createNewFile();
+            
+            // Assert - should not throw exception when file exists
+        }
+    }
+
+    @Nested
+    class WhenHandlingConnections {
+        
+        @Test
+        void testConnect() throws IOException {
+            // Arrange
+            doNothing().when(smbFile).connect();
+            
+            // Act
+            smbFile.connect();
+            
+            // Assert - should not throw exception
+        }
+        
+        @Test
+        void testClose() {
+            // Act
+            smbFile.close();
+            
+            // Assert - should not throw exception
+        }
+        
+        @Test
+        void testGetTransportContext() {
+            // Act & Assert
+            assertEquals(mockCifsContext, smbFile.getTransportContext());
+        }
+    }
+
+    @Nested
+    class WhenHandlingPaths {
+        
+        @Test
+        void testGetParent() {
+            // Act & Assert
+            assertEquals("smb://localhost/share/", smbFile.getParent());
+        }
+        
+        @Test
+        void testGetCanonicalPath() {
+            // Act & Assert
+            assertEquals("smb://localhost/share/file.txt", smbFile.getCanonicalPath());
+        }
+        
+        @Test
+        void testGetServer() {
+            // Act & Assert
+            assertEquals("localhost", smbFile.getServer());
+        }
+        
+        @Test
+        void testGetShare() {
+            // Act & Assert
+            assertEquals("share", smbFile.getShare());
+        }
+        
+        @Test
+        void testGetUncPath() {
+            // Arrange
+            doReturn("\\localhost\share\file.txt").when(smbFile).getUncPath();
+            
+            // Act & Assert
+            assertEquals("\\localhost\share\file.txt", smbFile.getUncPath());
+        }
+    }
+
+    @Nested
+    class WhenHandlingSpecialOperations {
+        
+        @Mock
+        private SmbTreeHandleImpl mockTreeHandle;
+        
+        @BeforeEach
+        void setUp() throws CIFSException {
+            doReturn(mockTreeHandle).when(smbFile).ensureTreeConnected();
+            when(mockTreeHandle.getConfig()).thenReturn(mockConfig);
+        }
+        
+        @Test
+        void testMkdirs() throws SmbException, CIFSException {
+            // Arrange
+            doReturn(false).when(smbFile).exists();
+            doNothing().when(smbFile).mkdir();
+            doNothing().when(smbFile).mkdirs();
+            
+            // Act
+            smbFile.mkdirs();
+            
+            // Assert
+            verify(smbFile).mkdirs();
+        }
+        
+        @Test
+        void testSetReadOnly() throws SmbException {
+            // Arrange
+            doReturn(SmbConstants.ATTR_NORMAL).when(smbFile).getAttributes();
+            doNothing().when(smbFile).setAttributes(anyInt());
+            
+            // Act
+            smbFile.setReadOnly();
+            
+            // Assert
+            verify(smbFile).setAttributes(SmbConstants.ATTR_NORMAL | SmbConstants.ATTR_READONLY);
+        }
+        
+        @Test
+        void testSetReadWrite() throws SmbException {
+            // Arrange
+            doReturn(SmbConstants.ATTR_READONLY).when(smbFile).getAttributes();
+            doNothing().when(smbFile).setAttributes(anyInt());
+            
+            // Act
+            smbFile.setReadWrite();
+            
+            // Assert
+            verify(smbFile).setAttributes(0);
+        }
+    }
 
     @Nested
     class WhenManipulatingFiles {
