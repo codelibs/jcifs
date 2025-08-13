@@ -343,7 +343,7 @@ class lsarpcTest {
         when(mockNdrBuffer.dec_ndr_long()).thenReturn(1, 2);
         // The implementation uses maximum_length/2 for _name_buffers, not length
         when(mockDeferredNdrBuffer.dec_ndr_long()).thenReturn(10, 0, 5); // _name_buffers (max_length/2 = 20/2 = 10), 0, _name_bufferl (5)
-        when(mockDeferredNdrBuffer.dec_ndr_short()).thenReturn((int)(short) 'a', (int)(int)(short) 'b', (int)(int)(short) 'c', (int)(int)(short) 'd', (int)(int)(short) 'e');
+        when(mockDeferredNdrBuffer.dec_ndr_short()).thenReturn((int)(short) 'a', (int)(short) 'b', (int)(short) 'c', (int)(short) 'd', (int)(short) 'e');
 
         domainInfo.decode(mockNdrBuffer);
 
