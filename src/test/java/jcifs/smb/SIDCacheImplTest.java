@@ -20,6 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import jcifs.CIFSContext;
 import jcifs.CIFSException;
+import jcifs.Configuration;
 import jcifs.dcerpc.DcerpcHandle;
 import jcifs.dcerpc.UnicodeString;
 import jcifs.dcerpc.msrpc.LsaPolicyHandle;
@@ -307,6 +308,9 @@ class SIDCacheImplTest {
     void getLocalGroupsMap_interactions_viaSpy() throws CIFSException, IOException {
         // This test verifies interactions with dependent public methods without invoking RPC
         CIFSContext ctx = mock(CIFSContext.class);
+        Configuration config = mock(Configuration.class);
+        lenient().when(ctx.getConfig()).thenReturn(config);
+        lenient().when(config.isTraceResourceUsage()).thenReturn(false);
         SIDCacheImpl cache = Mockito.spy(new SIDCacheImpl(ctx));
 
         // Domain SID to be returned by stub
