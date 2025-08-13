@@ -904,7 +904,7 @@ class lsarpcTest {
         lsarpc.LsarTrustInformation trustInfo = new lsarpc.LsarTrustInformation();
         trustInfo.name = new rpc.unicode_string();
 
-        when(mockNdrBuffer.dec_ndr_short()).thenReturn((int)(int)(short) 10, (int)(short) 20);
+        when(mockNdrBuffer.dec_ndr_short()).thenReturn((int)(short) 10, (int)(short) 20);
         when(mockNdrBuffer.dec_ndr_long()).thenReturn(1, 2);
         when(mockDeferredNdrBuffer.dec_ndr_long()).thenReturn(-1, 0, 5);
 
