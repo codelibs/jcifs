@@ -563,7 +563,7 @@ class lsarpcTest {
         lsarpc.LsarDnsDomainInfo dnsDomainInfo = new lsarpc.LsarDnsDomainInfo();
         dnsDomainInfo.name = new rpc.unicode_string();
 
-        when(mockNdrBuffer.dec_ndr_short()).thenReturn((int)(int)(short) 10, (int)(int)(short) 20, (int)(int)(short) 0, (int)(int)(short) 0, (int)(int)(short) 0, (int)(int)(short) 0);
+        when(mockNdrBuffer.dec_ndr_short()).thenReturn((int)(short) 10, (int)(short) 20, (int)(short) 0, (int)(short) 0, (int)(short) 0, (int)(short) 0);
         when(mockNdrBuffer.dec_ndr_long()).thenReturn(1, 0, 0, 0, 0);
         when(mockDeferredNdrBuffer.dec_ndr_long()).thenReturn(-1, 0, 5); // Invalid _name_buffers
 
