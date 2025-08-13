@@ -1238,7 +1238,7 @@ class lsarpcTest {
         lsarpc.LsarQueryInformationPolicy queryInfoPolicy = new lsarpc.LsarQueryInformationPolicy(mockHandle, (short) 1, mockInfo);
 
         when(mockNdrBuffer.dec_ndr_long()).thenReturn(1, 123); // _infop, retval
-        when(mockNdrBuffer.dec_ndr_short()).thenReturn((int)(int)(short) 0); // union discriminant
+        when(mockNdrBuffer.dec_ndr_short()).thenReturn((int)(short) 0); // union discriminant
 
         queryInfoPolicy.decode_out(mockNdrBuffer);
 
