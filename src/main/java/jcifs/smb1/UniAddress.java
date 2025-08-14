@@ -203,7 +203,7 @@ public class UniAddress {
     }
 
     static boolean isDotQuadIP( String hostname ) {
-        if( Character.isDigit( hostname.charAt( 0 ))) {
+        if( hostname != null && hostname.length() > 0 && Character.isDigit( hostname.charAt( 0 ))) {
             int i, len, dots;
             char[] data;
 
