@@ -251,6 +251,7 @@
 						<exclude>src/main/java/jcifs/dcerpc/msrpc/lsarpc.java</exclude>
 						<exclude>src/main/java/jcifs/dcerpc/rpc.java</exclude>
 						<exclude>src/main/java/jcifs/smb1/**</exclude>
+						<exclude>src/test/java/**</exclude>
 					</excludes>
 					<licenses>
 						<license implementation="org.apache.rat.analysis.license.SimplePatternBasedLicense">
