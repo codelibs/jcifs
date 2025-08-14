@@ -25,11 +25,11 @@ import java.net.UnknownHostException;
 
 import java.util.Enumeration;
 
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
-import javax.servlet.UnavailableException;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.UnavailableException;
 
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpSession;
 
 import jcifs.smb1.Config;
 import jcifs.smb1.UniAddress;
@@ -39,9 +39,9 @@ import jcifs.smb1.smb1.SmbAuthException;
 import jcifs.smb1.smb1.SmbSession;
 import jcifs.smb1.util.Base64;
 
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * This servlet may be used with pre-2.3 servlet containers
