@@ -1,27 +1,25 @@
 /*
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 package jcifs.internal.dtyp;
 
-
 import jcifs.Decodable;
 import jcifs.internal.util.SMBUtil;
 import jcifs.smb.SID;
 import jcifs.util.Hexdump;
-
 
 /**
  * An Access Control Entry (ACE) is an element in a security descriptor
@@ -52,20 +50,20 @@ import jcifs.util.Hexdump;
  * with desired access bits <tt>0x00000003</tt> (<tt>FILE_READ_DATA |
  * FILE_WRITE_DATA</tt>) and the target file has the following security
  * descriptor ACEs:
- * 
+ *
  * <pre>
  * Allow WNET\alice     0x001200A9  Direct
  * Allow Administrators 0x001F01FF  Inherited
  * Allow SYSTEM         0x001F01FF  Inherited
  * </pre>
- * 
+ *
  * the access check would fail because the direct ACE has an access mask
  * of <tt>0x001200A9</tt> which doesn't have the
  * <tt>FILE_WRITE_DATA</tt> bit on (bit <tt>0x00000002</tt>). Actually, this isn't quite correct. If
  * <tt>WNET\alice</tt> is in the local <tt>Administrators</tt> group the access check
  * will succeed because the inherited ACE allows local <tt>Administrators</tt>
  * both <tt>FILE_READ_DATA</tt> and <tt>FILE_WRITE_DATA</tt> access.
- * 
+ *
  * @internal
  */
 public class ACE implements jcifs.ACE, Decodable {
@@ -75,28 +73,24 @@ public class ACE implements jcifs.ACE, Decodable {
     int access;
     SID sid;
 
-
     @Override
-    public boolean isAllow () {
+    public boolean isAllow() {
         return this.allow;
     }
 
-
     @Override
-    public boolean isInherited () {
-        return ( this.flags & FLAGS_INHERITED ) != 0;
+    public boolean isInherited() {
+        return (this.flags & FLAGS_INHERITED) != 0;
     }
 
-
     @Override
-    public int getFlags () {
+    public int getFlags() {
         return this.flags;
     }
 
-
     @Override
-    public String getApplyToText () {
-        switch ( this.flags & ( FLAGS_OBJECT_INHERIT | FLAGS_CONTAINER_INHERIT | FLAGS_INHERIT_ONLY ) ) {
+    public String getApplyToText() {
+        switch (this.flags & (FLAGS_OBJECT_INHERIT | FLAGS_CONTAINER_INHERIT | FLAGS_INHERIT_ONLY)) {
         case 0x00:
             return "This folder only";
         case 0x03:
@@ -115,24 +109,22 @@ public class ACE implements jcifs.ACE, Decodable {
         return "Invalid";
     }
 
-
     @Override
-    public int getAccessMask () {
+    public int getAccessMask() {
         return this.access;
     }
 
-
     @Override
-    public SID getSID () {
+    public SID getSID() {
         return this.sid;
     }
 
-
     @Override
-    public int decode ( byte[] buf, int bi, int len ) {
-        this.allow = buf[ bi++ ] == (byte) 0x00;
-        this.flags = buf[ bi++ ] & 0xFF;
-        int size = SMBUtil.readInt2(buf, bi);
+    public int decode(final byte[] buf, int bi, final int len) {
+        this.allow = buf[bi] == (byte) 0x00;
+        bi++;
+        this.flags = buf[bi++] & 0xFF;
+        final int size = SMBUtil.readInt2(buf, bi);
         bi += 2;
         this.access = SMBUtil.readInt4(buf, bi);
         bi += 4;
@@ -140,15 +132,13 @@ public class ACE implements jcifs.ACE, Decodable {
         return size;
     }
 
-
-    void appendCol ( StringBuffer sb, String str, int width ) {
+    void appendCol(final StringBuffer sb, final String str, final int width) {
         sb.append(str);
-        int count = width - str.length();
-        for ( int i = 0; i < count; i++ ) {
+        final int count = width - str.length();
+        for (int i = 0; i < count; i++) {
             sb.append(' ');
         }
     }
-
 
     /**
      * Return a string represeting this ACE.
@@ -157,8 +147,8 @@ public class ACE implements jcifs.ACE, Decodable {
      * fragments but currently it does not.
      */
     @Override
-    public String toString () {
-        StringBuffer sb = new StringBuffer();
+    public String toString() {
+        final StringBuffer sb = new StringBuffer();
         sb.append(isAllow() ? "Allow " : "Deny  ");
         appendCol(sb, this.sid.toDisplayString(), 25);
         sb.append(" 0x").append(Hexdump.toHexString(this.access, 8)).append(' ');

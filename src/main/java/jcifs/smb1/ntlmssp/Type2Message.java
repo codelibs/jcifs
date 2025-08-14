@@ -20,7 +20,6 @@
 package jcifs.smb1.ntlmssp;
 
 import java.io.IOException;
-
 import java.net.UnknownHostException;
 
 import jcifs.smb1.Config;
@@ -46,29 +45,27 @@ public class Type2Message extends NtlmMessage {
     private byte[] targetInformation;
 
     static {
-        DEFAULT_FLAGS = NTLMSSP_NEGOTIATE_NTLM |
-                (Config.getBoolean("jcifs.smb1.smb.client.useUnicode", true) ?
-                        NTLMSSP_NEGOTIATE_UNICODE : NTLMSSP_NEGOTIATE_OEM);
+        DEFAULT_FLAGS = NTLMSSP_NEGOTIATE_NTLM
+                | (Config.getBoolean("jcifs.smb1.smb.client.useUnicode", true) ? NTLMSSP_NEGOTIATE_UNICODE : NTLMSSP_NEGOTIATE_OEM);
         DEFAULT_DOMAIN = Config.getProperty("jcifs.smb1.smb.client.domain", null);
-        byte[] domain = new byte[0];
+        byte[] domain = {};
         if (DEFAULT_DOMAIN != null) {
             try {
                 domain = DEFAULT_DOMAIN.getBytes(UNI_ENCODING);
-            } catch (IOException ex) { }
+            } catch (final IOException ex) {}
         }
-        int domainLength = domain.length;
-        byte[] server = new byte[0];
+        final int domainLength = domain.length;
+        byte[] server = {};
         try {
-            String host = NbtAddress.getLocalHost().getHostName();
+            final String host = NbtAddress.getLocalHost().getHostName();
             if (host != null) {
                 try {
                     server = host.getBytes(UNI_ENCODING);
-                } catch (IOException ex) { }
+                } catch (final IOException ex) {}
             }
-        } catch (UnknownHostException ex) { }
-        int serverLength = server.length;
-        byte[] targetInfo = new byte[(domainLength > 0 ? domainLength + 4 : 0) +
-                (serverLength > 0 ? serverLength + 4 : 0) + 4];
+        } catch (final UnknownHostException ex) {}
+        final int serverLength = server.length;
+        final byte[] targetInfo = new byte[(domainLength > 0 ? domainLength + 4 : 0) + (serverLength > 0 ? serverLength + 4 : 0) + 4];
         int offset = 0;
         if (domainLength > 0) {
             writeUShort(targetInfo, offset, 2);
@@ -102,7 +99,7 @@ public class Type2Message extends NtlmMessage {
      *
      * @param type1 The Type-1 message which this represents a response to.
      */
-    public Type2Message(Type1Message type1) {
+    public Type2Message(final Type1Message type1) {
         this(type1, null, null);
     }
 
@@ -113,10 +110,9 @@ public class Type2Message extends NtlmMessage {
      * @param challenge The challenge from the domain controller/server.
      * @param target The authentication target.
      */
-    public Type2Message(Type1Message type1, byte[] challenge, String target) {
-        this(getDefaultFlags(type1), challenge, (type1 != null &&
-                target == null && type1.getFlag(NTLMSSP_REQUEST_TARGET)) ?
-                        getDefaultDomain() : target);
+    public Type2Message(final Type1Message type1, final byte[] challenge, final String target) {
+        this(getDefaultFlags(type1), challenge,
+                type1 != null && target == null && type1.getFlag(NTLMSSP_REQUEST_TARGET) ? getDefaultDomain() : target);
     }
 
     /**
@@ -126,11 +122,13 @@ public class Type2Message extends NtlmMessage {
      * @param challenge The challenge from the domain controller/server.
      * @param target The authentication target.
      */
-    public Type2Message(int flags, byte[] challenge, String target) {
+    public Type2Message(final int flags, final byte[] challenge, final String target) {
         setFlags(flags);
         setChallenge(challenge);
         setTarget(target);
-        if (target != null) setTargetInformation(getDefaultTargetInformation());
+        if (target != null) {
+            setTargetInformation(getDefaultTargetInformation());
+        }
     }
 
     /**
@@ -139,7 +137,7 @@ public class Type2Message extends NtlmMessage {
      * @param material The raw Type-2 material used to construct this message.
      * @throws IOException If an error occurs while parsing the material.
      */
-    public Type2Message(byte[] material) throws IOException {
+    public Type2Message(final byte[] material) throws IOException {
         parse(material);
     }
 
@@ -157,7 +155,7 @@ public class Type2Message extends NtlmMessage {
      *
      * @param challenge The challenge from the domain controller/server.
      */
-    public void setChallenge(byte[] challenge) {
+    public void setChallenge(final byte[] challenge) {
         this.challenge = challenge;
     }
 
@@ -175,7 +173,7 @@ public class Type2Message extends NtlmMessage {
      *
      * @param target The authentication target.
      */
-    public void setTarget(String target) {
+    public void setTarget(final String target) {
         this.target = target;
     }
 
@@ -185,7 +183,7 @@ public class Type2Message extends NtlmMessage {
      * @return A <code>byte[]</code> containing the target information block.
      * The target information block is used by the client to create an
      * NTLMv2 response.
-     */ 
+     */
     public byte[] getTargetInformation() {
         return targetInformation;
     }
@@ -194,10 +192,10 @@ public class Type2Message extends NtlmMessage {
      * Sets the target information block.
      * The target information block is used by the client to create
      * an NTLMv2 response.
-     * 
+     *
      * @param targetInformation The target information block.
      */
-    public void setTargetInformation(byte[] targetInformation) {
+    public void setTargetInformation(final byte[] targetInformation) {
         this.targetInformation = targetInformation;
     }
 
@@ -218,65 +216,70 @@ public class Type2Message extends NtlmMessage {
      *
      * @param context The local security context.
      */
-    public void setContext(byte[] context) {
+    public void setContext(final byte[] context) {
         this.context = context;
     }
 
+    @Override
     public byte[] toByteArray() {
         try {
-            String targetName = getTarget();
-            byte[] challenge = getChallenge();
+            final String targetName = getTarget();
+            final byte[] challenge = getChallenge();
             byte[] context = getContext();
-            byte[] targetInformation = getTargetInformation();
+            final byte[] targetInformation = getTargetInformation();
             int flags = getFlags();
-            byte[] target = new byte[0];
+            byte[] target = {};
             if ((flags & NTLMSSP_REQUEST_TARGET) != 0) {
                 if (targetName != null && targetName.length() != 0) {
-                    target = (flags & NTLMSSP_NEGOTIATE_UNICODE) != 0 ?
-                            targetName.getBytes(UNI_ENCODING) :
-                            targetName.toUpperCase().getBytes(getOEMEncoding());
+                    target = (flags & NTLMSSP_NEGOTIATE_UNICODE) != 0 ? targetName.getBytes(UNI_ENCODING)
+                            : targetName.toUpperCase().getBytes(getOEMEncoding());
                 } else {
-                    flags &= (0xffffffff ^ NTLMSSP_REQUEST_TARGET);
+                    flags &= 0xffffffff ^ NTLMSSP_REQUEST_TARGET;
                 }
             }
             if (targetInformation != null) {
                 flags |= NTLMSSP_NEGOTIATE_TARGET_INFO;
                 // empty context is needed for padding when t.i. is supplied.
-                if (context == null) context = new byte[8];
+                if (context == null) {
+                    context = new byte[8];
+                }
             }
             int data = 32;
-            if (context != null) data += 8;
-            if (targetInformation != null) data += 8;
-            byte[] type2 = new byte[data + target.length +
-                    (targetInformation != null ? targetInformation.length : 0)];
+            if (context != null) {
+                data += 8;
+            }
+            if (targetInformation != null) {
+                data += 8;
+            }
+            final byte[] type2 = new byte[data + target.length + (targetInformation != null ? targetInformation.length : 0)];
             System.arraycopy(NTLMSSP_SIGNATURE, 0, type2, 0, 8);
             writeULong(type2, 8, 2);
             writeSecurityBuffer(type2, 12, data, target);
             writeULong(type2, 20, flags);
-            System.arraycopy(challenge != null ? challenge : new byte[8], 0,
-                    type2, 24, 8);
-            if (context != null) System.arraycopy(context, 0, type2, 32, 8);
+            System.arraycopy(challenge != null ? challenge : new byte[8], 0, type2, 24, 8);
+            if (context != null) {
+                System.arraycopy(context, 0, type2, 32, 8);
+            }
             if (targetInformation != null) {
-                writeSecurityBuffer(type2, 40, data + target.length,
-                        targetInformation);
+                writeSecurityBuffer(type2, 40, data + target.length, targetInformation);
             }
             return type2;
-        } catch (IOException ex) {
+        } catch (final IOException ex) {
             throw new IllegalStateException(ex.getMessage());
         }
     }
 
+    @Override
     public String toString() {
-        String target = getTarget();
-        byte[] challenge = getChallenge();
-        byte[] context = getContext();
-        byte[] targetInformation = getTargetInformation();
+        final String target = getTarget();
+        final byte[] challenge = getChallenge();
+        final byte[] context = getContext();
+        final byte[] targetInformation = getTargetInformation();
 
-        return "Type2Message[target=" + target +
-            ",challenge=" + (challenge == null ? "null" : "<" + challenge.length + " bytes>") +
-            ",context=" + (context == null ? "null" : "<" + context.length + " bytes>") +
-            ",targetInformation=" + (targetInformation == null ? "null" : "<" + targetInformation.length + " bytes>") +
-            ",flags=0x" + jcifs.smb1.util.Hexdump.toHexString(getFlags(), 8) + "]";
+        return "Type2Message[target=" + target + ",challenge=" + (challenge == null ? "null" : "<" + challenge.length + " bytes>")
+                + ",context=" + (context == null ? "null" : "<" + context.length + " bytes>") + ",targetInformation="
+                + (targetInformation == null ? "null" : "<" + targetInformation.length + " bytes>") + ",flags=0x"
+                + jcifs.smb1.util.Hexdump.toHexString(getFlags(), 8) + "]";
     }
 
     /**
@@ -295,14 +298,15 @@ public class Type2Message extends NtlmMessage {
      *
      * @return An <code>int</code> containing the default flags.
      */
-    public static int getDefaultFlags(Type1Message type1) {
-        if (type1 == null) return DEFAULT_FLAGS;
+    public static int getDefaultFlags(final Type1Message type1) {
+        if (type1 == null) {
+            return DEFAULT_FLAGS;
+        }
         int flags = NTLMSSP_NEGOTIATE_NTLM;
-        int type1Flags = type1.getFlags();
-        flags |= ((type1Flags & NTLMSSP_NEGOTIATE_UNICODE) != 0) ?
-                NTLMSSP_NEGOTIATE_UNICODE : NTLMSSP_NEGOTIATE_OEM;
+        final int type1Flags = type1.getFlags();
+        flags |= (type1Flags & NTLMSSP_NEGOTIATE_UNICODE) != 0 ? NTLMSSP_NEGOTIATE_UNICODE : NTLMSSP_NEGOTIATE_OEM;
         if ((type1Flags & NTLMSSP_REQUEST_TARGET) != 0) {
-            String domain = getDefaultDomain();
+            final String domain = getDefaultDomain();
             if (domain != null) {
                 flags |= NTLMSSP_REQUEST_TARGET | NTLMSSP_TARGET_TYPE_DOMAIN;
             }
@@ -323,7 +327,7 @@ public class Type2Message extends NtlmMessage {
         return DEFAULT_TARGET_INFORMATION;
     }
 
-    private void parse(byte[] material) throws IOException {
+    private void parse(final byte[] material) throws IOException {
         for (int i = 0; i < 8; i++) {
             if (material[i] != NTLMSSP_SIGNATURE[i]) {
                 throw new IOException("Not an NTLMSSP message.");
@@ -332,37 +336,41 @@ public class Type2Message extends NtlmMessage {
         if (readULong(material, 8) != 2) {
             throw new IOException("Not a Type 2 message.");
         }
-        int flags = readULong(material, 20);
+        final int flags = readULong(material, 20);
         setFlags(flags);
         String target = null;
         byte[] bytes = readSecurityBuffer(material, 12);
         if (bytes.length != 0) {
-            target = new String(bytes,
-                    ((flags & NTLMSSP_NEGOTIATE_UNICODE) != 0) ?
-                            UNI_ENCODING : getOEMEncoding());
+            target = new String(bytes, (flags & NTLMSSP_NEGOTIATE_UNICODE) != 0 ? UNI_ENCODING : getOEMEncoding());
         }
         setTarget(target);
         for (int i = 24; i < 32; i++) {
             if (material[i] != 0) {
-                byte[] challenge = new byte[8];
+                final byte[] challenge = new byte[8];
                 System.arraycopy(material, 24, challenge, 0, 8);
                 setChallenge(challenge);
                 break;
             }
         }
-        int offset = readULong(material, 16); // offset of targetname start
-        if (offset == 32 || material.length == 32) return;
+        final int offset = readULong(material, 16); // offset of targetname start
+        if (offset == 32 || material.length == 32) {
+            return;
+        }
         for (int i = 32; i < 40; i++) {
             if (material[i] != 0) {
-                byte[] context = new byte[8];
+                final byte[] context = new byte[8];
                 System.arraycopy(material, 32, context, 0, 8);
                 setContext(context);
                 break;
             }
         }
-        if (offset == 40 || material.length == 40) return;
+        if (offset == 40 || material.length == 40) {
+            return;
+        }
         bytes = readSecurityBuffer(material, 40);
-        if (bytes.length != 0) setTargetInformation(bytes);
+        if (bytes.length != 0) {
+            setTargetInformation(bytes);
+        }
     }
 
 }

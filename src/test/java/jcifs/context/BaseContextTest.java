@@ -110,7 +110,7 @@ class BaseContextTest extends BaseTest {
     @Test
     @DisplayName("get method should handle various URL formats successfully")
     void testGetSmbResourceWithValidURLs() throws CIFSException {
-        // Test that these URLs can be created successfully 
+        // Test that these URLs can be created successfully
         String[] validUrls = { "smb://server/", "smb://server/share/", "smb://server/share/file.txt" };
 
         for (String validUrl : validUrls) {

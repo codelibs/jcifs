@@ -218,8 +218,8 @@ class Kerb5ContextTest {
     void verifyMIC_failure_wraps() throws Exception {
         byte[] data = new byte[] { 7 };
         byte[] mic = new byte[] { 8 };
-        doThrow(new GSSException(GSSException.BAD_MIC)).when(gssContext).verifyMIC(any(), anyInt(), anyInt(), any(), anyInt(), anyInt(),
-                any());
+        doThrow(new GSSException(GSSException.BAD_MIC)).when(gssContext)
+                .verifyMIC(any(), anyInt(), anyInt(), any(), anyInt(), anyInt(), any());
 
         CIFSException ex = assertThrows(CIFSException.class, () -> ctx.verifyMIC(data, mic));
         assertTrue(ex.getMessage().contains("Failed to verify MIC"));

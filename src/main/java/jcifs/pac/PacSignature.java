@@ -1,28 +1,26 @@
 /*
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 package jcifs.pac;
 
-
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 
-
-@SuppressWarnings ( "javadoc" )
+@SuppressWarnings("javadoc")
 public class PacSignature {
 
     public static final int KERB_CHECKSUM_HMAC_MD5 = 0xFFFFFF76;
@@ -36,12 +34,11 @@ public class PacSignature {
     private int type;
     private byte[] checksum;
 
-
-    public PacSignature ( byte[] data ) throws PACDecodingException {
+    public PacSignature(final byte[] data) throws PACDecodingException {
         try {
-            PacDataInputStream bufferStream = new PacDataInputStream(new DataInputStream(new ByteArrayInputStream(data)));
+            final PacDataInputStream bufferStream = new PacDataInputStream(new DataInputStream(new ByteArrayInputStream(data)));
             this.type = bufferStream.readInt();
-            switch ( this.type ) {
+            switch (this.type) {
             case KERB_CHECKSUM_HMAC_MD5:
                 this.checksum = new byte[16];
                 break;
@@ -54,19 +51,16 @@ public class PacSignature {
                 break;
             }
             bufferStream.readFully(this.checksum);
-        }
-        catch ( IOException e ) {
+        } catch (final IOException e) {
             throw new PACDecodingException("Malformed PAC signature", e);
         }
     }
 
-
-    public int getType () {
+    public int getType() {
         return this.type;
     }
 
-
-    public byte[] getChecksum () {
+    public byte[] getChecksum() {
         return this.checksum;
     }
 

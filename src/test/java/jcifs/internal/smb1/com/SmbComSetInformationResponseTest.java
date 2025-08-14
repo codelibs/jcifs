@@ -20,7 +20,7 @@ import jcifs.Configuration;
 
 /**
  * Tests for {@link SmbComSetInformationResponse}.
- * 
+ *
  * Tests focus on the wire format methods which all return 0,
  * and the toString method implementation.
  */

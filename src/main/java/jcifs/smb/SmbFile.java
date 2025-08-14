@@ -1,23 +1,22 @@
 /* jcifs smb client library in Java
  * Copyright (C) 2000  "Michael B. Allen" <jcifs at samba dot org>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 package jcifs.smb;
-
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -93,7 +92,6 @@ import jcifs.internal.smb2.info.Smb2QueryInfoResponse;
 import jcifs.internal.smb2.info.Smb2SetInfoRequest;
 import jcifs.util.Strings;
 
-
 /**
  * This class represents a resource on an SMB network. Mainly these
  * resources are files and directories however an <code>SmbFile</code>
@@ -104,21 +102,21 @@ import jcifs.util.Strings;
  * directory. SmbFile URLs have the following syntax:
  *
  * <blockquote>
- * 
+ *
  * <pre>
  *     smb://[[[domain;]username[:password]@]server[:port]/[[share/[dir/]file]]][?param=value[param2=value2[...]]]
  * </pre>
- * 
+ *
  * </blockquote>
  *
  * This example:
  *
  * <blockquote>
- * 
+ *
  * <pre>
  *     smb://storage15/public/foo.txt
  * </pre>
- * 
+ *
  * </blockquote>
  *
  * would reference the file <code>foo.txt</code> in the share
@@ -156,7 +154,7 @@ import jcifs.util.Strings;
  * <p>
  * [1] This URL scheme is based largely on the <i>SMB
  * Filesharing URL Scheme</i> IETF draft.
- * 
+ *
  * <p>
  * <table border="1" cellpadding="3" cellspacing="0" width="100%" summary="URL examples">
  * <tr bgcolor="#ccccff">
@@ -165,7 +163,7 @@ import jcifs.util.Strings;
  * <td width="20%"><b>URL</b></td>
  * <td><b>Description</b></td>
  * </tr>
- * 
+ *
  * <tr>
  * <td width="20%"><code>smb://users-nyc;miallen:mypass@angus/tmp/</code></td>
  * <td>
@@ -174,7 +172,7 @@ import jcifs.util.Strings;
  * <code>mypass</code>.
  * </td>
  * </tr>
- * 
+ *
  * <tr>
  * <td width="20%">
  * <code>smb://Administrator:P%40ss@msmith1/c/WINDOWS/Desktop/foo.txt</code></td>
@@ -184,7 +182,7 @@ import jcifs.util.Strings;
  * hexcode escape.
  * </td>
  * </tr>
- * 
+ *
  * <tr>
  * <td width="20%"><code>smb://angus/</code></td>
  * <td>
@@ -194,7 +192,7 @@ import jcifs.util.Strings;
  * shares on this server.
  * </td>
  * </tr>
- * 
+ *
  * <tr>
  * <td width="20%"><code>smb://angus.foo.net/d/jcifs/pipes.doc</code></td>
  * <td>
@@ -203,7 +201,7 @@ import jcifs.util.Strings;
  * for details.
  * </td>
  * </tr>
- * 
+ *
  * <tr>
  * <td width="20%"><code>smb://192.168.1.15/ADMIN$/</code></td>
  * <td>
@@ -212,7 +210,7 @@ import jcifs.util.Strings;
  * for details.
  * </td>
  * </tr>
- * 
+ *
  * <tr>
  * <td width="20%">
  * <code>smb://domain;username:password@server/share/path/to/file.txt</code></td>
@@ -230,7 +228,7 @@ import jcifs.util.Strings;
  * </tr>
  *
  * </table>
- * 
+ *
  * <p>
  * A second constructor argument may be specified to augment the URL
  * for better programmatic control when processing many files under
@@ -263,7 +261,7 @@ import jcifs.util.Strings;
  *  smb://host/share/a/b/c/d/
  * </code></td>
  * </tr>
- * 
+ *
  * <tr>
  * <td width="20%"><code>
  *  smb://host/share/foo/bar/
@@ -275,7 +273,7 @@ import jcifs.util.Strings;
  *  smb://host/share2/zig/zag
  * </code></td>
  * </tr>
- * 
+ *
  * <tr>
  * <td width="20%"><code>
  *  smb://host/share/foo/bar/
@@ -287,7 +285,7 @@ import jcifs.util.Strings;
  *  smb://host/share/foo/zip/
  * </code></td>
  * </tr>
- * 
+ *
  * <tr>
  * <td width="20%"><code>
  *  smb://host/share/zig/zag
@@ -299,7 +297,7 @@ import jcifs.util.Strings;
  *  smb://foo/bar/
  * </code></td>
  * </tr>
- * 
+ *
  * <tr>
  * <td width="20%"><code>
  *  smb://host/share/foo/
@@ -311,7 +309,7 @@ import jcifs.util.Strings;
  *  smb://host/foo/
  * </code></td>
  * </tr>
- * 
+ *
  * <tr>
  * <td width="20%"><code>
  *  smb://host/share/zig/zag
@@ -323,7 +321,7 @@ import jcifs.util.Strings;
  *  smb://host/
  * </code></td>
  * </tr>
- * 
+ *
  * <tr>
  * <td width="20%"><code>
  *  smb://server/
@@ -335,7 +333,7 @@ import jcifs.util.Strings;
  *  smb://server/
  * </code></td>
  * </tr>
- * 
+ *
  * </table>
  *
  * <p>
@@ -365,11 +363,10 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
     private long sizeExpiration;
     private boolean isExists;
 
-    private CIFSContext transportContext;
+    private final CIFSContext transportContext;
     private SmbTreeConnection treeConnection;
     protected final SmbResourceLocatorImpl fileLocator;
     private SmbTreeHandleImpl treeHandle;
-
 
     /**
      * Constructs an SmbFile representing a resource on an SMB network such as
@@ -382,10 +379,9 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
      *             do not follow the prescribed syntax
      */
     @Deprecated
-    public SmbFile ( String url ) throws MalformedURLException {
+    public SmbFile(final String url) throws MalformedURLException {
         this(new URL(null, url, SingletonContext.getInstance().getUrlHandler()));
     }
-
 
     /**
      * Constructs an SmbFile representing a resource on an SMB network such
@@ -396,10 +392,10 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
      * @throws MalformedURLException
      */
     @Deprecated
-    public SmbFile ( URL url ) throws MalformedURLException {
-        this(url, SingletonContext.getInstance().withCredentials(new NtlmPasswordAuthentication(SingletonContext.getInstance(), url.getUserInfo())));
+    public SmbFile(final URL url) throws MalformedURLException {
+        this(url, SingletonContext.getInstance()
+                .withCredentials(new NtlmPasswordAuthentication(SingletonContext.getInstance(), url.getUserInfo())));
     }
-
 
     /**
      * Constructs an SmbFile representing a resource on an SMB network such
@@ -417,39 +413,36 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
      * @throws UnknownHostException
      *             If the server or workgroup of the <tt>context</tt> file cannot be determined
      */
-    public SmbFile ( SmbResource context, String name ) throws MalformedURLException, UnknownHostException {
-        this(
-            isWorkgroup(context) ? new URL(null, "smb://" + checkName(name), context.getContext().getUrlHandler())
-                    : new URL(context.getLocator().getURL(), encodeRelativePath(checkName(name)), context.getContext().getUrlHandler()),
-            context.getContext());
+    public SmbFile(final SmbResource context, final String name) throws MalformedURLException, UnknownHostException {
+        this(isWorkgroup(context) ? new URL(null, "smb://" + checkName(name), context.getContext().getUrlHandler())
+                : new URL(context.getLocator().getURL(), encodeRelativePath(checkName(name)), context.getContext().getUrlHandler()),
+                context.getContext());
         setContext(context, name);
     }
 
-
     /**
      * Construct from string URL
-     * 
+     *
      * @param url
      * @param tc
      *            context to use
      * @throws MalformedURLException
      */
-    public SmbFile ( String url, CIFSContext tc ) throws MalformedURLException {
+    public SmbFile(final String url, final CIFSContext tc) throws MalformedURLException {
         this(new URL(null, url, tc.getUrlHandler()), tc);
     }
 
-
     /**
      * Construct from URL
-     * 
+     *
      * @param url
      * @param tc
      *            context to use
      * @throws MalformedURLException
      */
-    public SmbFile ( URL url, CIFSContext tc ) throws MalformedURLException {
+    public SmbFile(final URL url, final CIFSContext tc) throws MalformedURLException {
         super(url);
-        if ( url.getPath() != null && !url.getPath().isEmpty() && url.getPath().charAt(0) != '/' ) {
+        if (url.getPath() != null && !url.getPath().isEmpty() && url.getPath().charAt(0) != '/') {
             throw new MalformedURLException("Invalid SMB URL: " + url);
         }
         this.transportContext = tc;
@@ -457,18 +450,15 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
         this.treeConnection = SmbTreeConnection.create(tc);
     }
 
+    SmbFile(final SmbResource context, final String name, final boolean loadedAttributes, final int type, final int attributes,
+            final long createTime, final long lastModified, final long lastAccess, final long size) throws MalformedURLException {
+        this(isWorkgroup(context) ? new URL(null, "smb://" + checkName(name) + "/", context.getContext().getUrlHandler())
+                : new URL(context.getLocator().getURL(),
+                        encodeRelativePath(checkName(name)) + ((attributes & ATTR_DIRECTORY) > 0 ? "/" : "")),
+                context.getContext());
 
-    SmbFile ( SmbResource context, String name, boolean loadedAttributes, int type, int attributes, long createTime, long lastModified,
-            long lastAccess, long size ) throws MalformedURLException {
-        this(
-            isWorkgroup(context) ? new URL(null, "smb://" + checkName(name) + "/", context.getContext().getUrlHandler())
-                    : new URL(
-                        context.getLocator().getURL(),
-                        encodeRelativePath(checkName(name)) + ( ( attributes & ATTR_DIRECTORY ) > 0 ? "/" : "" )),
-            context.getContext());
-
-        if ( !isWorkgroup(context) ) {
-            setContext(context, name + ( ( attributes & ATTR_DIRECTORY ) > 0 ? "/" : "" ));
+        if (!isWorkgroup(context)) {
+            setContext(context, name + ((attributes & ATTR_DIRECTORY) > 0 ? "/" : ""));
         }
 
         /*
@@ -483,13 +473,12 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
         this.size = size;
         this.isExists = true;
 
-        if ( loadedAttributes ) {
+        if (loadedAttributes) {
             this.attrExpiration = this.sizeExpiration = System.currentTimeMillis() + getContext().getConfig().getAttributeCacheTimeout();
         }
     }
 
-
-    private static String encodeRelativePath ( String name ) {
+    private static String encodeRelativePath(String name) {
         // workaround fix
         if (name == null) {
             return null;
@@ -507,20 +496,17 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
         return "URL:" + name.replace("?", "%3f");
     }
 
-
     /**
      * @return
      */
-    private static boolean isWorkgroup ( SmbResource r ) {
+    private static boolean isWorkgroup(final SmbResource r) {
         try {
             return r.getLocator().isWorkgroup();
-        }
-        catch ( CIFSException e ) {
+        } catch (final CIFSException e) {
             log.debug("Failed to check for workgroup", e);
             return false;
         }
     }
-
 
     /**
      * {@inheritDoc}
@@ -528,20 +514,18 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
      * @see java.net.URLConnection#connect()
      */
     @Override
-    public void connect () throws IOException {
-        try ( SmbTreeHandle th = ensureTreeConnected() ) {}
+    public void connect() throws IOException {
+        try (SmbTreeHandle th = ensureTreeConnected()) {}
     }
 
-
     /**
-     * 
+     *
      * @return a tree handle
      * @throws CIFSException
      */
-    public SmbTreeHandle getTreeHandle () throws CIFSException {
+    public SmbTreeHandle getTreeHandle() throws CIFSException {
         return ensureTreeConnected();
     }
-
 
     /**
      * {@inheritDoc}
@@ -549,30 +533,29 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
      * @see java.lang.AutoCloseable#close()
      */
     @Override
-    public synchronized void close () {
-        SmbTreeHandleImpl th = this.treeHandle;
-        if ( th != null ) {
+    public synchronized void close() {
+        final SmbTreeHandleImpl th = this.treeHandle;
+        if (th != null) {
             this.treeHandle = null;
-            if ( this.transportContext.getConfig().isStrictResourceLifecycle() ) {
+            if (this.transportContext.getConfig().isStrictResourceLifecycle()) {
                 th.close();
             }
         }
     }
 
-
     /**
      * @return
      * @throws CIFSException
-     * 
+     *
      */
-    synchronized SmbTreeHandleImpl ensureTreeConnected () throws CIFSException {
-        if ( this.treeHandle == null || !this.treeHandle.isConnected() ) {
-            if ( this.treeHandle != null && this.transportContext.getConfig().isStrictResourceLifecycle() ) {
+    synchronized SmbTreeHandleImpl ensureTreeConnected() throws CIFSException {
+        if (this.treeHandle == null || !this.treeHandle.isConnected()) {
+            if (this.treeHandle != null && this.transportContext.getConfig().isStrictResourceLifecycle()) {
                 this.treeHandle.release();
             }
             this.treeHandle = this.treeConnection.connectWrapException(this.fileLocator);
             this.treeHandle.ensureDFSResolved();
-            if ( this.transportContext.getConfig().isStrictResourceLifecycle() ) {
+            if (this.transportContext.getConfig().isStrictResourceLifecycle()) {
                 // one extra share to keep the tree alive
                 return this.treeHandle.acquire();
             }
@@ -581,124 +564,109 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
         return this.treeHandle.acquire();
     }
 
-
     /**
      * @param context
      * @param name
      */
-    private void setContext ( SmbResource context, String name ) {
+    private void setContext(final SmbResource context, final String name) {
         this.fileLocator.resolveInContext(context.getLocator(), name);
-        if ( context.getLocator().getShare() != null && ( context instanceof SmbFile ) ) {
-            this.treeConnection = SmbTreeConnection.create( ( (SmbFile) context ).treeConnection);
-        }
-        else {
+        if (context.getLocator().getShare() != null && context instanceof SmbFile) {
+            this.treeConnection = SmbTreeConnection.create(((SmbFile) context).treeConnection);
+        } else {
             this.treeConnection = SmbTreeConnection.create(context.getContext());
         }
     }
 
-
-    private static String checkName ( String name ) throws MalformedURLException {
-        if ( name == null || name.length() == 0 ) {
+    private static String checkName(final String name) throws MalformedURLException {
+        if (name == null || name.length() == 0) {
             throw new MalformedURLException("Name must not be empty");
         }
         return name;
     }
 
-
     /**
      * @param nonPooled
      *            whether this file will use an exclusive connection
      */
-    protected void setNonPooled ( boolean nonPooled ) {
+    protected void setNonPooled(final boolean nonPooled) {
         this.treeConnection.setNonPooled(nonPooled);
     }
-
 
     /**
      * @return the transportContext
      */
     @Deprecated
-    public CIFSContext getTransportContext () {
+    public CIFSContext getTransportContext() {
         return this.getContext();
     }
 
-
     @Override
-    public CIFSContext getContext () {
+    public CIFSContext getContext() {
         return this.transportContext;
     }
 
-
     @Override
-    public SmbResourceLocator getLocator () {
+    public SmbResourceLocator getLocator() {
         return this.fileLocator;
     }
 
-
     @Override
-    public SmbResource resolve ( String name ) throws CIFSException {
+    public SmbResource resolve(final String name) throws CIFSException {
         try {
-            if ( name == null || name.length() == 0 ) {
+            if (name == null || name.length() == 0) {
                 throw new SmbException("Name must not be empty");
             }
             return new SmbFile(this, name);
-        }
-        catch (
-            MalformedURLException |
-            UnknownHostException e ) {
+        } catch (MalformedURLException | UnknownHostException e) {
             // this should not actually happen
             throw new SmbException("Failed to resolve child element", e);
         }
     }
 
-
-    SmbFileHandleImpl openUnshared ( int flags, int access, int sharing, int attrs, int options ) throws CIFSException {
+    SmbFileHandleImpl openUnshared(final int flags, final int access, final int sharing, final int attrs, final int options)
+            throws CIFSException {
         return openUnshared(getUncPath(), flags, access, sharing, attrs, options);
     }
 
-
-    SmbFileHandleImpl openUnshared ( String uncPath, int flags, int access, int sharing, int attrs, int options ) throws CIFSException {
+    SmbFileHandleImpl openUnshared(final String uncPath, final int flags, final int access, final int sharing, final int attrs,
+            final int options) throws CIFSException {
         SmbFileHandleImpl fh = null;
-        try ( SmbTreeHandleImpl h = ensureTreeConnected() ) {
+        try (SmbTreeHandleImpl h = ensureTreeConnected()) {
 
-            if ( log.isDebugEnabled() ) {
-                log.debug(String.format("openUnshared: %s flags: %x access: %x attrs: %x options: %x", uncPath, flags, access, attrs, options));
+            if (log.isDebugEnabled()) {
+                log.debug(String.format("openUnshared: %s flags: %x access: %x attrs: %x options: %x", uncPath, flags, access, attrs,
+                        options));
             }
 
-            Configuration config = h.getConfig();
+            final Configuration config = h.getConfig();
             SmbBasicFileInfo info;
             boolean haveSize = true, haveAttributes = true;
             long fileSize = 0;
-            if ( h.isSMB2() ) {
-                Smb2CreateRequest req = new Smb2CreateRequest(config, uncPath);
+            if (h.isSMB2()) {
+                final Smb2CreateRequest req = new Smb2CreateRequest(config, uncPath);
                 req.setDesiredAccess(access);
 
-                if ( ( flags & SmbConstants.O_TRUNC ) == O_TRUNC && ( flags & SmbConstants.O_CREAT ) == O_CREAT ) {
+                if ((flags & SmbConstants.O_TRUNC) == O_TRUNC && (flags & SmbConstants.O_CREAT) == O_CREAT) {
                     req.setCreateDisposition(Smb2CreateRequest.FILE_OVERWRITE_IF);
-                }
-                else if ( ( flags & SmbConstants.O_TRUNC ) == O_TRUNC ) {
+                } else if ((flags & SmbConstants.O_TRUNC) == O_TRUNC) {
                     req.setCreateDisposition(Smb2CreateRequest.FILE_OVERWRITE);
-                }
-                else if ( ( flags & SmbConstants.O_EXCL ) == O_EXCL ) {
+                } else if ((flags & SmbConstants.O_EXCL) == O_EXCL) {
                     req.setCreateDisposition(Smb2CreateRequest.FILE_CREATE);
-                }
-                else if ( ( flags & SmbConstants.O_CREAT ) == O_CREAT ) {
+                } else if ((flags & SmbConstants.O_CREAT) == O_CREAT) {
                     req.setCreateDisposition(Smb2CreateRequest.FILE_OPEN_IF);
-                }
-                else {
+                } else {
                     req.setCreateDisposition(Smb2CreateRequest.FILE_OPEN);
                 }
 
                 req.setShareAccess(sharing);
                 req.setFileAttributes(attrs);
-                Smb2CreateResponse resp = h.send(req);
+                final Smb2CreateResponse resp = h.send(req);
                 info = resp;
                 fileSize = resp.getEndOfFile();
                 fh = new SmbFileHandleImpl(config, resp.getFileId(), h, uncPath, flags, access, 0, 0, resp.getEndOfFile());
-            }
-            else if ( h.hasCapability(SmbConstants.CAP_NT_SMBS) ) {
-                SmbComNTCreateAndXResponse resp = new SmbComNTCreateAndXResponse(config);
-                SmbComNTCreateAndX req = new SmbComNTCreateAndX(config, uncPath, flags, access, sharing, attrs, options, null);
+            } else if (h.hasCapability(SmbConstants.CAP_NT_SMBS)) {
+                final SmbComNTCreateAndXResponse resp = new SmbComNTCreateAndXResponse(config);
+                final SmbComNTCreateAndX req = new SmbComNTCreateAndX(config, uncPath, flags, access, sharing, attrs, options, null);
                 customizeCreate(req, resp);
 
                 h.send(req, resp);
@@ -706,9 +674,8 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
                 fileSize = resp.getEndOfFile();
                 this.fileLocator.updateType(resp.getFileType());
                 fh = new SmbFileHandleImpl(config, resp.getFid(), h, uncPath, flags, access, attrs, options, resp.getEndOfFile());
-            }
-            else {
-                SmbComOpenAndXResponse response = new SmbComOpenAndXResponse(config);
+            } else {
+                final SmbComOpenAndXResponse response = new SmbComOpenAndXResponse(config);
                 h.send(new SmbComOpenAndX(config, uncPath, access, sharing, flags, attrs, null), response);
                 this.fileLocator.updateType(response.getFileType());
                 info = response;
@@ -721,32 +688,31 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
                 // It is more critical than other attributes because append mode depends on it.
                 // We do only really care if we open for writing and not shared for writing
                 // otherwise there are no guarantees anyway, but this stuff is legacy anyways.
-                SmbComSeek seekReq = new SmbComSeek(config, 0);
+                final SmbComSeek seekReq = new SmbComSeek(config, 0);
                 seekReq.setMode(0x2); // from EOF
-                SmbComSeekResponse seekResp = new SmbComSeekResponse(config);
+                final SmbComSeekResponse seekResp = new SmbComSeekResponse(config);
                 seekReq.setFid(response.getFid());
                 try {
                     h.send(seekReq, seekResp);
-                    if ( log.isDebugEnabled() && seekResp.getOffset() != fileSize ) {
+                    if (log.isDebugEnabled() && seekResp.getOffset() != fileSize) {
                         log.debug(String.format("Open returned wrong size %d != %d", fileSize, seekResp.getOffset()));
                     }
                     fileSize = seekResp.getOffset();
-                }
-                catch ( Exception e ) {
+                } catch (final Exception e) {
                     log.debug("Seek failed", e);
                     haveSize = false;
                 }
                 fh = new SmbFileHandleImpl(config, response.getFid(), h, uncPath, flags, access, 0, 0, fileSize);
             }
 
-            long attrTimeout = System.currentTimeMillis() + config.getAttributeCacheTimeout();
+            final long attrTimeout = System.currentTimeMillis() + config.getAttributeCacheTimeout();
 
-            if ( haveSize ) {
+            if (haveSize) {
                 this.size = fileSize;
                 this.sizeExpiration = attrTimeout;
 
             }
-            if ( haveAttributes ) {
+            if (haveAttributes) {
                 this.createTime = info.getCreateTime();
                 this.lastModified = info.getLastWriteTime();
                 this.lastAccess = info.getLastAccessTime();
@@ -759,24 +725,22 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
         }
     }
 
-
     /**
      * @return this file's unc path below the share
      */
-    public String getUncPath () {
+    public String getUncPath() {
         return this.fileLocator.getUNCPath();
     }
-
 
     /**
      * @param request
      * @param response
      */
-    protected void customizeCreate ( SmbComNTCreateAndX request, SmbComNTCreateAndXResponse response ) {}
+    protected void customizeCreate(final SmbComNTCreateAndX request, final SmbComNTCreateAndXResponse response) {
+    }
 
-
-    SmbBasicFileInfo queryPath ( SmbTreeHandleImpl th, String path, int infoLevel ) throws CIFSException {
-        if ( log.isDebugEnabled() ) {
+    SmbBasicFileInfo queryPath(final SmbTreeHandleImpl th, final String path, final int infoLevel) throws CIFSException {
+        if (log.isDebugEnabled()) {
             log.debug("queryPath: " + path);
         }
 
@@ -788,35 +752,30 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
          * to support DFS referral _to_ Win95/98/ME.
          */
 
-        if ( th.isSMB2() ) {
+        if (th.isSMB2()) {
             // just open and close. withOpen will store the attributes
-            return (SmbBasicFileInfo) withOpen(
-                th,
-                Smb2CreateRequest.FILE_OPEN,
-                SmbConstants.FILE_READ_ATTRIBUTES,
-                SmbConstants.FILE_SHARE_READ | SmbConstants.FILE_SHARE_WRITE,
-                null);
+            return (SmbBasicFileInfo) withOpen(th, Smb2CreateRequest.FILE_OPEN, SmbConstants.FILE_READ_ATTRIBUTES,
+                    SmbConstants.FILE_SHARE_READ | SmbConstants.FILE_SHARE_WRITE, null);
         }
-        else if ( th.hasCapability(SmbConstants.CAP_NT_SMBS) ) {
+        if (th.hasCapability(SmbConstants.CAP_NT_SMBS)) {
             /*
              * Trans2 Query Path Information Request / Response
              */
             Trans2QueryPathInformationResponse response = new Trans2QueryPathInformationResponse(th.getConfig(), infoLevel);
             response = th.send(new Trans2QueryPathInformation(th.getConfig(), path, infoLevel), response);
 
-            if ( log.isDebugEnabled() ) {
+            if (log.isDebugEnabled()) {
                 log.debug("Path information " + response);
             }
-            BasicFileInformation info = response.getInfo(BasicFileInformation.class);
+            final BasicFileInformation info = response.getInfo(BasicFileInformation.class);
             this.isExists = true;
-            if ( info instanceof FileBasicInfo ) {
+            if (info instanceof FileBasicInfo) {
                 this.attributes = info.getAttributes() & ATTR_GET_MASK;
                 this.createTime = info.getCreateTime();
                 this.lastModified = info.getLastWriteTime();
                 this.lastAccess = info.getLastAccessTime();
                 this.attrExpiration = System.currentTimeMillis() + th.getConfig().getAttributeCacheTimeout();
-            }
-            else if ( info instanceof FileStandardInfo ) {
+            } else if (info instanceof FileStandardInfo) {
                 this.size = info.getSize();
                 this.sizeExpiration = System.currentTimeMillis() + th.getConfig().getAttributeCacheTimeout();
             }
@@ -828,7 +787,7 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
          */
         SmbComQueryInformationResponse response = new SmbComQueryInformationResponse(th.getConfig(), th.getServerTimeZoneOffset());
         response = th.send(new SmbComQueryInformation(th.getConfig(), path), response);
-        if ( log.isDebugEnabled() ) {
+        if (log.isDebugEnabled()) {
             log.debug("Legacy path information " + response);
         }
 
@@ -842,11 +801,10 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
         return response;
     }
 
-
     @Override
-    public boolean exists () throws SmbException {
+    public boolean exists() throws SmbException {
 
-        if ( this.attrExpiration > System.currentTimeMillis() ) {
+        if (this.attrExpiration > System.currentTimeMillis()) {
             log.trace("Using cached attributes");
             return this.isExists;
         }
@@ -858,24 +816,20 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
         this.isExists = false;
 
         try {
-            if ( this.url.getHost().length() == 0 ) {}
-            else if ( this.fileLocator.getShare() == null ) {
-                if ( this.fileLocator.getType() == TYPE_WORKGROUP ) {
+            if (this.url.getHost().length() == 0) {} else if (this.fileLocator.getShare() == null) {
+                if (this.fileLocator.getType() == TYPE_WORKGROUP) {
                     getContext().getNameServiceClient().getByName(this.url.getHost(), true);
-                }
-                else {
+                } else {
                     getContext().getNameServiceClient().getByName(this.url.getHost()).getHostName();
                 }
-            }
-            else {
+            } else {
                 // queryPath on a share root will fail, we only know whether this is one after we have resolved DFS
                 // referrals.
-                try ( SmbTreeHandleImpl th = ensureTreeConnected() ) {
-                    if ( this.fileLocator.getType() == TYPE_SHARE ) {
+                try (SmbTreeHandleImpl th = ensureTreeConnected()) {
+                    if (this.fileLocator.getType() == TYPE_SHARE) {
                         // treeConnect is good enough, but we need to do this after resolving DFS
-                        try ( SmbTreeHandleImpl th2 = ensureTreeConnected() ) {}
-                    }
-                    else {
+                        try (SmbTreeHandleImpl th2 = ensureTreeConnected()) {}
+                    } else {
                         queryPath(th, this.fileLocator.getUNCPath(), FileInformation.FILE_BASIC_INFO);
                     }
                 }
@@ -887,13 +841,11 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
 
             this.isExists = true;
 
-        }
-        catch ( UnknownHostException uhe ) {
+        } catch (final UnknownHostException uhe) {
             log.debug("Unknown host", uhe);
-        }
-        catch ( SmbException se ) {
+        } catch (final SmbException se) {
             log.trace("exists:", se);
-            switch ( se.getNtStatus() ) {
+            switch (se.getNtStatus()) {
             case NtStatus.NT_STATUS_NO_SUCH_FILE:
             case NtStatus.NT_STATUS_OBJECT_NAME_INVALID:
             case NtStatus.NT_STATUS_OBJECT_NAME_NOT_FOUND:
@@ -902,8 +854,7 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
             default:
                 throw se;
             }
-        }
-        catch ( CIFSException e ) {
+        } catch (final CIFSException e) {
             throw SmbException.wrap(e);
         }
 
@@ -911,29 +862,25 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
         return this.isExists;
     }
 
-
     @Override
-    public int getType () throws SmbException {
+    public int getType() throws SmbException {
         try {
-            int t = this.fileLocator.getType();
-            if ( t == TYPE_SHARE ) {
-                try ( SmbTreeHandle th = ensureTreeConnected() ) {
+            final int t = this.fileLocator.getType();
+            if (t == TYPE_SHARE) {
+                try (SmbTreeHandle th = ensureTreeConnected()) {
                     this.fileLocator.updateType(th.getTreeType());
                 }
             }
             return t;
-        }
-        catch ( CIFSException e ) {
+        } catch (final CIFSException e) {
             throw SmbException.wrap(e);
         }
     }
 
-
     @Override
-    public String getName () {
+    public String getName() {
         return this.fileLocator.getName();
     }
-
 
     /**
      * Everything but the last component of the URL representing this SMB
@@ -944,10 +891,9 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
      *         <code>smb://</code> if the resource refers to the root of the URL
      *         hierarchy which incidentally is also <code>smb://</code>.
      */
-    public String getParent () {
+    public String getParent() {
         return this.fileLocator.getParent();
     }
-
 
     /**
      * Returns the full uncanonicalized URL of this SMB resource. An
@@ -957,42 +903,38 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
      * @return The uncanonicalized full URL of this SMB resource.
      */
 
-    public String getPath () {
+    public String getPath() {
         return this.fileLocator.getPath();
     }
-
 
     /**
      * Returns the Windows UNC style path with backslashes instead of forward slashes.
      *
      * @return The UNC path.
      */
-    public String getCanonicalUncPath () {
+    public String getCanonicalUncPath() {
         return this.fileLocator.getCanonicalURL();
     }
-
 
     /**
      * If the path of this <code>SmbFile</code> falls within a DFS volume,
      * this method will return the referral path to which it maps. Otherwise
      * <code>null</code> is returned.
-     * 
+     *
      * @return URL to the DFS volume
      * @throws SmbException
      */
-    public String getDfsPath () throws SmbException {
+    public String getDfsPath() throws SmbException {
         try {
             String path = this.treeConnection.ensureDFSResolved(this.fileLocator).getDfsPath();
-            if ( path != null && isDirectory() ) {
+            if (path != null && isDirectory()) {
                 path += '/';
             }
             return path;
-        }
-        catch ( CIFSException e ) {
+        } catch (final CIFSException e) {
             throw SmbException.wrap(e);
         }
     }
-
 
     /**
      * Returns the full URL of this SMB resource with '.' and '..' components
@@ -1002,10 +944,9 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
      *
      * @return The canonicalized URL of this SMB resource.
      */
-    public String getCanonicalPath () {
+    public String getCanonicalPath() {
         return this.fileLocator.getCanonicalURL();
     }
-
 
     /**
      * Retrieves the share associated with this SMB resource. In
@@ -1015,140 +956,129 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
      *
      * @return The share component or <code>null</code> if there is no share
      */
-    public String getShare () {
+    public String getShare() {
         return this.fileLocator.getShare();
     }
-
 
     /**
      * Retrieve the hostname of the server for this SMB resource. If the resources has been resolved by DFS this will
      * return the target name.
-     * 
+     *
      * @return The server name
      */
-    public String getServerWithDfs () {
+    public String getServerWithDfs() {
         return this.fileLocator.getServerWithDfs();
     }
-
 
     /**
      * Retrieve the hostname of the server for this SMB resource. If this
      * <code>SmbFile</code> references a workgroup, the name of the workgroup
      * is returned. If this <code>SmbFile</code> refers to the root of this
      * SMB network hierarchy, <code>null</code> is returned.
-     * 
+     *
      * @return The server or workgroup name or <code>null</code> if this
      *         <code>SmbFile</code> refers to the root <code>smb://</code> resource.
      */
-    public String getServer () {
+    public String getServer() {
         return this.fileLocator.getServer();
     }
 
-
     @Override
-    public SmbWatchHandle watch ( int filter, boolean recursive ) throws CIFSException {
+    public SmbWatchHandle watch(final int filter, final boolean recursive) throws CIFSException {
 
-        if ( filter == 0 ) {
+        if (filter == 0) {
             throw new IllegalArgumentException("filter must not be 0");
         }
 
-        if ( !isDirectory() ) {
+        if (!isDirectory()) {
             throw new SmbException("Is not a directory");
         }
 
-        try ( SmbTreeHandleImpl th = ensureTreeConnected() ) {
-            if ( !th.isSMB2() && !th.hasCapability(SmbConstants.CAP_NT_SMBS) ) {
+        try (SmbTreeHandleImpl th = ensureTreeConnected()) {
+            if (!th.isSMB2() && !th.hasCapability(SmbConstants.CAP_NT_SMBS)) {
                 throw new SmbUnsupportedOperationException("Not supported without CAP_NT_SMBS");
             }
             return new SmbWatchHandleImpl(openUnshared(O_RDONLY, READ_CONTROL | GENERIC_READ, DEFAULT_SHARING, 0, 1), filter, recursive);
         }
     }
 
-
     @Override
-    public boolean canRead () throws SmbException {
-        if ( getType() == TYPE_NAMED_PIPE ) { // try opening the pipe for reading?
+    public boolean canRead() throws SmbException {
+        if (getType() == TYPE_NAMED_PIPE) { // try opening the pipe for reading?
             return true;
         }
         return exists(); // try opening and catch sharing violation?
     }
 
-
     @Override
-    public boolean canWrite () throws SmbException {
-        if ( getType() == TYPE_NAMED_PIPE ) { // try opening the pipe for writing?
+    public boolean canWrite() throws SmbException {
+        if (getType() == TYPE_NAMED_PIPE) { // try opening the pipe for writing?
             return true;
         }
-        return exists() && ( this.attributes & ATTR_READONLY ) == 0;
+        return exists() && (this.attributes & ATTR_READONLY) == 0;
     }
 
-
     @Override
-    public boolean isDirectory () throws SmbException {
-        if ( this.fileLocator.isRootOrShare() ) {
+    public boolean isDirectory() throws SmbException {
+        if (this.fileLocator.isRootOrShare()) {
             return true;
         }
-        if ( !exists() )
+        if (!exists()) {
             return false;
-        return ( this.attributes & ATTR_DIRECTORY ) == ATTR_DIRECTORY;
+        }
+        return (this.attributes & ATTR_DIRECTORY) == ATTR_DIRECTORY;
     }
 
-
     @Override
-    public boolean isFile () throws SmbException {
-        if ( this.fileLocator.isRootOrShare() ) {
+    public boolean isFile() throws SmbException {
+        if (this.fileLocator.isRootOrShare()) {
             return false;
         }
         exists();
-        return ( this.attributes & ATTR_DIRECTORY ) == 0;
+        return (this.attributes & ATTR_DIRECTORY) == 0;
     }
 
-
     @Override
-    public boolean isHidden () throws SmbException {
-        if ( this.fileLocator.getShare() == null ) {
+    public boolean isHidden() throws SmbException {
+        if (this.fileLocator.getShare() == null) {
             return false;
         }
-        else if ( this.fileLocator.isRootOrShare() ) {
-            if ( this.fileLocator.getShare().endsWith("$") ) {
+        if (this.fileLocator.isRootOrShare()) {
+            if (this.fileLocator.getShare().endsWith("$")) {
                 return true;
             }
             return false;
         }
         exists();
-        return ( this.attributes & ATTR_HIDDEN ) == ATTR_HIDDEN;
+        return (this.attributes & ATTR_HIDDEN) == ATTR_HIDDEN;
     }
 
-
     @Override
-    public long createTime () throws SmbException {
-        if ( !this.fileLocator.isRootOrShare() ) {
+    public long createTime() throws SmbException {
+        if (!this.fileLocator.isRootOrShare()) {
             exists();
             return this.createTime;
         }
         return 0L;
     }
 
-
     @Override
-    public long lastModified () throws SmbException {
-        if ( !this.fileLocator.isRootOrShare() ) {
+    public long lastModified() throws SmbException {
+        if (!this.fileLocator.isRootOrShare()) {
             exists();
             return this.lastModified;
         }
         return 0L;
     }
 
-
     @Override
-    public long lastAccess () throws SmbException {
-        if ( !this.fileLocator.isRootOrShare() ) {
+    public long lastAccess() throws SmbException {
+        if (!this.fileLocator.isRootOrShare()) {
             exists();
             return this.lastAccess;
         }
         return 0L;
     }
-
 
     /**
      * List the contents of this SMB resource. The list returned by this
@@ -1172,10 +1102,9 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
      *         resource URL
      * @throws SmbException
      */
-    public String[] list () throws SmbException {
+    public String[] list() throws SmbException {
         return SmbEnumerationUtil.list(this, "*", ATTR_DIRECTORY | ATTR_HIDDEN | ATTR_SYSTEM, null, null);
     }
-
 
     /**
      * List the contents of this SMB resource. The list returned will be
@@ -1190,10 +1119,9 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
      * @throws SmbException
      *             # @return An array of filenames
      */
-    public String[] list ( SmbFilenameFilter filter ) throws SmbException {
+    public String[] list(final SmbFilenameFilter filter) throws SmbException {
         return SmbEnumerationUtil.list(this, "*", ATTR_DIRECTORY | ATTR_HIDDEN | ATTR_SYSTEM, filter, null);
     }
-
 
     /**
      * List the contents of this SMB resource as an array of
@@ -1215,7 +1143,7 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
      * <code>smb://server/</code>,
      * <li>or <code>null</code> if the resource cannot be resolved.
      * </ul>
-     * 
+     *
      * If strict resource lifecycle is used, make sure you close the individual files after use.
      *
      * @return An array of <code>SmbResource</code> objects representing file
@@ -1223,10 +1151,9 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
      *         of the resource URL
      * @throws SmbException
      */
-    public SmbFile[] listFiles () throws SmbException {
+    public SmbFile[] listFiles() throws SmbException {
         return SmbEnumerationUtil.listFiles(this, "*", ATTR_DIRECTORY | ATTR_HIDDEN | ATTR_SYSTEM, null, null);
     }
-
 
     /**
      * The CIFS protocol provides for DOS "wildcards" to be used as
@@ -1244,16 +1171,16 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
      * Wildcard expressions will not filter workgroup names or server names.
      *
      * <blockquote>
-     * 
+     *
      * <pre>
      * winnt&gt; ls c?o*
      * clock.avi                  -rw--      82944 Mon Oct 14 1996 1:38 AM
      * Cookies                    drw--          0 Fri Nov 13 1998 9:42 PM
      * 2 items in 5ms
      * </pre>
-     * 
+     *
      * </blockquote>
-     * 
+     *
      * If strict resource lifecycle is used, make sure you close the individual files after use.
      *
      * @param wildcard
@@ -1263,16 +1190,15 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
      *         and directories, workgroups, servers, or shares depending on the context
      *         of the resource URL
      */
-    public SmbFile[] listFiles ( String wildcard ) throws SmbException {
+    public SmbFile[] listFiles(final String wildcard) throws SmbException {
         return SmbEnumerationUtil.listFiles(this, wildcard, ATTR_DIRECTORY | ATTR_HIDDEN | ATTR_SYSTEM, null, null);
     }
-
 
     /**
      * List the contents of this SMB resource. The list returned will be
      * identical to the list returned by the parameterless <code>listFiles()</code>
      * method minus files filtered by the specified filename filter.
-     * 
+     *
      * If strict resource lifecycle is used, make sure you close the individual files after use.
      *
      * @param filter
@@ -1280,16 +1206,15 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
      * @return An array of <tt>SmbResource</tt> objects
      * @throws SmbException
      */
-    public SmbFile[] listFiles ( SmbFilenameFilter filter ) throws SmbException {
+    public SmbFile[] listFiles(final SmbFilenameFilter filter) throws SmbException {
         return SmbEnumerationUtil.listFiles(this, "*", ATTR_DIRECTORY | ATTR_HIDDEN | ATTR_SYSTEM, filter, null);
     }
-
 
     /**
      * List the contents of this SMB resource. The list returned will be
      * identical to the list returned by the parameterless <code>listFiles()</code>
      * method minus filenames filtered by the specified filter.
-     * 
+     *
      * If strict resource lifecycle is used, make sure you close the individual files after use.
      *
      * @param filter
@@ -1297,71 +1222,63 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
      * @return An array of <tt>SmbResource</tt> objects
      * @throws SmbException
      */
-    public SmbFile[] listFiles ( SmbFileFilter filter ) throws SmbException {
+    public SmbFile[] listFiles(final SmbFileFilter filter) throws SmbException {
         return SmbEnumerationUtil.listFiles(this, "*", ATTR_DIRECTORY | ATTR_HIDDEN | ATTR_SYSTEM, null, filter);
     }
 
-
     @Override
-    public CloseableIterator<SmbResource> children () throws CIFSException {
+    public CloseableIterator<SmbResource> children() throws CIFSException {
         return SmbEnumerationUtil.doEnum(this, "*", ATTR_DIRECTORY | ATTR_HIDDEN | ATTR_SYSTEM, null, null);
     }
 
-
     @Override
-    public CloseableIterator<SmbResource> children ( String wildcard ) throws CIFSException {
+    public CloseableIterator<SmbResource> children(final String wildcard) throws CIFSException {
         return SmbEnumerationUtil.doEnum(this, wildcard, ATTR_DIRECTORY | ATTR_HIDDEN | ATTR_SYSTEM, null, null);
     }
 
-
     @Override
-    public CloseableIterator<SmbResource> children ( ResourceNameFilter filter ) throws CIFSException {
+    public CloseableIterator<SmbResource> children(final ResourceNameFilter filter) throws CIFSException {
         return SmbEnumerationUtil.doEnum(this, "*", ATTR_DIRECTORY | ATTR_HIDDEN | ATTR_SYSTEM, filter, null);
     }
 
-
     @Override
-    public CloseableIterator<SmbResource> children ( ResourceFilter filter ) throws CIFSException {
+    public CloseableIterator<SmbResource> children(final ResourceFilter filter) throws CIFSException {
         return SmbEnumerationUtil.doEnum(this, "*", ATTR_DIRECTORY | ATTR_HIDDEN | ATTR_SYSTEM, null, filter);
     }
 
-
     @Override
-    public void renameTo ( SmbResource d ) throws SmbException {
+    public void renameTo(final SmbResource d) throws SmbException {
         renameTo(d, false);
     }
 
-
     @Override
-    public void renameTo ( SmbResource d, boolean replace ) throws SmbException {
-        if ( ! ( d instanceof SmbFile ) ) {
+    public void renameTo(final SmbResource d, final boolean replace) throws SmbException {
+        if (!(d instanceof final SmbFile dest)) {
             throw new SmbException("Invalid target resource");
         }
-        SmbFile dest = (SmbFile) d;
-        try ( SmbTreeHandleImpl sh = ensureTreeConnected();
-              SmbTreeHandleImpl th = dest.ensureTreeConnected() ) {
+        try (SmbTreeHandleImpl sh = ensureTreeConnected(); SmbTreeHandleImpl th = dest.ensureTreeConnected()) {
 
             // this still might be required for standalone DFS
-            if ( !exists() ) {
+            if (!exists()) {
                 throw new SmbException(NtStatus.NT_STATUS_OBJECT_NAME_NOT_FOUND, null);
             }
             dest.exists();
 
-            if ( this.fileLocator.isRootOrShare() || dest.fileLocator.isRootOrShare() ) {
+            if (this.fileLocator.isRootOrShare() || dest.fileLocator.isRootOrShare()) {
                 throw new SmbException("Invalid operation for workgroups, servers, or shares");
             }
 
-            if ( !sh.isSameTree(th) ) {
+            if (!sh.isSameTree(th)) {
                 // trigger requests to resolve the actual target
                 exists();
                 dest.exists();
 
-                if ( !Objects.equals(getServerWithDfs(), dest.getServerWithDfs()) || !Objects.equals(getShare(), dest.getShare()) ) {
+                if (!Objects.equals(getServerWithDfs(), dest.getServerWithDfs()) || !Objects.equals(getShare(), dest.getShare())) {
                     throw new SmbException("Cannot rename between different trees");
                 }
             }
 
-            if ( log.isDebugEnabled() ) {
+            if (log.isDebugEnabled()) {
                 log.debug("renameTo: " + getUncPath() + " -> " + dest.getUncPath());
             }
 
@@ -1369,13 +1286,12 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
             /*
              * Rename Request / Response
              */
-            if ( sh.isSMB2() ) {
-                Smb2SetInfoRequest req = new Smb2SetInfoRequest(sh.getConfig());
+            if (sh.isSMB2()) {
+                final Smb2SetInfoRequest req = new Smb2SetInfoRequest(sh.getConfig());
                 req.setFileInformation(new FileRenameInformation2(dest.getUncPath().substring(1), replace));
                 withOpen(sh, Smb2CreateRequest.FILE_OPEN, FILE_WRITE_ATTRIBUTES | DELETE, FILE_SHARE_READ | FILE_SHARE_WRITE, req);
-            }
-            else {
-                if ( replace ) {
+            } else {
+                if (replace) {
                     // TRANS2_SET_FILE_INFORMATION does not seem to support the SMB1 RENAME_INFO
                     throw new SmbUnsupportedOperationException("Replacing rename only supported with SMB2");
                 }
@@ -1383,50 +1299,44 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
             }
 
             this.attrExpiration = this.sizeExpiration = 0;
-        }
-        catch ( CIFSException e ) {
+        } catch (final CIFSException e) {
             throw SmbException.wrap(e);
         }
     }
 
-
-    void copyRecursive ( SmbFile dest, byte[][] b, int bsize, WriterThread w, SmbTreeHandleImpl sh, SmbTreeHandleImpl dh ) throws CIFSException {
-        if ( isDirectory() ) {
+    void copyRecursive(final SmbFile dest, final byte[][] b, final int bsize, final WriterThread w, final SmbTreeHandleImpl sh,
+            final SmbTreeHandleImpl dh) throws CIFSException {
+        if (isDirectory()) {
             SmbCopyUtil.copyDir(this, dest, b, bsize, w, sh, dh);
-        }
-        else {
+        } else {
             SmbCopyUtil.copyFile(this, dest, b, bsize, w, sh, dh);
         }
 
         dest.clearAttributeCache();
     }
 
-
     /**
-     * 
+     *
      */
-    void clearAttributeCache () {
+    void clearAttributeCache() {
         this.attrExpiration = 0;
         this.sizeExpiration = 0;
     }
 
-
     @Override
-    public void copyTo ( SmbResource d ) throws SmbException {
-        if ( ! ( d instanceof SmbFile ) ) {
+    public void copyTo(final SmbResource d) throws SmbException {
+        if (!(d instanceof final SmbFile dest)) {
             throw new SmbException("Invalid target resource");
         }
-        SmbFile dest = (SmbFile) d;
-        try ( SmbTreeHandleImpl sh = ensureTreeConnected();
-              SmbTreeHandleImpl dh = dest.ensureTreeConnected() ) {
-            if ( !exists() ) {
+        try (SmbTreeHandleImpl sh = ensureTreeConnected(); SmbTreeHandleImpl dh = dest.ensureTreeConnected()) {
+            if (!exists()) {
                 throw new SmbException(NtStatus.NT_STATUS_OBJECT_NAME_NOT_FOUND, null);
             }
 
             /*
              * Should be able to copy an entire share actually
              */
-            if ( this.fileLocator.getShare() == null || dest.getLocator().getShare() == null ) {
+            if (this.fileLocator.getShare() == null || dest.getLocator().getShare() == null) {
                 throw new SmbException("Invalid operation for workgroups or servers");
             }
 
@@ -1434,60 +1344,54 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
              * It is invalid for the source path to be a child of the destination
              * path or visa versa.
              */
-            if ( this.fileLocator.overlaps(dest.getLocator()) ) {
+            if (this.fileLocator.overlaps(dest.getLocator())) {
                 throw new SmbException("Source and destination paths overlap.");
             }
 
-            WriterThread w = new WriterThread();
+            final WriterThread w = new WriterThread();
             w.setDaemon(true);
 
             try {
                 w.start();
                 // use commonly acceptable buffer size
-                int bsize = Math.min(sh.getReceiveBufferSize() - 70, dh.getSendBufferSize() - 70);
-                byte[][] b = new byte[2][bsize];
+                final int bsize = Math.min(sh.getReceiveBufferSize() - 70, dh.getSendBufferSize() - 70);
+                final byte[][] b = new byte[2][bsize];
                 copyRecursive(dest, b, bsize, w, sh, dh);
-            }
-            finally {
+            } finally {
                 w.write(null, -1, null);
                 w.interrupt();
                 try {
                     w.join();
-                }
-                catch ( InterruptedException e ) {
+                } catch (final InterruptedException e) {
                     log.warn("Interrupted while joining copy thread", e);
                 }
             }
-        }
-        catch ( CIFSException e ) {
+        } catch (final CIFSException e) {
             throw SmbException.wrap(e);
         }
     }
 
-
     @Override
-    public void delete () throws SmbException {
+    public void delete() throws SmbException {
         try {
             delete(this.fileLocator.getUNCPath());
-        }
-        catch ( CIFSException e ) {
+        } catch (final CIFSException e) {
             throw SmbException.wrap(e);
         }
         close();
     }
 
-
-    void delete ( String fileName ) throws CIFSException {
-        if ( this.fileLocator.isRootOrShare() ) {
+    void delete(final String fileName) throws CIFSException {
+        if (this.fileLocator.isRootOrShare()) {
             throw new SmbException("Invalid operation for workgroups, servers, or shares");
         }
 
-        try ( SmbTreeHandleImpl th = ensureTreeConnected() ) {
-            if ( !exists() ) {
+        try (SmbTreeHandleImpl th = ensureTreeConnected()) {
+            if (!exists()) {
                 throw new SmbException(NtStatus.NT_STATUS_OBJECT_NAME_NOT_FOUND, null);
             }
 
-            if ( ( this.attributes & ATTR_READONLY ) != 0 ) {
+            if ((this.attributes & ATTR_READONLY) != 0) {
                 setReadWrite();
             }
 
@@ -1495,132 +1399,116 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
              * Delete or Delete Directory Request / Response
              */
 
-            if ( log.isDebugEnabled() ) {
+            if (log.isDebugEnabled()) {
                 log.debug("delete: " + fileName);
             }
 
-            if ( ( this.attributes & ATTR_DIRECTORY ) != 0 ) {
+            if ((this.attributes & ATTR_DIRECTORY) != 0) {
 
                 /*
                  * Recursively delete directory contents
                  */
 
-                try ( CloseableIterator<SmbResource> it = SmbEnumerationUtil
-                        .doEnum(this, "*", ATTR_DIRECTORY | ATTR_HIDDEN | ATTR_SYSTEM, null, null) ) {
-                    while ( it.hasNext() ) {
-                        try ( SmbResource r = it.next() ) {
+                try (CloseableIterator<SmbResource> it =
+                        SmbEnumerationUtil.doEnum(this, "*", ATTR_DIRECTORY | ATTR_HIDDEN | ATTR_SYSTEM, null, null)) {
+                    while (it.hasNext()) {
+                        try (SmbResource r = it.next()) {
                             try {
                                 r.delete();
-                            }
-                            catch ( CIFSException e ) {
+                            } catch (final CIFSException e) {
                                 throw SmbException.wrap(e);
                             }
                         }
                     }
-                }
-                catch ( SmbException se ) {
+                } catch (final SmbException se) {
                     /*
                      * Oracle FilesOnline version 9.0.4 doesn't send '.' and '..' so
                      * listFiles may generate undesirable "cannot find
                      * the file specified".
                      */
                     log.debug("delete", se);
-                    if ( se.getNtStatus() != NtStatus.NT_STATUS_NO_SUCH_FILE ) {
+                    if (se.getNtStatus() != NtStatus.NT_STATUS_NO_SUCH_FILE) {
                         throw se;
                     }
                 }
 
-                if ( th.isSMB2() ) {
-                    Smb2CreateRequest req = new Smb2CreateRequest(th.getConfig(), fileName);
+                if (th.isSMB2()) {
+                    final Smb2CreateRequest req = new Smb2CreateRequest(th.getConfig(), fileName);
                     req.setDesiredAccess(0x10000); // delete
                     req.setCreateOptions(Smb2CreateRequest.FILE_DELETE_ON_CLOSE | Smb2CreateRequest.FILE_DIRECTORY_FILE);
                     req.setCreateDisposition(Smb2CreateRequest.FILE_OPEN);
                     req.chain(new Smb2CloseRequest(th.getConfig(), fileName));
                     th.send(req);
-                }
-                else {
+                } else {
                     th.send(new SmbComDeleteDirectory(th.getConfig(), fileName), new SmbComBlankResponse(th.getConfig()));
                 }
-            }
-            else {
-
-                if ( th.isSMB2() ) {
-                    Smb2CreateRequest req = new Smb2CreateRequest(th.getConfig(), fileName.substring(1));
-                    req.setDesiredAccess(0x10000); // delete
-                    req.setCreateOptions(Smb2CreateRequest.FILE_DELETE_ON_CLOSE);
-                    req.chain(new Smb2CloseRequest(th.getConfig(), fileName));
-                    th.send(req);
-                }
-                else {
-                    th.send(new SmbComDelete(th.getConfig(), fileName), new SmbComBlankResponse(th.getConfig()));
-                }
+            } else if (th.isSMB2()) {
+                final Smb2CreateRequest req = new Smb2CreateRequest(th.getConfig(), fileName.substring(1));
+                req.setDesiredAccess(0x10000); // delete
+                req.setCreateOptions(Smb2CreateRequest.FILE_DELETE_ON_CLOSE);
+                req.chain(new Smb2CloseRequest(th.getConfig(), fileName));
+                th.send(req);
+            } else {
+                th.send(new SmbComDelete(th.getConfig(), fileName), new SmbComBlankResponse(th.getConfig()));
             }
             this.attrExpiration = this.sizeExpiration = 0;
         }
 
     }
 
-
     @Override
-    public long length () throws SmbException {
-        if ( this.sizeExpiration > System.currentTimeMillis() ) {
+    public long length() throws SmbException {
+        if (this.sizeExpiration > System.currentTimeMillis()) {
             return this.size;
         }
 
-        try ( SmbTreeHandleImpl th = ensureTreeConnected() ) {
-            int t = getType();
-            if ( t == TYPE_SHARE ) {
+        try (SmbTreeHandleImpl th = ensureTreeConnected()) {
+            final int t = getType();
+            if (t == TYPE_SHARE) {
                 this.size = fetchAllocationInfo(th).getCapacity();
-            }
-            else if ( !this.fileLocator.isRoot() && t != TYPE_NAMED_PIPE ) {
+            } else if (!this.fileLocator.isRoot() && t != TYPE_NAMED_PIPE) {
                 queryPath(th, this.fileLocator.getUNCPath(), FileInformation.FILE_STANDARD_INFO);
-            }
-            else {
+            } else {
                 this.size = 0L;
             }
             this.sizeExpiration = System.currentTimeMillis() + getContext().getConfig().getAttributeCacheTimeout();
             return this.size;
-        }
-        catch ( CIFSException e ) {
+        } catch (final CIFSException e) {
             throw SmbException.wrap(e);
         }
     }
 
-
     @Override
-    public long getDiskFreeSpace () throws SmbException {
-        try ( SmbTreeHandleImpl th = ensureTreeConnected() ) {
-            int t = getType();
-            if ( t == TYPE_SHARE || t == TYPE_FILESYSTEM ) {
-                AllocInfo allocInfo = fetchAllocationInfo(th);
+    public long getDiskFreeSpace() throws SmbException {
+        try (SmbTreeHandleImpl th = ensureTreeConnected()) {
+            final int t = getType();
+            if (t == TYPE_SHARE || t == TYPE_FILESYSTEM) {
+                final AllocInfo allocInfo = fetchAllocationInfo(th);
                 this.size = allocInfo.getCapacity();
                 this.sizeExpiration = System.currentTimeMillis() + getContext().getConfig().getAttributeCacheTimeout();
                 return allocInfo.getFree();
             }
             return 0L;
-        }
-        catch ( CIFSException e ) {
+        } catch (final CIFSException e) {
             throw SmbException.wrap(e);
         }
     }
-
 
     /**
      * @return
      * @throws CIFSException
      * @throws SmbException
      */
-    private AllocInfo fetchAllocationInfo ( SmbTreeHandleImpl th ) throws CIFSException, SmbException {
+    private AllocInfo fetchAllocationInfo(final SmbTreeHandleImpl th) throws CIFSException, SmbException {
         AllocInfo ai;
         try {
             ai = queryFSInformation(th, AllocInfo.class, FileSystemInformation.FS_SIZE_INFO);
-        }
-        catch ( SmbException ex ) {
+        } catch (final SmbException ex) {
             log.debug("getDiskFreeSpace", ex);
-            switch ( ex.getNtStatus() ) {
+            switch (ex.getNtStatus()) {
             case NtStatus.NT_STATUS_INVALID_INFO_CLASS:
             case NtStatus.NT_STATUS_UNSUCCESSFUL: // NetApp Filer
-                if ( !th.isSMB2() ) {
+                if (!th.isSMB2()) {
                     // SMB_FS_FULL_SIZE_INFORMATION not supported by the server.
                     ai = queryFSInformation(th, AllocInfo.class, FileSystemInformation.SMB_INFO_ALLOCATION);
                     break;
@@ -1632,34 +1520,29 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
         return ai;
     }
 
-
-    private <T extends FileSystemInformation> T queryFSInformation ( SmbTreeHandleImpl th, Class<T> clazz, byte level ) throws CIFSException {
-        if ( th.isSMB2() ) {
-            Smb2QueryInfoRequest qreq = new Smb2QueryInfoRequest(th.getConfig());
+    private <T extends FileSystemInformation> T queryFSInformation(final SmbTreeHandleImpl th, final Class<T> clazz, final byte level)
+            throws CIFSException {
+        if (th.isSMB2()) {
+            final Smb2QueryInfoRequest qreq = new Smb2QueryInfoRequest(th.getConfig());
             qreq.setFilesystemInfoClass(level);
-            Smb2QueryInfoResponse resp = withOpen(
-                th,
-                Smb2CreateRequest.FILE_OPEN,
-                SmbConstants.FILE_READ_ATTRIBUTES,
-                SmbConstants.FILE_SHARE_READ | SmbConstants.FILE_SHARE_WRITE,
-                qreq);
+            final Smb2QueryInfoResponse resp = withOpen(th, Smb2CreateRequest.FILE_OPEN, SmbConstants.FILE_READ_ATTRIBUTES,
+                    SmbConstants.FILE_SHARE_READ | SmbConstants.FILE_SHARE_WRITE, qreq);
             return resp.getInfo(clazz);
         }
-        Trans2QueryFSInformationResponse response = new Trans2QueryFSInformationResponse(th.getConfig(), level);
+        final Trans2QueryFSInformationResponse response = new Trans2QueryFSInformationResponse(th.getConfig(), level);
         th.send(new Trans2QueryFSInformation(th.getConfig(), level), response);
         return response.getInfo(clazz);
     }
 
-
     @Override
-    public void mkdir () throws SmbException {
+    public void mkdir() throws SmbException {
         String path = this.fileLocator.getUNCPath();
 
-        if ( path.length() == 1 ) {
+        if (path.length() == 1) {
             throw new SmbException("Invalid operation for workgroups, servers, or shares");
         }
 
-        try ( SmbTreeHandleImpl th = ensureTreeConnected() ) {
+        try (SmbTreeHandleImpl th = ensureTreeConnected()) {
             // should not normally be required, but samba without NTStatus does not properly resolve the path and fails
             // with
             // STATUS_UNSUCCESSFUL
@@ -1671,84 +1554,76 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
              * Create Directory Request / Response
              */
 
-            if ( log.isDebugEnabled() ) {
+            if (log.isDebugEnabled()) {
                 log.debug("mkdir: " + path);
             }
 
-            if ( th.isSMB2() ) {
-                Smb2CreateRequest req = new Smb2CreateRequest(th.getConfig(), path);
+            if (th.isSMB2()) {
+                final Smb2CreateRequest req = new Smb2CreateRequest(th.getConfig(), path);
                 req.setCreateDisposition(Smb2CreateRequest.FILE_CREATE);
                 req.setCreateOptions(Smb2CreateRequest.FILE_DIRECTORY_FILE);
                 req.chain(new Smb2CloseRequest(th.getConfig(), path));
                 th.send(req);
-            }
-            else {
+            } else {
                 th.send(new SmbComCreateDirectory(th.getConfig(), path), new SmbComBlankResponse(th.getConfig()));
             }
             this.attrExpiration = this.sizeExpiration = 0;
-        }
-        catch ( CIFSException e ) {
+        } catch (final CIFSException e) {
             throw SmbException.wrap(e);
         }
     }
 
-
     @Override
-    public void mkdirs () throws SmbException {
-        String p = this.fileLocator.getParent();
-        try ( SmbTreeHandle th = ensureTreeConnected();
-              SmbFile parent = new SmbFile(p, getContext()) ) {
+    public void mkdirs() throws SmbException {
+        final String p = this.fileLocator.getParent();
+        try (SmbTreeHandle th = ensureTreeConnected(); SmbFile parent = new SmbFile(p, getContext())) {
             try {
-                if ( !parent.exists() ) {
-                    if ( log.isDebugEnabled() ) {
+                if (!parent.exists()) {
+                    if (log.isDebugEnabled()) {
                         log.debug("Parent does not exist " + p);
                     }
                     parent.mkdirs();
                 }
-            }
-            catch ( SmbException e ) {
-                if ( log.isDebugEnabled() ) {
+            } catch (final SmbException e) {
+                if (log.isDebugEnabled()) {
                     log.debug("Failed to ensure parent exists " + p, e);
                 }
                 throw e;
             }
             try {
                 mkdir();
-            }
-            catch ( SmbException e ) {
+            } catch (final SmbException e) {
                 log.debug("mkdirs", e);
                 // Ignore "Cannot create a file when that file already exists." errors for now as
                 // they seem to be show up under some conditions most likely due to timing issues.
-                if ( e.getNtStatus() != NtStatus.NT_STATUS_OBJECT_NAME_COLLISION ) {
+                if (e.getNtStatus() != NtStatus.NT_STATUS_OBJECT_NAME_COLLISION) {
                     throw e;
                 }
             }
-        }
-        catch ( CIFSException e ) {
+        } catch (final CIFSException e) {
             throw SmbException.wrap(e);
-        }
-        catch ( MalformedURLException e ) {
+        } catch (final MalformedURLException e) {
             throw new SmbException("Invalid URL in mkdirs", e);
         }
     }
 
-
-    protected <T extends ServerMessageBlock2Response> T withOpen ( SmbTreeHandleImpl th, ServerMessageBlock2Request<T> first,
-            ServerMessageBlock2Request<?>... others ) throws CIFSException {
-        return withOpen(th, Smb2CreateRequest.FILE_OPEN, 0x00120089, SmbConstants.FILE_SHARE_READ | SmbConstants.FILE_SHARE_WRITE, first, others);
+    protected <T extends ServerMessageBlock2Response> T withOpen(final SmbTreeHandleImpl th, final ServerMessageBlock2Request<T> first,
+            final ServerMessageBlock2Request<?>... others) throws CIFSException {
+        return withOpen(th, Smb2CreateRequest.FILE_OPEN, 0x00120089, SmbConstants.FILE_SHARE_READ | SmbConstants.FILE_SHARE_WRITE, first,
+                others);
     }
 
-
-    protected <T extends ServerMessageBlock2Response> T withOpen ( SmbTreeHandleImpl th, int createDisposition, int desiredAccess, int shareAccess,
-            ServerMessageBlock2Request<T> first, ServerMessageBlock2Request<?>... others ) throws CIFSException {
+    protected <T extends ServerMessageBlock2Response> T withOpen(final SmbTreeHandleImpl th, final int createDisposition,
+            final int desiredAccess, final int shareAccess, final ServerMessageBlock2Request<T> first,
+            final ServerMessageBlock2Request<?>... others) throws CIFSException {
         return withOpen(th, createDisposition, 0, SmbConstants.ATTR_NORMAL, desiredAccess, shareAccess, first, others);
     }
 
-
-    @SuppressWarnings ( "unchecked" )
-    protected <T extends ServerMessageBlock2Response> T withOpen ( SmbTreeHandleImpl th, int createDisposition, int createOptions, int fileAttributes,
-            int desiredAccess, int shareAccess, ServerMessageBlock2Request<T> first, ServerMessageBlock2Request<?>... others ) throws CIFSException {
-        Smb2CreateRequest cr = new Smb2CreateRequest(th.getConfig(), getUncPath());
+    @SuppressWarnings("unchecked")
+    protected <T extends ServerMessageBlock2Response> T withOpen(final SmbTreeHandleImpl th, final int createDisposition,
+            final int createOptions, final int fileAttributes, final int desiredAccess, final int shareAccess,
+            final ServerMessageBlock2Request<T> first, final ServerMessageBlock2Request<?>... others) throws CIFSException {
+        final Smb2CreateRequest cr = new Smb2CreateRequest(th.getConfig(), getUncPath());
         try {
             cr.setCreateDisposition(createDisposition);
             cr.setCreateOptions(createOptions);
@@ -1758,29 +1633,28 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
 
             ServerMessageBlock2Request<?> cur = cr;
 
-            if ( first != null ) {
+            if (first != null) {
                 cr.chain(first);
                 cur = first;
 
-                for ( ServerMessageBlock2Request<?> req : others ) {
+                for (final ServerMessageBlock2Request<?> req : others) {
                     cur.chain(req);
                     cur = req;
                 }
             }
 
-            Smb2CloseRequest closeReq = new Smb2CloseRequest(th.getConfig(), getUncPath());
+            final Smb2CloseRequest closeReq = new Smb2CloseRequest(th.getConfig(), getUncPath());
             closeReq.setCloseFlags(Smb2CloseResponse.SMB2_CLOSE_FLAG_POSTQUERY_ATTIB);
             cur.chain(closeReq);
 
-            Smb2CreateResponse createResp = th.send(cr);
+            final Smb2CreateResponse createResp = th.send(cr);
 
-            Smb2CloseResponse closeResp = closeReq.getResponse();
+            final Smb2CloseResponse closeResp = closeReq.getResponse();
             SmbBasicFileInfo info;
 
-            if ( ( closeResp.getCloseFlags() & Smb2CloseResponse.SMB2_CLOSE_FLAG_POSTQUERY_ATTIB ) != 0 ) {
+            if ((closeResp.getCloseFlags() & Smb2CloseResponse.SMB2_CLOSE_FLAG_POSTQUERY_ATTIB) != 0) {
                 info = closeResp;
-            }
-            else {
+            } else {
                 info = createResp;
             }
 
@@ -1794,18 +1668,14 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
             this.size = info.getSize();
             this.sizeExpiration = System.currentTimeMillis() + th.getConfig().getAttributeCacheTimeout();
             return (T) createResp.getNextResponse();
-        }
-        catch (
-            CIFSException |
-            RuntimeException e ) {
+        } catch (CIFSException | RuntimeException e) {
             try {
                 // make sure that the handle is closed when one of the requests fails
-                Smb2CreateResponse createResp = cr.getResponse();
-                if ( createResp.isReceived() && createResp.getStatus() == NtStatus.NT_STATUS_SUCCESS ) {
+                final Smb2CreateResponse createResp = cr.getResponse();
+                if (createResp.isReceived() && createResp.getStatus() == NtStatus.NT_STATUS_SUCCESS) {
                     th.send(new Smb2CloseRequest(th.getConfig(), createResp.getFileId()), RequestParam.NO_RETRY);
                 }
-            }
-            catch ( Exception e2 ) {
+            } catch (final Exception e2) {
                 log.debug("Failed to close after failure", e2);
                 e.addSuppressed(e2);
             }
@@ -1813,174 +1683,146 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
         }
     }
 
-
     @Override
-    public void createNewFile () throws SmbException {
-        if ( this.fileLocator.isRootOrShare() ) {
+    public void createNewFile() throws SmbException {
+        if (this.fileLocator.isRootOrShare()) {
             throw new SmbException("Invalid operation for workgroups, servers, or shares");
         }
 
-        try ( SmbTreeHandleImpl th = ensureTreeConnected() ) {
+        try (SmbTreeHandleImpl th = ensureTreeConnected()) {
 
-            if ( th.isSMB2() ) {
+            if (th.isSMB2()) {
                 withOpen(th, Smb2CreateRequest.FILE_OPEN_IF, O_RDWR, 0, null);
-            }
-            else {
-                try ( SmbFileHandle fd = openUnshared(O_RDWR | O_CREAT | O_EXCL, O_RDWR, FILE_NO_SHARE, ATTR_NORMAL, 0) ) {
+            } else {
+                try (SmbFileHandle fd = openUnshared(O_RDWR | O_CREAT | O_EXCL, O_RDWR, FILE_NO_SHARE, ATTR_NORMAL, 0)) {
                     // close explicitly
                     fd.close(0L);
                 }
             }
-        }
-        catch ( CIFSException e ) {
+        } catch (final CIFSException e) {
             throw SmbException.wrap(e);
         }
     }
 
-
-    void setPathInformation ( int attrs, long ctime, long mtime, long atime ) throws CIFSException {
-        try ( SmbTreeHandleImpl th = ensureTreeConnected() ) {
-            if ( !exists() ) {
+    void setPathInformation(final int attrs, final long ctime, final long mtime, final long atime) throws CIFSException {
+        try (SmbTreeHandleImpl th = ensureTreeConnected()) {
+            if (!exists()) {
                 throw new SmbException(NtStatus.NT_STATUS_OBJECT_NAME_NOT_FOUND, null);
             }
 
-            int dir = this.attributes & ATTR_DIRECTORY;
+            final int dir = this.attributes & ATTR_DIRECTORY;
 
-            if ( th.isSMB2() ) {
+            if (th.isSMB2()) {
 
-                Smb2SetInfoRequest req = new Smb2SetInfoRequest(th.getConfig());
+                final Smb2SetInfoRequest req = new Smb2SetInfoRequest(th.getConfig());
                 req.setFileInformation(new FileBasicInfo(ctime, atime, mtime, 0L, attrs | dir));
                 withOpen(th, Smb2CreateRequest.FILE_OPEN, FILE_WRITE_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE, req);
-            }
-            else if ( th.hasCapability(SmbConstants.CAP_NT_SMBS) ) {
+            } else if (th.hasCapability(SmbConstants.CAP_NT_SMBS)) {
 
-                try ( SmbFileHandleImpl f = openUnshared(
-                    O_RDONLY,
-                    FILE_WRITE_ATTRIBUTES,
-                    FILE_SHARE_READ | FILE_SHARE_WRITE,
-                    dir,
-                    dir != 0 ? 0x0001 : 0x0040) ) {
-                    th.send(
-                        new Trans2SetFileInformation(th.getConfig(), f.getFid(), attrs | dir, ctime, mtime, atime),
-                        new Trans2SetFileInformationResponse(th.getConfig()),
-                        RequestParam.NO_RETRY);
+                try (SmbFileHandleImpl f = openUnshared(O_RDONLY, FILE_WRITE_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE, dir,
+                        dir != 0 ? 0x0001 : 0x0040)) {
+                    th.send(new Trans2SetFileInformation(th.getConfig(), f.getFid(), attrs | dir, ctime, mtime, atime),
+                            new Trans2SetFileInformationResponse(th.getConfig()), RequestParam.NO_RETRY);
                 }
-            }
-            else {
-                if ( ctime != 0 || atime != 0 ) {
+            } else {
+                if (ctime != 0 || atime != 0) {
                     throw new SmbUnsupportedOperationException("Cannot set creation or access time without CAP_NT_SMBS");
                 }
-                th.send(
-                    new SmbComSetInformation(th.getConfig(), getUncPath(), attrs, mtime - th.getServerTimeZoneOffset()),
-                    new SmbComSetInformationResponse(th.getConfig()));
+                th.send(new SmbComSetInformation(th.getConfig(), getUncPath(), attrs, mtime - th.getServerTimeZoneOffset()),
+                        new SmbComSetInformationResponse(th.getConfig()));
             }
 
             this.attrExpiration = 0;
         }
     }
 
-
     @Override
-    public void setFileTimes ( long createTime, long lastLastModified, long lastLastAccess ) throws SmbException {
-        if ( this.fileLocator.isRootOrShare() ) {
+    public void setFileTimes(final long createTime, final long lastLastModified, final long lastLastAccess) throws SmbException {
+        if (this.fileLocator.isRootOrShare()) {
             throw new SmbException("Invalid operation for workgroups, servers, or shares");
         }
 
         try {
             setPathInformation(0, createTime, lastLastModified, lastLastAccess);
-        }
-        catch ( CIFSException e ) {
+        } catch (final CIFSException e) {
             throw SmbException.wrap(e);
         }
     }
 
-
     @Override
-    public void setCreateTime ( long time ) throws SmbException {
-        if ( this.fileLocator.isRootOrShare() ) {
+    public void setCreateTime(final long time) throws SmbException {
+        if (this.fileLocator.isRootOrShare()) {
             throw new SmbException("Invalid operation for workgroups, servers, or shares");
         }
 
         try {
             setPathInformation(0, time, 0L, 0L);
-        }
-        catch ( CIFSException e ) {
+        } catch (final CIFSException e) {
             throw SmbException.wrap(e);
         }
     }
 
-
     @Override
-    public void setLastModified ( long time ) throws SmbException {
-        if ( this.fileLocator.isRootOrShare() ) {
+    public void setLastModified(final long time) throws SmbException {
+        if (this.fileLocator.isRootOrShare()) {
             throw new SmbException("Invalid operation for workgroups, servers, or shares");
         }
 
         try {
             setPathInformation(0, 0L, time, 0L);
-        }
-        catch ( CIFSException e ) {
+        } catch (final CIFSException e) {
             throw SmbException.wrap(e);
         }
     }
 
-
     @Override
-    public void setLastAccess ( long time ) throws SmbException {
-        if ( this.fileLocator.isRootOrShare() ) {
+    public void setLastAccess(final long time) throws SmbException {
+        if (this.fileLocator.isRootOrShare()) {
             throw new SmbException("Invalid operation for workgroups, servers, or shares");
         }
 
         try {
             setPathInformation(0, 0L, 0L, time);
-        }
-        catch ( CIFSException e ) {
+        } catch (final CIFSException e) {
             throw SmbException.wrap(e);
         }
     }
 
-
     @Override
-    public int getAttributes () throws SmbException {
-        if ( this.fileLocator.isRootOrShare() ) {
+    public int getAttributes() throws SmbException {
+        if (this.fileLocator.isRootOrShare()) {
             return 0;
         }
         exists();
         return this.attributes & ATTR_GET_MASK;
     }
 
-
     @Override
-    public void setAttributes ( int attrs ) throws SmbException {
-        if ( this.fileLocator.isRootOrShare() ) {
+    public void setAttributes(final int attrs) throws SmbException {
+        if (this.fileLocator.isRootOrShare()) {
             throw new SmbException("Invalid operation for workgroups, servers, or shares");
         }
         try {
             setPathInformation(attrs & ATTR_SET_MASK, 0L, 0L, 0L);
-        }
-        catch ( SmbException e ) {
-            if ( e.getNtStatus() != 0xC00000BB ) {
+        } catch (final SmbException e) {
+            if (e.getNtStatus() != 0xC00000BB) {
                 throw e;
             }
             throw new SmbUnsupportedOperationException("Attribute not supported by server");
-        }
-        catch ( CIFSException e ) {
+        } catch (final CIFSException e) {
             throw SmbException.wrap(e);
         }
     }
 
-
     @Override
-    public void setReadOnly () throws SmbException {
+    public void setReadOnly() throws SmbException {
         setAttributes(getAttributes() | ATTR_READONLY);
     }
 
-
     @Override
-    public void setReadWrite () throws SmbException {
+    public void setReadWrite() throws SmbException {
         setAttributes(getAttributes() & ~ATTR_READONLY);
     }
-
 
     /**
      * Returns a {@link java.net.URL} for this <code>SmbFile</code>. The
@@ -1992,10 +1834,9 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
      * @return A new <code>{@link java.net.URL}</code> for this <code>SmbFile</code>
      */
     @Deprecated
-    public URL toURL () {
+    public URL toURL() {
         return getURL();
     }
-
 
     /**
      * Computes a hashCode for this file based on the URL string and IP
@@ -2009,10 +1850,9 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
      * @return A hashcode for this abstract file
      */
     @Override
-    public int hashCode () {
+    public int hashCode() {
         return this.fileLocator.hashCode();
     }
-
 
     /**
      * Tests to see if two <code>SmbFile</code> objects are equal. Two
@@ -2028,12 +1868,12 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
      *
      * <p>
      * <blockquote>
-     * 
+     *
      * <pre>
      * smb://192.168.1.15/share/DIR/foo.txt
      * smb://angus/share/data/../dir/foo.txt
      * </pre>
-     * 
+     *
      * </blockquote>
      *
      * @param obj
@@ -2043,19 +1883,19 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
      */
 
     @Override
-    public boolean equals ( Object obj ) {
-        if ( obj instanceof SmbFile ) {
-            SmbResource f = (SmbResource) obj;
+    public boolean equals(final Object obj) {
+        if (obj instanceof SmbFile) {
+            final SmbResource f = (SmbResource) obj;
 
-            if ( this == f )
+            if (this == f) {
                 return true;
+            }
 
             return this.fileLocator.equals(f.getLocator());
         }
 
         return false;
     }
-
 
     /**
      * Returns the string representation of this SmbFile object. This will
@@ -2067,10 +1907,9 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
      */
 
     @Override
-    public String toString () {
+    public String toString() {
         return Strings.maskSecretValue(url.toString());
     }
-
 
     /* URLConnection implementation */
     /**
@@ -2080,16 +1919,14 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
      */
     @Deprecated
     @Override
-    public int getContentLength () {
+    public int getContentLength() {
         try {
-            return (int) ( length() & 0xFFFFFFFFL );
-        }
-        catch ( SmbException se ) {
+            return (int) (length() & 0xFFFFFFFFL);
+        } catch (final SmbException se) {
             log.debug("getContentLength", se);
         }
         return 0;
     }
-
 
     /**
      * {@inheritDoc}
@@ -2097,50 +1934,44 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
      * @see java.net.URLConnection#getContentLengthLong()
      */
     @Override
-    public long getContentLengthLong () {
+    public long getContentLengthLong() {
         try {
             return length();
-        }
-        catch ( SmbException se ) {
+        } catch (final SmbException se) {
             log.debug("getContentLength", se);
         }
         return 0;
     }
 
-
     /**
      * This URLConnection method just returns the result of <tt>lastModified</tt>.
      *
      * @return the last modified data as milliseconds since Jan 1, 1970
      */
     @Override
-    public long getDate () {
+    public long getDate() {
         try {
             return lastModified();
-        }
-        catch ( SmbException se ) {
+        } catch (final SmbException se) {
             log.debug("getDate", se);
         }
         return 0L;
     }
 
-
     /**
      * This URLConnection method just returns the result of <tt>lastModified</tt>.
      *
      * @return the last modified data as milliseconds since Jan 1, 1970
      */
     @Override
-    public long getLastModified () {
+    public long getLastModified() {
         try {
             return lastModified();
-        }
-        catch ( SmbException se ) {
+        } catch (final SmbException se) {
             log.debug("getLastModified", se);
         }
         return 0L;
     }
-
 
     /**
      * This URLConnection method just returns a new <tt>SmbFileInputStream</tt> created with this file.
@@ -2149,168 +1980,146 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
      *             thrown by <tt>SmbFileInputStream</tt> constructor
      */
     @Override
-    public InputStream getInputStream () throws IOException {
+    public InputStream getInputStream() throws IOException {
         return new SmbFileInputStream(this);
     }
 
-
     @Override
-    public SmbFileInputStream openInputStream () throws SmbException {
+    public SmbFileInputStream openInputStream() throws SmbException {
         return new SmbFileInputStream(this);
     }
 
-
     @Override
-    public SmbFileInputStream openInputStream ( int sharing ) throws SmbException {
+    public SmbFileInputStream openInputStream(final int sharing) throws SmbException {
         return openInputStream(0, O_RDONLY, sharing);
     }
 
-
     @Override
-    public SmbFileInputStream openInputStream ( int flags, int access, int sharing ) throws SmbException {
+    public SmbFileInputStream openInputStream(final int flags, final int access, final int sharing) throws SmbException {
         return new SmbFileInputStream(this, flags, access, sharing, false);
     }
 
-
     @Override
-    public OutputStream getOutputStream () throws IOException {
+    public OutputStream getOutputStream() throws IOException {
         return new SmbFileOutputStream(this);
     }
 
-
     @Override
-    public SmbFileOutputStream openOutputStream () throws SmbException {
+    public SmbFileOutputStream openOutputStream() throws SmbException {
         return new SmbFileOutputStream(this);
     }
 
-
     @Override
-    public SmbFileOutputStream openOutputStream ( boolean append ) throws SmbException {
+    public SmbFileOutputStream openOutputStream(final boolean append) throws SmbException {
         return openOutputStream(append, FILE_SHARE_READ);
     }
 
-
     @Override
-    public SmbFileOutputStream openOutputStream ( boolean append, int sharing ) throws SmbException {
+    public SmbFileOutputStream openOutputStream(final boolean append, final int sharing) throws SmbException {
         return openOutputStream(append, append ? O_CREAT | O_WRONLY | O_APPEND : O_CREAT | O_WRONLY | O_TRUNC, 0, sharing);
     }
 
-
     @Override
-    public SmbFileOutputStream openOutputStream ( boolean append, int openFlags, int access, int sharing ) throws SmbException {
+    public SmbFileOutputStream openOutputStream(final boolean append, final int openFlags, final int access, final int sharing)
+            throws SmbException {
         return new SmbFileOutputStream(this, append, openFlags, access, sharing);
     }
 
-
     @Override
-    public SmbRandomAccessFile openRandomAccess ( String mode ) throws SmbException {
+    public SmbRandomAccessFile openRandomAccess(final String mode) throws SmbException {
         return new SmbRandomAccessFile(this, mode);
     }
 
-
     @Override
-    public SmbRandomAccessFile openRandomAccess ( String mode, int sharing ) throws SmbException {
+    public SmbRandomAccessFile openRandomAccess(final String mode, final int sharing) throws SmbException {
         return new SmbRandomAccessFile(this, mode, sharing, false);
     }
 
-
-    private void processAces ( ACE[] aces, boolean resolveSids ) throws IOException {
+    private void processAces(final ACE[] aces, final boolean resolveSids) throws IOException {
         String server = this.fileLocator.getServerWithDfs();
         int ai;
 
-        if ( resolveSids ) {
+        if (resolveSids) {
             if (this.fileLocator.getDfsPath() == null && this.fileLocator.getPort() != -1) {
                 server = server + ":" + this.fileLocator.getPort();
             }
-            SID[] sids = new SID[aces.length];
-            for ( ai = 0; ai < aces.length; ai++ ) {
-                sids[ ai ] = aces[ ai ].getSID();
+            final SID[] sids = new SID[aces.length];
+            for (ai = 0; ai < aces.length; ai++) {
+                sids[ai] = aces[ai].getSID();
             }
 
-            for ( int off = 0; off < sids.length; off += 64 ) {
+            for (int off = 0; off < sids.length; off += 64) {
                 int len = sids.length - off;
-                if ( len > 64 )
+                if (len > 64) {
                     len = 64;
+                }
 
                 getContext().getSIDResolver().resolveSids(getContext(), server, sids, off, len);
             }
-        }
-        else {
-            for ( ai = 0; ai < aces.length; ai++ ) {
-                aces[ ai ].getSID().initContext(server, getContext());
+        } else {
+            for (ai = 0; ai < aces.length; ai++) {
+                aces[ai].getSID().initContext(server, getContext());
             }
         }
     }
 
-
     @Override
-    public long fileIndex () throws SmbException {
+    public long fileIndex() throws SmbException {
 
-        try ( SmbTreeHandleImpl th = ensureTreeConnected() ) {
+        try (SmbTreeHandleImpl th = ensureTreeConnected()) {
 
-            if ( th.isSMB2() ) {
-                Smb2QueryInfoRequest req = new Smb2QueryInfoRequest(th.getConfig());
+            if (th.isSMB2()) {
+                final Smb2QueryInfoRequest req = new Smb2QueryInfoRequest(th.getConfig());
                 req.setFileInfoClass(FileInformation.FILE_INTERNAL_INFO);
-                Smb2QueryInfoResponse resp = withOpen(
-                    th,
-                    Smb2CreateRequest.FILE_OPEN,
-                    SmbConstants.FILE_READ_ATTRIBUTES,
-                    SmbConstants.FILE_SHARE_READ | SmbConstants.FILE_SHARE_WRITE,
-                    req);
-                FileInternalInfo info = resp.getInfo(FileInternalInfo.class);
+                final Smb2QueryInfoResponse resp = withOpen(th, Smb2CreateRequest.FILE_OPEN, SmbConstants.FILE_READ_ATTRIBUTES,
+                        SmbConstants.FILE_SHARE_READ | SmbConstants.FILE_SHARE_WRITE, req);
+                final FileInternalInfo info = resp.getInfo(FileInternalInfo.class);
                 return info.getIndexNumber();
             }
-        }
-        catch ( CIFSException e ) {
+        } catch (final CIFSException e) {
             throw SmbException.wrap(e);
         }
 
         return 0;
     }
 
-
-    SecurityDescriptor querySecurity ( SmbTreeHandleImpl th, int types ) throws CIFSException {
-        if ( th.isSMB2() ) {
-            Smb2QueryInfoRequest req = new Smb2QueryInfoRequest(th.getConfig());
+    SecurityDescriptor querySecurity(final SmbTreeHandleImpl th, final int types) throws CIFSException {
+        if (th.isSMB2()) {
+            final Smb2QueryInfoRequest req = new Smb2QueryInfoRequest(th.getConfig());
             req.setInfoType(Smb2Constants.SMB2_0_INFO_SECURITY);
             req.setAdditionalInformation(types);
-            Smb2QueryInfoResponse resp = withOpen(
-                th,
-                Smb2CreateRequest.FILE_OPEN,
-                SmbConstants.FILE_READ_ATTRIBUTES | SmbConstants.READ_CONTROL,
-                SmbConstants.FILE_SHARE_READ | SmbConstants.FILE_SHARE_WRITE,
-                req);
+            final Smb2QueryInfoResponse resp =
+                    withOpen(th, Smb2CreateRequest.FILE_OPEN, SmbConstants.FILE_READ_ATTRIBUTES | SmbConstants.READ_CONTROL,
+                            SmbConstants.FILE_SHARE_READ | SmbConstants.FILE_SHARE_WRITE, req);
             return resp.getInfo(SecurityDescriptor.class);
         }
 
-        if ( !th.hasCapability(SmbConstants.CAP_NT_SMBS) ) {
+        if (!th.hasCapability(SmbConstants.CAP_NT_SMBS)) {
             throw new SmbUnsupportedOperationException("Not supported without CAP_NT_SMBS/SMB2");
         }
         NtTransQuerySecurityDescResponse response = new NtTransQuerySecurityDescResponse(getContext().getConfig());
 
-        try ( SmbFileHandleImpl f = openUnshared(O_RDONLY, READ_CONTROL, DEFAULT_SHARING, 0, isDirectory() ? 1 : 0) ) {
+        try (SmbFileHandleImpl f = openUnshared(O_RDONLY, READ_CONTROL, DEFAULT_SHARING, 0, isDirectory() ? 1 : 0)) {
             /*
              * NtTrans Query Security Desc Request / Response
              */
-            NtTransQuerySecurityDesc request = new NtTransQuerySecurityDesc(getContext().getConfig(), f.getFid(), types);
+            final NtTransQuerySecurityDesc request = new NtTransQuerySecurityDesc(getContext().getConfig(), f.getFid(), types);
             response = th.send(request, response, RequestParam.NO_RETRY);
             return response.getSecurityDescriptor();
         }
     }
 
-
     @Override
-    public ACE[] getSecurity () throws IOException {
+    public ACE[] getSecurity() throws IOException {
         return getSecurity(false);
     }
 
-
     @Override
-    public ACE[] getSecurity ( boolean resolveSids ) throws IOException {
-        try ( SmbTreeHandleImpl th = ensureTreeConnected() ) {
-            SecurityDescriptor desc = querySecurity(th, SecurityInfo.DACL_SECURITY_INFO);
-            ACE[] aces = desc.getAces();
-            if ( aces != null ) {
+    public ACE[] getSecurity(final boolean resolveSids) throws IOException {
+        try (SmbTreeHandleImpl th = ensureTreeConnected()) {
+            final SecurityDescriptor desc = querySecurity(th, SecurityInfo.DACL_SECURITY_INFO);
+            final ACE[] aces = desc.getAces();
+            if (aces != null) {
                 processAces(aces, resolveSids);
             }
 
@@ -2318,93 +2127,84 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
         }
     }
 
-
     @Override
-    public SID getOwnerUser () throws IOException {
+    public SID getOwnerUser() throws IOException {
         return getOwnerUser(true);
     }
 
-
     @Override
-    public SID getOwnerUser ( boolean resolve ) throws IOException {
-        try ( SmbTreeHandleImpl th = ensureTreeConnected() ) {
-            SecurityDescriptor desc = querySecurity(th, SecurityInfo.OWNER_SECURITY_INFO);
-            SID ownerUser = desc.getOwnerUserSid();
-            if ( ownerUser == null ) {
+    public SID getOwnerUser(final boolean resolve) throws IOException {
+        try (SmbTreeHandleImpl th = ensureTreeConnected()) {
+            final SecurityDescriptor desc = querySecurity(th, SecurityInfo.OWNER_SECURITY_INFO);
+            final SID ownerUser = desc.getOwnerUserSid();
+            if (ownerUser == null) {
                 return null;
             }
 
             String server = this.fileLocator.getServerWithDfs();
-            if ( resolve ) {
+            if (resolve) {
                 if (this.fileLocator.getDfsPath() == null && this.fileLocator.getPort() != -1) {
                     server = server + ":" + this.fileLocator.getPort();
                 }
                 try {
                     ownerUser.resolve(server, getContext());
-                }
-                catch ( IOException e ) {
+                } catch (final IOException e) {
                     log.warn("Failed to resolve SID " + ownerUser.toString(), e);
                 }
-            }
-            else {
+            } else {
                 ownerUser.initContext(server, getContext());
             }
             return ownerUser;
         }
     }
 
-
     @Override
-    public SID getOwnerGroup () throws IOException {
+    public SID getOwnerGroup() throws IOException {
         return getOwnerGroup(true);
     }
 
-
     @Override
-    public SID getOwnerGroup ( boolean resolve ) throws IOException {
-        try ( SmbTreeHandleImpl th = ensureTreeConnected() ) {
-            SecurityDescriptor desc = querySecurity(th, SecurityInfo.GROUP_SECURITY_INFO);
-            SID ownerGroup = desc.getOwnerGroupSid();
-            if ( ownerGroup == null ) {
+    public SID getOwnerGroup(final boolean resolve) throws IOException {
+        try (SmbTreeHandleImpl th = ensureTreeConnected()) {
+            final SecurityDescriptor desc = querySecurity(th, SecurityInfo.GROUP_SECURITY_INFO);
+            final SID ownerGroup = desc.getOwnerGroupSid();
+            if (ownerGroup == null) {
                 return null;
             }
 
             String server = this.fileLocator.getServerWithDfs();
-            if ( resolve ) {
+            if (resolve) {
                 if (this.fileLocator.getDfsPath() == null && this.fileLocator.getPort() != -1) {
                     server = server + ":" + this.fileLocator.getPort();
                 }
                 try {
                     ownerGroup.resolve(server, getContext());
-                }
-                catch ( IOException e ) {
+                } catch (final IOException e) {
                     log.warn("Failed to resolve SID " + ownerGroup.toString(), e);
                 }
-            }
-            else {
+            } else {
                 ownerGroup.initContext(server, getContext());
             }
             return ownerGroup;
         }
     }
 
-
     @Override
-    public ACE[] getShareSecurity ( boolean resolveSids ) throws IOException {
-        try ( SmbTreeHandleInternal th = ensureTreeConnected() ) {
+    public ACE[] getShareSecurity(final boolean resolveSids) throws IOException {
+        try (SmbTreeHandleInternal th = ensureTreeConnected()) {
             String server = this.fileLocator.getServerWithDfs();
             ACE[] aces;
-            MsrpcShareGetInfo rpc = new MsrpcShareGetInfo(server, th.getConnectedShare());
+            final MsrpcShareGetInfo rpc = new MsrpcShareGetInfo(server, th.getConnectedShare());
             if (this.fileLocator.getDfsPath() == null && this.fileLocator.getPort() != -1) {
                 server = server + ":" + this.fileLocator.getPort();
             }
-            try ( DcerpcHandle handle = DcerpcHandle.getHandle("ncacn_np:" + server + "[\\PIPE\\srvsvc]", getContext()) ) {
+            try (DcerpcHandle handle = DcerpcHandle.getHandle("ncacn_np:" + server + "[\\PIPE\\srvsvc]", getContext())) {
                 handle.sendrecv(rpc);
-                if ( rpc.retval != 0 ) {
+                if (rpc.retval != 0) {
                     throw new SmbException(rpc.retval, true);
                 }
                 aces = rpc.getSecurity();
-                if ( aces != null ) {
+                if (aces != null) {
                     processAces(aces, resolveSids);
                 }
             }

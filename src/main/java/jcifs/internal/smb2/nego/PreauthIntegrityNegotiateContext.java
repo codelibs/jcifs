@@ -1,27 +1,25 @@
 /*
  * © 2017 AgNO3 Gmbh & Co. KG
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 package jcifs.internal.smb2.nego;
 
-
 import jcifs.Configuration;
 import jcifs.internal.SMBProtocolDecodingException;
 import jcifs.internal.util.SMBUtil;
-
 
 /**
  * @author mbechler
@@ -42,40 +40,36 @@ public class PreauthIntegrityNegotiateContext implements NegotiateContextRequest
     private int[] hashAlgos;
     private byte[] salt;
 
-
     /**
-     * 
+     *
      * @param config
      * @param hashAlgos
      * @param salt
      */
-    public PreauthIntegrityNegotiateContext ( Configuration config, int[] hashAlgos, byte[] salt ) {
+    public PreauthIntegrityNegotiateContext(final Configuration config, final int[] hashAlgos, final byte[] salt) {
         this.hashAlgos = hashAlgos;
         this.salt = salt;
     }
 
-
     /**
-     * 
+     *
      */
-    public PreauthIntegrityNegotiateContext () {}
-
+    public PreauthIntegrityNegotiateContext() {
+    }
 
     /**
      * @return the salt
      */
-    public byte[] getSalt () {
+    public byte[] getSalt() {
         return this.salt;
     }
-
 
     /**
      * @return the hashAlgos
      */
-    public int[] getHashAlgos () {
+    public int[] getHashAlgos() {
         return this.hashAlgos;
     }
-
 
     /**
      * {@inheritDoc}
@@ -83,10 +77,9 @@ public class PreauthIntegrityNegotiateContext implements NegotiateContextRequest
      * @see jcifs.internal.smb2.nego.NegotiateContextRequest#getContextType()
      */
     @Override
-    public int getContextType () {
+    public int getContextType() {
         return NEGO_CTX_PREAUTH_TYPE;
     }
-
 
     /**
      * {@inheritDoc}
@@ -94,21 +87,21 @@ public class PreauthIntegrityNegotiateContext implements NegotiateContextRequest
      * @see jcifs.Encodable#encode(byte[], int)
      */
     @Override
-    public int encode ( byte[] dst, int dstIndex ) {
-        int start = dstIndex;
+    public int encode(final byte[] dst, int dstIndex) {
+        final int start = dstIndex;
 
         SMBUtil.writeInt2(this.hashAlgos != null ? this.hashAlgos.length : 0, dst, dstIndex);
         SMBUtil.writeInt2(this.salt != null ? this.salt.length : 0, dst, dstIndex + 2);
         dstIndex += 4;
 
-        if ( this.hashAlgos != null ) {
-            for ( int hashAlgo : this.hashAlgos ) {
+        if (this.hashAlgos != null) {
+            for (final int hashAlgo : this.hashAlgos) {
                 SMBUtil.writeInt2(hashAlgo, dst, dstIndex);
                 dstIndex += 2;
             }
         }
 
-        if ( this.salt != null ) {
+        if (this.salt != null) {
             System.arraycopy(this.salt, 0, dst, dstIndex, this.salt.length);
             dstIndex += this.salt.length;
         }
@@ -116,22 +109,21 @@ public class PreauthIntegrityNegotiateContext implements NegotiateContextRequest
         return dstIndex - start;
     }
 
-
     /**
      * {@inheritDoc}
      *
      * @see jcifs.Decodable#decode(byte[], int, int)
      */
     @Override
-    public int decode ( byte[] buffer, int bufferIndex, int len ) throws SMBProtocolDecodingException {
-        int start = bufferIndex;
-        int nalgos = SMBUtil.readInt2(buffer, bufferIndex);
-        int nsalt = SMBUtil.readInt2(buffer, bufferIndex + 2);
+    public int decode(final byte[] buffer, int bufferIndex, final int len) throws SMBProtocolDecodingException {
+        final int start = bufferIndex;
+        final int nalgos = SMBUtil.readInt2(buffer, bufferIndex);
+        final int nsalt = SMBUtil.readInt2(buffer, bufferIndex + 2);
         bufferIndex += 4;
 
         this.hashAlgos = new int[nalgos];
-        for ( int i = 0; i < nalgos; i++ ) {
-            this.hashAlgos[ i ] = SMBUtil.readInt2(buffer, bufferIndex);
+        for (int i = 0; i < nalgos; i++) {
+            this.hashAlgos[i] = SMBUtil.readInt2(buffer, bufferIndex);
             bufferIndex += 2;
         }
 
@@ -142,15 +134,14 @@ public class PreauthIntegrityNegotiateContext implements NegotiateContextRequest
         return bufferIndex - start;
     }
 
-
     /**
      * {@inheritDoc}
      *
      * @see jcifs.Encodable#size()
      */
     @Override
-    public int size () {
-        return 4 + ( this.hashAlgos != null ? 2 * this.hashAlgos.length : 0 ) + ( this.salt != null ? this.salt.length : 0 );
+    public int size() {
+        return 4 + (this.hashAlgos != null ? 2 * this.hashAlgos.length : 0) + (this.salt != null ? this.salt.length : 0);
     }
 
 }

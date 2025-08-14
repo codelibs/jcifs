@@ -111,7 +111,7 @@ class NodeStatusResponseTest {
         // Name entry (18 bytes)
         String name = "TEST            ";
         System.arraycopy(name.getBytes("US-ASCII"), 0, src, srcIndex + 13, 16);
-        src[srcIndex + 28] = 0x00; // hex code  
+        src[srcIndex + 28] = 0x00; // hex code
         src[srcIndex + 29] = 0x04; // flags
         // MAC address (6 bytes)
         byte[] mac = new byte[6];
@@ -206,7 +206,7 @@ class NodeStatusResponseTest {
         // The stats array in NodeStatusResponse contains everything after names
         // MAC is at index 0-5, actual stats at 6-11
         byte[] expectedStats = new byte[12];
-        System.arraycopy(testMac, 0, expectedStats, 0, 6); // MAC at beginning  
+        System.arraycopy(testMac, 0, expectedStats, 0, 6); // MAC at beginning
         System.arraycopy(stats, 0, expectedStats, 6, 6); // Stats after MAC
         assertArrayEquals(expectedStats, parsedStats);
     }

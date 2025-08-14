@@ -1,28 +1,26 @@
 /*
  * © 2017 AgNO3 Gmbh & Co. KG
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 package jcifs;
 
-
 import java.util.EnumSet;
 import java.util.Set;
 
 import jcifs.internal.smb2.Smb2Constants;
-
 
 /**
  * @author mbechler
@@ -63,88 +61,79 @@ public enum DialectVersion {
     private final boolean smb2;
     private final int dialect;
 
-
     /**
-     * 
+     *
      */
-    private DialectVersion () {
+    DialectVersion() {
         this.smb2 = false;
         this.dialect = -1;
     }
 
-
-    private DialectVersion ( int dialectId ) {
+    DialectVersion(final int dialectId) {
         this.smb2 = true;
         this.dialect = dialectId;
     }
 
-
     /**
      * @return the smb2
      */
-    public final boolean isSMB2 () {
+    public final boolean isSMB2() {
         return this.smb2;
     }
-
 
     /**
      * @return the dialect
      */
-    public final int getDialect () {
-        if ( !this.smb2 ) {
+    public final int getDialect() {
+        if (!this.smb2) {
             throw new UnsupportedOperationException();
         }
         return this.dialect;
     }
 
-
     /**
-     * 
+     *
      * @param v
      * @return whether this version is a least the given one
      */
-    public boolean atLeast ( DialectVersion v ) {
+    public boolean atLeast(final DialectVersion v) {
         return ordinal() >= v.ordinal();
     }
 
-
     /**
-     * 
+     *
      * @param v
      * @return whether this version is a most the given one
      */
-    public boolean atMost ( DialectVersion v ) {
+    public boolean atMost(final DialectVersion v) {
         return ordinal() <= v.ordinal();
     }
 
-
     /**
-     * 
+     *
      * @param a
      * @param b
      * @return smaller of the two versions
      */
-    public static DialectVersion min ( DialectVersion a, DialectVersion b ) {
-        if ( a.atMost(b) ) {
+    public static DialectVersion min(final DialectVersion a, final DialectVersion b) {
+        if (a.atMost(b)) {
             return a;
         }
         return b;
     }
 
-
     /**
-     * 
+     *
      * @param a
      * @param b
      * @return larger of the two versions
      */
-    public static DialectVersion max ( DialectVersion a, DialectVersion b ) {
-        if ( a.atLeast(b) ) {
+    public static DialectVersion max(final DialectVersion a, final DialectVersion b) {
+        if (a.atLeast(b)) {
             return a;
         }
         return b;
     }
-
 
     /**
      * @param min
@@ -153,15 +142,11 @@ public enum DialectVersion {
      *            may be null for open end
      * @return range of versions
      */
-    public static Set<DialectVersion> range ( DialectVersion min, DialectVersion max ) {
-        EnumSet<DialectVersion> vers = EnumSet.noneOf(DialectVersion.class);
-        for ( DialectVersion ver : values() ) {
+    public static Set<DialectVersion> range(final DialectVersion min, final DialectVersion max) {
+        final EnumSet<DialectVersion> vers = EnumSet.noneOf(DialectVersion.class);
+        for (final DialectVersion ver : values()) {
 
-            if ( min != null && !ver.atLeast(min) ) {
-                continue;
-            }
-
-            if ( max != null && !ver.atMost(max) ) {
+            if ((min != null && !ver.atLeast(min)) || (max != null && !ver.atMost(max))) {
                 continue;
             }
 

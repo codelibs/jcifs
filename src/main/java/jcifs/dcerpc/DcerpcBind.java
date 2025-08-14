@@ -1,17 +1,17 @@
 /* jcifs msrpc client library in Java
  * Copyright (C) 2006  "Michael B. Allen" <jcifs at samba dot org>
  *                     "Eric Glass" <jcifs at samba dot org>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -19,48 +19,42 @@
 
 package jcifs.dcerpc;
 
-
 import jcifs.dcerpc.ndr.NdrBuffer;
 import jcifs.dcerpc.ndr.NdrException;
 
-
 /**
- * 
+ *
  * @author mbechler
  *
  */
 public class DcerpcBind extends DcerpcMessage {
 
-    private static final String[] result_message = {
-        "0", "DCERPC_BIND_ERR_ABSTRACT_SYNTAX_NOT_SUPPORTED", "DCERPC_BIND_ERR_PROPOSED_TRANSFER_SYNTAXES_NOT_SUPPORTED",
-        "DCERPC_BIND_ERR_LOCAL_LIMIT_EXCEEDED"
-    };
+    private static final String[] result_message = { "0", "DCERPC_BIND_ERR_ABSTRACT_SYNTAX_NOT_SUPPORTED",
+            "DCERPC_BIND_ERR_PROPOSED_TRANSFER_SYNTAXES_NOT_SUPPORTED", "DCERPC_BIND_ERR_LOCAL_LIMIT_EXCEEDED" };
 
-
-    private static String getResultMessage ( int result ) {
-        return result < 4 ? result_message[ result ] : "0x" + jcifs.util.Hexdump.toHexString(result, 4);
+    private static String getResultMessage(final int result) {
+        return result < 4 ? result_message[result] : "0x" + jcifs.util.Hexdump.toHexString(result, 4);
     }
 
-
     @Override
-    public DcerpcException getResult () {
-        if ( this.result != 0 )
+    public DcerpcException getResult() {
+        if (this.result != 0) {
             return new DcerpcException(getResultMessage(this.result));
+        }
         return null;
     }
 
     private DcerpcBinding binding;
     private int max_xmit, max_recv;
 
-
     /**
      * Construct bind message
-     * 
+     *
      */
-    public DcerpcBind () {}
+    public DcerpcBind() {
+    }
 
-
-    DcerpcBind ( DcerpcBinding binding, DcerpcHandle handle ) {
+    DcerpcBind(final DcerpcBinding binding, final DcerpcHandle handle) {
         this.binding = binding;
         this.max_xmit = handle.getMaxXmit();
         this.max_recv = handle.getMaxRecv();
@@ -68,15 +62,13 @@ public class DcerpcBind extends DcerpcMessage {
         this.flags = DCERPC_FIRST_FRAG | DCERPC_LAST_FRAG;
     }
 
-
     @Override
-    public int getOpnum () {
+    public int getOpnum() {
         return 0;
     }
 
-
     @Override
-    public void encode_in ( NdrBuffer buf ) throws NdrException {
+    public void encode_in(final NdrBuffer buf) throws NdrException {
         buf.enc_ndr_short(this.max_xmit);
         buf.enc_ndr_short(this.max_recv);
         buf.enc_ndr_long(0); /* assoc. group */
@@ -93,13 +85,12 @@ public class DcerpcBind extends DcerpcMessage {
         buf.enc_ndr_long(2); /* syntax version */
     }
 
-
     @Override
-    public void decode_out ( NdrBuffer buf ) throws NdrException {
+    public void decode_out(final NdrBuffer buf) throws NdrException {
         buf.dec_ndr_short(); /* max transmit frag size */
         buf.dec_ndr_short(); /* max receive frag size */
         buf.dec_ndr_long(); /* assoc. group */
-        int n = buf.dec_ndr_short(); /* secondary addr len */
+        final int n = buf.dec_ndr_short(); /* secondary addr len */
         buf.advance(n); /* secondary addr */
         buf.align(4);
         buf.dec_ndr_small(); /* num results */

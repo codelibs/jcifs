@@ -21,7 +21,7 @@ package jcifs.smb1.dcerpc.msrpc;
 
 public class MsrpcLsarClose extends lsarpc.LsarClose {
 
-    public MsrpcLsarClose(LsaPolicyHandle policyHandle) {
+    public MsrpcLsarClose(final LsaPolicyHandle policyHandle) {
         super(policyHandle);
         ptype = 0;
         flags = DCERPC_FIRST_FRAG | DCERPC_LAST_FRAG;

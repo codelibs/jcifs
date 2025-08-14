@@ -26,7 +26,7 @@ import jcifs.SmbResource;
 
 /**
  * Tests for {@link DirFileEntryAdapterIterator}.
- * 
+ *
  * This test class verifies the basic functionality of DirFileEntryAdapterIterator.
  * Due to the iterator's constructor calling advance() immediately, which requires
  * the adapt() method to be functional, we test the behavior using simple mock

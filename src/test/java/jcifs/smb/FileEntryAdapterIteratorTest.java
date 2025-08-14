@@ -161,7 +161,7 @@ class FileEntryAdapterIteratorTest {
         FileEntry entry3 = mock(FileEntry.class);
 
         // Constructor gets entry1, first next() returns it and gets entry2,
-        // second next() returns entry2 and gets entry3, 
+        // second next() returns entry2 and gets entry3,
         // third next() returns entry3 and exhausts
         when(delegate.hasNext()).thenReturn(true, true, true, false);
         when(delegate.next()).thenReturn(entry1, entry2, entry3);

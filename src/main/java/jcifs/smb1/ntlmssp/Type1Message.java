@@ -20,7 +20,6 @@
 package jcifs.smb1.ntlmssp;
 
 import java.io.IOException;
-
 import java.net.UnknownHostException;
 
 import jcifs.smb1.Config;
@@ -42,14 +41,13 @@ public class Type1Message extends NtlmMessage {
     private String suppliedWorkstation;
 
     static {
-        DEFAULT_FLAGS = NTLMSSP_NEGOTIATE_NTLM |
-                (Config.getBoolean("jcifs.smb1.smb.client.useUnicode", true) ?
-                        NTLMSSP_NEGOTIATE_UNICODE : NTLMSSP_NEGOTIATE_OEM);
+        DEFAULT_FLAGS = NTLMSSP_NEGOTIATE_NTLM
+                | (Config.getBoolean("jcifs.smb1.smb.client.useUnicode", true) ? NTLMSSP_NEGOTIATE_UNICODE : NTLMSSP_NEGOTIATE_OEM);
         DEFAULT_DOMAIN = Config.getProperty("jcifs.smb1.smb.client.domain", null);
         String defaultWorkstation = null;
         try {
             defaultWorkstation = NbtAddress.getLocalHost().getHostName();
-        } catch (UnknownHostException ex) { }
+        } catch (final UnknownHostException ex) {}
         DEFAULT_WORKSTATION = defaultWorkstation;
     }
 
@@ -68,12 +66,12 @@ public class Type1Message extends NtlmMessage {
      * @param suppliedDomain The supplied authentication domain.
      * @param suppliedWorkstation The supplied workstation name.
      */
-    public Type1Message(int flags, String suppliedDomain,
-            String suppliedWorkstation) {
+    public Type1Message(final int flags, final String suppliedDomain, String suppliedWorkstation) {
         setFlags(getDefaultFlags() | flags);
         setSuppliedDomain(suppliedDomain);
-        if (suppliedWorkstation == null)
+        if (suppliedWorkstation == null) {
             suppliedWorkstation = getDefaultWorkstation();
+        }
         setSuppliedWorkstation(suppliedWorkstation);
     }
 
@@ -83,7 +81,7 @@ public class Type1Message extends NtlmMessage {
      * @param material The raw Type-1 material used to construct this message.
      * @throws IOException If an error occurs while parsing the material.
      */
-    public Type1Message(byte[] material) throws IOException {
+    public Type1Message(final byte[] material) throws IOException {
         parse(material);
     }
 
@@ -101,13 +99,13 @@ public class Type1Message extends NtlmMessage {
      *
      * @param suppliedDomain The supplied domain for this message.
      */
-    public void setSuppliedDomain(String suppliedDomain) {
+    public void setSuppliedDomain(final String suppliedDomain) {
         this.suppliedDomain = suppliedDomain;
     }
 
     /**
      * Returns the supplied workstation name.
-     * 
+     *
      * @return A <code>String</code> containing the supplied workstation name.
      */
     public String getSuppliedWorkstation() {
@@ -116,42 +114,37 @@ public class Type1Message extends NtlmMessage {
 
     /**
      * Sets the supplied workstation name for this message.
-     * 
+     *
      * @param suppliedWorkstation The supplied workstation for this message.
      */
-    public void setSuppliedWorkstation(String suppliedWorkstation) {
+    public void setSuppliedWorkstation(final String suppliedWorkstation) {
         this.suppliedWorkstation = suppliedWorkstation;
     }
 
+    @Override
     public byte[] toByteArray() {
         try {
-            String suppliedDomain = getSuppliedDomain();
-            String suppliedWorkstation = getSuppliedWorkstation();
+            final String suppliedDomain = getSuppliedDomain();
+            final String suppliedWorkstation = getSuppliedWorkstation();
             int flags = getFlags();
             boolean hostInfo = false;
-            byte[] domain = new byte[0];
+            byte[] domain = {};
             if (suppliedDomain != null && suppliedDomain.length() != 0) {
                 hostInfo = true;
                 flags |= NTLMSSP_NEGOTIATE_OEM_DOMAIN_SUPPLIED;
-                domain = suppliedDomain.toUpperCase().getBytes(
-                        getOEMEncoding());
+                domain = suppliedDomain.toUpperCase().getBytes(getOEMEncoding());
             } else {
-                flags &= (NTLMSSP_NEGOTIATE_OEM_DOMAIN_SUPPLIED ^ 0xffffffff);
+                flags &= NTLMSSP_NEGOTIATE_OEM_DOMAIN_SUPPLIED ^ 0xffffffff;
             }
-            byte[] workstation = new byte[0];
-            if (suppliedWorkstation != null &&
-                    suppliedWorkstation.length() != 0) {
+            byte[] workstation = {};
+            if (suppliedWorkstation != null && suppliedWorkstation.length() != 0) {
                 hostInfo = true;
                 flags |= NTLMSSP_NEGOTIATE_OEM_WORKSTATION_SUPPLIED;
-                workstation =
-                        suppliedWorkstation.toUpperCase().getBytes(
-                                getOEMEncoding());
+                workstation = suppliedWorkstation.toUpperCase().getBytes(getOEMEncoding());
             } else {
-                flags &= (NTLMSSP_NEGOTIATE_OEM_WORKSTATION_SUPPLIED ^
-                        0xffffffff);
+                flags &= NTLMSSP_NEGOTIATE_OEM_WORKSTATION_SUPPLIED ^ 0xffffffff;
             }
-            byte[] type1 = new byte[hostInfo ?
-                    (32 + domain.length + workstation.length) : 16];
+            final byte[] type1 = new byte[hostInfo ? 32 + domain.length + workstation.length : 16];
             System.arraycopy(NTLMSSP_SIGNATURE, 0, type1, 0, 8);
             writeULong(type1, 8, 1);
             writeULong(type1, 12, flags);
@@ -160,23 +153,24 @@ public class Type1Message extends NtlmMessage {
                 writeSecurityBuffer(type1, 24, 32 + domain.length, workstation);
             }
             return type1;
-        } catch (IOException ex) {
+        } catch (final IOException ex) {
             throw new IllegalStateException(ex.getMessage());
         }
     }
 
+    @Override
     public String toString() {
-        String suppliedDomain = getSuppliedDomain();
-        String suppliedWorkstation = getSuppliedWorkstation();
-        return "Type1Message[suppliedDomain=" + (suppliedDomain == null ? "null" : suppliedDomain) +
-                ",suppliedWorkstation=" + (suppliedWorkstation == null ? "null" : suppliedWorkstation) +
-                ",flags=0x" + jcifs.smb1.util.Hexdump.toHexString(getFlags(), 8) + "]";
+        final String suppliedDomain = getSuppliedDomain();
+        final String suppliedWorkstation = getSuppliedWorkstation();
+        return "Type1Message[suppliedDomain=" + (suppliedDomain == null ? "null" : suppliedDomain) + ",suppliedWorkstation="
+                + (suppliedWorkstation == null ? "null" : suppliedWorkstation) + ",flags=0x"
+                + jcifs.smb1.util.Hexdump.toHexString(getFlags(), 8) + "]";
     }
 
     /**
      * Returns the default flags for a generic Type-1 message in the
      * current environment.
-     * 
+     *
      * @return An <code>int</code> containing the default flags.
      */
     public static int getDefaultFlags() {
@@ -201,7 +195,7 @@ public class Type1Message extends NtlmMessage {
         return DEFAULT_WORKSTATION;
     }
 
-    private void parse(byte[] material) throws IOException {
+    private void parse(final byte[] material) throws IOException {
         for (int i = 0; i < 8; i++) {
             if (material[i] != NTLMSSP_SIGNATURE[i]) {
                 throw new IOException("Not an NTLMSSP message.");
@@ -210,15 +204,15 @@ public class Type1Message extends NtlmMessage {
         if (readULong(material, 8) != 1) {
             throw new IOException("Not a Type 1 message.");
         }
-        int flags = readULong(material, 12);
+        final int flags = readULong(material, 12);
         String suppliedDomain = null;
         if ((flags & NTLMSSP_NEGOTIATE_OEM_DOMAIN_SUPPLIED) != 0) {
-            byte[] domain = readSecurityBuffer(material, 16);
+            final byte[] domain = readSecurityBuffer(material, 16);
             suppliedDomain = new String(domain, getOEMEncoding());
         }
         String suppliedWorkstation = null;
         if ((flags & NTLMSSP_NEGOTIATE_OEM_WORKSTATION_SUPPLIED) != 0) {
-            byte[] workstation = readSecurityBuffer(material, 24);
+            final byte[] workstation = readSecurityBuffer(material, 24);
             suppliedWorkstation = new String(workstation, getOEMEncoding());
         }
         setFlags(flags);

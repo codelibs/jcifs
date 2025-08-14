@@ -1,23 +1,22 @@
 /* jcifs smb client library in Java
  * Copyright (C) 2000  "Michael B. Allen" <jcifs at samba dot org>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 package jcifs.internal.smb1;
-
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,9 +28,8 @@ import jcifs.internal.smb1.com.SmbComNTCreateAndXResponse;
 import jcifs.internal.util.SMBUtil;
 import jcifs.util.Hexdump;
 
-
 /**
- * 
+ *
  */
 public abstract class AndXServerMessageBlock extends ServerMessageBlock {
 
@@ -46,51 +44,44 @@ public abstract class AndXServerMessageBlock extends ServerMessageBlock {
 
     private ServerMessageBlock andx;
 
-
-    protected AndXServerMessageBlock ( Configuration config, byte command, String name, ServerMessageBlock andx ) {
+    protected AndXServerMessageBlock(final Configuration config, final byte command, final String name, final ServerMessageBlock andx) {
         super(config, command, name);
         this.andx = andx;
-        if ( andx != null ) {
+        if (andx != null) {
             this.andxCommand = (byte) andx.getCommand();
         }
     }
 
-
-    protected AndXServerMessageBlock ( Configuration config, byte command ) {
+    protected AndXServerMessageBlock(final Configuration config, final byte command) {
         this(config, command, null);
     }
 
-
-    protected AndXServerMessageBlock ( Configuration config, byte command, ServerMessageBlock andx ) {
+    protected AndXServerMessageBlock(final Configuration config, final byte command, final ServerMessageBlock andx) {
         super(config, command);
         this.andx = andx;
-        if ( andx != null ) {
+        if (andx != null) {
             this.andxCommand = (byte) andx.getCommand();
         }
     }
 
-
-    protected AndXServerMessageBlock ( Configuration config ) {
+    protected AndXServerMessageBlock(final Configuration config) {
         this(config, null);
     }
 
-
-    protected AndXServerMessageBlock ( Configuration config, ServerMessageBlock andx ) {
+    protected AndXServerMessageBlock(final Configuration config, final ServerMessageBlock andx) {
         super(config);
         this.andx = andx;
-        if ( andx != null ) {
+        if (andx != null) {
             this.andxCommand = (byte) andx.getCommand();
         }
     }
-
 
     /**
      * @return the andx
      */
-    public final ServerMessageBlock getAndx () {
+    public final ServerMessageBlock getAndx() {
         return this.andx;
     }
-
 
     /**
      * {@inheritDoc}
@@ -98,10 +89,9 @@ public abstract class AndXServerMessageBlock extends ServerMessageBlock {
      * @see jcifs.internal.smb1.ServerMessageBlock#getNext()
      */
     @Override
-    public ServerMessageBlock getNext () {
+    public ServerMessageBlock getNext() {
         return this.andx;
     }
-
 
     /**
      * {@inheritDoc}
@@ -109,19 +99,17 @@ public abstract class AndXServerMessageBlock extends ServerMessageBlock {
      * @see jcifs.internal.CommonServerMessageBlockResponse#getNextResponse()
      */
     @Override
-    public ServerMessageBlock getNextResponse () {
+    public ServerMessageBlock getNextResponse() {
         return this.andx;
     }
 
-
-    protected int getBatchLimit ( Configuration cfg, byte cmd ) {
+    protected int getBatchLimit(final Configuration cfg, final byte cmd) {
         /*
          * the default limit is 0 batched messages before this
          * one, meaning this message cannot be batched.
          */
         return 0;
     }
-
 
     /*
      * We overload this method from ServerMessageBlock because
@@ -133,20 +121,19 @@ public abstract class AndXServerMessageBlock extends ServerMessageBlock {
      */
 
     @Override
-    public int encode ( byte[] dst, int dstIndex ) {
-        int start = this.headerStart = dstIndex;
+    public int encode(final byte[] dst, int dstIndex) {
+        final int start = this.headerStart = dstIndex;
 
         dstIndex += writeHeaderWireFormat(dst, dstIndex);
         dstIndex += writeAndXWireFormat(dst, dstIndex);
         this.length = dstIndex - start;
 
-        if ( this.digest != null ) {
+        if (this.digest != null) {
             this.digest.sign(dst, this.headerStart, this.length, this, this.getResponse());
         }
 
         return this.length;
     }
-
 
     /*
      * We overload this because we want readAndXWireFormat to
@@ -156,40 +143,40 @@ public abstract class AndXServerMessageBlock extends ServerMessageBlock {
      */
 
     @Override
-    public int decode ( byte[] buffer, int bufferIndex ) throws SMBProtocolDecodingException {
-        int start = this.headerStart = bufferIndex;
+    public int decode(final byte[] buffer, int bufferIndex) throws SMBProtocolDecodingException {
+        final int start = this.headerStart = bufferIndex;
 
         bufferIndex += readHeaderWireFormat(buffer, bufferIndex);
         bufferIndex += readAndXWireFormat(buffer, bufferIndex);
 
-        int len = bufferIndex - start;
+        final int len = bufferIndex - start;
         this.length = len;
 
-        if ( isRetainPayload() ) {
-            byte[] payload = new byte[len];
+        if (isRetainPayload()) {
+            final byte[] payload = new byte[len];
             System.arraycopy(buffer, 4, payload, 0, len);
             setRawPayload(payload);
         }
 
-        if ( !verifySignature(buffer, 4, len) ) {
+        if (!verifySignature(buffer, 4, len)) {
             throw new SMBProtocolDecodingException("Signature verification failed for " + this.getClass().getName());
         }
         return len;
     }
 
-
-    protected int writeAndXWireFormat ( byte[] dst, int dstIndex ) {
-        int start = dstIndex;
+    protected int writeAndXWireFormat(final byte[] dst, int dstIndex) {
+        final int start = dstIndex;
 
         this.wordCount = writeParameterWordsWireFormat(dst, start + ANDX_OFFSET_OFFSET + 2);
         this.wordCount += 4; // for command, reserved, and offset
         dstIndex += this.wordCount + 1;
         this.wordCount /= 2;
-        dst[ start ] = (byte) ( this.wordCount & 0xFF );
+        dst[start] = (byte) (this.wordCount & 0xFF);
 
         this.byteCount = writeBytesWireFormat(dst, dstIndex + 2);
-        dst[ dstIndex++ ] = (byte) ( this.byteCount & 0xFF );
-        dst[ dstIndex++ ] = (byte) ( ( this.byteCount >> 8 ) & 0xFF );
+        dst[dstIndex] = (byte) (this.byteCount & 0xFF);
+        dstIndex++;
+        dst[dstIndex++] = (byte) (this.byteCount >> 8 & 0xFF);
         dstIndex += this.byteCount;
 
         /*
@@ -203,16 +190,17 @@ public abstract class AndXServerMessageBlock extends ServerMessageBlock {
          * very indirect and simple batching control mechanism.
          */
 
-        if ( this.andx == null || !getConfig().isUseBatching() || this.batchLevel >= getBatchLimit(getConfig(), (byte) this.andx.getCommand()) ) {
+        if (this.andx == null || !getConfig().isUseBatching()
+                || this.batchLevel >= getBatchLimit(getConfig(), (byte) this.andx.getCommand())) {
             this.andxCommand = (byte) 0xFF;
             this.andx = null;
 
-            dst[ start + ANDX_COMMAND_OFFSET ] = (byte) 0xFF;
-            dst[ start + ANDX_RESERVED_OFFSET ] = (byte) 0x00;
+            dst[start + ANDX_COMMAND_OFFSET] = (byte) 0xFF;
+            dst[start + ANDX_RESERVED_OFFSET] = (byte) 0x00;
             // dst[start + ANDX_OFFSET_OFFSET] = (byte)0x00;
             // dst[start + ANDX_OFFSET_OFFSET + 1] = (byte)0x00;
-            dst[ start + ANDX_OFFSET_OFFSET ] = (byte) 0xde;
-            dst[ start + ANDX_OFFSET_OFFSET + 1 ] = (byte) 0xde;
+            dst[start + ANDX_OFFSET_OFFSET] = (byte) 0xde;
+            dst[start + ANDX_OFFSET_OFFSET + 1] = (byte) 0xde;
 
             // andx not used; return
             return dstIndex - start;
@@ -228,13 +216,13 @@ public abstract class AndXServerMessageBlock extends ServerMessageBlock {
 
         this.andx.batchLevel = this.batchLevel + 1;
 
-        dst[ start + ANDX_COMMAND_OFFSET ] = this.andxCommand;
-        dst[ start + ANDX_RESERVED_OFFSET ] = (byte) 0x00;
+        dst[start + ANDX_COMMAND_OFFSET] = this.andxCommand;
+        dst[start + ANDX_RESERVED_OFFSET] = (byte) 0x00;
         this.andxOffset = dstIndex - this.headerStart;
         SMBUtil.writeInt2(this.andxOffset, dst, start + ANDX_OFFSET_OFFSET);
 
         this.andx.setUseUnicode(this.isUseUnicode());
-        if ( this.andx instanceof AndXServerMessageBlock ) {
+        if (this.andx instanceof AndXServerMessageBlock) {
 
             /*
              * A word about communicating header info to andx smbs
@@ -252,42 +240,41 @@ public abstract class AndXServerMessageBlock extends ServerMessageBlock {
              */
 
             this.andx.uid = this.uid;
-            dstIndex += ( (AndXServerMessageBlock) this.andx ).writeAndXWireFormat(dst, dstIndex);
-        }
-        else {
+            dstIndex += ((AndXServerMessageBlock) this.andx).writeAndXWireFormat(dst, dstIndex);
+        } else {
             // the andx smb is not of type andx so lets just write it here and
             // were done.
-            int andxStart = dstIndex;
+            final int andxStart = dstIndex;
             this.andx.wordCount = this.andx.writeParameterWordsWireFormat(dst, dstIndex);
             dstIndex += this.andx.wordCount + 1;
             this.andx.wordCount /= 2;
-            dst[ andxStart ] = (byte) ( this.andx.wordCount & 0xFF );
+            dst[andxStart] = (byte) (this.andx.wordCount & 0xFF);
 
             this.andx.byteCount = this.andx.writeBytesWireFormat(dst, dstIndex + 2);
-            dst[ dstIndex++ ] = (byte) ( this.andx.byteCount & 0xFF );
-            dst[ dstIndex++ ] = (byte) ( ( this.andx.byteCount >> 8 ) & 0xFF );
+            dst[dstIndex++] = (byte) (this.andx.byteCount & 0xFF);
+            dst[dstIndex++] = (byte) (this.andx.byteCount >> 8 & 0xFF);
             dstIndex += this.andx.byteCount;
         }
 
         return dstIndex - start;
     }
 
+    protected int readAndXWireFormat(final byte[] buffer, int bufferIndex) throws SMBProtocolDecodingException {
+        final int start = bufferIndex;
 
-    protected int readAndXWireFormat ( byte[] buffer, int bufferIndex ) throws SMBProtocolDecodingException {
-        int start = bufferIndex;
+        this.wordCount = buffer[bufferIndex];
+        bufferIndex++;
 
-        this.wordCount = buffer[ bufferIndex++ ];
-
-        if ( this.wordCount != 0 ) {
+        if (this.wordCount != 0) {
             /*
              * these fields are common to all andx commands
              * so let's populate them here
              */
 
-            this.andxCommand = buffer[ bufferIndex ];
+            this.andxCommand = buffer[bufferIndex];
             this.andxOffset = SMBUtil.readInt2(buffer, bufferIndex + 2);
 
-            if ( this.andxOffset == 0 ) { /* Snap server workaround */
+            if (this.andxOffset == 0) { /* Snap server workaround */
                 this.andxCommand = (byte) 0xFF;
             }
 
@@ -296,7 +283,7 @@ public abstract class AndXServerMessageBlock extends ServerMessageBlock {
              * parameter words. besides, win98 doesn't return "OptionalSupport" field
              */
 
-            if ( this.wordCount > 2 ) {
+            if (this.wordCount > 2) {
                 readParameterWordsWireFormat(buffer, bufferIndex + 4);
 
                 /*
@@ -306,22 +293,22 @@ public abstract class AndXServerMessageBlock extends ServerMessageBlock {
                  * the correct number of bytes for signing purposes. Otherwise we get a
                  * signing verification failure.
                  */
-                if ( this.getCommand() == SMB_COM_NT_CREATE_ANDX && ( (SmbComNTCreateAndXResponse) this ).isExtended()
-                        && ( (SmbComNTCreateAndXResponse) this ).getFileType() != 1 ) {
+                if (this.getCommand() == SMB_COM_NT_CREATE_ANDX && ((SmbComNTCreateAndXResponse) this).isExtended()
+                        && ((SmbComNTCreateAndXResponse) this).getFileType() != 1) {
                     this.wordCount += 8;
                 }
             }
 
-            bufferIndex = start + 1 + ( this.wordCount * 2 );
+            bufferIndex = start + 1 + this.wordCount * 2;
         }
 
         this.byteCount = SMBUtil.readInt2(buffer, bufferIndex);
         bufferIndex += 2;
 
-        if ( this.byteCount != 0 ) {
+        if (this.byteCount != 0) {
             // TODO: is this really correct?
-            int n = readBytesWireFormat(buffer, bufferIndex);
-            if ( n != this.byteCount && log.isTraceEnabled() ) {
+            final int n = readBytesWireFormat(buffer, bufferIndex);
+            if (n != this.byteCount && log.isTraceEnabled()) {
                 log.trace("Short read, have " + n + ", want " + this.byteCount);
             }
             bufferIndex += this.byteCount;
@@ -334,15 +321,13 @@ public abstract class AndXServerMessageBlock extends ServerMessageBlock {
          * because there's no header.
          */
 
-        if ( this.errorCode != 0 || this.andxCommand == (byte) 0xFF ) {
+        if (this.errorCode != 0 || this.andxCommand == (byte) 0xFF) {
             this.andxCommand = (byte) 0xFF;
             this.andx = null;
-        }
-        else if ( this.andx == null ) {
+        } else if (this.andx == null) {
             this.andxCommand = (byte) 0xFF;
             throw new RuntimeCIFSException("no andx command supplied with response");
-        }
-        else {
+        } else {
 
             /*
              * Set bufferIndex according to andxOffset
@@ -361,32 +346,24 @@ public abstract class AndXServerMessageBlock extends ServerMessageBlock {
             this.andx.setMid(getMid());
             this.andx.setUseUnicode(this.isUseUnicode());
 
-            if ( this.andx instanceof AndXServerMessageBlock ) {
-                bufferIndex += ( (AndXServerMessageBlock) this.andx ).readAndXWireFormat(buffer, bufferIndex);
-            }
-            else {
+            if (this.andx instanceof AndXServerMessageBlock) {
+                bufferIndex += ((AndXServerMessageBlock) this.andx).readAndXWireFormat(buffer, bufferIndex);
+            } else {
 
                 /*
                  * Just a plain smb. Read it as normal.
                  */
 
-                buffer[ bufferIndex++ ] = (byte) ( this.andx.wordCount & 0xFF );
+                buffer[bufferIndex++] = (byte) (this.andx.wordCount & 0xFF);
 
-                if ( this.andx.wordCount != 0 ) {
-                    /*
-                     * no point in calling readParameterWordsWireFormat if there are no more
-                     * parameter words. besides, win98 doesn't return "OptionalSupport" field
-                     */
-
-                    if ( this.andx.wordCount > 2 ) {
-                        bufferIndex += this.andx.readParameterWordsWireFormat(buffer, bufferIndex);
-                    }
+                if ((this.andx.wordCount != 0) && (this.andx.wordCount > 2)) {
+                    bufferIndex += this.andx.readParameterWordsWireFormat(buffer, bufferIndex);
                 }
 
                 this.andx.byteCount = SMBUtil.readInt2(buffer, bufferIndex);
                 bufferIndex += 2;
 
-                if ( this.andx.byteCount != 0 ) {
+                if (this.andx.byteCount != 0) {
                     this.andx.readBytesWireFormat(buffer, bufferIndex);
                     bufferIndex += this.andx.byteCount;
                 }
@@ -397,9 +374,8 @@ public abstract class AndXServerMessageBlock extends ServerMessageBlock {
         return bufferIndex - start;
     }
 
-
     @Override
-    public String toString () {
-        return new String(super.toString() + ",andxCommand=0x" + Hexdump.toHexString(this.andxCommand, 2) + ",andxOffset=" + this.andxOffset);
+    public String toString() {
+        return (super.toString() + ",andxCommand=0x" + Hexdump.toHexString(this.andxCommand, 2) + ",andxOffset=" + this.andxOffset);
     }
 }

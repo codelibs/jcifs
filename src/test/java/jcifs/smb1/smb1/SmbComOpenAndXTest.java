@@ -115,7 +115,7 @@ class SmbComOpenAndXTest {
     void testWriteBytesWireFormat_Unicode() {
         smbComOpenAndX = new SmbComOpenAndX(fileName, access, 0, andx);
         smbComOpenAndX.useUnicode = true;
-        // For Unicode: 1 byte (initial null in writeBytesWireFormat) 
+        // For Unicode: 1 byte (initial null in writeBytesWireFormat)
         // + potential 1 byte alignment (in writeString) + fileName.length() * 2 + 2 bytes (terminating nulls)
         // Since headerStart is 0 and dstIndex starts at 1 (after initial null), (1-0)%2=1, so alignment byte added
         // Total: 1 + 1 + 12*2 + 2 = 28 bytes

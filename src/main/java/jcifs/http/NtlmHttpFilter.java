@@ -22,11 +22,14 @@
 
 package jcifs.http;
 
-
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.Enumeration;
 import java.util.Properties;
+
+import org.bouncycastle.util.encoders.Base64;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
@@ -37,11 +40,6 @@ import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-
-import org.bouncycastle.util.encoders.Base64;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import jcifs.Address;
 import jcifs.CIFSContext;
 import jcifs.CIFSException;
@@ -57,7 +55,6 @@ import jcifs.smb.SmbException;
 import jcifs.smb.SmbSessionInternal;
 import jcifs.smb.SmbTransportInternal;
 
-
 /**
  * This servlet Filter can be used to negotiate password hashes with
  * MSIE clients using NTLM SSP. This is similar to <tt>Authentication:
@@ -66,7 +63,7 @@ import jcifs.smb.SmbTransportInternal;
  * <p>
  * Read <a href="../../../ntlmhttpauth.html">jCIFS NTLM HTTP Authentication and the Network Explorer Servlet</a> for
  * complete details.
- * 
+ *
  * @deprecated NTLMv1 only
  */
 @Deprecated
@@ -89,12 +86,11 @@ public class NtlmHttpFilter implements Filter {
     private long netbiosCacheTimeout = 60 * 60 * 10;
     private static int dcListCounter;
 
-
     @Override
-    public void init ( FilterConfig filterConfig ) throws ServletException {
+    public void init(final FilterConfig filterConfig) throws ServletException {
         String name;
 
-        Properties p = new Properties();
+        final Properties p = new Properties();
         /*
          * Set jcifs properties we know we want; soTimeout and cachePolicy to 30min.
          */
@@ -109,10 +105,10 @@ public class NtlmHttpFilter implements Filter {
         p.setProperty("jcifs.smb.lmCompatibility", "0");
         p.setProperty("jcifs.smb.client.useExtendedSecurity", "false");
 
-        Enumeration<String> e = filterConfig.getInitParameterNames();
-        while ( e.hasMoreElements() ) {
+        final Enumeration<String> e = filterConfig.getInitParameterNames();
+        while (e.hasMoreElements()) {
             name = e.nextElement();
-            if ( name.startsWith("jcifs.") ) {
+            if (name.startsWith("jcifs.")) {
                 p.setProperty(name, filterConfig.getInitParameter(name));
             }
         }
@@ -120,30 +116,29 @@ public class NtlmHttpFilter implements Filter {
         try {
             this.defaultDomain = p.getProperty("jcifs.smb.client.domain");
             this.domainController = p.getProperty("jcifs.http.domainController");
-            if ( this.domainController == null ) {
+            if (this.domainController == null) {
                 this.domainController = this.defaultDomain;
                 this.loadBalance = Config.getBoolean(p, "jcifs.http.loadBalance", true);
             }
-            this.enableBasic = Boolean.valueOf(p.getProperty("jcifs.http.enableBasic")).booleanValue();
-            this.insecureBasic = Boolean.valueOf(p.getProperty("jcifs.http.insecureBasic")).booleanValue();
+            this.enableBasic = Boolean.parseBoolean(p.getProperty("jcifs.http.enableBasic"));
+            this.insecureBasic = Boolean.parseBoolean(p.getProperty("jcifs.http.insecureBasic"));
             this.realm = p.getProperty("jcifs.http.basicRealm");
             this.netbiosLookupRespLimit = Config.getInt(p, "jcifs.netbios.lookupRespLimit", 3);
             this.netbiosCacheTimeout = Config.getInt(p, "jcifs.netbios.cachePolicy", 60 * 10) * 60; /* 10 hours */
 
-            if ( this.realm == null )
+            if (this.realm == null) {
                 this.realm = "jCIFS";
+            }
 
             this.transportContext = new BaseContext(new PropertyConfiguration(p));
-        }
-        catch ( CIFSException ex ) {
+        } catch (final CIFSException ex) {
             throw new ServletException("Failed to initialize CIFS context");
         }
     }
 
-
     @Override
-    public void destroy () {}
-
+    public void destroy() {
+    }
 
     /**
      * This method simply calls <tt>negotiate( req, resp, false )</tt>
@@ -151,22 +146,22 @@ public class NtlmHttpFilter implements Filter {
      * negotiate manually to achive a variety of different behavior.
      */
     @Override
-    public void doFilter ( ServletRequest request, ServletResponse response, FilterChain chain ) throws IOException, ServletException {
-        HttpServletRequest req = (HttpServletRequest) request;
-        HttpServletResponse resp = (HttpServletResponse) response;
-        NtlmPasswordAuthentication ntlm;
+    public void doFilter(final ServletRequest request, final ServletResponse response, final FilterChain chain)
+            throws IOException, ServletException {
+        final HttpServletRequest req = (HttpServletRequest) request;
+        final HttpServletResponse resp = (HttpServletResponse) response;
+        NtlmPasswordAuthentication ntlm = negotiate(req, resp, false);
 
-        if ( ( ntlm = negotiate(req, resp, false) ) == null ) {
+        if (ntlm == null) {
             return;
         }
 
         chain.doFilter(new NtlmHttpServletRequest(req, ntlm), response);
     }
 
-
     /**
      * Negotiate password hashes with MSIE clients using NTLM SSP
-     * 
+     *
      * @param req
      *            The servlet request
      * @param resp
@@ -180,73 +175,72 @@ public class NtlmHttpFilter implements Filter {
      * @return True if the negotiation is complete, otherwise false
      * @throws ServletException
      */
-    protected NtlmPasswordAuthentication negotiate ( HttpServletRequest req, HttpServletResponse resp, boolean skipAuthentication )
-            throws IOException, ServletException {
+    protected NtlmPasswordAuthentication negotiate(final HttpServletRequest req, final HttpServletResponse resp,
+            final boolean skipAuthentication) throws IOException, ServletException {
         Address dc;
         String msg;
         NtlmPasswordAuthentication ntlm = null;
         msg = req.getHeader("Authorization");
-        boolean offerBasic = this.enableBasic && ( this.insecureBasic || req.isSecure() );
+        final boolean offerBasic = this.enableBasic && (this.insecureBasic || req.isSecure());
 
-        if ( msg != null && ( msg.startsWith("NTLM ") || ( offerBasic && msg.startsWith("Basic ") ) ) ) {
-            if ( msg.startsWith("NTLM ") ) {
-                HttpSession ssn = req.getSession();
+        if (msg != null && (msg.startsWith("NTLM ") || offerBasic && msg.startsWith("Basic "))) {
+            if (msg.startsWith("NTLM ")) {
+                final HttpSession ssn = req.getSession();
                 byte[] challenge;
 
-                if ( this.loadBalance ) {
+                if (this.loadBalance) {
                     NtlmChallenge chal = (NtlmChallenge) ssn.getAttribute("NtlmHttpChal");
-                    if ( chal == null ) {
+                    if (chal == null) {
                         chal = getChallengeForDomain(this.defaultDomain);
                         ssn.setAttribute("NtlmHttpChal", chal);
                     }
                     dc = chal.dc;
                     challenge = chal.challenge;
-                }
-                else {
+                } else {
                     dc = getTransportContext().getNameServiceClient().getByName(this.domainController, true);
                     challenge = getTransportContext().getTransportPool().getChallenge(getTransportContext(), dc);
                 }
 
-                if ( ( ntlm = NtlmSsp.authenticate(getTransportContext(), req, resp, challenge) ) == null ) {
+                ntlm = NtlmSsp.authenticate(getTransportContext(), req, resp, challenge);
+                if (ntlm == null) {
                     return null;
                 }
                 /* negotiation complete, remove the challenge object */
                 ssn.removeAttribute("NtlmHttpChal");
-            }
-            else {
-                String auth = new String(Base64.decode(msg.substring(6)), "US-ASCII");
+            } else {
+                final String auth = new String(Base64.decode(msg.substring(6)), "US-ASCII");
                 int index = auth.indexOf(':');
-                String user = ( index != -1 ) ? auth.substring(0, index) : auth;
-                String password = ( index != -1 ) ? auth.substring(index + 1) : "";
+                String user = index != -1 ? auth.substring(0, index) : auth;
+                final String password = index != -1 ? auth.substring(index + 1) : "";
                 index = user.indexOf('\\');
-                if ( index == -1 )
+                if (index == -1) {
                     index = user.indexOf('/');
-                String domain = ( index != -1 ) ? user.substring(0, index) : this.defaultDomain;
-                user = ( index != -1 ) ? user.substring(index + 1) : user;
+                }
+                final String domain = index != -1 ? user.substring(0, index) : this.defaultDomain;
+                user = index != -1 ? user.substring(index + 1) : user;
                 ntlm = new NtlmPasswordAuthentication(getTransportContext(), domain, user, password);
                 dc = getTransportContext().getNameServiceClient().getByName(this.domainController, true);
             }
             try {
                 getTransportContext().getTransportPool().logon(getTransportContext(), dc);
 
-                if ( log.isDebugEnabled() ) {
+                if (log.isDebugEnabled()) {
                     log.debug("NtlmHttpFilter: " + ntlm + " successfully authenticated against " + dc);
                 }
-            }
-            catch ( SmbAuthException sae ) {
+            } catch (final SmbAuthException sae) {
                 log.warn("NtlmHttpFilter: " + ntlm.getName() + ": 0x" + jcifs.util.Hexdump.toHexString(sae.getNtStatus(), 8) + ": " + sae);
-                if ( sae.getNtStatus() == NtStatus.NT_STATUS_ACCESS_VIOLATION ) {
+                if (sae.getNtStatus() == NtStatus.NT_STATUS_ACCESS_VIOLATION) {
                     /*
                      * Server challenge no longer valid for
                      * externally supplied password hashes.
                      */
-                    HttpSession ssn = req.getSession(false);
-                    if ( ssn != null ) {
+                    final HttpSession ssn = req.getSession(false);
+                    if (ssn != null) {
                         ssn.removeAttribute("NtlmHttpAuth");
                     }
                 }
                 resp.setHeader("WWW-Authenticate", "NTLM");
-                if ( offerBasic ) {
+                if (offerBasic) {
                     resp.addHeader("WWW-Authenticate", "Basic realm=\"" + this.realm + "\"");
                 }
                 resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -255,58 +249,52 @@ public class NtlmHttpFilter implements Filter {
                 return null;
             }
             req.getSession().setAttribute("NtlmHttpAuth", ntlm);
-        }
-        else {
-            if ( !skipAuthentication ) {
-                HttpSession ssn = req.getSession(false);
-                if ( ssn == null || ( ntlm = (NtlmPasswordAuthentication) ssn.getAttribute("NtlmHttpAuth") ) == null ) {
-                    resp.setHeader("WWW-Authenticate", "NTLM");
-                    if ( offerBasic ) {
-                        resp.addHeader("WWW-Authenticate", "Basic realm=\"" + this.realm + "\"");
-                    }
-                    resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    resp.setContentLength(0);
-                    resp.flushBuffer();
-                    return null;
+        } else if (!skipAuthentication) {
+            final HttpSession ssn = req.getSession(false);
+            if (ssn == null || (ntlm = (NtlmPasswordAuthentication) ssn.getAttribute("NtlmHttpAuth")) == null) {
+                resp.setHeader("WWW-Authenticate", "NTLM");
+                if (offerBasic) {
+                    resp.addHeader("WWW-Authenticate", "Basic realm=\"" + this.realm + "\"");
                 }
+                resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                resp.setContentLength(0);
+                resp.flushBuffer();
+                return null;
             }
         }
 
         return ntlm;
     }
 
-
-    private synchronized NtlmChallenge getChallengeForDomain ( String domain ) throws UnknownHostException, ServletException {
-        if ( domain == null ) {
+    private synchronized NtlmChallenge getChallengeForDomain(final String domain) throws UnknownHostException, ServletException {
+        if (domain == null) {
             throw new ServletException("A domain was not specified");
         }
-        long now = System.currentTimeMillis();
+        final long now = System.currentTimeMillis();
         int retry = 1;
 
         do {
-            if ( this.dcListExpiration < now ) {
-                Address[] list = getTransportContext().getNameServiceClient().getNbtAllByName(domain, 0x1C, null, null);
+            if (this.dcListExpiration < now) {
+                final Address[] list = getTransportContext().getNameServiceClient().getNbtAllByName(domain, 0x1C, null, null);
                 this.dcListExpiration = now + this.netbiosCacheTimeout * 1000L;
-                if ( list != null && list.length > 0 ) {
+                if (list != null && list.length > 0) {
                     this.dcList = list;
-                }
-                else { /* keep using the old list */
+                } else { /* keep using the old list */
                     this.dcListExpiration = now + 1000 * 60 * 15; /* 15 min */
                     log.warn("Failed to retrieve DC list from WINS");
                 }
             }
 
-            int max = Math.min(this.dcList.length, this.netbiosLookupRespLimit);
-            for ( int j = 0; j < max; j++ ) {
-                int i = dcListCounter++ % max;
-                if ( this.dcList[ i ] != null ) {
+            final int max = Math.min(this.dcList.length, this.netbiosLookupRespLimit);
+            for (int j = 0; j < max; j++) {
+                final int i = dcListCounter++ % max;
+                if (this.dcList[i] != null) {
                     try {
-                        return interrogate(getTransportContext(), this.dcList[ i ]);
+                        return interrogate(getTransportContext(), this.dcList[i]);
+                    } catch (final SmbException se) {
+                        log.warn("Failed validate DC: " + this.dcList[i], se);
                     }
-                    catch ( SmbException se ) {
-                        log.warn("Failed validate DC: " + this.dcList[ i ], se);
-                    }
-                    this.dcList[ i ] = null;
+                    this.dcList[i] = null;
                 }
             }
 
@@ -314,67 +302,59 @@ public class NtlmHttpFilter implements Filter {
              * No DCs found, for retieval of list by expiring it and retry.
              */
             this.dcListExpiration = 0;
-        }
-        while ( retry-- > 0 );
+        } while (retry-- > 0);
 
         this.dcListExpiration = now + 1000 * 60 * 15; /* 15 min */
         throw new UnknownHostException("Failed to negotiate with a suitable domain controller for " + domain);
     }
 
-
-    private static NtlmChallenge interrogate ( CIFSContext tf, Address addr ) throws SmbException {
-        UniAddress dc = new UniAddress(addr);
-        try ( SmbTransportInternal trans = tf.getTransportPool()
+    private static NtlmChallenge interrogate(final CIFSContext tf, final Address addr) throws SmbException {
+        final UniAddress dc = new UniAddress(addr);
+        try (SmbTransportInternal trans = tf.getTransportPool()
                 .getSmbTransport(tf, dc, 0, false, tf.hasDefaultCredentials() && tf.getConfig().isIpcSigningEnforced())
-                .unwrap(SmbTransportInternal.class) ) {
-            if ( !tf.hasDefaultCredentials() ) {
+                .unwrap(SmbTransportInternal.class)) {
+            if (!tf.hasDefaultCredentials()) {
                 trans.ensureConnected();
-                log.warn(
-                    "Default credentials (jcifs.smb.client.username/password)" + " not specified. SMB signing may not work propertly."
-                            + "  Skipping DC interrogation.");
-            }
-            else {
-                try ( SmbSessionInternal ssn = trans.getSmbSession(tf.withDefaultCredentials()).unwrap(SmbSessionInternal.class) ) {
+                log.warn("""
+                        Default credentials (jcifs.smb.client.username/password)\
+                         not specified. SMB signing may not work propertly.\
+                          Skipping DC interrogation.""");
+            } else {
+                try (SmbSessionInternal ssn = trans.getSmbSession(tf.withDefaultCredentials()).unwrap(SmbSessionInternal.class)) {
                     ssn.treeConnectLogon();
                 }
             }
             return new NtlmChallenge(trans.getServerEncryptionKey(), dc);
-        }
-        catch ( SmbException e ) {
+        } catch (final SmbException e) {
             throw e;
-        }
-        catch ( IOException e ) {
+        } catch (final IOException e) {
             throw new SmbException("Connection failed", e);
         }
     }
 
-
     /**
      * @return
      */
-    private CIFSContext getTransportContext () {
+    private CIFSContext getTransportContext() {
         return this.transportContext;
     }
-
 
     // Added by cgross to work with weblogic 6.1.
     /**
      * @param f
      */
-    public void setFilterConfig ( FilterConfig f ) {
+    public void setFilterConfig(final FilterConfig f) {
         try {
             init(f);
-        }
-        catch ( Exception e ) {
+        } catch (final Exception e) {
             e.printStackTrace();
         }
     }
 
-
     /**
      * @return filter config
      */
-    public FilterConfig getFilterConfig () {
+    public FilterConfig getFilterConfig() {
         return null;
     }
 }

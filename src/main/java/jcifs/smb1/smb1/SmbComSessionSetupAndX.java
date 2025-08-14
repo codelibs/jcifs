@@ -18,26 +18,23 @@
 
 package jcifs.smb1.smb1;
 
-import java.util.Arrays;
-
 import jcifs.smb1.Config;
 
 class SmbComSessionSetupAndX extends AndXServerMessageBlock {
 
-    private static final int BATCH_LIMIT =
-            Config.getInt( "jcifs.smb1.smb.client.SessionSetupAndX.TreeConnectAndX", 1 );
-    private static final boolean DISABLE_PLAIN_TEXT_PASSWORDS =
-            Config.getBoolean( "jcifs.smb1.smb.client.disablePlainTextPasswords", true );
+    private static final int BATCH_LIMIT = Config.getInt("jcifs.smb1.smb.client.SessionSetupAndX.TreeConnectAndX", 1);
+    private static final boolean DISABLE_PLAIN_TEXT_PASSWORDS = Config.getBoolean("jcifs.smb1.smb.client.disablePlainTextPasswords", true);
 
     private byte[] lmHash, ntHash, blob = null;
-    private int sessionKey, capabilities;
+    private final int sessionKey;
+    private int capabilities;
     private String accountName, primaryDomain;
 
     SmbSession session;
     Object cred;
 
-    SmbComSessionSetupAndX( SmbSession session, ServerMessageBlock andx, Object cred ) throws SmbException {
-        super( andx );
+    SmbComSessionSetupAndX(final SmbSession session, final ServerMessageBlock andx, final Object cred) throws SmbException {
+        super(andx);
         command = SMB_COM_SESSION_SETUP_ANDX;
         this.session = session;
         this.cred = cred;
@@ -46,133 +43,133 @@ class SmbComSessionSetupAndX extends AndXServerMessageBlock {
         capabilities = session.transport.capabilities;
 
         if (session.transport.server.security == SECURITY_USER) {
-            if (cred instanceof NtlmPasswordAuthentication) {
-                NtlmPasswordAuthentication auth = (NtlmPasswordAuthentication)cred;
-
+            if (cred instanceof final NtlmPasswordAuthentication auth) {
                 if (auth == NtlmPasswordAuthentication.ANONYMOUS) {
                     lmHash = new byte[0];
                     ntHash = new byte[0];
                     capabilities &= ~SmbConstants.CAP_EXTENDED_SECURITY;
                 } else if (session.transport.server.encryptedPasswords) {
-                    lmHash = auth.getAnsiHash( session.transport.server.encryptionKey );
-                    ntHash = auth.getUnicodeHash( session.transport.server.encryptionKey );
+                    lmHash = auth.getAnsiHash(session.transport.server.encryptionKey);
+                    ntHash = auth.getUnicodeHash(session.transport.server.encryptionKey);
                     // prohibit HTTP auth attempts for the null session
                     if (lmHash.length == 0 && ntHash.length == 0) {
                         throw new RuntimeException("Null setup prohibited.");
                     }
-                } else if( DISABLE_PLAIN_TEXT_PASSWORDS ) {
-                    throw new RuntimeException( "Plain text passwords are disabled" );
-                } else if( useUnicode ) {
+                } else if (DISABLE_PLAIN_TEXT_PASSWORDS) {
+                    throw new RuntimeException("Plain text passwords are disabled");
+                } else if (useUnicode) {
                     // plain text
-                    String password = auth.getPassword();
+                    final String password = auth.getPassword();
                     lmHash = new byte[0];
                     ntHash = new byte[(password.length() + 1) * 2];
-                    writeString( password, ntHash, 0 );
+                    writeString(password, ntHash, 0);
                 } else {
                     // plain text
-                    String password = auth.getPassword();
+                    final String password = auth.getPassword();
                     lmHash = new byte[(password.length() + 1) * 2];
                     ntHash = new byte[0];
-                    writeString( password, lmHash, 0 );
+                    writeString(password, lmHash, 0);
                 }
                 accountName = auth.username;
-                if (useUnicode)
+                if (useUnicode) {
                     accountName = accountName.toUpperCase();
+                }
                 primaryDomain = auth.domain.toUpperCase();
             } else if (cred instanceof byte[]) {
-                blob = (byte[])cred;
+                blob = (byte[]) cred;
             } else {
                 throw new SmbException("Unsupported credential type");
             }
         } else if (session.transport.server.security == SECURITY_SHARE) {
-            if (cred instanceof NtlmPasswordAuthentication) {
-                NtlmPasswordAuthentication auth = (NtlmPasswordAuthentication)cred;
-                lmHash = new byte[0];
-                ntHash = new byte[0];
-                accountName = auth.username;
-                if (useUnicode)
-                    accountName = accountName.toUpperCase();
-                primaryDomain = auth.domain.toUpperCase();
-            } else {
+            if (!(cred instanceof final NtlmPasswordAuthentication auth)) {
                 throw new SmbException("Unsupported credential type");
             }
+            lmHash = new byte[0];
+            ntHash = new byte[0];
+            accountName = auth.username;
+            if (useUnicode) {
+                accountName = accountName.toUpperCase();
+            }
+            primaryDomain = auth.domain.toUpperCase();
         } else {
             throw new SmbException("Unsupported");
         }
     }
 
-    int getBatchLimit( byte command ) {
+    @Override
+    int getBatchLimit(final byte command) {
         return command == SMB_COM_TREE_CONNECT_ANDX ? BATCH_LIMIT : 0;
     }
-    int writeParameterWordsWireFormat( byte[] dst, int dstIndex ) {
-        int start = dstIndex;
 
-        writeInt2( session.transport.snd_buf_size, dst, dstIndex );
+    @Override
+    int writeParameterWordsWireFormat(final byte[] dst, int dstIndex) {
+        final int start = dstIndex;
+
+        writeInt2(session.transport.snd_buf_size, dst, dstIndex);
         dstIndex += 2;
-        writeInt2( session.transport.maxMpxCount, dst, dstIndex );
+        writeInt2(session.transport.maxMpxCount, dst, dstIndex);
         dstIndex += 2;
-        writeInt2( session.transport.VC_NUMBER, dst, dstIndex );
+        writeInt2(SmbConstants.VC_NUMBER, dst, dstIndex);
         dstIndex += 2;
-        writeInt4( sessionKey, dst, dstIndex );
+        writeInt4(sessionKey, dst, dstIndex);
         dstIndex += 4;
         if (blob != null) {
-            writeInt2( blob.length, dst, dstIndex );
-            dstIndex += 2;
+            writeInt2(blob.length, dst, dstIndex);
         } else {
-            writeInt2( lmHash.length, dst, dstIndex );
+            writeInt2(lmHash.length, dst, dstIndex);
             dstIndex += 2;
-            writeInt2( ntHash.length, dst, dstIndex );
-            dstIndex += 2;
+            writeInt2(ntHash.length, dst, dstIndex);
         }
-        dst[dstIndex++] = (byte)0x00;
-        dst[dstIndex++] = (byte)0x00;
-        dst[dstIndex++] = (byte)0x00;
-        dst[dstIndex++] = (byte)0x00;
-        writeInt4( capabilities, dst, dstIndex );
+        dstIndex += 2;
+        dst[dstIndex] = (byte) 0x00;
+        dstIndex++;
+        dst[dstIndex++] = (byte) 0x00;
+        dst[dstIndex++] = (byte) 0x00;
+        dst[dstIndex++] = (byte) 0x00;
+        writeInt4(capabilities, dst, dstIndex);
         dstIndex += 4;
 
         return dstIndex - start;
     }
-    int writeBytesWireFormat( byte[] dst, int dstIndex ) {
-        int start = dstIndex;
+
+    @Override
+    int writeBytesWireFormat(final byte[] dst, int dstIndex) {
+        final int start = dstIndex;
 
         if (blob != null) {
-            System.arraycopy(blob, 0, dst, dstIndex, blob.length );
+            System.arraycopy(blob, 0, dst, dstIndex, blob.length);
             dstIndex += blob.length;
         } else {
-            System.arraycopy( lmHash, 0, dst, dstIndex, lmHash.length );
+            System.arraycopy(lmHash, 0, dst, dstIndex, lmHash.length);
             dstIndex += lmHash.length;
-            System.arraycopy( ntHash, 0, dst, dstIndex, ntHash.length );
+            System.arraycopy(ntHash, 0, dst, dstIndex, ntHash.length);
             dstIndex += ntHash.length;
-    
-            dstIndex += writeString( accountName, dst, dstIndex );
-            dstIndex += writeString( primaryDomain, dst, dstIndex );
+
+            dstIndex += writeString(accountName, dst, dstIndex);
+            dstIndex += writeString(primaryDomain, dst, dstIndex);
         }
-        dstIndex += writeString( session.transport.NATIVE_OS, dst, dstIndex );
-        dstIndex += writeString( session.transport.NATIVE_LANMAN, dst, dstIndex );
+        dstIndex += writeString(SmbConstants.NATIVE_OS, dst, dstIndex);
+        dstIndex += writeString(SmbConstants.NATIVE_LANMAN, dst, dstIndex);
 
         return dstIndex - start;
     }
-    int readParameterWordsWireFormat( byte[] buffer, int bufferIndex ) {
+
+    @Override
+    int readParameterWordsWireFormat(final byte[] buffer, final int bufferIndex) {
         return 0;
     }
-    int readBytesWireFormat( byte[] buffer, int bufferIndex ) {
+
+    @Override
+    int readBytesWireFormat(final byte[] buffer, final int bufferIndex) {
         return 0;
     }
+
+    @Override
     public String toString() {
-        String result = new String( "SmbComSessionSetupAndX[" +
-            super.toString() +
-            ",snd_buf_size=" + session.transport.snd_buf_size +
-            ",maxMpxCount=" + session.transport.maxMpxCount +
-            ",VC_NUMBER=" + session.transport.VC_NUMBER +
-            ",sessionKey=" + sessionKey +
-            ",lmHash.length=" + (lmHash == null ? 0 : lmHash.length) +
-            ",ntHash.length=" + (ntHash == null ? 0 : ntHash.length) +
-            ",capabilities=" + capabilities +
-            ",accountName=" + accountName +
-            ",primaryDomain=" + primaryDomain +
-            ",NATIVE_OS=" + session.transport.NATIVE_OS +
-            ",NATIVE_LANMAN=" + session.transport.NATIVE_LANMAN + "]" );
-        return result;
+        return ("SmbComSessionSetupAndX[" + super.toString() + ",snd_buf_size=" + session.transport.snd_buf_size + ",maxMpxCount="
+                + session.transport.maxMpxCount + ",VC_NUMBER=" + SmbConstants.VC_NUMBER + ",sessionKey=" + sessionKey + ",lmHash.length="
+                + (lmHash == null ? 0 : lmHash.length) + ",ntHash.length=" + (ntHash == null ? 0 : ntHash.length) + ",capabilities="
+                + capabilities + ",accountName=" + accountName + ",primaryDomain=" + primaryDomain + ",NATIVE_OS=" + SmbConstants.NATIVE_OS
+                + ",NATIVE_LANMAN=" + SmbConstants.NATIVE_LANMAN + "]");
     }
 }

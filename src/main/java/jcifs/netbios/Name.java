@@ -1,17 +1,17 @@
 /* jcifs smb client library in Java
  * Copyright (C) 2000  "Michael B. Allen" <jcifs at samba dot org>
  *                     "Christopher R. Hertel" <jcifs at samba dot org>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -19,16 +19,14 @@
 
 package jcifs.netbios;
 
-
 import jcifs.Configuration;
 import jcifs.NetbiosName;
 import jcifs.util.Hexdump;
 import jcifs.util.Strings;
 
-
 /**
- * 
- * 
+ *
+ *
  */
 public class Name implements NetbiosName {
 
@@ -51,52 +49,47 @@ public class Name implements NetbiosName {
                       * srcHashCode must be set by name resolution
                       * routines before entry into addressCache
                       */
-    private Configuration config;
+    private final Configuration config;
 
-
-    Name ( Configuration cfg ) {
+    Name(final Configuration cfg) {
         this.config = cfg;
     }
-
 
     /**
      * @return the name
      */
     @Override
-    public String getName () {
+    public String getName() {
         return this.name;
     }
-
 
     /**
      * @return scope id
      */
     @Override
-    public String getScope () {
+    public String getScope() {
         return this.scope;
     }
 
-
     /**
-     * 
+     *
      * @return the name type
      */
     @Override
-    public int getNameType () {
+    public int getNameType() {
         return this.hexCode;
     }
 
-
     /**
-     * 
+     *
      * @param cfg
      * @param name
      * @param hexCode
      * @param scope
      */
-    public Name ( Configuration cfg, String name, int hexCode, String scope ) {
+    public Name(final Configuration cfg, String name, final int hexCode, final String scope) {
         this.config = cfg;
-        if ( name.length() > 15 ) {
+        if (name.length() > 15) {
             name = name.substring(0, 15);
         }
         this.name = name.toUpperCase();
@@ -105,115 +98,109 @@ public class Name implements NetbiosName {
         this.srcHashCode = 0;
     }
 
-
     /**
      * @param cfg
      * @param name
      */
-    public Name ( Configuration cfg, NetbiosName name ) {
+    public Name(final Configuration cfg, final NetbiosName name) {
         this.config = cfg;
         this.name = name.getName();
         this.hexCode = name.getNameType();
         this.scope = name.getScope();
-        if ( name instanceof Name ) {
-            this.srcHashCode = ( (Name) name ).srcHashCode;
+        if (name instanceof Name) {
+            this.srcHashCode = ((Name) name).srcHashCode;
         }
     }
 
-
     /**
-     * 
+     *
      * @return whether this is the unknown address
      */
-    public boolean isUnknown () {
+    public boolean isUnknown() {
         return "0.0.0.0".equals(this.name) && this.hexCode == 0 && this.scope == null;
     }
 
-
-    int writeWireFormat ( byte[] dst, int dstIndex ) {
+    int writeWireFormat(final byte[] dst, final int dstIndex) {
         // write 0x20 in first byte
-        dst[ dstIndex ] = 0x20;
+        dst[dstIndex] = 0x20;
 
-        byte tmp[] = Strings.getOEMBytes(this.name, this.config);
+        final byte tmp[] = Strings.getOEMBytes(this.name, this.config);
         int i;
-        for ( i = 0; i < tmp.length; i++ ) {
-            dst[ dstIndex + ( 2 * i + 1 ) ] = (byte) ( ( ( tmp[ i ] & 0xF0 ) >> 4 ) + 0x41 );
-            dst[ dstIndex + ( 2 * i + 2 ) ] = (byte) ( ( tmp[ i ] & 0x0F ) + 0x41 );
+        for (i = 0; i < tmp.length; i++) {
+            dst[dstIndex + 2 * i + 1] = (byte) (((tmp[i] & 0xF0) >> 4) + 0x41);
+            dst[dstIndex + 2 * i + 2] = (byte) ((tmp[i] & 0x0F) + 0x41);
         }
-        for ( ; i < 15; i++ ) {
-            dst[ dstIndex + ( 2 * i + 1 ) ] = (byte) 0x43;
-            dst[ dstIndex + ( 2 * i + 2 ) ] = (byte) 0x41;
+        for (; i < 15; i++) {
+            dst[dstIndex + 2 * i + 1] = (byte) 0x43;
+            dst[dstIndex + 2 * i + 2] = (byte) 0x41;
         }
-        dst[ dstIndex + TYPE_OFFSET ] = (byte) ( ( ( this.hexCode & 0xF0 ) >> 4 ) + 0x41 );
-        dst[ dstIndex + TYPE_OFFSET + 1 ] = (byte) ( ( this.hexCode & 0x0F ) + 0x41 );
+        dst[dstIndex + TYPE_OFFSET] = (byte) (((this.hexCode & 0xF0) >> 4) + 0x41);
+        dst[dstIndex + TYPE_OFFSET + 1] = (byte) ((this.hexCode & 0x0F) + 0x41);
         return SCOPE_OFFSET + writeScopeWireFormat(dst, dstIndex + SCOPE_OFFSET);
     }
 
+    int readWireFormat(final byte[] src, final int srcIndex) {
 
-    int readWireFormat ( byte[] src, int srcIndex ) {
-
-        byte tmp[] = new byte[SCOPE_OFFSET];
+        final byte tmp[] = new byte[SCOPE_OFFSET];
         int length = 15;
-        for ( int i = 0; i < 15; i++ ) {
-            tmp[ i ] = (byte) ( ( ( src[ srcIndex + ( 2 * i + 1 ) ] & 0xFF ) - 0x41 ) << 4 );
-            tmp[ i ] |= (byte) ( ( ( src[ srcIndex + ( 2 * i + 2 ) ] & 0xFF ) - 0x41 ) & 0x0F );
-            if ( tmp[ i ] != (byte) ' ' ) {
+        for (int i = 0; i < 15; i++) {
+            tmp[i] = (byte) ((src[srcIndex + 2 * i + 1] & 0xFF) - 0x41 << 4);
+            tmp[i] |= (byte) ((src[srcIndex + 2 * i + 2] & 0xFF) - 0x41 & 0x0F);
+            if (tmp[i] != (byte) ' ') {
                 length = i + 1;
             }
         }
         this.name = Strings.fromOEMBytes(tmp, 0, length, this.config);
-        this.hexCode = ( ( src[ srcIndex + TYPE_OFFSET ] & 0xFF ) - 0x41 ) << 4;
-        this.hexCode |= ( ( src[ srcIndex + TYPE_OFFSET + 1 ] & 0xFF ) - 0x41 ) & 0x0F;
+        this.hexCode = (src[srcIndex + TYPE_OFFSET] & 0xFF) - 0x41 << 4;
+        this.hexCode |= (src[srcIndex + TYPE_OFFSET + 1] & 0xFF) - 0x41 & 0x0F;
         return SCOPE_OFFSET + readScopeWireFormat(src, srcIndex + SCOPE_OFFSET);
     }
 
-
-    int writeScopeWireFormat ( byte[] dst, int dstIndex ) {
-        if ( this.scope == null ) {
-            dst[ dstIndex ] = (byte) 0x00;
+    int writeScopeWireFormat(final byte[] dst, int dstIndex) {
+        if (this.scope == null) {
+            dst[dstIndex] = (byte) 0x00;
             return 1;
         }
 
         // copy new scope in
-        dst[ dstIndex++ ] = (byte) '.';
+        dst[dstIndex] = (byte) '.';
+        dstIndex++;
         System.arraycopy(Strings.getOEMBytes(this.scope, this.config), 0, dst, dstIndex, this.scope.length());
         dstIndex += this.scope.length();
 
-        dst[ dstIndex++ ] = (byte) 0x00;
+        dst[dstIndex++] = (byte) 0x00;
 
         // now go over scope backwards converting '.' to label length
 
         int i = dstIndex - 2;
-        int e = i - this.scope.length();
+        final int e = i - this.scope.length();
         int c = 0;
 
         do {
-            if ( dst[ i ] == '.' ) {
-                dst[ i ] = (byte) c;
+            if (dst[i] == '.') {
+                dst[i] = (byte) c;
                 c = 0;
-            }
-            else {
+            } else {
                 c++;
             }
-        }
-        while ( i-- > e );
+        } while (i-- > e);
         return this.scope.length() + 2;
     }
 
-
-    int readScopeWireFormat ( byte[] src, int srcIndex ) {
-        int start = srcIndex;
+    int readScopeWireFormat(final byte[] src, int srcIndex) {
+        final int start = srcIndex;
         int n;
-        StringBuffer sb;
+        StringBuilder sb;
 
-        if ( ( n = src[ srcIndex++ ] & 0xFF ) == 0 ) {
+        n = src[srcIndex++] & 0xFF;
+        if (n == 0) {
             this.scope = null;
             return 1;
         }
 
-        sb = new StringBuffer(Strings.fromOEMBytes(src, srcIndex, n, this.config));
+        sb = new StringBuilder(Strings.fromOEMBytes(src, srcIndex, n, this.config));
         srcIndex += n;
-        while ( ( n = src[ srcIndex++ ] & 0xFF ) != 0 ) {
+        while ((n = src[srcIndex++] & 0xFF) != 0) {
             sb.append('.').append(Strings.fromOEMBytes(src, srcIndex, n, this.config));
             srcIndex += n;
         }
@@ -222,58 +209,52 @@ public class Name implements NetbiosName {
         return srcIndex - start;
     }
 
-
     @Override
-    public int hashCode () {
-        int result;
-
-        result = this.name.hashCode();
+    public int hashCode() {
+        int result = this.name.hashCode();
         result += 65599 * this.hexCode;
         result += 65599 * this.srcHashCode; /*
                                              * hashCode is different depending
                                              * on where it came from
                                              */
-        if ( this.scope != null && this.scope.length() != 0 ) {
+        if (this.scope != null && this.scope.length() != 0) {
             result += this.scope.hashCode();
         }
         return result;
     }
 
-
     @Override
-    public boolean equals ( Object obj ) {
+    public boolean equals(final Object obj) {
         Name n;
 
-        if ( ! ( obj instanceof Name ) ) {
+        if (!(obj instanceof Name)) {
             return false;
         }
         n = (Name) obj;
-        if ( this.scope == null && n.scope == null ) {
+        if (this.scope == null && n.scope == null) {
             return this.name.equals(n.name) && this.hexCode == n.hexCode;
         }
         return this.name.equals(n.name) && this.hexCode == n.hexCode && this.scope.equals(n.scope);
     }
 
-
     @Override
-    public String toString () {
-        StringBuffer sb = new StringBuffer();
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
         String n = this.name;
 
         // fix MSBROWSE name
-        if ( n == null ) {
+        if (n == null) {
             n = "null";
-        }
-        else if ( n.charAt(0) == 0x01 ) {
-            char c[] = n.toCharArray();
-            c[ 0 ] = '.';
-            c[ 1 ] = '.';
-            c[ 14 ] = '.';
+        } else if (n.charAt(0) == 0x01) {
+            final char c[] = n.toCharArray();
+            c[0] = '.';
+            c[1] = '.';
+            c[14] = '.';
             n = new String(c);
         }
 
         sb.append(n).append("<").append(Hexdump.toHexString(this.hexCode, 2)).append(">");
-        if ( this.scope != null ) {
+        if (this.scope != null) {
             sb.append(".").append(this.scope);
         }
         return sb.toString();

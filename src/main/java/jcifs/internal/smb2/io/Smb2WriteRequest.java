@@ -1,22 +1,21 @@
 /*
  * © 2017 AgNO3 Gmbh & Co. KG
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 package jcifs.internal.smb2.io;
-
 
 import jcifs.CIFSContext;
 import jcifs.Configuration;
@@ -25,7 +24,6 @@ import jcifs.internal.smb2.ServerMessageBlock2Request;
 import jcifs.internal.smb2.Smb2Constants;
 import jcifs.internal.util.SMBUtil;
 
-
 /**
  * @author mbechler
  *
@@ -33,7 +31,7 @@ import jcifs.internal.util.SMBUtil;
 public class Smb2WriteRequest extends ServerMessageBlock2Request<Smb2WriteResponse> implements RequestWithFileId {
 
     /**
-     * 
+     *
      */
     public static final int OVERHEAD = Smb2Constants.SMB2_HEADER_LENGTH + 48;
 
@@ -47,16 +45,14 @@ public class Smb2WriteRequest extends ServerMessageBlock2Request<Smb2WriteRespon
     private int remainingBytes;
     private int writeFlags;
 
-
     /**
      * @param config
      * @param fileId
      */
-    public Smb2WriteRequest ( Configuration config, byte[] fileId ) {
+    public Smb2WriteRequest(final Configuration config, final byte[] fileId) {
         super(config, SMB2_WRITE);
         this.fileId = fileId;
     }
-
 
     /**
      * {@inheritDoc}
@@ -64,16 +60,14 @@ public class Smb2WriteRequest extends ServerMessageBlock2Request<Smb2WriteRespon
      * @see jcifs.internal.smb2.RequestWithFileId#setFileId(byte[])
      */
     @Override
-    public void setFileId ( byte[] fileId ) {
+    public void setFileId(final byte[] fileId) {
         this.fileId = fileId;
     }
 
-
     @Override
-    protected Smb2WriteResponse createResponse ( CIFSContext tc, ServerMessageBlock2Request<Smb2WriteResponse> req ) {
+    protected Smb2WriteResponse createResponse(final CIFSContext tc, final ServerMessageBlock2Request<Smb2WriteResponse> req) {
         return new Smb2WriteResponse(tc.getConfig());
     }
-
 
     /**
      * @param data
@@ -81,39 +75,35 @@ public class Smb2WriteRequest extends ServerMessageBlock2Request<Smb2WriteRespon
      * @param offset
      * @param length
      */
-    public void setData ( byte[] data, int offset, int length ) {
+    public void setData(final byte[] data, final int offset, final int length) {
         this.data = data;
         this.dataOffset = offset;
         this.dataLength = length;
     }
 
-
     /**
      * @param remainingBytes
      *            the remainingBytes to set
      */
-    public void setRemainingBytes ( int remainingBytes ) {
+    public void setRemainingBytes(final int remainingBytes) {
         this.remainingBytes = remainingBytes;
     }
-
 
     /**
      * @param writeFlags
      *            the writeFlags to set
      */
-    public void setWriteFlags ( int writeFlags ) {
+    public void setWriteFlags(final int writeFlags) {
         this.writeFlags = writeFlags;
     }
-
 
     /**
      * @param offset
      *            the offset to set
      */
-    public void setOffset ( long offset ) {
+    public void setOffset(final long offset) {
         this.offset = offset;
     }
-
 
     /**
      * {@inheritDoc}
@@ -121,10 +111,9 @@ public class Smb2WriteRequest extends ServerMessageBlock2Request<Smb2WriteRespon
      * @see jcifs.internal.CommonServerMessageBlockRequest#size()
      */
     @Override
-    public int size () {
+    public int size() {
         return size8(Smb2Constants.SMB2_HEADER_LENGTH + 48 + this.dataLength);
     }
-
 
     /**
      * {@inheritDoc}
@@ -132,10 +121,10 @@ public class Smb2WriteRequest extends ServerMessageBlock2Request<Smb2WriteRespon
      * @see jcifs.internal.smb2.ServerMessageBlock2#writeBytesWireFormat(byte[], int)
      */
     @Override
-    protected int writeBytesWireFormat ( byte[] dst, int dstIndex ) {
-        int start = dstIndex;
+    protected int writeBytesWireFormat(final byte[] dst, int dstIndex) {
+        final int start = dstIndex;
         SMBUtil.writeInt2(49, dst, dstIndex);
-        int dataOffsetOffset = dstIndex + 2;
+        final int dataOffsetOffset = dstIndex + 2;
         dstIndex += 4;
         SMBUtil.writeInt4(this.dataLength, dst, dstIndex);
         dstIndex += 4;
@@ -157,9 +146,9 @@ public class Smb2WriteRequest extends ServerMessageBlock2Request<Smb2WriteRespon
 
         SMBUtil.writeInt2(dstIndex - getHeaderStart(), dst, dataOffsetOffset);
 
-        if ( dstIndex + this.dataLength > dst.length ) {
+        if (dstIndex + this.dataLength > dst.length) {
             throw new IllegalArgumentException(
-                String.format("Data exceeds buffer size ( remain buffer: %d data length: %d)", dst.length - dstIndex, this.dataLength));
+                    String.format("Data exceeds buffer size ( remain buffer: %d data length: %d)", dst.length - dstIndex, this.dataLength));
         }
 
         System.arraycopy(this.data, this.dataOffset, dst, dstIndex, this.dataLength);
@@ -167,14 +156,13 @@ public class Smb2WriteRequest extends ServerMessageBlock2Request<Smb2WriteRespon
         return dstIndex - start;
     }
 
-
     /**
      * {@inheritDoc}
      *
      * @see jcifs.internal.smb2.ServerMessageBlock2#readBytesWireFormat(byte[], int)
      */
     @Override
-    protected int readBytesWireFormat ( byte[] buffer, int bufferIndex ) {
+    protected int readBytesWireFormat(final byte[] buffer, final int bufferIndex) {
         return 0;
     }
 

@@ -369,7 +369,7 @@ class BaseConfigurationTest {
         assertTrue((testConfig.getFlags2() & SmbConstants.FLAGS2_LONG_FILENAMES) != 0);
         assertTrue((testConfig.getFlags2() & SmbConstants.FLAGS2_EXTENDED_ATTRIBUTES) != 0);
 
-        // Check capabilities  
+        // Check capabilities
         assertTrue(testConfig.getCapabilities() != 0, "Capabilities should be non-zero");
 
         // Check broadcast address

@@ -1,17 +1,17 @@
 /* jcifs smb client library in Java
  * Copyright (C) 2000  "Michael B. Allen" <jcifs at samba dot org>
  *                     "Paul Walker" <jcifs at samba dot org>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -19,11 +19,11 @@
 
 package jcifs.smb1.smb1;
 
-import java.net.URL;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.net.UnknownHostException;
 
 /**
@@ -102,13 +102,13 @@ public class SmbNamedPipe extends SmbFile {
      * The pipe should be opened for both reading and writing.
      */
 
-    public static final int PIPE_TYPE_RDWR   = O_RDWR;
+    public static final int PIPE_TYPE_RDWR = O_RDWR;
 
     /**
      * Pipe operations should behave like the <code>CallNamedPipe</code> Win32 Named Pipe function.
      */
 
-    public static final int PIPE_TYPE_CALL   = 0x0100;
+    public static final int PIPE_TYPE_CALL = 0x0100;
 
     /**
      * Pipe operations should behave like the <code>TransactNamedPipe</code> Win32 Named Pipe function.
@@ -129,21 +129,22 @@ public class SmbNamedPipe extends SmbFile {
      * operator <code>|</code>. See the examples listed above.
      */
 
-    public SmbNamedPipe( String url, int pipeType )
-                            throws MalformedURLException, UnknownHostException {
-        super( url );
+    public SmbNamedPipe(final String url, final int pipeType) throws MalformedURLException, UnknownHostException {
+        super(url);
         this.pipeType = pipeType;
         type = TYPE_NAMED_PIPE;
     }
-    public SmbNamedPipe( String url, int pipeType, NtlmPasswordAuthentication auth )
-                            throws MalformedURLException, UnknownHostException {
-        super( url, auth );
+
+    public SmbNamedPipe(final String url, final int pipeType, final NtlmPasswordAuthentication auth)
+            throws MalformedURLException, UnknownHostException {
+        super(url, auth);
         this.pipeType = pipeType;
         type = TYPE_NAMED_PIPE;
     }
-    public SmbNamedPipe( URL url, int pipeType, NtlmPasswordAuthentication auth )
-                            throws MalformedURLException, UnknownHostException {
-        super( url, auth );
+
+    public SmbNamedPipe(final URL url, final int pipeType, final NtlmPasswordAuthentication auth)
+            throws MalformedURLException, UnknownHostException {
+        super(url, auth);
         this.pipeType = pipeType;
         type = TYPE_NAMED_PIPE;
     }
@@ -160,13 +161,11 @@ public class SmbNamedPipe extends SmbFile {
      */
 
     public InputStream getNamedPipeInputStream() throws IOException {
-        if( pipeIn == null ) {
-            if(( pipeType & PIPE_TYPE_CALL ) == PIPE_TYPE_CALL ||
-                    ( pipeType & PIPE_TYPE_TRANSACT ) == PIPE_TYPE_TRANSACT ) {
-                pipeIn = new TransactNamedPipeInputStream( this );
+        if (pipeIn == null) {
+            if ((pipeType & PIPE_TYPE_CALL) == PIPE_TYPE_CALL || (pipeType & PIPE_TYPE_TRANSACT) == PIPE_TYPE_TRANSACT) {
+                pipeIn = new TransactNamedPipeInputStream(this);
             } else {
-                pipeIn = new SmbFileInputStream(this,
-                            (pipeType & 0xFFFF00FF) | SmbFile.O_EXCL);
+                pipeIn = new SmbFileInputStream(this, pipeType & 0xFFFF00FF | SmbFile.O_EXCL);
             }
         }
         return pipeIn;
@@ -181,13 +180,11 @@ public class SmbNamedPipe extends SmbFile {
      */
 
     public OutputStream getNamedPipeOutputStream() throws IOException {
-        if( pipeOut == null ) {
-            if(( pipeType & PIPE_TYPE_CALL ) == PIPE_TYPE_CALL ||
-                    ( pipeType & PIPE_TYPE_TRANSACT ) == PIPE_TYPE_TRANSACT ) {
-                pipeOut = new TransactNamedPipeOutputStream( this );
+        if (pipeOut == null) {
+            if ((pipeType & PIPE_TYPE_CALL) == PIPE_TYPE_CALL || (pipeType & PIPE_TYPE_TRANSACT) == PIPE_TYPE_TRANSACT) {
+                pipeOut = new TransactNamedPipeOutputStream(this);
             } else {
-                pipeOut = new SmbFileOutputStream(this, false,
-                            (pipeType & 0xFFFF00FF) | SmbFile.O_EXCL );
+                pipeOut = new SmbFileOutputStream(this, false, pipeType & 0xFFFF00FF | SmbFile.O_EXCL);
             }
         }
         return pipeOut;

@@ -1,22 +1,21 @@
 /*
  * © 2017 AgNO3 Gmbh & Co. KG
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 package jcifs.smb;
-
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +29,6 @@ import jcifs.SmbResourceLocator;
 import jcifs.internal.smb1.net.NetServerEnum2;
 import jcifs.internal.smb1.net.NetServerEnum2Response;
 import jcifs.internal.smb1.trans.SmbComTransaction;
-
 
 /**
  *
@@ -48,7 +46,6 @@ public class NetServerEnumIterator implements CloseableIterator<FileEntry> {
     private int ridx;
     private FileEntry next;
 
-
     /**
      * @param parent
      * @param th
@@ -56,74 +53,68 @@ public class NetServerEnumIterator implements CloseableIterator<FileEntry> {
      * @param searchAttributes
      * @param filter
      * @throws CIFSException
-     * 
+     *
      */
-    public NetServerEnumIterator ( SmbFile parent, SmbTreeHandleImpl th, String wildcard, int searchAttributes, ResourceNameFilter filter )
-            throws CIFSException {
+    public NetServerEnumIterator(final SmbFile parent, final SmbTreeHandleImpl th, final String wildcard, final int searchAttributes,
+            final ResourceNameFilter filter) throws CIFSException {
         this.parent = parent;
         this.nameFilter = filter;
-        SmbResourceLocator locator = parent.getLocator();
+        final SmbResourceLocator locator = parent.getLocator();
         this.workgroup = locator.getType() == SmbConstants.TYPE_WORKGROUP;
-        if ( locator.getURL().getHost().isEmpty() ) {
+        if (locator.getURL().getHost().isEmpty()) {
             this.request = new NetServerEnum2(th.getConfig(), th.getOEMDomainName(), NetServerEnum2.SV_TYPE_DOMAIN_ENUM);
-            this.response = new NetServerEnum2Response(th.getConfig());
-        }
-        else if ( this.workgroup ) {
+        } else if (this.workgroup) {
             this.request = new NetServerEnum2(th.getConfig(), locator.getURL().getHost(), NetServerEnum2.SV_TYPE_ALL);
-            this.response = new NetServerEnum2Response(th.getConfig());
-        }
-        else {
+        } else {
             throw new SmbException("The requested list operations is invalid: " + locator.getURL());
         }
+        this.response = new NetServerEnum2Response(th.getConfig());
 
         this.treeHandle = th.acquire();
         try {
             this.next = open();
-        }
-        catch ( Exception e ) {
+        } catch (final Exception e) {
             this.treeHandle.release();
             throw e;
         }
 
     }
 
-
-    private FileEntry open () throws CIFSException {
+    private FileEntry open() throws CIFSException {
         this.treeHandle.send(this.request, this.response);
         checkStatus();
-        FileEntry n = advance();
-        if ( n == null ) {
+        final FileEntry n = advance();
+        if (n == null) {
             doClose();
         }
         return n;
     }
 
-
     /**
      * @throws SmbException
      */
-    private void checkStatus () throws SmbException {
-        int status = this.response.getStatus();
-        if ( status == WinError.ERROR_SERVICE_NOT_INSTALLED ) {
+    private void checkStatus() throws SmbException {
+        final int status = this.response.getStatus();
+        if (status == WinError.ERROR_SERVICE_NOT_INSTALLED) {
             throw new SmbUnsupportedOperationException();
         }
-        if ( status != WinError.ERROR_SUCCESS && status != WinError.ERROR_MORE_DATA ) {
+        if (status != WinError.ERROR_SUCCESS && status != WinError.ERROR_MORE_DATA) {
             throw new SmbException(status, true);
         }
     }
 
-
-    private FileEntry advance () throws CIFSException {
-        int n = this.response.getStatus() == WinError.ERROR_MORE_DATA ? this.response.getNumEntries() - 1 : this.response.getNumEntries();
-        while ( this.ridx < n ) {
-            FileEntry itm = this.response.getResults()[ this.ridx ];
+    private FileEntry advance() throws CIFSException {
+        final int n =
+                this.response.getStatus() == WinError.ERROR_MORE_DATA ? this.response.getNumEntries() - 1 : this.response.getNumEntries();
+        while (this.ridx < n) {
+            final FileEntry itm = this.response.getResults()[this.ridx];
             this.ridx++;
-            if ( filter(itm) ) {
+            if (filter(itm)) {
                 return itm;
             }
         }
 
-        if ( this.workgroup && this.response.getStatus() == WinError.ERROR_MORE_DATA ) {
+        if (this.workgroup && this.response.getStatus() == WinError.ERROR_MORE_DATA) {
             this.request.reset(0, this.response.getLastName());
             this.response.reset();
             this.request.setSubCommand(SmbComTransaction.NET_SERVER_ENUM3);
@@ -135,24 +126,21 @@ public class NetServerEnumIterator implements CloseableIterator<FileEntry> {
         return null;
     }
 
-
-    private final boolean filter ( FileEntry fe ) {
-        String name = fe.getName();
-        if ( this.nameFilter == null ) {
+    private final boolean filter(final FileEntry fe) {
+        final String name = fe.getName();
+        if (this.nameFilter == null) {
             return true;
         }
         try {
-            if ( !this.nameFilter.accept(this.parent, name) ) {
+            if (!this.nameFilter.accept(this.parent, name)) {
                 return false;
             }
             return true;
-        }
-        catch ( CIFSException e ) {
+        } catch (final CIFSException e) {
             log.error("Failed to apply name filter", e);
             return false;
         }
     }
-
 
     /**
      * {@inheritDoc}
@@ -160,10 +148,9 @@ public class NetServerEnumIterator implements CloseableIterator<FileEntry> {
      * @see java.util.Iterator#hasNext()
      */
     @Override
-    public boolean hasNext () {
+    public boolean hasNext() {
         return this.next != null;
     }
-
 
     /**
      * {@inheritDoc}
@@ -171,23 +158,21 @@ public class NetServerEnumIterator implements CloseableIterator<FileEntry> {
      * @see java.util.Iterator#next()
      */
     @Override
-    public FileEntry next () {
-        FileEntry n = this.next;
+    public FileEntry next() {
+        final FileEntry n = this.next;
         try {
-            FileEntry ne = advance();
-            if ( ne == null ) {
+            final FileEntry ne = advance();
+            if (ne == null) {
                 doClose();
                 return n;
             }
             this.next = ne;
-        }
-        catch ( CIFSException e ) {
+        } catch (final CIFSException e) {
             log.warn("Enumeration failed", e);
             this.next = null;
         }
         return n;
     }
-
 
     /**
      * {@inheritDoc}
@@ -195,24 +180,22 @@ public class NetServerEnumIterator implements CloseableIterator<FileEntry> {
      * @see jcifs.CloseableIterator#close()
      */
     @Override
-    public void close () throws CIFSException {
-        if ( this.next != null ) {
+    public void close() throws CIFSException {
+        if (this.next != null) {
             doClose();
         }
     }
 
-
     /**
-     * 
+     *
      */
-    private void doClose () {
+    private void doClose() {
         this.treeHandle.release();
         this.next = null;
     }
 
-
     @Override
-    public void remove () {
+    public void remove() {
         throw new UnsupportedOperationException("remove");
     }
 }

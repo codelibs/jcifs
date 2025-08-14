@@ -196,9 +196,9 @@ class SmbFileInputStreamTest {
             when(mockFile.getType()).thenReturn(SmbConstants.TYPE_NAMED_PIPE);
 
             // th.send(request, response, ...) throws SmbException with NT_STATUS_PIPE_BROKEN
-            doThrow(new SmbException(NtStatus.NT_STATUS_PIPE_BROKEN, false)).when(mockTree).send(
-                    any(jcifs.internal.CommonServerMessageBlockRequest.class), any(jcifs.internal.CommonServerMessageBlockResponse.class),
-                    any(RequestParam.class));
+            doThrow(new SmbException(NtStatus.NT_STATUS_PIPE_BROKEN, false)).when(mockTree)
+                    .send(any(jcifs.internal.CommonServerMessageBlockRequest.class),
+                            any(jcifs.internal.CommonServerMessageBlockResponse.class), any(RequestParam.class));
 
             SmbFileInputStream in = new SmbFileInputStream(mockFile, mockTree, mockHandle);
             int res = in.readDirect(new byte[1024], 0, 256);
@@ -221,8 +221,9 @@ class SmbFileInputStreamTest {
             // Capture the ReadAndX request; throw to short-circuit network
             doAnswer(inv -> {
                 throw new SmbException("short-circuit");
-            }).when(mockTree).send(any(jcifs.internal.CommonServerMessageBlockRequest.class),
-                    any(jcifs.internal.CommonServerMessageBlockResponse.class), any(RequestParam.class));
+            }).when(mockTree)
+                    .send(any(jcifs.internal.CommonServerMessageBlockRequest.class),
+                            any(jcifs.internal.CommonServerMessageBlockResponse.class), any(RequestParam.class));
 
             SmbFileInputStream in = new SmbFileInputStream(mockFile, mockTree, mockHandle);
 
@@ -254,8 +255,9 @@ class SmbFileInputStreamTest {
             // Cause send to throw to stop execution so we can verify arguments
             doAnswer(inv -> {
                 throw new SmbException("stop");
-            }).when(mockTree).send(any(jcifs.internal.CommonServerMessageBlockRequest.class),
-                    any(jcifs.internal.CommonServerMessageBlockResponse.class), any(RequestParam.class));
+            }).when(mockTree)
+                    .send(any(jcifs.internal.CommonServerMessageBlockRequest.class),
+                            any(jcifs.internal.CommonServerMessageBlockResponse.class), any(RequestParam.class));
 
             SmbFileInputStream in = new SmbFileInputStream(mockFile, mockTree, mockHandle);
             ArgumentCaptor<jcifs.internal.smb1.com.SmbComReadAndX> cap =

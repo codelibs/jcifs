@@ -20,19 +20,16 @@
 package jcifs.smb1.http;
 
 import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
-
 import java.net.Authenticator;
 import java.net.HttpURLConnection;
 import java.net.PasswordAuthentication;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.net.URLDecoder;
-
 import java.security.Permission;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -56,17 +53,15 @@ import jcifs.smb1.util.Base64;
  */
 public class NtlmHttpURLConnection extends HttpURLConnection {
 
-    private static final int MAX_REDIRECTS =
-            Integer.parseInt(System.getProperty("http.maxRedirects", "20"));
+    private static final int MAX_REDIRECTS = Integer.getInteger("http.maxRedirects", 20);
 
-    private static final int LM_COMPATIBILITY =
-            Config.getInt("jcifs.smb1.smb.lmCompatibility", 0);
+    private static final int LM_COMPATIBILITY = Config.getInt("jcifs.smb1.smb.lmCompatibility", 0);
 
     private static final String DEFAULT_DOMAIN;
 
     private HttpURLConnection connection;
 
-    private Map requestProperties;
+    private final Map requestProperties;
 
     private Map headerFields;
 
@@ -80,84 +75,101 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 
     static {
         String domain = System.getProperty("http.auth.ntlm.domain");
-        if (domain == null) domain = Type3Message.getDefaultDomain();
+        if (domain == null) {
+            domain = Type3Message.getDefaultDomain();
+        }
         DEFAULT_DOMAIN = domain;
     }
 
-    public NtlmHttpURLConnection(HttpURLConnection connection) {
+    public NtlmHttpURLConnection(final HttpURLConnection connection) {
         super(connection.getURL());
         this.connection = connection;
         requestProperties = new HashMap();
     }
 
+    @Override
     public void connect() throws IOException {
-        if (connected) return;
+        if (connected) {
+            return;
+        }
         connection.connect();
         connected = true;
     }
 
     private void handshake() throws IOException {
-        if (handshakeComplete) return;
+        if (handshakeComplete) {
+            return;
+        }
         doHandshake();
         handshakeComplete = true;
     }
 
+    @Override
     public URL getURL() {
         return connection.getURL();
     }
 
+    @Override
     public int getContentLength() {
         try {
             handshake();
-        } catch (IOException ex) { }
+        } catch (final IOException ex) {}
         return connection.getContentLength();
     }
 
+    @Override
     public String getContentType() {
         try {
             handshake();
-        } catch (IOException ex) { }
+        } catch (final IOException ex) {}
         return connection.getContentType();
     }
 
+    @Override
     public String getContentEncoding() {
         try {
             handshake();
-        } catch (IOException ex) { }
+        } catch (final IOException ex) {}
         return connection.getContentEncoding();
     }
 
+    @Override
     public long getExpiration() {
         try {
             handshake();
-        } catch (IOException ex) { }
+        } catch (final IOException ex) {}
         return connection.getExpiration();
     }
 
+    @Override
     public long getDate() {
         try {
             handshake();
-        } catch (IOException ex) { }
+        } catch (final IOException ex) {}
         return connection.getDate();
     }
 
+    @Override
     public long getLastModified() {
         try {
             handshake();
-        } catch (IOException ex) { }
+        } catch (final IOException ex) {}
         return connection.getLastModified();
     }
 
-    public String getHeaderField(String header) {
+    @Override
+    public String getHeaderField(final String header) {
         try {
             handshake();
-        } catch (IOException ex) { }
+        } catch (final IOException ex) {}
         return connection.getHeaderField(header);
     }
 
     private Map getHeaderFields0() {
-        if (headerFields != null) return headerFields;
-        Map map = new HashMap();
+        if (headerFields != null) {
+            return headerFields;
+        }
+        final Map map = new HashMap();
         String key = connection.getHeaderFieldKey(0);
         String value = connection.getHeaderField(0);
         for (int i = 1; key != null || value != null; i++) {
@@ -170,166 +182,198 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
             key = connection.getHeaderFieldKey(i);
             value = connection.getHeaderField(i);
         }
-        Iterator entries = map.entrySet().iterator();
+        final Iterator entries = map.entrySet().iterator();
         while (entries.hasNext()) {
-            Map.Entry entry = (Map.Entry) entries.next();
-            entry.setValue(Collections.unmodifiableList((List)
-                    entry.getValue()));
+            final Map.Entry entry = (Map.Entry) entries.next();
+            entry.setValue(Collections.unmodifiableList((List) entry.getValue()));
         }
-        return (headerFields = Collections.unmodifiableMap(map));
+        return headerFields = Collections.unmodifiableMap(map);
     }
 
+    @Override
     public Map getHeaderFields() {
-        if (headerFields != null) return headerFields;
+        if (headerFields != null) {
+            return headerFields;
+        }
         try {
             handshake();
-        } catch (IOException ex) { }
+        } catch (final IOException ex) {}
         return getHeaderFields0();
     }
 
-    public int getHeaderFieldInt(String header, int def) {
+    @Override
+    public int getHeaderFieldInt(final String header, final int def) {
         try {
             handshake();
-        } catch (IOException ex) { }
+        } catch (final IOException ex) {}
         return connection.getHeaderFieldInt(header, def);
     }
 
-    public long getHeaderFieldDate(String header, long def) {
+    @Override
+    public long getHeaderFieldDate(final String header, final long def) {
         try {
             handshake();
-        } catch (IOException ex) { }
+        } catch (final IOException ex) {}
         return connection.getHeaderFieldDate(header, def);
     }
 
-    public String getHeaderFieldKey(int index) {
+    @Override
+    public String getHeaderFieldKey(final int index) {
         try {
             handshake();
-        } catch (IOException ex) { }
+        } catch (final IOException ex) {}
         return connection.getHeaderFieldKey(index);
     }
 
-    public String getHeaderField(int index) {
+    @Override
+    public String getHeaderField(final int index) {
         try {
             handshake();
-        } catch (IOException ex) { }
+        } catch (final IOException ex) {}
         return connection.getHeaderField(index);
     }
 
+    @Override
     public Object getContent() throws IOException {
         try {
             handshake();
-        } catch (IOException ex) { }
+        } catch (final IOException ex) {}
         return connection.getContent();
     }
 
-    public Object getContent(Class[] classes) throws IOException {
+    @Override
+    public Object getContent(final Class[] classes) throws IOException {
         try {
             handshake();
-        } catch (IOException ex) { }
+        } catch (final IOException ex) {}
         return connection.getContent(classes);
     }
 
+    @Override
     public Permission getPermission() throws IOException {
         return connection.getPermission();
     }
 
+    @Override
     public InputStream getInputStream() throws IOException {
         try {
             handshake();
-        } catch (IOException ex) { }
+        } catch (final IOException ex) {}
         return connection.getInputStream();
     }
 
+    @Override
     public OutputStream getOutputStream() throws IOException {
         try {
             connect();
-        } catch (IOException ex) { }
-        OutputStream output = connection.getOutputStream();
+        } catch (final IOException ex) {}
+        final OutputStream output = connection.getOutputStream();
         cachedOutput = new ByteArrayOutputStream();
         return new CacheStream(output, cachedOutput);
     }
 
+    @Override
     public String toString() {
         return connection.toString();
     }
 
-    public void setDoInput(boolean doInput) {
+    @Override
+    public void setDoInput(final boolean doInput) {
         connection.setDoInput(doInput);
         this.doInput = doInput;
     }
 
+    @Override
     public boolean getDoInput() {
         return connection.getDoInput();
     }
 
-    public void setDoOutput(boolean doOutput) {
+    @Override
+    public void setDoOutput(final boolean doOutput) {
         connection.setDoOutput(doOutput);
         this.doOutput = doOutput;
     }
 
+    @Override
     public boolean getDoOutput() {
         return connection.getDoOutput();
     }
 
-    public void setAllowUserInteraction(boolean allowUserInteraction) {
+    @Override
+    public void setAllowUserInteraction(final boolean allowUserInteraction) {
         connection.setAllowUserInteraction(allowUserInteraction);
         this.allowUserInteraction = allowUserInteraction;
     }
 
+    @Override
     public boolean getAllowUserInteraction() {
         return connection.getAllowUserInteraction();
     }
 
-    public void setUseCaches(boolean useCaches) {
+    @Override
+    public void setUseCaches(final boolean useCaches) {
         connection.setUseCaches(useCaches);
         this.useCaches = useCaches;
     }
 
+    @Override
     public boolean getUseCaches() {
         return connection.getUseCaches();
     }
 
-    public void setIfModifiedSince(long ifModifiedSince) {
+    @Override
+    public void setIfModifiedSince(final long ifModifiedSince) {
         connection.setIfModifiedSince(ifModifiedSince);
         this.ifModifiedSince = ifModifiedSince;
     }
 
+    @Override
     public long getIfModifiedSince() {
         return connection.getIfModifiedSince();
     }
 
+    @Override
     public boolean getDefaultUseCaches() {
         return connection.getDefaultUseCaches();
     }
 
-    public void setDefaultUseCaches(boolean defaultUseCaches) {
+    @Override
+    public void setDefaultUseCaches(final boolean defaultUseCaches) {
         connection.setDefaultUseCaches(defaultUseCaches);
     }
 
-    public void setRequestProperty(String key, String value) {
-        if (key == null) throw new NullPointerException();
-        List values = new ArrayList();
+    @Override
+    public void setRequestProperty(final String key, final String value) {
+        if (key == null) {
+            throw new NullPointerException();
+        }
+        final List values = new ArrayList();
         values.add(value);
         boolean found = false;
-        Iterator entries = requestProperties.entrySet().iterator();
+        final Iterator entries = requestProperties.entrySet().iterator();
         while (entries.hasNext()) {
-            Map.Entry entry = (Map.Entry) entries.next();
+            final Map.Entry entry = (Map.Entry) entries.next();
             if (key.equalsIgnoreCase((String) entry.getKey())) {
                 entry.setValue(values);
                 found = true;
                 break;
             }
         }
-        if (!found) requestProperties.put(key, values);
+        if (!found) {
+            requestProperties.put(key, values);
+        }
         connection.setRequestProperty(key, value);
     }
 
-    public void addRequestProperty(String key, String value) {
-        if (key == null) throw new NullPointerException();
+    @Override
+    public void addRequestProperty(final String key, final String value) {
+        if (key == null) {
+            throw new NullPointerException();
+        }
         List values = null;
-        Iterator entries = requestProperties.entrySet().iterator();
+        final Iterator entries = requestProperties.entrySet().iterator();
         while (entries.hasNext()) {
-            Map.Entry entry = (Map.Entry) entries.next();
+            final Map.Entry entry = (Map.Entry) entries.next();
             if (key.equalsIgnoreCase((String) entry.getKey())) {
                 values = (List) entry.getValue();
                 values.add(value);
@@ -342,8 +386,8 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
             requestProperties.put(key, values);
         }
         // 1.3-compatible.
-        StringBuffer buffer = new StringBuffer();
-        Iterator propertyValues = values.iterator();
+        final StringBuilder buffer = new StringBuilder();
+        final Iterator propertyValues = values.iterator();
         while (propertyValues.hasNext()) {
             buffer.append(propertyValues.next());
             if (propertyValues.hasNext()) {
@@ -353,77 +397,88 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
         connection.setRequestProperty(key, buffer.toString());
     }
 
-    public String getRequestProperty(String key) {
+    @Override
+    public String getRequestProperty(final String key) {
         return connection.getRequestProperty(key);
     }
 
+    @Override
     public Map getRequestProperties() {
-        Map map = new HashMap();
-        Iterator entries = requestProperties.entrySet().iterator();
+        final Map map = new HashMap();
+        final Iterator entries = requestProperties.entrySet().iterator();
         while (entries.hasNext()) {
-            Map.Entry entry = (Map.Entry) entries.next();
-            map.put(entry.getKey(),
-                    Collections.unmodifiableList((List) entry.getValue()));
+            final Map.Entry entry = (Map.Entry) entries.next();
+            map.put(entry.getKey(), Collections.unmodifiableList((List) entry.getValue()));
         }
         return Collections.unmodifiableMap(map);
     }
 
-    public void setInstanceFollowRedirects(boolean instanceFollowRedirects) {
+    @Override
+    public void setInstanceFollowRedirects(final boolean instanceFollowRedirects) {
         connection.setInstanceFollowRedirects(instanceFollowRedirects);
     }
 
+    @Override
     public boolean getInstanceFollowRedirects() {
         return connection.getInstanceFollowRedirects();
     }
 
-    public void setRequestMethod(String requestMethod)
-            throws ProtocolException {
+    @Override
+    public void setRequestMethod(final String requestMethod) throws ProtocolException {
         connection.setRequestMethod(requestMethod);
         this.method = requestMethod;
     }
 
+    @Override
     public String getRequestMethod() {
         return connection.getRequestMethod();
     }
 
+    @Override
     public int getResponseCode() throws IOException {
         try {
             handshake();
-        } catch (IOException ex) { }
+        } catch (final IOException ex) {}
         return connection.getResponseCode();
     }
 
+    @Override
     public String getResponseMessage() throws IOException {
         try {
             handshake();
-        } catch (IOException ex) { }
+        } catch (final IOException ex) {}
         return connection.getResponseMessage();
     }
 
+    @Override
     public void disconnect() {
         connection.disconnect();
         handshakeComplete = false;
         connected = false;
     }
 
+    @Override
     public boolean usingProxy() {
         return connection.usingProxy();
     }
 
+    @Override
     public InputStream getErrorStream() {
         try {
             handshake();
-        } catch (IOException ex) { }
+        } catch (final IOException ex) {}
         return connection.getErrorStream();
     }
 
     private int parseResponseCode() throws IOException {
         try {
-            String response = connection.getHeaderField(0);
+            final String response = connection.getHeaderField(0);
             int index = response.indexOf(' ');
-            while (response.charAt(index) == ' ') index++;
+            while (response.charAt(index) == ' ') {
+                index++;
+            }
             return Integer.parseInt(response.substring(index, index + 3));
-        } catch (Exception ex) {
+        } catch (final Exception ex) {
             throw new IOException(ex.getMessage());
         }
     }
@@ -435,40 +490,38 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
             if (response != HTTP_UNAUTHORIZED && response != HTTP_PROXY_AUTH) {
                 return;
             }
-            Type1Message type1 = (Type1Message) attemptNegotiation(response);
-            if (type1 == null) return; // no NTLM
+            final Type1Message type1 = (Type1Message) attemptNegotiation(response);
+            if (type1 == null) {
+                return; // no NTLM
+            }
             int attempt = 0;
             while (attempt < MAX_REDIRECTS) {
-                connection.setRequestProperty(authProperty, authMethod + ' ' +
-                        Base64.encode(type1.toByteArray()));
+                connection.setRequestProperty(authProperty, authMethod + ' ' + Base64.encode(type1.toByteArray()));
                 connection.connect(); // send type 1
                 response = parseResponseCode();
-                if (response != HTTP_UNAUTHORIZED &&
-                        response != HTTP_PROXY_AUTH) {
+                if (response != HTTP_UNAUTHORIZED && response != HTTP_PROXY_AUTH) {
                     return;
                 }
-                Type3Message type3 = (Type3Message)
-                        attemptNegotiation(response);
-                if (type3 == null) return;
-                connection.setRequestProperty(authProperty, authMethod + ' ' +
-                        Base64.encode(type3.toByteArray()));
+                final Type3Message type3 = (Type3Message) attemptNegotiation(response);
+                if (type3 == null) {
+                    return;
+                }
+                connection.setRequestProperty(authProperty, authMethod + ' ' + Base64.encode(type3.toByteArray()));
                 connection.connect(); // send type 3
                 if (cachedOutput != null && doOutput) {
-                    OutputStream output = connection.getOutputStream();
+                    final OutputStream output = connection.getOutputStream();
                     cachedOutput.writeTo(output);
                     output.flush();
                 }
                 response = parseResponseCode();
-                if (response != HTTP_UNAUTHORIZED &&
-                        response != HTTP_PROXY_AUTH) {
+                if (response != HTTP_UNAUTHORIZED && response != HTTP_PROXY_AUTH) {
                     return;
                 }
                 attempt++;
-                if (allowUserInteraction && attempt < MAX_REDIRECTS) {
-                    reconnect();
-                } else {
+                if (!allowUserInteraction || (attempt >= MAX_REDIRECTS)) {
                     break;
                 }
+                reconnect();
             }
             throw new IOException("Unable to negotiate NTLM authentication.");
         } finally {
@@ -476,14 +529,16 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
         }
     }
 
-    private NtlmMessage attemptNegotiation(int response) throws IOException {
+    private NtlmMessage attemptNegotiation(final int response) throws IOException {
         authProperty = null;
         authMethod = null;
-        InputStream errorStream = connection.getErrorStream();
+        final InputStream errorStream = connection.getErrorStream();
         if (errorStream != null && errorStream.available() != 0) {
             int count;
-            byte[] buf = new byte[1024];
-            while ((count = errorStream.read(buf, 0, 1024)) != -1);
+            final byte[] buf = new byte[1024];
+            while ((count = errorStream.read(buf, 0, 1024)) != -1) {
+                ;
+            }
         }
         String authHeader;
         if (response == HTTP_UNAUTHORIZED) {
@@ -494,34 +549,42 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
             authProperty = "Proxy-Authorization";
         }
         String authorization = null;
-        List methods = (List) getHeaderFields0().get(authHeader);
-        if (methods == null) return null;
-        Iterator iterator = methods.iterator();
+        final List methods = (List) getHeaderFields0().get(authHeader);
+        if (methods == null) {
+            return null;
+        }
+        final Iterator iterator = methods.iterator();
         while (iterator.hasNext()) {
-            String currentAuthMethod = (String) iterator.next();
+            final String currentAuthMethod = (String) iterator.next();
             if (currentAuthMethod.startsWith("NTLM")) {
                 if (currentAuthMethod.length() == 4) {
                     authMethod = "NTLM";
                     break;
                 }
-                if (currentAuthMethod.indexOf(' ') != 4) continue;
+                if (currentAuthMethod.indexOf(' ') != 4) {
+                    continue;
+                }
                 authMethod = "NTLM";
                 authorization = currentAuthMethod.substring(5).trim();
                 break;
-            } else if (currentAuthMethod.startsWith("Negotiate")) {
+            }
+            if (currentAuthMethod.startsWith("Negotiate")) {
                 if (currentAuthMethod.length() == 9) {
                     authMethod = "Negotiate";
                     break;
                 }
-                if (currentAuthMethod.indexOf(' ') != 9) continue;
+                if (currentAuthMethod.indexOf(' ') != 9) {
+                    continue;
+                }
                 authMethod = "Negotiate";
                 authorization = currentAuthMethod.substring(10).trim();
                 break;
             }
         }
-        if (authMethod == null) return null;
-        NtlmMessage message = (authorization != null) ?
-                new Type2Message(Base64.decode(authorization)) : null;
+        if (authMethod == null) {
+            return null;
+        }
+        NtlmMessage message = authorization != null ? new Type2Message(Base64.decode(authorization)) : null;
         reconnect();
         if (message == null) {
             message = new Type1Message();
@@ -536,33 +599,38 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
             if (userInfo != null) {
                 userInfo = URLDecoder.decode(userInfo);
                 int index = userInfo.indexOf(':');
-                user = (index != -1) ? userInfo.substring(0, index) : userInfo;
-                if (index != -1) password = userInfo.substring(index + 1);
+                user = index != -1 ? userInfo.substring(0, index) : userInfo;
+                if (index != -1) {
+                    password = userInfo.substring(index + 1);
+                }
                 index = user.indexOf('\\');
-                if (index == -1) index = user.indexOf('/');
-                domain = (index != -1) ? user.substring(0, index) : domain;
-                user = (index != -1) ? user.substring(index + 1) : user;
+                if (index == -1) {
+                    index = user.indexOf('/');
+                }
+                domain = index != -1 ? user.substring(0, index) : domain;
+                user = index != -1 ? user.substring(index + 1) : user;
             }
             if (user == null) {
-                if (!allowUserInteraction) return null;
+                if (!allowUserInteraction) {
+                    return null;
+                }
                 try {
-                    URL url = getURL();
-                    String protocol = url.getProtocol();
+                    final URL url = getURL();
+                    final String protocol = url.getProtocol();
                     int port = url.getPort();
                     if (port == -1) {
                         port = "https".equalsIgnoreCase(protocol) ? 443 : 80;
                     }
-                    PasswordAuthentication auth =
-                            Authenticator.requestPasswordAuthentication(null,
-                                    port, protocol, "", authMethod);
-                    if (auth == null) return null;
+                    final PasswordAuthentication auth = Authenticator.requestPasswordAuthentication(null, port, protocol, "", authMethod);
+                    if (auth == null) {
+                        return null;
+                    }
                     user = auth.getUserName();
                     password = new String(auth.getPassword());
-                } catch (Exception ex) { }
+                } catch (final Exception ex) {}
             }
-            Type2Message type2 = (Type2Message) message;
-            message = new Type3Message(type2, password, domain, user,
-                    Type3Message.getDefaultWorkstation(), 0);
+            final Type2Message type2 = (Type2Message) message;
+            message = new Type3Message(type2, password, domain, user, Type3Message.getDefaultWorkstation(), 0);
         }
         return message;
     }
@@ -571,15 +639,17 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
         connection = (HttpURLConnection) connection.getURL().openConnection();
         connection.setRequestMethod(method);
         headerFields = null;
-        Iterator properties = requestProperties.entrySet().iterator();
+        final Iterator properties = requestProperties.entrySet().iterator();
         while (properties.hasNext()) {
-            Map.Entry property = (Map.Entry) properties.next();
-            String key = (String) property.getKey();
-            StringBuffer value = new StringBuffer();
-            Iterator values = ((List) property.getValue()).iterator();
+            final Map.Entry property = (Map.Entry) properties.next();
+            final String key = (String) property.getKey();
+            final StringBuilder value = new StringBuilder();
+            final Iterator values = ((List) property.getValue()).iterator();
             while (values.hasNext()) {
                 value.append(values.next());
-                if (values.hasNext()) value.append(", ");
+                if (values.hasNext()) {
+                    value.append(", ");
+                }
             }
             connection.setRequestProperty(key, value.toString());
         }
@@ -596,32 +666,37 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 
         private final OutputStream collector;
 
-        public CacheStream(OutputStream stream, OutputStream collector) {
+        public CacheStream(final OutputStream stream, final OutputStream collector) {
             this.stream = stream;
             this.collector = collector;
         }
 
+        @Override
         public void close() throws IOException {
             stream.close();
             collector.close();
         }
 
+        @Override
         public void flush() throws IOException {
             stream.flush();
             collector.flush();
         }
 
-        public void write(byte[] b) throws IOException {
+        @Override
+        public void write(final byte[] b) throws IOException {
             stream.write(b);
             collector.write(b);
         }
 
-        public void write(byte[] b, int off, int len) throws IOException {
+        @Override
+        public void write(final byte[] b, final int off, final int len) throws IOException {
             stream.write(b, off, len);
             collector.write(b, off, len);
         }
 
-        public void write(int b) throws IOException {
+        @Override
+        public void write(final int b) throws IOException {
             stream.write(b);
             collector.write(b);
         }

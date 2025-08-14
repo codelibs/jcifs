@@ -15,10 +15,10 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for {@link Handler}.
- * 
+ *
  * Tests the SMB URL handler implementation including:
  * - Default port configuration
- * - URL connection opening  
+ * - URL connection opening
  * - URL creation and parsing
  */
 public class HandlerTest {

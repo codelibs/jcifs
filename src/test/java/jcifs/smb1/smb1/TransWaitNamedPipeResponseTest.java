@@ -105,7 +105,7 @@ final class TransWaitNamedPipeResponseTest {
     }
 
     /**
-     * Verify that all methods can be called with null buffers without 
+     * Verify that all methods can be called with null buffers without
      * throwing exceptions. This test ensures robustness of the implementation.
      */
     @Test

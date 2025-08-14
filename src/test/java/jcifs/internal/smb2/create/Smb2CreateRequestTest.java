@@ -482,7 +482,7 @@ class Smb2CreateRequestTest {
         request.setPath("third\\path\\");
         assertEquals("\\third\\path", request.getPath());
 
-        // Multiple leading backslashes - only first one gets stripped, then trailing ones get stripped  
+        // Multiple leading backslashes - only first one gets stripped, then trailing ones get stripped
         // But getPath() adds a backslash at the beginning, so \\fourth\path\\ becomes \fourth\path\
         request.setPath("\\\\fourth\\path\\\\");
         assertEquals("\\\\fourth\\path\\", request.getPath());

@@ -1,22 +1,21 @@
 /*
  * © 2017 AgNO3 Gmbh & Co. KG
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 package jcifs.smb;
-
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -38,20 +37,19 @@ import jcifs.internal.util.StringUtil;
 import jcifs.netbios.NbtAddress;
 import jcifs.netbios.UniAddress;
 
-
 /**
- * 
- * 
+ *
+ *
  * This mainly tracks two locations:
  * - canonical URL path: path component of the URL: this is used to reconstruct URLs to resources and is not adjusted by
  * DFS referrals. (E.g. a resource with a DFS root's parent will still point to the DFS root not the share it's actually
  * located in).
  * - share + uncpath within it: This is the relevant information for most SMB requests. Both are adjusted by DFS
  * referrals. Nested resources will inherit the information already resolved by the parent resource.
- * 
+ *
  * Invariant:
  * A directory resource must have a trailing slash/backslash for both URL and UNC path at all times.
- * 
+ *
  * @author mbechler
  *
  */
@@ -72,19 +70,17 @@ class SmbResourceLocatorImpl implements SmbResourceLocatorInternal, Cloneable {
     private int addressIndex;
     private int type;
 
-    private CIFSContext ctx;
-
+    private final CIFSContext ctx;
 
     /**
-     * 
+     *
      * @param ctx
      * @param u
      */
-    public SmbResourceLocatorImpl ( CIFSContext ctx, URL u ) {
+    public SmbResourceLocatorImpl(final CIFSContext ctx, final URL u) {
         this.ctx = ctx;
         this.url = u;
     }
-
 
     /**
      * {@inheritDoc}
@@ -92,13 +88,13 @@ class SmbResourceLocatorImpl implements SmbResourceLocatorInternal, Cloneable {
      * @see java.lang.Object#clone()
      */
     @Override
-    protected SmbResourceLocatorImpl clone () {
-        SmbResourceLocatorImpl loc = new SmbResourceLocatorImpl(this.ctx, this.url);
+    protected SmbResourceLocatorImpl clone() {
+        final SmbResourceLocatorImpl loc = new SmbResourceLocatorImpl(this.ctx, this.url);
         loc.canon = this.canon;
         loc.share = this.share;
         loc.dfsReferral = this.dfsReferral;
         loc.unc = this.unc;
-        if ( this.addresses != null ) {
+        if (this.addresses != null) {
             loc.addresses = new UniAddress[this.addresses.length];
             System.arraycopy(this.addresses, 0, loc.addresses, 0, this.addresses.length);
         }
@@ -107,70 +103,63 @@ class SmbResourceLocatorImpl implements SmbResourceLocatorInternal, Cloneable {
         return loc;
     }
 
-
     /**
      * @param context
      * @param name
      */
-    void resolveInContext ( SmbResourceLocator context, String name ) {
-        String shr = context.getShare();
-        if ( shr != null ) {
+    void resolveInContext(final SmbResourceLocator context, String name) {
+        final String shr = context.getShare();
+        if (shr != null) {
             this.dfsReferral = context.getDfsReferral();
         }
-        int last = name.length() - 1;
+        final int last = name.length() - 1;
         boolean trailingSlash = false;
-        if ( last >= 0 && name.charAt(last) == '/' ) {
+        if (last >= 0 && name.charAt(last) == '/') {
             trailingSlash = true;
             name = name.substring(0, last);
         }
 
-        if ( shr == null ) {
-            String[] nameParts = name.split("/");
+        if (shr == null) {
+            final String[] nameParts = name.split("/");
 
             // server is set through URL, however it's still in the name
             int pos = 0;
-            if ( context.getServer() == null ) {
+            if (context.getServer() == null) {
                 pos = 1;
             }
 
             // first remaining path element would be share
-            if ( nameParts.length > pos ) {
-                this.share = nameParts[ pos++ ];
+            if (nameParts.length > pos) {
+                this.share = nameParts[pos];
+                pos++;
             }
 
             // all other remaining path elements are actual path
-            if ( nameParts.length > pos ) {
-                String[] remainParts = new String[nameParts.length - pos];
+            if (nameParts.length > pos) {
+                final String[] remainParts = new String[nameParts.length - pos];
                 System.arraycopy(nameParts, pos, remainParts, 0, nameParts.length - pos);
-                this.unc = "\\" + StringUtil.join("\\", remainParts) + ( trailingSlash ? "\\" : "" );
-                this.canon = "/" + this.share + "/" + StringUtil.join("/", remainParts) + ( trailingSlash ? "/" : "" );
-            }
-            else {
+                this.unc = "\\" + StringUtil.join("\\", remainParts) + (trailingSlash ? "\\" : "");
+                this.canon = "/" + this.share + "/" + StringUtil.join("/", remainParts) + (trailingSlash ? "/" : "");
+            } else {
                 this.unc = "\\";
-                if ( this.share != null ) {
-                    this.canon = "/" + this.share + ( trailingSlash ? "/" : "" );
-                }
-                else {
+                if (this.share != null) {
+                    this.canon = "/" + this.share + (trailingSlash ? "/" : "");
+                } else {
                     this.canon = "/";
                 }
             }
-        }
-        else {
-            String uncPath = context.getUNCPath();
-            if ( uncPath.equals("\\") ) {
+        } else {
+            final String uncPath = context.getUNCPath();
+            if (uncPath.equals("\\")) {
                 // context share != null, so the remainder is path
-                this.unc = '\\' + name.replace('/', '\\') + ( trailingSlash ? "\\" : "" );
-                this.canon = context.getURLPath() + name + ( trailingSlash ? "/" : "" );
-                this.share = shr;
+                this.unc = '\\' + name.replace('/', '\\') + (trailingSlash ? "\\" : "");
+            } else {
+                this.unc = uncPath + name.replace('/', '\\') + (trailingSlash ? "\\" : "");
             }
-            else {
-                this.unc = uncPath + name.replace('/', '\\') + ( trailingSlash ? "\\" : "" );
-                this.canon = context.getURLPath() + name + ( trailingSlash ? "/" : "" );
-                this.share = shr;
-            }
+            this.canon = context.getURLPath() + name + (trailingSlash ? "/" : "");
+            this.share = shr;
         }
     }
-
 
     /**
      * {@inheritDoc}
@@ -178,10 +167,9 @@ class SmbResourceLocatorImpl implements SmbResourceLocatorInternal, Cloneable {
      * @see jcifs.SmbResourceLocator#getDfsReferral()
      */
     @Override
-    public DfsReferralData getDfsReferral () {
+    public DfsReferralData getDfsReferral() {
         return this.dfsReferral;
     }
-
 
     /**
      * {@inheritDoc}
@@ -190,27 +178,24 @@ class SmbResourceLocatorImpl implements SmbResourceLocatorInternal, Cloneable {
      */
 
     @Override
-    public String getName () {
-        String urlpath = getURLPath();
-        String shr = getShare();
-        if ( urlpath.length() > 1 ) {
+    public String getName() {
+        final String urlpath = getURLPath();
+        final String shr = getShare();
+        if (urlpath.length() > 1) {
             int i = urlpath.length() - 2;
-            while ( urlpath.charAt(i) != '/' ) {
+            while (urlpath.charAt(i) != '/') {
                 i--;
             }
             return urlpath.substring(i + 1);
         }
-        else if ( shr != null ) {
+        if (shr != null) {
             return shr + '/';
         }
-        else if ( this.url.getHost().length() > 0 ) {
+        if (this.url.getHost().length() > 0) {
             return this.url.getHost() + '/';
         }
-        else {
-            return "smb://";
-        }
+        return "smb://";
     }
-
 
     /**
      * {@inheritDoc}
@@ -218,19 +203,18 @@ class SmbResourceLocatorImpl implements SmbResourceLocatorInternal, Cloneable {
      * @see jcifs.SmbResourceLocator#getParent()
      */
     @Override
-    public String getParent () {
+    public String getParent() {
         String str = this.url.getAuthority();
 
-        if ( str != null && !str.isEmpty() ) {
-            StringBuffer sb = new StringBuffer("smb://");
+        if (str != null && !str.isEmpty()) {
+            final StringBuilder sb = new StringBuilder("smb://");
 
             sb.append(str);
 
-            String urlpath = getURLPath();
-            if ( urlpath.length() > 1 ) {
+            final String urlpath = getURLPath();
+            if (urlpath.length() > 1) {
                 sb.append(urlpath);
-            }
-            else {
+            } else {
 
                 sb.append('/');
             }
@@ -238,7 +222,7 @@ class SmbResourceLocatorImpl implements SmbResourceLocatorInternal, Cloneable {
             str = sb.toString();
 
             int i = str.length() - 2;
-            while ( str.charAt(i) != '/' ) {
+            while (str.charAt(i) != '/') {
                 i--;
             }
 
@@ -248,7 +232,6 @@ class SmbResourceLocatorImpl implements SmbResourceLocatorInternal, Cloneable {
         return "smb://";
     }
 
-
     /**
      * {@inheritDoc}
      *
@@ -256,10 +239,9 @@ class SmbResourceLocatorImpl implements SmbResourceLocatorInternal, Cloneable {
      */
 
     @Override
-    public String getPath () {
+    public String getPath() {
         return this.url.toString();
     }
-
 
     /**
      * {@inheritDoc}
@@ -267,41 +249,37 @@ class SmbResourceLocatorImpl implements SmbResourceLocatorInternal, Cloneable {
      * @see jcifs.SmbResourceLocator#getCanonicalURL()
      */
     @Override
-    public String getCanonicalURL () {
-        String str = this.url.getAuthority();
-        if ( str != null && !str.isEmpty() ) {
+    public String getCanonicalURL() {
+        final String str = this.url.getAuthority();
+        if (str != null && !str.isEmpty()) {
             return "smb://" + this.url.getAuthority() + this.getURLPath();
         }
         return "smb://";
     }
 
-
     @Override
-    public String getUNCPath () {
-        if ( this.unc == null ) {
+    public String getUNCPath() {
+        if (this.unc == null) {
             canonicalizePath();
         }
         return this.unc;
     }
 
-
     @Override
-    public String getURLPath () {
-        if ( this.unc == null ) {
+    public String getURLPath() {
+        if (this.unc == null) {
             canonicalizePath();
         }
         return this.canon;
     }
 
-
     @Override
-    public String getShare () {
-        if ( this.unc == null ) {
+    public String getShare() {
+        if (this.unc == null) {
             canonicalizePath();
         }
         return this.share;
     }
-
 
     /**
      * {@inheritDoc}
@@ -309,13 +287,12 @@ class SmbResourceLocatorImpl implements SmbResourceLocatorInternal, Cloneable {
      * @see jcifs.SmbResourceLocator#getServerWithDfs()
      */
     @Override
-    public String getServerWithDfs () {
-        if ( this.dfsReferral != null ) {
+    public String getServerWithDfs() {
+        if (this.dfsReferral != null) {
             return this.dfsReferral.getServer();
         }
         return getServer();
     }
-
 
     /**
      * {@inheritDoc}
@@ -323,14 +300,13 @@ class SmbResourceLocatorImpl implements SmbResourceLocatorInternal, Cloneable {
      * @see jcifs.SmbResourceLocator#getServer()
      */
     @Override
-    public String getServer () {
-        String str = this.url.getHost();
-        if ( str.length() == 0 ) {
+    public String getServer() {
+        final String str = this.url.getHost();
+        if (str.length() == 0) {
             return null;
         }
         return str;
     }
-
 
     /**
      * {@inheritDoc}
@@ -338,13 +314,12 @@ class SmbResourceLocatorImpl implements SmbResourceLocatorInternal, Cloneable {
      * @see jcifs.SmbResourceLocator#getDfsPath()
      */
     @Override
-    public String getDfsPath () {
-        if ( this.dfsReferral == null ) {
+    public String getDfsPath() {
+        if (this.dfsReferral == null) {
             return null;
         }
         return "smb://" + this.dfsReferral.getServer() + "/" + this.dfsReferral.getShare() + this.getUNCPath().replace('\\', '/');
     }
-
 
     /**
      * {@inheritDoc}
@@ -352,10 +327,9 @@ class SmbResourceLocatorImpl implements SmbResourceLocatorInternal, Cloneable {
      * @see jcifs.SmbResourceLocator#getPort()
      */
     @Override
-    public int getPort () {
+    public int getPort() {
         return this.url.getPort();
     }
-
 
     /**
      * {@inheritDoc}
@@ -363,22 +337,20 @@ class SmbResourceLocatorImpl implements SmbResourceLocatorInternal, Cloneable {
      * @see jcifs.SmbResourceLocator#getURL()
      */
     @Override
-    public URL getURL () {
+    public URL getURL() {
         return this.url;
     }
 
-
     /**
-     * 
+     *
      * {@inheritDoc}
      *
      * @see jcifs.smb.SmbResourceLocatorInternal#shouldForceSigning()
      */
     @Override
-    public boolean shouldForceSigning () {
+    public boolean shouldForceSigning() {
         return this.ctx.getConfig().isIpcSigningEnforced() && !this.ctx.getCredentials().isAnonymous() && isIPC();
     }
-
 
     /**
      * {@inheritDoc}
@@ -386,10 +358,10 @@ class SmbResourceLocatorImpl implements SmbResourceLocatorInternal, Cloneable {
      * @see jcifs.SmbResourceLocator#isIPC()
      */
     @Override
-    public boolean isIPC () {
-        String shr = this.getShare();
-        if ( shr == null || "IPC$".equals(getShare()) ) {
-            if ( log.isDebugEnabled() ) {
+    public boolean isIPC() {
+        final String shr = this.getShare();
+        if (shr == null || "IPC$".equals(getShare())) {
+            if (log.isDebugEnabled()) {
                 log.debug("Share is IPC " + this.share);
             }
             return true;
@@ -397,50 +369,43 @@ class SmbResourceLocatorImpl implements SmbResourceLocatorInternal, Cloneable {
         return false;
     }
 
-
     /**
      * @param t
      */
-    void updateType ( int t ) {
+    void updateType(final int t) {
         this.type = t;
     }
 
-
     /**
      * {@inheritDoc}
-     * 
+     *
      * @see jcifs.SmbResourceLocator#getType()
      */
     @Override
-    public int getType () throws CIFSException {
-        if ( this.type == 0 ) {
-            if ( getUNCPath().length() > 1 ) {
+    public int getType() throws CIFSException {
+        if (this.type == 0) {
+            if (getUNCPath().length() > 1) {
                 this.type = SmbConstants.TYPE_FILESYSTEM;
-            }
-            else if ( getShare() != null ) {
-                if ( getShare().equals("IPC$") ) {
+            } else if (getShare() != null) {
+                if (getShare().equals("IPC$")) {
                     this.type = SmbConstants.TYPE_NAMED_PIPE;
-                }
-                else {
+                } else {
                     this.type = SmbConstants.TYPE_SHARE;
                 }
-            }
-            else if ( this.url.getAuthority() == null || this.url.getAuthority().isEmpty() ) {
+            } else if (this.url.getAuthority() == null || this.url.getAuthority().isEmpty()) {
                 this.type = SmbConstants.TYPE_WORKGROUP;
-            }
-            else {
+            } else {
                 try {
-                    NetbiosAddress nbaddr = getAddress().unwrap(NetbiosAddress.class);
-                    if ( nbaddr != null ) {
-                        int code = nbaddr.getNameType();
-                        if ( code == 0x1d || code == 0x1b ) {
+                    final NetbiosAddress nbaddr = getAddress().unwrap(NetbiosAddress.class);
+                    if (nbaddr != null) {
+                        final int code = nbaddr.getNameType();
+                        if (code == 0x1d || code == 0x1b) {
                             this.type = SmbConstants.TYPE_WORKGROUP;
                             return this.type;
                         }
                     }
-                }
-                catch ( CIFSException e ) {
-                    if ( ! ( e.getCause() instanceof UnknownHostException ) ) {
+                } catch (final CIFSException e) {
+                    if (!(e.getCause() instanceof UnknownHostException)) {
                         throw e;
                     }
                     log.debug("Unknown host", e);
@@ -451,24 +416,23 @@ class SmbResourceLocatorImpl implements SmbResourceLocatorInternal, Cloneable {
         return this.type;
     }
 
-
     /**
      * {@inheritDoc}
      *
      * @see jcifs.SmbResourceLocator#isWorkgroup()
      */
     @Override
-    public boolean isWorkgroup () throws CIFSException {
-        if ( this.type == SmbConstants.TYPE_WORKGROUP || this.url.getHost().length() == 0 ) {
+    public boolean isWorkgroup() throws CIFSException {
+        if (this.type == SmbConstants.TYPE_WORKGROUP || this.url.getHost().length() == 0) {
             this.type = SmbConstants.TYPE_WORKGROUP;
             return true;
         }
 
-        if ( getShare() == null ) {
-            NetbiosAddress addr = getAddress().unwrap(NetbiosAddress.class);
-            if ( addr != null ) {
-                int code = addr.getNameType();
-                if ( code == 0x1d || code == 0x1b ) {
+        if (getShare() == null) {
+            final NetbiosAddress addr = getAddress().unwrap(NetbiosAddress.class);
+            if (addr != null) {
+                final int code = addr.getNameType();
+                if (code == 0x1d || code == 0x1b) {
                     this.type = SmbConstants.TYPE_WORKGROUP;
                     return true;
                 }
@@ -478,39 +442,37 @@ class SmbResourceLocatorImpl implements SmbResourceLocatorInternal, Cloneable {
         return false;
     }
 
-
     @Override
-    public Address getAddress () throws CIFSException {
-        if ( this.addressIndex == 0 )
+    public Address getAddress() throws CIFSException {
+        if (this.addressIndex == 0) {
             return getFirstAddress();
-        return this.addresses[ this.addressIndex - 1 ];
+        }
+        return this.addresses[this.addressIndex - 1];
     }
 
-
-    static String queryLookup ( String query, String param ) {
-        char in[] = query.toCharArray();
+    static String queryLookup(final String query, final String param) {
+        final char in[] = query.toCharArray();
         int i, ch, st, eq;
 
         st = eq = 0;
-        for ( i = 0; i < in.length; i++ ) {
-            ch = in[ i ];
-            if ( ch == '&' ) {
-                if ( eq > st ) {
-                    String p = new String(in, st, eq - st);
-                    if ( p.equalsIgnoreCase(param) ) {
+        for (i = 0; i < in.length; i++) {
+            ch = in[i];
+            if (ch == '&') {
+                if (eq > st) {
+                    final String p = new String(in, st, eq - st);
+                    if (p.equalsIgnoreCase(param)) {
                         eq++;
                         return new String(in, eq, i - eq);
                     }
                 }
                 st = i + 1;
-            }
-            else if ( ch == '=' ) {
+            } else if (ch == '=') {
                 eq = i;
             }
         }
-        if ( eq > st ) {
-            String p = new String(in, st, eq - st);
-            if ( p.equalsIgnoreCase(param) ) {
+        if (eq > st) {
+            final String p = new String(in, st, eq - st);
+            if (p.equalsIgnoreCase(param)) {
                 eq++;
                 return new String(in, eq, in.length - eq);
             }
@@ -519,50 +481,44 @@ class SmbResourceLocatorImpl implements SmbResourceLocatorInternal, Cloneable {
         return null;
     }
 
-
-    Address getFirstAddress () throws CIFSException {
+    Address getFirstAddress() throws CIFSException {
         this.addressIndex = 0;
 
-        if ( this.addresses == null ) {
-            String host = this.url.getHost();
-            String path = this.url.getPath();
-            String query = this.url.getQuery();
+        if (this.addresses == null) {
+            final String host = this.url.getHost();
+            final String path = this.url.getPath();
+            final String query = this.url.getQuery();
             try {
-                if ( query != null ) {
-                    String server = queryLookup(query, "server");
-                    if ( server != null && server.length() > 0 ) {
+                if (query != null) {
+                    final String server = queryLookup(query, "server");
+                    if (server != null && server.length() > 0) {
                         this.addresses = new UniAddress[1];
-                        this.addresses[ 0 ] = this.ctx.getNameServiceClient().getByName(server);
+                        this.addresses[0] = this.ctx.getNameServiceClient().getByName(server);
                     }
-                    String address = queryLookup(query, "address");
-                    if ( address != null && address.length() > 0 ) {
-                        byte[] ip = java.net.InetAddress.getByName(address).getAddress();
+                    final String address = queryLookup(query, "address");
+                    if (address != null && address.length() > 0) {
+                        final byte[] ip = java.net.InetAddress.getByName(address).getAddress();
                         this.addresses = new UniAddress[1];
-                        this.addresses[ 0 ] = new UniAddress(java.net.InetAddress.getByAddress(host, ip));
+                        this.addresses[0] = new UniAddress(java.net.InetAddress.getByAddress(host, ip));
                     }
-                }
-                else if ( host.length() == 0 ) {
+                } else if (host.length() == 0) {
                     try {
-                        Address addr = this.ctx.getNameServiceClient().getNbtByName(NbtAddress.MASTER_BROWSER_NAME, 0x01, null);
+                        final Address addr = this.ctx.getNameServiceClient().getNbtByName(NbtAddress.MASTER_BROWSER_NAME, 0x01, null);
                         this.addresses = new UniAddress[1];
-                        this.addresses[ 0 ] = this.ctx.getNameServiceClient().getByName(addr.getHostAddress());
-                    }
-                    catch ( UnknownHostException uhe ) {
+                        this.addresses[0] = this.ctx.getNameServiceClient().getByName(addr.getHostAddress());
+                    } catch (final UnknownHostException uhe) {
                         log.debug("Unknown host", uhe);
-                        if ( this.ctx.getConfig().getDefaultDomain() == null ) {
+                        if (this.ctx.getConfig().getDefaultDomain() == null) {
                             throw uhe;
                         }
                         this.addresses = this.ctx.getNameServiceClient().getAllByName(this.ctx.getConfig().getDefaultDomain(), true);
                     }
-                }
-                else if ( path.length() == 0 || path.equals("/") ) {
+                } else if (path.length() == 0 || path.equals("/")) {
                     this.addresses = this.ctx.getNameServiceClient().getAllByName(host, true);
-                }
-                else {
+                } else {
                     this.addresses = this.ctx.getNameServiceClient().getAllByName(host, false);
                 }
-            }
-            catch ( UnknownHostException e ) {
+            } catch (final UnknownHostException e) {
                 throw new CIFSException("Failed to lookup address for name " + host, e);
             }
         }
@@ -570,19 +526,17 @@ class SmbResourceLocatorImpl implements SmbResourceLocatorInternal, Cloneable {
         return getNextAddress();
     }
 
-
-    Address getNextAddress () {
+    Address getNextAddress() {
         Address addr = null;
-        if ( this.addressIndex < this.addresses.length )
-            addr = this.addresses[ this.addressIndex++ ];
+        if (this.addressIndex < this.addresses.length) {
+            addr = this.addresses[this.addressIndex++];
+        }
         return addr;
     }
 
-
-    boolean hasNextAddress () {
+    boolean hasNextAddress() {
         return this.addressIndex < this.addresses.length;
     }
-
 
     /**
      * {@inheritDoc}
@@ -590,93 +544,88 @@ class SmbResourceLocatorImpl implements SmbResourceLocatorInternal, Cloneable {
      * @see jcifs.SmbResourceLocator#isRoot()
      */
     @Override
-    public boolean isRoot () {
+    public boolean isRoot() {
         // length == 0 should not happen
         return getShare() == null && getUNCPath().length() <= 1;
     }
 
-
-    boolean isRootOrShare () {
+    boolean isRootOrShare() {
         // length == 0 should not happen
         return getUNCPath().length() <= 1;
     }
 
-
     /**
      * @throws MalformedURLException
-     * 
+     *
      */
-    private synchronized void canonicalizePath () {
-        char[] in = this.url.getPath().toCharArray();
-        char[] out = new char[in.length];
-        int length = in.length, prefixLen = 0, state = 0;
+    private synchronized void canonicalizePath() {
+        final char[] in = this.url.getPath().toCharArray();
+        final char[] out = new char[in.length];
+        final int length = in.length;
+        int prefixLen = 0, state = 0;
 
         /*
          * The canonicalization routine
          */
-        for ( int i = 0; i < length; i++ ) {
-            switch ( state ) {
+        for (int i = 0; i < length; i++) {
+            switch (state) {
             case 0:
-                if ( in[ i ] != '/' ) {
+                if (in[i] != '/') {
                     // Checked exception (e.g. MalformedURLException) would be better
                     // but this would be a nightmare API wise
                     throw new RuntimeCIFSException("Invalid smb: URL: " + this.url);
                 }
-                out[ prefixLen++ ] = in[ i ];
+                out[prefixLen] = in[i];
+                prefixLen++;
                 state = 1;
                 break;
             case 1:
-                if ( in[ i ] == '/' ) {
+                if (in[i] == '/') {
                     break;
                 }
-                else if ( in[ i ] == '.' && ( ( i + 1 ) >= length || in[ i + 1 ] == '/' ) ) {
+                if (in[i] == '.' && (i + 1 >= length || in[i + 1] == '/')) {
                     i++;
                     break;
-                }
-                else if ( ( i + 1 ) < length && in[ i ] == '.' && in[ i + 1 ] == '.' && ( ( i + 2 ) >= length || in[ i + 2 ] == '/' ) ) {
+                } else if (i + 1 < length && in[i] == '.' && in[i + 1] == '.' && (i + 2 >= length || in[i + 2] == '/')) {
                     i += 2;
-                    if ( prefixLen == 1 )
+                    if (prefixLen == 1) {
                         break;
+                    }
                     do {
                         prefixLen--;
-                    }
-                    while ( prefixLen > 1 && out[ prefixLen - 1 ] != '/' );
+                    } while (prefixLen > 1 && out[prefixLen - 1] != '/');
                     break;
                 }
                 state = 2;
             case 2:
-                if ( in[ i ] == '/' ) {
+                if (in[i] == '/') {
                     state = 1;
                 }
-                out[ prefixLen++ ] = in[ i ];
+                out[prefixLen++] = in[i];
                 break;
             }
         }
 
         this.canon = new String(out, 0, prefixLen);
-        if ( prefixLen > 1 ) {
+        if (prefixLen > 1) {
             prefixLen--;
-            int firstSep = this.canon.indexOf('/', 1);
-            if ( firstSep < 0 ) {
+            final int firstSep = this.canon.indexOf('/', 1);
+            if (firstSep < 0) {
                 this.share = this.canon.substring(1);
                 this.unc = "\\";
-            }
-            else if ( firstSep == prefixLen ) {
+            } else if (firstSep == prefixLen) {
                 this.share = this.canon.substring(1, firstSep);
                 this.unc = "\\";
-            }
-            else {
+            } else {
                 this.share = this.canon.substring(1, firstSep);
                 this.unc = this.canon.substring(firstSep, prefixLen + 1).replace('/', '\\');
             }
-        }
-        else {
+        } else {
             this.canon = "/";
             this.share = null;
             this.unc = "\\";
         }
     }
-
 
     /**
      * {@inheritDoc}
@@ -684,17 +633,15 @@ class SmbResourceLocatorImpl implements SmbResourceLocatorInternal, Cloneable {
      * @see java.lang.Object#hashCode()
      */
     @Override
-    public int hashCode () {
+    public int hashCode() {
         int hash;
         try {
             hash = getAddress().hashCode();
-        }
-        catch ( CIFSException uhe ) {
+        } catch (final CIFSException uhe) {
             hash = getServer().toUpperCase().hashCode();
         }
         return hash + getURLPath().toUpperCase().hashCode();
     }
-
 
     /**
      * {@inheritDoc}
@@ -702,33 +649,27 @@ class SmbResourceLocatorImpl implements SmbResourceLocatorInternal, Cloneable {
      * @see java.lang.Object#equals(java.lang.Object)
      */
     @Override
-    public boolean equals ( Object obj ) {
-        if ( ! ( obj instanceof SmbResourceLocatorImpl ) ) {
+    public boolean equals(final Object obj) {
+        if (!(obj instanceof final SmbResourceLocatorImpl o)) {
             return false;
         }
-
-        SmbResourceLocatorImpl o = (SmbResourceLocatorImpl) obj;
 
         /*
          * If uncertain, pathNamesPossiblyEqual returns true.
          * Comparing canonical paths is definitive.
          */
-        if ( pathNamesPossiblyEqual(this.url.getPath(), o.url.getPath()) ) {
-            if ( getURLPath().equalsIgnoreCase(o.getURLPath()) ) {
-                try {
-                    return getAddress().equals(o.getAddress());
-                }
-                catch ( CIFSException uhe ) {
-                    log.debug("Unknown host", uhe);
-                    return getServer().equalsIgnoreCase(o.getServer());
-                }
+        if (pathNamesPossiblyEqual(this.url.getPath(), o.url.getPath()) && getURLPath().equalsIgnoreCase(o.getURLPath())) {
+            try {
+                return getAddress().equals(o.getAddress());
+            } catch (final CIFSException uhe) {
+                log.debug("Unknown host", uhe);
+                return getServer().equalsIgnoreCase(o.getServer());
             }
         }
         return false;
     }
 
-
-    private static boolean pathNamesPossiblyEqual ( String path1, String path2 ) {
+    private static boolean pathNamesPossiblyEqual(final String path1, final String path2) {
         int p1, p2, l1, l2;
 
         // if unsure return this method returns true
@@ -739,28 +680,25 @@ class SmbResourceLocatorImpl implements SmbResourceLocatorInternal, Cloneable {
         l2 = path2.length() - p2;
 
         // anything with dots voids comparison
-        if ( l1 > 1 && path1.charAt(p1 + 1) == '.' )
+        if ((l1 > 1 && path1.charAt(p1 + 1) == '.') || (l2 > 1 && path2.charAt(p2 + 1) == '.')) {
             return true;
-        if ( l2 > 1 && path2.charAt(p2 + 1) == '.' )
-            return true;
+        }
 
         return l1 == l2 && path1.regionMatches(true, p1, path2, p2, l1);
     }
 
-
     /**
-     * 
+     *
      * {@inheritDoc}
      *
      * @see jcifs.smb.SmbResourceLocatorInternal#overlaps(jcifs.SmbResourceLocator)
      */
     @Override
-    public boolean overlaps ( SmbResourceLocator other ) throws CIFSException {
-        String tp = getCanonicalURL();
-        String op = other.getCanonicalURL();
+    public boolean overlaps(final SmbResourceLocator other) throws CIFSException {
+        final String tp = getCanonicalURL();
+        final String op = other.getCanonicalURL();
         return getAddress().equals(other.getAddress()) && tp.regionMatches(true, 0, op, 0, Math.min(tp.length(), op.length()));
     }
-
 
     /**
      * @param dr
@@ -768,60 +706,58 @@ class SmbResourceLocatorImpl implements SmbResourceLocatorInternal, Cloneable {
      * @return UNC path the redirect leads to
      */
     @Override
-    public String handleDFSReferral ( DfsReferralData dr, String reqPath ) {
-        if ( Objects.equals(this.dfsReferral, dr) ) {
+    public String handleDFSReferral(final DfsReferralData dr, final String reqPath) {
+        if (Objects.equals(this.dfsReferral, dr)) {
             return this.unc;
         }
         this.dfsReferral = dr;
         if (uncBeforeDfsReferal == null) {
             uncBeforeDfsReferal = unc;
         }
-        if ( this.unc == null ) {
+        if (this.unc == null) {
             canonicalizePath();
         }
-        String oldUncPath = uncBeforeDfsReferal != null ? uncBeforeDfsReferal : this.unc;
+        final String oldUncPath = uncBeforeDfsReferal != null ? uncBeforeDfsReferal : this.unc;
 
         int pathConsumed = dr.getPathConsumed();
-        if ( pathConsumed < 0 ) {
+        if (pathConsumed < 0) {
             log.warn("Path consumed out of range " + pathConsumed);
             pathConsumed = 0;
-        }
-        else if ( pathConsumed > this.unc.length() ) {
+        } else if (pathConsumed > this.unc.length()) {
             log.warn("Path consumed out of range " + pathConsumed);
             pathConsumed = oldUncPath.length();
         }
 
-        if ( log.isDebugEnabled() ) {
+        if (log.isDebugEnabled()) {
             log.debug("UNC is '" + oldUncPath + "'");
             log.debug("Consumed '" + oldUncPath.substring(0, pathConsumed) + "'");
         }
         String dunc = oldUncPath.substring(pathConsumed);
-        if ( log.isDebugEnabled() ) {
+        if (log.isDebugEnabled()) {
             log.debug("Remaining '" + dunc + "'");
         }
 
-        if ( dunc.equals("") || dunc.equals("\\") ) {
+        if (dunc.equals("") || dunc.equals("\\")) {
             dunc = "\\";
             this.type = SmbConstants.TYPE_SHARE;
         }
-        if ( !dr.getPath().isEmpty() ) {
+        if (!dr.getPath().isEmpty()) {
             dunc = "\\" + dr.getPath() + dunc;
         }
 
-        if ( dunc.charAt(0) != '\\' ) {
+        if (dunc.charAt(0) != '\\') {
             log.warn("No slash at start of remaining DFS path " + dunc);
         }
 
         this.unc = dunc;
-        if ( dr.getShare() != null && !dr.getShare().isEmpty() ) {
+        if (dr.getShare() != null && !dr.getShare().isEmpty()) {
             this.share = dr.getShare();
         }
-        if ( reqPath != null && reqPath.endsWith("\\") && !dunc.endsWith("\\") ) {
+        if (reqPath != null && reqPath.endsWith("\\") && !dunc.endsWith("\\")) {
             dunc += "\\";
         }
         return dunc;
     }
-
 
     /**
      * {@inheritDoc}
@@ -829,18 +765,18 @@ class SmbResourceLocatorImpl implements SmbResourceLocatorInternal, Cloneable {
      * @see java.lang.Object#toString()
      */
     @Override
-    public String toString () {
-        StringBuilder sb = new StringBuilder(this.url.toString());
+    public String toString() {
+        final StringBuilder sb = new StringBuilder(this.url.toString());
         sb.append('[');
-        if ( this.unc != null ) {
+        if (this.unc != null) {
             sb.append("unc=");
             sb.append(this.unc);
         }
-        if ( this.canon != null ) {
+        if (this.canon != null) {
             sb.append("canon=");
             sb.append(this.canon);
         }
-        if ( this.dfsReferral != null ) {
+        if (this.dfsReferral != null) {
             sb.append("dfsReferral=");
             sb.append(this.dfsReferral);
         }

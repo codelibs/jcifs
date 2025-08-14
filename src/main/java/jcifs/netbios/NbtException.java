@@ -1,16 +1,16 @@
 /* jcifs smb client library in Java
  * Copyright (C) 2000  "Michael B. Allen" <jcifs at samba dot org>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -18,15 +18,13 @@
 
 package jcifs.netbios;
 
-
 import jcifs.CIFSException;
 
-
-@SuppressWarnings ( "javadoc" )
+@SuppressWarnings("javadoc")
 public class NbtException extends CIFSException {
 
     /**
-     * 
+     *
      */
     private static final long serialVersionUID = 492638554095148960L;
     // error classes
@@ -53,64 +51,61 @@ public class NbtException extends CIFSException {
     public int errorClass;
     public int errorCode;
 
-
-    public static String getErrorString ( int errorClass, int errorCode ) {
-        String result = "";
-        switch ( errorClass ) {
+    public static String getErrorString(final int errorClass, final int errorCode) {
+        StringBuilder result = new StringBuilder();
+        switch (errorClass) {
         case SUCCESS:
-            result += "SUCCESS";
+            result.append("SUCCESS");
             break;
         case ERR_NAM_SRVC:
-            result += "ERR_NAM_SRVC/";
-            switch ( errorCode ) {
+            result.append("ERR_NAM_SRVC/");
+            switch (errorCode) {
             case FMT_ERR:
-                result += "FMT_ERR: Format Error";
+                result.append("FMT_ERR: Format Error");
             default:
-                result += "Unknown error code: " + errorCode;
+                result.append("Unknown error code: ").append(errorCode);
             }
             break;
         case ERR_SSN_SRVC:
-            result += "ERR_SSN_SRVC/";
-            switch ( errorCode ) {
+            result.append("ERR_SSN_SRVC/");
+            switch (errorCode) {
             case CONNECTION_REFUSED:
-                result += "Connection refused";
+                result.append("Connection refused");
                 break;
             case NOT_LISTENING_CALLED:
-                result += "Not listening on called name";
+                result.append("Not listening on called name");
                 break;
             case NOT_LISTENING_CALLING:
-                result += "Not listening for calling name";
+                result.append("Not listening for calling name");
                 break;
             case CALLED_NOT_PRESENT:
-                result += "Called name not present";
+                result.append("Called name not present");
                 break;
             case NO_RESOURCES:
-                result += "Called name present, but insufficient resources";
+                result.append("Called name present, but insufficient resources");
                 break;
             case UNSPECIFIED:
-                result += "Unspecified error";
+                result.append("Unspecified error");
                 break;
             default:
-                result += "Unknown error code: " + errorCode;
+                result.append("Unknown error code: ").append(errorCode);
             }
             break;
         default:
-            result += "unknown error class: " + errorClass;
+            result.append("unknown error class: ").append(errorClass);
         }
-        return result;
+        return result.toString();
     }
 
-
-    public NbtException ( int errorClass, int errorCode ) {
+    public NbtException(final int errorClass, final int errorCode) {
         super(getErrorString(errorClass, errorCode));
         this.errorClass = errorClass;
         this.errorCode = errorCode;
     }
 
-
     @Override
-    public String toString () {
-        return new String(
-            "errorClass=" + this.errorClass + ",errorCode=" + this.errorCode + ",errorString=" + getErrorString(this.errorClass, this.errorCode));
+    public String toString() {
+        return ("errorClass=" + this.errorClass + ",errorCode=" + this.errorCode + ",errorString="
+                + getErrorString(this.errorClass, this.errorCode));
     }
 }

@@ -41,7 +41,7 @@ import jcifs.smb.NtlmPasswordAuthentication;
 
 /**
  * Test class for NtlmHttpFilter
- * 
+ *
  * NtlmHttpFilter is deprecated but we test it for backward compatibility
  */
 @SuppressWarnings("deprecation")

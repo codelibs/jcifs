@@ -78,16 +78,16 @@ class SidResolverTest {
 
     @Test
     void testResolveSids_WithNullServerName() throws CIFSException {
-        doThrow(new CIFSException("Server name cannot be null")).when(sidResolver).resolveSids(any(CIFSContext.class), eq(null),
-                any(SID[].class));
+        doThrow(new CIFSException("Server name cannot be null")).when(sidResolver)
+                .resolveSids(any(CIFSContext.class), eq(null), any(SID[].class));
 
         assertThrows(CIFSException.class, () -> sidResolver.resolveSids(mockContext, null, testSids));
     }
 
     @Test
     void testResolveSids_WithNullSidsArray() throws CIFSException {
-        doThrow(new CIFSException("SIDs array cannot be null")).when(sidResolver).resolveSids(any(CIFSContext.class), anyString(),
-                eq(null));
+        doThrow(new CIFSException("SIDs array cannot be null")).when(sidResolver)
+                .resolveSids(any(CIFSContext.class), anyString(), eq(null));
 
         assertThrows(CIFSException.class, () -> sidResolver.resolveSids(mockContext, testServerName, null));
     }
@@ -112,24 +112,24 @@ class SidResolverTest {
 
     @Test
     void testResolveSidsWithOffsetAndLength_InvalidOffset() throws CIFSException {
-        doThrow(new CIFSException("Invalid offset")).when(sidResolver).resolveSids(any(CIFSContext.class), anyString(), any(SID[].class),
-                eq(-1), anyInt());
+        doThrow(new CIFSException("Invalid offset")).when(sidResolver)
+                .resolveSids(any(CIFSContext.class), anyString(), any(SID[].class), eq(-1), anyInt());
 
         assertThrows(CIFSException.class, () -> sidResolver.resolveSids(mockContext, testServerName, testSids, -1, 2));
     }
 
     @Test
     void testResolveSidsWithOffsetAndLength_InvalidLength() throws CIFSException {
-        doThrow(new CIFSException("Invalid length")).when(sidResolver).resolveSids(any(CIFSContext.class), anyString(), any(SID[].class),
-                anyInt(), eq(-1));
+        doThrow(new CIFSException("Invalid length")).when(sidResolver)
+                .resolveSids(any(CIFSContext.class), anyString(), any(SID[].class), anyInt(), eq(-1));
 
         assertThrows(CIFSException.class, () -> sidResolver.resolveSids(mockContext, testServerName, testSids, 0, -1));
     }
 
     @Test
     void testResolveSidsWithOffsetAndLength_OutOfBounds() throws CIFSException {
-        doThrow(new CIFSException("Array index out of bounds")).when(sidResolver).resolveSids(any(CIFSContext.class), anyString(),
-                any(SID[].class), eq(5), anyInt());
+        doThrow(new CIFSException("Array index out of bounds")).when(sidResolver)
+                .resolveSids(any(CIFSContext.class), anyString(), any(SID[].class), eq(5), anyInt());
 
         assertThrows(CIFSException.class, () -> sidResolver.resolveSids(mockContext, testServerName, testSids, 5, 2));
     }
@@ -270,8 +270,8 @@ class SidResolverTest {
     // Test with network errors
     @Test
     void testResolveSids_NetworkError() throws CIFSException {
-        doThrow(new CIFSException("Network error occurred")).when(sidResolver).resolveSids(any(CIFSContext.class), anyString(),
-                any(SID[].class));
+        doThrow(new CIFSException("Network error occurred")).when(sidResolver)
+                .resolveSids(any(CIFSContext.class), anyString(), any(SID[].class));
 
         assertThrows(CIFSException.class, () -> sidResolver.resolveSids(mockContext, testServerName, testSids));
     }

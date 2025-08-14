@@ -201,7 +201,7 @@ public class DcerpcMessageTest {
 
         // Verify header was written correctly
         assertEquals(5, buf.dec_ndr_small()); // RPC version
-        assertEquals(0, buf.dec_ndr_small()); // minor version  
+        assertEquals(0, buf.dec_ndr_small()); // minor version
         assertEquals(0, buf.dec_ndr_small()); // ptype
         assertEquals(0x05, buf.dec_ndr_small()); // flags
         assertEquals(0x00000010, buf.dec_ndr_long()); // data representation

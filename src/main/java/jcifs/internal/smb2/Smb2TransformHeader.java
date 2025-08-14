@@ -1,34 +1,32 @@
 /*
  * © 2025 CodeLibs, Inc.
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 package jcifs.internal.smb2;
 
-
 import jcifs.Encodable;
 import jcifs.internal.util.SMBUtil;
 
-
 /**
  * SMB2 Transform Header for encrypted messages
- * 
+ *
  * This header is used to encrypt SMB2/SMB3 messages and provides the necessary
  * cryptographic parameters for decryption including the nonce, session ID, and
  * authentication tag.
- * 
+ *
  * @author mbechler
  */
 public class Smb2TransformHeader implements Encodable {
@@ -43,22 +41,21 @@ public class Smb2TransformHeader implements Encodable {
      */
     public static final int TRANSFORM_HEADER_SIZE = 52;
 
-    private byte[] signature = new byte[16];
-    private byte[] nonce = new byte[16];
+    private final byte[] signature = new byte[16];
+    private final byte[] nonce = new byte[16];
     private int originalMessageSize;
     private int flags;
     private long sessionId;
 
-
     /**
      * Create a new SMB2 Transform Header
      */
-    public Smb2TransformHeader () {}
-
+    public Smb2TransformHeader() {
+    }
 
     /**
      * Create a new SMB2 Transform Header with specified parameters
-     * 
+     *
      * @param nonce
      *            16-byte nonce for encryption
      * @param originalMessageSize
@@ -68,8 +65,8 @@ public class Smb2TransformHeader implements Encodable {
      * @param sessionId
      *            session identifier
      */
-    public Smb2TransformHeader ( byte[] nonce, int originalMessageSize, int flags, long sessionId ) {
-        if ( nonce.length != 16 ) {
+    public Smb2TransformHeader(final byte[] nonce, final int originalMessageSize, final int flags, final long sessionId) {
+        if (nonce.length != 16) {
             throw new IllegalArgumentException("Nonce must be 16 bytes");
         }
         System.arraycopy(nonce, 0, this.nonce, 0, 16);
@@ -78,107 +75,95 @@ public class Smb2TransformHeader implements Encodable {
         this.sessionId = sessionId;
     }
 
-
     /**
      * @return the signature/authentication tag
      */
-    public byte[] getSignature () {
+    public byte[] getSignature() {
         return this.signature;
     }
-
 
     /**
      * @param signature
      *            the signature/authentication tag to set
      */
-    public void setSignature ( byte[] signature ) {
-        if ( signature.length != 16 ) {
+    public void setSignature(final byte[] signature) {
+        if (signature.length != 16) {
             throw new IllegalArgumentException("Signature must be 16 bytes");
         }
         System.arraycopy(signature, 0, this.signature, 0, 16);
     }
 
-
     /**
      * @return the nonce
      */
-    public byte[] getNonce () {
+    public byte[] getNonce() {
         return this.nonce;
     }
-
 
     /**
      * @param nonce
      *            the nonce to set
      */
-    public void setNonce ( byte[] nonce ) {
-        if ( nonce.length != 16 ) {
+    public void setNonce(final byte[] nonce) {
+        if (nonce.length != 16) {
             throw new IllegalArgumentException("Nonce must be 16 bytes");
         }
         System.arraycopy(nonce, 0, this.nonce, 0, 16);
     }
 
-
     /**
      * @return the original message size
      */
-    public int getOriginalMessageSize () {
+    public int getOriginalMessageSize() {
         return this.originalMessageSize;
     }
-
 
     /**
      * @param originalMessageSize
      *            the original message size to set
      */
-    public void setOriginalMessageSize ( int originalMessageSize ) {
+    public void setOriginalMessageSize(final int originalMessageSize) {
         this.originalMessageSize = originalMessageSize;
     }
-
 
     /**
      * @return the flags (SMB 3.1.1) or encryption algorithm (SMB 3.0/3.0.2)
      */
-    public int getFlags () {
+    public int getFlags() {
         return this.flags;
     }
-
 
     /**
      * @param flags
      *            the flags to set
      */
-    public void setFlags ( int flags ) {
+    public void setFlags(final int flags) {
         this.flags = flags;
     }
-
 
     /**
      * @return the session ID
      */
-    public long getSessionId () {
+    public long getSessionId() {
         return this.sessionId;
     }
-
 
     /**
      * @param sessionId
      *            the session ID to set
      */
-    public void setSessionId ( long sessionId ) {
+    public void setSessionId(final long sessionId) {
         this.sessionId = sessionId;
     }
 
-
     @Override
-    public int size () {
+    public int size() {
         return TRANSFORM_HEADER_SIZE;
     }
 
-
     @Override
-    public int encode ( byte[] dst, int dstIndex ) {
-        int start = dstIndex;
+    public int encode(final byte[] dst, int dstIndex) {
+        final int start = dstIndex;
 
         // Protocol ID
         SMBUtil.writeInt4(TRANSFORM_PROTOCOL_ID, dst, dstIndex);
@@ -211,22 +196,21 @@ public class Smb2TransformHeader implements Encodable {
         return dstIndex - start;
     }
 
-
     /**
      * Decode a transform header from byte array
-     * 
+     *
      * @param buffer
      *            buffer to decode from
      * @param bufferIndex
      *            offset in buffer
      * @return new transform header instance
      */
-    public static Smb2TransformHeader decode ( byte[] buffer, int bufferIndex ) {
-        Smb2TransformHeader header = new Smb2TransformHeader();
+    public static Smb2TransformHeader decode(final byte[] buffer, int bufferIndex) {
+        final Smb2TransformHeader header = new Smb2TransformHeader();
 
         // Check protocol ID
-        int protocolId = SMBUtil.readInt4(buffer, bufferIndex);
-        if ( protocolId != TRANSFORM_PROTOCOL_ID ) {
+        final int protocolId = SMBUtil.readInt4(buffer, bufferIndex);
+        if (protocolId != TRANSFORM_PROTOCOL_ID) {
             throw new IllegalArgumentException("Invalid transform header protocol ID: 0x" + Integer.toHexString(protocolId));
         }
         bufferIndex += 4;
@@ -256,14 +240,13 @@ public class Smb2TransformHeader implements Encodable {
         return header;
     }
 
-
     /**
      * Get the associated data for AEAD encryption (everything except signature)
-     * 
+     *
      * @return byte array containing associated data
      */
-    public byte[] getAssociatedData () {
-        byte[] aad = new byte[52]; // Use full header size to ensure all data fits
+    public byte[] getAssociatedData() {
+        final byte[] aad = new byte[52]; // Use full header size to ensure all data fits
         int index = 0;
 
         // Protocol ID

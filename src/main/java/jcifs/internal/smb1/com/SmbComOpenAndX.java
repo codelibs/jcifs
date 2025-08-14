@@ -1,23 +1,22 @@
 /* jcifs smb client library in Java
  * Copyright (C) 2000  "Michael B. Allen" <jcifs at samba dot org>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 package jcifs.internal.smb1.com;
-
 
 import java.util.Date;
 
@@ -28,9 +27,8 @@ import jcifs.internal.smb1.ServerMessageBlock;
 import jcifs.internal.util.SMBUtil;
 import jcifs.util.Hexdump;
 
-
 /**
- * 
+ *
  */
 public class SmbComOpenAndX extends AndXServerMessageBlock {
 
@@ -56,11 +54,10 @@ public class SmbComOpenAndX extends AndXServerMessageBlock {
 
     int tflags, desiredAccess, searchAttributes, fileAttributes, creationTime, openFunction, allocationSize;
 
-
     // flags is NOT the same as flags member
 
     /**
-     * 
+     *
      * @param config
      * @param fileName
      * @param access
@@ -69,30 +66,26 @@ public class SmbComOpenAndX extends AndXServerMessageBlock {
      * @param fileAttributes
      * @param andx
      */
-    public SmbComOpenAndX ( Configuration config, String fileName, int access, int shareAccess, int flags, int fileAttributes,
-            ServerMessageBlock andx ) {
+    public SmbComOpenAndX(final Configuration config, final String fileName, final int access, final int shareAccess, final int flags,
+            final int fileAttributes, final ServerMessageBlock andx) {
         super(config, SMB_COM_OPEN_ANDX, fileName, andx);
         this.fileAttributes = fileAttributes;
 
         this.desiredAccess = access & 0x3;
-        if ( this.desiredAccess == 0x3 ) {
+        if (this.desiredAccess == 0x3) {
             this.desiredAccess = 0x2; /* Mmm, I thought 0x03 was RDWR */
         }
 
         // map shareAccess as far as we can
-        if ( ( shareAccess & SmbConstants.FILE_SHARE_READ ) != 0 && ( shareAccess & SmbConstants.FILE_SHARE_WRITE ) != 0 ) {
+        if ((shareAccess & SmbConstants.FILE_SHARE_READ) != 0 && (shareAccess & SmbConstants.FILE_SHARE_WRITE) != 0) {
             this.desiredAccess |= SHARING_DENY_NONE;
-        }
-        else if ( shareAccess == SmbConstants.FILE_NO_SHARE ) {
+        } else if (shareAccess == SmbConstants.FILE_NO_SHARE) {
             this.desiredAccess |= SHARING_DENY_READ_WRITE_EXECUTE;
-        }
-        else if ( ( shareAccess & SmbConstants.FILE_SHARE_WRITE ) == 0 ) {
+        } else if ((shareAccess & SmbConstants.FILE_SHARE_WRITE) == 0) {
             this.desiredAccess |= SHARING_DENY_WRITE;
-        }
-        else if ( ( shareAccess & SmbConstants.FILE_SHARE_READ ) == 0 ) {
+        } else if ((shareAccess & SmbConstants.FILE_SHARE_READ) == 0) {
             this.desiredAccess |= SHARING_DENY_READ_EXECUTE;
-        }
-        else {
+        } else {
             // neither SHARE_READ nor SHARE_WRITE are set
             this.desiredAccess |= SHARING_DENY_READ_WRITE_EXECUTE;
         }
@@ -103,44 +96,36 @@ public class SmbComOpenAndX extends AndXServerMessageBlock {
         this.searchAttributes = SmbConstants.ATTR_DIRECTORY | SmbConstants.ATTR_HIDDEN | SmbConstants.ATTR_SYSTEM;
 
         // openFunction
-        if ( ( flags & SmbConstants.O_TRUNC ) == SmbConstants.O_TRUNC ) {
+        if ((flags & SmbConstants.O_TRUNC) == SmbConstants.O_TRUNC) {
             // truncate the file
-            if ( ( flags & SmbConstants.O_CREAT ) == SmbConstants.O_CREAT ) {
+            if ((flags & SmbConstants.O_CREAT) == SmbConstants.O_CREAT) {
                 // create it if necessary
                 this.openFunction = OPEN_FN_TRUNC | OPEN_FN_CREATE;
-            }
-            else {
+            } else {
                 this.openFunction = OPEN_FN_TRUNC;
             }
-        }
-        else {
-            // don't truncate the file
-            if ( ( flags & SmbConstants.O_CREAT ) == SmbConstants.O_CREAT ) {
-                // create it if necessary
-                if ( ( flags & SmbConstants.O_EXCL ) == SmbConstants.O_EXCL ) {
-                    // fail if already exists
-                    this.openFunction = OPEN_FN_CREATE | OPEN_FN_FAIL_IF_EXISTS;
-                }
-                else {
-                    this.openFunction = OPEN_FN_CREATE | OPEN_FN_OPEN;
-                }
+        } else // don't truncate the file
+        if ((flags & SmbConstants.O_CREAT) == SmbConstants.O_CREAT) {
+            // create it if necessary
+            if ((flags & SmbConstants.O_EXCL) == SmbConstants.O_EXCL) {
+                // fail if already exists
+                this.openFunction = OPEN_FN_CREATE | OPEN_FN_FAIL_IF_EXISTS;
+            } else {
+                this.openFunction = OPEN_FN_CREATE | OPEN_FN_OPEN;
             }
-            else {
-                this.openFunction = OPEN_FN_OPEN;
-            }
+        } else {
+            this.openFunction = OPEN_FN_OPEN;
         }
     }
 
-
     @Override
-    protected int getBatchLimit ( Configuration cfg, byte cmd ) {
+    protected int getBatchLimit(final Configuration cfg, final byte cmd) {
         return cmd == SMB_COM_READ_ANDX ? cfg.getBatchLimit("OpenAndX.ReadAndX") : 0;
     }
 
-
     @Override
-    protected int writeParameterWordsWireFormat ( byte[] dst, int dstIndex ) {
-        int start = dstIndex;
+    protected int writeParameterWordsWireFormat(final byte[] dst, int dstIndex) {
+        final int start = dstIndex;
 
         SMBUtil.writeInt2(this.tflags, dst, dstIndex);
         dstIndex += 2;
@@ -157,46 +142,43 @@ public class SmbComOpenAndX extends AndXServerMessageBlock {
         dstIndex += 2;
         SMBUtil.writeInt4(this.allocationSize, dst, dstIndex);
         dstIndex += 4;
-        for ( int i = 0; i < 8; i++ ) {
-            dst[ dstIndex++ ] = 0x00;
+        for (int i = 0; i < 8; i++) {
+            dst[dstIndex] = 0x00;
+            dstIndex++;
         }
 
         return dstIndex - start;
     }
 
-
     @Override
-    protected int writeBytesWireFormat ( byte[] dst, int dstIndex ) {
-        int start = dstIndex;
+    protected int writeBytesWireFormat(final byte[] dst, int dstIndex) {
+        final int start = dstIndex;
 
-        if ( this.isUseUnicode() ) {
-            dst[ dstIndex++ ] = (byte) '\0';
+        if (this.isUseUnicode()) {
+            dst[dstIndex] = (byte) '\0';
+            dstIndex++;
         }
         dstIndex += writeString(this.path, dst, dstIndex);
 
         return dstIndex - start;
     }
 
-
     @Override
-    protected int readParameterWordsWireFormat ( byte[] buffer, int bufferIndex ) {
+    protected int readParameterWordsWireFormat(final byte[] buffer, final int bufferIndex) {
         return 0;
     }
 
-
     @Override
-    protected int readBytesWireFormat ( byte[] buffer, int bufferIndex ) {
+    protected int readBytesWireFormat(final byte[] buffer, final int bufferIndex) {
         return 0;
     }
 
-
     @Override
-    public String toString () {
-        return new String(
-            "SmbComOpenAndX[" + super.toString() + ",flags=0x" + Hexdump.toHexString(this.tflags, 2) + ",desiredAccess=0x"
-                    + Hexdump.toHexString(this.desiredAccess, 4) + ",searchAttributes=0x" + Hexdump.toHexString(this.searchAttributes, 4)
-                    + ",fileAttributes=0x" + Hexdump.toHexString(this.fileAttributes, 4) + ",creationTime=" + new Date(this.creationTime)
-                    + ",openFunction=0x" + Hexdump.toHexString(this.openFunction, 2) + ",allocationSize=" + this.allocationSize + ",fileName="
-                    + this.path + "]");
+    public String toString() {
+        return ("SmbComOpenAndX[" + super.toString() + ",flags=0x" + Hexdump.toHexString(this.tflags, 2) + ",desiredAccess=0x"
+                + Hexdump.toHexString(this.desiredAccess, 4) + ",searchAttributes=0x" + Hexdump.toHexString(this.searchAttributes, 4)
+                + ",fileAttributes=0x" + Hexdump.toHexString(this.fileAttributes, 4) + ",creationTime=" + new Date(this.creationTime)
+                + ",openFunction=0x" + Hexdump.toHexString(this.openFunction, 2) + ",allocationSize=" + this.allocationSize + ",fileName="
+                + this.path + "]");
     }
 }

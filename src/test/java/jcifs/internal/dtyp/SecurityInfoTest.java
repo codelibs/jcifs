@@ -147,8 +147,11 @@ class SecurityInfoTest {
     @DisplayName("Test all constant fields count")
     void testConstantFieldsCount() {
         Field[] fields = SecurityInfo.class.getDeclaredFields();
-        long constantCount = Arrays.stream(fields).filter(f -> f.getType() == int.class).filter(f -> Modifier.isStatic(f.getModifiers()))
-                .filter(f -> Modifier.isFinal(f.getModifiers())).count();
+        long constantCount = Arrays.stream(fields)
+                .filter(f -> f.getType() == int.class)
+                .filter(f -> Modifier.isStatic(f.getModifiers()))
+                .filter(f -> Modifier.isFinal(f.getModifiers()))
+                .count();
 
         assertEquals(8, constantCount, "Should have exactly 8 constant fields");
     }

@@ -22,14 +22,21 @@
 
 package jcifs.smb1.http;
 
-import java.io.*;
+import java.io.IOException;
 import java.util.Enumeration;
-import java.net.UnknownHostException;
-import jakarta.servlet.*;
-import jakarta.servlet.http.*;
 
-import jcifs.smb1.*;
-import jcifs.smb1.netbios.NbtAddress;
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.FilterConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import jcifs.smb1.Config;
+import jcifs.smb1.UniAddress;
+import jcifs.smb1.smb1.NtStatus;
 import jcifs.smb1.smb1.NtlmChallenge;
 import jcifs.smb1.smb1.NtlmPasswordAuthentication;
 import jcifs.smb1.smb1.SmbAuthException;
@@ -57,53 +64,55 @@ public class NtlmHttpFilter implements Filter {
     private boolean insecureBasic;
     private String realm;
 
-    public void init( FilterConfig filterConfig ) throws ServletException {
+    @Override
+    public void init(final FilterConfig filterConfig) throws ServletException {
         String name;
         int level;
 
         /* Set jcifs.smb1 properties we know we want; soTimeout and cachePolicy to 30min.
          */
-        Config.setProperty( "jcifs.smb1.smb.client.soTimeout", "1800000" );
-        Config.setProperty( "jcifs.smb1.netbios.cachePolicy", "1200" );
+        Config.setProperty("jcifs.smb1.smb.client.soTimeout", "1800000");
+        Config.setProperty("jcifs.smb1.netbios.cachePolicy", "1200");
         /* The Filter can only work with NTLMv1 as it uses a man-in-the-middle
          * techinque that NTLMv2 specifically thwarts. A real NTLM Filter would
          * need to do a NETLOGON RPC that JCIFS will likely never implement
          * because it requires a lot of extra crypto not used by CIFS.
          */
-        Config.setProperty( "jcifs.smb1.smb.lmCompatibility", "0" );
-        Config.setProperty( "jcifs.smb1.smb.client.useExtendedSecurity", "false" );
+        Config.setProperty("jcifs.smb1.smb.lmCompatibility", "0");
+        Config.setProperty("jcifs.smb1.smb.client.useExtendedSecurity", "false");
 
-        Enumeration e = filterConfig.getInitParameterNames();
-        while( e.hasMoreElements() ) {
-            name = (String)e.nextElement();
-            if( name.startsWith( "jcifs.smb1." )) {
-                Config.setProperty( name, filterConfig.getInitParameter( name ));
+        final Enumeration e = filterConfig.getInitParameterNames();
+        while (e.hasMoreElements()) {
+            name = (String) e.nextElement();
+            if (name.startsWith("jcifs.smb1.")) {
+                Config.setProperty(name, filterConfig.getInitParameter(name));
             }
         }
         defaultDomain = Config.getProperty("jcifs.smb1.smb.client.domain");
-        domainController = Config.getProperty( "jcifs.smb1.http.domainController" );
-        if( domainController == null ) {
+        domainController = Config.getProperty("jcifs.smb1.http.domainController");
+        if (domainController == null) {
             domainController = defaultDomain;
-            loadBalance = Config.getBoolean( "jcifs.smb1.http.loadBalance", true );
+            loadBalance = Config.getBoolean("jcifs.smb1.http.loadBalance", true);
         }
-        enableBasic = Boolean.valueOf(
-                Config.getProperty("jcifs.smb1.http.enableBasic")).booleanValue();
-        insecureBasic = Boolean.valueOf(
-                Config.getProperty("jcifs.smb1.http.insecureBasic")).booleanValue();
+        enableBasic = Boolean.parseBoolean(Config.getProperty("jcifs.smb1.http.enableBasic"));
+        insecureBasic = Boolean.parseBoolean(Config.getProperty("jcifs.smb1.http.insecureBasic"));
         realm = Config.getProperty("jcifs.smb1.http.basicRealm");
-        if (realm == null) realm = "jCIFS";
-
-        if(( level = Config.getInt( "jcifs.smb1.util.loglevel", -1 )) != -1 ) {
-            LogStream.setLevel( level );
+        if (realm == null) {
+            realm = "jCIFS";
         }
-        if( log.level > 2 ) {
+
+        level = Config.getInt("jcifs.smb1.util.loglevel", -1);
+        if (level != -1) {
+            LogStream.setLevel(level);
+        }
+        if (LogStream.level > 2) {
             try {
-                Config.store( log, "JCIFS PROPERTIES" );
-            } catch( IOException ioe ) {
-            }
+                Config.store(log, "JCIFS PROPERTIES");
+            } catch (final IOException ioe) {}
         }
     }
 
+    @Override
     public void destroy() {
     }
 
@@ -112,18 +121,18 @@ public class NtlmHttpFilter implements Filter {
      * and then <tt>chain.doFilter</tt>. You can override and call
      * negotiate manually to achive a variety of different behavior.
      */
-    public void doFilter( ServletRequest request,
-                ServletResponse response,
-                FilterChain chain ) throws IOException, ServletException {
-        HttpServletRequest req = (HttpServletRequest)request;
-        HttpServletResponse resp = (HttpServletResponse)response;
-        NtlmPasswordAuthentication ntlm;
+    @Override
+    public void doFilter(final ServletRequest request, final ServletResponse response, final FilterChain chain)
+            throws IOException, ServletException {
+        final HttpServletRequest req = (HttpServletRequest) request;
+        final HttpServletResponse resp = (HttpServletResponse) response;
+        NtlmPasswordAuthentication ntlm = negotiate(req, resp, false);
 
-        if ((ntlm = negotiate( req, resp, false )) == null) {
+        if (ntlm == null) {
             return;
         }
 
-        chain.doFilter( new NtlmHttpServletRequest( req, ntlm ), response );
+        chain.doFilter(new NtlmHttpServletRequest(req, ntlm), response);
     }
 
     /**
@@ -137,103 +146,94 @@ public class NtlmHttpFilter implements Filter {
      * HttpServletResponse.SC_UNAUTHORIZED).
      * @return True if the negotiation is complete, otherwise false
      */
-    protected NtlmPasswordAuthentication negotiate( HttpServletRequest req,
-                HttpServletResponse resp,
-                boolean skipAuthentication ) throws IOException, ServletException {
+    protected NtlmPasswordAuthentication negotiate(final HttpServletRequest req, final HttpServletResponse resp,
+            final boolean skipAuthentication) throws IOException, ServletException {
         UniAddress dc;
         String msg;
         NtlmPasswordAuthentication ntlm = null;
-        msg = req.getHeader( "Authorization" );
-        boolean offerBasic = enableBasic && (insecureBasic || req.isSecure());
+        msg = req.getHeader("Authorization");
+        final boolean offerBasic = enableBasic && (insecureBasic || req.isSecure());
 
-        if( msg != null && (msg.startsWith( "NTLM " ) ||
-                    (offerBasic && msg.startsWith("Basic ")))) {
+        if (msg != null && (msg.startsWith("NTLM ") || offerBasic && msg.startsWith("Basic "))) {
             if (msg.startsWith("NTLM ")) {
-                HttpSession ssn = req.getSession();
+                final HttpSession ssn = req.getSession();
                 byte[] challenge;
 
-                if( loadBalance ) {
-                    NtlmChallenge chal = (NtlmChallenge)ssn.getAttribute( "NtlmHttpChal" );
-                    if( chal == null ) {
+                if (loadBalance) {
+                    NtlmChallenge chal = (NtlmChallenge) ssn.getAttribute("NtlmHttpChal");
+                    if (chal == null) {
                         chal = SmbSession.getChallengeForDomain();
-                        ssn.setAttribute( "NtlmHttpChal", chal );
+                        ssn.setAttribute("NtlmHttpChal", chal);
                     }
                     dc = chal.dc;
                     challenge = chal.challenge;
                 } else {
-                    dc = UniAddress.getByName( domainController, true );
-                    challenge = SmbSession.getChallenge( dc );
+                    dc = UniAddress.getByName(domainController, true);
+                    challenge = SmbSession.getChallenge(dc);
                 }
 
-                if(( ntlm = NtlmSsp.authenticate( req, resp, challenge )) == null ) {
+                ntlm = NtlmSsp.authenticate(req, resp, challenge);
+                if (ntlm == null) {
                     return null;
                 }
                 /* negotiation complete, remove the challenge object */
-                ssn.removeAttribute( "NtlmHttpChal" );
+                ssn.removeAttribute("NtlmHttpChal");
             } else {
-                String auth = new String(Base64.decode(msg.substring(6)),
-                        "US-ASCII");
+                final String auth = new String(Base64.decode(msg.substring(6)), "US-ASCII");
                 int index = auth.indexOf(':');
-                String user = (index != -1) ? auth.substring(0, index) : auth;
-                String password = (index != -1) ? auth.substring(index + 1) :
-                        "";
+                String user = index != -1 ? auth.substring(0, index) : auth;
+                final String password = index != -1 ? auth.substring(index + 1) : "";
                 index = user.indexOf('\\');
-                if (index == -1) index = user.indexOf('/');
-                String domain = (index != -1) ? user.substring(0, index) :
-                        defaultDomain;
-                user = (index != -1) ? user.substring(index + 1) : user;
+                if (index == -1) {
+                    index = user.indexOf('/');
+                }
+                final String domain = index != -1 ? user.substring(0, index) : defaultDomain;
+                user = index != -1 ? user.substring(index + 1) : user;
                 ntlm = new NtlmPasswordAuthentication(domain, user, password);
-                dc = UniAddress.getByName( domainController, true );
+                dc = UniAddress.getByName(domainController, true);
             }
             try {
 
-                SmbSession.logon( dc, ntlm );
+                SmbSession.logon(dc, ntlm);
 
-                if( log.level > 2 ) {
-                    log.println( "NtlmHttpFilter: " + ntlm +
-                            " successfully authenticated against " + dc );
+                if (LogStream.level > 2) {
+                    log.println("NtlmHttpFilter: " + ntlm + " successfully authenticated against " + dc);
                 }
-            } catch( SmbAuthException sae ) {
-                if( log.level > 1 ) {
-                    log.println( "NtlmHttpFilter: " + ntlm.getName() +
-                            ": 0x" + jcifs.smb1.util.Hexdump.toHexString( sae.getNtStatus(), 8 ) +
-                            ": " + sae );
+            } catch (final SmbAuthException sae) {
+                if (LogStream.level > 1) {
+                    log.println("NtlmHttpFilter: " + ntlm.getName() + ": 0x" + jcifs.smb1.util.Hexdump.toHexString(sae.getNtStatus(), 8)
+                            + ": " + sae);
                 }
-                if( sae.getNtStatus() == sae.NT_STATUS_ACCESS_VIOLATION ) {
+                if (sae.getNtStatus() == NtStatus.NT_STATUS_ACCESS_VIOLATION) {
                     /* Server challenge no longer valid for
                      * externally supplied password hashes.
                      */
-                    HttpSession ssn = req.getSession(false);
+                    final HttpSession ssn = req.getSession(false);
                     if (ssn != null) {
-                        ssn.removeAttribute( "NtlmHttpAuth" );
+                        ssn.removeAttribute("NtlmHttpAuth");
                     }
                 }
-                resp.setHeader( "WWW-Authenticate", "NTLM" );
+                resp.setHeader("WWW-Authenticate", "NTLM");
                 if (offerBasic) {
-                    resp.addHeader( "WWW-Authenticate", "Basic realm=\"" +
-                            realm + "\"");
+                    resp.addHeader("WWW-Authenticate", "Basic realm=\"" + realm + "\"");
                 }
-                resp.setStatus( HttpServletResponse.SC_UNAUTHORIZED );
+                resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 resp.setContentLength(0); /* Marcel Feb-15-2005 */
                 resp.flushBuffer();
                 return null;
             }
-            req.getSession().setAttribute( "NtlmHttpAuth", ntlm );
-        } else {
-            if (!skipAuthentication) {
-                HttpSession ssn = req.getSession(false);
-                if (ssn == null || (ntlm = (NtlmPasswordAuthentication)
-                            ssn.getAttribute("NtlmHttpAuth")) == null) {
-                    resp.setHeader( "WWW-Authenticate", "NTLM" );
-                    if (offerBasic) {
-                        resp.addHeader( "WWW-Authenticate", "Basic realm=\"" +
-                                realm + "\"");
-                    }
-                    resp.setStatus( HttpServletResponse.SC_UNAUTHORIZED );
-                    resp.setContentLength(0);
-                    resp.flushBuffer();
-                    return null;
+            req.getSession().setAttribute("NtlmHttpAuth", ntlm);
+        } else if (!skipAuthentication) {
+            final HttpSession ssn = req.getSession(false);
+            if (ssn == null || (ntlm = (NtlmPasswordAuthentication) ssn.getAttribute("NtlmHttpAuth")) == null) {
+                resp.setHeader("WWW-Authenticate", "NTLM");
+                if (offerBasic) {
+                    resp.addHeader("WWW-Authenticate", "Basic realm=\"" + realm + "\"");
                 }
+                resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                resp.setContentLength(0);
+                resp.flushBuffer();
+                return null;
             }
         }
 
@@ -241,15 +241,15 @@ public class NtlmHttpFilter implements Filter {
     }
 
     // Added by cgross to work with weblogic 6.1.
-    public void setFilterConfig( FilterConfig f ) {
+    public void setFilterConfig(final FilterConfig f) {
         try {
-            init( f );
-        } catch( Exception e ) {
+            init(f);
+        } catch (final Exception e) {
             e.printStackTrace();
         }
     }
+
     public FilterConfig getFilterConfig() {
         return null;
     }
 }
-

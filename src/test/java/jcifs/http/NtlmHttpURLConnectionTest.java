@@ -297,7 +297,7 @@ class NtlmHttpURLConnectionTest {
                 when(conn.getHeaderField(entry.getKey())).thenReturn(entry.getValue().get(0));
             }
 
-            // Mock by index - getHeaderField(int) 
+            // Mock by index - getHeaderField(int)
             // Index 0 is status line, then headers in order
             int index = 1;
             for (Map.Entry<String, List<String>> entry : headers.entrySet()) {

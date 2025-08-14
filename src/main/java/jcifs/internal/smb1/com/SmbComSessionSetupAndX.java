@@ -18,7 +18,6 @@
 
 package jcifs.internal.smb1.com;
 
-
 import java.security.GeneralSecurityException;
 
 import jcifs.CIFSContext;
@@ -30,20 +29,18 @@ import jcifs.internal.util.SMBUtil;
 import jcifs.smb.NtlmPasswordAuthenticator;
 import jcifs.smb.SmbException;
 
-
 /**
- * 
+ *
  */
 public class SmbComSessionSetupAndX extends AndXServerMessageBlock {
 
     private byte[] lmHash, ntHash, blob = null;
     private String accountName, primaryDomain;
-    private SmbComNegotiateResponse negotiated;
+    private final SmbComNegotiateResponse negotiated;
     private int capabilities;
 
-
     /**
-     * 
+     *
      * @param tc
      * @param negotiated
      * @param andx
@@ -51,98 +48,86 @@ public class SmbComSessionSetupAndX extends AndXServerMessageBlock {
      * @throws SmbException
      * @throws GeneralSecurityException
      */
-    public SmbComSessionSetupAndX ( CIFSContext tc, SmbComNegotiateResponse negotiated, ServerMessageBlock andx, Object cred )
-            throws SmbException, GeneralSecurityException {
+    public SmbComSessionSetupAndX(final CIFSContext tc, final SmbComNegotiateResponse negotiated, final ServerMessageBlock andx,
+            final Object cred) throws SmbException, GeneralSecurityException {
         super(tc.getConfig(), SMB_COM_SESSION_SETUP_ANDX, andx);
         this.negotiated = negotiated;
         this.capabilities = negotiated.getNegotiatedCapabilities();
-        ServerData server = negotiated.getServerData();
-        if ( server.security == SmbConstants.SECURITY_USER ) {
-            if ( cred instanceof NtlmPasswordAuthenticator ) {
-                NtlmPasswordAuthenticator a = (NtlmPasswordAuthenticator) cred;
-                if ( a.isAnonymous() ) {
+        final ServerData server = negotiated.getServerData();
+        if (server.security == SmbConstants.SECURITY_USER) {
+            if (cred instanceof final NtlmPasswordAuthenticator a) {
+                if (a.isAnonymous()) {
                     this.lmHash = new byte[0];
                     this.ntHash = new byte[0];
                     this.capabilities &= ~SmbConstants.CAP_EXTENDED_SECURITY;
-                    if ( a.isGuest() ) {
+                    if (a.isGuest()) {
                         this.accountName = a.getUsername();
-                        if ( this.isUseUnicode() )
+                        if (this.isUseUnicode()) {
                             this.accountName = this.accountName.toUpperCase();
+                        }
                         this.primaryDomain = a.getUserDomain() != null ? a.getUserDomain().toUpperCase() : "?";
-                    }
-                    else {
+                    } else {
                         this.accountName = "";
                         this.primaryDomain = "";
                     }
-                }
-                else {
+                } else {
                     this.accountName = a.getUsername();
-                    if ( this.isUseUnicode() )
+                    if (this.isUseUnicode()) {
                         this.accountName = this.accountName.toUpperCase();
+                    }
                     this.primaryDomain = a.getUserDomain() != null ? a.getUserDomain().toUpperCase() : "?";
-                    if ( server.encryptedPasswords ) {
+                    if (server.encryptedPasswords) {
                         this.lmHash = a.getAnsiHash(tc, server.encryptionKey);
                         this.ntHash = a.getUnicodeHash(tc, server.encryptionKey);
                         // prohibit HTTP auth attempts for the null session
-                        if ( this.lmHash.length == 0 && this.ntHash.length == 0 ) {
+                        if (this.lmHash.length == 0 && this.ntHash.length == 0) {
                             throw new RuntimeException("Null setup prohibited.");
                         }
-                    }
-                    else if ( tc.getConfig().isDisablePlainTextPasswords() ) {
+                    } else if (tc.getConfig().isDisablePlainTextPasswords()) {
                         throw new RuntimeException("Plain text passwords are disabled");
-                    }
-                    else {
+                    } else {
                         // plain text
-                        String password = a.getPassword();
-                        this.lmHash = new byte[ ( password.length() + 1 ) * 2];
+                        final String password = a.getPassword();
+                        this.lmHash = new byte[(password.length() + 1) * 2];
                         this.ntHash = new byte[0];
                         writeString(password, this.lmHash, 0);
                     }
                 }
 
-            }
-            else if ( cred instanceof byte[] ) {
+            } else if (cred instanceof byte[]) {
                 this.blob = (byte[]) cred;
+            } else {
+                throw new SmbException("Unsupported credential type " + (cred != null ? cred.getClass() : "NULL"));
             }
-            else {
-                throw new SmbException("Unsupported credential type " + ( cred != null ? cred.getClass() : "NULL" ));
-            }
-        }
-        else if ( server.security == SmbConstants.SECURITY_SHARE ) {
-            if ( cred instanceof NtlmPasswordAuthenticator ) {
-                NtlmPasswordAuthenticator a = (NtlmPasswordAuthenticator) cred;
-                this.lmHash = new byte[0];
-                this.ntHash = new byte[0];
-                if ( !a.isAnonymous() ) {
-                    this.accountName = a.getUsername();
-                    if ( this.isUseUnicode() )
-                        this.accountName = this.accountName.toUpperCase();
-                    this.primaryDomain = a.getUserDomain() != null ? a.getUserDomain().toUpperCase() : "?";
-                }
-                else {
-                    this.accountName = "";
-                    this.primaryDomain = "";
-                }
-            }
-            else {
+        } else if (server.security == SmbConstants.SECURITY_SHARE) {
+            if (!(cred instanceof final NtlmPasswordAuthenticator a)) {
                 throw new SmbException("Unsupported credential type");
             }
-        }
-        else {
+            this.lmHash = new byte[0];
+            this.ntHash = new byte[0];
+            if (!a.isAnonymous()) {
+                this.accountName = a.getUsername();
+                if (this.isUseUnicode()) {
+                    this.accountName = this.accountName.toUpperCase();
+                }
+                this.primaryDomain = a.getUserDomain() != null ? a.getUserDomain().toUpperCase() : "?";
+            } else {
+                this.accountName = "";
+                this.primaryDomain = "";
+            }
+        } else {
             throw new SmbException("Unsupported");
         }
     }
 
-
     @Override
-    protected int getBatchLimit ( Configuration cfg, byte cmd ) {
+    protected int getBatchLimit(final Configuration cfg, final byte cmd) {
         return cmd == SMB_COM_TREE_CONNECT_ANDX ? cfg.getBatchLimit("SessionSetupAndX.TreeConnectAndX") : 0;
     }
 
-
     @Override
-    protected int writeParameterWordsWireFormat ( byte[] dst, int dstIndex ) {
-        int start = dstIndex;
+    protected int writeParameterWordsWireFormat(final byte[] dst, int dstIndex) {
+        final int start = dstIndex;
 
         SMBUtil.writeInt2(this.negotiated.getNegotiatedSendBufferSize(), dst, dstIndex);
         dstIndex += 2;
@@ -152,36 +137,33 @@ public class SmbComSessionSetupAndX extends AndXServerMessageBlock {
         dstIndex += 2;
         SMBUtil.writeInt4(this.negotiated.getNegotiatedSessionKey(), dst, dstIndex);
         dstIndex += 4;
-        if ( this.blob != null ) {
+        if (this.blob != null) {
             SMBUtil.writeInt2(this.blob.length, dst, dstIndex);
-            dstIndex += 2;
-        }
-        else {
+        } else {
             SMBUtil.writeInt2(this.lmHash.length, dst, dstIndex);
             dstIndex += 2;
             SMBUtil.writeInt2(this.ntHash.length, dst, dstIndex);
-            dstIndex += 2;
         }
-        dst[ dstIndex++ ] = (byte) 0x00;
-        dst[ dstIndex++ ] = (byte) 0x00;
-        dst[ dstIndex++ ] = (byte) 0x00;
-        dst[ dstIndex++ ] = (byte) 0x00;
+        dstIndex += 2;
+        dst[dstIndex] = (byte) 0x00;
+        dstIndex++;
+        dst[dstIndex++] = (byte) 0x00;
+        dst[dstIndex++] = (byte) 0x00;
+        dst[dstIndex++] = (byte) 0x00;
         SMBUtil.writeInt4(this.capabilities, dst, dstIndex);
         dstIndex += 4;
 
         return dstIndex - start;
     }
 
-
     @Override
-    protected int writeBytesWireFormat ( byte[] dst, int dstIndex ) {
-        int start = dstIndex;
+    protected int writeBytesWireFormat(final byte[] dst, int dstIndex) {
+        final int start = dstIndex;
 
-        if ( this.blob != null ) {
+        if (this.blob != null) {
             System.arraycopy(this.blob, 0, dst, dstIndex, this.blob.length);
             dstIndex += this.blob.length;
-        }
-        else {
+        } else {
             System.arraycopy(this.lmHash, 0, dst, dstIndex, this.lmHash.length);
             dstIndex += this.lmHash.length;
             System.arraycopy(this.ntHash, 0, dst, dstIndex, this.ntHash.length);
@@ -196,28 +178,23 @@ public class SmbComSessionSetupAndX extends AndXServerMessageBlock {
         return dstIndex - start;
     }
 
-
     @Override
-    protected int readParameterWordsWireFormat ( byte[] buffer, int bufferIndex ) {
+    protected int readParameterWordsWireFormat(final byte[] buffer, final int bufferIndex) {
         return 0;
     }
 
-
     @Override
-    protected int readBytesWireFormat ( byte[] buffer, int bufferIndex ) {
+    protected int readBytesWireFormat(final byte[] buffer, final int bufferIndex) {
         return 0;
     }
 
-
     @Override
-    public String toString () {
-        String result = new String(
-            "SmbComSessionSetupAndX[" + super.toString() + ",snd_buf_size=" + this.negotiated.getNegotiatedSendBufferSize() + ",maxMpxCount="
-                    + this.negotiated.getNegotiatedMpxCount() + ",VC_NUMBER=" + getConfig().getVcNumber() + ",sessionKey="
-                    + this.negotiated.getNegotiatedSessionKey() + ",lmHash.length=" + ( this.lmHash == null ? 0 : this.lmHash.length )
-                    + ",ntHash.length=" + ( this.ntHash == null ? 0 : this.ntHash.length ) + ",capabilities=" + this.capabilities + ",accountName="
-                    + this.accountName + ",primaryDomain=" + this.primaryDomain + ",NATIVE_OS=" + getConfig().getNativeOs() + ",NATIVE_LANMAN="
-                    + getConfig().getNativeLanman() + "]");
-        return result;
+    public String toString() {
+        return ("SmbComSessionSetupAndX[" + super.toString() + ",snd_buf_size=" + this.negotiated.getNegotiatedSendBufferSize()
+                + ",maxMpxCount=" + this.negotiated.getNegotiatedMpxCount() + ",VC_NUMBER=" + getConfig().getVcNumber() + ",sessionKey="
+                + this.negotiated.getNegotiatedSessionKey() + ",lmHash.length=" + (this.lmHash == null ? 0 : this.lmHash.length)
+                + ",ntHash.length=" + (this.ntHash == null ? 0 : this.ntHash.length) + ",capabilities=" + this.capabilities
+                + ",accountName=" + this.accountName + ",primaryDomain=" + this.primaryDomain + ",NATIVE_OS=" + getConfig().getNativeOs()
+                + ",NATIVE_LANMAN=" + getConfig().getNativeLanman() + "]");
     }
 }

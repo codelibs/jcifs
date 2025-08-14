@@ -146,7 +146,7 @@ class SmbTreeTest {
         assertEquals("testService", tree.service);
         assertTrue(tree.inDfs);
 
-        // Test tree disconnect  
+        // Test tree disconnect
         tree.treeDisconnect(false);
         assertEquals(0, tree.connectionState);
     }

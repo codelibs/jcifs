@@ -18,7 +18,6 @@
 
 package jcifs.internal.smb1.com;
 
-
 import java.io.UnsupportedEncodingException;
 import java.security.GeneralSecurityException;
 
@@ -32,29 +31,28 @@ import jcifs.internal.util.SMBUtil;
 import jcifs.smb.NtlmPasswordAuthenticator;
 import jcifs.util.Hexdump;
 
-
 /**
- * 
+ *
  */
 public class SmbComTreeConnectAndX extends AndXServerMessageBlock {
 
-    private boolean disconnectTid = false;
-    private String service;
+    private final boolean disconnectTid = false;
+    private final String service;
     private byte[] password;
     private int passwordLength;
-    private CIFSContext ctx;
-    private ServerData server;
-
+    private final CIFSContext ctx;
+    private final ServerData server;
 
     /**
-     * 
+     *
      * @param ctx
      * @param server
      * @param path
      * @param service
      * @param andx
      */
-    public SmbComTreeConnectAndX ( CIFSContext ctx, ServerData server, String path, String service, ServerMessageBlock andx ) {
+    public SmbComTreeConnectAndX(final CIFSContext ctx, final ServerData server, final String path, final String service,
+            final ServerMessageBlock andx) {
         super(ctx.getConfig(), SMB_COM_TREE_CONNECT_ANDX, andx);
         this.ctx = ctx;
         this.server = server;
@@ -62,11 +60,10 @@ public class SmbComTreeConnectAndX extends AndXServerMessageBlock {
         this.service = service;
     }
 
-
     @Override
-    protected int getBatchLimit ( Configuration cfg, byte cmd ) {
-        int c = cmd & 0xFF;
-        switch ( c ) {
+    protected int getBatchLimit(final Configuration cfg, final byte cmd) {
+        final int c = cmd & 0xFF;
+        switch (c) {
         case SMB_COM_CHECK_DIRECTORY:
             return cfg.getBatchLimit("TreeConnectAndX.CheckDirectory");
         case SMB_COM_CREATE_DIRECTORY:
@@ -87,101 +84,87 @@ public class SmbComTreeConnectAndX extends AndXServerMessageBlock {
         return 0;
     }
 
-
     @Override
-    protected int writeParameterWordsWireFormat ( byte[] dst, int dstIndex ) {
-        if ( this.server.security == SmbConstants.SECURITY_SHARE && this.ctx.getCredentials() instanceof NtlmPasswordAuthenticator ) {
-            NtlmPasswordAuthenticator pwAuth = (NtlmPasswordAuthenticator) this.ctx.getCredentials();
-            if ( isExternalAuth(pwAuth) ) {
+    protected int writeParameterWordsWireFormat(final byte[] dst, int dstIndex) {
+        if (this.server.security == SmbConstants.SECURITY_SHARE && this.ctx.getCredentials() instanceof NtlmPasswordAuthenticator) {
+            final NtlmPasswordAuthenticator pwAuth = (NtlmPasswordAuthenticator) this.ctx.getCredentials();
+            if (isExternalAuth(pwAuth)) {
                 this.passwordLength = 1;
-            }
-            else if ( this.server.encryptedPasswords ) {
+            } else if (this.server.encryptedPasswords) {
                 // encrypted
                 try {
                     this.password = pwAuth.getAnsiHash(this.ctx, this.server.encryptionKey);
-                }
-                catch ( GeneralSecurityException e ) {
+                } catch (final GeneralSecurityException e) {
                     throw new RuntimeCIFSException("Failed to encrypt password", e);
                 }
                 this.passwordLength = this.password.length;
-            }
-            else if ( this.ctx.getConfig().isDisablePlainTextPasswords() ) {
+            } else if (this.ctx.getConfig().isDisablePlainTextPasswords()) {
                 throw new RuntimeCIFSException("Plain text passwords are disabled");
-            }
-            else {
+            } else {
                 // plain text
-                this.password = new byte[ ( pwAuth.getPassword().length() + 1 ) * 2];
+                this.password = new byte[(pwAuth.getPassword().length() + 1) * 2];
                 this.passwordLength = writeString(pwAuth.getPassword(), this.password, 0);
             }
-        }
-        else {
+        } else {
             // no password in tree connect
             this.passwordLength = 1;
         }
 
-        dst[ dstIndex++ ] = this.disconnectTid ? (byte) 0x01 : (byte) 0x00;
-        dst[ dstIndex++ ] = (byte) 0x00;
+        dst[dstIndex] = this.disconnectTid ? (byte) 0x01 : (byte) 0x00;
+        dstIndex++;
+        dst[dstIndex++] = (byte) 0x00;
         SMBUtil.writeInt2(this.passwordLength, dst, dstIndex);
         return 4;
     }
 
-
-    @SuppressWarnings ( "deprecation" )
-    private static boolean isExternalAuth ( NtlmPasswordAuthenticator pwAuth ) {
-        return pwAuth instanceof jcifs.smb.NtlmPasswordAuthentication && ! ( (jcifs.smb.NtlmPasswordAuthentication) pwAuth ).areHashesExternal()
-                && pwAuth.getPassword().isEmpty();
+    @SuppressWarnings("deprecation")
+    private static boolean isExternalAuth(final NtlmPasswordAuthenticator pwAuth) {
+        return pwAuth instanceof jcifs.smb.NtlmPasswordAuthentication
+                && !((jcifs.smb.NtlmPasswordAuthentication) pwAuth).areHashesExternal() && pwAuth.getPassword().isEmpty();
     }
 
-
     @Override
-    protected int writeBytesWireFormat ( byte[] dst, int dstIndex ) {
-        int start = dstIndex;
-        if ( this.server.security == SmbConstants.SECURITY_SHARE && this.ctx.getCredentials() instanceof NtlmPasswordAuthenticator ) {
-            NtlmPasswordAuthenticator pwAuth = (NtlmPasswordAuthenticator) this.ctx.getCredentials();
-            if ( isExternalAuth(pwAuth) ) {
-                dst[ dstIndex++ ] = (byte) 0x00;
-            }
-            else {
+    protected int writeBytesWireFormat(final byte[] dst, int dstIndex) {
+        final int start = dstIndex;
+        if (this.server.security == SmbConstants.SECURITY_SHARE && this.ctx.getCredentials() instanceof NtlmPasswordAuthenticator) {
+            final NtlmPasswordAuthenticator pwAuth = (NtlmPasswordAuthenticator) this.ctx.getCredentials();
+            if (isExternalAuth(pwAuth)) {
+                dst[dstIndex++] = (byte) 0x00;
+            } else {
                 System.arraycopy(this.password, 0, dst, dstIndex, this.passwordLength);
                 dstIndex += this.passwordLength;
             }
-        }
-        else {
+        } else {
             // no password in tree connect
-            dst[ dstIndex++ ] = (byte) 0x00;
+            dst[dstIndex++] = (byte) 0x00;
         }
         dstIndex += writeString(this.path, dst, dstIndex);
         try {
             System.arraycopy(this.service.getBytes("ASCII"), 0, dst, dstIndex, this.service.length());
-        }
-        catch ( UnsupportedEncodingException uee ) {
+        } catch (final UnsupportedEncodingException uee) {
             return 0;
         }
         dstIndex += this.service.length();
-        dst[ dstIndex++ ] = (byte) '\0';
+        dst[dstIndex] = (byte) '\0';
+        dstIndex++;
 
         return dstIndex - start;
     }
 
-
     @Override
-    protected int readParameterWordsWireFormat ( byte[] buffer, int bufferIndex ) {
+    protected int readParameterWordsWireFormat(final byte[] buffer, final int bufferIndex) {
         return 0;
     }
 
-
     @Override
-    protected int readBytesWireFormat ( byte[] buffer, int bufferIndex ) {
+    protected int readBytesWireFormat(final byte[] buffer, final int bufferIndex) {
         return 0;
     }
 
-
     @Override
-    public String toString () {
-        String result = new String(
-            "SmbComTreeConnectAndX[" + super.toString() + ",disconnectTid=" + this.disconnectTid + ",passwordLength=" + this.passwordLength
-                    + ",password=" + Hexdump.toHexString(this.password, this.passwordLength, 0) + ",path=" + this.path + ",service=" + this.service
-                    + "]");
-        return result;
+    public String toString() {
+        return ("SmbComTreeConnectAndX[" + super.toString() + ",disconnectTid=" + this.disconnectTid + ",passwordLength="
+                + this.passwordLength + ",password=" + Hexdump.toHexString(this.password, this.passwordLength, 0) + ",path=" + this.path
+                + ",service=" + this.service + "]");
     }
 }

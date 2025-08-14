@@ -21,21 +21,18 @@
 
 package jcifs.http;
 
-
 import java.io.IOException;
-
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 
 import org.bouncycastle.util.encoders.Base64;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jcifs.CIFSContext;
 import jcifs.ntlmssp.NtlmFlags;
 import jcifs.ntlmssp.Type1Message;
 import jcifs.ntlmssp.Type2Message;
 import jcifs.ntlmssp.Type3Message;
 import jcifs.smb.NtlmPasswordAuthentication;
-
 
 /**
  * This class is used internally by <tt>NtlmHttpFilter</tt>,
@@ -58,7 +55,7 @@ public class NtlmSsp implements NtlmFlags {
      * Calls the static {@link #authenticate(CIFSContext, HttpServletRequest,
      * HttpServletResponse, byte[])} method to perform NTLM authentication
      * for the specified servlet request.
-     * 
+     *
      * @param tc
      *
      * @param req
@@ -71,15 +68,14 @@ public class NtlmSsp implements NtlmFlags {
      * @throws IOException
      *             If an IO error occurs.
      */
-    public NtlmPasswordAuthentication doAuthentication ( CIFSContext tc, HttpServletRequest req, HttpServletResponse resp, byte[] challenge )
-            throws IOException {
+    public NtlmPasswordAuthentication doAuthentication(final CIFSContext tc, final HttpServletRequest req, final HttpServletResponse resp,
+            final byte[] challenge) throws IOException {
         return authenticate(tc, req, resp, challenge);
     }
 
-
     /**
      * Performs NTLM authentication for the servlet request.
-     * 
+     *
      * @param tc
      *            context to use
      *
@@ -93,29 +89,29 @@ public class NtlmSsp implements NtlmFlags {
      * @throws IOException
      *             If an IO error occurs.
      */
-    public static NtlmPasswordAuthentication authenticate ( CIFSContext tc, HttpServletRequest req, HttpServletResponse resp, byte[] challenge )
-            throws IOException {
+    public static NtlmPasswordAuthentication authenticate(final CIFSContext tc, final HttpServletRequest req,
+            final HttpServletResponse resp, final byte[] challenge) throws IOException {
         String msg = req.getHeader("Authorization");
-        if ( msg != null && msg.startsWith("NTLM ") ) {
-            byte[] src = Base64.decode(msg.substring(5));
-            if ( src[ 8 ] == 1 ) {
-                Type1Message type1 = new Type1Message(src);
-                Type2Message type2 = new Type2Message(tc, type1, challenge, null);
+        if (msg != null && msg.startsWith("NTLM ")) {
+            final byte[] src = Base64.decode(msg.substring(5));
+            if (src[8] == 1) {
+                final Type1Message type1 = new Type1Message(src);
+                final Type2Message type2 = new Type2Message(tc, type1, challenge, null);
                 msg = new String(Base64.encode(type2.toByteArray()), "US-ASCII");
                 resp.setHeader("WWW-Authenticate", "NTLM " + msg);
-            }
-            else if ( src[ 8 ] == 3 ) {
-                Type3Message type3 = new Type3Message(src);
+            } else if (src[8] == 3) {
+                final Type3Message type3 = new Type3Message(src);
                 byte[] lmResponse = type3.getLMResponse();
-                if ( lmResponse == null )
+                if (lmResponse == null) {
                     lmResponse = new byte[0];
+                }
                 byte[] ntResponse = type3.getNTResponse();
-                if ( ntResponse == null )
+                if (ntResponse == null) {
                     ntResponse = new byte[0];
+                }
                 return new NtlmPasswordAuthentication(type3.getDomain(), type3.getUser(), challenge, lmResponse, ntResponse);
             }
-        }
-        else {
+        } else {
             resp.setHeader("WWW-Authenticate", "NTLM");
         }
         resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);

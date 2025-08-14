@@ -1,22 +1,21 @@
 /*
  * © 2017 AgNO3 Gmbh & Co. KG
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 package jcifs.internal.smb2;
-
 
 import jcifs.Configuration;
 import jcifs.internal.CommonServerMessageBlock;
@@ -27,9 +26,8 @@ import jcifs.internal.util.SMBUtil;
 import jcifs.smb.SmbException;
 import jcifs.util.Hexdump;
 
-
 /**
- * 
+ *
  * @author mbechler
  *
  */
@@ -66,31 +64,31 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
     protected static final short SMB2_OPLOCK_BREAK = 0x0012;
 
     /**
-     * 
+     *
      */
     public static final int SMB2_FLAGS_SERVER_TO_REDIR = 0x00000001;
     /**
-     * 
+     *
      */
     public static final int SMB2_FLAGS_ASYNC_COMMAND = 0x00000002;
     /**
-     * 
+     *
      */
     public static final int SMB2_FLAGS_RELATED_OPERATIONS = 0x00000004;
     /**
-     * 
+     *
      */
     public static final int SMB2_FLAGS_SIGNED = 0x00000008;
     /**
-     * 
+     *
      */
     public static final int SMB2_FLAGS_PRIORITY_MASK = 0x00000070;
     /**
-     * 
+     *
      */
     public static final int SMB2_FLAGS_DFS_OPERATIONS = 0x10000000;
     /**
-     * 
+     *
      */
     public static final int SMB2_FLAGS_REPLAY_OPERATION = 0x20000000;
 
@@ -98,10 +96,10 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
     private int flags;
     private int length, headerStart, wordCount, byteCount;
 
-    private byte[] signature = new byte[16];
+    private final byte[] signature = new byte[16];
     private Smb2SigningDigest digest = null;
 
-    private Configuration config;
+    private final Configuration config;
 
     private int creditCharge;
     private int status;
@@ -119,164 +117,143 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
 
     private ServerMessageBlock2 next;
 
-
-    protected ServerMessageBlock2 ( Configuration config ) {
+    protected ServerMessageBlock2(final Configuration config) {
         this.config = config;
     }
 
-
-    protected ServerMessageBlock2 ( Configuration config, int command ) {
+    protected ServerMessageBlock2(final Configuration config, final int command) {
         this.config = config;
         this.command = command;
     }
 
-
     /**
      * @return the config
      */
-    protected Configuration getConfig () {
+    protected Configuration getConfig() {
         return this.config;
     }
 
-
     @Override
-    public void reset () {
+    public void reset() {
         this.flags = 0;
         this.digest = null;
         this.sessionId = 0;
         this.treeId = 0;
     }
 
-
     /**
      * @return the command
      */
     @Override
-    public final int getCommand () {
+    public final int getCommand() {
         return this.command;
     }
-
 
     /**
      * @return offset to next compound command
      */
-    public final int getNextCommandOffset () {
+    public final int getNextCommandOffset() {
         return this.nextCommand;
     }
-
 
     /**
      * @param readSize
      *            the readSize to set
      */
-    public void setReadSize ( int readSize ) {
+    public void setReadSize(final int readSize) {
         this.readSize = readSize;
     }
-
 
     /**
      * @return the async
      */
-    public boolean isAsync () {
+    public boolean isAsync() {
         return this.async;
     }
-
 
     /**
      * @param command
      *            the command to set
      */
     @Override
-    public final void setCommand ( int command ) {
+    public final void setCommand(final int command) {
         this.command = command;
     }
-
 
     /**
      * @return the treeId
      */
-    public final int getTreeId () {
+    public final int getTreeId() {
         return this.treeId;
     }
-
 
     /**
      * @param treeId
      *            the treeId to set
      */
-    public final void setTreeId ( int treeId ) {
+    public final void setTreeId(final int treeId) {
         this.treeId = treeId;
-        if ( this.next != null ) {
+        if (this.next != null) {
             this.next.setTreeId(treeId);
         }
     }
 
-
     /**
      * @return the asyncId
      */
-    public final long getAsyncId () {
+    public final long getAsyncId() {
         return this.asyncId;
     }
-
 
     /**
      * @param asyncId
      *            the asyncId to set
      */
-    public final void setAsyncId ( long asyncId ) {
+    public final void setAsyncId(final long asyncId) {
         this.asyncId = asyncId;
     }
-
 
     /**
      * @return the credit
      */
-    public final int getCredit () {
+    public final int getCredit() {
         return this.credit;
     }
-
 
     /**
      * @param credit
      *            the credit to set
      */
-    public final void setCredit ( int credit ) {
+    public final void setCredit(final int credit) {
         this.credit = credit;
     }
-
 
     /**
      * @return the creditCharge
      */
-    public final int getCreditCharge () {
+    public final int getCreditCharge() {
         return this.creditCharge;
     }
 
-
     @Override
-    public void retainPayload () {
+    public void retainPayload() {
         this.retainPayload = true;
     }
 
-
     @Override
-    public boolean isRetainPayload () {
+    public boolean isRetainPayload() {
         return this.retainPayload;
     }
 
-
     @Override
-    public byte[] getRawPayload () {
+    public byte[] getRawPayload() {
         return this.rawPayload;
     }
 
-
     @Override
-    public void setRawPayload ( byte[] rawPayload ) {
+    public void setRawPayload(final byte[] rawPayload) {
         this.rawPayload = rawPayload;
     }
-
 
     /**
      * {@inheritDoc}
@@ -284,54 +261,49 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
      * @see jcifs.internal.CommonServerMessageBlock#getDigest()
      */
     @Override
-    public Smb2SigningDigest getDigest () {
+    public Smb2SigningDigest getDigest() {
         return this.digest;
     }
 
-
     /**
-     * 
+     *
      * {@inheritDoc}
      *
      * @see jcifs.internal.CommonServerMessageBlock#setDigest(jcifs.internal.SMBSigningDigest)
      */
     @Override
-    public void setDigest ( SMBSigningDigest digest ) {
+    public void setDigest(final SMBSigningDigest digest) {
         this.digest = (Smb2SigningDigest) digest;
-        if ( this.next != null ) {
+        if (this.next != null) {
             this.next.setDigest(digest);
         }
     }
 
-
     /**
      * @return the status
      */
-    public final int getStatus () {
+    public final int getStatus() {
         return this.status;
     }
-
 
     /**
      * @return the sessionId
      */
-    public long getSessionId () {
+    public long getSessionId() {
         return this.sessionId;
     }
-
 
     /**
      * @param sessionId
      *            the sessionId to set
      */
     @Override
-    public final void setSessionId ( long sessionId ) {
+    public final void setSessionId(final long sessionId) {
         this.sessionId = sessionId;
-        if ( this.next != null ) {
+        if (this.next != null) {
             this.next.setSessionId(sessionId);
         }
     }
-
 
     /**
      * {@inheritDoc}
@@ -339,10 +311,9 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
      * @see jcifs.internal.CommonServerMessageBlock#setExtendedSecurity(boolean)
      */
     @Override
-    public void setExtendedSecurity ( boolean extendedSecurity ) {
+    public void setExtendedSecurity(final boolean extendedSecurity) {
         // ignore
     }
-
 
     /**
      * {@inheritDoc}
@@ -350,62 +321,56 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
      * @see jcifs.internal.CommonServerMessageBlock#setUid(int)
      */
     @Override
-    public void setUid ( int uid ) {
+    public void setUid(final int uid) {
         // ignore
     }
-
 
     /**
      * @return the flags
      */
-    public final int getFlags () {
+    public final int getFlags() {
         return this.flags;
     }
 
-
     /**
-     * 
+     *
      * @param flag
      */
-    public final void addFlags ( int flag ) {
+    public final void addFlags(final int flag) {
         this.flags |= flag;
     }
 
-
     /**
-     * 
+     *
      * @param flag
      */
-    public final void clearFlags ( int flag ) {
+    public final void clearFlags(final int flag) {
         this.flags &= ~flag;
     }
-
 
     /**
      * @return the mid
      */
     @Override
-    public final long getMid () {
+    public final long getMid() {
         return this.mid;
     }
-
 
     /**
      * @param mid
      *            the mid to set
      */
     @Override
-    public final void setMid ( long mid ) {
+    public final void setMid(final long mid) {
         this.mid = mid;
     }
-
 
     /**
      * @param n
      * @return whether chaining was successful
      */
-    public boolean chain ( ServerMessageBlock2 n ) {
-        if ( this.next != null ) {
+    public boolean chain(final ServerMessageBlock2 n) {
+        if (this.next != null) {
             return this.next.chain(n);
         }
 
@@ -414,73 +379,64 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
         return true;
     }
 
-
-    protected ServerMessageBlock2 getNext () {
+    protected ServerMessageBlock2 getNext() {
         return this.next;
     }
 
-
-    protected void setNext ( ServerMessageBlock2 n ) {
+    protected void setNext(final ServerMessageBlock2 n) {
         this.next = n;
     }
-
 
     /**
      * @return the response
      */
     @Override
-    public ServerMessageBlock2Response getResponse () {
+    public ServerMessageBlock2Response getResponse() {
         return null;
     }
 
-
     /**
-     * 
+     *
      * {@inheritDoc}
      *
      * @see jcifs.internal.CommonServerMessageBlock#setResponse(jcifs.internal.CommonServerMessageBlockResponse)
      */
     @Override
-    public void setResponse ( CommonServerMessageBlockResponse msg ) {
+    public void setResponse(final CommonServerMessageBlockResponse msg) {
 
     }
-
 
     /**
      * @return the errorData
      */
-    public final byte[] getErrorData () {
+    public final byte[] getErrorData() {
         return this.errorData;
     }
-
 
     /**
      * @return the errorContextCount
      */
-    public final byte getErrorContextCount () {
+    public final byte getErrorContextCount() {
         return this.errorContextCount;
     }
-
 
     /**
      * @return the headerStart
      */
-    public final int getHeaderStart () {
+    public final int getHeaderStart() {
         return this.headerStart;
     }
-
 
     /**
      * @return the length
      */
-    public final int getLength () {
+    public final int getLength() {
         return this.length;
     }
 
-
     @Override
-    public int encode ( byte[] dst, int dstIndex ) {
-        int start = this.headerStart = dstIndex;
+    public int encode(final byte[] dst, int dstIndex) {
+        final int start = this.headerStart = dstIndex;
         dstIndex += writeHeaderWireFormat(dst, dstIndex);
 
         this.byteCount = writeBytesWireFormat(dst, dstIndex);
@@ -491,19 +447,19 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
 
         int len = this.length;
 
-        if ( this.next != null ) {
-            int nextStart = dstIndex;
+        if (this.next != null) {
+            final int nextStart = dstIndex;
             dstIndex += this.next.encode(dst, dstIndex);
-            int off = nextStart - start;
+            final int off = nextStart - start;
             SMBUtil.writeInt4(off, dst, start + 20);
             len += dstIndex - nextStart;
         }
 
-        if ( this.digest != null ) {
+        if (this.digest != null) {
             this.digest.sign(dst, this.headerStart, this.length, this, getResponse());
         }
 
-        if ( isRetainPayload() ) {
+        if (isRetainPayload()) {
             this.rawPayload = new byte[len];
             System.arraycopy(dst, start, this.rawPayload, 0, len);
         }
@@ -511,44 +467,39 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
         return len;
     }
 
-
-    protected static final int size8 ( int size ) {
+    protected static final int size8(final int size) {
         return size8(size, 0);
     }
 
-
-    protected static final int size8 ( int size, int align ) {
+    protected static final int size8(final int size, final int align) {
 
         int rem = size % 8 - align;
-        if ( rem == 0 ) {
+        if (rem == 0) {
             return size;
         }
-        if ( rem < 0 ) {
+        if (rem < 0) {
             rem = 8 + rem;
         }
         return size + 8 - rem;
     }
 
-
     /**
      * @param dstIndex
      * @return
      */
-    protected final int pad8 ( int dstIndex ) {
-        int fromHdr = dstIndex - this.headerStart;
-        int rem = fromHdr % 8;
-        if ( rem == 0 ) {
+    protected final int pad8(final int dstIndex) {
+        final int fromHdr = dstIndex - this.headerStart;
+        final int rem = fromHdr % 8;
+        if (rem == 0) {
             return 0;
         }
         return 8 - rem;
     }
 
-
     @Override
-    public int decode ( byte[] buffer, int bufferIndex ) throws SMBProtocolDecodingException {
+    public int decode(final byte[] buffer, final int bufferIndex) throws SMBProtocolDecodingException {
         return decode(buffer, bufferIndex, false);
     }
-
 
     /**
      * @param buffer
@@ -557,48 +508,42 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
      * @return decoded length
      * @throws SMBProtocolDecodingException
      */
-    public int decode ( byte[] buffer, int bufferIndex, boolean compound ) throws SMBProtocolDecodingException {
-        int start = this.headerStart = bufferIndex;
+    public int decode(final byte[] buffer, int bufferIndex, final boolean compound) throws SMBProtocolDecodingException {
+        final int start = this.headerStart = bufferIndex;
         bufferIndex += readHeaderWireFormat(buffer, bufferIndex);
-        if ( isErrorResponseStatus() ) {
+        if (isErrorResponseStatus()) {
             bufferIndex += readErrorResponse(buffer, bufferIndex);
-        }
-        else {
+        } else {
             bufferIndex += readBytesWireFormat(buffer, bufferIndex);
         }
 
         this.length = bufferIndex - start;
         int len = this.length;
 
-        if ( this.nextCommand != 0 ) {
+        if (this.nextCommand != 0) {
             // padding becomes part of signature if this is _PART_ of a compound chain
             len += pad8(bufferIndex);
-        }
-        else if ( compound && this.nextCommand == 0 && this.readSize > 0 ) {
+        } else if (compound && this.nextCommand == 0 && this.readSize > 0) {
             // TODO: only apply this for actual compound chains, or is this correct for single responses, too?
             // 3.2.5.1.9 Handling Compounded Responses
             // The final response in the compounded response chain will have NextCommand equal to 0,
             // and it MUST be processed as an individual message of a size equal to the number of bytes
             // remaining in this receive.
-            int rem = this.readSize - this.length;
+            final int rem = this.readSize - this.length;
             len += rem;
         }
 
         haveResponse(buffer, start, len);
 
-        if ( this.nextCommand != 0 && this.next != null ) {
-            if ( this.nextCommand % 8 != 0 ) {
-                throw new SMBProtocolDecodingException("Chained command is not aligned");
-            }
+        if ((this.nextCommand != 0 && this.next != null) && (this.nextCommand % 8 != 0)) {
+            throw new SMBProtocolDecodingException("Chained command is not aligned");
         }
         return len;
     }
 
-
-    protected boolean isErrorResponseStatus () {
+    protected boolean isErrorResponseStatus() {
         return getStatus() != 0;
     }
-
 
     /**
      * @param buffer
@@ -606,30 +551,30 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
      * @param len
      * @throws SMBProtocolDecodingException
      */
-    protected void haveResponse ( byte[] buffer, int start, int len ) throws SMBProtocolDecodingException {}
-
+    protected void haveResponse(final byte[] buffer, final int start, final int len) throws SMBProtocolDecodingException {
+    }
 
     /**
      * Read error response from buffer
-     * 
+     *
      * @param buffer the buffer to read from
      * @param bufferIndex the starting index in the buffer
      * @return the number of bytes read
      * @throws SMBProtocolDecodingException if decoding fails
      */
-    protected int readErrorResponse ( byte[] buffer, int bufferIndex ) throws SMBProtocolDecodingException {
-        int start = bufferIndex;
-        int structureSize = SMBUtil.readInt2(buffer, bufferIndex);
-        if ( structureSize != 9 ) {
+    protected int readErrorResponse(final byte[] buffer, int bufferIndex) throws SMBProtocolDecodingException {
+        final int start = bufferIndex;
+        final int structureSize = SMBUtil.readInt2(buffer, bufferIndex);
+        if (structureSize != 9) {
             throw new SMBProtocolDecodingException("Error structureSize should be 9");
         }
-        this.errorContextCount = buffer[ bufferIndex + 2 ];
+        this.errorContextCount = buffer[bufferIndex + 2];
         bufferIndex += 4;
 
-        int bc = SMBUtil.readInt4(buffer, bufferIndex);
+        final int bc = SMBUtil.readInt4(buffer, bufferIndex);
         bufferIndex += 4;
 
-        if ( bc > 0 ) {
+        if (bc > 0) {
             this.errorData = new byte[bc];
             System.arraycopy(buffer, bufferIndex, this.errorData, 0, bc);
             bufferIndex += bc;
@@ -637,8 +582,7 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
         return bufferIndex - start;
     }
 
-
-    protected int writeHeaderWireFormat ( byte[] dst, int dstIndex ) {
+    protected int writeHeaderWireFormat(final byte[] dst, final int dstIndex) {
         System.arraycopy(SMBUtil.SMB2_HEADER, 0, dst, dstIndex, SMBUtil.SMB2_HEADER.length);
 
         SMBUtil.writeInt2(this.creditCharge, dst, dstIndex + 6);
@@ -648,22 +592,18 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
         SMBUtil.writeInt4(this.nextCommand, dst, dstIndex + 20);
         SMBUtil.writeInt8(this.mid, dst, dstIndex + 24);
 
-        if ( this.async ) {
+        if (this.async) {
             SMBUtil.writeInt8(this.asyncId, dst, dstIndex + 32);
-            SMBUtil.writeInt8(this.sessionId, dst, dstIndex + 40);
-        }
-        else {
+        } else {
             // 4 reserved
             SMBUtil.writeInt4(this.treeId, dst, dstIndex + 36);
-            SMBUtil.writeInt8(this.sessionId, dst, dstIndex + 40);
-            // + signature
         }
+        SMBUtil.writeInt8(this.sessionId, dst, dstIndex + 40);
 
         return Smb2Constants.SMB2_HEADER_LENGTH;
     }
 
-
-    protected int readHeaderWireFormat ( byte[] buffer, int bufferIndex ) {
+    protected int readHeaderWireFormat(final byte[] buffer, int bufferIndex) {
         // these are common between SYNC/ASYNC
         SMBUtil.readInt4(buffer, bufferIndex);
         bufferIndex += 4;
@@ -683,124 +623,71 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
         this.mid = SMBUtil.readInt8(buffer, bufferIndex);
         bufferIndex += 8;
 
-        if ( ( this.flags & SMB2_FLAGS_ASYNC_COMMAND ) == SMB2_FLAGS_ASYNC_COMMAND ) {
+        if ((this.flags & SMB2_FLAGS_ASYNC_COMMAND) == SMB2_FLAGS_ASYNC_COMMAND) {
             // async
             this.async = true;
             this.asyncId = SMBUtil.readInt8(buffer, bufferIndex);
             bufferIndex += 8;
-            this.sessionId = SMBUtil.readInt8(buffer, bufferIndex);
-            bufferIndex += 8;
-            System.arraycopy(buffer, bufferIndex, this.signature, 0, 16);
-            bufferIndex += 16;
-        }
-        else {
+        } else {
             // sync
             this.async = false;
             bufferIndex += 4; // reserved
             this.treeId = SMBUtil.readInt4(buffer, bufferIndex);
             bufferIndex += 4;
-            this.sessionId = SMBUtil.readInt8(buffer, bufferIndex);
-            bufferIndex += 8;
-            System.arraycopy(buffer, bufferIndex, this.signature, 0, 16);
-            bufferIndex += 16;
         }
+        this.sessionId = SMBUtil.readInt8(buffer, bufferIndex);
+        bufferIndex += 8;
+        System.arraycopy(buffer, bufferIndex, this.signature, 0, 16);
+        bufferIndex += 16;
 
         return Smb2Constants.SMB2_HEADER_LENGTH;
     }
 
-
-    boolean isResponse () {
-        return ( this.flags & SMB2_FLAGS_SERVER_TO_REDIR ) == SMB2_FLAGS_SERVER_TO_REDIR;
+    boolean isResponse() {
+        return (this.flags & SMB2_FLAGS_SERVER_TO_REDIR) == SMB2_FLAGS_SERVER_TO_REDIR;
     }
 
+    protected abstract int writeBytesWireFormat(byte[] dst, int dstIndex);
 
-    protected abstract int writeBytesWireFormat ( byte[] dst, int dstIndex );
-
-
-    protected abstract int readBytesWireFormat ( byte[] buffer, int bufferIndex ) throws SMBProtocolDecodingException;
-
+    protected abstract int readBytesWireFormat(byte[] buffer, int bufferIndex) throws SMBProtocolDecodingException;
 
     @Override
-    public int hashCode () {
+    public int hashCode() {
         return (int) this.mid;
     }
 
-
     @Override
-    public boolean equals ( Object obj ) {
-        return obj instanceof ServerMessageBlock2 && ( (ServerMessageBlock2) obj ).mid == this.mid;
+    public boolean equals(final Object obj) {
+        return obj instanceof ServerMessageBlock2 && ((ServerMessageBlock2) obj).mid == this.mid;
     }
 
-
     @Override
-    public String toString () {
-        String c;
-        switch ( this.command ) {
-
-        case SMB2_NEGOTIATE:
-            c = "SMB2_NEGOTIATE";
-            break;
-        case SMB2_SESSION_SETUP:
-            c = "SMB2_SESSION_SETUP";
-            break;
-        case SMB2_LOGOFF:
-            c = "SMB2_LOGOFF";
-            break;
-        case SMB2_TREE_CONNECT:
-            c = "SMB2_TREE_CONNECT";
-            break;
-        case SMB2_TREE_DISCONNECT:
-            c = "SMB2_TREE_DISCONNECT";
-            break;
-        case SMB2_CREATE:
-            c = "SMB2_CREATE";
-            break;
-        case SMB2_CLOSE:
-            c = "SMB2_CLOSE";
-            break;
-        case SMB2_FLUSH:
-            c = "SMB2_FLUSH";
-            break;
-        case SMB2_READ:
-            c = "SMB2_READ";
-            break;
-        case SMB2_WRITE:
-            c = "SMB2_WRITE";
-            break;
-        case SMB2_LOCK:
-            c = "SMB2_LOCK";
-            break;
-        case SMB2_IOCTL:
-            c = "SMB2_IOCTL";
-            break;
-        case SMB2_CANCEL:
-            c = "SMB2_CANCEL";
-            break;
-        case SMB2_ECHO:
-            c = "SMB2_ECHO";
-            break;
-        case SMB2_QUERY_DIRECTORY:
-            c = "SMB2_QUERY_DIRECTORY";
-            break;
-        case SMB2_CHANGE_NOTIFY:
-            c = "SMB2_CHANGE_NOTIFY";
-            break;
-        case SMB2_QUERY_INFO:
-            c = "SMB2_QUERY_INFO";
-            break;
-        case SMB2_SET_INFO:
-            c = "SMB2_SET_INFO";
-            break;
-        case SMB2_OPLOCK_BREAK:
-            c = "SMB2_OPLOCK_BREAK";
-            break;
-        default:
-            c = "UNKNOWN";
-        }
-        String str = this.status == 0 ? "0" : SmbException.getMessageByCode(this.status);
-        return new String(
-            "command=" + c + ",status=" + str + ",flags=0x" + Hexdump.toHexString(this.flags, 4) + ",mid=" + this.mid + ",wordCount=" + this.wordCount
-                    + ",byteCount=" + this.byteCount);
+    public String toString() {
+        String c = switch (this.command) {
+        case SMB2_NEGOTIATE -> "SMB2_NEGOTIATE";
+        case SMB2_SESSION_SETUP -> "SMB2_SESSION_SETUP";
+        case SMB2_LOGOFF -> "SMB2_LOGOFF";
+        case SMB2_TREE_CONNECT -> "SMB2_TREE_CONNECT";
+        case SMB2_TREE_DISCONNECT -> "SMB2_TREE_DISCONNECT";
+        case SMB2_CREATE -> "SMB2_CREATE";
+        case SMB2_CLOSE -> "SMB2_CLOSE";
+        case SMB2_FLUSH -> "SMB2_FLUSH";
+        case SMB2_READ -> "SMB2_READ";
+        case SMB2_WRITE -> "SMB2_WRITE";
+        case SMB2_LOCK -> "SMB2_LOCK";
+        case SMB2_IOCTL -> "SMB2_IOCTL";
+        case SMB2_CANCEL -> "SMB2_CANCEL";
+        case SMB2_ECHO -> "SMB2_ECHO";
+        case SMB2_QUERY_DIRECTORY -> "SMB2_QUERY_DIRECTORY";
+        case SMB2_CHANGE_NOTIFY -> "SMB2_CHANGE_NOTIFY";
+        case SMB2_QUERY_INFO -> "SMB2_QUERY_INFO";
+        case SMB2_SET_INFO -> "SMB2_SET_INFO";
+        case SMB2_OPLOCK_BREAK -> "SMB2_OPLOCK_BREAK";
+        default -> "UNKNOWN";
+        };
+        final String str = this.status == 0 ? "0" : SmbException.getMessageByCode(this.status);
+        return ("command=" + c + ",status=" + str + ",flags=0x" + Hexdump.toHexString(this.flags, 4) + ",mid=" + this.mid + ",wordCount="
+                + this.wordCount + ",byteCount=" + this.byteCount);
     }
 
 }

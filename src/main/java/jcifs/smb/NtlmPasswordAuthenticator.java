@@ -1,21 +1,20 @@
 /*
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 package jcifs.smb;
-
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -42,20 +41,19 @@ import jcifs.spnego.NegTokenInit;
 import jcifs.util.Crypto;
 import jcifs.util.Strings;
 
-
 /**
  * This class stores and encrypts NTLM user credentials.
- * 
+ *
  * Contrary to {@link NtlmPasswordAuthentication} this does not cause guest authentication
  * when the "guest" username is supplied. Use {@link AuthenticationType} instead.
- * 
+ *
  * @author mbechler
  */
-@SuppressWarnings ( "javadoc" )
+@SuppressWarnings("javadoc")
 public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal, Serializable {
 
     /**
-     * 
+     *
      */
     private static final long serialVersionUID = -4090263879887877186L;
 
@@ -67,65 +65,59 @@ public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal
     private String password;
     private byte[] clientChallenge = null;
 
-
     /**
      * Construct anonymous credentials
      */
-    public NtlmPasswordAuthenticator () {
+    public NtlmPasswordAuthenticator() {
         this(AuthenticationType.NULL);
     }
 
-
-    public NtlmPasswordAuthenticator ( AuthenticationType type ) {
+    public NtlmPasswordAuthenticator(AuthenticationType type) {
         this.domain = "";
         this.username = "";
         this.password = "";
         this.type = type;
     }
 
-
     /**
      * Create username/password credentials
-     * 
+     *
      * @param username
      * @param password
      */
-    public NtlmPasswordAuthenticator ( String username, String password ) {
+    public NtlmPasswordAuthenticator(String username, String password) {
         this(null, username, password);
     }
 
-
     /**
      * Create username/password credentials with specified domain
-     * 
+     *
      * @param domain
      * @param username
      * @param password
      */
-    public NtlmPasswordAuthenticator ( String domain, String username, String password ) {
+    public NtlmPasswordAuthenticator(String domain, String username, String password) {
         this(domain, username, password, AuthenticationType.USER);
     }
 
-
     /**
      * Create username/password credentials with specified domain
-     * 
+     *
      * @param domain
      * @param username
      * @param password
      * @param type
      *            authentication type
      */
-    public NtlmPasswordAuthenticator ( String domain, String username, String password, AuthenticationType type ) {
-        if ( username != null ) {
+    public NtlmPasswordAuthenticator(String domain, String username, String password, AuthenticationType type) {
+        if (username != null) {
             int ci = username.indexOf('@');
-            if ( ci > 0 ) {
+            if (ci > 0) {
                 domain = username.substring(ci + 1);
                 username = username.substring(0, ci);
-            }
-            else {
+            } else {
                 ci = username.indexOf('\\');
-                if ( ci > 0 ) {
+                if (ci > 0) {
                     domain = username.substring(0, ci);
                     username = username.substring(ci + 1);
                 }
@@ -135,41 +127,36 @@ public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal
         this.domain = domain != null ? domain : "";
         this.username = username != null ? username : "";
         this.password = password != null ? password : "";
-        if ( type == null ) {
+        if (type == null) {
             this.type = guessAuthenticationType();
-        }
-        else {
+        } else {
             this.type = type;
         }
     }
 
-
-    protected NtlmPasswordAuthenticator ( String userInfo, String defDomain, String defUser, String defPassword ) {
+    protected NtlmPasswordAuthenticator(String userInfo, String defDomain, String defUser, String defPassword) {
         this(userInfo, defDomain, defUser, defPassword, null);
     }
-
 
     /**
      * @param userInfo
      */
-    protected NtlmPasswordAuthenticator ( String userInfo, String defDomain, String defUser, String defPassword, AuthenticationType type ) {
+    protected NtlmPasswordAuthenticator(String userInfo, String defDomain, String defUser, String defPassword, AuthenticationType type) {
         String dom = null, user = null, pass = null;
-        if ( userInfo != null ) {
+        if (userInfo != null) {
             try {
                 userInfo = unescape(userInfo);
-            }
-            catch ( UnsupportedEncodingException uee ) {
+            } catch (UnsupportedEncodingException uee) {
                 throw new RuntimeCIFSException(uee);
             }
             int i, u;
             int end = userInfo.length();
-            for ( i = 0, u = 0; i < end; i++ ) {
+            for (i = 0, u = 0; i < end; i++) {
                 char c = userInfo.charAt(i);
-                if ( c == ';' ) {
+                if (c == ';') {
                     dom = userInfo.substring(0, i);
                     u = i + 1;
-                }
-                else if ( c == ':' ) {
+                } else if (c == ':') {
                     pass = userInfo.substring(i + 1);
                     break;
                 }
@@ -177,143 +164,129 @@ public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal
             user = userInfo.substring(u, i);
         }
 
-        this.domain = dom != null ? dom : ( defDomain != null ? defDomain : "" );
-        this.username = user != null ? user : ( defUser != null ? defUser : "" );
-        this.password = pass != null ? pass : ( defPassword != null ? defPassword : "" );
+        this.domain = dom != null ? dom : defDomain != null ? defDomain : "";
+        this.username = user != null ? user : defUser != null ? defUser : "";
+        this.password = pass != null ? pass : defPassword != null ? defPassword : "";
 
-        if ( type == null ) {
+        if (type == null) {
             this.type = guessAuthenticationType();
-        }
-        else {
+        } else {
             this.type = type;
         }
     }
 
-
     /**
      * @return
      */
-    protected AuthenticationType guessAuthenticationType () {
+    protected AuthenticationType guessAuthenticationType() {
         AuthenticationType t = AuthenticationType.USER;
-        if ( "guest".equalsIgnoreCase(this.username) ) {
+        if ("guest".equalsIgnoreCase(this.username)) {
             t = AuthenticationType.GUEST;
-        }
-        else if ( ( getUserDomain() == null || getUserDomain().isEmpty() ) && getUsername().isEmpty() && ( getPassword().isEmpty() ) ) {
+        } else if ((getUserDomain() == null || getUserDomain().isEmpty()) && getUsername().isEmpty() && getPassword().isEmpty()) {
             t = AuthenticationType.NULL;
         }
         return t;
     }
 
-
-    @SuppressWarnings ( "unchecked" )
+    @SuppressWarnings("unchecked")
     @Override
-    public <T extends Credentials> T unwrap ( Class<T> t ) {
-        if ( t.isAssignableFrom(this.getClass()) ) {
+    public <T extends Credentials> T unwrap(Class<T> t) {
+        if (t.isAssignableFrom(this.getClass())) {
             return (T) this;
         }
         return null;
     }
 
-
     @Override
-    public Subject getSubject () {
+    public Subject getSubject() {
         return null;
     }
 
-
     @Override
-    public void refresh () throws CIFSException {}
-
+    public void refresh() throws CIFSException {
+    }
 
     /**
-     * 
+     *
      * {@inheritDoc}
      *
      * @see jcifs.smb.CredentialsInternal#createContext(jcifs.CIFSContext, java.lang.String, java.lang.String, byte[],
      *      boolean)
      */
     @Override
-    public SSPContext createContext ( CIFSContext tc, String targetDomain, String host, byte[] initialToken, boolean doSigning ) throws SmbException {
-        if ( tc.getConfig().isUseRawNTLM() ) {
+    public SSPContext createContext(CIFSContext tc, String targetDomain, String host, byte[] initialToken, boolean doSigning)
+            throws SmbException {
+        if (tc.getConfig().isUseRawNTLM()) {
             return setupTargetName(tc, host, new NtlmContext(tc, this, doSigning));
         }
 
         try {
-            if ( initialToken != null && initialToken.length > 0 ) {
+            if (initialToken != null && initialToken.length > 0) {
                 NegTokenInit tok = new NegTokenInit(initialToken);
-                if ( log.isDebugEnabled() ) {
+                if (log.isDebugEnabled()) {
                     log.debug("Have initial token " + tok);
                 }
-                if ( tok.getMechanisms() != null ) {
+                if (tok.getMechanisms() != null) {
                     Set<ASN1ObjectIdentifier> mechs = new HashSet<>(Arrays.asList(tok.getMechanisms()));
-                    if ( !mechs.contains(NtlmContext.NTLMSSP_OID) ) {
+                    if (!mechs.contains(NtlmContext.NTLMSSP_OID)) {
                         throw new SmbUnsupportedOperationException("Server does not support NTLM authentication");
                     }
                 }
             }
-        }
-        catch ( SmbException e ) {
+        } catch (SmbException e) {
             throw e;
-        }
-        catch ( IOException e1 ) {
+        } catch (IOException e1) {
             log.debug("Ignoring invalid initial token", e1);
         }
 
         return new SpnegoContext(tc.getConfig(), setupTargetName(tc, host, new NtlmContext(tc, this, doSigning)));
     }
 
-
-    private static SSPContext setupTargetName ( CIFSContext tc, String host, NtlmContext ntlmContext ) {
-        if ( host != null && tc.getConfig().isSendNTLMTargetName() ) {
+    private static SSPContext setupTargetName(CIFSContext tc, String host, NtlmContext ntlmContext) {
+        if (host != null && tc.getConfig().isSendNTLMTargetName()) {
             ntlmContext.setTargetName(String.format("cifs/%s", host));
         }
         return ntlmContext;
     }
 
-
     @Override
-    public NtlmPasswordAuthenticator clone () {
+    public NtlmPasswordAuthenticator clone() {
         NtlmPasswordAuthenticator cloned = new NtlmPasswordAuthenticator();
         cloneInternal(cloned, this);
         return cloned;
     }
 
-
-    protected static void cloneInternal ( NtlmPasswordAuthenticator cloned, NtlmPasswordAuthenticator toClone ) {
+    protected static void cloneInternal(NtlmPasswordAuthenticator cloned, NtlmPasswordAuthenticator toClone) {
         cloned.domain = toClone.domain;
         cloned.username = toClone.username;
         cloned.password = toClone.password;
         cloned.type = toClone.type;
     }
 
-
     /**
      * Returns the domain.
      */
     @Override
-    public String getUserDomain () {
+    public String getUserDomain() {
         return this.domain;
     }
-
 
     /**
-     * 
+     *
      * @return the original specified user domain
      */
-    public String getSpecifiedUserDomain () {
+    public String getSpecifiedUserDomain() {
         return this.domain;
     }
-
 
     /**
      * Returns the username.
-     * 
+     *
      * @return the username
      */
-    public String getUsername () {
+    public String getUsername() {
         return this.username;
     }
-
 
     /**
      * Returns the password in plain text or <tt>null</tt> if the raw password
@@ -321,36 +294,33 @@ public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal
      * object which will be the case when NTLM HTTP Authentication is
      * used. There is no way to retrieve a users password in plain text unless
      * it is supplied by the user at runtime.
-     * 
+     *
      * @return the password
      */
-    public String getPassword () {
+    public String getPassword() {
         return this.password;
     }
-
 
     /**
      * Return the domain and username in the format:
      * <tt>domain\\username</tt>. This is equivalent to <tt>toString()</tt>.
      */
     @Override
-    public String getName () {
+    public String getName() {
         boolean d = this.domain != null && this.domain.length() > 0;
         return d ? this.domain + "\\" + this.username : this.username;
     }
 
-
     /**
      * Compares two <tt>NtlmPasswordAuthentication</tt> objects for equality.
-     * 
+     *
      * Two <tt>NtlmPasswordAuthentication</tt> objects are equal if their caseless domain and username fields are equal
      *
      * @see java.lang.Object#equals(java.lang.Object)
      */
     @Override
-    public boolean equals ( Object obj ) {
-        if ( obj instanceof NtlmPasswordAuthenticator ) {
-            NtlmPasswordAuthenticator ntlm = (NtlmPasswordAuthenticator) obj;
+    public boolean equals(Object obj) {
+        if (obj instanceof NtlmPasswordAuthenticator ntlm) {
             String domA = ntlm.getUserDomain() != null ? ntlm.getUserDomain().toUpperCase() : null;
             String domB = this.getUserDomain() != null ? this.getUserDomain().toUpperCase() : null;
             return ntlm.type == this.type && Objects.equals(domA, domB) && ntlm.getUsername().equalsIgnoreCase(this.getUsername())
@@ -359,60 +329,54 @@ public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal
         return false;
     }
 
-
     /**
      * Return the upcased username hash code.
      */
     @Override
-    public int hashCode () {
+    public int hashCode() {
         return getName().toUpperCase().hashCode();
     }
-
 
     /**
      * Return the domain and username in the format:
      * <tt>domain\\username</tt>. This is equivalent to <tt>getName()</tt>.
      */
     @Override
-    public String toString () {
+    public String toString() {
         return getName();
     }
 
-
     @Override
-    public boolean isAnonymous () {
+    public boolean isAnonymous() {
         return this.type == AuthenticationType.NULL;
     }
 
-
     @Override
-    public boolean isGuest () {
+    public boolean isGuest() {
         return this.type == AuthenticationType.GUEST;
     }
 
-
-    static String unescape ( String str ) throws NumberFormatException, UnsupportedEncodingException {
+    static String unescape(String str) throws NumberFormatException, UnsupportedEncodingException {
         char ch;
         int i, j, state, len;
         char[] out;
         byte[] b = new byte[1];
 
-        if ( str == null ) {
+        if (str == null) {
             return null;
         }
 
         len = str.length();
         out = new char[len];
         state = 0;
-        for ( i = j = 0; i < len; i++ ) {
-            switch ( state ) {
+        for (i = j = 0; i < len; i++) {
+            switch (state) {
             case 0:
                 ch = str.charAt(i);
-                if ( ch == '%' ) {
+                if (ch == '%') {
                     state = 1;
-                }
-                else {
-                    out[ j++ ] = ch;
+                } else {
+                    out[j++] = ch;
                 }
                 break;
             case 1:
@@ -420,8 +384,9 @@ public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal
                  * Get ASCII hex value and convert to platform dependent
                  * encoding like EBCDIC perhaps
                  */
-                b[ 0 ] = (byte) ( Integer.parseInt(str.substring(i, i + 2), 16) & 0xFF );
-                out[ j++ ] = ( new String(b, 0, 1, "ASCII") ).charAt(0);
+                b[0] = (byte) (Integer.parseInt(str.substring(i, i + 2), 16) & 0xFF);
+                out[j] = new String(b, 0, 1, "ASCII").charAt(0);
+                j++;
                 i++;
                 state = 0;
             }
@@ -430,26 +395,24 @@ public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal
         return new String(out, 0, j);
     }
 
-
     /**
      * @param mechanism
      * @return whether the given mechanism is the preferred one for this credential
      */
-    public boolean isPreferredMech ( ASN1ObjectIdentifier mechanism ) {
+    public boolean isPreferredMech(ASN1ObjectIdentifier mechanism) {
         return NtlmContext.NTLMSSP_OID.equals(mechanism);
     }
 
-
     /**
      * Computes the 24 byte ANSI password hash given the 8 byte server challenge.
-     * 
+     *
      * @param tc
      * @param chlng
      * @return the hash for the given challenge
      * @throws GeneralSecurityException
      */
-    public byte[] getAnsiHash ( CIFSContext tc, byte[] chlng ) throws GeneralSecurityException {
-        switch ( tc.getConfig().getLanManCompatibility() ) {
+    public byte[] getAnsiHash(CIFSContext tc, byte[] chlng) throws GeneralSecurityException {
+        switch (tc.getConfig().getLanManCompatibility()) {
         case 0:
         case 1:
             return NtlmUtil.getPreNTLMResponse(tc, this.password, chlng);
@@ -458,7 +421,7 @@ public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal
         case 3:
         case 4:
         case 5:
-            if ( this.clientChallenge == null ) {
+            if (this.clientChallenge == null) {
                 this.clientChallenge = new byte[8];
                 tc.getConfig().getRandom().nextBytes(this.clientChallenge);
             }
@@ -468,30 +431,21 @@ public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal
         }
     }
 
-
     /**
      * Computes the 24 byte Unicode password hash given the 8 byte server challenge.
-     * 
+     *
      * @param tc
      * @param chlng
      * @return the hash for the given challenge
      * @throws GeneralSecurityException
      */
-    public byte[] getUnicodeHash ( CIFSContext tc, byte[] chlng ) throws GeneralSecurityException {
-        switch ( tc.getConfig().getLanManCompatibility() ) {
-        case 0:
-        case 1:
-        case 2:
-            return NtlmUtil.getNTLMResponse(this.password, chlng);
-        case 3:
-        case 4:
-        case 5:
-            return new byte[0];
-        default:
-            return NtlmUtil.getNTLMResponse(this.password, chlng);
-        }
+    public byte[] getUnicodeHash(CIFSContext tc, byte[] chlng) throws GeneralSecurityException {
+        return switch (tc.getConfig().getLanManCompatibility()) {
+        case 0, 1, 2 -> NtlmUtil.getNTLMResponse(this.password, chlng);
+        case 3, 4, 5 -> new byte[0];
+        default -> NtlmUtil.getNTLMResponse(this.password, chlng);
+        };
     }
-
 
     /**
      * @param tc
@@ -500,8 +454,8 @@ public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal
      * @throws SmbException
      * @throws GeneralSecurityException
      */
-    public byte[] getSigningKey ( CIFSContext tc, byte[] chlng ) throws SmbException, GeneralSecurityException {
-        switch ( tc.getConfig().getLanManCompatibility() ) {
+    public byte[] getSigningKey(CIFSContext tc, byte[] chlng) throws SmbException, GeneralSecurityException {
+        switch (tc.getConfig().getLanManCompatibility()) {
         case 0:
         case 1:
         case 2:
@@ -517,32 +471,29 @@ public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal
              * all be cleaned up an normalized in JCIFS 2.x.
              */
             throw new SmbException(
-                "NTLMv2 requires extended security (jcifs.smb.client.useExtendedSecurity must be true if jcifs.smb.lmCompatibility >= 3)");
+                    "NTLMv2 requires extended security (jcifs.smb.client.useExtendedSecurity must be true if jcifs.smb.lmCompatibility >= 3)");
         }
         return null;
     }
 
-
     /**
      * Returns the effective user session key.
-     * 
+     *
      * @param tc
      * @param chlng
      *            The server challenge.
      * @return A <code>byte[]</code> containing the effective user session key,
      *         used in SMB MAC signing and NTLMSSP signing and sealing.
      */
-    public byte[] getUserSessionKey ( CIFSContext tc, byte[] chlng ) {
+    public byte[] getUserSessionKey(CIFSContext tc, byte[] chlng) {
         byte[] key = new byte[16];
         try {
             getUserSessionKey(tc, chlng, key, 0);
-        }
-        catch ( Exception ex ) {
+        } catch (Exception ex) {
             log.error("Failed to get session key", ex);
         }
         return key;
     }
-
 
     /**
      * Calculates the effective user session key.
@@ -559,11 +510,11 @@ public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal
      *            session key will start.
      * @throws SmbException
      */
-    public void getUserSessionKey ( CIFSContext tc, byte[] chlng, byte[] dest, int offset ) throws SmbException {
+    public void getUserSessionKey(CIFSContext tc, byte[] chlng, byte[] dest, int offset) throws SmbException {
         try {
             MessageDigest md4 = Crypto.getMD4();
             byte[] ntHash = getNTHash();
-            switch ( tc.getConfig().getLanManCompatibility() ) {
+            switch (tc.getConfig().getLanManCompatibility()) {
             case 0:
             case 1:
             case 2:
@@ -573,8 +524,8 @@ public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal
             case 3:
             case 4:
             case 5:
-                synchronized ( this ) {
-                    if ( this.clientChallenge == null ) {
+                synchronized (this) {
+                    if (this.clientChallenge == null) {
                         this.clientChallenge = new byte[8];
                         tc.getConfig().getRandom().nextBytes(this.clientChallenge);
                     }
@@ -596,38 +547,35 @@ public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal
                 md4.digest(dest, offset, 16);
                 break;
             }
-        }
-        catch ( Exception e ) {
+        } catch (Exception e) {
             throw new SmbException("", e);
         }
     }
 
-
     /**
      * @return
      */
-    protected byte[] getNTHash () {
+    protected byte[] getNTHash() {
         MessageDigest md4 = Crypto.getMD4();
         md4.update(Strings.getUNIBytes(this.password));
-        byte[] ntHash = md4.digest();
-        return ntHash;
+        return md4.digest();
     }
 
     /**
      * Authentication strategy
-     * 
-     * 
+     *
+     *
      */
     public enum AuthenticationType {
         /**
          * Null/anonymous authentication
-         * 
+         *
          * Login with no credentials
          */
         NULL,
         /**
          * Guest authentication
-         * 
+         *
          * Allows login with invalid credentials (username and/or password)
          * Fallback to anonymous authentication is permitted
          */

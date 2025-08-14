@@ -1,23 +1,22 @@
 /* jcifs smb client library in Java
  * Copyright (C) 2000  "Michael B. Allen" <jcifs at samba dot org>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 package jcifs.netbios;
-
 
 import java.io.IOException;
 import java.io.InterruptedIOException;
@@ -46,9 +45,8 @@ import jcifs.RuntimeCIFSException;
 import jcifs.SmbConstants;
 import jcifs.util.Hexdump;
 
-
 /**
- * 
+ *
  * @author mbechler
  *
  */
@@ -56,9 +54,7 @@ public class NameServiceClientImpl implements Runnable, NameServiceClient {
 
     private static final int NAME_SERVICE_UDP_PORT = 137;
 
-    static final byte[] UNKNOWN_MAC_ADDRESS = new byte[] {
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00
-    };
+    static final byte[] UNKNOWN_MAC_ADDRESS = { (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00 };
 
     private static final Logger log = LoggerFactory.getLogger(NameServiceClientImpl.class);
 
@@ -69,34 +65,34 @@ public class NameServiceClientImpl implements Runnable, NameServiceClient {
     private final Map<Name, CacheEntry> addressCache = new HashMap<>();
     private final Set<Name> inFlightLookups = new HashSet<>();
 
-    private int lport, closeTimeout;
-    private byte[] snd_buf, rcv_buf;
+    private final int lport;
+
+    private int closeTimeout;
+    private final byte[] snd_buf, rcv_buf;
     private DatagramSocket socket;
-    private DatagramPacket in, out;
-    private Map<Integer, NameServicePacket> responseTable = new HashMap<>();
+    private final DatagramPacket in, out;
+    private final Map<Integer, NameServicePacket> responseTable = new HashMap<>();
     private Thread thread;
     private int nextNameTrnId = 0;
     private List<ResolverType> resolveOrder = new ArrayList<>();
 
-    private InetAddress laddr, baddr;
-    private CIFSContext transportContext;
+    private final InetAddress laddr, baddr;
+    private final CIFSContext transportContext;
     private NbtAddress localhostAddress;
 
-    private Lmhosts lmhosts = new Lmhosts();
+    private final Lmhosts lmhosts = new Lmhosts();
     private Name unknownName;
     private NbtAddress unknownAddress;
 
-
     /**
-     * 
+     *
      * @param tc
      */
-    public NameServiceClientImpl ( CIFSContext tc ) {
+    public NameServiceClientImpl(final CIFSContext tc) {
         this(tc.getConfig().getNetbiosLocalPort(), tc.getConfig().getNetbiosLocalAddress(), tc);
     }
 
-
-    NameServiceClientImpl ( int lport, InetAddress laddr, CIFSContext tc ) {
+    NameServiceClientImpl(final int lport, final InetAddress laddr, final CIFSContext tc) {
         this.lport = lport;
         this.laddr = laddr;
         this.transportContext = tc;
@@ -117,19 +113,17 @@ public class NameServiceClientImpl implements Runnable, NameServiceClient {
         NbtAddress address;
         long expiration;
 
-
-        CacheEntry ( Name hostName, NbtAddress address, long expiration ) {
+        CacheEntry(final Name hostName, final NbtAddress address, final long expiration) {
             this.hostName = hostName;
             this.address = address;
             this.expiration = expiration;
         }
     }
 
-
     /**
-     * 
+     *
      */
-    private void initCache ( CIFSContext tc ) {
+    private void initCache(final CIFSContext tc) {
         this.unknownName = new Name(tc.getConfig(), "0.0.0.0", 0x00, null);
         this.unknownAddress = new NbtAddress(this.unknownName, 0, false, NbtAddress.B_NODE);
         this.addressCache.put(this.unknownName, new CacheEntry(this.unknownName, this.unknownAddress, SmbConstants.FOREVER));
@@ -139,11 +133,10 @@ public class NameServiceClientImpl implements Runnable, NameServiceClient {
          * if one was not specified.
          */
         InetAddress localInetAddress = tc.getConfig().getNetbiosLocalAddress();
-        if ( localInetAddress == null ) {
+        if (localInetAddress == null) {
             try {
                 localInetAddress = InetAddress.getLocalHost();
-            }
-            catch ( UnknownHostException uhe ) {
+            } catch (final UnknownHostException uhe) {
                 /*
                  * Java cannot determine the localhost. This is basically a config
                  * issue on the host. There's not much we can do about it. Just
@@ -152,8 +145,7 @@ public class NameServiceClientImpl implements Runnable, NameServiceClient {
                  */
                 try {
                     localInetAddress = InetAddress.getByName("127.0.0.1");
-                }
-                catch ( UnknownHostException ignored ) {
+                } catch (final UnknownHostException ignored) {
                     throw new RuntimeCIFSException(ignored);
                 }
             }
@@ -166,10 +158,10 @@ public class NameServiceClientImpl implements Runnable, NameServiceClient {
          * CallingName during session establishment.
          */
         String localHostname = tc.getConfig().getNetbiosHostname();
-        if ( localHostname == null || localHostname.length() == 0 ) {
-            byte[] addr = localInetAddress.getAddress();
-            localHostname = "JCIFS" + ( addr[ 2 ] & 0xFF ) + "_" + ( addr[ 3 ] & 0xFF ) + "_"
-                    + Hexdump.toHexString((int) ( Math.random() * 0xFF ), 2);
+        if (localHostname == null || localHostname.length() == 0) {
+            final byte[] addr = localInetAddress.getAddress();
+            localHostname =
+                    "JCIFS" + (addr[2] & 0xFF) + "_" + (addr[3] & 0xFF) + "_" + Hexdump.toHexString((int) (Math.random() * 0xFF), 2);
         }
 
         /*
@@ -177,76 +169,61 @@ public class NameServiceClientImpl implements Runnable, NameServiceClient {
          * the name deduced above possibly with scope applied and
          * cache it forever.
          */
-        Name localName = new Name(tc.getConfig(), localHostname, 0x00, tc.getConfig().getNetbiosScope());
-        this.localhostAddress = new NbtAddress(
-            localName,
-            localInetAddress.hashCode(),
-            false,
-            NbtAddress.B_NODE,
-            false,
-            false,
-            true,
-            false,
-            UNKNOWN_MAC_ADDRESS);
+        final Name localName = new Name(tc.getConfig(), localHostname, 0x00, tc.getConfig().getNetbiosScope());
+        this.localhostAddress = new NbtAddress(localName, localInetAddress.hashCode(), false, NbtAddress.B_NODE, false, false, true, false,
+                UNKNOWN_MAC_ADDRESS);
         cacheAddress(localName, this.localhostAddress, SmbConstants.FOREVER);
     }
 
-
-    NbtAddress doNameQuery ( Name name, InetAddress svr ) throws UnknownHostException {
+    NbtAddress doNameQuery(final Name name, InetAddress svr) throws UnknownHostException {
         NbtAddress addr;
 
-        if ( name.hexCode == 0x1d && svr == null ) {
+        if (name.hexCode == 0x1d && svr == null) {
             svr = this.baddr; // bit of a hack but saves a lookup
         }
         name.srcHashCode = svr != null ? svr.hashCode() : 0;
         addr = getCachedAddress(name);
 
-        if ( addr == null ) {
-            /*
-             * This is almost exactly like InetAddress.java. See the
-             * comments there for a description of how the LOOKUP_TABLE prevents
-             * redundant queries from going out on the wire.
-             */
-            if ( ( addr = (NbtAddress) checkLookupTable(name) ) == null ) {
-                try {
-                    addr = getByName(name, svr);
-                }
-                catch ( UnknownHostException uhe ) {
-                    addr = this.unknownAddress;
-                }
-                finally {
-                    cacheAddress(name, addr);
-                    updateLookupTable(name);
-                }
+        /*
+         * This is almost exactly like InetAddress.java. See the
+         * comments there for a description of how the LOOKUP_TABLE prevents
+         * redundant queries from going out on the wire.
+         */
+        if ((addr == null) && ((addr = (NbtAddress) checkLookupTable(name)) == null)) {
+            try {
+                addr = getByName(name, svr);
+            } catch (final UnknownHostException uhe) {
+                addr = this.unknownAddress;
+            } finally {
+                cacheAddress(name, addr);
+                updateLookupTable(name);
             }
         }
-        if ( addr == this.unknownAddress ) {
+        if (addr == this.unknownAddress) {
             throw new UnknownHostException(name.toString());
         }
         return addr;
     }
 
-
-    private Object checkLookupTable ( Name name ) {
+    private Object checkLookupTable(final Name name) {
         Object obj;
 
-        synchronized ( this.inFlightLookups ) {
-            if ( this.inFlightLookups.contains(name) == false ) {
+        synchronized (this.inFlightLookups) {
+            if (!this.inFlightLookups.contains(name)) {
                 this.inFlightLookups.add(name);
                 return null;
             }
-            while ( this.inFlightLookups.contains(name) ) {
+            while (this.inFlightLookups.contains(name)) {
                 try {
                     this.inFlightLookups.wait();
-                }
-                catch ( InterruptedException e ) {
+                } catch (final InterruptedException e) {
                     log.trace("Interrupted", e);
                 }
             }
         }
         obj = getCachedAddress(name);
-        if ( obj == null ) {
-            synchronized ( this.inFlightLookups ) {
+        if (obj == null) {
+            synchronized (this.inFlightLookups) {
                 this.inFlightLookups.add(name);
             }
         }
@@ -254,99 +231,90 @@ public class NameServiceClientImpl implements Runnable, NameServiceClient {
         return obj;
     }
 
-
-    private void updateLookupTable ( Name name ) {
-        synchronized ( this.inFlightLookups ) {
+    private void updateLookupTable(final Name name) {
+        synchronized (this.inFlightLookups) {
             this.inFlightLookups.remove(name);
             this.inFlightLookups.notifyAll();
         }
     }
 
-
-    void cacheAddress ( Name hostName, NbtAddress addr ) {
-        if ( this.transportContext.getConfig().getNetbiosCachePolicy() == 0 ) {
+    void cacheAddress(final Name hostName, final NbtAddress addr) {
+        if (this.transportContext.getConfig().getNetbiosCachePolicy() == 0) {
             return;
         }
         long expiration = -1;
-        if ( this.transportContext.getConfig().getNetbiosCachePolicy() != SmbConstants.FOREVER ) {
+        if (this.transportContext.getConfig().getNetbiosCachePolicy() != SmbConstants.FOREVER) {
             expiration = System.currentTimeMillis() + this.transportContext.getConfig().getNetbiosCachePolicy() * 1000;
         }
         cacheAddress(hostName, addr, expiration);
     }
 
-
-    void cacheAddress ( Name hostName, NbtAddress addr, long expiration ) {
-        if ( this.transportContext.getConfig().getNetbiosCachePolicy() == 0 ) {
+    void cacheAddress(final Name hostName, final NbtAddress addr, final long expiration) {
+        if (this.transportContext.getConfig().getNetbiosCachePolicy() == 0) {
             return;
         }
-        synchronized ( this.addressCache ) {
+        synchronized (this.addressCache) {
             CacheEntry entry = this.addressCache.get(hostName);
-            if ( entry == null ) {
+            if (entry == null) {
                 entry = new CacheEntry(hostName, addr, expiration);
                 this.addressCache.put(hostName, entry);
-            }
-            else {
+            } else {
                 entry.address = addr;
                 entry.expiration = expiration;
             }
         }
     }
 
-
-    void cacheAddressArray ( NbtAddress[] addrs ) {
-        if ( this.transportContext.getConfig().getNetbiosCachePolicy() == 0 ) {
+    void cacheAddressArray(final NbtAddress[] addrs) {
+        if (this.transportContext.getConfig().getNetbiosCachePolicy() == 0) {
             return;
         }
         long expiration = -1;
-        if ( this.transportContext.getConfig().getNetbiosCachePolicy() != SmbConstants.FOREVER ) {
+        if (this.transportContext.getConfig().getNetbiosCachePolicy() != SmbConstants.FOREVER) {
             expiration = System.currentTimeMillis() + this.transportContext.getConfig().getNetbiosCachePolicy() * 1000;
         }
-        synchronized ( this.addressCache ) {
-            for ( int i = 0; i < addrs.length; i++ ) {
-                CacheEntry entry = this.addressCache.get(addrs[ i ].hostName);
-                if ( entry == null ) {
-                    entry = new CacheEntry(addrs[ i ].hostName, addrs[ i ], expiration);
-                    this.addressCache.put(addrs[ i ].hostName, entry);
-                }
-                else {
-                    entry.address = addrs[ i ];
+        synchronized (this.addressCache) {
+            for (final NbtAddress addr : addrs) {
+                CacheEntry entry = this.addressCache.get(addr.hostName);
+                if (entry == null) {
+                    entry = new CacheEntry(addr.hostName, addr, expiration);
+                    this.addressCache.put(addr.hostName, entry);
+                } else {
+                    entry.address = addr;
                     entry.expiration = expiration;
                 }
             }
         }
     }
 
-
-    NbtAddress getCachedAddress ( Name hostName ) {
-        if ( this.transportContext.getConfig().getNetbiosCachePolicy() == 0 ) {
+    NbtAddress getCachedAddress(final Name hostName) {
+        if (this.transportContext.getConfig().getNetbiosCachePolicy() == 0) {
             return null;
         }
-        synchronized ( this.addressCache ) {
+        synchronized (this.addressCache) {
             CacheEntry entry = this.addressCache.get(hostName);
-            if ( entry != null && entry.expiration < System.currentTimeMillis() && entry.expiration >= 0 ) {
+            if (entry != null && entry.expiration < System.currentTimeMillis() && entry.expiration >= 0) {
                 entry = null;
             }
             return entry != null ? entry.address : null;
         }
     }
 
-
-    int getNextNameTrnId () {
-        if ( ( ++this.nextNameTrnId & 0xFFFF ) == 0 ) {
+    int getNextNameTrnId() {
+        if ((++this.nextNameTrnId & 0xFFFF) == 0) {
             this.nextNameTrnId = 1;
         }
         return this.nextNameTrnId;
     }
 
-
-    void ensureOpen ( int timeout ) throws IOException {
+    void ensureOpen(final int timeout) throws IOException {
         this.closeTimeout = 0;
-        if ( this.transportContext.getConfig().getNetbiosSoTimeout() != 0 ) {
+        if (this.transportContext.getConfig().getNetbiosSoTimeout() != 0) {
             this.closeTimeout = Math.max(this.transportContext.getConfig().getNetbiosSoTimeout(), timeout);
         }
         // If socket is still good, the new closeTimeout will
         // be ignored; see tryClose comment.
-        if ( this.socket == null ) {
+        if (this.socket == null) {
             this.socket = new DatagramSocket(this.lport, this.laddr);
             this.thread = new Thread(this, "JCIFS-NameServiceClient");
             this.thread.setDaemon(true);
@@ -354,9 +322,8 @@ public class NameServiceClientImpl implements Runnable, NameServiceClient {
         }
     }
 
-
-    void tryClose () {
-        synchronized ( this.LOCK ) {
+    void tryClose() {
+        synchronized (this.LOCK) {
 
             /*
              * Yes, there is the potential to drop packets
@@ -367,7 +334,7 @@ public class NameServiceClientImpl implements Runnable, NameServiceClient {
              * more than I think is worth it.
              */
 
-            if ( this.socket != null ) {
+            if (this.socket != null) {
                 this.socket.close();
                 this.socket = null;
             }
@@ -376,11 +343,10 @@ public class NameServiceClientImpl implements Runnable, NameServiceClient {
         }
     }
 
-
     @Override
-    public void run () {
+    public void run() {
         try {
-            while ( this.thread == Thread.currentThread() ) {
+            while (this.thread == Thread.currentThread()) {
                 this.in.setLength(this.transportContext.getConfig().getNetbiosRcvBufSize());
 
                 this.socket.setSoTimeout(this.closeTimeout);
@@ -388,16 +354,16 @@ public class NameServiceClientImpl implements Runnable, NameServiceClient {
 
                 log.trace("NetBIOS: new data read from socket");
 
-                int nameTrnId = NameServicePacket.readNameTrnId(this.rcv_buf, 0);
-                NameServicePacket response = this.responseTable.get(Integer.valueOf(nameTrnId));
-                if ( response == null || response.received ) {
+                final int nameTrnId = NameServicePacket.readNameTrnId(this.rcv_buf, 0);
+                final NameServicePacket response = this.responseTable.get(Integer.valueOf(nameTrnId));
+                if (response == null || response.received) {
                     continue;
                 }
-                synchronized ( response ) {
+                synchronized (response) {
                     response.readWireFormat(this.rcv_buf, 0);
                     response.received = true;
 
-                    if ( log.isTraceEnabled() ) {
+                    if (log.isTraceEnabled()) {
                         log.trace(response.toString());
                         log.trace(Hexdump.toHexString(this.rcv_buf, 0, this.in.getLength()));
                     }
@@ -405,33 +371,29 @@ public class NameServiceClientImpl implements Runnable, NameServiceClient {
                     response.notify();
                 }
             }
-        }
-        catch ( SocketTimeoutException ste ) {
+        } catch (final SocketTimeoutException ste) {
             log.trace("Socket timeout", ste);
-        }
-        catch ( Exception ex ) {
+        } catch (final Exception ex) {
             log.warn("Uncaught exception in NameServiceClient", ex);
-        }
-        finally {
+        } finally {
             tryClose();
         }
     }
 
-
-    void send ( NameServicePacket request, NameServicePacket response, int timeout ) throws IOException {
+    void send(final NameServicePacket request, final NameServicePacket response, int timeout) throws IOException {
         Integer nid = null;
         int max = this.transportContext.getConfig().getWinsServers().length;
 
-        if ( max == 0 ) {
+        if (max == 0) {
             max = 1; /* No WINs, try only bcast addr */
         }
 
-        synchronized ( response ) {
-            while ( max-- > 0 ) {
+        synchronized (response) {
+            while (max-- > 0) {
                 try {
-                    synchronized ( this.LOCK ) {
+                    synchronized (this.LOCK) {
                         request.nameTrnId = getNextNameTrnId();
-                        nid = Integer.valueOf(request.nameTrnId);
+                        nid = request.nameTrnId;
 
                         this.out.setAddress(request.addr);
                         this.out.setLength(request.writeWireFormat(this.snd_buf, 0));
@@ -441,14 +403,14 @@ public class NameServiceClientImpl implements Runnable, NameServiceClient {
                         ensureOpen(timeout + 1000);
                         this.socket.send(this.out);
 
-                        if ( log.isTraceEnabled() ) {
+                        if (log.isTraceEnabled()) {
                             log.trace(request.toString());
                             log.trace(Hexdump.toHexString(this.snd_buf, 0, this.out.getLength()));
                         }
                     }
 
-                    long start = System.currentTimeMillis();
-                    while ( timeout > 0 ) {
+                    final long start = System.currentTimeMillis();
+                    while (timeout > 0) {
                         response.wait(timeout);
 
                         /*
@@ -457,91 +419,86 @@ public class NameServiceClientImpl implements Runnable, NameServiceClient {
                          * the record type matches the question type and if not,
                          * loop around and try again.
                          */
-                        if ( response.received && request.questionType == response.recordType )
+                        if (response.received && request.questionType == response.recordType) {
                             return;
+                        }
 
                         response.received = false;
                         timeout -= System.currentTimeMillis() - start;
                     }
 
-                }
-                catch ( InterruptedException ie ) {
+                } catch (final InterruptedException ie) {
                     throw new InterruptedIOException();
-                }
-                finally {
+                } finally {
                     this.responseTable.remove(nid);
                 }
 
-                synchronized ( this.LOCK ) {
-                    if ( isWINS(request.addr) == false )
+                synchronized (this.LOCK) {
+                    if (!isWINS(request.addr)) {
                         break;
+                    }
                     /*
                      * Message was sent to WINS but
                      * failed to receive response.
                      * Try a different WINS server.
                      */
-                    if ( request.addr == getWINSAddress() )
+                    if (request.addr == getWINSAddress()) {
                         switchWINS();
+                    }
                     request.addr = getWINSAddress();
                 }
             }
         }
     }
 
-
-    NbtAddress[] getAllByName ( Name name, InetAddress addr ) throws UnknownHostException {
+    NbtAddress[] getAllByName(final Name name, final InetAddress addr) throws UnknownHostException {
         int n;
-        Configuration config = this.transportContext.getConfig();
-        NameQueryRequest request = new NameQueryRequest(config, name);
-        NameQueryResponse response = new NameQueryResponse(config);
+        final Configuration config = this.transportContext.getConfig();
+        final NameQueryRequest request = new NameQueryRequest(config, name);
+        final NameQueryResponse response = new NameQueryResponse(config);
 
         request.addr = addr != null ? addr : getWINSAddress();
         request.isBroadcast = request.addr == null || isBroadcastAddress(request.addr);
 
-        if ( request.isBroadcast ) {
-            if ( request.addr == null ) {
+        if (request.isBroadcast) {
+            if (request.addr == null) {
                 request.addr = this.baddr;
             }
             n = config.getNetbiosRetryCount();
-        }
-        else {
+        } else {
             n = 1;
         }
 
         do {
             try {
                 send(request, response, config.getNetbiosRetryTimeout());
-            }
-            catch ( InterruptedIOException ioe ) {
+            } catch (final InterruptedIOException ioe) {
                 // second query thread to finish gets interrupted so this is expected
-                if ( log.isTraceEnabled() ) {
+                if (log.isTraceEnabled()) {
                     log.trace("Failed to send nameservice request for " + name.name, ioe);
                 }
                 throw new UnknownHostException(name.name);
-            }
-            catch ( IOException ioe ) {
+            } catch (final IOException ioe) {
                 log.info("Failed to send nameservice request for " + name.name, ioe);
                 throw new UnknownHostException(name.name);
             }
 
-            if ( response.received && response.resultCode == 0 ) {
+            if (response.received && response.resultCode == 0) {
                 return response.addrEntry;
             }
-        }
-        while ( --n > 0 && request.isBroadcast );
+        } while (--n > 0 && request.isBroadcast);
 
         throw new UnknownHostException(name.name);
     }
 
+    NbtAddress getByName(final Name name, final InetAddress addr) throws UnknownHostException {
+        final NameQueryRequest request = new NameQueryRequest(this.transportContext.getConfig(), name);
+        final NameQueryResponse response = new NameQueryResponse(this.transportContext.getConfig());
 
-    NbtAddress getByName ( Name name, InetAddress addr ) throws UnknownHostException {
-        NameQueryRequest request = new NameQueryRequest(this.transportContext.getConfig(), name);
-        NameQueryResponse response = new NameQueryResponse(this.transportContext.getConfig());
-
-        if ( addr != null ) { /*
-                               * UniAddress calls always use this
-                               * because it specifies addr
-                               */
+        if (addr != null) { /*
+                             * UniAddress calls always use this
+                             * because it specifies addr
+                             */
             request.addr = addr; /* if addr ends with 255 flag it bcast */
             request.isBroadcast = isBroadcastAddress(addr);
 
@@ -549,25 +506,22 @@ public class NameServiceClientImpl implements Runnable, NameServiceClient {
             do {
                 try {
                     send(request, response, this.transportContext.getConfig().getNetbiosRetryTimeout());
-                }
-                catch ( InterruptedIOException ioe ) {
-                    if ( log.isTraceEnabled() ) {
+                } catch (final InterruptedIOException ioe) {
+                    if (log.isTraceEnabled()) {
                         log.trace("Timeout waiting for response " + name.name, ioe);
                     }
                     throw new UnknownHostException(name.name);
-                }
-                catch ( IOException ioe ) {
+                } catch (final IOException ioe) {
                     log.info("Failed to send nameservice request for " + name.name, ioe);
                     throw new UnknownHostException(name.name);
                 }
 
-                if ( response.received && response.resultCode == 0 ) {
-                    int last = response.addrEntry.length - 1;
-                    response.addrEntry[ last ].hostName.srcHashCode = addr.hashCode();
-                    return response.addrEntry[ last ];
+                if (response.received && response.resultCode == 0) {
+                    final int last = response.addrEntry.length - 1;
+                    response.addrEntry[last].hostName.srcHashCode = addr.hashCode();
+                    return response.addrEntry[last];
                 }
-            }
-            while ( --n > 0 && request.isBroadcast );
+            } while (--n > 0 && request.isBroadcast);
 
             throw new UnknownHostException(name.name);
         }
@@ -577,12 +531,12 @@ public class NameServiceClientImpl implements Runnable, NameServiceClient {
          * with the addr parameter we fall into this resolveOrder routine.
          */
 
-        for ( ResolverType resolverType : this.resolveOrder ) {
+        for (final ResolverType resolverType : this.resolveOrder) {
             try {
-                switch ( resolverType ) {
+                switch (resolverType) {
                 case RESOLVER_LMHOSTS:
-                    NbtAddress ans = this.lmhosts.getByName(name, this.transportContext);
-                    if ( ans != null ) {
+                    final NbtAddress ans = this.lmhosts.getByName(name, this.transportContext);
+                    if (ans != null) {
                         ans.hostName.srcHashCode = 0; // just has to be different
                                                       // from other methods
                         return ans;
@@ -590,25 +544,23 @@ public class NameServiceClientImpl implements Runnable, NameServiceClient {
                     break;
                 case RESOLVER_WINS:
                 case RESOLVER_BCAST:
-                    if ( resolverType == ResolverType.RESOLVER_WINS && name.name != NbtAddress.MASTER_BROWSER_NAME && name.hexCode != 0x1d ) {
+                    if (resolverType == ResolverType.RESOLVER_WINS && name.name != NbtAddress.MASTER_BROWSER_NAME && name.hexCode != 0x1d) {
                         request.addr = getWINSAddress();
                         request.isBroadcast = false;
-                    }
-                    else {
+                    } else {
                         request.addr = this.baddr;
                         request.isBroadcast = true;
                     }
 
                     int n = this.transportContext.getConfig().getNetbiosRetryCount();
-                    while ( n-- > 0 ) {
+                    while (n-- > 0) {
                         try {
                             send(request, response, this.transportContext.getConfig().getNetbiosRetryTimeout());
-                        }
-                        catch ( IOException ioe ) {
+                        } catch (final IOException ioe) {
                             log.info("Failed to send nameservice request for " + name.name, ioe);
                             throw new UnknownHostException(name.name);
                         }
-                        if ( response.received && response.resultCode == 0 ) {
+                        if (response.received && response.resultCode == 0) {
 
                             /*
                              * Before we return, in anticipation of this address being cached we must
@@ -616,10 +568,10 @@ public class NameServiceClientImpl implements Runnable, NameServiceClient {
                              * Lmhosts, WINS, or BCAST. Otherwise a failed query from say WINS would
                              * get pulled out of the cache for a BCAST on the same name.
                              */
-                            response.addrEntry[ 0 ].hostName.srcHashCode = request.addr.hashCode();
-                            return response.addrEntry[ 0 ];
+                            response.addrEntry[0].hostName.srcHashCode = request.addr.hashCode();
+                            return response.addrEntry[0];
                         }
-                        else if ( resolverType == ResolverType.RESOLVER_WINS ) {
+                        if (resolverType == ResolverType.RESOLVER_WINS) {
                             /*
                              * If WINS reports negative, no point in retry
                              */
@@ -630,34 +582,29 @@ public class NameServiceClientImpl implements Runnable, NameServiceClient {
                 default:
                     break;
                 }
-            }
-            catch ( IOException ioe ) {
+            } catch (final IOException ioe) {
                 log.debug("Failed to lookup name", ioe);
             }
         }
         throw new UnknownHostException(name.name);
     }
 
-
-
     @Override
-    public NbtAddress[] getNodeStatus ( NetbiosAddress addr ) throws UnknownHostException {
-        NodeStatusResponse response = new NodeStatusResponse(this.transportContext.getConfig(), addr.unwrap(NbtAddress.class));
-        NodeStatusRequest request = new NodeStatusRequest(
-            this.transportContext.getConfig(),
-            new Name(this.transportContext.getConfig(), NbtAddress.ANY_HOSTS_NAME, 0x00, null));
+    public NbtAddress[] getNodeStatus(final NetbiosAddress addr) throws UnknownHostException {
+        final NodeStatusResponse response = new NodeStatusResponse(this.transportContext.getConfig(), addr.unwrap(NbtAddress.class));
+        final NodeStatusRequest request = new NodeStatusRequest(this.transportContext.getConfig(),
+                new Name(this.transportContext.getConfig(), NbtAddress.ANY_HOSTS_NAME, 0x00, null));
         request.addr = addr.toInetAddress();
 
         int n = this.transportContext.getConfig().getNetbiosRetryCount();
-        while ( n-- > 0 ) {
+        while (n-- > 0) {
             try {
                 send(request, response, this.transportContext.getConfig().getNetbiosRetryTimeout());
-            }
-            catch ( IOException ioe ) {
+            } catch (final IOException ioe) {
                 log.info("Failed to send node status request for " + addr, ioe);
                 throw new UnknownHostException(addr.toString());
             }
-            if ( response.received && response.resultCode == 0 ) {
+            if (response.received && response.resultCode == 0) {
 
                 /*
                  * For name queries resolved by different sources (e.g. WINS,
@@ -673,9 +620,9 @@ public class NameServiceClientImpl implements Runnable, NameServiceClient {
                  * make them specific to who resolved the name.
                  */
 
-                int srcHashCode = request.addr.hashCode();
-                for ( int i = 0; i < response.addressArray.length; i++ ) {
-                    response.addressArray[ i ].hostName.srcHashCode = srcHashCode;
+                final int srcHashCode = request.addr.hashCode();
+                for (int i = 0; i < response.addressArray.length; i++) {
+                    response.addressArray[i].hostName.srcHashCode = srcHashCode;
                 }
                 return response.addressArray;
             }
@@ -683,145 +630,136 @@ public class NameServiceClientImpl implements Runnable, NameServiceClient {
         throw new UnknownHostException(addr.getHostName());
     }
 
-
     @Override
-    public NbtAddress getNbtByName ( String host ) throws UnknownHostException {
+    public NbtAddress getNbtByName(final String host) throws UnknownHostException {
         return getNbtByName(host, 0x00, null);
     }
 
-
     @Override
-    public NbtAddress getNbtByName ( String host, int type, String scope ) throws UnknownHostException {
+    public NbtAddress getNbtByName(final String host, final int type, final String scope) throws UnknownHostException {
         return getNbtByName(host, type, scope, null);
     }
 
-
     @Override
-    public NbtAddress getNbtByName ( String host, int type, String scope, InetAddress svr ) throws UnknownHostException {
+    public NbtAddress getNbtByName(final String host, final int type, final String scope, final InetAddress svr)
+            throws UnknownHostException {
 
-        if ( host == null || host.length() == 0 ) {
+        if (host == null || host.length() == 0) {
             return getLocalHost();
         }
 
-        Name name = new Name(this.transportContext.getConfig(), host, type, scope);
-        if ( !Character.isDigit(host.charAt(0)) ) {
+        final Name name = new Name(this.transportContext.getConfig(), host, type, scope);
+        if (!Character.isDigit(host.charAt(0))) {
             return doNameQuery(name, svr);
         }
 
         int IP = 0x00;
         int hitDots = 0;
-        char[] data = host.toCharArray();
+        final char[] data = host.toCharArray();
 
-        for ( int i = 0; i < data.length; i++ ) {
-            char c = data[ i ];
-            if ( c < 48 || c > 57 ) {
+        for (int i = 0; i < data.length; i++) {
+            char c = data[i];
+            if (c < 48 || c > 57) {
                 return doNameQuery(name, svr);
             }
             int b = 0x00;
-            while ( c != '.' ) {
-                if ( c < 48 || c > 57 ) {
+            while (c != '.') {
+                if (c < 48 || c > 57) {
                     return doNameQuery(name, svr);
                 }
                 b = b * 10 + c - '0';
 
-                if ( ++i >= data.length )
+                i++;
+                if (i >= data.length) {
                     break;
+                }
 
-                c = data[ i ];
+                c = data[i];
             }
-            if ( b > 0xFF ) {
+            if (b > 0xFF) {
                 return doNameQuery(name, svr);
             }
-            IP = ( IP << 8 ) + b;
+            IP = (IP << 8) + b;
             hitDots++;
         }
-        if ( hitDots != 4 || host.endsWith(".") ) {
+        if (hitDots != 4 || host.endsWith(".")) {
             return doNameQuery(name, svr);
         }
         return new NbtAddress(getUnknownName(), IP, false, NbtAddress.B_NODE);
     }
 
-
     @Override
-    public NbtAddress[] getNbtAllByName ( String host, int type, String scope, InetAddress svr ) throws UnknownHostException {
+    public NbtAddress[] getNbtAllByName(final String host, final int type, final String scope, final InetAddress svr)
+            throws UnknownHostException {
         return getAllByName(new Name(this.transportContext.getConfig(), host, type, scope), svr);
     }
 
-
     @Override
-    public NbtAddress[] getNbtAllByAddress ( String host ) throws UnknownHostException {
+    public NbtAddress[] getNbtAllByAddress(final String host) throws UnknownHostException {
         return getNbtAllByAddress(getNbtByName(host, 0x00, null));
     }
 
-
     @Override
-    public NbtAddress[] getNbtAllByAddress ( String host, int type, String scope ) throws UnknownHostException {
+    public NbtAddress[] getNbtAllByAddress(final String host, final int type, final String scope) throws UnknownHostException {
         return getNbtAllByAddress(getNbtByName(host, type, scope));
     }
 
-
     @Override
-    public NbtAddress[] getNbtAllByAddress ( NetbiosAddress addr ) throws UnknownHostException {
+    public NbtAddress[] getNbtAllByAddress(final NetbiosAddress addr) throws UnknownHostException {
         try {
-            NbtAddress[] addrs = getNodeStatus(addr);
+            final NbtAddress[] addrs = getNodeStatus(addr);
             cacheAddressArray(addrs);
             return addrs;
-        }
-        catch ( UnknownHostException uhe ) {
-            throw new UnknownHostException(
-                "no name with type 0x" + Hexdump.toHexString(addr.getNameType(), 2)
-                        + ( ( ( addr.getName().getScope() == null ) || ( addr.getName().getScope().isEmpty() ) ) ? " with no scope"
-                                : " with scope " + addr.getName().getScope() )
-                        + " for host " + addr.getHostAddress());
+        } catch (final UnknownHostException uhe) {
+            throw new UnknownHostException("no name with type 0x" + Hexdump.toHexString(addr.getNameType(), 2)
+                    + (addr.getName().getScope() == null || addr.getName().getScope().isEmpty() ? " with no scope"
+                            : " with scope " + addr.getName().getScope())
+                    + " for host " + addr.getHostAddress());
         }
     }
-
 
     /**
      * Get the address of the active WINS server
-     * 
+     *
      * @return address of active WINS server
      */
-    protected InetAddress getWINSAddress () {
+    protected InetAddress getWINSAddress() {
         return this.transportContext.getConfig().getWinsServers().length == 0 ? null
-                : this.transportContext.getConfig().getWinsServers()[ this.nbnsIndex ];
+                : this.transportContext.getConfig().getWinsServers()[this.nbnsIndex];
     }
 
-
     /**
-     * 
+     *
      * @param svr
      * @return whether the given address is a WINS server
      */
-    protected boolean isWINS ( InetAddress svr ) {
-        for ( int i = 0; svr != null && i < this.transportContext.getConfig().getWinsServers().length; i++ ) {
-            if ( svr.hashCode() == this.transportContext.getConfig().getWinsServers()[ i ].hashCode() ) {
+    protected boolean isWINS(final InetAddress svr) {
+        for (int i = 0; svr != null && i < this.transportContext.getConfig().getWinsServers().length; i++) {
+            if (svr.hashCode() == this.transportContext.getConfig().getWinsServers()[i].hashCode()) {
                 return true;
             }
         }
         return false;
     }
 
-
     /**
      *
      * @param svr
      * @return whether the given address is the configured broadcast address
      */
-    private boolean isBroadcastAddress(InetAddress svr) {
+    private boolean isBroadcastAddress(final InetAddress svr) {
         return svr.equals(this.baddr) || svr.getAddress()[3] == (byte) 0xFF;
     }
 
-
-    protected InetAddress switchWINS () {
-        this.nbnsIndex = ( this.nbnsIndex + 1 ) < this.transportContext.getConfig().getWinsServers().length ? this.nbnsIndex + 1 : 0;
+    protected InetAddress switchWINS() {
+        this.nbnsIndex = this.nbnsIndex + 1 < this.transportContext.getConfig().getWinsServers().length ? this.nbnsIndex + 1 : 0;
         return this.transportContext.getConfig().getWinsServers().length == 0 ? null
-                : this.transportContext.getConfig().getWinsServers()[ this.nbnsIndex ];
+                : this.transportContext.getConfig().getWinsServers()[this.nbnsIndex];
     }
 
     static class Sem {
 
-        Sem ( int count ) {
+        Sem(final int count) {
             this.count = count;
         }
 
@@ -830,16 +768,15 @@ public class NameServiceClientImpl implements Runnable, NameServiceClient {
 
     static class QueryThread extends Thread {
 
-        private Sem sem;
-        private String host, scope;
-        private int type;
+        private final Sem sem;
+        private final String host, scope;
+        private final int type;
         private NetbiosAddress[] ans = null;
-        private InetAddress svr;
+        private final InetAddress svr;
         private UnknownHostException uhe;
-        private CIFSContext tc;
+        private final CIFSContext tc;
 
-
-        QueryThread ( Sem sem, String host, int type, String scope, InetAddress svr, CIFSContext tc ) {
+        QueryThread(final Sem sem, final String host, final int type, final String scope, final InetAddress svr, final CIFSContext tc) {
             super("JCIFS-QueryThread: " + host);
             this.sem = sem;
             this.host = host;
@@ -849,188 +786,163 @@ public class NameServiceClientImpl implements Runnable, NameServiceClient {
             this.tc = tc;
         }
 
-
         @Override
-        public void run () {
+        public void run() {
             try {
                 this.ans = this.tc.getNameServiceClient().getNbtAllByName(this.host, this.type, this.scope, this.svr);
-            }
-            catch ( UnknownHostException ex ) {
+            } catch (final UnknownHostException ex) {
                 this.uhe = ex;
-            }
-            catch ( Exception ex ) {
+            } catch (final Exception ex) {
                 this.uhe = new UnknownHostException(ex.getMessage());
-            }
-            finally {
-                synchronized ( this.sem ) {
+            } finally {
+                synchronized (this.sem) {
                     this.sem.count--;
                     this.sem.notify();
                 }
             }
         }
 
-
         /**
          * @return the ans
          */
-        public NetbiosAddress[] getAnswer () {
+        public NetbiosAddress[] getAnswer() {
             return this.ans;
         }
-
 
         /**
          * @return the uhe
          */
-        public UnknownHostException getException () {
+        public UnknownHostException getException() {
             return this.uhe;
         }
 
     }
 
+    NetbiosAddress[] lookupServerOrWorkgroup(final String name, final InetAddress svr) throws UnknownHostException {
+        final Sem sem = new Sem(2);
+        final int type = isWINS(svr) ? 0x1b : 0x1d;
 
-    NetbiosAddress[] lookupServerOrWorkgroup ( String name, InetAddress svr ) throws UnknownHostException {
-        Sem sem = new Sem(2);
-        int type = isWINS(svr) ? 0x1b : 0x1d;
-
-        QueryThread q1x = new QueryThread(sem, name, type, null, svr, this.transportContext);
-        QueryThread q20 = new QueryThread(sem, name, 0x20, null, svr, this.transportContext);
+        final QueryThread q1x = new QueryThread(sem, name, type, null, svr, this.transportContext);
+        final QueryThread q20 = new QueryThread(sem, name, 0x20, null, svr, this.transportContext);
         q1x.setDaemon(true);
         q20.setDaemon(true);
         try {
-            synchronized ( sem ) {
+            synchronized (sem) {
                 q1x.start();
                 q20.start();
 
-                while ( sem.count > 0 && q1x.getAnswer() == null && q20.getAnswer() == null ) {
+                while (sem.count > 0 && q1x.getAnswer() == null && q20.getAnswer() == null) {
                     sem.wait();
                 }
             }
-        }
-        catch ( InterruptedException ie ) {
+        } catch (final InterruptedException ie) {
             throw new UnknownHostException(name);
         }
         waitForQueryThreads(q1x, q20);
-        if ( q1x.getAnswer() != null ) {
+        if (q1x.getAnswer() != null) {
             return q1x.getAnswer();
         }
-        else if ( q20.getAnswer() != null ) {
+        if (q20.getAnswer() != null) {
             return q20.getAnswer();
         }
-        else {
-            throw q1x.getException();
-        }
+        throw q1x.getException();
     }
 
-
-    private static void waitForQueryThreads ( QueryThread q1x, QueryThread q20 ) {
+    private static void waitForQueryThreads(final QueryThread q1x, final QueryThread q20) {
         interruptThreadSafely(q1x);
         joinThread(q1x);
         interruptThreadSafely(q20);
         joinThread(q20);
     }
 
-
-    private static void interruptThreadSafely ( QueryThread thread ) {
+    private static void interruptThreadSafely(final QueryThread thread) {
         try {
             thread.interrupt();
-        }
-        catch ( SecurityException e ) {
+        } catch (final SecurityException e) {
             e.printStackTrace();
         }
     }
 
-
-    private static void joinThread ( Thread thread ) {
+    private static void joinThread(final Thread thread) {
         try {
             thread.join();
-        }
-        catch ( InterruptedException e ) {
+        } catch (final InterruptedException e) {
             e.printStackTrace();
         }
     }
 
-
-    private static boolean isAllDigits ( String hostname ) {
-        for ( int i = 0; i < hostname.length(); i++ ) {
-            if ( Character.isDigit(hostname.charAt(i)) == false ) {
+    private static boolean isAllDigits(final String hostname) {
+        for (int i = 0; i < hostname.length(); i++) {
+            if (!Character.isDigit(hostname.charAt(i))) {
                 return false;
             }
         }
         return true;
     }
 
-
     @Override
-    public UniAddress getByName ( String hostname ) throws UnknownHostException {
+    public UniAddress getByName(final String hostname) throws UnknownHostException {
         return getByName(hostname, false);
     }
 
-
     @Override
-    public UniAddress getByName ( String hostname, boolean possibleNTDomainOrWorkgroup ) throws UnknownHostException {
-        return getAllByName(hostname, possibleNTDomainOrWorkgroup)[ 0 ];
+    public UniAddress getByName(final String hostname, final boolean possibleNTDomainOrWorkgroup) throws UnknownHostException {
+        return getAllByName(hostname, possibleNTDomainOrWorkgroup)[0];
     }
 
-
     @Override
-    public UniAddress[] getAllByName ( String hostname, boolean possibleNTDomainOrWorkgroup ) throws UnknownHostException {
-        if ( hostname == null || hostname.length() == 0 ) {
+    public UniAddress[] getAllByName(final String hostname, final boolean possibleNTDomainOrWorkgroup) throws UnknownHostException {
+        if (hostname == null || hostname.length() == 0) {
             throw new UnknownHostException();
         }
 
-        if ( UniAddress.isDotQuadIP(hostname) ) {
-            return new UniAddress[] {
-                new UniAddress(getNbtByName(hostname))
-            };
+        if (UniAddress.isDotQuadIP(hostname)) {
+            return new UniAddress[] { new UniAddress(getNbtByName(hostname)) };
         }
 
-        if ( log.isTraceEnabled() ) {
+        if (log.isTraceEnabled()) {
             log.trace("Resolver order is " + this.transportContext.getConfig().getResolveOrder());
         }
 
-        for ( ResolverType resolver : this.transportContext.getConfig().getResolveOrder() ) {
+        for (final ResolverType resolver : this.transportContext.getConfig().getResolveOrder()) {
             NetbiosAddress[] addr = null;
             try {
-                switch ( resolver ) {
+                switch (resolver) {
                 case RESOLVER_LMHOSTS:
-                    NbtAddress lmaddr;
-                    if ( ( lmaddr = getLmhosts().getByName(hostname, this.transportContext) ) == null ) {
+                    NbtAddress lmaddr = getLmhosts().getByName(hostname, this.transportContext);
+                    if (lmaddr == null) {
                         continue;
                     }
-                    addr = new NetbiosAddress[] {
-                        lmaddr
-                    };
+                    addr = new NetbiosAddress[] { lmaddr };
                     break;
                 case RESOLVER_WINS:
-                    if ( hostname.equals(NbtAddress.MASTER_BROWSER_NAME) || hostname.length() > 15 ) {
+                    if (hostname.equals(NbtAddress.MASTER_BROWSER_NAME) || hostname.length() > 15) {
                         // invalid netbios name
                         continue;
                     }
-                    if ( possibleNTDomainOrWorkgroup ) {
+                    if (possibleNTDomainOrWorkgroup) {
                         addr = lookupServerOrWorkgroup(hostname, getWINSAddress());
-                    }
-                    else {
+                    } else {
                         addr = getNbtAllByName(hostname, 0x20, null, getWINSAddress());
                     }
                     break;
                 case RESOLVER_BCAST:
-                    if ( hostname.length() > 15 ) {
+                    if (hostname.length() > 15) {
                         // invalid netbios name
                         continue;
                     }
-                    if ( possibleNTDomainOrWorkgroup ) {
+                    if (possibleNTDomainOrWorkgroup) {
                         addr = lookupServerOrWorkgroup(hostname, this.transportContext.getConfig().getBroadcastAddress());
-                    }
-                    else {
+                    } else {
                         addr = getNbtAllByName(hostname, 0x20, null, this.transportContext.getConfig().getBroadcastAddress());
                     }
                     break;
                 case RESOLVER_DNS:
-                    if ( isAllDigits(hostname) ) {
+                    if (isAllDigits(hostname)) {
                         throw new UnknownHostException(hostname);
                     }
-                    UniAddress[] addrs = wrapInetAddresses(InetAddress.getAllByName(hostname));
-                    if ( log.isDebugEnabled() ) {
+                    final UniAddress[] addrs = wrapInetAddresses(InetAddress.getAllByName(hostname));
+                    if (log.isDebugEnabled()) {
                         log.debug("Resolved '{}' to {} using DNS", hostname, Arrays.toString(addrs));
                     }
                     return addrs; // Success
@@ -1038,14 +950,13 @@ public class NameServiceClientImpl implements Runnable, NameServiceClient {
                     throw new UnknownHostException(hostname);
                 }
 
-                if ( addr != null ) { // Success
-                    if ( log.isDebugEnabled() ) {
+                if (addr != null) { // Success
+                    if (log.isDebugEnabled()) {
                         log.debug("Resolved '{}' to addrs {} via {}", hostname, Arrays.toString(addr), resolver);
                     }
                     return wrapNetbiosAddresses(addr);
                 }
-            }
-            catch ( IOException ioe ) {
+            } catch (final IOException ioe) {
                 // Failure
                 log.trace("Resolving {} via {} failed:", hostname, resolver);
                 log.trace("Exception is", ioe);
@@ -1054,24 +965,21 @@ public class NameServiceClientImpl implements Runnable, NameServiceClient {
         throw new UnknownHostException(hostname);
     }
 
-
-    private static UniAddress[] wrapInetAddresses ( InetAddress[] iaddrs ) {
-        UniAddress[] addrs = new UniAddress[iaddrs.length];
-        for ( int ii = 0; ii < iaddrs.length; ii++ ) {
-            addrs[ ii ] = new UniAddress(iaddrs[ ii ]);
+    private static UniAddress[] wrapInetAddresses(final InetAddress[] iaddrs) {
+        final UniAddress[] addrs = new UniAddress[iaddrs.length];
+        for (int ii = 0; ii < iaddrs.length; ii++) {
+            addrs[ii] = new UniAddress(iaddrs[ii]);
         }
         return addrs;
     }
 
-
-    private static UniAddress[] wrapNetbiosAddresses ( NetbiosAddress[] addr ) {
-        UniAddress[] addrs = new UniAddress[addr.length];
-        for ( int i = 0; i < addr.length; i++ ) {
-            addrs[ i ] = new UniAddress(addr[ i ]);
+    private static UniAddress[] wrapNetbiosAddresses(final NetbiosAddress[] addr) {
+        final UniAddress[] addrs = new UniAddress[addr.length];
+        for (int i = 0; i < addr.length; i++) {
+            addrs[i] = new UniAddress(addr[i]);
         }
         return addrs;
     }
-
 
     /**
      * {@inheritDoc}
@@ -1079,10 +987,9 @@ public class NameServiceClientImpl implements Runnable, NameServiceClient {
      * @see jcifs.NameServiceClient#getLocalHost()
      */
     @Override
-    public NbtAddress getLocalHost () {
+    public NbtAddress getLocalHost() {
         return this.localhostAddress;
     }
-
 
     /**
      * {@inheritDoc}
@@ -1090,22 +997,20 @@ public class NameServiceClientImpl implements Runnable, NameServiceClient {
      * @see jcifs.NameServiceClient#getLocalName()
      */
     @Override
-    public Name getLocalName () {
-        if ( this.localhostAddress != null ) {
+    public Name getLocalName() {
+        if (this.localhostAddress != null) {
             return this.localhostAddress.hostName;
         }
         return null;
     }
 
-
     /**
-     * 
+     *
      * @return lmhosts file used
      */
-    public Lmhosts getLmhosts () {
+    public Lmhosts getLmhosts() {
         return this.lmhosts;
     }
-
 
     /**
      * {@inheritDoc}
@@ -1113,7 +1018,7 @@ public class NameServiceClientImpl implements Runnable, NameServiceClient {
      * @see jcifs.NameServiceClient#getUnknownName()
      */
     @Override
-    public Name getUnknownName () {
+    public Name getUnknownName() {
         return this.unknownName;
     }
 }

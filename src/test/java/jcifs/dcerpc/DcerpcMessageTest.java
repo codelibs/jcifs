@@ -180,7 +180,8 @@ class DcerpcMessageTest {
         @DisplayName("decode_header should successfully parse valid header")
         void testDecodeHeaderSuccess() throws NdrException {
             // Mock NdrBuffer methods for successful decoding
-            when(mockBuffer.dec_ndr_small()).thenReturn(5).thenReturn(0) // RPC version
+            when(mockBuffer.dec_ndr_small()).thenReturn(5)
+                    .thenReturn(0) // RPC version
                     .thenReturn(DcerpcConstants.RPC_PT_RESPONSE) // ptype
                     .thenReturn(DcerpcConstants.RPC_C_PF_BROADCAST); // flags
             when(mockBuffer.dec_ndr_long()).thenReturn(0x00000010) // Data representation
@@ -213,7 +214,9 @@ class DcerpcMessageTest {
         @Test
         @DisplayName("decode_header should throw NdrException for unsupported data representation")
         void testDecodeHeaderThrowsNdrExceptionForDataRepresentation() {
-            when(mockBuffer.dec_ndr_small()).thenReturn(5).thenReturn(0).thenReturn(DcerpcConstants.RPC_PT_RESPONSE)
+            when(mockBuffer.dec_ndr_small()).thenReturn(5)
+                    .thenReturn(0)
+                    .thenReturn(DcerpcConstants.RPC_PT_RESPONSE)
                     .thenReturn(DcerpcConstants.RPC_C_PF_BROADCAST);
             when(mockBuffer.dec_ndr_long()).thenReturn(0x00000011); // Incorrect data representation
             assertThrows(NdrException.class, () -> message.decode_header(mockBuffer));
@@ -222,7 +225,9 @@ class DcerpcMessageTest {
         @Test
         @DisplayName("decode_header should throw NdrException for non-zero authentication length")
         void testDecodeHeaderThrowsNdrExceptionForAuthentication() {
-            when(mockBuffer.dec_ndr_small()).thenReturn(5).thenReturn(0).thenReturn(DcerpcConstants.RPC_PT_RESPONSE)
+            when(mockBuffer.dec_ndr_small()).thenReturn(5)
+                    .thenReturn(0)
+                    .thenReturn(DcerpcConstants.RPC_PT_RESPONSE)
                     .thenReturn(DcerpcConstants.RPC_C_PF_BROADCAST);
             when(mockBuffer.dec_ndr_long()).thenReturn(0x00000010);
             when(mockBuffer.dec_ndr_short()).thenReturn(100).thenReturn(1); // Non-zero auth_value length
@@ -276,7 +281,7 @@ class DcerpcMessageTest {
             message.encode(mockBuffer);
 
             // Verify header encoding happened
-            verify(mockBuffer).enc_ndr_small(5); // RPC version  
+            verify(mockBuffer).enc_ndr_small(5); // RPC version
             verify(mockBuffer).enc_ndr_long(0x00000010); // Little-endian / ASCII / IEEE
             verify(mockBuffer).enc_ndr_long(message.call_id);
             verify(mockBuffer).enc_ndr_long(12345); // From TestDcerpcMessage.encode_in
@@ -295,7 +300,8 @@ class DcerpcMessageTest {
             message.ptype = DcerpcConstants.RPC_PT_RESPONSE; // 2
 
             // Mock NdrBuffer for decode_header
-            when(mockBuffer.dec_ndr_small()).thenReturn(5).thenReturn(0) // RPC version
+            when(mockBuffer.dec_ndr_small()).thenReturn(5)
+                    .thenReturn(0) // RPC version
                     .thenReturn(DcerpcConstants.RPC_PT_RESPONSE) // ptype
                     .thenReturn(0); // flags
             when(mockBuffer.dec_ndr_long()).thenReturn(0x00000010) // Data representation
@@ -319,7 +325,8 @@ class DcerpcMessageTest {
             message.ptype = DcerpcConstants.RPC_PT_FAULT; // 3
 
             // Mock NdrBuffer for decode_header
-            when(mockBuffer.dec_ndr_small()).thenReturn(5).thenReturn(0) // RPC version
+            when(mockBuffer.dec_ndr_small()).thenReturn(5)
+                    .thenReturn(0) // RPC version
                     .thenReturn(DcerpcConstants.RPC_PT_FAULT) // ptype
                     .thenReturn(0); // flags
             when(mockBuffer.dec_ndr_long()).thenReturn(0x00000010) // Data representation
@@ -344,7 +351,8 @@ class DcerpcMessageTest {
             message.ptype = DcerpcConstants.RPC_PT_BIND_ACK; // 12
 
             // Mock NdrBuffer for decode_header
-            when(mockBuffer.dec_ndr_small()).thenReturn(5).thenReturn(0) // RPC version
+            when(mockBuffer.dec_ndr_small()).thenReturn(5)
+                    .thenReturn(0) // RPC version
                     .thenReturn(DcerpcConstants.RPC_PT_BIND_ACK) // ptype
                     .thenReturn(0); // flags
             when(mockBuffer.dec_ndr_long()).thenReturn(0x00000010) // Data representation
@@ -364,7 +372,8 @@ class DcerpcMessageTest {
             message.ptype = DcerpcConstants.RPC_PT_BIND_NAK; // 13
 
             // Mock NdrBuffer for decode_header
-            when(mockBuffer.dec_ndr_small()).thenReturn(5).thenReturn(0) // RPC version
+            when(mockBuffer.dec_ndr_small()).thenReturn(5)
+                    .thenReturn(0) // RPC version
                     .thenReturn(DcerpcConstants.RPC_PT_BIND_NAK) // ptype
                     .thenReturn(0); // flags
             when(mockBuffer.dec_ndr_long()).thenReturn(0x00000010) // Data representation
@@ -385,7 +394,8 @@ class DcerpcMessageTest {
             message.ptype = DcerpcConstants.RPC_PT_ALTER_CONTEXT; // 14, not in allowed list
 
             // Mock NdrBuffer for decode_header
-            when(mockBuffer.dec_ndr_small()).thenReturn(5).thenReturn(0) // RPC version
+            when(mockBuffer.dec_ndr_small()).thenReturn(5)
+                    .thenReturn(0) // RPC version
                     .thenReturn(DcerpcConstants.RPC_PT_ALTER_CONTEXT) // ptype
                     .thenReturn(0); // flags
             when(mockBuffer.dec_ndr_long()).thenReturn(0x00000010) // Data representation
