@@ -23,6 +23,9 @@ import jcifs.SmbTransport;
 import jcifs.SmbTree;
 
 /**
+ * Internal SMB session interface providing extended session management capabilities.
+ * Defines methods for internal session operations and state management.
+ *
  * @author mbechler
  *
  * <p>This interface is intended for internal use.</p>

@@ -77,6 +77,8 @@ public enum DialectVersion {
     }
 
     /**
+     * Check if this is an SMB2 dialect version
+     *
      * @return the smb2
      */
     public final boolean isSMB2() {
@@ -84,6 +86,8 @@ public enum DialectVersion {
     }
 
     /**
+     * Get the SMB2 dialect identifier
+     *
      * @return the dialect
      */
     public final int getDialect() {
@@ -94,8 +98,9 @@ public enum DialectVersion {
     }
 
     /**
+     * Check if this dialect version is at least the specified version
      *
-     * @param v
+     * @param v the version to compare against
      * @return whether this version is a least the given one
      */
     public boolean atLeast(final DialectVersion v) {
@@ -103,8 +108,9 @@ public enum DialectVersion {
     }
 
     /**
+     * Check if this dialect version is at most the specified version
      *
-     * @param v
+     * @param v the version to compare against
      * @return whether this version is a most the given one
      */
     public boolean atMost(final DialectVersion v) {
@@ -112,9 +118,10 @@ public enum DialectVersion {
     }
 
     /**
+     * Get the minimum of two dialect versions
      *
-     * @param a
-     * @param b
+     * @param a the first version to compare
+     * @param b the second version to compare
      * @return smaller of the two versions
      */
     public static DialectVersion min(final DialectVersion a, final DialectVersion b) {
@@ -125,9 +132,10 @@ public enum DialectVersion {
     }
 
     /**
+     * Get the maximum of two dialect versions
      *
-     * @param a
-     * @param b
+     * @param a the first version to compare
+     * @param b the second version to compare
      * @return larger of the two versions
      */
     public static DialectVersion max(final DialectVersion a, final DialectVersion b) {
@@ -138,6 +146,8 @@ public enum DialectVersion {
     }
 
     /**
+     * Creates a range of dialect versions between min and max.
+     *
      * @param min
      *            may be null for open end
      * @param max

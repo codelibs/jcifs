@@ -18,8 +18,20 @@
 
 package jcifs.dcerpc.msrpc;
 
+/**
+ * MSRPC implementation for connecting to the SAM service.
+ * This class provides functionality to establish a connection to the
+ * Security Account Manager (SAM) database using the SAMR RPC interface.
+ */
 public class MsrpcSamrConnect2 extends samr.SamrConnect2 {
 
+    /**
+     * Creates a new request to connect to the SAM service.
+     *
+     * @param server the server name to connect to
+     * @param access the desired access rights
+     * @param policyHandle the policy handle to be populated
+     */
     public MsrpcSamrConnect2(final String server, final int access, final SamrPolicyHandle policyHandle) {
         super(server, access, policyHandle);
         this.ptype = 0;

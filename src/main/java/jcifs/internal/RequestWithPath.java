@@ -27,48 +27,58 @@ package jcifs.internal;
 public interface RequestWithPath extends CommonServerMessageBlock {
 
     /**
+     * Gets the path to the resource.
+     *
      * @return the path to the resource (below share)
      */
     String getPath();
 
     /**
+     * Gets the server name.
      *
      * @return the server name
      */
     String getServer();
 
     /**
+     * Gets the domain name.
      *
      * @return the domain name
      */
     String getDomain();
 
     /**
+     * Gets the full UNC path.
      *
      * @return the full UNC path
      */
     String getFullUNCPath();
 
     /**
-     * @param path
+     * Sets the path to the resource.
+     *
+     * @param path the path to set
      */
     void setPath(String path);
 
     /**
+     * Sets the full UNC path components.
      *
-     * @param domain
-     * @param server
-     * @param fullPath
+     * @param domain the domain name
+     * @param server the server name
+     * @param fullPath the full UNC path
      */
     void setFullUNCPath(String domain, String server, String fullPath);
 
     /**
-     * @param resolve
+     * Sets whether to resolve this request path in DFS.
      *
+     * @param resolve true to enable DFS resolution
      */
     void setResolveInDfs(boolean resolve);
 
     /**
+     * Checks if this request should be resolved in DFS.
      *
      * @return whether to resolve the request path in DFS
      */

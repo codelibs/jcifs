@@ -31,19 +31,23 @@ public interface Message {
     void retainPayload();
 
     /**
+     * Determines whether to retain the message payload.
      *
      * @return whether to retain the message payload
      */
     boolean isRetainPayload();
 
     /**
+     * Gets the raw payload of the message.
      *
      * @return the raw response message
      */
     byte[] getRawPayload();
 
     /**
-     * @param rawPayload
+     * Sets the raw payload of the message.
+     *
+     * @param rawPayload the raw message payload to set
      */
     void setRawPayload(byte[] rawPayload);
 }

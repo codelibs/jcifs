@@ -20,8 +20,22 @@ package jcifs.smb1.dcerpc.msrpc;
 
 import jcifs.smb1.dcerpc.rpc;
 
+/**
+ * MS-RPC SAMR open domain operation.
+ *
+ * This class implements the SAMR OpenDomain operation for obtaining
+ * a handle to a specific domain in the Security Account Manager.
+ */
 public class MsrpcSamrOpenDomain extends samr.SamrOpenDomain {
 
+    /**
+     * Creates a new request to open a domain handle.
+     *
+     * @param handle the SAM policy handle
+     * @param access the desired access rights
+     * @param sid the security identifier of the domain
+     * @param domainHandle the domain handle to be populated
+     */
     public MsrpcSamrOpenDomain(final SamrPolicyHandle handle, final int access, final rpc.sid_t sid, final SamrDomainHandle domainHandle) {
         super(handle, access, sid, domainHandle);
         ptype = 0;

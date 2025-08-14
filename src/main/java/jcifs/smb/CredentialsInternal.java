@@ -34,30 +34,32 @@ import jcifs.Credentials;
 public interface CredentialsInternal extends Cloneable, Credentials {
 
     /**
-     *
+     * Create a copy of the credentials.
      * @return a copy of the credentials
      */
     CredentialsInternal clone();
 
     /**
-     * @param tc
-     * @param targetDomain
-     * @param host
-     * @param initialToken
-     * @param doSigning
-     * @return a new context
-     * @throws SmbException
+     * Create an SSP context for authentication.
+     * @param tc the CIFS context
+     * @param targetDomain the target domain for authentication
+     * @param host the target host
+     * @param initialToken initial authentication token, if any
+     * @param doSigning whether message signing should be enabled
+     * @return a new SSP authentication context
+     * @throws SmbException if context creation fails
      */
     SSPContext createContext(CIFSContext tc, String targetDomain, String host, byte[] initialToken, boolean doSigning) throws SmbException;
 
     /**
+     * Get the security subject associated with these credentials.
      * @return subject associated with the credentials
      */
     Subject getSubject();
 
     /**
-     * @throws CIFSException
-     *
+     * Refresh the credentials.
+     * @throws CIFSException if refresh fails
      */
     void refresh() throws CIFSException;
 }

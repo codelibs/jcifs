@@ -29,6 +29,9 @@ import jcifs.smb1.smb1.SmbFileOutputStream;
 import jcifs.smb1.smb1.SmbNamedPipe;
 import jcifs.smb1.util.Encdec;
 
+/**
+ * DCERPC handle implementation using SMB named pipes for transport
+ */
 public class DcerpcPipeHandle extends DcerpcHandle {
 
     SmbNamedPipe pipe;
@@ -36,6 +39,14 @@ public class DcerpcPipeHandle extends DcerpcHandle {
     SmbFileOutputStream out = null;
     boolean isStart = true;
 
+    /**
+     * Creates a DCERPC pipe handle with the specified URL and authentication
+     * @param url the DCERPC URL specifying the endpoint
+     * @param auth the NTLM authentication credentials
+     * @throws UnknownHostException if the host cannot be resolved
+     * @throws MalformedURLException if the URL is malformed
+     * @throws DcerpcException if DCERPC initialization fails
+     */
     public DcerpcPipeHandle(String url, final NtlmPasswordAuthentication auth)
             throws UnknownHostException, MalformedURLException, DcerpcException {
         binding = DcerpcHandle.parseBinding(url);

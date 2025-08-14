@@ -28,7 +28,9 @@ import jcifs.dcerpc.msrpc.lsarpc.LsarClose;
 public class MsrpcLsarClose extends LsarClose {
 
     /**
-     * @param handle
+     * Creates a new request to close an LSA policy handle.
+     *
+     * @param handle the policy handle to close
      */
     public MsrpcLsarClose(final policy_handle handle) {
         super(handle);

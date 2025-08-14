@@ -19,10 +19,21 @@
 
 package jcifs.dcerpc.ndr;
 
+/**
+ * NDR representation of a long integer (4-byte signed integer).
+ */
 public class NdrLong extends NdrObject {
 
+    /**
+     * The long integer value.
+     */
     public int value;
 
+    /**
+     * Constructs an NdrLong with the specified value.
+     *
+     * @param value the long integer value
+     */
     public NdrLong(final int value) {
         this.value = value;
     }

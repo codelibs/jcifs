@@ -31,28 +31,34 @@ public class CIFSUnsupportedCryptoException extends RuntimeCIFSException {
     private static final long serialVersionUID = -6350312430383107348L;
 
     /**
-     *
+     * Constructs a CIFS unsupported crypto exception with no detail message.
      */
     public CIFSUnsupportedCryptoException() {
     }
 
     /**
-     * @param message
-     * @param cause
+     * Constructs a CIFS unsupported crypto exception with the specified detail message and cause.
+     *
+     * @param message the detail message
+     * @param cause the cause of this exception
      */
     public CIFSUnsupportedCryptoException(final String message, final Throwable cause) {
         super(message, cause);
     }
 
     /**
-     * @param message
+     * Constructs a CIFS unsupported crypto exception with the specified detail message.
+     *
+     * @param message the detail message
      */
     public CIFSUnsupportedCryptoException(final String message) {
         super(message);
     }
 
     /**
-     * @param cause
+     * Constructs a CIFS unsupported crypto exception with the specified cause.
+     *
+     * @param cause the cause of this exception
      */
     public CIFSUnsupportedCryptoException(final Throwable cause) {
         super(cause);

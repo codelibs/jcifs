@@ -21,8 +21,19 @@ package jcifs.smb1.dcerpc.msrpc;
 
 import jcifs.smb1.dcerpc.rpc;
 
+/**
+ * MS-RPC SAMR close handle operation.
+ *
+ * This class implements the SAMR CloseHandle operation for releasing
+ * Security Account Manager (SAM) handles.
+ */
 public class MsrpcSamrCloseHandle extends samr.SamrCloseHandle {
 
+    /**
+     * Creates a new request to close a SAM handle.
+     *
+     * @param policyHandle the policy handle to close
+     */
     public MsrpcSamrCloseHandle(final rpc.policy_handle policyHandle) {
         super(policyHandle);
         ptype = 0;

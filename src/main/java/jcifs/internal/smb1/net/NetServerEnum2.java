@@ -33,12 +33,12 @@ import jcifs.internal.util.SMBUtil;
 public class NetServerEnum2 extends SmbComTransaction {
 
     /**
-     *
+     * Server type filter for all servers
      */
     public static final int SV_TYPE_ALL = 0xFFFFFFFF;
 
     /**
-     *
+     * Server type filter for domain enumeration
      */
     public static final int SV_TYPE_DOMAIN_ENUM = 0x80000000;
 
@@ -48,10 +48,13 @@ public class NetServerEnum2 extends SmbComTransaction {
     int serverTypes;
 
     /**
-     *
+     * Constructs a NetServerEnum2 request
      * @param config
+     *            the configuration to use
      * @param domain
+     *            the domain to enumerate servers in
      * @param serverTypes
+     *            the types of servers to enumerate
      */
     public NetServerEnum2(final Configuration config, final String domain, final int serverTypes) {
         super(config, SMB_COM_TRANSACTION, NET_SERVER_ENUM2);

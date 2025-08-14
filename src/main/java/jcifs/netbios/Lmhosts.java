@@ -39,6 +39,13 @@ import jcifs.smb.SmbFileInputStream;
  */
 public class Lmhosts {
 
+    /**
+     * Default constructor for Lmhosts.
+     */
+    public Lmhosts() {
+        // Default constructor
+    }
+
     private static final Logger log = LoggerFactory.getLogger(Lmhosts.class);
 
     private final Map<Name, NbtAddress> table = new HashMap<>();
@@ -51,8 +58,8 @@ public class Lmhosts {
      * is queried frequently and exceptions would be rather costly to
      * throw on a regular basis here.
      *
-     * @param host
-     * @param tc
+     * @param host the hostname to resolve
+     * @param tc the CIFS context
      * @return resolved name, null if not found
      */
     public synchronized NbtAddress getByName(final String host, final CIFSContext tc) {

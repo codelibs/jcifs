@@ -39,6 +39,9 @@ import jcifs.SmbTransportPool;
 import jcifs.util.transport.TransportException;
 
 /**
+ * Implementation of the SMB transport pool for managing SMB connections.
+ * Provides connection pooling and reuse for improved performance.
+ *
  * @author mbechler
  *
  * <p>This class is intended for internal use.</p>

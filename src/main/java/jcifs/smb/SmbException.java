@@ -84,10 +84,10 @@ public class SmbException extends CIFSException implements NtStatus, DosError, W
     }
 
     /**
+     * Get the message string for an NT STATUS code
      *
-     * @param errcode
+     * @param errcode the NT STATUS error code
      * @return message for NT STATUS code
-
      */
     public static String getMessageByCode(final int errcode) {
         String message = errorCodeMessages.get(errcode);
@@ -121,14 +121,17 @@ public class SmbException extends CIFSException implements NtStatus, DosError, W
 
     /**
      *
+     /**
+     * Constructs an SmbException with no detail message
      */
     public SmbException() {
     }
 
     /**
+     * Constructs an SmbException with the specified error code and root cause
      *
-     * @param errcode
-     * @param rootCause
+     * @param errcode the SMB error code
+     * @param rootCause the underlying cause of this exception
      */
     public SmbException(final int errcode, final Throwable rootCause) {
         super(getMessageByCode(errcode), rootCause);
@@ -136,8 +139,9 @@ public class SmbException extends CIFSException implements NtStatus, DosError, W
     }
 
     /**
+     * Constructs an SmbException with the specified detail message
      *
-     * @param msg
+     * @param msg the detail message
      */
     public SmbException(final String msg) {
         super(msg);
@@ -145,9 +149,10 @@ public class SmbException extends CIFSException implements NtStatus, DosError, W
     }
 
     /**
+     * Constructs an SmbException with the specified detail message and root cause
      *
-     * @param msg
-     * @param rootCause
+     * @param msg the detail message
+     * @param rootCause the underlying cause of this exception
      */
     public SmbException(final String msg, final Throwable rootCause) {
         super(msg, rootCause);
@@ -155,9 +160,10 @@ public class SmbException extends CIFSException implements NtStatus, DosError, W
     }
 
     /**
+     * Constructs an SmbException with the specified error code
      *
-     * @param errcode
-     * @param winerr
+     * @param errcode the error code (either SMB or Windows error code)
+     * @param winerr true if errcode is a Windows error code, false if it's an SMB error code
      */
     public SmbException(final int errcode, final boolean winerr) {
         super(winerr ? getMessageByWinerrCode(errcode) : getMessageByCode(errcode));
@@ -165,6 +171,7 @@ public class SmbException extends CIFSException implements NtStatus, DosError, W
     }
 
     /**
+     * Get the NT STATUS code associated with this exception
      *
      * @return status code
      */
@@ -173,6 +180,7 @@ public class SmbException extends CIFSException implements NtStatus, DosError, W
     }
 
     /**
+     * Get the root cause of this exception (deprecated - use getCause() instead)
      *
      * @return cause
      */

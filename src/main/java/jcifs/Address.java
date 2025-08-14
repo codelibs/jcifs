@@ -29,13 +29,16 @@ import java.net.UnknownHostException;
 public interface Address {
 
     /**
+     * Unwrap the address to a specific type
      *
-     * @param type
+     * @param <T> the type to unwrap to
+     * @param type the target type to unwrap to
      * @return instance for type, null if the type cannot be unwrapped
      */
     <T extends Address> T unwrap(Class<T> type);
 
     /**
+     * Gets the host name of this address.
      *
      * @return the resolved host name, or the host address if it could not be resolved
      */
@@ -49,9 +52,10 @@ public interface Address {
     String getHostAddress();
 
     /**
+     * Converts this address to an InetAddress.
      *
      * @return this address as an InetAddress
-     * @throws UnknownHostException
+     * @throws UnknownHostException if the host cannot be resolved
      */
     InetAddress toInetAddress() throws UnknownHostException;
 
@@ -67,7 +71,7 @@ public interface Address {
      * Guess next called name to try for session establishment. These
      * methods are used by the smb package.
      *
-     * @param tc
+     * @param tc the transport context to use for name resolution
      *
      * @return guessed name
      */

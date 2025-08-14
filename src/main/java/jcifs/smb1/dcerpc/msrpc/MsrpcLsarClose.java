@@ -19,8 +19,18 @@
 
 package jcifs.smb1.dcerpc.msrpc;
 
+/**
+ * Microsoft RPC LSA close handle request.
+ * This class implements the LSARPC close handle operation for closing
+ * LSA policy handles when they are no longer needed.
+ */
 public class MsrpcLsarClose extends lsarpc.LsarClose {
 
+    /**
+     * Creates a new request to close an LSA policy handle.
+     *
+     * @param policyHandle the policy handle to close
+     */
     public MsrpcLsarClose(final LsaPolicyHandle policyHandle) {
         super(policyHandle);
         ptype = 0;

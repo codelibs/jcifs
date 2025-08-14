@@ -36,21 +36,49 @@ import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.DERTaggedObject;
 
+/**
+ * SPNEGO response token (NegTokenTarg) used in SPNEGO authentication exchanges
+ */
 public class NegTokenTarg extends SpnegoToken {
 
+    /**
+     * Result code indicating unspecified result
+     */
     public static final int UNSPECIFIED_RESULT = -1;
+    /**
+     * Result code indicating authentication completed successfully
+     */
     public static final int ACCEPT_COMPLETED = 0;
+    /**
+     * Result code indicating authentication is incomplete and additional tokens required
+     */
     public static final int ACCEPT_INCOMPLETE = 1;
+    /**
+     * Result code indicating authentication was rejected
+     */
     public static final int REJECTED = 2;
+    /**
+     * Result code indicating MIC token is requested
+     */
     public static final int REQUEST_MIC = 3;
 
     private ASN1ObjectIdentifier mechanism;
 
     private int result = UNSPECIFIED_RESULT;
 
+    /**
+     * Default constructor for NegTokenTarg
+     */
     public NegTokenTarg() {
     }
 
+    /**
+     * Constructs a NegTokenTarg with the specified parameters
+     * @param result the negotiation result code
+     * @param mechanism the selected authentication mechanism OID
+     * @param mechanismToken the response token for the selected mechanism
+     * @param mechanismListMIC the MIC over the mechanism list
+     */
     public NegTokenTarg(final int result, final ASN1ObjectIdentifier mechanism, final byte[] mechanismToken,
             final byte[] mechanismListMIC) {
         setResult(result);
@@ -59,22 +87,43 @@ public class NegTokenTarg extends SpnegoToken {
         setMechanismListMIC(mechanismListMIC);
     }
 
+    /**
+     * Constructs a NegTokenTarg by parsing the provided token bytes
+     * @param token the SPNEGO token bytes to parse
+     * @throws IOException if parsing fails
+     */
     public NegTokenTarg(final byte[] token) throws IOException {
         parse(token);
     }
 
+    /**
+     * Gets the negotiation result code
+     * @return the result code
+     */
     public int getResult() {
         return this.result;
     }
 
+    /**
+     * Sets the negotiation result code
+     * @param result the result code to set
+     */
     public void setResult(final int result) {
         this.result = result;
     }
 
+    /**
+     * Gets the selected authentication mechanism OID
+     * @return the mechanism OID
+     */
     public ASN1ObjectIdentifier getMechanism() {
         return this.mechanism;
     }
 
+    /**
+     * Sets the selected authentication mechanism OID
+     * @param mechanism the mechanism OID to set
+     */
     public void setMechanism(final ASN1ObjectIdentifier mechanism) {
         this.mechanism = mechanism;
     }

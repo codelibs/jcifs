@@ -37,12 +37,23 @@ import org.bouncycastle.asn1.DEROctetString;
 import jcifs.pac.ASN1Util;
 import jcifs.pac.PACDecodingException;
 
+/**
+ * Represents a Kerberos ticket.
+ */
 public class KerberosTicket {
 
     private String serverPrincipalName;
     private String serverRealm;
     private KerberosEncData encData;
 
+    /**
+     * Constructs a KerberosTicket from token bytes.
+     *
+     * @param token the ticket token bytes
+     * @param apOptions AP options flags
+     * @param keys array of Kerberos keys for decryption
+     * @throws PACDecodingException if ticket decoding fails
+     */
     public KerberosTicket(byte[] token, byte apOptions, KerberosKey[] keys) throws PACDecodingException {
         if (token.length <= 0) {
             throw new PACDecodingException("Empty kerberos ticket");
@@ -125,22 +136,47 @@ public class KerberosTicket {
 
     }
 
+    /**
+     * Returns the user principal name from the ticket.
+     *
+     * @return the user principal name
+     */
     public String getUserPrincipalName() {
         return this.encData.getUserPrincipalName();
     }
 
+    /**
+     * Returns the user realm from the ticket.
+     *
+     * @return the user realm
+     */
     public String getUserRealm() {
         return this.encData.getUserRealm();
     }
 
+    /**
+     * Returns the server principal name from the ticket.
+     *
+     * @return the server principal name
+     */
     public String getServerPrincipalName() {
         return this.serverPrincipalName;
     }
 
+    /**
+     * Returns the server realm from the ticket.
+     *
+     * @return the server realm
+     */
     public String getServerRealm() {
         return this.serverRealm;
     }
 
+    /**
+     * Returns the encrypted data from the ticket.
+     *
+     * @return the KerberosEncData object
+     */
     public KerberosEncData getEncData() {
         return this.encData;
     }

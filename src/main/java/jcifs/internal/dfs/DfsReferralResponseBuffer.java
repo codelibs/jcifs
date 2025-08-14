@@ -31,12 +31,22 @@ import jcifs.internal.util.SMBUtil;
  */
 public class DfsReferralResponseBuffer implements Decodable {
 
+    /**
+     * Default constructor for DfsReferralResponseBuffer.
+     * Initializes the DFS referral response buffer for parsing server responses.
+     */
+    public DfsReferralResponseBuffer() {
+        // Default constructor
+    }
+
     private int pathConsumed;
     private int numReferrals;
     private int tflags;
     private Referral[] referrals;
 
     /**
+     * Get the number of characters consumed from the path
+     *
      * @return the pathConsumed
      */
     public final int getPathConsumed() {
@@ -44,6 +54,8 @@ public class DfsReferralResponseBuffer implements Decodable {
     }
 
     /**
+     * Get the number of referrals in the response
+     *
      * @return the numReferrals
      */
     public final int getNumReferrals() {
@@ -51,6 +63,8 @@ public class DfsReferralResponseBuffer implements Decodable {
     }
 
     /**
+     * Get the referral flags
+     *
      * @return the tflags
      */
     public final int getTflags() {
@@ -58,6 +72,8 @@ public class DfsReferralResponseBuffer implements Decodable {
     }
 
     /**
+     * Get the array of referral entries
+     *
      * @return the referrals
      */
     public final Referral[] getReferrals() {

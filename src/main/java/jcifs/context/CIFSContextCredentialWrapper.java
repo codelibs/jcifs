@@ -36,9 +36,11 @@ public final class CIFSContextCredentialWrapper extends CIFSContextWrapper imple
     private Credentials creds;
 
     /**
-     * @param delegate
+     * Constructs a CIFS context wrapper with custom credentials.
+     *
+     * @param delegate the context to wrap
      * @param creds
-     *            Crendentials to use
+     *            Credentials to use
      */
     public CIFSContextCredentialWrapper(final AbstractCIFSContext delegate, final Credentials creds) {
         super(delegate);

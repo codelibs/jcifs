@@ -28,30 +28,35 @@ package jcifs.internal;
 public interface SmbBasicFileInfo {
 
     /**
+     * Gets the file attributes.
      *
      * @return file attributes
      */
     int getAttributes();
 
     /**
+     * Gets the file creation time.
      *
      * @return file create time
      */
     long getCreateTime();
 
     /**
+     * Gets the file last write time.
      *
      * @return file last write time
      */
     long getLastWriteTime();
 
     /**
+     * Gets the file last access time.
      *
      * @return file last access time
      */
     long getLastAccessTime();
 
     /**
+     * Gets the file size in bytes.
      *
      * @return file size
      */

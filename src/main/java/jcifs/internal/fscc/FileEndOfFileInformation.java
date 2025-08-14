@@ -33,7 +33,7 @@ public class FileEndOfFileInformation implements FileInformation, Encodable {
     private long endOfFile;
 
     /**
-     *
+     * Default constructor for decoding.
      */
     public FileEndOfFileInformation() {
     }
@@ -49,8 +49,9 @@ public class FileEndOfFileInformation implements FileInformation, Encodable {
     }
 
     /**
+     * Constructs file end of file information.
      *
-     * @param eofOfFile
+     * @param eofOfFile the end of file position
      */
     public FileEndOfFileInformation(final long eofOfFile) {
         this.endOfFile = eofOfFile;

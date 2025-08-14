@@ -32,9 +32,11 @@ public class ByteEncodable implements Encodable {
     private final int len;
 
     /**
-     * @param b
-     * @param off
-     * @param len
+     * Constructs a ByteEncodable object wrapping a byte array segment.
+     *
+     * @param b the byte array to wrap
+     * @param off the offset in the byte array
+     * @param len the length of the segment to use
      */
     public ByteEncodable(final byte[] b, final int off, final int len) {
         this.bytes = b;

@@ -55,147 +55,147 @@ public abstract class ServerMessageBlock implements CommonServerMessageBlockRequ
      */
 
     /**
-     *
+     * SMB command to create a directory.
      */
     public static final byte SMB_COM_CREATE_DIRECTORY = (byte) 0x00;
 
     /**
-     *
+     * SMB command to delete a directory.
      */
     public static final byte SMB_COM_DELETE_DIRECTORY = (byte) 0x01;
 
     /**
-     *
+     * SMB command to close a file handle.
      */
     public static final byte SMB_COM_CLOSE = (byte) 0x04;
 
     /**
-     *
+     * SMB command to delete a file.
      */
     public static final byte SMB_COM_DELETE = (byte) 0x06;
 
     /**
-     *
+     * SMB command to rename a file.
      */
     public static final byte SMB_COM_RENAME = (byte) 0x07;
 
     /**
-     *
+     * SMB command to query file information.
      */
     public static final byte SMB_COM_QUERY_INFORMATION = (byte) 0x08;
 
     /**
-     *
+     * SMB command to set file information.
      */
     public static final byte SMB_COM_SET_INFORMATION = (byte) 0x09;
 
     /**
-     *
+     * SMB command to write data to a file.
      */
     public static final byte SMB_COM_WRITE = (byte) 0x0B;
 
     /**
-     *
+     * SMB command to check if a directory exists.
      */
     public static final byte SMB_COM_CHECK_DIRECTORY = (byte) 0x10;
 
     /**
-     *
+     * SMB command to seek within a file.
      */
     public static final byte SMB_COM_SEEK = (byte) 0x12;
 
     /**
-     *
+     * SMB command for file locking operations.
      */
     public static final byte SMB_COM_LOCKING_ANDX = (byte) 0x24;
 
     /**
-     *
+     * SMB command for transaction operations.
      */
     public static final byte SMB_COM_TRANSACTION = (byte) 0x25;
 
     /**
-     *
+     * SMB command for secondary transaction operations.
      */
     public static final byte SMB_COM_TRANSACTION_SECONDARY = (byte) 0x26;
 
     /**
-     *
+     * SMB command to move a file.
      */
     public static final byte SMB_COM_MOVE = (byte) 0x2A;
 
     /**
-     *
+     * SMB command for echo/ping operations.
      */
     public static final byte SMB_COM_ECHO = (byte) 0x2B;
 
     /**
-     *
+     * SMB command to open a file with extended attributes.
      */
     public static final byte SMB_COM_OPEN_ANDX = (byte) 0x2D;
 
     /**
-     *
+     * SMB command to read from a file with extended attributes.
      */
     public static final byte SMB_COM_READ_ANDX = (byte) 0x2E;
 
     /**
-     *
+     * SMB command to write to a file with extended attributes.
      */
     public static final byte SMB_COM_WRITE_ANDX = (byte) 0x2F;
 
     /**
-     *
+     * SMB command for extended transaction operations.
      */
     public static final byte SMB_COM_TRANSACTION2 = (byte) 0x32;
 
     /**
-     *
+     * SMB command to close a find operation.
      */
     public static final byte SMB_COM_FIND_CLOSE2 = (byte) 0x34;
 
     /**
-     *
+     * SMB command to disconnect from a tree share.
      */
     public static final byte SMB_COM_TREE_DISCONNECT = (byte) 0x71;
 
     /**
-     *
+     * SMB command to negotiate protocol dialect.
      */
     public static final byte SMB_COM_NEGOTIATE = (byte) 0x72;
 
     /**
-     *
+     * SMB command to setup a session with extended attributes.
      */
     public static final byte SMB_COM_SESSION_SETUP_ANDX = (byte) 0x73;
 
     /**
-     *
+     * SMB command to logoff from a session with extended attributes.
      */
     public static final byte SMB_COM_LOGOFF_ANDX = (byte) 0x74;
 
     /**
-     *
+     * SMB command to connect to a tree share with extended attributes.
      */
     public static final byte SMB_COM_TREE_CONNECT_ANDX = (byte) 0x75;
 
     /**
-     *
+     * SMB command for NT transaction operations.
      */
     public static final byte SMB_COM_NT_TRANSACT = (byte) 0xA0;
 
     /**
-     *
+     * SMB command to cancel an NT operation.
      */
     public static final byte SMB_COM_NT_CANCEL = (byte) 0xA4;
 
     /**
-     *
+     * SMB command for secondary NT transaction operations.
      */
     public static final byte SMB_COM_NT_TRANSACT_SECONDARY = (byte) 0xA1;
 
     /**
-     *
+     * SMB command to create or open a file with NT extended attributes.
      */
     public static final byte SMB_COM_NT_CREATE_ANDX = (byte) 0xA2;
 
@@ -299,6 +299,7 @@ public abstract class ServerMessageBlock implements CommonServerMessageBlockRequ
     }
 
     /**
+     * Sets the timeout override for this message block
      * @param overrideTimeout
      *            the overrideTimeout to set
      */
@@ -415,6 +416,7 @@ public abstract class ServerMessageBlock implements CommonServerMessageBlockRequ
     }
 
     /**
+     * Gets the byte count of this message block
      * @return the byteCount
      */
     public final int getByteCount() {
@@ -422,6 +424,7 @@ public abstract class ServerMessageBlock implements CommonServerMessageBlockRequ
     }
 
     /**
+     * Gets the total length of this message block
      * @return the length
      */
     public final int getLength() {
@@ -429,6 +432,7 @@ public abstract class ServerMessageBlock implements CommonServerMessageBlockRequ
     }
 
     /**
+     * Checks if Unicode encoding is forced for this message
      * @return the forceUnicode
      */
     public boolean isForceUnicode() {
@@ -436,6 +440,7 @@ public abstract class ServerMessageBlock implements CommonServerMessageBlockRequ
     }
 
     /**
+     * Gets the SMB message flags
      * @return the flags
      */
     public final byte getFlags() {
@@ -443,6 +448,7 @@ public abstract class ServerMessageBlock implements CommonServerMessageBlockRequ
     }
 
     /**
+     * Sets the SMB message flags
      * @param flags
      *            the flags to set
      */
@@ -451,6 +457,7 @@ public abstract class ServerMessageBlock implements CommonServerMessageBlockRequ
     }
 
     /**
+     * Gets the SMB message flags2 field
      * @return the flags2
      */
     public final int getFlags2() {
@@ -458,6 +465,7 @@ public abstract class ServerMessageBlock implements CommonServerMessageBlockRequ
     }
 
     /**
+     * Sets the SMB message flags2 field
      * @param fl
      *            the flags2 to set
      */
@@ -466,15 +474,16 @@ public abstract class ServerMessageBlock implements CommonServerMessageBlockRequ
     }
 
     /**
-     * @param fl
+     * Adds flags to the flags2 field using bitwise OR
+     * @param fl flags to add
      */
     public final void addFlags2(final int fl) {
         this.flags2 |= fl;
     }
 
     /**
-     *
-     * @param fl
+     * Removes flags from the flags2 field using bitwise AND NOT
+     * @param fl flags to remove
      */
     public final void remFlags2(final int fl) {
         this.flags2 &= ~fl;
@@ -513,6 +522,7 @@ public abstract class ServerMessageBlock implements CommonServerMessageBlockRequ
     }
 
     /**
+     * Sets the error code for this message block
      * @param errorCode
      *            the errorCode to set
      */
@@ -598,6 +608,7 @@ public abstract class ServerMessageBlock implements CommonServerMessageBlockRequ
     }
 
     /**
+     * Checks if extended security is enabled for this message
      * @return the extendedSecurity
      */
     public boolean isExtendedSecurity() {
@@ -619,6 +630,7 @@ public abstract class ServerMessageBlock implements CommonServerMessageBlockRequ
     }
 
     /**
+     * Checks if Unicode encoding is enabled for this message
      * @return the useUnicode
      */
     public final boolean isUseUnicode() {
@@ -626,6 +638,7 @@ public abstract class ServerMessageBlock implements CommonServerMessageBlockRequ
     }
 
     /**
+     * Sets whether to use Unicode encoding for this message
      * @param useUnicode
      *            the useUnicode to set
      */
@@ -694,7 +707,7 @@ public abstract class ServerMessageBlock implements CommonServerMessageBlockRequ
     }
 
     /**
-     *
+     * Returns a message block that ignores disconnection
      * @return null
      */
     public CommonServerMessageBlock ignoreDisconnect() {
@@ -741,6 +754,7 @@ public abstract class ServerMessageBlock implements CommonServerMessageBlockRequ
     }
 
     /**
+     * Gets the tree connection identifier
      * @return the tid
      */
     public final int getTid() {
@@ -757,6 +771,7 @@ public abstract class ServerMessageBlock implements CommonServerMessageBlockRequ
     }
 
     /**
+     * Gets the process identifier
      * @return the pid
      */
     public final int getPid() {
@@ -764,6 +779,7 @@ public abstract class ServerMessageBlock implements CommonServerMessageBlockRequ
     }
 
     /**
+     * Sets the process identifier
      * @param pid
      *            the pid to set
      */
@@ -772,6 +788,7 @@ public abstract class ServerMessageBlock implements CommonServerMessageBlockRequ
     }
 
     /**
+     * Gets the user identifier
      * @return the uid
      */
     public final int getUid() {
@@ -788,6 +805,7 @@ public abstract class ServerMessageBlock implements CommonServerMessageBlockRequ
     }
 
     /**
+     * Gets the signature sequence number
      * @return the signSeq
      */
     public int getSignSeq() {
@@ -795,6 +813,7 @@ public abstract class ServerMessageBlock implements CommonServerMessageBlockRequ
     }
 
     /**
+     * Sets the signature sequence number
      * @param signSeq
      *            the signSeq to set
      */
@@ -891,6 +910,7 @@ public abstract class ServerMessageBlock implements CommonServerMessageBlockRequ
     }
 
     /**
+     * Gets the configuration object for this message block
      * @return the config
      */
     protected final Configuration getConfig() {
@@ -972,9 +992,9 @@ public abstract class ServerMessageBlock implements CommonServerMessageBlockRequ
     }
 
     /**
-     *
-     * @param src
-     * @param srcIndex
+     * Reads a null-terminated string from the buffer
+     * @param src source buffer
+     * @param srcIndex starting index in the buffer
      * @return read string
      */
     public String readString(final byte[] src, final int srcIndex) {
@@ -982,11 +1002,11 @@ public abstract class ServerMessageBlock implements CommonServerMessageBlockRequ
     }
 
     /**
-     *
-     * @param src
-     * @param srcIndex
-     * @param maxLen
-     * @param unicode
+     * Reads a null-terminated string from the buffer with specified encoding
+     * @param src source buffer
+     * @param srcIndex starting index in the buffer
+     * @param maxLen maximum length to read
+     * @param unicode whether to use Unicode encoding
      * @return read string
      */
     public String readString(final byte[] src, int srcIndex, final int maxLen, final boolean unicode) {
@@ -1002,12 +1022,12 @@ public abstract class ServerMessageBlock implements CommonServerMessageBlockRequ
     }
 
     /**
-     *
-     * @param src
-     * @param srcIndex
-     * @param srcEnd
-     * @param maxLen
-     * @param unicode
+     * Reads a null-terminated string from the buffer with bounds checking
+     * @param src source buffer
+     * @param srcIndex starting index in the buffer
+     * @param srcEnd ending index boundary
+     * @param maxLen maximum length to read
+     * @param unicode whether to use Unicode encoding
      * @return read string
      */
     public String readString(final byte[] src, int srcIndex, final int srcEnd, final int maxLen, final boolean unicode) {
@@ -1023,9 +1043,9 @@ public abstract class ServerMessageBlock implements CommonServerMessageBlockRequ
     }
 
     /**
-     *
-     * @param str
-     * @param offset
+     * Calculates the wire format length of a string
+     * @param str string to measure
+     * @param offset current buffer offset for alignment calculation
      * @return string length
      */
     public int stringWireLength(final String str, final int offset) {

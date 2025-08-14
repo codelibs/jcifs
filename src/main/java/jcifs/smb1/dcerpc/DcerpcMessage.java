@@ -23,27 +23,74 @@ import jcifs.smb1.dcerpc.ndr.NdrBuffer;
 import jcifs.smb1.dcerpc.ndr.NdrException;
 import jcifs.smb1.dcerpc.ndr.NdrObject;
 
+/**
+ * Abstract base class for DCERPC messages.
+ * This class provides common functionality for all DCE/RPC message types in SMB1 protocol.
+ */
 public abstract class DcerpcMessage extends NdrObject implements DcerpcConstants {
 
+    /**
+     * Default constructor for DcerpcMessage.
+     * Initializes the DCE/RPC message structure for SMB1 protocol.
+     */
+    protected DcerpcMessage() {
+        // Default constructor
+    }
+
+    /**
+     * The packet type of this DCERPC message
+     */
     protected int ptype = -1;
+    /**
+     * The flags for this DCERPC message
+     */
     protected int flags = 0;
+    /**
+     * The total length of this DCERPC message
+     */
     protected int length = 0;
+    /**
+     * The call ID for matching requests and responses
+     */
     protected int call_id = 0;
+    /**
+     * The allocation hint for buffer sizing
+     */
     protected int alloc_hint = 0;
+    /**
+     * The result code of the DCERPC operation
+     */
     protected int result = 0;
 
+    /**
+     * Checks if a specific flag is set
+     * @param flag the flag to check
+     * @return true if the flag is set, false otherwise
+     */
     public boolean isFlagSet(final int flag) {
         return (flags & flag) == flag;
     }
 
+    /**
+     * Unsets a specific flag
+     * @param flag the flag to unset
+     */
     public void unsetFlag(final int flag) {
         flags &= ~flag;
     }
 
+    /**
+     * Sets a specific flag
+     * @param flag the flag to set
+     */
     public void setFlag(final int flag) {
         flags |= flag;
     }
 
+    /**
+     * Get the result of the DCERPC call.
+     * @return result exception if the call failed, null otherwise
+     */
     public DcerpcException getResult() {
         if (result != 0) {
             return new DcerpcException(result);
@@ -126,9 +173,23 @@ public abstract class DcerpcMessage extends NdrObject implements DcerpcConstants
         }
     }
 
+    /**
+     * Get the operation number for this DCERPC message.
+     * @return the operation number
+     */
     public abstract int getOpnum();
 
+    /**
+     * Encode the input parameters for this DCERPC message.
+     * @param buf the buffer to encode into
+     * @throws NdrException if encoding fails
+     */
     public abstract void encode_in(NdrBuffer buf) throws NdrException;
 
+    /**
+     * Decode the output parameters from this DCERPC message.
+     * @param buf the buffer to decode from
+     * @throws NdrException if decoding fails
+     */
     public abstract void decode_out(NdrBuffer buf) throws NdrException;
 }

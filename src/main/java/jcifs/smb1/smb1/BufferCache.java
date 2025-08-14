@@ -20,13 +20,29 @@ package jcifs.smb1.smb1;
 
 import jcifs.smb1.Config;
 
+/**
+ * Buffer cache implementation for SMB1 protocol operations.
+ * Manages a pool of byte buffers to reduce garbage collection overhead.
+ */
 public class BufferCache {
+
+    /**
+     * Private constructor to prevent instantiation of this utility class.
+     */
+    private BufferCache() {
+        // Utility class - not instantiable
+    }
 
     private static final int MAX_BUFFERS = Config.getInt("jcifs.smb1.smb.maxBuffers", 16);
 
     static Object[] cache = new Object[MAX_BUFFERS];
     private static int freeBuffers = 0;
 
+    /**
+     * Gets a buffer from the cache or creates a new one if the cache is empty.
+     *
+     * @return a byte buffer for SMB operations
+     */
     static public byte[] getBuffer() {
         synchronized (cache) {
             byte[] buf;
@@ -53,6 +69,11 @@ public class BufferCache {
         }
     }
 
+    /**
+     * Returns a buffer to the cache for reuse.
+     *
+     * @param buf the buffer to return to the cache
+     */
     static public void releaseBuffer(final byte[] buf) {
         synchronized (cache) {
             if (freeBuffers < MAX_BUFFERS) {

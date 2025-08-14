@@ -7,17 +7,47 @@ import jcifs.smb1.dcerpc.ndr.NdrException;
 import jcifs.smb1.dcerpc.ndr.NdrObject;
 import jcifs.smb1.dcerpc.ndr.NdrSmall;
 
+/**
+ * LSA RPC (Local Security Authority Remote Procedure Call) definitions.
+ * Provides interface definitions and data structures for LSA RPC operations.
+ */
 public class lsarpc {
 
+    /**
+     * Private constructor to prevent instantiation of utility class.
+     */
+    private lsarpc() {
+        // Utility class
+    }
+
+    /**
+     * Returns the RPC syntax identifier for LSA RPC interface.
+     *
+     * @return the RPC syntax string
+     */
     public static String getSyntax() {
         return "12345778-1234-abcd-ef00-0123456789ab:0.0";
     }
 
+    /**
+     * LSA Quality of Service information.
+     */
     public static class LsarQosInfo extends NdrObject {
 
+        /**
+         * Default constructor for LsarQosInfo.
+         */
+        public LsarQosInfo() {
+            // Default constructor
+        }
+
+        /** Length of the QoS information. */
         public int length;
+        /** Security impersonation level. */
         public short impersonation_level;
+        /** Context tracking mode. */
         public byte context_mode;
+        /** Indicates if only effective privileges should be used. */
         public byte effective_only;
 
         @Override
@@ -41,13 +71,29 @@ public class lsarpc {
         }
     }
 
+    /**
+     * LSA object attributes for policy and resource access.
+     */
     public static class LsarObjectAttributes extends NdrObject {
 
+        /**
+         * Default constructor for LsarObjectAttributes.
+         */
+        public LsarObjectAttributes() {
+            // Default constructor
+        }
+
+        /** Length of the object attributes structure. */
         public int length;
+        /** Handle to the root directory. */
         public NdrSmall root_directory;
+        /** Name of the object. */
         public rpc.unicode_string object_name;
+        /** Object attributes flags. */
         public int attributes;
+        /** Security descriptor for the object. */
         public int security_descriptor;
+        /** Quality of Service information. */
         public LsarQosInfo security_quality_of_service;
 
         @Override
@@ -111,9 +157,21 @@ public class lsarpc {
         }
     }
 
+    /**
+     * LSA domain information structure.
+     */
     public static class LsarDomainInfo extends NdrObject {
 
+        /**
+         * Default constructor for LsarDomainInfo.
+         */
+        public LsarDomainInfo() {
+            // Default constructor
+        }
+
+        /** Domain name. */
         public rpc.unicode_string name;
+        /** Domain security identifier. */
         public rpc.sid_t sid;
 
         @Override
@@ -188,12 +246,27 @@ public class lsarpc {
         }
     }
 
+    /**
+     * LSA DNS domain information structure.
+     */
     public static class LsarDnsDomainInfo extends NdrObject {
 
+        /**
+         * Default constructor for LsarDnsDomainInfo.
+         */
+        public LsarDnsDomainInfo() {
+            // Default constructor
+        }
+
+        /** Domain NetBIOS name. */
         public rpc.unicode_string name;
+        /** DNS domain name. */
         public rpc.unicode_string dns_domain;
+        /** DNS forest name. */
         public rpc.unicode_string dns_forest;
+        /** Domain GUID. */
         public rpc.uuid_t domain_guid;
+        /** Domain security identifier. */
         public rpc.sid_t sid;
 
         @Override
@@ -390,15 +463,32 @@ public class lsarpc {
         }
     }
 
+    /** Policy information level for audit events. */
     public static final int POLICY_INFO_AUDIT_EVENTS = 2;
+    /** Policy information level for primary domain. */
     public static final int POLICY_INFO_PRIMARY_DOMAIN = 3;
+    /** Policy information level for account domain. */
     public static final int POLICY_INFO_ACCOUNT_DOMAIN = 5;
+    /** Policy information level for server role. */
     public static final int POLICY_INFO_SERVER_ROLE = 6;
+    /** Policy information level for modification details. */
     public static final int POLICY_INFO_MODIFICATION = 9;
+    /** Policy information level for DNS domain information. */
     public static final int POLICY_INFO_DNS_DOMAIN = 12;
 
+    /**
+     * LSA SID pointer structure.
+     */
     public static class LsarSidPtr extends NdrObject {
 
+        /**
+         * Default constructor for LsarSidPtr.
+         */
+        public LsarSidPtr() {
+            // Default constructor
+        }
+
+        /** Security identifier. */
         public rpc.sid_t sid;
 
         @Override
@@ -429,9 +519,21 @@ public class lsarpc {
         }
     }
 
+    /**
+     * LSA SID array structure for batch SID operations.
+     */
     public static class LsarSidArray extends NdrObject {
 
+        /**
+         * Default constructor for LsarSidArray.
+         */
+        public LsarSidArray() {
+            // Default constructor
+        }
+
+        /** Number of SIDs in the array. */
         public int num_sids;
+        /** Array of SID pointers. */
         public LsarSidPtr[] sids;
 
         @Override
@@ -483,20 +585,42 @@ public class lsarpc {
         }
     }
 
+    /** SID name type: none or unused. */
     public static final int SID_NAME_USE_NONE = 0;
+    /** SID name type: user account. */
     public static final int SID_NAME_USER = 1;
+    /** SID name type: domain group. */
     public static final int SID_NAME_DOM_GRP = 2;
+    /** SID name type: domain. */
     public static final int SID_NAME_DOMAIN = 3;
+    /** SID name type: alias. */
     public static final int SID_NAME_ALIAS = 4;
+    /** SID name type: well-known group. */
     public static final int SID_NAME_WKN_GRP = 5;
+    /** SID name type: deleted account. */
     public static final int SID_NAME_DELETED = 6;
+    /** SID name type: invalid. */
     public static final int SID_NAME_INVALID = 7;
+    /** SID name type: unknown. */
     public static final int SID_NAME_UNKNOWN = 8;
 
+    /**
+     * LSA translated SID structure for name to SID lookups.
+     */
     public static class LsarTranslatedSid extends NdrObject {
 
+        /**
+         * Default constructor for LsarTranslatedSid.
+         */
+        public LsarTranslatedSid() {
+            // Default constructor
+        }
+
+        /** SID type. */
         public int sid_type;
+        /** Relative identifier. */
         public int rid;
+        /** Index of the SID in the domain list. */
         public int sid_index;
 
         @Override
@@ -518,9 +642,21 @@ public class lsarpc {
         }
     }
 
+    /**
+     * LSA translated SID array structure.
+     */
     public static class LsarTransSidArray extends NdrObject {
 
+        /**
+         * Default constructor for LsarTransSidArray.
+         */
+        public LsarTransSidArray() {
+            // Default constructor
+        }
+
+        /** Number of SIDs in the array. */
         public int count;
+        /** Array of translated SIDs. */
         public LsarTranslatedSid[] sids;
 
         @Override
@@ -572,9 +708,21 @@ public class lsarpc {
         }
     }
 
+    /**
+     * LSA trust information structure.
+     */
     public static class LsarTrustInformation extends NdrObject {
 
+        /**
+         * Default constructor for LsarTrustInformation.
+         */
+        public LsarTrustInformation() {
+            // Default constructor
+        }
+
+        /** Domain name. */
         public rpc.unicode_string name;
+        /** Domain security identifier. */
         public rpc.sid_t sid;
 
         @Override
@@ -649,10 +797,23 @@ public class lsarpc {
         }
     }
 
+    /**
+     * LSA referenced domain list structure.
+     */
     public static class LsarRefDomainList extends NdrObject {
 
+        /**
+         * Default constructor for LsarRefDomainList.
+         */
+        public LsarRefDomainList() {
+            // Default constructor
+        }
+
+        /** Number of domains in the list. */
         public int count;
+        /** Array of trust information for domains. */
         public LsarTrustInformation[] domains;
+        /** Maximum count of domains. */
         public int max_count;
 
         @Override
@@ -706,10 +867,23 @@ public class lsarpc {
         }
     }
 
+    /**
+     * LSA translated name structure for SID to name lookups.
+     */
     public static class LsarTranslatedName extends NdrObject {
 
+        /**
+         * Default constructor for LsarTranslatedName.
+         */
+        public LsarTranslatedName() {
+            // Default constructor
+        }
+
+        /** SID type for the name. */
         public short sid_type;
+        /** Translated name. */
         public rpc.unicode_string name;
+        /** Index of the SID in the domain list. */
         public int sid_index;
 
         @Override
@@ -773,9 +947,21 @@ public class lsarpc {
         }
     }
 
+    /**
+     * LSA translated name array structure.
+     */
     public static class LsarTransNameArray extends NdrObject {
 
+        /**
+         * Default constructor for LsarTransNameArray.
+         */
+        public LsarTransNameArray() {
+            // Default constructor
+        }
+
+        /** Number of names in the array. */
         public int count;
+        /** Array of translated names. */
         public LsarTranslatedName[] names;
 
         @Override
@@ -827,6 +1013,9 @@ public class lsarpc {
         }
     }
 
+    /**
+     * LSA close handle message.
+     */
     public static class LsarClose extends DcerpcMessage {
 
         @Override
@@ -834,9 +1023,16 @@ public class lsarpc {
             return 0x00;
         }
 
+        /** Return value from the RPC call. */
         public int retval;
+        /** Policy handle to be closed. */
         public rpc.policy_handle handle;
 
+        /**
+         * Creates a new LsarClose message.
+         *
+         * @param handle the policy handle to close
+         */
         public LsarClose(final rpc.policy_handle handle) {
             this.handle = handle;
         }
@@ -853,6 +1049,9 @@ public class lsarpc {
         }
     }
 
+    /**
+     * LSA query information policy message.
+     */
     public static class LsarQueryInformationPolicy extends DcerpcMessage {
 
         @Override
@@ -860,11 +1059,22 @@ public class lsarpc {
             return 0x07;
         }
 
+        /** Return value from the RPC call. */
         public int retval;
+        /** Policy handle for the query. */
         public rpc.policy_handle handle;
+        /** Information level to query. */
         public short level;
+        /** Information object to populate. */
         public NdrObject info;
 
+        /**
+         * Creates a new LsarQueryInformationPolicy message.
+         *
+         * @param handle the policy handle
+         * @param level the information level
+         * @param info the information object
+         */
         public LsarQueryInformationPolicy(final rpc.policy_handle handle, final short level, final NdrObject info) {
             this.handle = handle;
             this.level = level;
@@ -889,6 +1099,9 @@ public class lsarpc {
         }
     }
 
+    /**
+     * LSA lookup SIDs message.
+     */
     public static class LsarLookupSids extends DcerpcMessage {
 
         @Override
@@ -896,14 +1109,31 @@ public class lsarpc {
             return 0x0f;
         }
 
+        /** Return value from the RPC call. */
         public int retval;
+        /** Policy handle for the LSA operation. */
         public rpc.policy_handle handle;
+        /** Array of SIDs to lookup. */
         public LsarSidArray sids;
+        /** Referenced domain list returned from lookup. */
         public LsarRefDomainList domains;
+        /** Array of translated names. */
         public LsarTransNameArray names;
+        /** Lookup level. */
         public short level;
+        /** Count of SIDs to lookup. */
         public int count;
 
+        /**
+         * Creates a new LsarLookupSids message.
+         *
+         * @param handle the policy handle
+         * @param sids the SIDs to lookup
+         * @param domains the domain list to populate
+         * @param names the names array to populate
+         * @param level the lookup level
+         * @param count the number of SIDs
+         */
         public LsarLookupSids(final rpc.policy_handle handle, final LsarSidArray sids, final LsarRefDomainList domains,
                 final LsarTransNameArray names, final short level, final int count) {
             this.handle = handle;
@@ -939,6 +1169,9 @@ public class lsarpc {
         }
     }
 
+    /**
+     * LSA open policy version 2 message.
+     */
     public static class LsarOpenPolicy2 extends DcerpcMessage {
 
         @Override
@@ -946,12 +1179,25 @@ public class lsarpc {
             return 0x2c;
         }
 
+        /** Return value from the RPC call. */
         public int retval;
+        /** Name of the system to connect to. */
         public String system_name;
+        /** Object attributes for the policy. */
         public LsarObjectAttributes object_attributes;
+        /** Desired access rights. */
         public int desired_access;
+        /** Policy handle returned by the operation. */
         public rpc.policy_handle policy_handle;
 
+        /**
+         * Creates a new LsarOpenPolicy2 message.
+         *
+         * @param system_name the system name
+         * @param object_attributes the object attributes
+         * @param desired_access the desired access rights
+         * @param policy_handle the policy handle to populate
+         */
         public LsarOpenPolicy2(final String system_name, final LsarObjectAttributes object_attributes, final int desired_access,
                 final rpc.policy_handle policy_handle) {
             this.system_name = system_name;
@@ -978,6 +1224,9 @@ public class lsarpc {
         }
     }
 
+    /**
+     * LSA query information policy version 2 message.
+     */
     public static class LsarQueryInformationPolicy2 extends DcerpcMessage {
 
         @Override
@@ -985,11 +1234,22 @@ public class lsarpc {
             return 0x2e;
         }
 
+        /** Return value from the RPC call. */
         public int retval;
+        /** Policy handle for the query. */
         public rpc.policy_handle handle;
+        /** Information level to query. */
         public short level;
+        /** Information object to populate. */
         public NdrObject info;
 
+        /**
+         * Creates a new LsarQueryInformationPolicy2 message.
+         *
+         * @param handle the policy handle
+         * @param level the information level
+         * @param info the information object
+         */
         public LsarQueryInformationPolicy2(final rpc.policy_handle handle, final short level, final NdrObject info) {
             this.handle = handle;
             this.level = level;

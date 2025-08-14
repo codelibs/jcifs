@@ -33,11 +33,22 @@ import org.bouncycastle.asn1.DERBitString;
 import jcifs.pac.ASN1Util;
 import jcifs.pac.PACDecodingException;
 
+/**
+ * Represents a Kerberos AP-REQ (Application Request) message.
+ * This class parses and contains the authentication request sent from a client to a server.
+ */
 public class KerberosApRequest {
 
     private byte apOptions;
     private KerberosTicket ticket;
 
+    /**
+     * Creates a Kerberos AP request from a token.
+     *
+     * @param token the Kerberos AP-REQ token
+     * @param keys the Kerberos keys for decryption
+     * @throws PACDecodingException if the token cannot be decoded
+     */
     public KerberosApRequest(byte[] token, KerberosKey[] keys) throws PACDecodingException {
         this(parseSequence(token), keys);
     }
@@ -58,6 +69,13 @@ public class KerberosApRequest {
         return sequence;
     }
 
+    /**
+     * Creates a Kerberos AP request from an ASN.1 sequence.
+     *
+     * @param seq the ASN.1 sequence containing the AP-REQ
+     * @param keys the Kerberos keys for decryption
+     * @throws PACDecodingException if the sequence cannot be decoded
+     */
     public KerberosApRequest(ASN1Sequence seq, KerberosKey[] keys) throws PACDecodingException {
         Enumeration<?> fields = seq.getObjects();
         while (fields.hasMoreElements()) {
@@ -99,10 +117,20 @@ public class KerberosApRequest {
         }
     }
 
+    /**
+     * Get the AP options flags.
+     *
+     * @return the AP options byte
+     */
     public byte getApOptions() {
         return this.apOptions;
     }
 
+    /**
+     * Get the Kerberos ticket from this AP request.
+     *
+     * @return the Kerberos ticket
+     */
     public KerberosTicket getTicket() {
         return this.ticket;
     }

@@ -26,13 +26,17 @@ package jcifs;
 public interface Encodable {
 
     /**
-     * @param dst
-     * @param dstIndex
+     * Encodes this object into the specified byte array.
+     *
+     * @param dst the destination byte array to encode into
+     * @param dstIndex the starting index in the destination array
      * @return encoded length
      */
     int encode(byte[] dst, int dstIndex);
 
     /**
+     * Returns the size in bytes that this object will occupy when encoded.
+     *
      * @return the encoded size
      */
     int size();

@@ -24,14 +24,33 @@ import java.io.IOException;
 import jcifs.smb1.smb1.ACE;
 import jcifs.smb1.smb1.SecurityDescriptor;
 
+/**
+ * MS-RPC share information retrieval operation.
+ *
+ * This class implements the Server Service (SRVSVC) ShareGetInfo operation
+ * for retrieving detailed information about a network share, including
+ * security descriptors.
+ */
 public class MsrpcShareGetInfo extends srvsvc.ShareGetInfo {
 
+    /**
+     * Creates a new request to get share information.
+     *
+     * @param server the server name
+     * @param sharename the name of the share to query
+     */
     public MsrpcShareGetInfo(final String server, final String sharename) {
         super(server, sharename, 502, new srvsvc.ShareInfo502());
         ptype = 0;
         flags = DCERPC_FIRST_FRAG | DCERPC_LAST_FRAG;
     }
 
+    /**
+     * Returns the security descriptor of the share as an array of ACEs.
+     *
+     * @return an array of ACE objects representing the share's security descriptor
+     * @throws IOException if there is an error retrieving the security information
+     */
     public ACE[] getSecurity() throws IOException {
         final srvsvc.ShareInfo502 info502 = (srvsvc.ShareInfo502) info;
         if (info502.security_descriptor != null) {

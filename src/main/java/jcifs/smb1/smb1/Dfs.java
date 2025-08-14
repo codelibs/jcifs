@@ -26,7 +26,19 @@ import jcifs.smb1.Config;
 import jcifs.smb1.UniAddress;
 import jcifs.smb1.util.LogStream;
 
+/**
+ * Implements DFS (Distributed File System) referral caching and resolution.
+ * This class manages DFS referral cache and provides DFS path resolution functionality.
+ */
 public class Dfs {
+
+    /**
+     * Default constructor for Dfs.
+     * Initializes the DFS referral system.
+     */
+    public Dfs() {
+        // Default constructor
+    }
 
     static class CacheEntry {
         long expiration;
@@ -46,11 +58,26 @@ public class Dfs {
     static final long TTL = Config.getLong("jcifs.smb1.smb.client.dfs.ttl", 300);
     static final boolean DISABLED = Config.getBoolean("jcifs.smb1.smb.client.dfs.disabled", false);
 
+    /**
+     * Sentinel cache entry indicating a negative cache result
+     */
     protected static CacheEntry FALSE_ENTRY = new Dfs.CacheEntry(0L);
 
+    /**
+     * Cache of trusted domains for DFS resolution
+     */
     protected CacheEntry _domains = null; /* aka trusted domains cache */
+    /**
+     * Cache of DFS referrals
+     */
     protected CacheEntry referrals = null;
 
+    /**
+     * Gets the map of trusted domains for DFS resolution
+     * @param auth the authentication credentials
+     * @return a map of trusted domain names to domain controllers
+     * @throws SmbAuthException if authentication fails
+     */
     public HashMap getTrustedDomains(final NtlmPasswordAuthentication auth) throws SmbAuthException {
         if (DISABLED || auth.domain == "?") {
             return null;
@@ -90,6 +117,13 @@ public class Dfs {
         return null;
     }
 
+    /**
+     * Checks if a domain is trusted for DFS operations
+     * @param domain the domain name to check
+     * @param auth the authentication credentials
+     * @return true if the domain is trusted, false otherwise
+     * @throws SmbAuthException if authentication fails
+     */
     public boolean isTrustedDomain(String domain, final NtlmPasswordAuthentication auth) throws SmbAuthException {
         final HashMap domains = getTrustedDomains(auth);
         if (domains == null) {
@@ -99,6 +133,13 @@ public class Dfs {
         return domains.get(domain) != null;
     }
 
+    /**
+     * Gets a domain controller transport for the specified domain
+     * @param domain the domain name
+     * @param auth the authentication credentials
+     * @return an SMB transport to the domain controller
+     * @throws SmbAuthException if authentication fails
+     */
     public SmbTransport getDc(final String domain, final NtlmPasswordAuthentication auth) throws SmbAuthException {
         if (DISABLED) {
             return null;
@@ -136,6 +177,16 @@ public class Dfs {
         return null;
     }
 
+    /**
+     * Gets a DFS referral for the specified path
+     * @param trans the SMB transport to use
+     * @param domain the domain name
+     * @param root the DFS root
+     * @param path the path to resolve
+     * @param auth the authentication credentials
+     * @return a DFS referral or null if not found
+     * @throws SmbAuthException if authentication fails
+     */
     public DfsReferral getReferral(final SmbTransport trans, final String domain, final String root, final String path,
             final NtlmPasswordAuthentication auth) throws SmbAuthException {
         if (DISABLED) {
@@ -162,6 +213,15 @@ public class Dfs {
         return null;
     }
 
+    /**
+     * Resolves a DFS path to obtain referral information
+     * @param domain the domain name
+     * @param root the DFS root
+     * @param path the path to resolve
+     * @param auth the authentication credentials
+     * @return a DFS referral for the resolved path
+     * @throws SmbAuthException if authentication fails
+     */
     public synchronized DfsReferral resolve(String domain, String root, final String path, final NtlmPasswordAuthentication auth)
             throws SmbAuthException {
         DfsReferral dr = null;

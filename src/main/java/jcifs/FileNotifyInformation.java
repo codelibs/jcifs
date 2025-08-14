@@ -78,7 +78,7 @@ public interface FileNotifyInformation {
     int FILE_NOTIFY_CHANGE_CREATION = 0x00000040;
 
     /**
-     *
+     * Any change to the extended attributes (EA) of a file in the watched directory or subtree causes a change notification wait operation to return.
      */
     int FILE_NOTIFY_CHANGE_EA = 0x00000080;
 
@@ -89,17 +89,17 @@ public interface FileNotifyInformation {
     int FILE_NOTIFY_CHANGE_SECURITY = 0x00000100;
 
     /**
-     *
+     * Any change to a named stream of a file in the watched directory or subtree causes a change notification wait operation to return.
      */
     int FILE_NOTIFY_CHANGE_STREAM_NAME = 0x00000200;
 
     /**
-     *
+     * Any change in the size of a named stream of a file in the watched directory or subtree causes a change notification wait operation to return.
      */
     int FILE_NOTIFY_CHANGE_STREAM_SIZE = 0x00000400;
 
     /**
-     *
+     * Any change to the data in a named stream of a file in the watched directory or subtree causes a change notification wait operation to return.
      */
     int FILE_NOTIFY_CHANGE_STREAM_WRITE = 0x00000800;
 
@@ -118,12 +118,12 @@ public interface FileNotifyInformation {
     int FILE_ACTION_MODIFIED = 0x00000003;
 
     /**
-     *
+     * File has been renamed (old name)
      */
     int FILE_ACTION_RENAMED_OLD_NAME = 0x00000004;
 
     /**
-     *
+     * File has been renamed (new name)
      */
     int FILE_ACTION_RENAMED_NEW_NAME = 0x00000005;
 
@@ -141,16 +141,20 @@ public interface FileNotifyInformation {
     int FILE_ACTION_MODIFIED_STREAM = 0x00000008;
 
     /**
-     *
+     * File has been removed by delete operation
      */
     int FILE_ACTION_REMOVED_BY_DELETE = 0x00000009;
 
     /**
+     * Gets the action that triggered this notification.
+     *
      * @return the action triggering this entry (FILE_ACTION_*)
      */
     int getAction();
 
     /**
+     * Gets the name of the file affected by the action.
+     *
      * @return the file name affected by the action
      */
     String getFileName();

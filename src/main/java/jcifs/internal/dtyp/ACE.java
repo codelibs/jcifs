@@ -67,6 +67,13 @@ import jcifs.util.Hexdump;
  */
 public class ACE implements jcifs.ACE, Decodable {
 
+    /**
+     * Default constructor for ACE
+     */
+    public ACE() {
+        // Default constructor
+    }
+
     boolean allow;
     int flags;
     int access;

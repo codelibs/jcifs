@@ -39,9 +39,9 @@ public class Handler extends jcifs.http.Handler {
     public static final int DEFAULT_HTTPS_PORT = 443;
 
     /**
-     * @param tc
-     *            context to use
+     * Constructs an HTTPS handler with the specified CIFS context.
      *
+     * @param tc context to use
      */
     public Handler(final CIFSContext tc) {
         super(tc);

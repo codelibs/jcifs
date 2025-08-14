@@ -86,8 +86,9 @@ public class NameServiceClientImpl implements Runnable, NameServiceClient {
     private NbtAddress unknownAddress;
 
     /**
+     * Constructs a name service client with the given context.
      *
-     * @param tc
+     * @param tc the CIFS context containing configuration
      */
     public NameServiceClientImpl(final CIFSContext tc) {
         this(tc.getConfig().getNetbiosLocalPort(), tc.getConfig().getNetbiosLocalAddress(), tc);
@@ -730,8 +731,9 @@ public class NameServiceClientImpl implements Runnable, NameServiceClient {
     }
 
     /**
+     * Checks if the given address is one of the configured WINS servers.
      *
-     * @param svr
+     * @param svr the server address to check
      * @return whether the given address is a WINS server
      */
     protected boolean isWINS(final InetAddress svr) {
@@ -752,6 +754,11 @@ public class NameServiceClientImpl implements Runnable, NameServiceClient {
         return svr.equals(this.baddr) || svr.getAddress()[3] == (byte) 0xFF;
     }
 
+    /**
+     * Switches to the next available WINS server in round-robin fashion.
+     *
+     * @return the next WINS server address, or null if no WINS servers are configured
+     */
     protected InetAddress switchWINS() {
         this.nbnsIndex = this.nbnsIndex + 1 < this.transportContext.getConfig().getWinsServers().length ? this.nbnsIndex + 1 : 0;
         return this.transportContext.getConfig().getWinsServers().length == 0 ? null
@@ -1006,6 +1013,7 @@ public class NameServiceClientImpl implements Runnable, NameServiceClient {
     }
 
     /**
+     * Gets the lmhosts resolver instance used by this client.
      *
      * @return lmhosts file used
      */

@@ -26,7 +26,8 @@ package jcifs.ntlmssp.av;
 public class AvChannelBindings extends AvPair {
 
     /**
-     * @param channelBindingHash
+     * Constructs an AV channel bindings pair
+     * @param channelBindingHash the channel binding hash value
      */
     public AvChannelBindings(final byte[] channelBindingHash) {
         super(AvPair.MsvAvChannelBindings, channelBindingHash);

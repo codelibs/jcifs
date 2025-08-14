@@ -175,6 +175,8 @@ public interface NetbiosAddress extends Address {
     int getNameType();
 
     /**
+     * Gets the NetBIOS name associated with this address.
+     *
      * @return the name for this address
      */
     NetbiosName getName();

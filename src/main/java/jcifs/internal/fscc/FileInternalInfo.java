@@ -32,6 +32,12 @@ public class FileInternalInfo implements FileInformation {
     private long indexNumber;
 
     /**
+     * Default constructor for decoding file internal information.
+     */
+    public FileInternalInfo() {
+    }
+
+    /**
      * {@inheritDoc}
      *
      * @see jcifs.internal.fscc.FileInformation#getFileInformationLevel()
@@ -42,7 +48,9 @@ public class FileInternalInfo implements FileInformation {
     }
 
     /**
-     * @return the indexNumber
+     * Gets the file index number.
+     *
+     * @return the index number assigned by the file system
      */
     public long getIndexNumber() {
         return this.indexNumber;

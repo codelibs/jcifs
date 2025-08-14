@@ -42,7 +42,7 @@ public class FileNotifyInformationImpl implements FileNotifyInformation, Decodab
     String fileName;
 
     /**
-     *
+     * Default constructor for decoding.
      */
     public FileNotifyInformationImpl() {
     }
@@ -58,18 +58,21 @@ public class FileNotifyInformationImpl implements FileNotifyInformation, Decodab
     }
 
     /**
-     * @return the nextEntryOffset
+     * Gets the offset to the next entry.
+     *
+     * @return the next entry offset in bytes
      */
     public int getNextEntryOffset() {
         return this.nextEntryOffset;
     }
 
     /**
+     * Constructs a file notify information from the given buffer.
      *
-     * @param buffer
-     * @param bufferIndex
-     * @param len
-     * @throws IOException
+     * @param buffer the buffer containing the notification data
+     * @param bufferIndex the starting index in the buffer
+     * @param len the length of data to decode
+     * @throws IOException if an I/O error occurs during decoding
      */
     public FileNotifyInformationImpl(final byte[] buffer, final int bufferIndex, final int len) throws IOException {
         decode(buffer, bufferIndex, len);

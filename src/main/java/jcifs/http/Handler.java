@@ -89,9 +89,9 @@ public class Handler extends URLStreamHandler {
     }
 
     /**
-     * @param tc
-     *            context to use
+     * Constructs a handler with the specified CIFS context.
      *
+     * @param tc context to use
      */
     public Handler(final CIFSContext tc) {
         this.transportContext = tc;

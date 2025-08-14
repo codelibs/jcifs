@@ -38,32 +38,36 @@ public class LockingAndXRange implements Encodable, Decodable {
     private long lengthInBytes;
 
     /**
-     * @param largeFile
+     * Constructs a LockingAndXRange with large file support.
      *
+     * @param largeFile whether to use large file support (64-bit offsets)
      */
     public LockingAndXRange(final boolean largeFile) {
         this.largeFile = largeFile;
     }
 
     /**
+     * Returns the process ID associated with this lock range.
      *
-     * @return pid
+     * @return the process ID
      */
     public int getPid() {
         return this.pid;
     }
 
     /**
+     * Returns the starting byte offset of the lock range.
      *
-     * @return start byte offset
+     * @return the starting byte offset
      */
     public long getByteOffset() {
         return this.byteOffset;
     }
 
     /**
+     * Returns the byte length of the lock range.
      *
-     * @return byte length
+     * @return the byte length of the range
      */
     public long getLengthInBytes() {
         return this.lengthInBytes;

@@ -47,6 +47,8 @@ public class CIFSContextWrapper implements CIFSContext {
     private Handler wrappedHandler;
 
     /**
+     * Constructs a wrapper around the specified CIFS context.
+     *
      * @param delegate
      *            context to delegate non-override methods to
      *
@@ -58,7 +60,7 @@ public class CIFSContextWrapper implements CIFSContext {
     /**
      * {@inheritDoc}
      *
-     * @throws CIFSException
+     * @throws CIFSException if the URL is malformed or there is an error creating the SMB resource
      *
      * @see jcifs.CIFSContext#get(java.lang.String)
      */
@@ -86,6 +88,12 @@ public class CIFSContextWrapper implements CIFSContext {
         }
     }
 
+    /**
+     * Wraps a new context, allowing subclasses to provide custom wrapping behavior.
+     *
+     * @param newContext the context to wrap
+     * @return the wrapped context
+     */
     protected CIFSContext wrap(final CIFSContext newContext) {
         return newContext;
     }

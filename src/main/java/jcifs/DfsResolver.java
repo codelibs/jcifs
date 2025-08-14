@@ -27,44 +27,43 @@ package jcifs;
 public interface DfsResolver {
 
     /**
-     * @param domain
-     * @param tf
+     * Checks if a domain is trusted for DFS operations
+     * @param tf the CIFS context
+     * @param domain the domain name to check
      * @return whether the given domain is trusted
-     * @throws CIFSException
-     * @throws jcifs.smb.SmbAuthException
+     * @throws CIFSException if the operation fails
      */
     boolean isTrustedDomain(CIFSContext tf, String domain) throws CIFSException;
 
     /**
      * Get a connection to the domain controller for a given domain
      *
-     * @param domain
-     * @param tf
-     * @return connection
-     * @throws CIFSException
-     * @throws jcifs.smb.SmbAuthException
+     * @param tf the CIFS context
+     * @param domain the domain name
+     * @return connection to the domain controller
+     * @throws CIFSException if the connection fails
      */
     SmbTransport getDc(CIFSContext tf, String domain) throws CIFSException;
 
     /**
      * Resolve the location of a DFS path
      *
-     * @param domain
-     * @param root
-     * @param path
-     * @param tf
+     * @param domain the domain for the DFS referral
+     * @param root the DFS root share
+     * @param path the DFS path to resolve
+     * @param tf the CIFS context containing configuration and credentials
      * @return the final referral for the given DFS path
-     * @throws CIFSException
-     * @throws jcifs.smb.SmbAuthException
+     * @throws CIFSException if an error occurs during resolution
+     * @throws jcifs.smb.SmbAuthException if authentication fails
      */
     DfsReferralData resolve(CIFSContext tf, String domain, String root, String path) throws CIFSException;
 
     /**
      * Add a referral to the cache
      *
-     * @param path
-     * @param dr
-     * @param tc
+     * @param path the DFS path for this referral
+     * @param dr the DFS referral data to cache
+     * @param tc the CIFS context containing configuration
      */
     void cache(CIFSContext tc, String path, DfsReferralData dr);
 

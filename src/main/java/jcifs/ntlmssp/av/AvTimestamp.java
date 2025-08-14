@@ -28,15 +28,18 @@ import jcifs.internal.util.SMBUtil;
 public class AvTimestamp extends AvPair {
 
     /**
-     * @param raw
+     * Constructs an AvTimestamp from raw byte data
+     *
+     * @param raw the raw byte data for the timestamp AV pair
      */
     public AvTimestamp(final byte[] raw) {
         super(AvPair.MsvAvTimestamp, raw);
     }
 
     /**
+     * Constructs an AvTimestamp with the specified timestamp value
      *
-     * @param ts
+     * @param ts the timestamp value in Windows FILETIME format
      */
     public AvTimestamp(final long ts) {
         this(encode(ts));
@@ -53,6 +56,8 @@ public class AvTimestamp extends AvPair {
     }
 
     /**
+     * Gets the timestamp value from this AV pair
+     *
      * @return the timestamp
      */
     public long getTimestamp() {

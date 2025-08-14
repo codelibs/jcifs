@@ -20,8 +20,21 @@ package jcifs.dcerpc.msrpc;
 
 import jcifs.dcerpc.ndr.NdrObject;
 
+/**
+ * MS-RPC query information policy operation.
+ *
+ * This class implements the LSARPC QueryInformationPolicy operation
+ * for retrieving policy information from the Local Security Authority (LSA).
+ */
 public class MsrpcQueryInformationPolicy extends lsarpc.LsarQueryInformationPolicy {
 
+    /**
+     * Constructs a new MsrpcQueryInformationPolicy request.
+     *
+     * @param policyHandle the policy handle obtained from LsarOpenPolicy
+     * @param level the information level to query
+     * @param info the NdrObject to receive the policy information
+     */
     public MsrpcQueryInformationPolicy(final LsaPolicyHandle policyHandle, final short level, final NdrObject info) {
         super(policyHandle, level, info);
         this.ptype = 0;

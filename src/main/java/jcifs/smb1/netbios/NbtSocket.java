@@ -45,17 +45,46 @@ public class NbtSocket extends Socket {
     private Name calledName;
     private int soTimeout;
 
+    /**
+     * Constructs an unconnected NbtSocket.
+     */
     public NbtSocket() {
     }
 
+    /**
+     * Constructs an NbtSocket and connects it to the specified NetBIOS address and port.
+     *
+     * @param address the NetBIOS address to connect to
+     * @param port the port number, or 0 for the default NetBIOS session service port
+     * @throws IOException if an I/O error occurs while creating the socket
+     */
     public NbtSocket(final NbtAddress address, final int port) throws IOException {
         this(address, port, null, 0);
     }
 
+    /**
+     * Constructs an NbtSocket with specified local and remote addresses.
+     *
+     * @param address the NetBIOS address to connect to
+     * @param port the remote port number, or 0 for the default NetBIOS session service port
+     * @param localAddr the local address to bind to
+     * @param localPort the local port to bind to
+     * @throws IOException if an I/O error occurs while creating the socket
+     */
     public NbtSocket(final NbtAddress address, final int port, final InetAddress localAddr, final int localPort) throws IOException {
         this(address, null, port, localAddr, localPort);
     }
 
+    /**
+     * Creates a new NetBIOS socket with the specified parameters.
+     *
+     * @param address the NetBIOS address to connect to
+     * @param calledName the called NetBIOS name (optional)
+     * @param port the port number (0 for default)
+     * @param localAddr the local address to bind to
+     * @param localPort the local port to bind to
+     * @throws IOException if an I/O error occurs while creating the socket
+     */
     public NbtSocket(final NbtAddress address, final String calledName, final int port, final InetAddress localAddr, final int localPort)
             throws IOException {
         super(address.getInetAddress(), port == 0 ? SSN_SRVC_PORT : port, localAddr, localPort);
@@ -69,6 +98,11 @@ public class NbtSocket extends Socket {
         connect();
     }
 
+    /**
+     * Returns the NetBIOS address associated with this socket.
+     *
+     * @return the NetBIOS address
+     */
     public NbtAddress getNbtAddress() {
         return address;
     }

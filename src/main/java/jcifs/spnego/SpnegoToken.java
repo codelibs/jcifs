@@ -43,8 +43,17 @@ public abstract class SpnegoToken {
         this.mechanismListMIC = mechanismListMIC;
     }
 
+    /**
+     * Encodes this SPNEGO token to a byte array
+     * @return the encoded token bytes
+     */
     public abstract byte[] toByteArray();
 
+    /**
+     * Parses the provided token bytes to populate this SPNEGO token
+     * @param token the token bytes to parse
+     * @throws IOException if parsing fails
+     */
     protected abstract void parse(byte[] token) throws IOException;
 
 }

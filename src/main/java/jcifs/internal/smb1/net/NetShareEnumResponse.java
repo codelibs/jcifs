@@ -37,8 +37,9 @@ public class NetShareEnumResponse extends SmbComTransactionResponse {
     private int converter, totalAvailableEntries;
 
     /**
-     *
+     * Constructs a NetShareEnumResponse
      * @param config
+     *            the configuration to use
      */
     public NetShareEnumResponse(final Configuration config) {
         super(config);

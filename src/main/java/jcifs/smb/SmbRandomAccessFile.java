@@ -46,8 +46,8 @@ import jcifs.internal.smb2.io.Smb2WriteResponse;
 import jcifs.util.Encdec;
 
 /**
- *
- *
+ * Random access file implementation for SMB resources.
+ * Provides random read/write access to SMB files with support for seeking and positioning.
  *
  */
 public class SmbRandomAccessFile implements SmbRandomAccess {

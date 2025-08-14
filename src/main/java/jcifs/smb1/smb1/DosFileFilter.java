@@ -18,15 +18,31 @@
 
 package jcifs.smb1.smb1;
 
+/**
+ * DOS-style file filter implementation for SMB1 protocol.
+ * Filters files based on wildcard patterns and DOS file attributes.
+ */
 public class DosFileFilter implements SmbFileFilter {
 
+    /**
+     * The wildcard pattern for filtering file names.
+     */
     protected String wildcard;
+
+    /**
+     * The DOS file attributes to filter on.
+     */
     protected int attributes;
 
-    /* This filter can be considerably more efficient than other file filters
-     * as the specifed wildcard and attributes are passed to the server for
+    /**
+     * Creates a DOS file filter with the specified wildcard and attributes.
+     * This filter can be considerably more efficient than other file filters
+     * as the specified wildcard and attributes are passed to the server for
      * filtering there (although attributes are largely ignored by servers
      * they are filtered locally by the default accept method).
+     *
+     * @param wildcard the wildcard pattern for matching file names (e.g., "*.txt")
+     * @param attributes the DOS file attributes to match (e.g., ATTR_DIRECTORY)
      */
     public DosFileFilter(final String wildcard, final int attributes) {
         this.wildcard = wildcard;

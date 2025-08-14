@@ -16,26 +16,44 @@
  */
 package jcifs.pac.kerberos;
 
+/**
+ * Constants used in Kerberos protocol implementation.
+ */
 public interface KerberosConstants {
 
+    /** Kerberos OID identifier */
     String KERBEROS_OID = "1.2.840.113554.1.2.2";
+    /** Kerberos protocol version */
     String KERBEROS_VERSION = "5";
 
+    /** Kerberos AP-REQ message type */
     String KERBEROS_AP_REQ = "14";
 
+    /** Address family: Internet (IPv4) */
     int AF_INTERNET = 2;
+    /** Address family: CHANET */
     int AF_CHANET = 5;
+    /** Address family: XNS */
     int AF_XNS = 6;
+    /** Address family: ISO */
     int AF_ISO = 7;
 
+    /** Authorization data type: Relevant */
     int AUTH_DATA_RELEVANT = 1;
+    /** Authorization data type: PAC */
     int AUTH_DATA_PAC = 128;
 
+    /** DES encryption type identifier */
     int DES_ENC_TYPE = 3;
+    /** RC4 encryption type identifier */
     int RC4_ENC_TYPE = 23;
+    /** RC4 algorithm name */
     String RC4_ALGORITHM = "ARCFOUR";
+    /** HMAC algorithm name */
     String HMAC_ALGORITHM = "HmacMD5";
+    /** Size of confounder in bytes */
     int CONFOUNDER_SIZE = 8;
+    /** Size of checksum in bytes */
     int CHECKSUM_SIZE = 16;
 
 }

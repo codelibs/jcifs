@@ -38,9 +38,9 @@ public final class AvPairs {
     /**
      * Decode a list of AvPairs
      *
-     * @param data
+     * @param data the encoded AV pairs data
      * @return individual pairs
-     * @throws CIFSException
+     * @throws CIFSException if decoding fails
      */
     public static List<AvPair> decode(final byte[] data) throws CIFSException {
         final List<AvPair> pairs = new LinkedList<>();
@@ -72,9 +72,10 @@ public final class AvPairs {
     }
 
     /**
+     * Checks if the AV pairs list contains a pair of the specified type
      *
-     * @param pairs
-     * @param type
+     * @param pairs the list of AV pairs to search
+     * @param type the AV pair type to look for
      * @return whether the list contains a pair of that type
      */
     public static boolean contains(final List<AvPair> pairs, final int type) {
@@ -90,9 +91,10 @@ public final class AvPairs {
     }
 
     /**
+     * Gets the first AV pair of the specified type from the list
      *
-     * @param pairs
-     * @param type
+     * @param pairs the list of AV pairs to search
+     * @param type the AV pair type to retrieve
      * @return first occurance of the given type
      */
     public static AvPair get(final List<AvPair> pairs, final int type) {
@@ -107,8 +109,8 @@ public final class AvPairs {
     /**
      * Remove all occurances of the given type
      *
-     * @param pairs
-     * @param type
+     * @param pairs the list of AV pairs to modify
+     * @param type the AV pair type to remove
      */
     public static void remove(final List<AvPair> pairs, final int type) {
         final Iterator<AvPair> it = pairs.iterator();
@@ -123,8 +125,8 @@ public final class AvPairs {
     /**
      * Replace all occurances of the given type
      *
-     * @param pairs
-     * @param rep
+     * @param pairs the list of AV pairs to modify
+     * @param rep the replacement AV pair
      */
     public static void replace(final List<AvPair> pairs, final AvPair rep) {
         remove(pairs, rep.getType());
@@ -132,8 +134,9 @@ public final class AvPairs {
     }
 
     /**
+     * Encodes a list of AV pairs into byte array format
      *
-     * @param pairs
+     * @param pairs the list of AV pairs to encode
      * @return encoded avpairs
      */
     public static byte[] encode(final List<AvPair> pairs) {

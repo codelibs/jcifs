@@ -28,6 +28,10 @@ import java.util.Date;
 
 import jcifs.SmbConstants;
 
+/**
+ * Encoding and decoding utility class for SMB protocol.
+ * Provides methods for encoding/decoding various data types in different byte orders.
+ */
 public final class Encdec {
 
     private static final long SEC_BETWEEEN_1904_AND_1970 = 2082844800L;
@@ -50,6 +54,14 @@ public final class Encdec {
      * Encode integers
      */
 
+    /**
+     * Encodes a 16-bit unsigned integer in big-endian byte order.
+     *
+     * @param s the short value to encode
+     * @param dst the destination byte array
+     * @param di the starting index in the destination array
+     * @return the number of bytes written (2)
+     */
     public static int enc_uint16be(final short s, final byte[] dst, int di) {
         dst[di] = (byte) (s >> 8 & 0xFF);
         di++;
@@ -57,6 +69,14 @@ public final class Encdec {
         return 2;
     }
 
+    /**
+     * Encodes a 32-bit unsigned integer in big-endian byte order.
+     *
+     * @param i the integer value to encode
+     * @param dst the destination byte array
+     * @param di the starting index in the destination array
+     * @return the number of bytes written (4)
+     */
     public static int enc_uint32be(final int i, final byte[] dst, int di) {
         dst[di] = (byte) (i >> 24 & 0xFF);
         di++;
@@ -66,6 +86,14 @@ public final class Encdec {
         return 4;
     }
 
+    /**
+     * Encodes a 16-bit unsigned integer in little-endian byte order.
+     *
+     * @param s the short value to encode
+     * @param dst the destination byte array
+     * @param di the starting index in the destination array
+     * @return the number of bytes written (2)
+     */
     public static int enc_uint16le(final short s, final byte[] dst, int di) {
         dst[di] = (byte) (s & 0xFF);
         di++;
@@ -73,6 +101,14 @@ public final class Encdec {
         return 2;
     }
 
+    /**
+     * Encodes a 32-bit unsigned integer in little-endian byte order.
+     *
+     * @param i the integer value to encode
+     * @param dst the destination byte array
+     * @param di the starting index in the destination array
+     * @return the number of bytes written (4)
+     */
     public static int enc_uint32le(final int i, final byte[] dst, int di) {
         dst[di] = (byte) (i & 0xFF);
         di++;
@@ -86,18 +122,46 @@ public final class Encdec {
      * Decode integers
      */
 
+    /**
+     * Decodes a 16-bit unsigned integer from big-endian byte order.
+     *
+     * @param src the source byte array
+     * @param si the starting index in the source array
+     * @return the decoded short value
+     */
     public static short dec_uint16be(final byte[] src, final int si) {
         return (short) ((src[si] & 0xFF) << 8 | src[si + 1] & 0xFF);
     }
 
+    /**
+     * Decodes a 32-bit unsigned integer from big-endian byte order.
+     *
+     * @param src the source byte array
+     * @param si the starting index in the source array
+     * @return the decoded integer value
+     */
     public static int dec_uint32be(final byte[] src, final int si) {
         return (src[si] & 0xFF) << 24 | (src[si + 1] & 0xFF) << 16 | (src[si + 2] & 0xFF) << 8 | src[si + 3] & 0xFF;
     }
 
+    /**
+     * Decodes a 16-bit unsigned integer from little-endian byte order.
+     *
+     * @param src the source byte array
+     * @param si the starting index in the source array
+     * @return the decoded short value
+     */
     public static short dec_uint16le(final byte[] src, final int si) {
         return (short) (src[si] & 0xFF | (src[si + 1] & 0xFF) << 8);
     }
 
+    /**
+     * Decodes a 32-bit unsigned integer from little-endian byte order.
+     *
+     * @param src the source byte array
+     * @param si the starting index in the source array
+     * @return the decoded integer value
+     */
     public static int dec_uint32le(final byte[] src, final int si) {
         return src[si] & 0xFF | (src[si + 1] & 0xFF) << 8 | (src[si + 2] & 0xFF) << 16 | (src[si + 3] & 0xFF) << 24;
     }
@@ -106,18 +170,41 @@ public final class Encdec {
      * Encode and decode 64 bit integers
      */
 
+    /**
+     * Encodes a 64-bit unsigned integer in big-endian byte order.
+     *
+     * @param l the long value to encode
+     * @param dst the destination byte array
+     * @param di the starting index in the destination array
+     * @return the number of bytes written (8)
+     */
     public static int enc_uint64be(final long l, final byte[] dst, final int di) {
         enc_uint32be((int) (l & 0xFFFFFFFFL), dst, di + 4);
         enc_uint32be((int) (l >> 32L & 0xFFFFFFFFL), dst, di);
         return 8;
     }
 
+    /**
+     * Encodes a 64-bit unsigned integer in little-endian byte order.
+     *
+     * @param l the long value to encode
+     * @param dst the destination byte array
+     * @param di the starting index in the destination array
+     * @return the number of bytes written (8)
+     */
     public static int enc_uint64le(final long l, final byte[] dst, final int di) {
         enc_uint32le((int) (l & 0xFFFFFFFFL), dst, di);
         enc_uint32le((int) (l >> 32L & 0xFFFFFFFFL), dst, di + 4);
         return 8;
     }
 
+    /**
+     * Decodes a 64-bit unsigned integer from big-endian byte order.
+     *
+     * @param src the source byte array
+     * @param si the starting index in the source array
+     * @return the decoded long value
+     */
     public static long dec_uint64be(final byte[] src, final int si) {
         long l = dec_uint32be(src, si) & 0xFFFFFFFFL;
         l <<= 32L;
@@ -125,6 +212,13 @@ public final class Encdec {
         return l;
     }
 
+    /**
+     * Decodes a 64-bit unsigned integer from little-endian byte order.
+     *
+     * @param src the source byte array
+     * @param si the starting index in the source array
+     * @return the decoded long value
+     */
     public static long dec_uint64le(final byte[] src, final int si) {
         long l = dec_uint32le(src, si + 4) & 0xFFFFFFFFL;
         l <<= 32L;
@@ -136,10 +230,26 @@ public final class Encdec {
      * Encode floats
      */
 
+    /**
+     * Encodes a float value in little-endian byte order.
+     *
+     * @param f the float value to encode
+     * @param dst the destination byte array
+     * @param di the starting index in the destination array
+     * @return the number of bytes written (4)
+     */
     public static int enc_floatle(final float f, final byte[] dst, final int di) {
         return enc_uint32le(Float.floatToIntBits(f), dst, di);
     }
 
+    /**
+     * Encodes a float value in big-endian byte order.
+     *
+     * @param f the float value to encode
+     * @param dst the destination byte array
+     * @param di the starting index in the destination array
+     * @return the number of bytes written (4)
+     */
     public static int enc_floatbe(final float f, final byte[] dst, final int di) {
         return enc_uint32be(Float.floatToIntBits(f), dst, di);
     }
@@ -148,10 +258,24 @@ public final class Encdec {
      * Decode floating point numbers
      */
 
+    /**
+     * Decodes a float value from little-endian byte order.
+     *
+     * @param src the source byte array
+     * @param si the starting index in the source array
+     * @return the decoded float value
+     */
     public static float dec_floatle(final byte[] src, final int si) {
         return Float.intBitsToFloat(dec_uint32le(src, si));
     }
 
+    /**
+     * Decodes a float value from big-endian byte order.
+     *
+     * @param src the source byte array
+     * @param si the starting index in the source array
+     * @return the decoded float value
+     */
     public static float dec_floatbe(final byte[] src, final int si) {
         return Float.intBitsToFloat(dec_uint32be(src, si));
     }
@@ -160,18 +284,48 @@ public final class Encdec {
      * Encode and decode doubles
      */
 
+    /**
+     * Encodes a double value in little-endian byte order.
+     *
+     * @param d the double value to encode
+     * @param dst the destination byte array
+     * @param di the starting index in the destination array
+     * @return the number of bytes written (8)
+     */
     public static int enc_doublele(final double d, final byte[] dst, final int di) {
         return enc_uint64le(Double.doubleToLongBits(d), dst, di);
     }
 
+    /**
+     * Encodes a double value in big-endian byte order.
+     *
+     * @param d the double value to encode
+     * @param dst the destination byte array
+     * @param di the starting index in the destination array
+     * @return the number of bytes written (8)
+     */
     public static int enc_doublebe(final double d, final byte[] dst, final int di) {
         return enc_uint64be(Double.doubleToLongBits(d), dst, di);
     }
 
+    /**
+     * Decodes a double value from little-endian byte order.
+     *
+     * @param src the source byte array
+     * @param si the starting index in the source array
+     * @return the decoded double value
+     */
     public static double dec_doublele(final byte[] src, final int si) {
         return Double.longBitsToDouble(dec_uint64le(src, si));
     }
 
+    /**
+     * Decodes a double value from big-endian byte order.
+     *
+     * @param src the source byte array
+     * @param si the starting index in the source array
+     * @return the decoded double value
+     */
     public static double dec_doublebe(final byte[] src, final int si) {
         return Double.longBitsToDouble(dec_uint64be(src, si));
     }
@@ -180,6 +334,15 @@ public final class Encdec {
      * Encode times
      */
 
+    /**
+     * Encodes a Date value according to the specified time encoding type.
+     *
+     * @param date the Date to encode
+     * @param dst the destination byte array
+     * @param di the starting index in the destination array
+     * @param enc the time encoding type (e.g., TIME_1970_SEC_32BE)
+     * @return the number of bytes written
+     */
     public static int enc_time(final Date date, final byte[] dst, final int di, final int enc) {
         long t;
 
@@ -206,6 +369,14 @@ public final class Encdec {
      * Decode times
      */
 
+    /**
+     * Decodes a Date value according to the specified time encoding type.
+     *
+     * @param src the source byte array
+     * @param si the starting index in the source array
+     * @param enc the time encoding type (e.g., TIME_1970_SEC_32BE)
+     * @return the decoded Date value
+     */
     public static Date dec_time(final byte[] src, final int si, final int enc) {
         long t;
 
@@ -228,6 +399,15 @@ public final class Encdec {
         };
     }
 
+    /**
+     * Encodes a String as UTF-8 bytes.
+     *
+     * @param str the String to encode
+     * @param dst the destination byte array
+     * @param di the starting index in the destination array
+     * @param dlim the maximum index in the destination array
+     * @return the number of bytes written
+     */
     public static int enc_utf8(final String str, final byte[] dst, int di, final int dlim) {
         final int start = di;
         int ch;
@@ -260,6 +440,15 @@ public final class Encdec {
         return di - start;
     }
 
+    /**
+     * Decodes a UTF-8 encoded string from a byte array.
+     *
+     * @param src the source byte array
+     * @param si the starting index in the source array
+     * @param slim the limit index in the source array
+     * @return the decoded String
+     * @throws IOException if a decoding error occurs
+     */
     public static String dec_utf8(final byte[] src, int si, final int slim) throws IOException {
         final char[] uni = new char[slim - si];
         int ui, ch;
@@ -302,6 +491,15 @@ public final class Encdec {
         return new String(uni, 0, ui);
     }
 
+    /**
+     * Decodes a UCS-2 little-endian encoded string from a byte array.
+     *
+     * @param src the source byte array
+     * @param si the starting index in the source array
+     * @param slim the limit index in the source array
+     * @param buf the character buffer for decoding
+     * @return the decoded String
+     */
     public static String dec_ucs2le(final byte[] src, int si, final int slim, final char[] buf) {
         int bi;
 

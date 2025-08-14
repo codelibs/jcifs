@@ -91,9 +91,9 @@ public class JAASAuthenticator extends Kerb5Authenticator implements CallbackHan
      *
      * @param serviceName
      *            JAAS configuration name
-     * @param domain
-     * @param username
-     * @param password
+     * @param domain the domain for authentication
+     * @param username the username for authentication
+     * @param password the password for authentication
      */
     public JAASAuthenticator(String serviceName, String domain, String username, String password) {
         super(null, domain, username, password);
@@ -105,9 +105,9 @@ public class JAASAuthenticator extends Kerb5Authenticator implements CallbackHan
      *
      * This will create a JAAS configuration that is used to obtain a TGT.
      *
-     * @param domain
-     * @param username
-     * @param password
+     * @param domain the domain for authentication
+     * @param username the username for authentication
+     * @param password the password for authentication
      */
     public JAASAuthenticator(String domain, String username, String password) {
         this(new HashMap<>(), domain, username, password);
@@ -121,9 +121,9 @@ public class JAASAuthenticator extends Kerb5Authenticator implements CallbackHan
      *
      * @param properties
      *            JAAS properties to set
-     * @param domain
-     * @param username
-     * @param password
+     * @param domain the domain for authentication
+     * @param username the username for authentication
+     * @param password the password for authentication
      */
     public JAASAuthenticator(Map<String, ?> properties, String domain, String username, String password) {
         super(null, domain, username, password);
@@ -161,8 +161,8 @@ public class JAASAuthenticator extends Kerb5Authenticator implements CallbackHan
     /**
      * Clone the context
      *
-     * @param to
-     * @param from
+     * @param to the target authenticator
+     * @param from the source authenticator
      */
     protected static void cloneInternal(JAASAuthenticator to, JAASAuthenticator from) {
         Kerb5Authenticator.cloneInternal(to, from);

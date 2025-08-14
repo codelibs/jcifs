@@ -68,6 +68,9 @@ import jcifs.smb.SmbFileInputStream;
  * @deprecated Unsupported
  */
 @Deprecated
+/**
+ * A servlet that provides network browsing capabilities for SMB shares
+ */
 public class NetworkExplorer extends HttpServlet {
 
     /**
@@ -157,6 +160,14 @@ public class NetworkExplorer extends HttpServlet {
         }
     }
 
+    /**
+     * Compares two SMB files by name
+     * @param f1 first file to compare
+     * @param f1name name of first file
+     * @param f2 second file to compare
+     * @return comparison result for sorting
+     * @throws IOException if an I/O error occurs
+     */
     protected int compareNames(final SmbFile f1, final String f1name, final SmbFile f2) throws IOException {
         if (f1.isDirectory() != f2.isDirectory()) {
             return f1.isDirectory() ? -1 : 1;
@@ -164,6 +175,14 @@ public class NetworkExplorer extends HttpServlet {
         return f1name.compareToIgnoreCase(f2.getName());
     }
 
+    /**
+     * Compares two SMB files by size
+     * @param f1 first file to compare
+     * @param f1name name of first file
+     * @param f2 second file to compare
+     * @return comparison result for sorting
+     * @throws IOException if an I/O error occurs
+     */
     protected int compareSizes(final SmbFile f1, final String f1name, final SmbFile f2) throws IOException {
         long diff;
 

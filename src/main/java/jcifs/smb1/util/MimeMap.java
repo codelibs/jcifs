@@ -21,6 +21,11 @@ package jcifs.smb1.util;
 import java.io.IOException;
 import java.io.InputStream;
 
+/**
+ * MIME type mapping utility for file extensions.
+ * Provides mappings between file extensions and their corresponding MIME types
+ * by reading from a resource file containing extension-to-MIME-type mappings.
+ */
 public class MimeMap {
 
     private static final int IN_SIZE = 7000;
@@ -34,6 +39,11 @@ public class MimeMap {
     private final byte[] in;
     private int inLen;
 
+    /**
+     * Creates a new MimeMap instance by loading MIME type mappings from the resource file.
+     *
+     * @throws IOException if there is an error reading the mime.map resource file
+     */
     public MimeMap() throws IOException {
         int n;
 
@@ -50,10 +60,26 @@ public class MimeMap {
         is.close();
     }
 
+    /**
+     * Returns the MIME type for the given file extension.
+     * If no mapping is found, returns "application/octet-stream" as the default.
+     *
+     * @param extension the file extension to look up (without the dot)
+     * @return the MIME type for the extension, or "application/octet-stream" if not found
+     * @throws IOException if there is an error processing the MIME mappings
+     */
     public String getMimeType(final String extension) throws IOException {
         return getMimeType(extension, "application/octet-stream");
     }
 
+    /**
+     * Returns the MIME type for the given file extension with a custom default.
+     *
+     * @param extension the file extension to look up (without the dot)
+     * @param def the default MIME type to return if no mapping is found
+     * @return the MIME type for the extension, or the specified default if not found
+     * @throws IOException if there is an error processing the MIME mappings
+     */
     public String getMimeType(final String extension, final String def) throws IOException {
         int state, t, x, i, off;
         byte ch;

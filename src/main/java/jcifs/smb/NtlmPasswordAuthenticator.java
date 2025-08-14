@@ -81,8 +81,8 @@ public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal
     /**
      * Create username/password credentials
      *
-     * @param username
-     * @param password
+     * @param username the username for authentication
+     * @param password the password for authentication
      */
     public NtlmPasswordAuthenticator(String username, String password) {
         this(null, username, password);
@@ -91,9 +91,9 @@ public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal
     /**
      * Create username/password credentials with specified domain
      *
-     * @param domain
-     * @param username
-     * @param password
+     * @param domain the domain for authentication
+     * @param username the username for authentication
+     * @param password the password for authentication
      */
     public NtlmPasswordAuthenticator(String domain, String username, String password) {
         this(domain, username, password, AuthenticationType.USER);
@@ -102,9 +102,9 @@ public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal
     /**
      * Create username/password credentials with specified domain
      *
-     * @param domain
-     * @param username
-     * @param password
+     * @param domain the authentication domain
+     * @param username the username for authentication
+     * @param password the password for authentication
      * @param type
      *            authentication type
      */
@@ -138,7 +138,13 @@ public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal
     }
 
     /**
-     * @param userInfo
+     * Create authenticator from URL userInfo string
+     *
+     * @param userInfo the userInfo string from URL
+     * @param defDomain the default domain to use if not specified
+     * @param defUser the default username to use if not specified
+     * @param defPassword the default password to use if not specified
+     * @param type the authentication type to use
      */
     protected NtlmPasswordAuthenticator(String userInfo, String defDomain, String defUser, String defPassword, AuthenticationType type) {
         String dom = null, user = null, pass = null;
@@ -175,7 +181,9 @@ public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal
     }
 
     /**
-     * @return
+     * Guess the authentication type based on the username format
+     *
+     * @return the guessed authentication type
      */
     protected AuthenticationType guessAuthenticationType() {
         AuthenticationType t = AuthenticationType.USER;
@@ -271,6 +279,7 @@ public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal
     }
 
     /**
+     * Get the original specified user domain
      *
      * @return the original specified user domain
      */
@@ -395,7 +404,9 @@ public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal
     }
 
     /**
-     * @param mechanism
+     * Check if the given mechanism is preferred for this credential
+     *
+     * @param mechanism the mechanism to check
      * @return whether the given mechanism is the preferred one for this credential
      */
     public boolean isPreferredMech(ASN1ObjectIdentifier mechanism) {
@@ -405,10 +416,10 @@ public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal
     /**
      * Computes the 24 byte ANSI password hash given the 8 byte server challenge.
      *
-     * @param tc
-     * @param chlng
+     * @param tc the CIFS context
+     * @param chlng the server challenge
      * @return the hash for the given challenge
-     * @throws GeneralSecurityException
+     * @throws GeneralSecurityException if a security error occurs
      */
     public byte[] getAnsiHash(CIFSContext tc, byte[] chlng) throws GeneralSecurityException {
         switch (tc.getConfig().getLanManCompatibility()) {
@@ -433,10 +444,10 @@ public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal
     /**
      * Computes the 24 byte Unicode password hash given the 8 byte server challenge.
      *
-     * @param tc
-     * @param chlng
+     * @param tc the CIFS context
+     * @param chlng the server challenge
      * @return the hash for the given challenge
-     * @throws GeneralSecurityException
+     * @throws GeneralSecurityException if a security error occurs
      */
     public byte[] getUnicodeHash(CIFSContext tc, byte[] chlng) throws GeneralSecurityException {
         return switch (tc.getConfig().getLanManCompatibility()) {
@@ -447,11 +458,13 @@ public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal
     }
 
     /**
-     * @param tc
-     * @param chlng
+     * Get the signing key for this authentication
+     *
+     * @param tc the CIFS context
+     * @param chlng the server challenge
      * @return the signing key
-     * @throws SmbException
-     * @throws GeneralSecurityException
+     * @throws SmbException if an SMB error occurs
+     * @throws GeneralSecurityException if a security error occurs
      */
     public byte[] getSigningKey(CIFSContext tc, byte[] chlng) throws SmbException, GeneralSecurityException {
         switch (tc.getConfig().getLanManCompatibility()) {
@@ -478,7 +491,7 @@ public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal
     /**
      * Returns the effective user session key.
      *
-     * @param tc
+     * @param tc the CIFS context
      * @param chlng
      *            The server challenge.
      * @return A <code>byte[]</code> containing the effective user session key,
@@ -507,7 +520,7 @@ public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal
      * @param offset
      *            The offset in the destination array at which the
      *            session key will start.
-     * @throws SmbException
+     * @throws SmbException if an SMB error occurs
      */
     public void getUserSessionKey(CIFSContext tc, byte[] chlng, byte[] dest, int offset) throws SmbException {
         try {
@@ -552,7 +565,9 @@ public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal
     }
 
     /**
-     * @return
+     * Get the NT hash of the password
+     *
+     * @return the NT hash
      */
     protected byte[] getNTHash() {
         MessageDigest md4 = Crypto.getMD4();

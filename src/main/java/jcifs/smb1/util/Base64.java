@@ -18,7 +18,18 @@
 
 package jcifs.smb1.util;
 
+/**
+ * Utility class for Base64 encoding and decoding operations.
+ * Provides methods to convert between binary data and Base64 encoded strings.
+ */
 public class Base64 {
+
+    /**
+     * Private constructor to prevent instantiation of this utility class.
+     */
+    private Base64() {
+        // Utility class - not instantiable
+    }
 
     private static final String ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 

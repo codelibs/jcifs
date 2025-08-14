@@ -26,6 +26,9 @@ import java.io.StringWriter;
 import jcifs.smb1.smb1.WinError;
 import jcifs.smb1.util.Hexdump;
 
+/**
+ * DCE/RPC exception class for SMB1 compatibility
+ */
 public class DcerpcException extends IOException implements DcerpcError, WinError {
 
     static String getMessageByDcerpcError(final int errcode) {
@@ -55,19 +58,40 @@ public class DcerpcException extends IOException implements DcerpcError, WinErro
         this.error = error;
     }
 
+    /**
+     * Constructs a DcerpcException with the specified message
+     *
+     * @param msg the error message
+     */
     public DcerpcException(final String msg) {
         super(msg);
     }
 
+    /**
+     * Constructs a DcerpcException with the specified message and root cause
+     *
+     * @param msg the error message
+     * @param rootCause the underlying cause of this exception
+     */
     public DcerpcException(final String msg, final Throwable rootCause) {
         super(msg);
         this.rootCause = rootCause;
     }
 
+    /**
+     * Returns the DCE/RPC error code associated with this exception
+     *
+     * @return the error code
+     */
     public int getErrorCode() {
         return error;
     }
 
+    /**
+     * Returns the root cause of this exception
+     *
+     * @return the root cause throwable
+     */
     public Throwable getRootCause() {
         return rootCause;
     }

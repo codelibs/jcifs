@@ -31,79 +31,101 @@ public interface CommonServerMessageBlock extends Message {
     /**
      * Decode message data from the given byte array
      *
-     * @param buffer
-     * @param bufferIndex
+     * @param buffer the byte array containing the message data
+     * @param bufferIndex the starting index in the buffer
      * @return message length
-     * @throws SMBProtocolDecodingException
+     * @throws SMBProtocolDecodingException if decoding fails
      */
     int decode(byte[] buffer, int bufferIndex) throws SMBProtocolDecodingException;
 
     /**
-     * @param dst
-     * @param dstIndex
+     * Encodes this message into a byte array.
+     *
+     * @param dst the destination byte array
+     * @param dstIndex the starting index in the destination array
      * @return message length
      */
     int encode(byte[] dst, int dstIndex);
 
     /**
-     * @param digest
+     * Sets the signing digest for this message.
+     *
+     * @param digest the signing digest to set
      */
     void setDigest(SMBSigningDigest digest);
 
     /**
+     * Gets the signing digest for this message.
+     *
      * @return the signing digest
      */
     SMBSigningDigest getDigest();
 
     /**
+     * Gets the response associated with this message.
+     *
      * @return the associated response
      */
     CommonServerMessageBlockResponse getResponse();
 
     /**
+     * Sets the response for this message.
      *
-     * @param msg
+     * @param msg the response message to set
      */
     void setResponse(CommonServerMessageBlockResponse msg);
 
     /**
+     * Gets the message ID.
      *
      * @return the message id
      */
     long getMid();
 
     /**
-     * @param mid
+     * Sets the message ID.
+     *
+     * @param mid the message ID to set
      */
     void setMid(long mid);
 
     /**
+     * Gets the SMB command.
+     *
      * @return the command
      */
     int getCommand();
 
     /**
-     * @param command
+     * Sets the SMB command.
+     *
+     * @param command the command to set
      */
     void setCommand(int command);
 
     /**
-     * @param uid
+     * Sets the user ID.
+     *
+     * @param uid the user ID to set
      */
     void setUid(int uid);
 
     /**
-     * @param extendedSecurity
+     * Sets whether extended security is enabled.
+     *
+     * @param extendedSecurity true to enable extended security
      */
     void setExtendedSecurity(boolean extendedSecurity);
 
     /**
-     * @param sessionId
+     * Sets the session ID.
+     *
+     * @param sessionId the session ID to set
      */
     void setSessionId(long sessionId);
 
     /**
-     *
+     * Resets this message to its initial state.
      */
     void reset();
 

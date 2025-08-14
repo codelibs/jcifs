@@ -30,6 +30,13 @@ import java.io.PrintStream;
 
 public class Hexdump {
 
+    /**
+     * Default constructor.
+     */
+    public Hexdump() {
+        // Utility class - no instance variables to initialize
+    }
+
     private static final String NL = System.lineSeparator();
     private static final int NL_LENGTH = NL.length();
 
@@ -37,12 +44,14 @@ public class Hexdump {
             { ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
                     ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ' };
 
+    /**
+     * Array of hexadecimal digit characters used for converting binary data to hex representation.
+     */
     public static final char[] HEX_DIGITS = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
 
     /**
      * Generate "hexdump" output of the buffer at src like the following:
      *
-     * <p>
      * <pre>
      * 00000: 04 d2 29 00 00 01 00 00 00 00 00 01 20 45 47 46  |..)......... EGF|
      * 00010: 43 45 46 45 45 43 41 43 41 43 41 43 41 43 41 43  |CEFEECACACACACAC|
@@ -50,6 +59,11 @@ public class Hexdump {
      * 00030: 00 01 c0 0c 00 20 00 01 00 00 00 00 00 06 20 00  |..... ........ .|
      * 00040: ac 22 22 e1                                      |."".            |
      * </pre>
+     *
+     * @param ps the PrintStream to write the hexdump output to
+     * @param src the source byte array containing the data to dump
+     * @param srcIndex the starting index in the source array
+     * @param length the number of bytes to dump from the source array
      */
 
     public static void hexdump(final PrintStream ps, final byte[] src, final int srcIndex, final int length) {
@@ -105,6 +119,10 @@ public class Hexdump {
      * This is an alternative to the <code>java.lang.Integer.toHexString</code>
      * method. It is an efficient relative that also will pad the left side so
      * that the result is <code>size</code> digits.
+     *
+     * @param val the integer value to convert to hexadecimal
+     * @param size the desired length of the resulting hex string (will be left-padded with zeros)
+     * @return a hexadecimal string representation of the value, padded to the specified size
      */
     public static String toHexString(final int val, final int size) {
         final char[] c = new char[size];
@@ -112,12 +130,27 @@ public class Hexdump {
         return new String(c);
     }
 
+    /**
+     * Converts a long value to a hexadecimal string representation with specified padding.
+     *
+     * @param val the long value to convert to hexadecimal
+     * @param size the desired length of the resulting hex string (will be left-padded with zeros)
+     * @return a hexadecimal string representation of the value, padded to the specified size
+     */
     public static String toHexString(final long val, final int size) {
         final char[] c = new char[size];
         toHexChars(val, c, 0, size);
         return new String(c);
     }
 
+    /**
+     * Converts a byte array to a hexadecimal string representation.
+     *
+     * @param src the source byte array to convert
+     * @param srcIndex the starting index in the source array
+     * @param size the number of characters in the resulting hex string
+     * @return a hexadecimal string representation of the byte array
+     */
     public static String toHexString(final byte[] src, final int srcIndex, int size) {
         final char[] c = new char[size];
         size = size % 2 == 0 ? size / 2 : size / 2 + 1;
@@ -136,6 +169,11 @@ public class Hexdump {
      * This is the same as {@link jcifs.smb1.util.Hexdump#toHexString(int val, int
      * size)} but provides a more practical form when trying to avoid {@link
      * java.lang.String} concatenation and {@link java.lang.StringBuffer}.
+     *
+     * @param val the integer value to convert to hexadecimal characters
+     * @param dst the destination character array to write the hex digits into
+     * @param dstIndex the starting index in the destination array
+     * @param size the number of hex digits to write (will be left-padded with zeros)
      */
     public static void toHexChars(int val, final char dst[], final int dstIndex, int size) {
         while (size > 0) {
@@ -150,6 +188,14 @@ public class Hexdump {
         }
     }
 
+    /**
+     * Converts a long value to hexadecimal characters and writes them to the specified character array.
+     *
+     * @param val the long value to convert to hexadecimal characters
+     * @param dst the destination character array to write the hex digits into
+     * @param dstIndex the starting index in the destination array
+     * @param size the number of hex digits to write (will be left-padded with zeros)
+     */
     public static void toHexChars(long val, final char dst[], final int dstIndex, int size) {
         while (size > 0) {
             dst[dstIndex + size - 1] = HEX_DIGITS[(int) (val & 0x000FL)];

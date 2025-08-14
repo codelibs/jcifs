@@ -36,8 +36,9 @@ public class FsctlPipeWaitRequest implements Encodable {
     private final boolean timeoutSpecified;
 
     /**
-     * @param name
+     * Constructs a pipe wait request without timeout.
      *
+     * @param name the pipe name to wait for
      */
     public FsctlPipeWaitRequest(final String name) {
         this.nameBytes = name.getBytes(StandardCharsets.UTF_16LE);
@@ -46,9 +47,10 @@ public class FsctlPipeWaitRequest implements Encodable {
     }
 
     /**
-     * @param name
-     * @param timeout
+     * Constructs a pipe wait request with timeout.
      *
+     * @param name the pipe name to wait for
+     * @param timeout the timeout value in milliseconds
      */
     public FsctlPipeWaitRequest(final String name, final long timeout) {
         this.nameBytes = name.getBytes(StandardCharsets.UTF_16LE);

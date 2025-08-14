@@ -21,11 +21,26 @@ package jcifs.smb1.dcerpc.ndr;
 
 import java.io.IOException;
 
+/**
+ * Exception thrown when an error occurs during NDR encoding or decoding operations.
+ */
 public class NdrException extends IOException {
 
+    /**
+     * Error message for null reference pointers.
+     */
     public static final String NO_NULL_REF = "ref pointer cannot be null";
+
+    /**
+     * Error message for invalid array conformance.
+     */
     public static final String INVALID_CONFORMANCE = "invalid array conformance";
 
+    /**
+     * Constructs an NdrException with the specified error message.
+     *
+     * @param msg the error message
+     */
     public NdrException(final String msg) {
         super(msg);
     }

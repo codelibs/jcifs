@@ -28,12 +28,14 @@ import jcifs.internal.fscc.FileSystemInformation;
 public interface AllocInfo extends FileSystemInformation {
 
     /**
+     * Gets the total capacity of the allocation.
      *
      * @return total capacity
      */
     long getCapacity();
 
     /**
+     * Gets the free space available.
      *
      * @return free space
      */

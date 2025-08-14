@@ -47,8 +47,8 @@ public final class Crypto {
     }
 
     /**
-     *
-     * @return MD4 digest
+     * Get an MD4 message digest instance.
+     * @return MD4 digest instance
      */
     public static MessageDigest getMD4() {
         try {
@@ -59,8 +59,8 @@ public final class Crypto {
     }
 
     /**
-     *
-     * @return MD5 digest
+     * Get an MD5 message digest instance.
+     * @return MD5 digest instance
      */
     public static MessageDigest getMD5() {
         try {
@@ -71,7 +71,8 @@ public final class Crypto {
     }
 
     /**
-     * @return SHA512 digest
+     * Get a SHA-512 message digest instance.
+     * @return SHA512 digest instance
      */
     public static MessageDigest getSHA512() {
         try {
@@ -82,18 +83,18 @@ public final class Crypto {
     }
 
     /**
-     *
-     * @param key
-     * @return HMACT64 MAC
+     * Get an HMACT64 message authentication code instance.
+     * @param key the key for the HMACT64 MAC
+     * @return HMACT64 MAC instance
      */
     public static MessageDigest getHMACT64(final byte[] key) {
         return new HMACT64(key);
     }
 
     /**
-     *
-     * @param key
-     * @return RC4 cipher
+     * Get an RC4 cipher instance initialized with the specified key.
+     * @param key the encryption key
+     * @return RC4 cipher in encryption mode
      */
     public static Cipher getArcfour(final byte[] key) {
         try {
@@ -106,6 +107,8 @@ public final class Crypto {
     }
 
     /**
+     * Get a DES cipher in encryption mode
+     *
      * @param key
      *            7 or 8 byte DES key
      * @return DES cipher in encryption mode
@@ -161,7 +164,7 @@ public final class Crypto {
 
     /**
      * Initialize Provider Instance with customProvider
-     * @param customProvider
+     * @param customProvider the custom cryptographic provider to use
      * @throws CIFSUnsupportedCryptoException if Provider has already been initialized.
      */
     public static void initProvider(final Provider customProvider) throws CIFSUnsupportedCryptoException {

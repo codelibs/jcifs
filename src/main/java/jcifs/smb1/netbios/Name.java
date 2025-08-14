@@ -25,6 +25,10 @@ import java.nio.charset.Charset;
 import jcifs.smb1.Config;
 import jcifs.smb1.util.Hexdump;
 
+/**
+ * NetBIOS name representation for SMB1 protocol.
+ * This class represents a NetBIOS name with its associated type and scope.
+ */
 public class Name {
 
     private static final int TYPE_OFFSET = 31;
@@ -33,7 +37,11 @@ public class Name {
 
     static final String OEM_ENCODING = Config.getProperty("jcifs.smb1.encoding", Charset.defaultCharset().displayName());
 
-    public String name, scope;
+    /** The NetBIOS name (up to 15 characters) */
+    public String name;
+    /** The NetBIOS scope identifier */
+    public String scope;
+    /** The NetBIOS name type/suffix (hexadecimal code) */
     public int hexCode;
     int srcHashCode; /* srcHashCode must be set by name resolution
                       * routines before entry into addressCache
@@ -42,6 +50,13 @@ public class Name {
     Name() {
     }
 
+    /**
+     * Creates a NetBIOS name with the specified attributes.
+     *
+     * @param name the NetBIOS name (will be truncated to 15 characters if longer)
+     * @param hexCode the NetBIOS name type/suffix
+     * @param scope the NetBIOS scope identifier (uses default if null or empty)
+     */
     public Name(String name, final int hexCode, final String scope) {
         if (name.length() > 15) {
             name = name.substring(0, 15);

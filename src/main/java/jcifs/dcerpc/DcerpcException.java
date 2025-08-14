@@ -61,21 +61,29 @@ public class DcerpcException extends CIFSException implements DcerpcError, WinEr
     }
 
     /**
+     * Constructs a DcerpcException with the specified message
+     *
      * @param msg
+     *            the error message
      */
     public DcerpcException(final String msg) {
         super(msg);
     }
 
     /**
+     * Constructs a DcerpcException with the specified message and root cause
+     *
      * @param msg
+     *            the error message
      * @param rootCause
+     *            the underlying cause of this exception
      */
     public DcerpcException(final String msg, final Throwable rootCause) {
         super(msg, rootCause);
     }
 
     /**
+     * Returns the DCE/RPC error code associated with this exception
      *
      * @return the error code
      */

@@ -66,6 +66,10 @@ public class MD4 extends MessageDigest implements Cloneable {
     // Constructors
     //...........................................................................
 
+    /**
+     * Creates a new MD4 message digest instance.
+     * Initializes the digest with the MD4 algorithm parameters.
+     */
     public MD4() {
         super("MD4");
         engineReset();

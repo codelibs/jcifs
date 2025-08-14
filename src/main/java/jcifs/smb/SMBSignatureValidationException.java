@@ -18,6 +18,9 @@
 package jcifs.smb;
 
 /**
+ * Exception thrown when SMB message signature validation fails.
+ * Indicates that the integrity of an SMB message could not be verified.
+ *
  * @author mbechler
  *
  */

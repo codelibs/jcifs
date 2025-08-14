@@ -33,21 +33,21 @@ public interface DfsReferralDataInternal extends DfsReferralData {
     /**
      * Replaces the host with the given FQDN if it is currently unqualified
      *
-     * @param fqdn
+     * @param fqdn the fully qualified domain name to use
      */
     void fixupHost(String fqdn);
 
     /**
      * Possibly appends the given domain name to the host name if it is currently unqualified
      *
-     * @param domain
+     * @param domain the domain name to append
      */
     void fixupDomain(String domain);
 
     /**
      * Reduces path consumed by the given value
      *
-     * @param i
+     * @param i the number of characters to strip from path consumed
      */
     void stripPathConsumed(int i);
 
@@ -55,16 +55,21 @@ public interface DfsReferralDataInternal extends DfsReferralData {
     DfsReferralDataInternal next();
 
     /**
-     * @param link
+     * Set the UNC path link for this referral
+     *
+     * @param link the UNC path link to set
      */
     void setLink(String link);
 
     /**
+     * Get the cache key for this referral
+     *
      * @return cache key
      */
     String getKey();
 
     /**
+     * Set the cache key for this referral
      *
      * @param key
      *            cache key
@@ -72,7 +77,9 @@ public interface DfsReferralDataInternal extends DfsReferralData {
     void setKey(String key);
 
     /**
-     * @param map
+     * Set the cache map for this referral
+     *
+     * @param map the cache map to associate with this referral
      */
     void setCacheMap(Map<String, DfsReferralDataInternal> map);
 
@@ -89,18 +96,24 @@ public interface DfsReferralDataInternal extends DfsReferralData {
     boolean isResolveHashes();
 
     /**
+     * Check if this referral needs to be resolved further
+     *
      * @return whether this refrral needs to be resolved further
      */
     boolean isIntermediate();
 
     /**
-     * @param next
+     * Combine this referral with another to form a chain
+     *
+     * @param next the referral to combine with
      * @return new referral, combining a chain of referrals
      */
     DfsReferralDataInternal combine(DfsReferralData next);
 
     /**
-     * @param dr
+     * Append another referral to this referral chain
+     *
+     * @param dr the referral to append
      */
     void append(DfsReferralDataInternal dr);
 }

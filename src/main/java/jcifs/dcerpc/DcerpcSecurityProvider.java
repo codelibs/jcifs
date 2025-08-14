@@ -27,16 +27,16 @@ import jcifs.dcerpc.ndr.NdrBuffer;
 public interface DcerpcSecurityProvider {
 
     /**
-     *
-     * @param outgoing
-     * @throws DcerpcException
+     * Wraps outgoing DCERPC message data for security protection
+     * @param outgoing the buffer containing data to be wrapped
+     * @throws DcerpcException if the wrapping operation fails
      */
     void wrap(NdrBuffer outgoing) throws DcerpcException;
 
     /**
-     *
-     * @param incoming
-     * @throws DcerpcException
+     * Unwraps incoming DCERPC message data after security processing
+     * @param incoming the buffer containing data to be unwrapped
+     * @throws DcerpcException if the unwrapping operation fails
      */
     void unwrap(NdrBuffer incoming) throws DcerpcException;
 }

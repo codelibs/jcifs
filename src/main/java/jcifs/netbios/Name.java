@@ -81,11 +81,12 @@ public class Name implements NetbiosName {
     }
 
     /**
+     * Constructs a NetBIOS name with the specified parameters.
      *
-     * @param cfg
-     * @param name
-     * @param hexCode
-     * @param scope
+     * @param cfg the configuration to use
+     * @param name the NetBIOS name (will be truncated to 15 characters if longer)
+     * @param hexCode the NetBIOS name type code
+     * @param scope the NetBIOS scope identifier
      */
     public Name(final Configuration cfg, String name, final int hexCode, final String scope) {
         this.config = cfg;
@@ -99,8 +100,10 @@ public class Name implements NetbiosName {
     }
 
     /**
-     * @param cfg
-     * @param name
+     * Constructs a Name from a NetbiosName.
+     *
+     * @param cfg the configuration to use
+     * @param name the NetbiosName to copy from
      */
     public Name(final Configuration cfg, final NetbiosName name) {
         this.config = cfg;
@@ -113,6 +116,7 @@ public class Name implements NetbiosName {
     }
 
     /**
+     * Checks if this represents an unknown address.
      *
      * @return whether this is the unknown address
      */

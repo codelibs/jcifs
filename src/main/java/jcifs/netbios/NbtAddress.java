@@ -400,7 +400,7 @@ public final class NbtAddress implements NetbiosAddress {
      * To convert this address to an <code>InetAddress</code>.
      *
      * @return the {@link java.net.InetAddress} representation of this address.
-     * @throws UnknownHostException
+     * @throws UnknownHostException if the address cannot be resolved
      */
 
     public InetAddress getInetAddress() throws UnknownHostException {

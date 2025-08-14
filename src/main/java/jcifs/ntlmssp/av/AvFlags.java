@@ -28,22 +28,23 @@ import jcifs.internal.util.SMBUtil;
 public class AvFlags extends AvPair {
 
     /**
-     * @param raw
+     * Constructs an AV flags pair from raw bytes
+     * @param raw the raw flag bytes
      */
     public AvFlags(final byte[] raw) {
         super(AvPair.MsvAvFlags, raw);
     }
 
     /**
-     *
-     * @param flags
+     * Constructs an AV flags pair from integer flags
+     * @param flags the flag values as integer
      */
     public AvFlags(final int flags) {
         this(encode(flags));
     }
 
     /**
-     *
+     * Gets the flags as an integer value
      * @return flags
      */
     public int getFlags() {

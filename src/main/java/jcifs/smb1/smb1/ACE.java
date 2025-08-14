@@ -46,29 +46,59 @@ import jcifs.smb1.util.Hexdump;
 
 public class ACE {
 
+    /**
+     * Default constructor for ACE
+     */
+    public ACE() {
+        // Default constructor
+    }
+
+    /** Permission to read data from a file or list directory contents */
     public static final int FILE_READ_DATA = 0x00000001; // 1
+    /** Permission to write data to a file or add files to a directory */
     public static final int FILE_WRITE_DATA = 0x00000002; // 2
+    /** Permission to append data to a file or add subdirectories */
     public static final int FILE_APPEND_DATA = 0x00000004; // 3
+    /** Permission to read extended attributes */
     public static final int FILE_READ_EA = 0x00000008; // 4
+    /** Permission to write extended attributes */
     public static final int FILE_WRITE_EA = 0x00000010; // 5
+    /** Permission to execute a file or traverse a directory */
     public static final int FILE_EXECUTE = 0x00000020; // 6
+    /** Permission to delete a file or directory */
     public static final int FILE_DELETE = 0x00000040; // 7
+    /** Permission to read file attributes */
     public static final int FILE_READ_ATTRIBUTES = 0x00000080; // 8
+    /** Permission to write file attributes */
     public static final int FILE_WRITE_ATTRIBUTES = 0x00000100; // 9
+    /** Standard delete permission */
     public static final int DELETE = 0x00010000; // 16
+    /** Permission to read the security descriptor */
     public static final int READ_CONTROL = 0x00020000; // 17
+    /** Permission to write the discretionary access control list */
     public static final int WRITE_DAC = 0x00040000; // 18
+    /** Permission to change the owner in the security descriptor */
     public static final int WRITE_OWNER = 0x00080000; // 19
+    /** Permission to synchronize with the file */
     public static final int SYNCHRONIZE = 0x00100000; // 20
+    /** Generic all permissions */
     public static final int GENERIC_ALL = 0x10000000; // 28
+    /** Generic execute permission */
     public static final int GENERIC_EXECUTE = 0x20000000; // 29
+    /** Generic write permission */
     public static final int GENERIC_WRITE = 0x40000000; // 30
+    /** Generic read permission */
     public static final int GENERIC_READ = 0x80000000; // 31
 
+    /** Inheritance flag: child objects inherit this ACE */
     public static final int FLAGS_OBJECT_INHERIT = 0x01;
+    /** Inheritance flag: child containers inherit this ACE */
     public static final int FLAGS_CONTAINER_INHERIT = 0x02;
+    /** Inheritance flag: inheritance stops after one level */
     public static final int FLAGS_NO_PROPAGATE = 0x04;
+    /** Inheritance flag: ACE applies only to children, not to the object itself */
     public static final int FLAGS_INHERIT_ONLY = 0x08;
+    /** Inheritance flag: ACE was inherited from parent */
     public static final int FLAGS_INHERITED = 0x10;
 
     boolean allow;
@@ -78,6 +108,7 @@ public class ACE {
 
     /**
      * Returns true if this ACE is an allow ACE and false if it is a deny ACE.
+     * @return true if this is an allow ACE, false if it is a deny ACE
      */
     public boolean isAllow() {
         return allow;
@@ -90,6 +121,7 @@ public class ACE {
      * not be set within all security descriptors even though the ACE was in
      * face inherited. If an inherited ACE is added to a parent the Windows
      * ACL editor will rebuild all children ACEs and set this flag accordingly.
+     * @return true if this ACE is inherited, false if it is direct
      */
     public boolean isInherited() {
         return (flags & FLAGS_INHERITED) != 0;
@@ -98,6 +130,7 @@ public class ACE {
     /**
      * Returns the flags for this ACE. The <code>isInherited()</code>
      * method checks the <code>FLAGS_INHERITED</code> bit in these flags.
+     * @return the ACE flags
      */
     public int getFlags() {
         return flags;
@@ -107,6 +140,7 @@ public class ACE {
      * Returns the 'Apply To' text for inheritance of ACEs on
      * directories such as 'This folder, subfolder and files'. For
      * files the text is always 'This object only'.
+     * @return the text describing what this ACE applies to
      */
     public String getApplyToText() {
         switch (flags & (FLAGS_OBJECT_INHERIT | FLAGS_CONTAINER_INHERIT | FLAGS_INHERIT_ONLY)) {
@@ -133,6 +167,7 @@ public class ACE {
      * constants for <code>FILE_READ_DATA</code>, <code>FILE_WRITE_DATA</code>,
      * <code>READ_CONTROL</code>, <code>GENERIC_ALL</code>, etc with bitwise
      * operators to determine which bits of the mask are on or off.
+     * @return the access mask for this ACE
      */
     public int getAccessMask() {
         return access;
@@ -140,6 +175,7 @@ public class ACE {
 
     /**
      * Return the SID associated with this ACE.
+     * @return the SID for this ACE
      */
     public SID getSID() {
         return sid;

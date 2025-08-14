@@ -24,6 +24,9 @@ import jcifs.internal.CommonServerMessageBlockResponse;
 import jcifs.internal.Request;
 
 /**
+ * Internal SMB tree connection interface providing extended tree management capabilities.
+ * Defines methods for internal tree operations and resource management.
+ *
  * @author mbechler
  *
  * <p>This interface is intended for internal use.</p>

@@ -17,56 +17,65 @@
 package jcifs.smb;
 
 /**
- *
- *
+ * Interface representing a file entry in an SMB directory listing.
+ * Provides access to file metadata and attributes.
  *
  */
 public interface FileEntry {
 
     /**
+     * Gets the file name.
      *
      * @return the file name
      */
     String getName();
 
     /**
+     * Gets the file type.
      *
      * @return the file type
      */
     int getType();
 
     /**
+     * Gets the file attributes.
      *
      * @return the file attributes
      */
     int getAttributes();
 
     /**
+     * Gets the file creation time.
      *
-     * @return the creation time
+     * @return the creation time in milliseconds since epoch
      */
     long createTime();
 
     /**
+     * Gets the last modified time.
      *
-     * @return the last modified time
+     * @return the last modified time in milliseconds since epoch
      */
     long lastModified();
 
     /**
+     * Gets the last access time.
      *
-     * @return the last access time
+     * @return the last access time in milliseconds since epoch
      */
     long lastAccess();
 
     /**
+     * Gets the file size.
      *
-     * @return the file size
+     * @return the file size in bytes
      */
     long length();
 
     /**
-     * @return the file index inside the parent
+     * Gets the file index.
+     *
+     * @return the file index inside the parent directory
      */
     int getFileIndex();
 }

@@ -30,39 +30,39 @@ public class TransportException extends CIFSException {
     private static final long serialVersionUID = 3743631204022885618L;
 
     /**
-     *
+     * Constructs a new TransportException with no detail message.
      */
     public TransportException() {
     }
 
     /**
-     *
-     * @param msg
+     * Constructs a new TransportException with the specified detail message.
+     * @param msg the detail message
      */
     public TransportException(final String msg) {
         super(msg);
     }
 
     /**
-     *
-     * @param rootCause
+     * Constructs a new TransportException with the specified cause.
+     * @param rootCause the cause of this exception
      */
     public TransportException(final Throwable rootCause) {
         super(rootCause);
     }
 
     /**
-     *
-     * @param msg
-     * @param rootCause
+     * Constructs a new TransportException with the specified detail message and cause.
+     * @param msg the detail message
+     * @param rootCause the cause of this exception
      */
     public TransportException(final String msg, final Throwable rootCause) {
         super(msg, rootCause);
     }
 
     /**
-     *
-     * @return root cause
+     * Gets the root cause of this exception.
+     * @return root cause of this exception
      */
     @Deprecated
     public Throwable getRootCause() {

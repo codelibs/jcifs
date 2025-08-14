@@ -38,14 +38,14 @@ public abstract class AbstractCIFSContext extends Thread implements CIFSContext 
     private boolean closed;
 
     /**
-     *
+     * Default constructor that registers a shutdown hook for cleanup
      */
     public AbstractCIFSContext() {
         Runtime.getRuntime().addShutdownHook(this);
     }
 
     /**
-     * @param creds
+     * @param creds the credentials to use
      * @return a wrapped context with the given credentials
      */
     @Override
@@ -105,7 +105,9 @@ public abstract class AbstractCIFSContext extends Thread implements CIFSContext 
     }
 
     /**
-     * @return
+     * Gets the default credentials for this context.
+     *
+     * @return the default credentials for this context
      */
     protected abstract Credentials getDefaultCredentials();
 

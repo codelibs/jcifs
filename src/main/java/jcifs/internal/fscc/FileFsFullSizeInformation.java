@@ -35,6 +35,12 @@ public class FileFsFullSizeInformation implements AllocInfo, FileSystemInformati
     private int bytesPerSect;
 
     /**
+     * Default constructor for decoding file system full size information.
+     */
+    public FileFsFullSizeInformation() {
+    }
+
+    /**
      * {@inheritDoc}
      *
      * @see jcifs.internal.fscc.FileSystemInformation#getFileSystemInformationClass()

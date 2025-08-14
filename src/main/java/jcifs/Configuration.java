@@ -34,6 +34,7 @@ import java.util.TimeZone;
 public interface Configuration {
 
     /**
+     * Gets the secure random number generator for cryptographic operations
      *
      * @return random source to use
      */
@@ -389,7 +390,7 @@ public interface Configuration {
     int getNetbiosSoTimeout();
 
     /**
-     *
+     * Gets the virtual circuit number for SMB connections
      *
      * @return virtual circuit number to use
      */
@@ -429,11 +430,15 @@ public interface Configuration {
     String getOemEncoding();
 
     /**
+     * Gets the local timezone for time-related operations
+     *
      * @return local timezone
      */
     TimeZone getLocalTimezone();
 
     /**
+     * Gets the process ID to use in SMB messages
+     *
      * @return Process id to send, randomized if unset
      */
     int getPid();
@@ -548,6 +553,7 @@ public interface Configuration {
     int getNetbiosCachePolicy();
 
     /**
+     * Gets the maximum buffer size for IO operations
      *
      * @return the maximum size of IO buffers, limits the maximum message size
      */
@@ -604,7 +610,9 @@ public interface Configuration {
     boolean isIgnoreCopyToException();
 
     /**
-     * @param cmd
+     * Gets the batch limit for a specific SMB command
+     *
+     * @param cmd the SMB command name
      * @return the batch limit for the given command
      */
     int getBatchLimit(String cmd);
@@ -648,7 +656,9 @@ public interface Configuration {
     boolean isTraceResourceUsage();
 
     /**
-     * @param command
+     * Checks if compound requests are allowed for the specified command
+     *
+     * @param command the SMB command to check
      * @return whether to allow creating compound requests with that command
      */
     boolean isAllowCompound(String command);

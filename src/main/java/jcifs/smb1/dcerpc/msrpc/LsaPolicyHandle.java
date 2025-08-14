@@ -25,10 +25,21 @@ import jcifs.smb1.dcerpc.DcerpcHandle;
 import jcifs.smb1.dcerpc.rpc;
 import jcifs.smb1.smb1.SmbException;
 
+/**
+ * LSA policy handle for Local Security Authority operations.
+ */
 public class LsaPolicyHandle extends rpc.policy_handle {
 
     DcerpcHandle handle;
 
+    /**
+     * Constructs an LSA policy handle.
+     *
+     * @param handle the DCERPC handle
+     * @param server the server name
+     * @param access the access rights
+     * @throws IOException if an I/O error occurs
+     */
     public LsaPolicyHandle(final DcerpcHandle handle, String server, final int access) throws IOException {
         this.handle = handle;
         if (server == null) {
@@ -41,6 +52,11 @@ public class LsaPolicyHandle extends rpc.policy_handle {
         }
     }
 
+    /**
+     * Closes the LSA policy handle.
+     *
+     * @throws IOException if an I/O error occurs
+     */
     public void close() throws IOException {
         final MsrpcLsarClose rpc = new MsrpcLsarClose(this);
         handle.sendrecv(rpc);

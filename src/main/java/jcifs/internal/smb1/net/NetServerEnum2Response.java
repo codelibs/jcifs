@@ -106,14 +106,16 @@ public class NetServerEnum2Response extends SmbComTransactionResponse {
     private String lastName;
 
     /**
-     *
+     * Constructs a NetServerEnum2Response
      * @param config
+     *            the configuration to use
      */
     public NetServerEnum2Response(final Configuration config) {
         super(config);
     }
 
     /**
+     * Gets the last server name from the enumeration
      * @return the lastName
      */
     public final String getLastName() {

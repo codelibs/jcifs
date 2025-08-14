@@ -34,8 +34,9 @@ public class NetShareEnum extends SmbComTransaction {
     private static final String DESCR = "WrLeh\u0000B13BWz\u0000";
 
     /**
-     *
+     * Constructs a NetShareEnum request
      * @param config
+     *            the configuration to use
      */
     public NetShareEnum(final Configuration config) {
         super(config, SMB_COM_TRANSACTION, NET_SHARE_ENUM);

@@ -20,21 +20,36 @@ package jcifs.smb1.smb1;
 
 import java.util.Map;
 
+/**
+ * Represents a DFS (Distributed File System) referral in SMB1 protocol.
+ * This class extends SmbException to provide DFS referral information when a DFS path is encountered.
+ */
 public class DfsReferral extends SmbException {
 
+    /** Number of characters consumed from the path */
     public int pathConsumed;
+    /** Time to live for this referral in seconds */
     public long ttl;
+    /** Target server for this referral */
     public String server; // Server
+    /** Target share for this referral */
     public String share; // Share
+    /** The complete UNC path link */
     public String link;
+    /** Path relative to tree from which this referral was thrown */
     public String path; // Path relative to tree from which this referral was thrown
+    /** Whether to resolve hashes in the path */
     public boolean resolveHashes;
+    /** Expiration time for this referral entry */
     public long expiration;
 
     DfsReferral next;
     Map map;
     String key = null;
 
+    /**
+     * Constructs a new DfsReferral instance
+     */
     public DfsReferral() {
         this.next = this;
     }

@@ -164,6 +164,8 @@ public class Kerb5Authenticator extends NtlmPasswordAuthenticator {
     }
 
     /**
+     * Set the Kerberos subject
+     *
      * @param subject
      *            the subject to set
      */
@@ -187,8 +189,8 @@ public class Kerb5Authenticator extends NtlmPasswordAuthenticator {
     /**
      * Clone the context
      *
-     * @param to
-     * @param from
+     * @param to the target authenticator
+     * @param from the source authenticator
      */
     public static void cloneInternal(Kerb5Authenticator to, Kerb5Authenticator from) {
         NtlmPasswordAuthenticator.cloneInternal(to, from);
@@ -215,6 +217,8 @@ public class Kerb5Authenticator extends NtlmPasswordAuthenticator {
     }
 
     /**
+     * Set the Kerberos realm
+     *
      * @param realm
      *            the realm to set
      */
@@ -223,6 +227,7 @@ public class Kerb5Authenticator extends NtlmPasswordAuthenticator {
     }
 
     /**
+     * Get the Kerberos realm
      *
      * @return the kerberos realm
      */

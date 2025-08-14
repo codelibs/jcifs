@@ -82,8 +82,9 @@ public class DfsImpl implements DfsResolver {
     private final Object referralsLock = new Object();
 
     /**
-     * @param tc
+     * Constructs a DFS resolver implementation
      *
+     * @param tc the CIFS context containing configuration
      */
     public DfsImpl(final CIFSContext tc) {
     }
@@ -269,6 +270,19 @@ public class DfsImpl implements DfsResolver {
         return null;
     }
 
+    /**
+     * Get a DFS referral for the specified target
+     *
+     * @param tf the CIFS context
+     * @param trans the SMB transport
+     * @param target the target path
+     * @param targetDomain the target domain
+     * @param targetHost the target host
+     * @param root the DFS root
+     * @param path the DFS path
+     * @return the DFS referral data or null if not found
+     * @throws SmbAuthException if authentication fails
+     */
     protected DfsReferralDataInternal getReferral(final CIFSContext tf, final SmbTransportInternal trans, final String target,
             final String targetDomain, final String targetHost, final String root, final String path) throws SmbAuthException {
         if (tf.getConfig().isDfsDisabled()) {

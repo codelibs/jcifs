@@ -26,6 +26,14 @@ package jcifs;
 public class EmptyIterator implements CloseableIterator<SmbResource> {
 
     /**
+     * Default constructor for EmptyIterator.
+     * Creates an empty iterator with no elements.
+     */
+    public EmptyIterator() {
+        // Default constructor
+    }
+
+    /**
      * {@inheritDoc}
      *
      * @see java.util.Iterator#hasNext()

@@ -25,11 +25,22 @@ import jcifs.dcerpc.DcerpcHandle;
 import jcifs.dcerpc.rpc;
 import jcifs.smb.SmbException;
 
+/**
+ * LSA policy handle for Local Security Authority operations.
+ */
 public class LsaPolicyHandle extends rpc.policy_handle implements AutoCloseable {
 
     private final DcerpcHandle handle;
     private boolean opened;
 
+    /**
+     * Constructs an LSA policy handle.
+     *
+     * @param handle the DCERPC handle
+     * @param server the server name
+     * @param access the access rights
+     * @throws IOException if an I/O error occurs
+     */
     public LsaPolicyHandle(final DcerpcHandle handle, String server, final int access) throws IOException {
         this.handle = handle;
         if (server == null) {

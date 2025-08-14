@@ -22,6 +22,9 @@ import jcifs.internal.SMBProtocolDecodingException;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * Response structure for SMB2 IOCTL pipe peek operation.
+ * Provides information about data available in a named pipe.
+ *
  * @author svella
  *
  */

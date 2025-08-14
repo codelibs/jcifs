@@ -20,8 +20,20 @@ package jcifs.smb1.dcerpc.msrpc;
 
 import jcifs.smb1.dcerpc.ndr.NdrObject;
 
+/**
+ * MSRPC implementation for querying LSA policy information.
+ * This class provides functionality to retrieve information about
+ * LSA policy settings using the LSA RPC interface.
+ */
 public class MsrpcQueryInformationPolicy extends lsarpc.LsarQueryInformationPolicy {
 
+    /**
+     * Creates a new request to query LSA policy information.
+     *
+     * @param policyHandle the LSA policy handle
+     * @param level the information level to query
+     * @param info the object to store the query results
+     */
     public MsrpcQueryInformationPolicy(final LsaPolicyHandle policyHandle, final short level, final NdrObject info) {
         super(policyHandle, level, info);
         ptype = 0;

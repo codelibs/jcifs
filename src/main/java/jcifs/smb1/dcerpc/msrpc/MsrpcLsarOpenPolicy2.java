@@ -19,8 +19,20 @@
 
 package jcifs.smb1.dcerpc.msrpc;
 
+/**
+ * MSRPC implementation for opening an LSA policy handle.
+ * This class provides functionality to open a handle to the LSA policy
+ * database on a remote server using the LSA RPC interface.
+ */
 public class MsrpcLsarOpenPolicy2 extends lsarpc.LsarOpenPolicy2 {
 
+    /**
+     * Creates a new request to open an LSA policy handle.
+     *
+     * @param server the server name to connect to
+     * @param access the desired access rights
+     * @param policyHandle the policy handle to be populated
+     */
     public MsrpcLsarOpenPolicy2(final String server, final int access, final LsaPolicyHandle policyHandle) {
         super(server, new lsarpc.LsarObjectAttributes(), access, policyHandle);
         object_attributes.length = 24;

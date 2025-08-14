@@ -29,7 +29,8 @@ import jcifs.Decodable;
 public interface CreateContextResponse extends Decodable {
 
     /**
-     * @return context name
+     * Get the name of this create context.
+     * @return context name as byte array
      */
     byte[] getName();
 }

@@ -19,5 +19,12 @@
 package jcifs.smb1.smb1;
 
 public interface SmbFileFilter {
+    /**
+     * Tests whether the specified SMB file should be included in a file list.
+     *
+     * @param file the SMB file to test for inclusion
+     * @return true if the file should be included, false otherwise
+     * @throws SmbException if an error occurs while accessing the file
+     */
     boolean accept(SmbFile file) throws SmbException;
 }

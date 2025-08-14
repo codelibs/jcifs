@@ -22,8 +22,18 @@ import jcifs.dcerpc.ndr.NdrLong;
 import jcifs.internal.smb1.net.SmbShareInfo;
 import jcifs.smb.FileEntry;
 
+/**
+ * MSRPC implementation for enumerating DFS roots.
+ * This class provides functionality to enumerate Distributed File System (DFS)
+ * roots on a server using the NetDFS RPC interface.
+ */
 public class MsrpcDfsRootEnum extends netdfs.NetrDfsEnumEx {
 
+    /**
+     * Creates a new DFS root enumeration request for the specified server.
+     *
+     * @param server the server name to enumerate DFS roots from
+     */
     public MsrpcDfsRootEnum(final String server) {
         super(server, 200, 0xFFFF, new netdfs.DfsEnumStruct(), new NdrLong(0));
         this.info.level = this.level;
@@ -32,6 +42,11 @@ public class MsrpcDfsRootEnum extends netdfs.NetrDfsEnumEx {
         this.flags = DCERPC_FIRST_FRAG | DCERPC_LAST_FRAG;
     }
 
+    /**
+     * Returns the DFS root entries retrieved from the enumeration.
+     *
+     * @return an array of FileEntry objects representing the DFS roots
+     */
     public FileEntry[] getEntries() {
         final netdfs.DfsEnumArray200 a200 = (netdfs.DfsEnumArray200) this.info.e;
         final SmbShareInfo[] entries = new SmbShareInfo[a200.count];

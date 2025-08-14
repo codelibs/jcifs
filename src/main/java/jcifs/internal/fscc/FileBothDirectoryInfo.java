@@ -50,9 +50,10 @@ public class FileBothDirectoryInfo implements FileEntry, Decodable {
     private final boolean unicode;
 
     /**
-     * @param config
-     * @param unicode
+     * Constructs a file both directory info.
      *
+     * @param config the configuration
+     * @param unicode whether to use unicode encoding
      */
     public FileBothDirectoryInfo(final Configuration config, final boolean unicode) {
         this.config = config;
@@ -78,6 +79,8 @@ public class FileBothDirectoryInfo implements FileEntry, Decodable {
     }
 
     /**
+     * Gets the filename.
+     *
      * @return the filename
      */
     public String getFilename() {
@@ -110,7 +113,9 @@ public class FileBothDirectoryInfo implements FileEntry, Decodable {
     }
 
     /**
-     * @return the nextEntryOffset
+     * Gets the offset to the next entry.
+     *
+     * @return the next entry offset in bytes
      */
     public int getNextEntryOffset() {
         return this.nextEntryOffset;

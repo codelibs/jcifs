@@ -18,6 +18,9 @@
 package jcifs.smb;
 
 /**
+ * Exception thrown when an unsupported SMB operation is attempted.
+ * Indicates that the requested operation is not supported by the SMB server or protocol version.
+ *
  * @author mbechler
  *
  */

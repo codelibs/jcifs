@@ -37,17 +37,19 @@ public class FileBasicInfo implements BasicFileInformation {
     private int attributes;
 
     /**
-     *
+     * Default constructor for decoding.
      */
     public FileBasicInfo() {
     }
 
     /**
-     * @param create
-     * @param lastAccess
-     * @param lastWrite
-     * @param change
-     * @param attributes
+     * Constructs file basic information.
+     *
+     * @param create file creation time
+     * @param lastAccess last access time
+     * @param lastWrite last write time
+     * @param change last change time
+     * @param attributes file attributes
      */
     public FileBasicInfo(final long create, final long lastAccess, final long lastWrite, final long change, final int attributes) {
         this.createTime = create;

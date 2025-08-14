@@ -19,10 +19,21 @@
 
 package jcifs.dcerpc.ndr;
 
+/**
+ * Represents an NDR small integer (1 byte unsigned) for DCE/RPC communication.
+ * This class encapsulates a single byte value (0-255) in NDR format.
+ */
 public class NdrSmall extends NdrObject {
 
+    /**
+     * The small integer value (0-255)
+     */
     public int value;
 
+    /**
+     * Constructs an NdrSmall with the specified value
+     * @param value the small integer value (will be masked to 0-255 range)
+     */
     public NdrSmall(final int value) {
         this.value = value & 0xFF;
     }

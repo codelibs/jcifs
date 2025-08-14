@@ -35,8 +35,10 @@ public class DfsReferralRequestBuffer implements Encodable {
     private final String path;
 
     /**
-     * @param filename
-     * @param maxReferralLevel
+     * Constructs a DFS referral request buffer
+     *
+     * @param filename the DFS path to request referral for
+     * @param maxReferralLevel the maximum referral level to request
      */
     public DfsReferralRequestBuffer(final String filename, final int maxReferralLevel) {
         this.path = filename;

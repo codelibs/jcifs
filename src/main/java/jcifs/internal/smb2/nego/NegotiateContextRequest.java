@@ -30,8 +30,9 @@ import jcifs.Encodable;
 public interface NegotiateContextRequest extends Encodable {
 
     /**
+     * Gets the negotiate context type.
      *
-     * @return context type
+     * @return the SMB2 negotiate context type
      */
     int getContextType();
 }

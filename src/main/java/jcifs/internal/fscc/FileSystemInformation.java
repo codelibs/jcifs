@@ -29,20 +29,21 @@ import jcifs.Decodable;
 public interface FileSystemInformation extends Decodable {
 
     /**
-     *
+     * SMB information allocation constant.
      */
     byte SMB_INFO_ALLOCATION = -1;
 
     /**
-     *
+     * File system size information constant.
      */
     byte FS_SIZE_INFO = 3;
     /**
-     *
+     * File system full size information constant.
      */
     byte FS_FULL_SIZE_INFO = 7;
 
     /**
+     * Gets the file system information class.
      *
      * @return file system information class
      */

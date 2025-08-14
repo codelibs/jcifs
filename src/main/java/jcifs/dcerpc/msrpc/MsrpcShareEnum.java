@@ -22,6 +22,11 @@ package jcifs.dcerpc.msrpc;
 import jcifs.internal.smb1.net.SmbShareInfo;
 import jcifs.smb.FileEntry;
 
+/**
+ * MSRPC implementation for enumerating shares.
+ * This class provides functionality to enumerate shared resources
+ * on a server using the Server Service RPC interface.
+ */
 public class MsrpcShareEnum extends srvsvc.ShareEnumAll {
 
     class MsrpcShareInfo1 extends SmbShareInfo {
@@ -33,12 +38,22 @@ public class MsrpcShareEnum extends srvsvc.ShareEnumAll {
         }
     }
 
+    /**
+     * Creates a new request to enumerate shares on a server.
+     *
+     * @param server the server name to enumerate shares from
+     */
     public MsrpcShareEnum(final String server) {
         super("\\\\" + server, 1, new srvsvc.ShareInfoCtr1(), -1, 0, 0);
         this.ptype = 0;
         this.flags = DCERPC_FIRST_FRAG | DCERPC_LAST_FRAG;
     }
 
+    /**
+     * Returns the share entries retrieved from the enumeration.
+     *
+     * @return an array of FileEntry objects representing the shares
+     */
     public FileEntry[] getEntries() {
         /*
          * The ShareInfo1 class does not implement the FileEntry

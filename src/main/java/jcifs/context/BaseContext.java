@@ -86,7 +86,7 @@ public class BaseContext extends AbstractCIFSContext {
     /**
      * {@inheritDoc}
      *
-     * @throws CIFSException
+     * @throws CIFSException if the URL is malformed or there is an error creating the SMB resource
      *
      * @see jcifs.CIFSContext#get(java.lang.String)
      */

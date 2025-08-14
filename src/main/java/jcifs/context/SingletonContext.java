@@ -44,8 +44,8 @@ public class SingletonContext extends BaseContext implements CIFSContext {
      *
      * This method can only be called once.
      *
-     * @param props
-     * @throws CIFSException
+     * @param props the properties to use for initialization
+     * @throws CIFSException if the singleton context is already initialized or there is an error during initialization
      */
     public static synchronized final void init(final Properties props) throws CIFSException {
         if (INSTANCE != null) {

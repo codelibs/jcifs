@@ -20,6 +20,9 @@ package jcifs.smb;
 import jcifs.CIFSException;
 
 /**
+ * Exception thrown when an SMB protocol downgrade attack is detected.
+ * Indicates that the negotiated protocol version is lower than expected or required.
+ *
  * @author mbechler
  *
  */

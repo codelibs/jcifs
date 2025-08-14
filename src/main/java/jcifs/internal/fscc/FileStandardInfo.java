@@ -33,6 +33,12 @@ public class FileStandardInfo implements BasicFileInformation {
     private boolean deletePending;
     private boolean directory;
 
+    /**
+     * Default constructor for decoding file standard information.
+     */
+    public FileStandardInfo() {
+    }
+
     @Override
     public byte getFileInformationLevel() {
         return FILE_STANDARD_INFO;

@@ -19,12 +19,20 @@
 package jcifs.smb;
 
 /**
- *
+ * File filter implementation for DOS-style wildcards and attributes.
+ * Supports filtering files based on DOS wildcards and file attributes.
  *
  */
 public class DosFileFilter implements SmbFileFilter {
 
+    /**
+     * The wildcard pattern for filtering file names.
+     */
     protected String wildcard;
+
+    /**
+     * The DOS file attributes to filter on.
+     */
     protected int attributes;
 
     /**
@@ -33,8 +41,8 @@ public class DosFileFilter implements SmbFileFilter {
      * filtering there (although attributes are largely ignored by servers
      * they are filtered locally by the default accept method).
      *
-     * @param wildcard
-     * @param attributes
+     * @param wildcard the wildcard pattern for matching file names (e.g., "*.txt")
+     * @param attributes the DOS file attributes to match (e.g., ATTR_DIRECTORY)
      */
     public DosFileFilter(final String wildcard, final int attributes) {
         this.wildcard = wildcard;

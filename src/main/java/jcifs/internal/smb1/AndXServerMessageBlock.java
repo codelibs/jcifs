@@ -46,6 +46,13 @@ public abstract class AndXServerMessageBlock extends ServerMessageBlock {
 
     private ServerMessageBlock andx;
 
+    /**
+     * Constructs an AndX message block with full parameters
+     * @param config the configuration
+     * @param command the SMB command
+     * @param name the name parameter
+     * @param andx the chained command
+     */
     protected AndXServerMessageBlock(final Configuration config, final byte command, final String name, final ServerMessageBlock andx) {
         super(config, command, name);
         this.andx = andx;
@@ -54,10 +61,21 @@ public abstract class AndXServerMessageBlock extends ServerMessageBlock {
         }
     }
 
+    /**
+     * Constructs an AndX message block with configuration and command
+     * @param config the configuration
+     * @param command the SMB command
+     */
     protected AndXServerMessageBlock(final Configuration config, final byte command) {
         this(config, command, null);
     }
 
+    /**
+     * Constructs an AndX message block with command and chained command
+     * @param config the configuration
+     * @param command the SMB command
+     * @param andx the chained command
+     */
     protected AndXServerMessageBlock(final Configuration config, final byte command, final ServerMessageBlock andx) {
         super(config, command);
         this.andx = andx;
@@ -66,10 +84,19 @@ public abstract class AndXServerMessageBlock extends ServerMessageBlock {
         }
     }
 
+    /**
+     * Constructs an AndX message block with configuration
+     * @param config the configuration
+     */
     protected AndXServerMessageBlock(final Configuration config) {
         this(config, null);
     }
 
+    /**
+     * Constructs an AndX message block with configuration and chained command
+     * @param config the configuration
+     * @param andx the chained command
+     */
     protected AndXServerMessageBlock(final Configuration config, final ServerMessageBlock andx) {
         super(config);
         this.andx = andx;
@@ -79,6 +106,7 @@ public abstract class AndXServerMessageBlock extends ServerMessageBlock {
     }
 
     /**
+     * Gets the chained AndX command
      * @return the andx
      */
     public final ServerMessageBlock getAndx() {
@@ -105,6 +133,12 @@ public abstract class AndXServerMessageBlock extends ServerMessageBlock {
         return this.andx;
     }
 
+    /**
+     * Gets the batch limit for chained commands
+     * @param cfg the configuration
+     * @param cmd the command byte
+     * @return the batch limit
+     */
     protected int getBatchLimit(final Configuration cfg, final byte cmd) {
         /*
          * the default limit is 0 batched messages before this
@@ -166,6 +200,12 @@ public abstract class AndXServerMessageBlock extends ServerMessageBlock {
         return len;
     }
 
+    /**
+     * Writes the AndX wire format to buffer
+     * @param dst the destination buffer
+     * @param dstIndex the starting index
+     * @return the number of bytes written
+     */
     protected int writeAndXWireFormat(final byte[] dst, int dstIndex) {
         final int start = dstIndex;
 
@@ -261,6 +301,13 @@ public abstract class AndXServerMessageBlock extends ServerMessageBlock {
         return dstIndex - start;
     }
 
+    /**
+     * Reads the AndX wire format from buffer
+     * @param buffer the buffer to read from
+     * @param bufferIndex the starting index
+     * @return the number of bytes read
+     * @throws SMBProtocolDecodingException if decoding fails
+     */
     protected int readAndXWireFormat(final byte[] buffer, int bufferIndex) throws SMBProtocolDecodingException {
         final int start = bufferIndex;
 

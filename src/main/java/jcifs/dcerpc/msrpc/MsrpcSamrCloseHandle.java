@@ -28,7 +28,9 @@ import jcifs.dcerpc.rpc.policy_handle;
 public class MsrpcSamrCloseHandle extends samr.SamrCloseHandle {
 
     /**
-     * @param handle
+     * Creates a new request to close a SAM handle.
+     *
+     * @param handle the policy handle to close
      */
     public MsrpcSamrCloseHandle(final policy_handle handle) {
         super(handle);

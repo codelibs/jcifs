@@ -29,7 +29,8 @@ import jcifs.Encodable;
 public interface CreateContextRequest extends Encodable {
 
     /**
-     * @return context name
+     * Get the name of this create context.
+     * @return context name as byte array
      */
     byte[] getName();
 

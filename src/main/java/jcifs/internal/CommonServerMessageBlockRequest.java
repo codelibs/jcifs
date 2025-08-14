@@ -29,6 +29,8 @@ import jcifs.util.transport.Request;
 public interface CommonServerMessageBlockRequest extends CommonServerMessageBlock, Request {
 
     /**
+     * Checks if the request will be handled asynchronously.
+     *
      * @return request was handled asynchronously
      */
     boolean isResponseAsync();
@@ -41,33 +43,43 @@ public interface CommonServerMessageBlockRequest extends CommonServerMessageBloc
     CommonServerMessageBlockRequest getNext();
 
     /**
+     * Splits this request for processing.
      *
      * @return the following message
      */
     CommonServerMessageBlockRequest split();
 
     /**
+     * Gets the size of this message.
+     *
      * @return the size of this message
      */
     int size();
 
     /**
+     * Creates a cancel request for this request.
+     *
      * @return create cancel request
      */
     CommonServerMessageBlockRequest createCancel();
 
     /**
-     * @param next
+     * Checks if chaining is allowed with the next request.
+     *
+     * @param next the next request in the chain
      * @return whether to allow chaining
      */
     boolean allowChain(CommonServerMessageBlockRequest next);
 
     /**
-     * @param t
+     * Sets the tree ID.
+     *
+     * @param t the tree ID to set
      */
     void setTid(int t);
 
     /**
+     * Gets the custom response timeout for this request.
      *
      * @return custom response timeout for this request
      */

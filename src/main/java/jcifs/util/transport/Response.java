@@ -24,6 +24,7 @@ package jcifs.util.transport;
 public interface Response extends Message {
 
     /**
+     * Checks if the response has been received.
      *
      * @return whether the response is received
      */
@@ -40,41 +41,52 @@ public interface Response extends Message {
     void clearReceived();
 
     /**
+     * Gets the number of credits granted by the server.
      *
      * @return number of credits granted by the server
      */
     int getGrantedCredits();
 
     /**
+     * Gets the error status code.
+     *
      * @return status code
      */
     int getErrorCode();
 
     /**
-     * @param k
+     * Sets the message ID.
+     *
+     * @param k the message ID to set
      */
     void setMid(long k);
 
     /**
+     * Gets the message ID.
+     *
      * @return mid
      */
     long getMid();
 
     /**
+     * Verifies the signature of this response.
      *
-     * @param buffer
-     * @param i
-     * @param size
+     * @param buffer the buffer containing the signature data
+     * @param i the starting index in the buffer
+     * @param size the size of the signature data
      * @return whether signature verification is successful
      */
     boolean verifySignature(byte[] buffer, int i, int size);
 
     /**
+     * Checks if signature verification failed.
+     *
      * @return whether signature verification failed
      */
     boolean isVerifyFailed();
 
     /**
+     * Checks if the response indicates an error.
      *
      * @return whether the response is an error
      */
@@ -86,35 +98,41 @@ public interface Response extends Message {
     void error();
 
     /**
+     * Gets the expiration time for this response.
      *
      * @return the message timeout
      */
     Long getExpiration();
 
     /**
+     * Sets the expiration time for this response.
      *
-     * @param exp
-     *            message timeout
+     * @param exp the message timeout to set
      */
     void setExpiration(Long exp);
 
     /**
-     *
+     * Resets this response to its initial state.
      */
     void reset();
 
     /**
+     * Gets the exception associated with this response.
      *
      * @return an exception linked to an error
      */
     Exception getException();
 
     /**
-     * @param e
+     * Sets an exception for this response.
+     *
+     * @param e the exception to set
      */
     void exception(Exception e);
 
     /**
+     * Gets the next response in the chain.
+     *
      * @return chained response
      */
     Response getNextResponse();

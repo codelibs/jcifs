@@ -49,22 +49,25 @@ public class EncryptionNegotiateContext implements NegotiateContextRequest, Nego
     private int[] ciphers;
 
     /**
+     * Constructs an encryption negotiate context.
      *
-     * @param config
-     * @param ciphers
+     * @param config the configuration (currently unused)
+     * @param ciphers array of encryption cipher IDs to negotiate
      */
     public EncryptionNegotiateContext(final Configuration config, final int ciphers[]) {
         this.ciphers = ciphers;
     }
 
     /**
-     *
+     * Default constructor for decoding.
      */
     public EncryptionNegotiateContext() {
     }
 
     /**
-     * @return the ciphers
+     * Gets the supported encryption ciphers.
+     *
+     * @return array of encryption cipher IDs
      */
     public int[] getCiphers() {
         return this.ciphers;
