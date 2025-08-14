@@ -27,6 +27,7 @@ import jcifs.CIFSException;
 import jcifs.Configuration;
 import jcifs.Credentials;
 import jcifs.DfsResolver;
+import jcifs.SmbSession;
 import jcifs.SmbTransport;
 import jcifs.SmbTransportPool;
 import jcifs.smb.SmbTransportInternal;
@@ -324,6 +325,7 @@ class SIDCacheImplTest {
         SmbTransportPool transportPool = mock(SmbTransportPool.class);
         SmbTransport transport = mock(SmbTransport.class);
         SmbTransportInternal transportInternal = mock(SmbTransportInternal.class);
+        SmbSession session = mock(SmbSession.class);
         lenient().when(ctx.getConfig()).thenReturn(config);
         lenient().when(config.isTraceResourceUsage()).thenReturn(false);
         lenient().when(ctx.getBufferCache()).thenReturn(bufferCache);
@@ -334,6 +336,7 @@ class SIDCacheImplTest {
         lenient().when(ctx.getTransportPool()).thenReturn(transportPool);
         lenient().when(transportPool.getSmbTransport(any(CIFSContext.class), anyString(), anyInt(), anyBoolean(), anyBoolean())).thenReturn(transport);
         lenient().when(transport.unwrap(SmbTransportInternal.class)).thenReturn(transportInternal);
+        lenient().when(transportInternal.getSmbSession(any(CIFSContext.class), anyString(), anyString())).thenReturn(session);
         SIDCacheImpl cache = Mockito.spy(new SIDCacheImpl(ctx));
 
         // Domain SID to be returned by stub
