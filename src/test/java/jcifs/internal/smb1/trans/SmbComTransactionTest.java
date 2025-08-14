@@ -1,11 +1,18 @@
 package jcifs.internal.smb1.trans;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -113,7 +120,7 @@ class SmbComTransactionTest {
         // Verify command and subcommand are set correctly
         assertEquals(SmbComTransaction.SMB_COM_TRANSACTION, transaction.getCommand());
         assertEquals(SmbComTransaction.TRANS2_FIND_FIRST2, transaction.getSubCommand());
-        
+
         // Verify maxDataCount and maxParameterCount are initialized
         assertTrue(transaction.maxDataCount > 0);
         assertTrue(transaction.maxParameterCount > 0);
@@ -138,13 +145,13 @@ class SmbComTransactionTest {
     void testBufferManagement() {
         byte[] buffer = new byte[1024];
         buffer[0] = 0x42;
-        
+
         transaction.setBuffer(buffer);
-        
+
         byte[] released = transaction.releaseBuffer();
         assertSame(buffer, released);
         assertEquals(0x42, released[0]);
-        
+
         // After release, getting buffer again should return null
         assertNull(transaction.releaseBuffer());
     }
@@ -153,7 +160,7 @@ class SmbComTransactionTest {
     @DisplayName("Test subCommand getter and setter")
     void testSubCommand() {
         assertEquals(SmbComTransaction.TRANS2_FIND_FIRST2, transaction.getSubCommand());
-        
+
         transaction.setSubCommand(SmbComTransaction.TRANS2_QUERY_FS_INFORMATION);
         assertEquals(SmbComTransaction.TRANS2_QUERY_FS_INFORMATION, transaction.getSubCommand());
     }
@@ -163,7 +170,7 @@ class SmbComTransactionTest {
     void testReset() {
         // Reset should not throw exception
         assertDoesNotThrow(() -> transaction.reset());
-        
+
         // Transaction should be ready for reuse
         assertTrue(transaction.hasMoreElements());
     }
@@ -173,7 +180,7 @@ class SmbComTransactionTest {
     void testResetWithKeyAndLastName() {
         // Reset with parameters should not throw exception
         assertDoesNotThrow(() -> transaction.reset(123, "testName"));
-        
+
         // Transaction should be ready for reuse
         assertTrue(transaction.hasMoreElements());
     }
@@ -191,9 +198,9 @@ class SmbComTransactionTest {
         transaction.setBuffer(new byte[SmbComTransaction.TRANSACTION_BUF_SIZE]);
         transaction.setParametersWireFormatReturn(100);
         transaction.setDataWireFormatReturn(200);
-        
+
         SmbComTransaction result = transaction.nextElement();
-        
+
         assertSame(transaction, result);
     }
 
@@ -201,12 +208,12 @@ class SmbComTransactionTest {
     @DisplayName("Test pad calculation with various offsets")
     void testPadCalculation() {
         // Test pad calculation with different alignment values
-        assertEquals(0, transaction.pad(0));  // Already aligned
-        assertEquals(0, transaction.pad(4));  // Already aligned
-        assertEquals(0, transaction.pad(8));  // Already aligned
-        assertEquals(3, transaction.pad(1));  // Need 3 bytes to align to 4
-        assertEquals(2, transaction.pad(2));  // Need 2 bytes to align to 4
-        assertEquals(1, transaction.pad(3));  // Need 1 byte to align to 4
+        assertEquals(0, transaction.pad(0)); // Already aligned
+        assertEquals(0, transaction.pad(4)); // Already aligned
+        assertEquals(0, transaction.pad(8)); // Already aligned
+        assertEquals(3, transaction.pad(1)); // Need 3 bytes to align to 4
+        assertEquals(2, transaction.pad(2)); // Need 2 bytes to align to 4
+        assertEquals(1, transaction.pad(3)); // Need 1 byte to align to 4
     }
 
     @Test
@@ -220,14 +227,14 @@ class SmbComTransactionTest {
     @DisplayName("Test write operations")
     void testWriteOperations() {
         byte[] dst = new byte[1024];
-        
+
         // Initialize transaction buffer to avoid NPE
         transaction.setBuffer(new byte[SmbComTransaction.TRANSACTION_BUF_SIZE]);
-        
+
         // Test parameter words wire format
         int paramWords = transaction.writeParameterWordsWireFormat(dst, 0);
         assertTrue(paramWords >= 0);
-        
+
         // Test bytes wire format
         int bytes = transaction.writeBytesWireFormat(dst, 0);
         assertTrue(bytes >= 0);
@@ -237,11 +244,11 @@ class SmbComTransactionTest {
     @DisplayName("Test read operations")
     void testReadOperations() {
         byte[] buffer = new byte[256];
-        
+
         // Test parameter words read
         int paramResult = transaction.readParameterWordsWireFormat(buffer, 0);
         assertEquals(0, paramResult);
-        
+
         // Test bytes read
         int bytesResult = transaction.readBytesWireFormat(buffer, 0);
         assertEquals(0, bytesResult);
@@ -251,7 +258,7 @@ class SmbComTransactionTest {
     @DisplayName("Test toString method")
     void testToString() {
         String result = transaction.toString();
-        
+
         assertNotNull(result);
         // The toString method from parent class returns SMB_COM_TRANSACTION, not SmbComTransaction
         assertTrue(result.contains("SMB_COM_TRANSACTION"));
@@ -287,14 +294,14 @@ class SmbComTransactionTest {
     @DisplayName("Test encode and decode operations")
     void testEncodeDecodeOperations() {
         byte[] buffer = new byte[1024];
-        
+
         // Initialize transaction buffer to avoid NPE
         transaction.setBuffer(new byte[SmbComTransaction.TRANSACTION_BUF_SIZE]);
-        
+
         // Test encode
         int encodeLength = transaction.encode(buffer, 0);
         assertTrue(encodeLength > 0);
-        
+
         // Test decode - should not throw exception
         assertDoesNotThrow(() -> {
             transaction.decode(buffer, 0);

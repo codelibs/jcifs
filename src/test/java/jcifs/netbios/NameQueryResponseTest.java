@@ -29,7 +29,7 @@ class NameQueryResponseTest {
         // Mock the OEM encoding configuration with lenient stubbing
         // since not all tests need this stub
         lenient().when(mockConfig.getOemEncoding()).thenReturn("UTF-8");
-        
+
         // Initialize NameQueryResponse before each test
         nameQueryResponse = new NameQueryResponse(mockConfig);
     }
@@ -55,17 +55,17 @@ class NameQueryResponseTest {
     void readBodyWireFormat_shouldCallReadResourceRecordWireFormat() throws NoSuchFieldException, IllegalAccessException {
         // This method directly calls a superclass method (readResourceRecordWireFormat).
         // We need to setup fields to avoid NPE when parsing
-        
+
         // Set recordName for parsing
         Field recordNameField = NameServicePacket.class.getDeclaredField("recordName");
         recordNameField.setAccessible(true);
         Name mockRecordName = new Name(mockConfig);
         recordNameField.set(nameQueryResponse, mockRecordName);
-        
+
         // Prepare a byte array with valid NetBIOS name format
         byte[] src = new byte[100];
         int srcIndex = 0;
-        
+
         // Start with compressed name pointer (0xC0) to use questionName
         src[srcIndex] = (byte) 0xC0;
         src[srcIndex + 1] = 0x0C; // Pointer offset
@@ -83,12 +83,12 @@ class NameQueryResponseTest {
         // rDataLength (2 bytes)
         src[srcIndex + 10] = 0x00;
         src[srcIndex + 11] = 0x06; // 6 bytes of data
-        
+
         // Initialize questionName to avoid NPE
         Field questionNameField = NameServicePacket.class.getDeclaredField("questionName");
         questionNameField.setAccessible(true);
         questionNameField.set(nameQueryResponse, mockRecordName);
-        
+
         // The method should return the number of bytes read by readResourceRecordWireFormat
         int result = nameQueryResponse.readBodyWireFormat(src, srcIndex);
         assertEquals(12 + 6, result, "readBodyWireFormat should return the total bytes read");
@@ -125,7 +125,7 @@ class NameQueryResponseTest {
         Field resultCodeField = NameServicePacket.class.getDeclaredField("resultCode");
         resultCodeField.setAccessible(true);
         resultCodeField.set(nameQueryResponse, 0);
-        
+
         // Initialize addrEntry to avoid NPE
         Field addrEntryField = NameServicePacket.class.getDeclaredField("addrEntry");
         addrEntryField.setAccessible(true);

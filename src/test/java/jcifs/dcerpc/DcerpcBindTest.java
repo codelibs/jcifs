@@ -1,7 +1,17 @@
 package jcifs.dcerpc;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -15,7 +25,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import jcifs.dcerpc.ndr.NdrBuffer;
-import jcifs.dcerpc.ndr.NdrException;
 
 /**
  * Comprehensive test suite for jcifs.dcerpc.DcerpcBind class.
@@ -72,8 +81,8 @@ class DcerpcBindTest {
             assertNotNull(bindWithParams, "Constructor should create instance");
             assertEquals(0, bindWithParams.getOpnum(), "Opnum should be 0");
             assertEquals(11, bindWithParams.getPtype(), "Ptype should be 11 for bind message");
-            assertEquals(DcerpcConstants.DCERPC_FIRST_FRAG | DcerpcConstants.DCERPC_LAST_FRAG, 
-                        bindWithParams.getFlags(), "Flags should be set for first and last fragment");
+            assertEquals(DcerpcConstants.DCERPC_FIRST_FRAG | DcerpcConstants.DCERPC_LAST_FRAG, bindWithParams.getFlags(),
+                    "Flags should be set for first and last fragment");
 
             // Verify private fields using reflection
             Field bindingField = DcerpcBind.class.getDeclaredField("binding");
@@ -180,7 +189,7 @@ class DcerpcBindTest {
             // Then
             assertNotNull(result, "Should return exception for error result");
             assertEquals("DCERPC_BIND_ERR_ABSTRACT_SYNTAX_NOT_SUPPORTED", result.getMessage(),
-                        "Should return correct error message for code 1");
+                    "Should return correct error message for code 1");
         }
 
         @Test
@@ -195,7 +204,7 @@ class DcerpcBindTest {
             // Then
             assertNotNull(result, "Should return exception for error result");
             assertEquals("DCERPC_BIND_ERR_PROPOSED_TRANSFER_SYNTAXES_NOT_SUPPORTED", result.getMessage(),
-                        "Should return correct error message for code 2");
+                    "Should return correct error message for code 2");
         }
 
         @Test
@@ -209,8 +218,7 @@ class DcerpcBindTest {
 
             // Then
             assertNotNull(result, "Should return exception for error result");
-            assertEquals("DCERPC_BIND_ERR_LOCAL_LIMIT_EXCEEDED", result.getMessage(),
-                        "Should return correct error message for code 3");
+            assertEquals("DCERPC_BIND_ERR_LOCAL_LIMIT_EXCEEDED", result.getMessage(), "Should return correct error message for code 3");
         }
 
         @Test
@@ -224,8 +232,7 @@ class DcerpcBindTest {
 
             // Then
             assertNotNull(result, "Should return exception for unknown error result");
-            assertEquals("0x0005", result.getMessage(),
-                        "Should return hex representation for unknown error code");
+            assertEquals("0x0005", result.getMessage(), "Should return hex representation for unknown error code");
         }
 
         @Test
@@ -239,8 +246,7 @@ class DcerpcBindTest {
 
             // Then
             assertNotNull(result, "Should return exception for large error code");
-            assertEquals("0xFFFF", result.getMessage(),
-                        "Should return hex representation for large error code");
+            assertEquals("0xFFFF", result.getMessage(), "Should return hex representation for large error code");
         }
 
         private void setResultField(DcerpcBind bind, int value) throws Exception {
@@ -358,7 +364,7 @@ class DcerpcBindTest {
             DcerpcException exception = bind.getResult();
             assertNotNull(exception, "Should return exception for error result");
             assertEquals("DCERPC_BIND_ERR_PROPOSED_TRANSFER_SYNTAXES_NOT_SUPPORTED", exception.getMessage(),
-                        "Should return correct error message");
+                    "Should return correct error message");
         }
 
         @Test
@@ -390,14 +396,13 @@ class DcerpcBindTest {
             Method getResultMessageMethod = DcerpcBind.class.getDeclaredMethod("getResultMessage", int.class);
             getResultMessageMethod.setAccessible(true);
 
-            assertEquals("0", getResultMessageMethod.invoke(null, 0),
-                        "Should return '0' for success");
+            assertEquals("0", getResultMessageMethod.invoke(null, 0), "Should return '0' for success");
             assertEquals("DCERPC_BIND_ERR_ABSTRACT_SYNTAX_NOT_SUPPORTED", getResultMessageMethod.invoke(null, 1),
-                        "Should return correct message for error 1");
+                    "Should return correct message for error 1");
             assertEquals("DCERPC_BIND_ERR_PROPOSED_TRANSFER_SYNTAXES_NOT_SUPPORTED", getResultMessageMethod.invoke(null, 2),
-                        "Should return correct message for error 2");
+                    "Should return correct message for error 2");
             assertEquals("DCERPC_BIND_ERR_LOCAL_LIMIT_EXCEEDED", getResultMessageMethod.invoke(null, 3),
-                        "Should return correct message for error 3");
+                    "Should return correct message for error 3");
         }
 
         @Test
@@ -407,12 +412,9 @@ class DcerpcBindTest {
             Method getResultMessageMethod = DcerpcBind.class.getDeclaredMethod("getResultMessage", int.class);
             getResultMessageMethod.setAccessible(true);
 
-            assertEquals("0x0004", getResultMessageMethod.invoke(null, 4),
-                        "Should return hex format for unknown code 4");
-            assertEquals("0x00FF", getResultMessageMethod.invoke(null, 255),
-                        "Should return hex format for unknown code 255");
-            assertEquals("0x1000", getResultMessageMethod.invoke(null, 4096),
-                        "Should return hex format for large unknown code");
+            assertEquals("0x0004", getResultMessageMethod.invoke(null, 4), "Should return hex format for unknown code 4");
+            assertEquals("0x00FF", getResultMessageMethod.invoke(null, 255), "Should return hex format for unknown code 255");
+            assertEquals("0x1000", getResultMessageMethod.invoke(null, 4096), "Should return hex format for large unknown code");
         }
 
         @Test
@@ -424,9 +426,8 @@ class DcerpcBindTest {
 
             // Test boundary at 4 (first unknown code)
             assertEquals("DCERPC_BIND_ERR_LOCAL_LIMIT_EXCEEDED", getResultMessageMethod.invoke(null, 3),
-                        "Should return known message for code 3");
-            assertEquals("0x0004", getResultMessageMethod.invoke(null, 4),
-                        "Should return hex format for code 4");
+                    "Should return known message for code 3");
+            assertEquals("0x0004", getResultMessageMethod.invoke(null, 4), "Should return hex format for code 4");
         }
     }
 
@@ -491,8 +492,8 @@ class DcerpcBindTest {
             // Then
             assertEquals(11, bindMessage.getPtype(), "Ptype should be set for bind");
             assertEquals(0, bindMessage.getOpnum(), "Opnum should be 0");
-            assertEquals(DcerpcConstants.DCERPC_FIRST_FRAG | DcerpcConstants.DCERPC_LAST_FRAG, 
-                        bindMessage.getFlags(), "Flags should be set correctly");
+            assertEquals(DcerpcConstants.DCERPC_FIRST_FRAG | DcerpcConstants.DCERPC_LAST_FRAG, bindMessage.getFlags(),
+                    "Flags should be set correctly");
         }
 
         @Test
@@ -514,8 +515,7 @@ class DcerpcBindTest {
             // Then - Verify error result
             DcerpcException exception = bindMessage.getResult();
             assertNotNull(exception, "Should return exception for error result");
-            assertEquals("DCERPC_BIND_ERR_ABSTRACT_SYNTAX_NOT_SUPPORTED", exception.getMessage(),
-                        "Should return correct error message");
+            assertEquals("DCERPC_BIND_ERR_ABSTRACT_SYNTAX_NOT_SUPPORTED", exception.getMessage(), "Should return correct error message");
         }
     }
 
@@ -527,13 +527,10 @@ class DcerpcBindTest {
         @DisplayName("Should handle various result codes correctly")
         void testVariousResultCodes() throws Exception {
             // Test all known result codes
-            int[] validCodes = {0, 1, 2, 3};
-            String[] expectedMessages = {
-                null, // 0 returns null (no exception)
-                "DCERPC_BIND_ERR_ABSTRACT_SYNTAX_NOT_SUPPORTED",
-                "DCERPC_BIND_ERR_PROPOSED_TRANSFER_SYNTAXES_NOT_SUPPORTED",
-                "DCERPC_BIND_ERR_LOCAL_LIMIT_EXCEEDED"
-            };
+            int[] validCodes = { 0, 1, 2, 3 };
+            String[] expectedMessages = { null, // 0 returns null (no exception)
+                    "DCERPC_BIND_ERR_ABSTRACT_SYNTAX_NOT_SUPPORTED", "DCERPC_BIND_ERR_PROPOSED_TRANSFER_SYNTAXES_NOT_SUPPORTED",
+                    "DCERPC_BIND_ERR_LOCAL_LIMIT_EXCEEDED" };
 
             for (int i = 0; i < validCodes.length; i++) {
                 setResultField(bind, validCodes[i]);
@@ -553,15 +550,14 @@ class DcerpcBindTest {
         @DisplayName("Should handle unknown result codes with hex format")
         void testUnknownResultCodes() throws Exception {
             // Test unknown result codes
-            int[] unknownCodes = {4, 10, 255, 1000};
+            int[] unknownCodes = { 4, 10, 255, 1000 };
 
             for (int code : unknownCodes) {
                 setResultField(bind, code);
                 DcerpcException result = bind.getResult();
 
                 assertNotNull(result, "Should return exception for unknown result code " + code);
-                assertTrue(result.getMessage().startsWith("0x"), 
-                          "Should return hex format for unknown result code " + code);
+                assertTrue(result.getMessage().startsWith("0x"), "Should return hex format for unknown result code " + code);
             }
         }
 

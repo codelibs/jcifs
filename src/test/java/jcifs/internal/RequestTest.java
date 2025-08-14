@@ -1,7 +1,13 @@
 package jcifs.internal;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -11,8 +17,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import jcifs.CIFSContext;
-import jcifs.Configuration;
-import jcifs.config.PropertyConfiguration;
 
 /**
  * Test class for Request interface
@@ -22,16 +26,16 @@ class RequestTest {
 
     @Mock
     private Request<CommonServerMessageBlockResponse> request;
-    
+
     @Mock
     private CommonServerMessageBlockResponse response;
-    
+
     @Mock
     private CIFSContext context;
-    
+
     @Mock
     private CommonServerMessageBlock disconnectRequest;
-    
+
     @Mock
     private CommonServerMessageBlockRequest nextRequest;
 
@@ -46,10 +50,10 @@ class RequestTest {
     void testInitResponse() {
         // Given
         when(request.initResponse(context)).thenReturn(response);
-        
+
         // When
         CommonServerMessageBlockResponse result = request.initResponse(context);
-        
+
         // Then
         assertNotNull(result);
         assertEquals(response, result);
@@ -61,10 +65,10 @@ class RequestTest {
     void testInitResponseWithNullContext() {
         // Given
         when(request.initResponse(null)).thenReturn(response);
-        
+
         // When
         CommonServerMessageBlockResponse result = request.initResponse(null);
-        
+
         // Then
         assertNotNull(result);
         assertEquals(response, result);
@@ -76,10 +80,10 @@ class RequestTest {
     void testGetResponse() {
         // Given
         when(request.getResponse()).thenReturn(response);
-        
+
         // When
         CommonServerMessageBlockResponse result = request.getResponse();
-        
+
         // Then
         assertNotNull(result);
         assertEquals(response, result);
@@ -91,10 +95,10 @@ class RequestTest {
     void testGetResponseReturnsNull() {
         // Given
         when(request.getResponse()).thenReturn(null);
-        
+
         // When
         CommonServerMessageBlockResponse result = request.getResponse();
-        
+
         // Then
         assertNull(result);
         verify(request, times(1)).getResponse();
@@ -105,10 +109,10 @@ class RequestTest {
     void testIgnoreDisconnect() {
         // Given
         when(request.ignoreDisconnect()).thenReturn(disconnectRequest);
-        
+
         // When
         CommonServerMessageBlock result = request.ignoreDisconnect();
-        
+
         // Then
         assertNotNull(result);
         assertEquals(disconnectRequest, result);
@@ -120,10 +124,10 @@ class RequestTest {
     void testIgnoreDisconnectReturnsSelf() {
         // Given
         when(request.ignoreDisconnect()).thenReturn(request);
-        
+
         // When
         CommonServerMessageBlock result = request.ignoreDisconnect();
-        
+
         // Then
         assertNotNull(result);
         assertEquals(request, result);
@@ -148,7 +152,7 @@ class RequestTest {
         when(request.createCancel()).thenReturn(nextRequest);
         when(request.size()).thenReturn(1024);
         when(request.getOverrideTimeout()).thenReturn(5000);
-        
+
         // When & Then
         assertTrue(request.isResponseAsync());
         assertEquals(nextRequest, request.getNext());
@@ -157,7 +161,7 @@ class RequestTest {
         assertEquals(nextRequest, request.createCancel());
         assertEquals(1024, request.size());
         assertEquals(Integer.valueOf(5000), request.getOverrideTimeout());
-        
+
         verify(request, times(1)).isResponseAsync();
         verify(request, times(1)).getNext();
         verify(request, times(1)).split();
@@ -172,16 +176,16 @@ class RequestTest {
     void testConcreteImplementation() {
         // Create a concrete implementation for testing
         TestRequest testRequest = new TestRequest();
-        
+
         // Test initResponse
         CommonServerMessageBlockResponse testResponse = testRequest.initResponse(context);
         assertNotNull(testResponse);
         assertTrue(testResponse instanceof TestResponse);
-        
+
         // Test getResponse
         assertNotNull(testRequest.getResponse());
         assertEquals(testResponse, testRequest.getResponse());
-        
+
         // Test ignoreDisconnect
         CommonServerMessageBlock ignored = testRequest.ignoreDisconnect();
         assertNotNull(ignored);
@@ -380,7 +384,7 @@ class RequestTest {
         private int command = 0;
         private byte[] rawPayload;
         private boolean retainPayload = false;
-        
+
         @Override
         public boolean isAsync() {
             return async;

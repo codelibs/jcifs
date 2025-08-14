@@ -1,10 +1,13 @@
 package jcifs.smb1.smb1;
 
-import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests for the NetShareEnumResponse class.
@@ -18,11 +21,10 @@ class NetShareEnumResponseTest {
     void testReadParametersWireFormat() {
         NetShareEnumResponse response = new NetShareEnumResponse();
         // Parameters: status (2 bytes), converter (2 bytes), numEntries (2 bytes), totalAvailableEntries (2 bytes)
-        byte[] buffer = {
-            0x00, 0x00, // status = 0 (Success)
-            0x12, 0x34, // converter = 0x3412
-            0x02, 0x00, // numEntries = 2
-            0x05, 0x00  // totalAvailableEntries = 5
+        byte[] buffer = { 0x00, 0x00, // status = 0 (Success)
+                0x12, 0x34, // converter = 0x3412
+                0x02, 0x00, // numEntries = 2
+                0x05, 0x00 // totalAvailableEntries = 5
         };
 
         int bytesRead = response.readParametersWireFormat(buffer, 0, buffer.length);
@@ -39,7 +41,7 @@ class NetShareEnumResponseTest {
     @Test
     void testReadDataWireFormat() throws IOException {
         NetShareEnumResponse response = new NetShareEnumResponse();
-        
+
         // Manually set parameters that would be read by readParametersWireFormat
         response.numEntries = 2;
         byte[] params = { 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x02, 0x00 };
@@ -49,13 +51,21 @@ class NetShareEnumResponseTest {
         byte[] data = new byte[100];
         // Entry 1: SHARE1, type 0 (Disk), remark "Remark 1"
         System.arraycopy("SHARE1".getBytes(StandardCharsets.US_ASCII), 0, data, 0, 6);
-        data[14] = 0x00; data[15] = 0x00; // type = 0
-        data[16] = 40; data[17] = 0; data[18] = 0; data[19] = 0; // remark offset
+        data[14] = 0x00;
+        data[15] = 0x00; // type = 0
+        data[16] = 40;
+        data[17] = 0;
+        data[18] = 0;
+        data[19] = 0; // remark offset
 
         // Entry 2: IPC$, type 3 (IPC), remark "Inter-Process Communication"
         System.arraycopy("IPC$".getBytes(StandardCharsets.US_ASCII), 0, data, 20, 4);
-        data[34] = 0x03; data[35] = 0x00; // type = 3
-        data[36] = 60; data[37] = 0; data[38] = 0; data[39] = 0; // remark offset
+        data[34] = 0x03;
+        data[35] = 0x00; // type = 3
+        data[36] = 60;
+        data[37] = 0;
+        data[38] = 0;
+        data[39] = 0; // remark offset
 
         // Remarks data
         System.arraycopy("Remark 1".getBytes(StandardCharsets.US_ASCII), 0, data, 40, 8);

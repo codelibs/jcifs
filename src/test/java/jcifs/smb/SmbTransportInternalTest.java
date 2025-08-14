@@ -1,5 +1,22 @@
 package jcifs.smb;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,11 +28,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import jcifs.SmbSession;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import jcifs.SmbSession;
 
 /**
  * Tests for SmbTransportInternal interface using Mockito mocks to
@@ -79,11 +93,7 @@ public class SmbTransportInternalTest {
     @DisplayName("disconnect returns expected for flag combinations")
     @CsvSource({
             // hard, inuse, expected
-            "true,true,false",
-            "true,false,true",
-            "false,true,true",
-            "false,false,false"
-    })
+            "true,true,false", "true,false,true", "false,true,true", "false,false,false" })
     void disconnect_flagCombinations(boolean hard, boolean inuse, boolean expected) throws Exception {
         when(transport.disconnect(anyBoolean(), anyBoolean())).thenAnswer(inv -> {
             boolean h = inv.getArgument(0);
@@ -160,8 +170,8 @@ public class SmbTransportInternalTest {
     @DisplayName("getDfsReferrals handles empty name via CIFSException")
     void getDfsReferrals_emptyName() throws Exception {
         String emptyName = "";
-        doThrow(new jcifs.CIFSException("invalid dfs name")).when(transport)
-                .getDfsReferrals(eq(ctx), eq(emptyName), any(), any(), anyInt());
+        doThrow(new jcifs.CIFSException("invalid dfs name")).when(transport).getDfsReferrals(eq(ctx), eq(emptyName), any(), any(),
+                anyInt());
 
         assertThrows(jcifs.CIFSException.class, () -> transport.getDfsReferrals(ctx, emptyName, "h", "d", 1));
         verify(transport).getDfsReferrals(eq(ctx), eq(emptyName), eq("h"), eq("d"), eq(1));
@@ -172,8 +182,7 @@ public class SmbTransportInternalTest {
     @DisplayName("getDfsReferrals handles null name via CIFSException")
     void getDfsReferrals_nullName() throws Exception {
         String nullName = null;
-        doThrow(new jcifs.CIFSException("invalid dfs name")).when(transport)
-                .getDfsReferrals(eq(ctx), isNull(), any(), any(), anyInt());
+        doThrow(new jcifs.CIFSException("invalid dfs name")).when(transport).getDfsReferrals(eq(ctx), isNull(), any(), any(), anyInt());
 
         assertThrows(jcifs.CIFSException.class, () -> transport.getDfsReferrals(ctx, nullName, "h", "d", 1));
         verify(transport).getDfsReferrals(eq(ctx), isNull(), eq("h"), eq("d"), eq(1));
@@ -246,12 +255,7 @@ public class SmbTransportInternalTest {
     // Happy path: session retrieval with host/domain variations
     @ParameterizedTest
     @DisplayName("getSmbSession(ctx,host,domain) returns session for various inputs")
-    @CsvSource({
-            "server,DOMAIN",
-            "server,",
-            ",DOMAIN",
-            ","
-    })
+    @CsvSource({ "server,DOMAIN", "server,", ",DOMAIN", "," })
     void getSmbSession_withTarget(String host, String domain) {
         when(transport.getSmbSession(any(jcifs.CIFSContext.class), any(), any())).thenReturn(session);
         SmbSession result = transport.getSmbSession(ctx, host, domain);

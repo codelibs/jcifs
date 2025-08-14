@@ -104,8 +104,8 @@ class EmptyIteratorTest extends BaseTest {
         // Given & When & Then
         assertDoesNotThrow(() -> {
             try (EmptyIterator iterator1 = new EmptyIterator();
-                 EmptyIterator iterator2 = new EmptyIterator();
-                 EmptyIterator iterator3 = new EmptyIterator()) {
+                    EmptyIterator iterator2 = new EmptyIterator();
+                    EmptyIterator iterator3 = new EmptyIterator()) {
                 assertFalse(iterator1.hasNext(), "First instance should have no elements");
                 assertFalse(iterator2.hasNext(), "Second instance should have no elements");
                 assertFalse(iterator3.hasNext(), "Third instance should have no elements");

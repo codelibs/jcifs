@@ -6,10 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -23,7 +19,6 @@ import jcifs.Configuration;
 import jcifs.internal.SMBProtocolDecodingException;
 import jcifs.internal.smb2.ServerMessageBlock2;
 import jcifs.internal.smb2.ServerMessageBlock2Response;
-import jcifs.internal.smb2.Smb2Constants;
 import jcifs.internal.util.SMBUtil;
 
 /**
@@ -35,7 +30,7 @@ class Smb2SetInfoResponseTest {
 
     private Configuration mockConfig;
     private Smb2SetInfoResponse response;
-    
+
     @BeforeEach
     void setUp() {
         mockConfig = mock(Configuration.class);
@@ -55,9 +50,9 @@ class Smb2SetInfoResponseTest {
     void testWriteBytesWireFormat() {
         byte[] dst = new byte[1024];
         int dstIndex = 0;
-        
+
         int result = response.writeBytesWireFormat(dst, dstIndex);
-        
+
         assertEquals(0, result);
     }
 
@@ -66,12 +61,12 @@ class Smb2SetInfoResponseTest {
     void testReadBytesWireFormatValidStructureSize() throws SMBProtocolDecodingException {
         byte[] buffer = new byte[1024];
         int bufferIndex = 0;
-        
+
         // Set structure size to 2 (valid)
         SMBUtil.writeInt2(2, buffer, bufferIndex);
-        
+
         int result = response.readBytesWireFormat(buffer, bufferIndex);
-        
+
         assertEquals(2, result);
     }
 
@@ -80,16 +75,14 @@ class Smb2SetInfoResponseTest {
     void testReadBytesWireFormatInvalidStructureSize() {
         byte[] buffer = new byte[1024];
         int bufferIndex = 0;
-        
+
         // Set structure size to 4 (invalid, should be 2)
         SMBUtil.writeInt2(4, buffer, bufferIndex);
-        
-        SMBProtocolDecodingException exception = assertThrows(
-            SMBProtocolDecodingException.class,
-            () -> response.readBytesWireFormat(buffer, bufferIndex),
-            "Should throw SMBProtocolDecodingException for invalid structure size"
-        );
-        
+
+        SMBProtocolDecodingException exception =
+                assertThrows(SMBProtocolDecodingException.class, () -> response.readBytesWireFormat(buffer, bufferIndex),
+                        "Should throw SMBProtocolDecodingException for invalid structure size");
+
         assertEquals("Expected structureSize = 2", exception.getMessage());
     }
 
@@ -98,16 +91,14 @@ class Smb2SetInfoResponseTest {
     void testReadBytesWireFormatZeroStructureSize() {
         byte[] buffer = new byte[1024];
         int bufferIndex = 0;
-        
+
         // Set structure size to 0 (invalid)
         SMBUtil.writeInt2(0, buffer, bufferIndex);
-        
-        SMBProtocolDecodingException exception = assertThrows(
-            SMBProtocolDecodingException.class,
-            () -> response.readBytesWireFormat(buffer, bufferIndex),
-            "Should throw SMBProtocolDecodingException for zero structure size"
-        );
-        
+
+        SMBProtocolDecodingException exception =
+                assertThrows(SMBProtocolDecodingException.class, () -> response.readBytesWireFormat(buffer, bufferIndex),
+                        "Should throw SMBProtocolDecodingException for zero structure size");
+
         assertEquals("Expected structureSize = 2", exception.getMessage());
     }
 
@@ -116,34 +107,30 @@ class Smb2SetInfoResponseTest {
     void testReadBytesWireFormatNegativeStructureSize() {
         byte[] buffer = new byte[1024];
         int bufferIndex = 0;
-        
+
         // Set structure size to -1 (0xFFFF when read as unsigned)
         SMBUtil.writeInt2(0xFFFF, buffer, bufferIndex);
-        
-        SMBProtocolDecodingException exception = assertThrows(
-            SMBProtocolDecodingException.class,
-            () -> response.readBytesWireFormat(buffer, bufferIndex),
-            "Should throw SMBProtocolDecodingException for negative structure size"
-        );
-        
+
+        SMBProtocolDecodingException exception =
+                assertThrows(SMBProtocolDecodingException.class, () -> response.readBytesWireFormat(buffer, bufferIndex),
+                        "Should throw SMBProtocolDecodingException for negative structure size");
+
         assertEquals("Expected structureSize = 2", exception.getMessage());
     }
 
     @ParameterizedTest
-    @ValueSource(ints = {1, 3, 4, 5, 10, 100, 255, 256, 1000, 65535})
+    @ValueSource(ints = { 1, 3, 4, 5, 10, 100, 255, 256, 1000, 65535 })
     @DisplayName("Test readBytesWireFormat with various invalid structure sizes")
     void testReadBytesWireFormatVariousInvalidSizes(int invalidSize) {
         byte[] buffer = new byte[1024];
         int bufferIndex = 0;
-        
+
         SMBUtil.writeInt2(invalidSize, buffer, bufferIndex);
-        
-        SMBProtocolDecodingException exception = assertThrows(
-            SMBProtocolDecodingException.class,
-            () -> response.readBytesWireFormat(buffer, bufferIndex),
-            "Should throw SMBProtocolDecodingException for structure size " + invalidSize
-        );
-        
+
+        SMBProtocolDecodingException exception =
+                assertThrows(SMBProtocolDecodingException.class, () -> response.readBytesWireFormat(buffer, bufferIndex),
+                        "Should throw SMBProtocolDecodingException for structure size " + invalidSize);
+
         assertEquals("Expected structureSize = 2", exception.getMessage());
     }
 
@@ -151,16 +138,16 @@ class Smb2SetInfoResponseTest {
     @DisplayName("Test readBytesWireFormat with different buffer positions")
     void testReadBytesWireFormatDifferentBufferPositions() throws SMBProtocolDecodingException {
         byte[] buffer = new byte[1024];
-        
+
         // Test at different positions in the buffer
-        int[] positions = {0, 10, 100, 500};
-        
+        int[] positions = { 0, 10, 100, 500 };
+
         for (int position : positions) {
             // Set structure size to 2 at the given position
             SMBUtil.writeInt2(2, buffer, position);
-            
+
             int result = response.readBytesWireFormat(buffer, position);
-            
+
             assertEquals(2, result, "Should return 2 for buffer position " + position);
         }
     }
@@ -170,11 +157,11 @@ class Smb2SetInfoResponseTest {
     void testReadBytesWireFormatMinimumBufferSize() throws SMBProtocolDecodingException {
         byte[] buffer = new byte[2]; // Minimum size needed for structure size
         int bufferIndex = 0;
-        
+
         SMBUtil.writeInt2(2, buffer, bufferIndex);
-        
+
         int result = response.readBytesWireFormat(buffer, bufferIndex);
-        
+
         assertEquals(2, result);
     }
 
@@ -190,10 +177,10 @@ class Smb2SetInfoResponseTest {
     void testDecodeMethodIntegration() throws Exception {
         byte[] buffer = new byte[1024];
         int bufferIndex = 0;
-        
+
         // Prepare SMB2 header (64 bytes)
         // Protocol ID
-        System.arraycopy(new byte[]{(byte)0xFE, 'S', 'M', 'B'}, 0, buffer, bufferIndex, 4);
+        System.arraycopy(new byte[] { (byte) 0xFE, 'S', 'M', 'B' }, 0, buffer, bufferIndex, 4);
         // Header length
         SMBUtil.writeInt2(64, buffer, bufferIndex + 4);
         // Credit charge
@@ -216,14 +203,14 @@ class Smb2SetInfoResponseTest {
         SMBUtil.writeInt8(0, buffer, bufferIndex + 40);
         // Signature
         System.arraycopy(new byte[16], 0, buffer, bufferIndex + 48, 16);
-        
+
         // Body starts at bufferIndex + 64
         // Structure size = 2
         SMBUtil.writeInt2(2, buffer, bufferIndex + 64);
-        
+
         // Decode the response
         int result = response.decode(buffer, bufferIndex);
-        
+
         assertEquals(66, result);
         assertEquals(0, response.getStatus()); // Should be STATUS_SUCCESS
     }
@@ -233,21 +220,21 @@ class Smb2SetInfoResponseTest {
     void testReadBytesWireFormatPreservesBuffer() throws SMBProtocolDecodingException {
         byte[] buffer = new byte[1024];
         int bufferIndex = 0;
-        
+
         // Fill buffer with test data
         for (int i = 0; i < buffer.length; i++) {
-            buffer[i] = (byte)(i % 256);
+            buffer[i] = (byte) (i % 256);
         }
-        
+
         // Set structure size to 2
         SMBUtil.writeInt2(2, buffer, bufferIndex);
-        
+
         // Make a copy of the buffer
         byte[] bufferCopy = buffer.clone();
-        
+
         // Call readBytesWireFormat
         response.readBytesWireFormat(buffer, bufferIndex);
-        
+
         // Verify buffer wasn't modified
         assertArrayEquals(bufferCopy, buffer, "Buffer content should not be modified");
     }
@@ -257,10 +244,10 @@ class Smb2SetInfoResponseTest {
     void testMultipleReadBytesWireFormatCalls() throws SMBProtocolDecodingException {
         byte[] buffer = new byte[1024];
         int bufferIndex = 0;
-        
+
         // Set structure size to 2
         SMBUtil.writeInt2(2, buffer, bufferIndex);
-        
+
         // Call readBytesWireFormat multiple times
         for (int i = 0; i < 5; i++) {
             int result = response.readBytesWireFormat(buffer, bufferIndex);
@@ -273,12 +260,12 @@ class Smb2SetInfoResponseTest {
     void testReadBytesWireFormatMaxBufferIndex() throws SMBProtocolDecodingException {
         byte[] buffer = new byte[65536]; // Large buffer
         int bufferIndex = 65534; // Near the end
-        
+
         // Set structure size to 2
         SMBUtil.writeInt2(2, buffer, bufferIndex);
-        
+
         int result = response.readBytesWireFormat(buffer, bufferIndex);
-        
+
         assertEquals(2, result);
     }
 
@@ -286,22 +273,15 @@ class Smb2SetInfoResponseTest {
     @DisplayName("Test writeBytesWireFormat with various buffer configurations")
     void testWriteBytesWireFormatVariousConfigurations() {
         // Test with different buffer sizes and indices
-        int[][] configs = {
-            {100, 0},
-            {1024, 50},
-            {4096, 2000},
-            {65536, 32768}
-        };
-        
+        int[][] configs = { { 100, 0 }, { 1024, 50 }, { 4096, 2000 }, { 65536, 32768 } };
+
         for (int[] config : configs) {
             byte[] dst = new byte[config[0]];
             int dstIndex = config[1];
-            
+
             int result = response.writeBytesWireFormat(dst, dstIndex);
-            
-            assertEquals(0, result, 
-                String.format("Should return 0 for buffer size %d at index %d", 
-                    config[0], config[1]));
+
+            assertEquals(0, result, String.format("Should return 0 for buffer size %d at index %d", config[0], config[1]));
         }
     }
 }

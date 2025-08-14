@@ -1,7 +1,24 @@
 package jcifs.smb;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+
+import java.util.Arrays;
+import java.util.Objects;
+import java.util.stream.Stream;
 
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.junit.jupiter.api.DisplayName;
@@ -14,10 +31,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.Arrays;
-import java.util.Objects;
-import java.util.stream.Stream;
 
 import jcifs.CIFSException;
 
@@ -34,12 +47,8 @@ class SSPContextTest {
         private boolean integrity;
         private boolean disposed;
 
-        DummySSPContext(byte[] signingKey,
-                        boolean established,
-                        String nbName,
-                        ASN1ObjectIdentifier[] supportedMechs,
-                        int flags,
-                        boolean integrity) {
+        DummySSPContext(byte[] signingKey, boolean established, String nbName, ASN1ObjectIdentifier[] supportedMechs, int flags,
+                boolean integrity) {
             this.signingKey = signingKey;
             this.established = established;
             this.nbName = nbName;
@@ -162,21 +171,15 @@ class SSPContextTest {
             // Arrange
             ASN1ObjectIdentifier mech1 = new ASN1ObjectIdentifier("1.2.840.113554.1.2.2"); // Kerberos V5
             ASN1ObjectIdentifier mech2 = new ASN1ObjectIdentifier("1.3.6.1.5.5.2"); // SPNEGO
-            DummySSPContext ctx = new DummySSPContext(
-                new byte[] {1,2,3},
-                true,
-                "NBHOST",
-                new ASN1ObjectIdentifier[] { mech1, mech2 },
-                0xA5,
-                true
-            );
+            DummySSPContext ctx =
+                    new DummySSPContext(new byte[] { 1, 2, 3 }, true, "NBHOST", new ASN1ObjectIdentifier[] { mech1, mech2 }, 0xA5, true);
 
             // Act & Assert
-            assertArrayEquals(new byte[] {1,2,3}, ctx.getSigningKey(), "signing key");
+            assertArrayEquals(new byte[] { 1, 2, 3 }, ctx.getSigningKey(), "signing key");
             assertTrue(ctx.isEstablished(), "should be established");
 
-            byte[] in = new byte[] {9,8,7,6};
-            assertArrayEquals(new byte[] {8,7}, ctx.initSecContext(in, 1, 2), "slice should match");
+            byte[] in = new byte[] { 9, 8, 7, 6 };
+            assertArrayEquals(new byte[] { 8, 7 }, ctx.initSecContext(in, 1, 2), "slice should match");
 
             assertEquals("NBHOST", ctx.getNetbiosName(), "NetBIOS name");
 
@@ -189,7 +192,7 @@ class SSPContextTest {
             assertArrayEquals(new ASN1ObjectIdentifier[] { mech1, mech2 }, ctx.getSupportedMechs(), "supported mechs");
 
             // MIC roundtrip: calculate then verify
-            byte[] data = new byte[] {10,20,30};
+            byte[] data = new byte[] { 10, 20, 30 };
             byte[] mic = ctx.calculateMIC(data);
             assertNotNull(mic);
             ctx.verifyMIC(data, mic); // should not throw
@@ -210,8 +213,8 @@ class SSPContextTest {
         @Test
         @DisplayName("initSecContext throws on invalid ranges")
         void testInitSecContextInvalidRanges() {
-            DummySSPContext ctx = new DummySSPContext(new byte[] {1}, false, null, null, 0, false);
-            byte[] buf = new byte[] {1,2,3};
+            DummySSPContext ctx = new DummySSPContext(new byte[] { 1 }, false, null, null, 0, false);
+            byte[] buf = new byte[] { 1, 2, 3 };
             assertThrows(CIFSException.class, () -> ctx.initSecContext(buf, -1, 1));
             assertThrows(CIFSException.class, () -> ctx.initSecContext(buf, 0, -1));
             assertThrows(CIFSException.class, () -> ctx.initSecContext(buf, 3, 1));
@@ -221,7 +224,7 @@ class SSPContextTest {
         @Test
         @DisplayName("initSecContext null token edge cases")
         void testInitSecContextNullToken() throws Exception {
-            DummySSPContext ctx = new DummySSPContext(new byte[] {1}, false, null, null, 0, false);
+            DummySSPContext ctx = new DummySSPContext(new byte[] { 1 }, false, null, null, 0, false);
             // len == 0 is allowed and returns empty token
             assertArrayEquals(new byte[0], ctx.initSecContext(null, 0, 0));
             // len > 0 is invalid
@@ -231,18 +234,18 @@ class SSPContextTest {
         @Test
         @DisplayName("verifyMIC throws on mismatch and nulls")
         void testVerifyMICThrows() throws Exception {
-            DummySSPContext ctx = new DummySSPContext(new byte[] {1}, true, null, null, 0, true);
-            byte[] data = new byte[] {1,2,3};
+            DummySSPContext ctx = new DummySSPContext(new byte[] { 1 }, true, null, null, 0, true);
+            byte[] data = new byte[] { 1, 2, 3 };
             byte[] wrongMic = new byte[] { 0 };
             assertThrows(CIFSException.class, () -> ctx.verifyMIC(data, wrongMic));
-            assertThrows(CIFSException.class, () -> ctx.verifyMIC(null, new byte[] {0}));
+            assertThrows(CIFSException.class, () -> ctx.verifyMIC(null, new byte[] { 0 }));
             assertThrows(CIFSException.class, () -> ctx.verifyMIC(data, null));
         }
 
         @Test
         @DisplayName("dispose toggles state and is not idempotent")
         void testDisposeBehavior() throws Exception {
-            DummySSPContext ctx = new DummySSPContext(new byte[] {1}, true, null, null, 0, false);
+            DummySSPContext ctx = new DummySSPContext(new byte[] { 1 }, true, null, null, 0, false);
             ctx.dispose();
             assertFalse(ctx.isEstablished(), "disposed context should not be established");
             CIFSException ex = assertThrows(CIFSException.class, ctx::dispose);
@@ -252,7 +255,7 @@ class SSPContextTest {
         @Test
         @DisplayName("Supported/preferred mech edge cases (null, empty, unknown)")
         void testMechanismEdges() {
-            DummySSPContext empty = new DummySSPContext(new byte[] {1}, false, "", new ASN1ObjectIdentifier[0], 0, false);
+            DummySSPContext empty = new DummySSPContext(new byte[] { 1 }, false, "", new ASN1ObjectIdentifier[0], 0, false);
             assertFalse(empty.isSupported(new ASN1ObjectIdentifier("1.2.3")));
             assertFalse(empty.isPreferredMech(new ASN1ObjectIdentifier("1.2.3")));
             assertFalse(empty.isPreferredMech(null));
@@ -265,19 +268,15 @@ class SSPContextTest {
     @DisplayName("Parameterized initSecContext slices")
     class ParameterizedInit {
         static Stream<Arguments> validRanges() {
-            byte[] src = new byte[] {0,1,2,3};
-            return Stream.of(
-                Arguments.of(src, 0, 0, new byte[] {}),
-                Arguments.of(src, 0, 4, new byte[] {0,1,2,3}),
-                Arguments.of(src, 1, 2, new byte[] {1,2}),
-                Arguments.of(src, 3, 1, new byte[] {3})
-            );
+            byte[] src = new byte[] { 0, 1, 2, 3 };
+            return Stream.of(Arguments.of(src, 0, 0, new byte[] {}), Arguments.of(src, 0, 4, new byte[] { 0, 1, 2, 3 }),
+                    Arguments.of(src, 1, 2, new byte[] { 1, 2 }), Arguments.of(src, 3, 1, new byte[] { 3 }));
         }
 
         @ParameterizedTest(name = "slice off={1}, len={2}")
         @MethodSource("validRanges")
         void testSlices(byte[] src, int off, int len, byte[] expected) throws Exception {
-            DummySSPContext ctx = new DummySSPContext(new byte[] {9}, false, null, null, 0, false);
+            DummySSPContext ctx = new DummySSPContext(new byte[] { 9 }, false, null, null, 0, false);
             assertArrayEquals(expected, ctx.initSecContext(src, off, len));
         }
     }
@@ -293,15 +292,15 @@ class SSPContextTest {
         private void useContext(SSPContext ctx) throws Exception {
             ctx.getSigningKey();
             ctx.isEstablished();
-            ctx.initSecContext(new byte[] {1,2,3}, 1, 1);
+            ctx.initSecContext(new byte[] { 1, 2, 3 }, 1, 1);
             ctx.getNetbiosName();
             ctx.isSupported(new ASN1ObjectIdentifier("1.2.3"));
             ctx.isPreferredMech(new ASN1ObjectIdentifier("1.2.3"));
             ctx.getFlags();
             ctx.getSupportedMechs();
             ctx.supportsIntegrity();
-            byte[] mic = ctx.calculateMIC(new byte[] {5});
-            ctx.verifyMIC(new byte[] {5}, mic);
+            byte[] mic = ctx.calculateMIC(new byte[] { 5 });
+            ctx.verifyMIC(new byte[] { 5 }, mic);
             ctx.isMICAvailable();
             ctx.dispose();
         }
@@ -310,16 +309,16 @@ class SSPContextTest {
         @DisplayName("Verifies calls and argument flow across methods")
         void testInteractions() throws Exception {
             // Arrange
-            when(mockCtx.getSigningKey()).thenReturn(new byte[] {7});
+            when(mockCtx.getSigningKey()).thenReturn(new byte[] { 7 });
             when(mockCtx.isEstablished()).thenReturn(true);
-            when(mockCtx.initSecContext(any(byte[].class), anyInt(), anyInt())).thenReturn(new byte[] {9});
+            when(mockCtx.initSecContext(any(byte[].class), anyInt(), anyInt())).thenReturn(new byte[] { 9 });
             when(mockCtx.getNetbiosName()).thenReturn("NB");
             when(mockCtx.isSupported(any())).thenReturn(true);
             when(mockCtx.isPreferredMech(any())).thenReturn(false);
             when(mockCtx.getFlags()).thenReturn(123);
             when(mockCtx.getSupportedMechs()).thenReturn(new ASN1ObjectIdentifier[] { new ASN1ObjectIdentifier("1.2.3") });
             when(mockCtx.supportsIntegrity()).thenReturn(true);
-            when(mockCtx.calculateMIC(any(byte[].class))).thenReturn(new byte[] {42});
+            when(mockCtx.calculateMIC(any(byte[].class))).thenReturn(new byte[] { 42 });
             // verifyMIC returns void; no stubbing needed
             when(mockCtx.isMICAvailable()).thenReturn(true);
 
@@ -353,7 +352,7 @@ class SSPContextTest {
             when(mockCtx.supportsIntegrity()).thenReturn(false);
 
             // A small consumer that only uses MIC if advertised as available
-            byte[] data = new byte[] {1,2};
+            byte[] data = new byte[] { 1, 2 };
             if (mockCtx.supportsIntegrity() && mockCtx.isEstablished()) {
                 mockCtx.calculateMIC(data);
             }
@@ -368,4 +367,3 @@ class SSPContextTest {
         }
     }
 }
-

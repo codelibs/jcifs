@@ -93,8 +93,9 @@ class Type2MessageTest {
             // Then
             assertNotNull(message);
             // Verify flags are derived from Type1Message and context
-            int expectedFlags = Type2Message.NTLMSSP_NEGOTIATE_NTLM | Type2Message.NTLMSSP_NEGOTIATE_VERSION
-                    | Type2Message.NTLMSSP_NEGOTIATE_UNICODE | Type2Message.NTLMSSP_REQUEST_TARGET | Type2Message.NTLMSSP_TARGET_TYPE_DOMAIN;
+            int expectedFlags =
+                    Type2Message.NTLMSSP_NEGOTIATE_NTLM | Type2Message.NTLMSSP_NEGOTIATE_VERSION | Type2Message.NTLMSSP_NEGOTIATE_UNICODE
+                            | Type2Message.NTLMSSP_REQUEST_TARGET | Type2Message.NTLMSSP_TARGET_TYPE_DOMAIN;
             assertEquals(expectedFlags, message.getFlags());
             assertNull(message.getChallenge());
             assertEquals(TEST_DOMAIN, message.getTarget()); // Target should be default domain if requested
@@ -238,8 +239,9 @@ class Type2MessageTest {
             int flags = Type2Message.getDefaultFlags(mockContext, type1);
 
             // Then
-            int expectedFlags = Type2Message.NTLMSSP_NEGOTIATE_NTLM | Type2Message.NTLMSSP_NEGOTIATE_VERSION
-                    | Type2Message.NTLMSSP_NEGOTIATE_UNICODE | Type2Message.NTLMSSP_REQUEST_TARGET | Type2Message.NTLMSSP_TARGET_TYPE_DOMAIN;
+            int expectedFlags =
+                    Type2Message.NTLMSSP_NEGOTIATE_NTLM | Type2Message.NTLMSSP_NEGOTIATE_VERSION | Type2Message.NTLMSSP_NEGOTIATE_UNICODE
+                            | Type2Message.NTLMSSP_REQUEST_TARGET | Type2Message.NTLMSSP_TARGET_TYPE_DOMAIN;
             assertEquals(expectedFlags, flags);
         }
 
@@ -258,7 +260,7 @@ class Type2MessageTest {
             when(mockHost.getHostName()).thenReturn(TEST_HOSTNAME);
             when(mockConfig.isUseUnicode()).thenReturn(false);
             when(mockConfig.getDefaultDomain()).thenReturn(TEST_DOMAIN);
-            
+
             Type1Message type1 = new Type1Message(mockContext);
             type1.setFlags(Type1Message.NTLMSSP_NEGOTIATE_OEM); // No REQUEST_TARGET
 
@@ -340,7 +342,8 @@ class Type2MessageTest {
             // Given
             CIFSContext mockContext = createMockContext();
             Type2Message message = new Type2Message(mockContext);
-            byte[] testContext = new byte[] { (byte) 0x11, (byte) 0x22, (byte) 0x33, (byte) 0x44, (byte) 0x55, (byte) 0x66, (byte) 0x77, (byte) 0x88 };
+            byte[] testContext =
+                    new byte[] { (byte) 0x11, (byte) 0x22, (byte) 0x33, (byte) 0x44, (byte) 0x55, (byte) 0x66, (byte) 0x77, (byte) 0x88 };
 
             // When
             message.setContext(testContext);
@@ -359,8 +362,8 @@ class Type2MessageTest {
         void testToByteArray_Basic() throws IOException {
             // Given
             CIFSContext mockContext = createMockContext();
-            Type2Message message =
-                    new Type2Message(mockContext, Type2Message.NTLMSSP_NEGOTIATE_UNICODE | Type2Message.NTLMSSP_NEGOTIATE_VERSION, null, null);
+            Type2Message message = new Type2Message(mockContext,
+                    Type2Message.NTLMSSP_NEGOTIATE_UNICODE | Type2Message.NTLMSSP_NEGOTIATE_VERSION, null, null);
 
             // When
             byte[] bytes = message.toByteArray();
@@ -383,7 +386,8 @@ class Type2MessageTest {
             CIFSContext mockContext = createMockContext();
             Type2Message message = new Type2Message(mockContext,
                     Type2Message.NTLMSSP_NEGOTIATE_UNICODE | Type2Message.NTLMSSP_NEGOTIATE_VERSION, TEST_CHALLENGE, null);
-            byte[] testContext = new byte[] { (byte) 0x11, (byte) 0x22, (byte) 0x33, (byte) 0x44, (byte) 0x55, (byte) 0x66, (byte) 0x77, (byte) 0x88 };
+            byte[] testContext =
+                    new byte[] { (byte) 0x11, (byte) 0x22, (byte) 0x33, (byte) 0x44, (byte) 0x55, (byte) 0x66, (byte) 0x77, (byte) 0x88 };
             message.setContext(testContext);
 
             // When
@@ -412,7 +416,7 @@ class Type2MessageTest {
             // Then
             assertNotNull(bytes);
             assertTrue(bytes.length > 48);
-            
+
             // Parse the message to verify target and target info
             Type2Message parsedMessage = new Type2Message(bytes);
             assertEquals(TEST_TARGET, parsedMessage.getTarget());
@@ -443,8 +447,8 @@ class Type2MessageTest {
         void testToByteArray_TargetInfoNull_FlagNotSet() throws IOException {
             // Given
             CIFSContext mockContext = createMockContext();
-            Type2Message message =
-                    new Type2Message(mockContext, Type2Message.NTLMSSP_NEGOTIATE_UNICODE | Type2Message.NTLMSSP_NEGOTIATE_VERSION, null, null);
+            Type2Message message = new Type2Message(mockContext,
+                    Type2Message.NTLMSSP_NEGOTIATE_UNICODE | Type2Message.NTLMSSP_NEGOTIATE_VERSION, null, null);
             message.setTargetInformation(null); // Explicitly set to null
 
             // When
@@ -483,7 +487,8 @@ class Type2MessageTest {
             // Given
             CIFSContext mockContext = createMockContext();
             Type2Message message = new Type2Message(mockContext, Type2Message.NTLMSSP_NEGOTIATE_UNICODE, TEST_CHALLENGE, TEST_TARGET);
-            byte[] testContext = new byte[] { (byte) 0x11, (byte) 0x22, (byte) 0x33, (byte) 0x44, (byte) 0x55, (byte) 0x66, (byte) 0x77, (byte) 0x88 };
+            byte[] testContext =
+                    new byte[] { (byte) 0x11, (byte) 0x22, (byte) 0x33, (byte) 0x44, (byte) 0x55, (byte) 0x66, (byte) 0x77, (byte) 0x88 };
             message.setContext(testContext);
             byte[] testTargetInfo = new byte[] { 0x10, 0x20, 0x30 };
             message.setTargetInformation(testTargetInfo);
@@ -510,8 +515,8 @@ class Type2MessageTest {
             String result = message.toString();
 
             // Then
-            String expectedToString = "Type2Message[target=null" + ",challenge=null" + ",context=null" + ",targetInformation=null" + ",flags=0x"
-                    + Hexdump.toHexString(message.getFlags(), 8) + "]";
+            String expectedToString = "Type2Message[target=null" + ",challenge=null" + ",context=null" + ",targetInformation=null"
+                    + ",flags=0x" + Hexdump.toHexString(message.getFlags(), 8) + "]";
             assertEquals(expectedToString, result);
         }
     }
@@ -525,8 +530,8 @@ class Type2MessageTest {
         void testParse_MinimumValidMessage() throws IOException {
             // Given
             CIFSContext mockContext = createMockContext();
-            Type2Message originalMessage =
-                    new Type2Message(mockContext, Type2Message.NTLMSSP_NEGOTIATE_UNICODE | Type2Message.NTLMSSP_NEGOTIATE_VERSION, null, null);
+            Type2Message originalMessage = new Type2Message(mockContext,
+                    Type2Message.NTLMSSP_NEGOTIATE_UNICODE | Type2Message.NTLMSSP_NEGOTIATE_VERSION, null, null);
             byte[] rawMessage = originalMessage.toByteArray();
 
             // When
@@ -549,7 +554,8 @@ class Type2MessageTest {
             Type2Message originalMessage = new Type2Message(mockContext,
                     Type2Message.NTLMSSP_NEGOTIATE_UNICODE | Type2Message.NTLMSSP_NEGOTIATE_VERSION | Type2Message.NTLMSSP_REQUEST_TARGET,
                     TEST_CHALLENGE, TEST_TARGET);
-            byte[] testContext = new byte[] { (byte) 0x11, (byte) 0x22, (byte) 0x33, (byte) 0x44, (byte) 0x55, (byte) 0x66, (byte) 0x77, (byte) 0x88 };
+            byte[] testContext =
+                    new byte[] { (byte) 0x11, (byte) 0x22, (byte) 0x33, (byte) 0x44, (byte) 0x55, (byte) 0x66, (byte) 0x77, (byte) 0x88 };
             originalMessage.setContext(testContext);
             byte[] rawMessage = originalMessage.toByteArray();
 
@@ -645,7 +651,7 @@ class Type2MessageTest {
             when(mockHost.getHostName()).thenReturn(TEST_HOSTNAME);
             when(mockConfig.isUseUnicode()).thenReturn(false); // Simulate OEM encoding
             when(mockConfig.getDefaultDomain()).thenReturn(TEST_DOMAIN);
-            
+
             Type2Message originalMessage = new Type2Message(mockContext,
                     Type2Message.NTLMSSP_NEGOTIATE_OEM | Type2Message.NTLMSSP_NEGOTIATE_VERSION | Type2Message.NTLMSSP_REQUEST_TARGET,
                     TEST_CHALLENGE, TEST_TARGET);
@@ -730,9 +736,9 @@ class Type2MessageTest {
                     int serverNameLength = Type2Message.readUShort(targetInfo, serverOffset + 2);
                     assertTrue(serverNameLength > 0);
                     if (serverOffset + 4 + serverNameLength <= targetInfo.length) {
-                        String serverName = new String(
-                                Arrays.copyOfRange(targetInfo, serverOffset + 4, serverOffset + 4 + serverNameLength),
-                                Type2Message.UNI_ENCODING);
+                        String serverName =
+                                new String(Arrays.copyOfRange(targetInfo, serverOffset + 4, serverOffset + 4 + serverNameLength),
+                                        Type2Message.UNI_ENCODING);
                         assertNotNull(serverName);
                         // The actual server name might be different from TEST_HOSTNAME based on how getHostName() works
                     }

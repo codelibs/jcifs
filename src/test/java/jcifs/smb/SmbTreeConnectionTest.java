@@ -1,8 +1,24 @@
 package jcifs.smb;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anySet;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Field;
 import java.net.URL;
@@ -18,7 +34,6 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
 import jcifs.CIFSContext;
-import jcifs.CIFSException;
 import jcifs.Configuration;
 import jcifs.Credentials;
 import jcifs.DfsResolver;
@@ -27,7 +42,6 @@ import jcifs.SmbResourceLocator;
 import jcifs.SmbTreeHandle;
 import jcifs.internal.CommonServerMessageBlockRequest;
 import jcifs.internal.CommonServerMessageBlockResponse;
-import jcifs.internal.RequestWithPath;
 import jcifs.internal.smb1.com.SmbComClose;
 
 @ExtendWith(MockitoExtension.class)
@@ -47,7 +61,8 @@ class SmbTreeConnectionTest {
     DfsResolver dfsResolver;
 
     private SmbTreeConnection newConn() {
-        return new SmbTreeConnection(ctx) { };
+        return new SmbTreeConnection(ctx) {
+        };
     }
 
     @BeforeEach
@@ -247,24 +262,23 @@ class SmbTreeConnectionTest {
     void send_retries_on_transportError() throws Exception {
         // Create a spy to track method calls
         SmbTreeConnection c = spy(newConn());
-        
+
         // Prepare a minimal locator
         SmbResourceLocatorImpl loc = new SmbResourceLocatorImpl(ctx, smbUrl("smb://srv/share/path"));
 
         // Setup a tree that will fail with transport error first, then succeed
         SmbTreeImpl tree = mock(SmbTreeImpl.class);
         when(tree.acquire(false)).thenReturn(tree);
-        
+
         CommonServerMessageBlockRequest req = mock(CommonServerMessageBlockRequest.class);
         CommonServerMessageBlockResponse resp = mock(CommonServerMessageBlockResponse.class);
-        
+
         // Configure the tree to throw transport error on first call, succeed on second
         when(tree.send(eq(req), eq(resp), anySet()))
-                .thenThrow(new SmbException("transport error", new jcifs.util.transport.TransportException()))
-                .thenReturn(resp);
-        
+                .thenThrow(new SmbException("transport error", new jcifs.util.transport.TransportException())).thenReturn(resp);
+
         setTree(c, tree);
-        
+
         // Override connectHost to avoid actual network connection on retry
         doAnswer(invocation -> {
             SmbTreeHandleImpl handle = mock(SmbTreeHandleImpl.class);
@@ -279,7 +293,7 @@ class SmbTreeConnectionTest {
         } catch (Exception e) {
             // It's ok if it fails, we just want to verify reset was called
         }
-        
+
         // Request/response reset should happen on retry
         verify(req, atLeastOnce()).reset();
         verify(resp, atLeastOnce()).reset();
@@ -311,7 +325,7 @@ class SmbTreeConnectionTest {
         SmbTreeImpl tree = mock(SmbTreeImpl.class);
         SmbSessionImpl session = mock(SmbSessionImpl.class);
         SmbTransportImpl transport = mock(SmbTransportImpl.class);
-        
+
         when(tree.isConnected()).thenReturn(true);
         when(tree.getSession()).thenReturn(session);
         when(tree.acquire(false)).thenReturn(tree);

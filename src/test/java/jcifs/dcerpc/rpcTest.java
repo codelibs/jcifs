@@ -1,10 +1,16 @@
 package jcifs.dcerpc;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -25,7 +31,7 @@ class rpcTest {
 
     @Mock
     private NdrBuffer mockNdrBuffer;
-    
+
     @Mock
     private NdrBuffer mockDeferredBuffer;
 
@@ -74,14 +80,12 @@ class rpcTest {
         void testUuidTDecode() throws NdrException {
             // Given: A UUID object to decode into
             rpc.uuid_t uuid = new rpc.uuid_t();
-            
+
             // Mock the NdrBuffer responses for decoding
             when(mockNdrBuffer.dec_ndr_long()).thenReturn(0x12345678);
-            when(mockNdrBuffer.dec_ndr_short()).thenReturn((int)(short) 0x9ABC, (int)(short) 0xDEF0);
-            when(mockNdrBuffer.dec_ndr_small()).thenReturn(
-                (int)(byte) 0x11, (int)(byte) 0x22,  // clock seq bytes
-                (int)(byte) 0xAA, (int)(byte) 0xBB, (int)(byte) 0xCC, 
-                (int)(byte) 0xDD, (int)(byte) 0xEE, (int)(byte) 0xFF  // node bytes
+            when(mockNdrBuffer.dec_ndr_short()).thenReturn((int) (short) 0x9ABC, (int) (short) 0xDEF0);
+            when(mockNdrBuffer.dec_ndr_small()).thenReturn((int) (byte) 0x11, (int) (byte) 0x22, // clock seq bytes
+                    (int) (byte) 0xAA, (int) (byte) 0xBB, (int) (byte) 0xCC, (int) (byte) 0xDD, (int) (byte) 0xEE, (int) (byte) 0xFF // node bytes
             );
             when(mockNdrBuffer.derive(anyInt())).thenReturn(mockNdrBuffer);
 
@@ -101,8 +105,7 @@ class rpcTest {
             assertEquals((short) 0xDEF0, uuid.time_hi_and_version);
             assertEquals((byte) 0x11, uuid.clock_seq_hi_and_reserved);
             assertEquals((byte) 0x22, uuid.clock_seq_low);
-            assertArrayEquals(new byte[] { (byte) 0xAA, (byte) 0xBB, (byte) 0xCC, 
-                                         (byte) 0xDD, (byte) 0xEE, (byte) 0xFF }, uuid.node);
+            assertArrayEquals(new byte[] { (byte) 0xAA, (byte) 0xBB, (byte) 0xCC, (byte) 0xDD, (byte) 0xEE, (byte) 0xFF }, uuid.node);
         }
 
         @Test
@@ -115,8 +118,7 @@ class rpcTest {
             originalUuid.time_hi_and_version = (short) 0x8765;
             originalUuid.clock_seq_hi_and_reserved = (byte) 0x99;
             originalUuid.clock_seq_low = (byte) 0x88;
-            originalUuid.node = new byte[] { (byte) 0x11, (byte) 0x22, (byte) 0x33, 
-                                           (byte) 0x44, (byte) 0x55, (byte) 0x66 };
+            originalUuid.node = new byte[] { (byte) 0x11, (byte) 0x22, (byte) 0x33, (byte) 0x44, (byte) 0x55, (byte) 0x66 };
 
             // Mock encoding buffer
             NdrBuffer encodeBuffer = mock(NdrBuffer.class);
@@ -126,17 +128,10 @@ class rpcTest {
             // Mock decoding buffer with the same values
             NdrBuffer decodeBuffer = mock(NdrBuffer.class);
             when(decodeBuffer.dec_ndr_long()).thenReturn(originalUuid.time_low);
-            when(decodeBuffer.dec_ndr_short()).thenReturn(
-                (int)originalUuid.time_mid, 
-                (int)originalUuid.time_hi_and_version
-            );
-            when(decodeBuffer.dec_ndr_small()).thenReturn(
-                (int)originalUuid.clock_seq_hi_and_reserved, 
-                (int)originalUuid.clock_seq_low,
-                (int)originalUuid.node[0], (int)originalUuid.node[1], 
-                (int)originalUuid.node[2], (int)originalUuid.node[3], 
-                (int)originalUuid.node[4], (int)originalUuid.node[5]
-            );
+            when(decodeBuffer.dec_ndr_short()).thenReturn((int) originalUuid.time_mid, (int) originalUuid.time_hi_and_version);
+            when(decodeBuffer.dec_ndr_small()).thenReturn((int) originalUuid.clock_seq_hi_and_reserved, (int) originalUuid.clock_seq_low,
+                    (int) originalUuid.node[0], (int) originalUuid.node[1], (int) originalUuid.node[2], (int) originalUuid.node[3],
+                    (int) originalUuid.node[4], (int) originalUuid.node[5]);
             when(decodeBuffer.derive(anyInt())).thenReturn(decodeBuffer);
 
             // When: Decoding into a new UUID
@@ -169,8 +164,7 @@ class rpcTest {
             policyHandle.uuid.time_hi_and_version = (short) 0x3333;
             policyHandle.uuid.clock_seq_hi_and_reserved = (byte) 0x44;
             policyHandle.uuid.clock_seq_low = (byte) 0x55;
-            policyHandle.uuid.node = new byte[] { (byte) 0x01, (byte) 0x02, (byte) 0x03, 
-                                                 (byte) 0x04, (byte) 0x05, (byte) 0x06 };
+            policyHandle.uuid.node = new byte[] { (byte) 0x01, (byte) 0x02, (byte) 0x03, (byte) 0x04, (byte) 0x05, (byte) 0x06 };
 
             when(mockNdrBuffer.derive(anyInt())).thenReturn(mockNdrBuffer);
 
@@ -215,11 +209,9 @@ class rpcTest {
             rpc.policy_handle policyHandle = new rpc.policy_handle();
 
             when(mockNdrBuffer.dec_ndr_long()).thenReturn(456, 0x22222222);
-            when(mockNdrBuffer.dec_ndr_short()).thenReturn((int)(short) 0x3333, (int)(short) 0x4444);
-            when(mockNdrBuffer.dec_ndr_small()).thenReturn(
-                (int)(byte) 0x55, (int)(byte) 0x66,  // clock seq bytes
-                (int)(byte) 0x07, (int)(byte) 0x08, (int)(byte) 0x09,
-                (int)(byte) 0x0A, (int)(byte) 0x0B, (int)(byte) 0x0C  // node bytes
+            when(mockNdrBuffer.dec_ndr_short()).thenReturn((int) (short) 0x3333, (int) (short) 0x4444);
+            when(mockNdrBuffer.dec_ndr_small()).thenReturn((int) (byte) 0x55, (int) (byte) 0x66, // clock seq bytes
+                    (int) (byte) 0x07, (int) (byte) 0x08, (int) (byte) 0x09, (int) (byte) 0x0A, (int) (byte) 0x0B, (int) (byte) 0x0C // node bytes
             );
             when(mockNdrBuffer.derive(anyInt())).thenReturn(mockNdrBuffer);
 
@@ -241,9 +233,8 @@ class rpcTest {
             assertEquals((short) 0x4444, policyHandle.uuid.time_hi_and_version);
             assertEquals((byte) 0x55, policyHandle.uuid.clock_seq_hi_and_reserved);
             assertEquals((byte) 0x66, policyHandle.uuid.clock_seq_low);
-            assertArrayEquals(new byte[] { (byte) 0x07, (byte) 0x08, (byte) 0x09, 
-                                         (byte) 0x0A, (byte) 0x0B, (byte) 0x0C },
-                             policyHandle.uuid.node);
+            assertArrayEquals(new byte[] { (byte) 0x07, (byte) 0x08, (byte) 0x09, (byte) 0x0A, (byte) 0x0B, (byte) 0x0C },
+                    policyHandle.uuid.node);
         }
     }
 
@@ -265,7 +256,7 @@ class rpcTest {
 
             // Then: Verify the encoding sequence
             verify(mockNdrBuffer).align(4);
-            verify(mockNdrBuffer, times(2)).enc_ndr_short((short) 0);  // length and maximum_length
+            verify(mockNdrBuffer, times(2)).enc_ndr_short((short) 0); // length and maximum_length
             verify(mockNdrBuffer).enc_ndr_referent(null, 1);
             // No deferred encoding for null buffer
         }
@@ -276,7 +267,7 @@ class rpcTest {
             // Given: A unicode string to decode into
             rpc.unicode_string unicodeString = new rpc.unicode_string();
 
-            when(mockNdrBuffer.dec_ndr_short()).thenReturn((int)(short) 0, (int)(short) 0);
+            when(mockNdrBuffer.dec_ndr_short()).thenReturn((int) (short) 0, (int) (short) 0);
             when(mockNdrBuffer.dec_ndr_long()).thenReturn(0); // Null referent pointer
 
             // When: Decoding the unicode string
@@ -298,12 +289,12 @@ class rpcTest {
         void testUnicodeStringBasicFields() {
             // Given: A unicode string
             rpc.unicode_string unicodeString = new rpc.unicode_string();
-            
+
             // When: Setting values
             unicodeString.length = (short) 10;
             unicodeString.maximum_length = (short) 20;
             unicodeString.buffer = new short[] { 65, 66, 67 }; // A, B, C
-            
+
             // Then: Values should be set correctly
             assertEquals((short) 10, unicodeString.length);
             assertEquals((short) 20, unicodeString.maximum_length);
@@ -321,13 +312,13 @@ class rpcTest {
 
             // Create a real NdrBuffer mock that can handle the deferred field access
             // But only test the non-deferred parts to avoid field mocking issues
-            
+
             // When: Trying to encode (may throw exception due to deferred buffer)
             // Then: Should at least call the basic encoding methods before hitting deferred
             assertThrows(Exception.class, () -> {
                 unicodeString.encode(mockNdrBuffer);
             }, "Should encounter issue with deferred buffer access");
-            
+
             // Verify that basic encoding was attempted
             verify(mockNdrBuffer).align(4);
             verify(mockNdrBuffer).enc_ndr_short((short) 6);
@@ -347,8 +338,7 @@ class rpcTest {
             rpc.sid_t sid = new rpc.sid_t();
             sid.revision = (byte) 1;
             sid.sub_authority_count = (byte) 2;
-            sid.identifier_authority = new byte[] { (byte) 0, (byte) 0, (byte) 0, 
-                                                   (byte) 0, (byte) 0, (byte) 5 };
+            sid.identifier_authority = new byte[] { (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 5 };
             sid.sub_authority = new int[] { 1000, 2000 };
 
             when(mockNdrBuffer.derive(anyInt())).thenReturn(mockNdrBuffer);
@@ -358,17 +348,17 @@ class rpcTest {
 
             // Then: Verify the encoding sequence
             verify(mockNdrBuffer).align(4);
-            verify(mockNdrBuffer).enc_ndr_long(2);  // sub_authority_count
-            verify(mockNdrBuffer).enc_ndr_small((byte) 1);  // revision
-            verify(mockNdrBuffer).enc_ndr_small((byte) 2);  // sub_authority_count
-            verify(mockNdrBuffer).advance(6);  // identifier_authority advance
-            verify(mockNdrBuffer).advance(8);  // sub_authority advance (4 * 2)
+            verify(mockNdrBuffer).enc_ndr_long(2); // sub_authority_count
+            verify(mockNdrBuffer).enc_ndr_small((byte) 1); // revision
+            verify(mockNdrBuffer).enc_ndr_small((byte) 2); // sub_authority_count
+            verify(mockNdrBuffer).advance(6); // identifier_authority advance
+            verify(mockNdrBuffer).advance(8); // sub_authority advance (4 * 2)
             verify(mockNdrBuffer, times(2)).derive(anyInt());
-            
+
             // Verify identifier_authority bytes (5 zeros + 1 five)
             verify(mockNdrBuffer, times(5)).enc_ndr_small((byte) 0);
             verify(mockNdrBuffer).enc_ndr_small((byte) 5);
-            
+
             // Verify sub_authority values
             verify(mockNdrBuffer).enc_ndr_long(1000);
             verify(mockNdrBuffer).enc_ndr_long(2000);
@@ -381,11 +371,9 @@ class rpcTest {
             rpc.sid_t sid = new rpc.sid_t();
 
             when(mockNdrBuffer.dec_ndr_long()).thenReturn(2, 1000, 2000); // sub_authority_count, sub_authorities
-            when(mockNdrBuffer.dec_ndr_small()).thenReturn(
-                (int)(byte) 1, (int)(byte) 2,  // revision, sub_authority_count
-                (int)(byte) 0, (int)(byte) 0, (int)(byte) 0,  // identifier_authority
-                (int)(byte) 0, (int)(byte) 0, (int)(byte) 5
-            );
+            when(mockNdrBuffer.dec_ndr_small()).thenReturn((int) (byte) 1, (int) (byte) 2, // revision, sub_authority_count
+                    (int) (byte) 0, (int) (byte) 0, (int) (byte) 0, // identifier_authority
+                    (int) (byte) 0, (int) (byte) 0, (int) (byte) 5);
             when(mockNdrBuffer.derive(anyInt())).thenReturn(mockNdrBuffer);
 
             // When: Decoding the SID
@@ -393,16 +381,15 @@ class rpcTest {
 
             // Then: Verify the decoding sequence and values
             verify(mockNdrBuffer).align(4);
-            verify(mockNdrBuffer, times(3)).dec_ndr_long();  // sub_authority_count + 2 sub_authorities
-            verify(mockNdrBuffer, times(8)).dec_ndr_small();  // revision + sub_authority_count + 6 identifier_authority bytes
-            verify(mockNdrBuffer).advance(6);  // identifier_authority advance
-            verify(mockNdrBuffer).advance(8);  // sub_authority advance (4 * 2)
+            verify(mockNdrBuffer, times(3)).dec_ndr_long(); // sub_authority_count + 2 sub_authorities
+            verify(mockNdrBuffer, times(8)).dec_ndr_small(); // revision + sub_authority_count + 6 identifier_authority bytes
+            verify(mockNdrBuffer).advance(6); // identifier_authority advance
+            verify(mockNdrBuffer).advance(8); // sub_authority advance (4 * 2)
             verify(mockNdrBuffer, times(2)).derive(anyInt());
 
             assertEquals((byte) 1, sid.revision);
             assertEquals((byte) 2, sid.sub_authority_count);
-            assertArrayEquals(new byte[] { (byte) 0, (byte) 0, (byte) 0, 
-                                         (byte) 0, (byte) 0, (byte) 5 }, sid.identifier_authority);
+            assertArrayEquals(new byte[] { (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 5 }, sid.identifier_authority);
             assertArrayEquals(new int[] { 1000, 2000 }, sid.sub_authority);
         }
 
@@ -413,8 +400,7 @@ class rpcTest {
             rpc.sid_t originalSid = new rpc.sid_t();
             originalSid.revision = (byte) 1;
             originalSid.sub_authority_count = (byte) 3;
-            originalSid.identifier_authority = new byte[] { (byte) 1, (byte) 2, (byte) 3, 
-                                                           (byte) 4, (byte) 5, (byte) 6 };
+            originalSid.identifier_authority = new byte[] { (byte) 1, (byte) 2, (byte) 3, (byte) 4, (byte) 5, (byte) 6 };
             originalSid.sub_authority = new int[] { 10, 20, 30 };
 
             // Mock encoding buffer
@@ -424,18 +410,13 @@ class rpcTest {
 
             // Mock decoding buffer with the same values
             NdrBuffer decodeBuffer = mock(NdrBuffer.class);
-            when(decodeBuffer.dec_ndr_long()).thenReturn(
-                (int) originalSid.sub_authority_count,  // sub_authority_count
-                originalSid.sub_authority[0],  // sub_authorities
-                originalSid.sub_authority[1],
-                originalSid.sub_authority[2]
-            );
-            when(decodeBuffer.dec_ndr_small()).thenReturn(
-                (int)originalSid.revision, (int)originalSid.sub_authority_count,
-                (int)originalSid.identifier_authority[0], (int)originalSid.identifier_authority[1],
-                (int)originalSid.identifier_authority[2], (int)originalSid.identifier_authority[3],
-                (int)originalSid.identifier_authority[4], (int)originalSid.identifier_authority[5]
-            );
+            when(decodeBuffer.dec_ndr_long()).thenReturn((int) originalSid.sub_authority_count, // sub_authority_count
+                    originalSid.sub_authority[0], // sub_authorities
+                    originalSid.sub_authority[1], originalSid.sub_authority[2]);
+            when(decodeBuffer.dec_ndr_small()).thenReturn((int) originalSid.revision, (int) originalSid.sub_authority_count,
+                    (int) originalSid.identifier_authority[0], (int) originalSid.identifier_authority[1],
+                    (int) originalSid.identifier_authority[2], (int) originalSid.identifier_authority[3],
+                    (int) originalSid.identifier_authority[4], (int) originalSid.identifier_authority[5]);
             when(decodeBuffer.derive(anyInt())).thenReturn(decodeBuffer);
 
             // When: Decoding into a new SID

@@ -1,7 +1,17 @@
 package jcifs.internal;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -18,13 +28,13 @@ class CommonServerMessageBlockRequestTest {
 
     @Mock
     private CommonServerMessageBlockRequest request;
-    
+
     @Mock
     private CommonServerMessageBlockRequest nextRequest;
-    
+
     @Mock
     private CommonServerMessageBlockRequest splitRequest;
-    
+
     @Mock
     private CommonServerMessageBlockRequest cancelRequest;
 
@@ -39,10 +49,10 @@ class CommonServerMessageBlockRequestTest {
     void testIsResponseAsyncTrue() {
         // Given
         when(request.isResponseAsync()).thenReturn(true);
-        
+
         // When
         boolean result = request.isResponseAsync();
-        
+
         // Then
         assertTrue(result);
         verify(request, times(1)).isResponseAsync();
@@ -53,10 +63,10 @@ class CommonServerMessageBlockRequestTest {
     void testIsResponseAsyncFalse() {
         // Given
         when(request.isResponseAsync()).thenReturn(false);
-        
+
         // When
         boolean result = request.isResponseAsync();
-        
+
         // Then
         assertFalse(result);
         verify(request, times(1)).isResponseAsync();
@@ -67,10 +77,10 @@ class CommonServerMessageBlockRequestTest {
     void testGetNextWithChainedMessage() {
         // Given
         when(request.getNext()).thenReturn(nextRequest);
-        
+
         // When
         CommonServerMessageBlockRequest result = request.getNext();
-        
+
         // Then
         assertNotNull(result);
         assertEquals(nextRequest, result);
@@ -82,10 +92,10 @@ class CommonServerMessageBlockRequestTest {
     void testGetNextWithNoChainedMessage() {
         // Given
         when(request.getNext()).thenReturn(null);
-        
+
         // When
         CommonServerMessageBlockRequest result = request.getNext();
-        
+
         // Then
         assertNull(result);
         verify(request, times(1)).getNext();
@@ -96,10 +106,10 @@ class CommonServerMessageBlockRequestTest {
     void testSplitWithFollowingMessage() {
         // Given
         when(request.split()).thenReturn(splitRequest);
-        
+
         // When
         CommonServerMessageBlockRequest result = request.split();
-        
+
         // Then
         assertNotNull(result);
         assertEquals(splitRequest, result);
@@ -111,10 +121,10 @@ class CommonServerMessageBlockRequestTest {
     void testSplitWithNoFollowingMessage() {
         // Given
         when(request.split()).thenReturn(null);
-        
+
         // When
         CommonServerMessageBlockRequest result = request.split();
-        
+
         // Then
         assertNull(result);
         verify(request, times(1)).split();
@@ -126,10 +136,10 @@ class CommonServerMessageBlockRequestTest {
         // Given
         int expectedSize = 1024;
         when(request.size()).thenReturn(expectedSize);
-        
+
         // When
         int result = request.size();
-        
+
         // Then
         assertEquals(expectedSize, result);
         verify(request, times(1)).size();
@@ -140,10 +150,10 @@ class CommonServerMessageBlockRequestTest {
     void testSizeReturnsZero() {
         // Given
         when(request.size()).thenReturn(0);
-        
+
         // When
         int result = request.size();
-        
+
         // Then
         assertEquals(0, result);
         verify(request, times(1)).size();
@@ -155,10 +165,10 @@ class CommonServerMessageBlockRequestTest {
         // Given
         int largeSize = Integer.MAX_VALUE;
         when(request.size()).thenReturn(largeSize);
-        
+
         // When
         int result = request.size();
-        
+
         // Then
         assertEquals(largeSize, result);
         verify(request, times(1)).size();
@@ -169,10 +179,10 @@ class CommonServerMessageBlockRequestTest {
     void testCreateCancelReturnsRequest() {
         // Given
         when(request.createCancel()).thenReturn(cancelRequest);
-        
+
         // When
         CommonServerMessageBlockRequest result = request.createCancel();
-        
+
         // Then
         assertNotNull(result);
         assertEquals(cancelRequest, result);
@@ -184,10 +194,10 @@ class CommonServerMessageBlockRequestTest {
     void testCreateCancelReturnsNull() {
         // Given
         when(request.createCancel()).thenReturn(null);
-        
+
         // When
         CommonServerMessageBlockRequest result = request.createCancel();
-        
+
         // Then
         assertNull(result);
         verify(request, times(1)).createCancel();
@@ -198,10 +208,10 @@ class CommonServerMessageBlockRequestTest {
     void testAllowChainReturnsTrue() {
         // Given
         when(request.allowChain(nextRequest)).thenReturn(true);
-        
+
         // When
         boolean result = request.allowChain(nextRequest);
-        
+
         // Then
         assertTrue(result);
         verify(request, times(1)).allowChain(nextRequest);
@@ -212,10 +222,10 @@ class CommonServerMessageBlockRequestTest {
     void testAllowChainReturnsFalse() {
         // Given
         when(request.allowChain(nextRequest)).thenReturn(false);
-        
+
         // When
         boolean result = request.allowChain(nextRequest);
-        
+
         // Then
         assertFalse(result);
         verify(request, times(1)).allowChain(nextRequest);
@@ -226,10 +236,10 @@ class CommonServerMessageBlockRequestTest {
     void testAllowChainWithNull() {
         // Given
         when(request.allowChain(null)).thenReturn(false);
-        
+
         // When
         boolean result = request.allowChain(null);
-        
+
         // Then
         assertFalse(result);
         verify(request, times(1)).allowChain(null);
@@ -241,10 +251,10 @@ class CommonServerMessageBlockRequestTest {
         // Given
         int tid = 12345;
         doNothing().when(request).setTid(tid);
-        
+
         // When
         request.setTid(tid);
-        
+
         // Then
         verify(request, times(1)).setTid(tid);
     }
@@ -255,10 +265,10 @@ class CommonServerMessageBlockRequestTest {
         // Given
         int tid = 0;
         doNothing().when(request).setTid(tid);
-        
+
         // When
         request.setTid(tid);
-        
+
         // Then
         verify(request, times(1)).setTid(tid);
     }
@@ -269,10 +279,10 @@ class CommonServerMessageBlockRequestTest {
         // Given
         int tid = -1;
         doNothing().when(request).setTid(tid);
-        
+
         // When
         request.setTid(tid);
-        
+
         // Then
         verify(request, times(1)).setTid(tid);
     }
@@ -283,10 +293,10 @@ class CommonServerMessageBlockRequestTest {
         // Given
         int tid = Integer.MAX_VALUE;
         doNothing().when(request).setTid(tid);
-        
+
         // When
         request.setTid(tid);
-        
+
         // Then
         verify(request, times(1)).setTid(tid);
     }
@@ -297,10 +307,10 @@ class CommonServerMessageBlockRequestTest {
         // Given
         Integer expectedTimeout = 5000;
         when(request.getOverrideTimeout()).thenReturn(expectedTimeout);
-        
+
         // When
         Integer result = request.getOverrideTimeout();
-        
+
         // Then
         assertNotNull(result);
         assertEquals(expectedTimeout, result);
@@ -312,10 +322,10 @@ class CommonServerMessageBlockRequestTest {
     void testGetOverrideTimeoutReturnsNull() {
         // Given
         when(request.getOverrideTimeout()).thenReturn(null);
-        
+
         // When
         Integer result = request.getOverrideTimeout();
-        
+
         // Then
         assertNull(result);
         verify(request, times(1)).getOverrideTimeout();
@@ -327,10 +337,10 @@ class CommonServerMessageBlockRequestTest {
         // Given
         Integer zeroTimeout = 0;
         when(request.getOverrideTimeout()).thenReturn(zeroTimeout);
-        
+
         // When
         Integer result = request.getOverrideTimeout();
-        
+
         // Then
         assertNotNull(result);
         assertEquals(0, result.intValue());
@@ -343,10 +353,10 @@ class CommonServerMessageBlockRequestTest {
         // Given
         Integer largeTimeout = Integer.MAX_VALUE;
         when(request.getOverrideTimeout()).thenReturn(largeTimeout);
-        
+
         // When
         Integer result = request.getOverrideTimeout();
-        
+
         // Then
         assertNotNull(result);
         assertEquals(Integer.MAX_VALUE, result.intValue());
@@ -361,13 +371,13 @@ class CommonServerMessageBlockRequestTest {
         when(request.size()).thenReturn(100);
         when(request.getOverrideTimeout()).thenReturn(3000);
         when(request.allowChain(any())).thenReturn(true);
-        
+
         // When
         boolean async = request.isResponseAsync();
         int size = request.size();
         Integer timeout = request.getOverrideTimeout();
         boolean canChain = request.allowChain(nextRequest);
-        
+
         // Then
         assertTrue(async);
         assertEquals(100, size);
@@ -389,14 +399,14 @@ class CommonServerMessageBlockRequestTest {
         when(thirdRequest.getNext()).thenReturn(null);
         when(request.allowChain(nextRequest)).thenReturn(true);
         when(nextRequest.allowChain(thirdRequest)).thenReturn(true);
-        
+
         // When
         CommonServerMessageBlockRequest second = request.getNext();
         CommonServerMessageBlockRequest third = second.getNext();
         CommonServerMessageBlockRequest fourth = third.getNext();
         boolean firstAllowsSecond = request.allowChain(nextRequest);
         boolean secondAllowsThird = nextRequest.allowChain(thirdRequest);
-        
+
         // Then
         assertEquals(nextRequest, second);
         assertEquals(thirdRequest, third);
@@ -410,7 +420,7 @@ class CommonServerMessageBlockRequestTest {
     void testInterfaceImplementation() {
         // Given
         CommonServerMessageBlockRequest implementation = mock(CommonServerMessageBlockRequest.class);
-        
+
         // When/Then - Verify the interface extends the expected interfaces
         assertTrue(CommonServerMessageBlock.class.isAssignableFrom(CommonServerMessageBlockRequest.class));
         assertTrue(jcifs.util.transport.Request.class.isAssignableFrom(CommonServerMessageBlockRequest.class));

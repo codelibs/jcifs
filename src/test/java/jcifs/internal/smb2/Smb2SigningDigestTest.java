@@ -1,7 +1,14 @@
 package jcifs.internal.smb2;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 
 import java.security.GeneralSecurityException;
 import java.security.Security;
@@ -13,16 +20,15 @@ import javax.crypto.spec.SecretKeySpec;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedStatic;
 
 import jcifs.internal.CommonServerMessageBlock;
 import jcifs.internal.util.SMBUtil;
-import jcifs.util.Crypto;
 
 class Smb2SigningDigestTest {
 
@@ -43,7 +49,7 @@ class Smb2SigningDigestTest {
     void setup() {
         sessionKey = new byte[16];
         Arrays.fill(sessionKey, (byte) 0xAA);
-        
+
         preauthIntegrityHash = new byte[64];
         Arrays.fill(preauthIntegrityHash, (byte) 0xBB);
     }
@@ -72,20 +78,15 @@ class Smb2SigningDigestTest {
             try (MockedStatic<Smb3KeyDerivation> mockedKeyDerivation = mockStatic(Smb3KeyDerivation.class)) {
                 byte[] derivedKey = new byte[16];
                 Arrays.fill(derivedKey, (byte) 0xCC);
-                mockedKeyDerivation.when(() -> Smb3KeyDerivation.deriveSigningKey(
-                    eq(Smb2Constants.SMB2_DIALECT_0300), 
-                    any(byte[].class), 
-                    any(byte[].class))
-                ).thenReturn(derivedKey);
+                mockedKeyDerivation.when(
+                        () -> Smb3KeyDerivation.deriveSigningKey(eq(Smb2Constants.SMB2_DIALECT_0300), any(byte[].class), any(byte[].class)))
+                        .thenReturn(derivedKey);
 
                 Smb2SigningDigest digest = new Smb2SigningDigest(sessionKey, Smb2Constants.SMB2_DIALECT_0300, null);
                 assertNotNull(digest);
-                
-                mockedKeyDerivation.verify(() -> Smb3KeyDerivation.deriveSigningKey(
-                    eq(Smb2Constants.SMB2_DIALECT_0300),
-                    eq(sessionKey),
-                    any(byte[].class)
-                ));
+
+                mockedKeyDerivation.verify(
+                        () -> Smb3KeyDerivation.deriveSigningKey(eq(Smb2Constants.SMB2_DIALECT_0300), eq(sessionKey), any(byte[].class)));
             }
         }
 
@@ -95,20 +96,15 @@ class Smb2SigningDigestTest {
             try (MockedStatic<Smb3KeyDerivation> mockedKeyDerivation = mockStatic(Smb3KeyDerivation.class)) {
                 byte[] derivedKey = new byte[16];
                 Arrays.fill(derivedKey, (byte) 0xDD);
-                mockedKeyDerivation.when(() -> Smb3KeyDerivation.deriveSigningKey(
-                    eq(Smb2Constants.SMB2_DIALECT_0302), 
-                    any(byte[].class), 
-                    any(byte[].class))
-                ).thenReturn(derivedKey);
+                mockedKeyDerivation.when(
+                        () -> Smb3KeyDerivation.deriveSigningKey(eq(Smb2Constants.SMB2_DIALECT_0302), any(byte[].class), any(byte[].class)))
+                        .thenReturn(derivedKey);
 
                 Smb2SigningDigest digest = new Smb2SigningDigest(sessionKey, Smb2Constants.SMB2_DIALECT_0302, null);
                 assertNotNull(digest);
-                
-                mockedKeyDerivation.verify(() -> Smb3KeyDerivation.deriveSigningKey(
-                    eq(Smb2Constants.SMB2_DIALECT_0302),
-                    eq(sessionKey),
-                    any(byte[].class)
-                ));
+
+                mockedKeyDerivation.verify(
+                        () -> Smb3KeyDerivation.deriveSigningKey(eq(Smb2Constants.SMB2_DIALECT_0302), eq(sessionKey), any(byte[].class)));
             }
         }
 
@@ -118,51 +114,40 @@ class Smb2SigningDigestTest {
             try (MockedStatic<Smb3KeyDerivation> mockedKeyDerivation = mockStatic(Smb3KeyDerivation.class)) {
                 byte[] derivedKey = new byte[16];
                 Arrays.fill(derivedKey, (byte) 0xEE);
-                mockedKeyDerivation.when(() -> Smb3KeyDerivation.deriveSigningKey(
-                    eq(Smb2Constants.SMB2_DIALECT_0311), 
-                    any(byte[].class), 
-                    any(byte[].class))
-                ).thenReturn(derivedKey);
+                mockedKeyDerivation.when(
+                        () -> Smb3KeyDerivation.deriveSigningKey(eq(Smb2Constants.SMB2_DIALECT_0311), any(byte[].class), any(byte[].class)))
+                        .thenReturn(derivedKey);
 
                 Smb2SigningDigest digest = new Smb2SigningDigest(sessionKey, Smb2Constants.SMB2_DIALECT_0311, preauthIntegrityHash);
                 assertNotNull(digest);
-                
-                mockedKeyDerivation.verify(() -> Smb3KeyDerivation.deriveSigningKey(
-                    eq(Smb2Constants.SMB2_DIALECT_0311),
-                    eq(sessionKey),
-                    eq(preauthIntegrityHash)
-                ));
+
+                mockedKeyDerivation.verify(() -> Smb3KeyDerivation.deriveSigningKey(eq(Smb2Constants.SMB2_DIALECT_0311), eq(sessionKey),
+                        eq(preauthIntegrityHash)));
             }
         }
 
         @Test
         @DisplayName("Should throw exception for SMB 3.1.1 without preauth hash")
         void testConstructorSmb311WithoutPreauthHash() {
-            IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> new Smb2SigningDigest(sessionKey, Smb2Constants.SMB2_DIALECT_0311, null)
-            );
+            IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                    () -> new Smb2SigningDigest(sessionKey, Smb2Constants.SMB2_DIALECT_0311, null));
             assertEquals("Missing preauthIntegrityHash for SMB 3.1", exception.getMessage());
         }
 
         @Test
         @DisplayName("Should throw exception for unknown dialect")
         void testConstructorUnknownDialect() {
-            IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> new Smb2SigningDigest(sessionKey, 0x9999, null)
-            );
+            IllegalArgumentException exception =
+                    assertThrows(IllegalArgumentException.class, () -> new Smb2SigningDigest(sessionKey, 0x9999, null));
             assertEquals("Unknown dialect", exception.getMessage());
         }
 
         @ParameterizedTest
-        @ValueSource(ints = {0x0000, 0x0100, 0x0201, 0x0303, 0x0400, 0xFFFF})
+        @ValueSource(ints = { 0x0000, 0x0100, 0x0201, 0x0303, 0x0400, 0xFFFF })
         @DisplayName("Should throw exception for invalid dialects")
         void testConstructorInvalidDialects(int dialect) {
-            IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> new Smb2SigningDigest(sessionKey, dialect, null)
-            );
+            IllegalArgumentException exception =
+                    assertThrows(IllegalArgumentException.class, () -> new Smb2SigningDigest(sessionKey, dialect, null));
             assertEquals("Unknown dialect", exception.getMessage());
         }
     }
@@ -181,7 +166,7 @@ class Smb2SigningDigestTest {
             digest = new Smb2SigningDigest(sessionKey, Smb2Constants.SMB2_DIALECT_0202, null);
             data = new byte[128];
             Arrays.fill(data, (byte) 0x00);
-            
+
             // Set up mock messages
             request = mock(CommonServerMessageBlock.class);
             response = mock(CommonServerMessageBlock.class);
@@ -262,12 +247,12 @@ class Smb2SigningDigestTest {
             int threadCount = 10;
             Thread[] threads = new Thread[threadCount];
             byte[][] dataArrays = new byte[threadCount][128];
-            
+
             for (int i = 0; i < threadCount; i++) {
                 final int index = i;
                 dataArrays[i] = new byte[128];
                 Arrays.fill(dataArrays[i], (byte) i);
-                
+
                 threads[i] = new Thread(() -> {
                     digest.sign(dataArrays[index], 0, dataArrays[index].length, request, response);
                 });
@@ -318,7 +303,7 @@ class Smb2SigningDigestTest {
             SMBUtil.writeInt4(0x00000000, data, 16);
 
             boolean result = digest.verify(data, 0, data.length, 0, msg);
-            
+
             assertTrue(result, "Should return true when signed flag is not set");
         }
 
@@ -331,20 +316,20 @@ class Smb2SigningDigestTest {
             // Create valid signature using HmacSHA256
             Mac mac = Mac.getInstance("HmacSHA256");
             mac.init(new SecretKeySpec(sessionKey, "HmacSHA256"));
-            
+
             // Zero signature field for calculation
             for (int i = 0; i < SIGNATURE_LENGTH; i++) {
                 data[SIGNATURE_OFFSET + i] = 0;
             }
-            
+
             mac.update(data, 0, data.length);
             byte[] signature = mac.doFinal();
-            
+
             // Place signature in data
             System.arraycopy(signature, 0, data, SIGNATURE_OFFSET, SIGNATURE_LENGTH);
 
             boolean result = digest.verify(data, 0, data.length, 0, msg);
-            
+
             assertFalse(result, "Should return false for valid signature");
         }
 
@@ -360,7 +345,7 @@ class Smb2SigningDigestTest {
             System.arraycopy(invalidSignature, 0, data, SIGNATURE_OFFSET, SIGNATURE_LENGTH);
 
             boolean result = digest.verify(data, 0, data.length, 0, msg);
-            
+
             assertTrue(result, "Should return true for invalid signature");
         }
 
@@ -377,20 +362,20 @@ class Smb2SigningDigestTest {
             // Create valid signature
             Mac mac = Mac.getInstance("HmacSHA256");
             mac.init(new SecretKeySpec(sessionKey, "HmacSHA256"));
-            
+
             // Zero signature field for calculation
             for (int i = 0; i < SIGNATURE_LENGTH; i++) {
                 largeData[offset + SIGNATURE_OFFSET + i] = 0;
             }
-            
+
             mac.update(largeData, offset, 128);
             byte[] signature = mac.doFinal();
-            
+
             // Place signature at correct offset
             System.arraycopy(signature, 0, largeData, offset + SIGNATURE_OFFSET, SIGNATURE_LENGTH);
 
             boolean result = digest.verify(largeData, offset, 128, 0, msg);
-            
+
             assertFalse(result, "Should return false for valid signature with offset");
         }
 
@@ -406,7 +391,7 @@ class Smb2SigningDigestTest {
             System.arraycopy(signature, 0, data, SIGNATURE_OFFSET, SIGNATURE_LENGTH);
 
             boolean result = digest.verify(data, 0, data.length, 8, msg);
-            
+
             assertTrue(result, "Should handle extra padding parameter");
         }
 
@@ -416,7 +401,7 @@ class Smb2SigningDigestTest {
             int threadCount = 10;
             Thread[] threads = new Thread[threadCount];
             boolean[] results = new boolean[threadCount];
-            
+
             // Set signed flag
             SMBUtil.writeInt4(ServerMessageBlock2.SMB2_FLAGS_SIGNED, data, 16);
 
@@ -452,7 +437,7 @@ class Smb2SigningDigestTest {
         void testSignAndVerifyRoundTripSmb202() throws GeneralSecurityException {
             Smb2SigningDigest digest1 = new Smb2SigningDigest(sessionKey, Smb2Constants.SMB2_DIALECT_0202, null);
             Smb2SigningDigest digest2 = new Smb2SigningDigest(sessionKey, Smb2Constants.SMB2_DIALECT_0202, null);
-            
+
             byte[] data = new byte[128];
             Arrays.fill(data, (byte) 0x42);
             CommonServerMessageBlock request = mock(CommonServerMessageBlock.class);
@@ -463,7 +448,7 @@ class Smb2SigningDigestTest {
 
             // Verify with second digest (simulating server verification)
             boolean isValid = digest2.verify(data, 0, data.length, 0, response);
-            
+
             assertFalse(isValid, "Valid signature should verify correctly");
         }
 
@@ -472,7 +457,7 @@ class Smb2SigningDigestTest {
         void testSignAndVerifyRoundTripSmb210() throws GeneralSecurityException {
             Smb2SigningDigest digest1 = new Smb2SigningDigest(sessionKey, Smb2Constants.SMB2_DIALECT_0210, null);
             Smb2SigningDigest digest2 = new Smb2SigningDigest(sessionKey, Smb2Constants.SMB2_DIALECT_0210, null);
-            
+
             byte[] data = new byte[128];
             Arrays.fill(data, (byte) 0x43);
             CommonServerMessageBlock request = mock(CommonServerMessageBlock.class);
@@ -483,7 +468,7 @@ class Smb2SigningDigestTest {
 
             // Verify with second digest
             boolean isValid = digest2.verify(data, 0, data.length, 0, response);
-            
+
             assertFalse(isValid, "Valid signature should verify correctly");
         }
 
@@ -492,7 +477,7 @@ class Smb2SigningDigestTest {
         void testDetectTampering() throws GeneralSecurityException {
             Smb2SigningDigest digest1 = new Smb2SigningDigest(sessionKey, Smb2Constants.SMB2_DIALECT_0202, null);
             Smb2SigningDigest digest2 = new Smb2SigningDigest(sessionKey, Smb2Constants.SMB2_DIALECT_0202, null);
-            
+
             byte[] data = new byte[128];
             Arrays.fill(data, (byte) 0x44);
             CommonServerMessageBlock request = mock(CommonServerMessageBlock.class);
@@ -506,7 +491,7 @@ class Smb2SigningDigestTest {
 
             // Verify should fail
             boolean isValid = digest2.verify(data, 0, data.length, 0, response);
-            
+
             assertTrue(isValid, "Tampered data should fail verification");
         }
 
@@ -515,13 +500,13 @@ class Smb2SigningDigestTest {
         void testDifferentSessionKeys() throws GeneralSecurityException {
             byte[] sessionKey1 = new byte[16];
             Arrays.fill(sessionKey1, (byte) 0x11);
-            
+
             byte[] sessionKey2 = new byte[16];
             Arrays.fill(sessionKey2, (byte) 0x22);
 
             Smb2SigningDigest digest1 = new Smb2SigningDigest(sessionKey1, Smb2Constants.SMB2_DIALECT_0202, null);
             Smb2SigningDigest digest2 = new Smb2SigningDigest(sessionKey2, Smb2Constants.SMB2_DIALECT_0202, null);
-            
+
             byte[] data = new byte[128];
             Arrays.fill(data, (byte) 0x45);
             CommonServerMessageBlock request = mock(CommonServerMessageBlock.class);
@@ -532,7 +517,7 @@ class Smb2SigningDigestTest {
 
             // Verify with different key should fail
             boolean isValid = digest2.verify(data, 0, data.length, 0, response);
-            
+
             assertTrue(isValid, "Different session keys should fail verification");
         }
     }

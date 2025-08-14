@@ -1,15 +1,18 @@
 package jcifs.internal.smb2.session;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 import jcifs.Configuration;
 import jcifs.internal.SMBProtocolDecodingException;
@@ -100,11 +103,8 @@ class Smb2LogoffResponseTest {
             Smb2LogoffResponse resp = newResponse();
 
             // Act
-            SMBProtocolDecodingException ex = assertThrows(
-                SMBProtocolDecodingException.class,
-                () -> resp.readBytesWireFormat(buffer, 0),
-                "Should throw when structure size != 4"
-            );
+            SMBProtocolDecodingException ex = assertThrows(SMBProtocolDecodingException.class, () -> resp.readBytesWireFormat(buffer, 0),
+                    "Should throw when structure size != 4");
 
             // Assert: message is meaningful
             assertEquals("Structure size is not 4", ex.getMessage());
@@ -132,4 +132,3 @@ class Smb2LogoffResponseTest {
         }
     }
 }
-

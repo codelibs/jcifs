@@ -100,7 +100,7 @@ class KerberosRelevantAuthDataTest {
         PACDecodingException exception = assertThrows(PACDecodingException.class, () -> {
             new KerberosRelevantAuthData(malformedToken, keys);
         }, "A PACDecodingException should be thrown for a malformed token.");
-        
+
         assertEquals("Malformed kerberos ticket", exception.getMessage(), "The exception message should indicate a malformed ticket.");
     }
 
@@ -120,22 +120,20 @@ class KerberosRelevantAuthDataTest {
         Exception exception = assertThrows(Exception.class, () -> {
             new KerberosRelevantAuthData(emptyToken, keys);
         }, "An exception should be thrown for an empty token.");
-        
+
         // The exception could be PACDecodingException or NullPointerException
         assertTrue(exception instanceof PACDecodingException || exception instanceof NullPointerException,
-                   "The exception should be either PACDecodingException or NullPointerException.");
-        
+                "The exception should be either PACDecodingException or NullPointerException.");
+
         if (exception instanceof PACDecodingException) {
-            assertEquals("Malformed kerberos ticket", exception.getMessage(), 
-                        "PAC exception should indicate malformed ticket.");
+            assertEquals("Malformed kerberos ticket", exception.getMessage(), "PAC exception should indicate malformed ticket.");
         } else if (exception instanceof NullPointerException) {
             // Empty input causes null ASN1 object, which is expected behavior
-            assertTrue(exception.getMessage() == null || 
-                      exception.getMessage().contains("Cannot invoke \"Object.getClass()\""),
-                      "NullPointerException should be from null ASN1 object.");
+            assertTrue(exception.getMessage() == null || exception.getMessage().contains("Cannot invoke \"Object.getClass()\""),
+                    "NullPointerException should be from null ASN1 object.");
         }
     }
-    
+
     /**
      * Test constructor with a valid token that contains no authorization entries.
      *
@@ -170,7 +168,7 @@ class KerberosRelevantAuthDataTest {
         // 1. GIVEN
         KerberosAuthData mockAuthData1 = mock(KerberosAuthData.class);
         KerberosAuthData mockAuthData2 = mock(KerberosAuthData.class);
-        
+
         // Mock the parse method to return two different objects based on input
         // Must use matchers for all arguments when using any matcher
         mockedStaticAuthData.when(() -> KerberosAuthData.parse(eq(1), eq(new byte[] { 0x01 }), any(Map.class)))
@@ -180,12 +178,12 @@ class KerberosRelevantAuthDataTest {
 
         // Construct a token with two authorization entries
         ASN1EncodableVector authVector = new ASN1EncodableVector();
-        
+
         ASN1EncodableVector elementVector1 = new ASN1EncodableVector();
         elementVector1.add(new DERTaggedObject(0, new ASN1Integer(1)));
         elementVector1.add(new DERTaggedObject(1, new DEROctetString(new byte[] { 0x01 })));
         authVector.add(new DERSequence(elementVector1));
-        
+
         ASN1EncodableVector elementVector2 = new ASN1EncodableVector();
         elementVector2.add(new DERTaggedObject(0, new ASN1Integer(2)));
         elementVector2.add(new DERTaggedObject(1, new DEROctetString(new byte[] { 0x02 })));
@@ -193,7 +191,7 @@ class KerberosRelevantAuthDataTest {
 
         byte[] token = new DERSequence(authVector).getEncoded();
         Map<Integer, KerberosKey> keys = new HashMap<>();
-        
+
         KerberosRelevantAuthData relevantAuthData = new KerberosRelevantAuthData(token, keys);
 
         // 2. WHEN

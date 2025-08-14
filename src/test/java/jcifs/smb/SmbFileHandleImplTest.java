@@ -1,13 +1,25 @@
 package jcifs.smb;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isA;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -44,18 +56,15 @@ class SmbFileHandleImplTest {
     @DisplayName("Constructor with null tree throws NPE (byte[] fid variant)")
     void constructor_nullTree_byteArray_throwsNPE() {
         lenient().when(cfg.isTraceResourceUsage()).thenReturn(false);
-        assertThrows(NullPointerException.class, () ->
-            new SmbFileHandleImpl(cfg, new byte[] {1,2}, null, "//server/share", 0, 0, 0, 0, 0L)
-        );
+        assertThrows(NullPointerException.class,
+                () -> new SmbFileHandleImpl(cfg, new byte[] { 1, 2 }, null, "//server/share", 0, 0, 0, 0, 0L));
     }
 
     @Test
     @DisplayName("Constructor with null cfg throws NPE")
     void constructor_nullCfg_throwsNPE() {
         stubValidTree(7L, true, true);
-        assertThrows(NullPointerException.class, () ->
-            new SmbFileHandleImpl(null, 42, tree, "//server/share", 0, 0, 0, 0, 0L)
-        );
+        assertThrows(NullPointerException.class, () -> new SmbFileHandleImpl(null, 42, tree, "//server/share", 0, 0, 0, 0, 0L));
     }
 
     @Test
@@ -90,7 +99,7 @@ class SmbFileHandleImplTest {
     void isValid_false_inVariousCases() {
         when(cfg.isTraceResourceUsage()).thenReturn(false);
         stubValidTree(10L, true, true);
-        SmbFileHandleImpl h = new SmbFileHandleImpl(cfg, new byte[]{0x01}, tree, "//x", 0, 0, 0, 0, 0L);
+        SmbFileHandleImpl h = new SmbFileHandleImpl(cfg, new byte[] { 0x01 }, tree, "//x", 0, 0, 0, 0, 0L);
 
         assertTrue(h.isValid());
 
@@ -115,7 +124,7 @@ class SmbFileHandleImplTest {
     void getters_throw_whenInvalid() {
         when(cfg.isTraceResourceUsage()).thenReturn(false);
         stubValidTree(1L, true, true);
-        SmbFileHandleImpl h = new SmbFileHandleImpl(cfg, new byte[]{0x01, 0x02}, tree, "//x", 0, 0, 0, 0, 0L);
+        SmbFileHandleImpl h = new SmbFileHandleImpl(cfg, new byte[] { 0x01, 0x02 }, tree, "//x", 0, 0, 0, 0, 0L);
         // invalidate
         h.markClosed();
 
@@ -131,7 +140,7 @@ class SmbFileHandleImplTest {
         when(cfg.isTraceResourceUsage()).thenReturn(false);
         stubValidTree(5L, true, true);
 
-        byte[] fileId = new byte[] {0x0A, 0x0B};
+        byte[] fileId = new byte[] { 0x0A, 0x0B };
         SmbFileHandleImpl h = new SmbFileHandleImpl(cfg, fileId, tree, "//server/share/path", 0x1, 0x2, 0x3, 0x4, 123L);
 
         h.close(777L);
@@ -185,7 +194,7 @@ class SmbFileHandleImplTest {
         when(cfg.isTraceResourceUsage()).thenReturn(false);
         stubValidTree(8L, true, true);
 
-        SmbFileHandleImpl h = new SmbFileHandleImpl(cfg, new byte[]{1,2,3}, tree, "//srv/share", 0, 0, 0, 0, 0L);
+        SmbFileHandleImpl h = new SmbFileHandleImpl(cfg, new byte[] { 1, 2, 3 }, tree, "//srv/share", 0, 0, 0, 0, 0L);
 
         // Increase usage to 2
         h.acquire();
@@ -217,7 +226,7 @@ class SmbFileHandleImplTest {
         when(cfg.isTraceResourceUsage()).thenReturn(false);
         stubValidTree(1L, true, true);
 
-        byte[] fidBytes = new byte[] {0x01, 0x02};
+        byte[] fidBytes = new byte[] { 0x01, 0x02 };
         SmbFileHandleImpl h1 = new SmbFileHandleImpl(cfg, fidBytes, tree, "//u/one", 0x10, 0x20, 0x30, 0x40, 0L);
         String s1 = h1.toString();
         assertTrue(s1.contains("//u/one"));
@@ -231,11 +240,10 @@ class SmbFileHandleImplTest {
 
     static Stream<Arguments> equalsHashParams() {
         return Stream.of(
-            // byte[] id based equality (same id and tree id)
-            Arguments.of(new byte[]{0x0A, 0x0B}, new byte[]{0x0A, 0x0B}, 100L, true),
-            // fid based equality (null fileId, same fid and tree id)
-            Arguments.of(null, null, 200L, true)
-        );
+                // byte[] id based equality (same id and tree id)
+                Arguments.of(new byte[] { 0x0A, 0x0B }, new byte[] { 0x0A, 0x0B }, 100L, true),
+                // fid based equality (null fileId, same fid and tree id)
+                Arguments.of(null, null, 200L, true));
     }
 
     @ParameterizedTest(name = "equals/hashCode consistent for treeId={2}")
@@ -253,13 +261,11 @@ class SmbFileHandleImplTest {
         lenient().when(tA.isConnected()).thenReturn(true);
         lenient().when(tB.isConnected()).thenReturn(true);
 
-        SmbFileHandleImpl hA = id1 != null
-            ? new SmbFileHandleImpl(cfg, id1, tA, "//eq/a", 0, 0, 0, 0, 0L)
-            : new SmbFileHandleImpl(cfg, 33, tA, "//eq/a", 0, 0, 0, 0, 0L);
+        SmbFileHandleImpl hA = id1 != null ? new SmbFileHandleImpl(cfg, id1, tA, "//eq/a", 0, 0, 0, 0, 0L)
+                : new SmbFileHandleImpl(cfg, 33, tA, "//eq/a", 0, 0, 0, 0, 0L);
 
-        SmbFileHandleImpl hB = id2 != null
-            ? new SmbFileHandleImpl(cfg, id2, tB, "//eq/b", 0, 0, 0, 0, 0L)
-            : new SmbFileHandleImpl(cfg, 33, tB, "//eq/b", 0, 0, 0, 0, 0L);
+        SmbFileHandleImpl hB = id2 != null ? new SmbFileHandleImpl(cfg, id2, tB, "//eq/b", 0, 0, 0, 0, 0L)
+                : new SmbFileHandleImpl(cfg, 33, tB, "//eq/b", 0, 0, 0, 0, 0L);
 
         if (expectEqual) {
             assertEquals(hA, hB);
@@ -273,11 +279,10 @@ class SmbFileHandleImplTest {
         lenient().when(tC.acquire()).thenReturn(tC);
         lenient().when(tC.getTreeId()).thenReturn(treeId + 1);
         lenient().when(tC.isConnected()).thenReturn(true);
-        
-        SmbFileHandleImpl hC = id2 != null
-            ? new SmbFileHandleImpl(cfg, id2, tC, "//eq/c", 0, 0, 0, 0, 0L)
-            : new SmbFileHandleImpl(cfg, 33, tC, "//eq/c", 0, 0, 0, 0, 0L);
-        
+
+        SmbFileHandleImpl hC = id2 != null ? new SmbFileHandleImpl(cfg, id2, tC, "//eq/c", 0, 0, 0, 0, 0L)
+                : new SmbFileHandleImpl(cfg, 33, tC, "//eq/c", 0, 0, 0, 0, 0L);
+
         assertNotEquals(hA, hC);
     }
 

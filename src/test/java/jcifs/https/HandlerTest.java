@@ -1,6 +1,10 @@
 package jcifs.https;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -10,8 +14,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-
-import jcifs.CIFSContext;
 
 /**
  * Test suite for jcifs.https.Handler class.
@@ -137,7 +139,7 @@ class HandlerTest {
         void testNtlmSupport() {
             // When
             Handler testHandler = new Handler(null);
-            
+
             // Then
             assertTrue(testHandler instanceof jcifs.http.Handler);
             assertEquals(443, testHandler.getDefaultPort());
@@ -150,7 +152,7 @@ class HandlerTest {
             Handler handler1 = new Handler(null);
             Handler handler2 = new Handler(null);
             Handler handler3 = new Handler(null);
-            
+
             // Then
             assertEquals(443, handler1.getDefaultPort());
             assertEquals(443, handler2.getDefaultPort());
@@ -167,11 +169,11 @@ class HandlerTest {
         void testDifferentPorts() {
             // Given
             Handler httpsHandler = new Handler(null);
-            
+
             // When
             int httpsPort = httpsHandler.getDefaultPort();
             int httpPort = jcifs.http.Handler.DEFAULT_HTTP_PORT;
-            
+
             // Then
             assertEquals(443, httpsPort);
             assertEquals(80, httpPort);
@@ -188,10 +190,10 @@ class HandlerTest {
         void testProtectedMethodAccess() throws Exception {
             // Given
             Handler testHandler = new Handler(null);
-            
+
             // When
             Method method = Handler.class.getDeclaredMethod("getDefaultPort");
-            
+
             // Then
             assertTrue(Modifier.isProtected(method.getModifiers()));
             method.setAccessible(true); // Required to invoke protected method
@@ -203,7 +205,7 @@ class HandlerTest {
         void testInheritanceHierarchy() {
             // When
             Class<?> superclass = Handler.class.getSuperclass();
-            
+
             // Then
             assertEquals(jcifs.http.Handler.class, superclass);
             assertEquals(URLStreamHandler.class, superclass.getSuperclass());
@@ -214,7 +216,7 @@ class HandlerTest {
         void testClassModifiers() {
             // When
             int modifiers = Handler.class.getModifiers();
-            
+
             // Then
             assertTrue(Modifier.isPublic(modifiers));
             assertFalse(Modifier.isAbstract(modifiers));

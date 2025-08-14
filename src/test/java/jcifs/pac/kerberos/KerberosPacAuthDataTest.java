@@ -41,21 +41,20 @@ class KerberosPacAuthDataTest {
         keys.put(PacSignature.ETYPE_AES256_CTS_HMAC_SHA1_96, kdcKey);
 
         // Mock Pac construction to bypass complex validation
-        try (MockedConstruction<Pac> pacMock = Mockito.mockConstruction(Pac.class, 
-            (mock, context) -> {
-                // Setup mock behavior
-                PacLogonInfo mockLogonInfo = Mockito.mock(PacLogonInfo.class);
-                PacSignature mockServerSig = Mockito.mock(PacSignature.class);
-                PacSignature mockKdcSig = Mockito.mock(PacSignature.class);
-                
-                Mockito.when(mock.getLogonInfo()).thenReturn(mockLogonInfo);
-                Mockito.when(mock.getServerSignature()).thenReturn(mockServerSig);
-                Mockito.when(mock.getKdcSignature()).thenReturn(mockKdcSig);
-            })) {
-            
+        try (MockedConstruction<Pac> pacMock = Mockito.mockConstruction(Pac.class, (mock, context) -> {
+            // Setup mock behavior
+            PacLogonInfo mockLogonInfo = Mockito.mock(PacLogonInfo.class);
+            PacSignature mockServerSig = Mockito.mock(PacSignature.class);
+            PacSignature mockKdcSig = Mockito.mock(PacSignature.class);
+
+            Mockito.when(mock.getLogonInfo()).thenReturn(mockLogonInfo);
+            Mockito.when(mock.getServerSignature()).thenReturn(mockServerSig);
+            Mockito.when(mock.getKdcSignature()).thenReturn(mockKdcSig);
+        })) {
+
             // Create minimal PAC data
             byte[] pacData = createMinimalPacData();
-            
+
             // Test constructor
             KerberosPacAuthData authData = new KerberosPacAuthData(pacData, keys);
             assertNotNull(authData.getPac());
@@ -76,7 +75,7 @@ class KerberosPacAuthDataTest {
     }
 
     // Test exception for short PAC
-    @Test  
+    @Test
     void testConstructorShortPac() {
         byte[] shortToken = new byte[7];
         PACDecodingException e = assertThrows(PACDecodingException.class, () -> {
@@ -90,18 +89,18 @@ class KerberosPacAuthDataTest {
     void testConstructorInvalidVersion() throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream dos = new DataOutputStream(baos);
-        
+
         // Write header with invalid version
         dos.writeInt(Integer.reverseBytes(1)); // 1 buffer
         dos.writeInt(Integer.reverseBytes(999)); // Invalid version
-        
+
         // Add minimal buffer entry
         dos.writeInt(Integer.reverseBytes(PacConstants.LOGON_INFO));
         dos.writeInt(Integer.reverseBytes(10));
         dos.writeLong(Long.reverseBytes(100));
-        
+
         byte[] invalidVersionPac = baos.toByteArray();
-        
+
         PACDecodingException e = assertThrows(PACDecodingException.class, () -> {
             new KerberosPacAuthData(invalidVersionPac, keys);
         });
@@ -113,13 +112,13 @@ class KerberosPacAuthDataTest {
     void testConstructorMissingBuffers() throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream dos = new DataOutputStream(baos);
-        
+
         // Write header with no buffers
         dos.writeInt(Integer.reverseBytes(0));
         dos.writeInt(Integer.reverseBytes(PacConstants.PAC_VERSION));
-        
+
         byte[] noBufPac = baos.toByteArray();
-        
+
         PACDecodingException e = assertThrows(PACDecodingException.class, () -> {
             new KerberosPacAuthData(noBufPac, keys);
         });
@@ -136,7 +135,7 @@ class KerberosPacAuthDataTest {
         try (MockedConstruction<Pac> pacMock = Mockito.mockConstruction(Pac.class)) {
             byte[] pacData = createMinimalPacData();
             KerberosPacAuthData authData = new KerberosPacAuthData(pacData, keys);
-            
+
             Pac result = authData.getPac();
             assertNotNull(result);
         }
@@ -146,29 +145,29 @@ class KerberosPacAuthDataTest {
         try {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             DataOutputStream dos = new DataOutputStream(baos);
-            
+
             // Write minimal PAC header
             dos.writeInt(Integer.reverseBytes(3)); // 3 buffers
             dos.writeInt(Integer.reverseBytes(PacConstants.PAC_VERSION));
-            
+
             // Write buffer entries
             dos.writeInt(Integer.reverseBytes(PacConstants.LOGON_INFO));
             dos.writeInt(Integer.reverseBytes(10));
             dos.writeLong(Long.reverseBytes(100));
-            
+
             dos.writeInt(Integer.reverseBytes(PacConstants.SERVER_CHECKSUM));
             dos.writeInt(Integer.reverseBytes(16));
             dos.writeLong(Long.reverseBytes(200));
-            
+
             dos.writeInt(Integer.reverseBytes(PacConstants.PRIVSVR_CHECKSUM));
             dos.writeInt(Integer.reverseBytes(16));
             dos.writeLong(Long.reverseBytes(300));
-            
+
             // Add some padding
             for (int i = 0; i < 300; i++) {
                 dos.writeByte(0);
             }
-            
+
             return baos.toByteArray();
         } catch (IOException e) {
             throw new PACDecodingException("Failed to create test data", e);

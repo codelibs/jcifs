@@ -1,16 +1,18 @@
 package jcifs.smb1.smb1;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static jcifs.smb1.smb1.ServerMessageBlock.SMB_COM_CLOSE;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
@@ -30,8 +32,7 @@ class SmbComCloseTest {
     @DisplayName("happy: constructor sets command correctly")
     void testConstructorSetsCommand() {
         SmbComClose close = new SmbComClose(1, 12345L);
-        assertEquals(SMB_COM_CLOSE, close.command,
-                     "command should be SMB_COM_CLOSE after construction");
+        assertEquals(SMB_COM_CLOSE, close.command, "command should be SMB_COM_CLOSE after construction");
     }
 
     /**
@@ -55,11 +56,9 @@ class SmbComCloseTest {
 
     static Stream<Arguments> validParams() {
         // fid 0x1234, lastWriteTime 0 -> UTime all 0xFF
-        return Stream.of(
-            Arguments.of(0x1234, 0L, new byte[] {0x34, 0x12, (byte)0xFF, (byte)0xFF, (byte)0xFF, (byte)0xFF}),
-            // negative fid wraps around, lastWriteTime = 1000 -> 1 second -> int value 1
-            Arguments.of(-1, 1000L, new byte[] {(byte)0xFF, (byte)0xFF, 0x01, 0x00, 0x00, 0x00})
-        );
+        return Stream.of(Arguments.of(0x1234, 0L, new byte[] { 0x34, 0x12, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF }),
+                // negative fid wraps around, lastWriteTime = 1000 -> 1 second -> int value 1
+                Arguments.of(-1, 1000L, new byte[] { (byte) 0xFF, (byte) 0xFF, 0x01, 0x00, 0x00, 0x00 }));
     }
 
     /**
@@ -72,11 +71,11 @@ class SmbComCloseTest {
         byte[] buffer = new byte[6];
         close.writeParameterWordsWireFormat(buffer, 0);
         // first two bytes encode fid 42
-        assertEquals((byte)42, buffer[0]);
-        assertEquals((byte)0, buffer[1]);
+        assertEquals((byte) 42, buffer[0]);
+        assertEquals((byte) 0, buffer[1]);
         // remaining 4 bytes should all be 0xFF according to writeUTime
         for (int i = 2; i < 6; i++) {
-            assertEquals((byte)0xFF, buffer[i], "byte %d should be 0xFF".formatted(i));
+            assertEquals((byte) 0xFF, buffer[i], "byte %d should be 0xFF".formatted(i));
         }
     }
 
@@ -111,4 +110,3 @@ class SmbComCloseTest {
         assertTrue(s.contains("lastWriteTime=" + lwt), "string should contain the lwt value");
     }
 }
-

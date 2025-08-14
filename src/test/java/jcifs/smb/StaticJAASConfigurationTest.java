@@ -1,22 +1,29 @@
 package jcifs.smb;
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.NullSource;
-import org.junit.jupiter.params.provider.ValueSource;
-import org.junit.jupiter.api.extension.ExtendWith;
-
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import javax.security.auth.login.AppConfigurationEntry;
-import javax.security.auth.login.AppConfigurationEntry.LoginModuleControlFlag;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import javax.security.auth.login.AppConfigurationEntry;
+import javax.security.auth.login.AppConfigurationEntry.LoginModuleControlFlag;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
  * Tests for StaticJAASConfiguration.
@@ -142,13 +149,13 @@ class StaticJAASConfigurationTest {
         // Arrange: create a regular map first, then spy on it
         Map<String, Object> originalMap = new HashMap<>();
         originalMap.put("refreshKrb5Config", "true");
-        
+
         @SuppressWarnings("unchecked")
         Map<String, Object> spyOpts = spy(originalMap);
-        
+
         // Reset the spy to clear any prior invocations from setup
         reset(spyOpts);
-        
+
         StaticJAASConfiguration cfg = new StaticJAASConfiguration(spyOpts);
 
         // Act
@@ -162,4 +169,3 @@ class StaticJAASConfigurationTest {
         verify(spyOpts, never()).clear();
     }
 }
-

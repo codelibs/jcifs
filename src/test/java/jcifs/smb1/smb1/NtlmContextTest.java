@@ -1,6 +1,5 @@
 package jcifs.smb1.smb1;
 
-import java.io.IOException;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -9,20 +8,16 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
-import static org.junit.jupiter.api.Assertions.fail;
 
-import jcifs.smb1.ntlmssp.NtlmFlags;
-import jcifs.smb1.smb1.NtlmPasswordAuthentication;
-import jcifs.smb1.smb1.NtlmContext;
-import jcifs.smb1.smb1.SmbException;
-import jcifs.smb1.ntlmssp.Type1Message;
-import jcifs.smb1.ntlmssp.Type2Message;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import jcifs.smb1.ntlmssp.NtlmFlags;
+import jcifs.smb1.ntlmssp.Type1Message;
+import jcifs.smb1.ntlmssp.Type2Message;
 
 @ExtendWith(MockitoExtension.class)
 class NtlmContextTest {
@@ -52,12 +47,8 @@ class NtlmContextTest {
         assertNull(context.getSigningKey());
         assertNull(context.getNetbiosName());
 
-        int expectedFlags = NtlmFlags.NTLMSSP_REQUEST_TARGET |
-                NtlmFlags.NTLMSSP_NEGOTIATE_NTLM2 |
-                NtlmFlags.NTLMSSP_NEGOTIATE_128 |
-                NtlmFlags.NTLMSSP_NEGOTIATE_SIGN |
-                NtlmFlags.NTLMSSP_NEGOTIATE_ALWAYS_SIGN |
-                NtlmFlags.NTLMSSP_NEGOTIATE_KEY_EXCH;
+        int expectedFlags = NtlmFlags.NTLMSSP_REQUEST_TARGET | NtlmFlags.NTLMSSP_NEGOTIATE_NTLM2 | NtlmFlags.NTLMSSP_NEGOTIATE_128
+                | NtlmFlags.NTLMSSP_NEGOTIATE_SIGN | NtlmFlags.NTLMSSP_NEGOTIATE_ALWAYS_SIGN | NtlmFlags.NTLMSSP_NEGOTIATE_KEY_EXCH;
         // Verify exactly the expected bits are set
         assertEquals(expectedFlags, context.ntlmsspFlags);
     }
@@ -69,9 +60,7 @@ class NtlmContextTest {
         assertNotNull(context);
         assertFalse(context.isEstablished());
 
-        int expectedFlags = NtlmFlags.NTLMSSP_REQUEST_TARGET |
-                NtlmFlags.NTLMSSP_NEGOTIATE_NTLM2 |
-                NtlmFlags.NTLMSSP_NEGOTIATE_128;
+        int expectedFlags = NtlmFlags.NTLMSSP_REQUEST_TARGET | NtlmFlags.NTLMSSP_NEGOTIATE_NTLM2 | NtlmFlags.NTLMSSP_NEGOTIATE_128;
         assertEquals(expectedFlags, context.ntlmsspFlags);
     }
 
@@ -104,9 +93,9 @@ class NtlmContextTest {
         context.initSecContext(new byte[0], 0, 0);
 
         // Create a mock Type 2 message (server challenge)
-        byte[] serverChallenge = new byte[]{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
-        int type2Flags = NtlmFlags.NTLMSSP_NEGOTIATE_NTLM | NtlmFlags.NTLMSSP_REQUEST_TARGET 
-                | NtlmFlags.NTLMSSP_NEGOTIATE_KEY_EXCH | NtlmFlags.NTLMSSP_NEGOTIATE_SIGN;
+        byte[] serverChallenge = new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 };
+        int type2Flags = NtlmFlags.NTLMSSP_NEGOTIATE_NTLM | NtlmFlags.NTLMSSP_REQUEST_TARGET | NtlmFlags.NTLMSSP_NEGOTIATE_KEY_EXCH
+                | NtlmFlags.NTLMSSP_NEGOTIATE_SIGN;
         Type2Message type2Message = new Type2Message(type2Flags, serverChallenge, domain);
         byte[] type2Token = type2Message.toByteArray();
 
@@ -120,7 +109,7 @@ class NtlmContextTest {
         // Signing key may or may not be generated depending on flags negotiation
         // The context negotiates flags with server, so we can't guarantee signing key
     }
-    
+
     @Test
     void testInitSecContext_state2_withoutSigning() throws Exception {
         // Test the second step (processing Type 2 and creating Type 3 message)
@@ -133,7 +122,7 @@ class NtlmContextTest {
         context.initSecContext(new byte[0], 0, 0);
 
         // Create a mock Type 2 message (server challenge)
-        byte[] serverChallenge = new byte[]{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
+        byte[] serverChallenge = new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 };
         int type2Flags = NtlmFlags.NTLMSSP_NEGOTIATE_NTLM | NtlmFlags.NTLMSSP_REQUEST_TARGET;
         Type2Message type2Message = new Type2Message(type2Flags, serverChallenge, domain);
         byte[] type2Token = type2Message.toByteArray();
@@ -154,15 +143,15 @@ class NtlmContextTest {
         when(mockAuth.getDomain()).thenReturn(domain);
         when(mockAuth.getUsername()).thenReturn(username);
         when(mockAuth.getPassword()).thenReturn(password);
-        
+
         NtlmContext context = new NtlmContext(mockAuth, true);
         context.initSecContext(new byte[0], 0, 0); // state -> 2
-        
-        byte[] serverChallenge = new byte[]{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
+
+        byte[] serverChallenge = new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 };
         int type2Flags = NtlmFlags.NTLMSSP_NEGOTIATE_NTLM | NtlmFlags.NTLMSSP_REQUEST_TARGET;
         Type2Message type2Message = new Type2Message(type2Flags, serverChallenge, domain);
         byte[] type2Token = type2Message.toByteArray();
-        
+
         context.initSecContext(type2Token, 0, type2Token.length); // state -> 3 (established)
 
         // Try to call again
@@ -171,16 +160,16 @@ class NtlmContextTest {
         });
         assertEquals("Invalid state", e.getMessage());
     }
-    
+
     @Test
     void testInitSecContext_malformedType2Message() throws SmbException {
         // Test handling of a malformed Type 2 message
         when(mockAuth.getDomain()).thenReturn(domain);
-        
+
         NtlmContext context = new NtlmContext(mockAuth, true);
         context.initSecContext(new byte[0], 0, 0); // state -> 2
 
-        byte[] malformedToken = new byte[]{0x01, 0x02}; // Not a valid Type 2 message
+        byte[] malformedToken = new byte[] { 0x01, 0x02 }; // Not a valid Type 2 message
 
         SmbException e = assertThrows(SmbException.class, () -> {
             context.initSecContext(malformedToken, 0, malformedToken.length);

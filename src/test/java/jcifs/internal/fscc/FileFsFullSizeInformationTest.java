@@ -1,8 +1,9 @@
 package jcifs.internal.fscc;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -17,7 +18,6 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import jcifs.internal.AllocInfo;
 import jcifs.internal.SMBProtocolDecodingException;
-import jcifs.internal.util.SMBUtil;
 
 /**
  * Test suite for FileFsFullSizeInformation class
@@ -64,11 +64,11 @@ class FileFsFullSizeInformationTest {
             // Given - prepare buffer with typical file system values
             ByteBuffer buffer = ByteBuffer.allocate(32);
             buffer.order(ByteOrder.LITTLE_ENDIAN);
-            buffer.putLong(1048576L);  // Total allocation units (1M)
-            buffer.putLong(524288L);   // Caller available allocation units (512K)
-            buffer.putLong(524288L);   // Actual free allocation units (512K)
-            buffer.putInt(8);          // Sectors per allocation unit
-            buffer.putInt(512);        // Bytes per sector
+            buffer.putLong(1048576L); // Total allocation units (1M)
+            buffer.putLong(524288L); // Caller available allocation units (512K)
+            buffer.putLong(524288L); // Actual free allocation units (512K)
+            buffer.putInt(8); // Sectors per allocation unit
+            buffer.putInt(512); // Bytes per sector
             byte[] bufferArray = buffer.array();
 
             // When
@@ -121,7 +121,7 @@ class FileFsFullSizeInformationTest {
             // Then
             assertEquals(32, bytesConsumed);
             // Note: multiplication may overflow, but that's expected behavior
-            long expectedCapacity = Long.MAX_VALUE * (long)Integer.MAX_VALUE * (long)Integer.MAX_VALUE;
+            long expectedCapacity = Long.MAX_VALUE * (long) Integer.MAX_VALUE * (long) Integer.MAX_VALUE;
             assertEquals(expectedCapacity, fileFsFullSizeInfo.getCapacity());
         }
 
@@ -154,9 +154,9 @@ class FileFsFullSizeInformationTest {
             // Given - different values for caller available and actual free units
             ByteBuffer buffer = ByteBuffer.allocate(32);
             buffer.order(ByteOrder.LITTLE_ENDIAN);
-            buffer.putLong(1000L);     // Total allocation units
-            buffer.putLong(500L);      // Caller available allocation units
-            buffer.putLong(600L);      // Actual free allocation units (should be skipped)
+            buffer.putLong(1000L); // Total allocation units
+            buffer.putLong(500L); // Caller available allocation units
+            buffer.putLong(600L); // Actual free allocation units (should be skipped)
             buffer.putInt(8);
             buffer.putInt(512);
             byte[] bufferArray = buffer.array();
@@ -195,17 +195,16 @@ class FileFsFullSizeInformationTest {
 
         @ParameterizedTest
         @DisplayName("Should decode various sector and allocation configurations")
-        @CsvSource({
-            "1000, 500, 600, 1, 512",      // Minimal sectors per alloc
-            "1000, 500, 600, 8, 512",      // Typical configuration
-            "1000, 500, 600, 64, 512",     // Large allocation units
-            "1000, 500, 600, 8, 4096",     // 4K sectors
-            "1000, 500, 600, 16, 4096",    // Large sectors and allocation
-            "1000, 0, 0, 8, 512",          // No free space
-            "1000, 1000, 1000, 8, 512"     // All space free
+        @CsvSource({ "1000, 500, 600, 1, 512", // Minimal sectors per alloc
+                "1000, 500, 600, 8, 512", // Typical configuration
+                "1000, 500, 600, 64, 512", // Large allocation units
+                "1000, 500, 600, 8, 4096", // 4K sectors
+                "1000, 500, 600, 16, 4096", // Large sectors and allocation
+                "1000, 0, 0, 8, 512", // No free space
+                "1000, 1000, 1000, 8, 512" // All space free
         })
-        void shouldDecodeVariousSectorConfigurations(long alloc, long callerFree, long actualFree, 
-                int sectPerAlloc, int bytesPerSect) throws SMBProtocolDecodingException {
+        void shouldDecodeVariousSectorConfigurations(long alloc, long callerFree, long actualFree, int sectPerAlloc, int bytesPerSect)
+                throws SMBProtocolDecodingException {
             // Given
             ByteBuffer buffer = ByteBuffer.allocate(32);
             buffer.order(ByteOrder.LITTLE_ENDIAN);
@@ -278,7 +277,7 @@ class FileFsFullSizeInformationTest {
             long alloc = 1024L;
             int sectPerAlloc = 8;
             int bytesPerSect = 512;
-            
+
             ByteBuffer buffer = ByteBuffer.allocate(32);
             buffer.order(ByteOrder.LITTLE_ENDIAN);
             buffer.putLong(alloc);
@@ -304,7 +303,7 @@ class FileFsFullSizeInformationTest {
             long actualFree = 600L; // Should be ignored
             int sectPerAlloc = 8;
             int bytesPerSect = 512;
-            
+
             ByteBuffer buffer = ByteBuffer.allocate(32);
             buffer.order(ByteOrder.LITTLE_ENDIAN);
             buffer.putLong(0L);
@@ -344,16 +343,14 @@ class FileFsFullSizeInformationTest {
 
         @ParameterizedTest
         @DisplayName("Should calculate various file system sizes correctly")
-        @CsvSource({
-            "1048576, 524288, 8, 512, 4294967296, 2147483648",     // 4GB total, 2GB free
-            "2097152, 1048576, 8, 512, 8589934592, 4294967296",    // 8GB total, 4GB free
-            "134217728, 67108864, 8, 512, 549755813888, 274877906944", // 512GB total, 256GB free
-            "1, 1, 1, 1, 1, 1",                                     // Minimal values
-            "0, 0, 1, 1, 0, 0"                                      // Zero allocation units
+        @CsvSource({ "1048576, 524288, 8, 512, 4294967296, 2147483648", // 4GB total, 2GB free
+                "2097152, 1048576, 8, 512, 8589934592, 4294967296", // 8GB total, 4GB free
+                "134217728, 67108864, 8, 512, 549755813888, 274877906944", // 512GB total, 256GB free
+                "1, 1, 1, 1, 1, 1", // Minimal values
+                "0, 0, 1, 1, 0, 0" // Zero allocation units
         })
-        void shouldCalculateVariousFileSystemSizes(long alloc, long free, int sectPerAlloc, int bytesPerSect,
-                                                   long expectedCapacity, long expectedFree) 
-                throws SMBProtocolDecodingException {
+        void shouldCalculateVariousFileSystemSizes(long alloc, long free, int sectPerAlloc, int bytesPerSect, long expectedCapacity,
+                long expectedFree) throws SMBProtocolDecodingException {
             // Given
             ByteBuffer buffer = ByteBuffer.allocate(32);
             buffer.order(ByteOrder.LITTLE_ENDIAN);
@@ -543,8 +540,8 @@ class FileFsFullSizeInformationTest {
         void shouldHandleTypicalNTFSConfiguration() throws SMBProtocolDecodingException {
             // Given - typical NTFS: 4KB clusters (8 sectors * 512 bytes)
             long totalClusters = 26214400L; // 100GB / 4KB
-            long freeClusters = 13107200L;  // 50GB / 4KB
-            
+            long freeClusters = 13107200L; // 50GB / 4KB
+
             ByteBuffer buffer = ByteBuffer.allocate(32);
             buffer.order(ByteOrder.LITTLE_ENDIAN);
             buffer.putLong(totalClusters);
@@ -558,17 +555,17 @@ class FileFsFullSizeInformationTest {
 
             // Then
             assertEquals(107374182400L, fileFsFullSizeInfo.getCapacity()); // 100GB
-            assertEquals(53687091200L, fileFsFullSizeInfo.getFree());      // 50GB
+            assertEquals(53687091200L, fileFsFullSizeInfo.getFree()); // 50GB
         }
 
         @Test
         @DisplayName("Should handle quota restricted scenarios")
         void shouldHandleQuotaRestrictedScenarios() throws SMBProtocolDecodingException {
             // Given - quota restricts caller available units
-            long totalClusters = 26214400L;  // 100GB / 4KB
+            long totalClusters = 26214400L; // 100GB / 4KB
             long callerAvailable = 2621440L; // 10GB / 4KB (quota limit)
-            long actualFree = 13107200L;     // 50GB / 4KB (actual free)
-            
+            long actualFree = 13107200L; // 50GB / 4KB (actual free)
+
             ByteBuffer buffer = ByteBuffer.allocate(32);
             buffer.order(ByteOrder.LITTLE_ENDIAN);
             buffer.putLong(totalClusters);
@@ -582,7 +579,7 @@ class FileFsFullSizeInformationTest {
 
             // Then
             assertEquals(107374182400L, fileFsFullSizeInfo.getCapacity()); // 100GB total
-            assertEquals(10737418240L, fileFsFullSizeInfo.getFree());      // 10GB (quota limited)
+            assertEquals(10737418240L, fileFsFullSizeInfo.getFree()); // 10GB (quota limited)
         }
 
         @Test
@@ -590,22 +587,22 @@ class FileFsFullSizeInformationTest {
         void shouldHandleTypicalExt4Configuration() throws SMBProtocolDecodingException {
             // Given - typical ext4: 4KB blocks
             long totalBlocks = 26214400L; // 100GB / 4KB
-            long freeBlocks = 5242880L;   // 20GB / 4KB
-            
+            long freeBlocks = 5242880L; // 20GB / 4KB
+
             ByteBuffer buffer = ByteBuffer.allocate(32);
             buffer.order(ByteOrder.LITTLE_ENDIAN);
             buffer.putLong(totalBlocks);
             buffer.putLong(freeBlocks);
             buffer.putLong(freeBlocks);
-            buffer.putInt(1);    // 1 sector per allocation unit
-            buffer.putInt(4096);  // 4KB sectors
+            buffer.putInt(1); // 1 sector per allocation unit
+            buffer.putInt(4096); // 4KB sectors
 
             // When
             fileFsFullSizeInfo.decode(buffer.array(), 0, 32);
 
             // Then
             assertEquals(107374182400L, fileFsFullSizeInfo.getCapacity()); // 100GB
-            assertEquals(21474836480L, fileFsFullSizeInfo.getFree());      // 20GB
+            assertEquals(21474836480L, fileFsFullSizeInfo.getFree()); // 20GB
         }
 
         @Test
@@ -613,8 +610,8 @@ class FileFsFullSizeInformationTest {
         void shouldHandleLargeFileSystems() throws SMBProtocolDecodingException {
             // Given - 10TB file system with 4KB clusters
             long totalClusters = 2684354560L; // 10TB / 4KB
-            long freeClusters = 536870912L;   // 2TB / 4KB
-            
+            long freeClusters = 536870912L; // 2TB / 4KB
+
             ByteBuffer buffer = ByteBuffer.allocate(32);
             buffer.order(ByteOrder.LITTLE_ENDIAN);
             buffer.putLong(totalClusters);
@@ -628,12 +625,12 @@ class FileFsFullSizeInformationTest {
 
             // Then
             assertEquals(10995116277760L, fileFsFullSizeInfo.getCapacity()); // 10TB
-            assertEquals(2199023255552L, fileFsFullSizeInfo.getFree());      // 2TB
+            assertEquals(2199023255552L, fileFsFullSizeInfo.getFree()); // 2TB
         }
 
         @ParameterizedTest
         @DisplayName("Should handle various sector sizes")
-        @ValueSource(ints = {512, 1024, 2048, 4096, 8192, 16384, 32768, 65536})
+        @ValueSource(ints = { 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536 })
         void shouldHandleVariousSectorSizes(int sectorSize) throws SMBProtocolDecodingException {
             // Given
             ByteBuffer buffer = ByteBuffer.allocate(32);
@@ -677,7 +674,7 @@ class FileFsFullSizeInformationTest {
         void shouldHandleEmptyDiskScenario() throws SMBProtocolDecodingException {
             // Given - disk with all space free
             long totalUnits = 1000000L;
-            
+
             ByteBuffer buffer = ByteBuffer.allocate(32);
             buffer.order(ByteOrder.LITTLE_ENDIAN);
             buffer.putLong(totalUnits);
@@ -755,8 +752,8 @@ class FileFsFullSizeInformationTest {
             // When
             fileFsFullSizeInfo.decode(buffer.array(), 0, 32);
             double percentFree = (fileFsFullSizeInfo.getFree() * 100.0) / fileFsFullSizeInfo.getCapacity();
-            double percentUsed = ((fileFsFullSizeInfo.getCapacity() - fileFsFullSizeInfo.getFree()) * 100.0) 
-                                / fileFsFullSizeInfo.getCapacity();
+            double percentUsed =
+                    ((fileFsFullSizeInfo.getCapacity() - fileFsFullSizeInfo.getFree()) * 100.0) / fileFsFullSizeInfo.getCapacity();
 
             // Then
             assertEquals(25.0, percentFree, 0.001);
@@ -769,9 +766,9 @@ class FileFsFullSizeInformationTest {
             // Given - simulating quota scenario
             ByteBuffer buffer = ByteBuffer.allocate(32);
             buffer.order(ByteOrder.LITTLE_ENDIAN);
-            buffer.putLong(10000L);  // Total units
-            buffer.putLong(2000L);   // Caller available (quota limited)
-            buffer.putLong(5000L);   // Actual free (more than caller can use)
+            buffer.putLong(10000L); // Total units
+            buffer.putLong(2000L); // Caller available (quota limited)
+            buffer.putLong(5000L); // Actual free (more than caller can use)
             buffer.putInt(8);
             buffer.putInt(512);
 

@@ -1,22 +1,22 @@
 package jcifs.internal.smb1.com;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.when;
 
 import java.io.UnsupportedEncodingException;
-import java.nio.charset.StandardCharsets;
 
-import jcifs.Configuration;
-import jcifs.RuntimeCIFSException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+
+import jcifs.Configuration;
 
 /**
  * Unit tests for {@link SmbComQueryInformation}.  The class is very small and
@@ -52,8 +52,7 @@ class SmbComQueryInformationTest {
         int used = cmd.writeBytesWireFormat(buffer, 0);
         // Calculate expected size: 1 byte for command + string bytes + 1 null terminator
         byte[] expectedString = "testfile.txt".getBytes("windows-1252");
-        assertEquals(1 + expectedString.length + 1, used,
-                "Expected exactly one command byte plus OEM string and NUL terminator");
+        assertEquals(1 + expectedString.length + 1, used, "Expected exactly one command byte plus OEM string and NUL terminator");
         assertEquals(0x04, buffer[0] & 0xFF, "First byte must be SMB_COM_QUERY_INFORMATION type 0x04");
         // Verify that the string part ends with the null terminator
         assertArrayEquals(expectedString, subArray(buffer, 1, expectedString.length));
@@ -64,10 +63,8 @@ class SmbComQueryInformationTest {
     @DisplayName("toString includes command name and filename")
     void testToStringIncludesInformation() {
         String str = cmd.toString();
-        assertTrue(str.startsWith("SmbComQueryInformation"),
-                "String representation must start with class name");
-        assertTrue(str.contains("filename=testfile.txt"),
-                "toString must contain the supplied filename");
+        assertTrue(str.startsWith("SmbComQueryInformation"), "String representation must start with class name");
+        assertTrue(str.contains("filename=testfile.txt"), "toString must contain the supplied filename");
     }
 
     @Test
@@ -110,4 +107,3 @@ class SmbComQueryInformationTest {
         return dst;
     }
 }
-

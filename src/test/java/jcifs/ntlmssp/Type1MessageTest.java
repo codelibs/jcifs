@@ -35,13 +35,13 @@ class Type1MessageTest {
 
     @Mock
     private CIFSContext mockContext;
-    
+
     @Mock
     private Configuration mockConfig;
-    
+
     @Mock
     private NameServiceClient mockNameServiceClient;
-    
+
     @Mock
     private NetbiosAddress mockLocalHost;
 

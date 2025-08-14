@@ -1,13 +1,13 @@
 package jcifs.smb1.smb1;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static jcifs.smb1.smb1.ServerMessageBlock.SMB_COM_WRITE;
-
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.reflect.Field;
+
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests for SmbComWrite command - SMB write operations
@@ -42,7 +42,7 @@ public class SmbComWriteTest {
 
         // Act
         SmbComWrite write = new SmbComWrite(fid, offset, remaining, buffer, off, len);
-        
+
         // Assert
         assertEquals(fid, getFieldValue(write, "fid"), "FID should match constructor arg");
         assertEquals(offset, getFieldValue(write, "offset"), "Offset should match constructor arg");
@@ -71,7 +71,7 @@ public class SmbComWriteTest {
 
         // Assert
         assertEquals(fid, getFieldValue(write, "fid"), "FID should be updated");
-        assertEquals((int)offset, getFieldValue(write, "offset"), "Offset should be updated");
+        assertEquals((int) offset, getFieldValue(write, "offset"), "Offset should be updated");
         assertEquals(remaining, getFieldValue(write, "remaining"), "Remaining should be updated");
         assertEquals(buffer, getFieldValue(write, "b"), "Buffer should be updated");
         assertEquals(off, getFieldValue(write, "off"), "Off should be updated");
@@ -111,7 +111,7 @@ public class SmbComWriteTest {
     @Test
     public void testWriteBytesWireFormat() {
         // Arrange
-        byte[] data = {1, 2, 3, 4, 5};
+        byte[] data = { 1, 2, 3, 4, 5 };
         SmbComWrite write = new SmbComWrite();
         write.setParam(0, 0L, 0, data, 1, 3); // Write bytes 2,3,4
         byte[] dst = new byte[10];
@@ -158,7 +158,7 @@ public class SmbComWriteTest {
     public void testToString() {
         SmbComWrite write = new SmbComWrite();
         write.setParam(0x1234, 100L, 50, new byte[10], 0, 10);
-        
+
         String str = write.toString();
         assertNotNull(str);
         assertTrue(str.contains("SmbComWrite"), "Should contain class name");

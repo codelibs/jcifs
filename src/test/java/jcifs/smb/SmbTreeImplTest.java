@@ -141,16 +141,16 @@ class SmbTreeImplTest {
         when(transport.isSMB2()).thenReturn(false);
         when(transport.getContext()).thenReturn(context);
         when(session.getTargetHost()).thenReturn("localhost");
-        
+
         // Mock negotiate response for SMB1
         SmbComNegotiateResponse nego = mock(SmbComNegotiateResponse.class);
         ServerData serverData = new ServerData();
         when(nego.getServerData()).thenReturn(serverData);
         when(transport.getNegotiateResponse()).thenReturn(nego);
-        
+
         // Mock config methods needed for SMB1
         when(config.getPid()).thenReturn(1234);
-        
+
         SmbComTreeConnectAndXResponse response = mock(SmbComTreeConnectAndXResponse.class);
         when(response.getService()).thenReturn("A:");
         when(response.isValidTid()).thenReturn(true);
@@ -171,11 +171,11 @@ class SmbTreeImplTest {
         when(transport.isSMB2()).thenReturn(true);
         when(transport.getContext()).thenReturn(context);
         when(session.getTargetHost()).thenReturn("localhost");
-        
+
         // Mock negotiate response for SMB2
         Smb2NegotiateResponse nego = mock(Smb2NegotiateResponse.class);
         when(transport.getNegotiateResponse()).thenReturn(nego);
-        
+
         Smb2TreeConnectResponse response = mock(Smb2TreeConnectResponse.class);
         when(response.getService()).thenReturn("A:");
         when(response.isValidTid()).thenReturn(true);
@@ -196,11 +196,11 @@ class SmbTreeImplTest {
         when(transport.isSMB2()).thenReturn(true);
         when(transport.getContext()).thenReturn(context);
         when(session.getTargetHost()).thenReturn("localhost");
-        
+
         // Mock negotiate response for SMB2
         Smb2NegotiateResponse nego = mock(Smb2NegotiateResponse.class);
         when(transport.getNegotiateResponse()).thenReturn(nego);
-        
+
         Smb2TreeConnectResponse response = mock(Smb2TreeConnectResponse.class);
         when(response.getService()).thenReturn("A:");
         when(response.isValidTid()).thenReturn(true);

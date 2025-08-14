@@ -1,7 +1,10 @@
 package jcifs.smb1.smb1;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for the SmbComDeleteDirectory class.
@@ -53,7 +56,6 @@ class SmbComDeleteDirectoryTest {
         System.arraycopy(dst, 0, result, 0, len);
         assertArrayEquals(expected, result);
     }
-
 
     /**
      * Test readParameterWordsWireFormat.

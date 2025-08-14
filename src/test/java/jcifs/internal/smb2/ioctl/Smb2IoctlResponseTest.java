@@ -7,7 +7,12 @@
  */
 package jcifs.internal.smb2.ioctl;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
@@ -34,8 +39,8 @@ class Smb2IoctlResponseTest {
     }
 
     // Helper: build SMB2 IOCTL response body (without header) with structureSize=49
-    private static byte[] buildIoctlResponseBody(int ctlCode, byte[] fileId, int inputCount, byte[] inputBytes,
-            int outputCount, byte[] outputBytes, int ioctlFlags) {
+    private static byte[] buildIoctlResponseBody(int ctlCode, byte[] fileId, int inputCount, byte[] inputBytes, int outputCount,
+            byte[] outputBytes, int ioctlFlags) {
         final int headerLen = 64; // SMB2 header is 64 bytes
         final int bodyFixed = 48; // body size minus 1 for structure size field overlap
         final int payloadStart = headerLen + bodyFixed;
@@ -43,7 +48,7 @@ class Smb2IoctlResponseTest {
 
         byte[] buf = new byte[bodyLen];
         int pos = 0;
-        
+
         // structureSize (LE) - includes 1 byte of the variable part
         SMBUtil.writeInt2(49, buf, pos);
         pos += 2;
@@ -144,12 +149,7 @@ class Smb2IoctlResponseTest {
         // When an output buffer is provided, bytes are copied and getOutputData(Class) should fail.
         byte[] header = buildHeader(NtStatus.NT_STATUS_SUCCESS);
         byte[] output = new byte[] { 1, 2, 3, 4, 5 };
-        byte[] body = buildIoctlResponseBody(
-                Smb2IoctlRequest.FSCTL_SRV_COPYCHUNK,
-                new byte[16],
-                0, null,
-                output.length, output,
-                0x0);
+        byte[] body = buildIoctlResponseBody(Smb2IoctlRequest.FSCTL_SRV_COPYCHUNK, new byte[16], 0, null, output.length, output, 0x0);
         byte[] packet = new byte[header.length + body.length];
         System.arraycopy(header, 0, packet, 0, header.length);
         System.arraycopy(body, 0, packet, header.length, body.length);
@@ -170,12 +170,7 @@ class Smb2IoctlResponseTest {
     void throwsWhenOutputExceedsProvidedBuffer() throws Exception {
         byte[] header = buildHeader(NtStatus.NT_STATUS_SUCCESS);
         byte[] output = new byte[] { 1, 2, 3, 4, 5, 6 };
-        byte[] body = buildIoctlResponseBody(
-                Smb2IoctlRequest.FSCTL_SRV_COPYCHUNK_WRITE,
-                new byte[16],
-                0, null,
-                output.length, output,
-                0);
+        byte[] body = buildIoctlResponseBody(Smb2IoctlRequest.FSCTL_SRV_COPYCHUNK_WRITE, new byte[16], 0, null, output.length, output, 0);
         byte[] packet = new byte[header.length + body.length];
         System.arraycopy(header, 0, packet, 0, header.length);
         System.arraycopy(body, 0, packet, header.length, body.length);
@@ -197,12 +192,7 @@ class Smb2IoctlResponseTest {
         SMBUtil.writeInt4(2, out, 4);
         SMBUtil.writeInt4(3, out, 8);
 
-        byte[] body = buildIoctlResponseBody(
-                Smb2IoctlRequest.FSCTL_SRV_COPYCHUNK,
-                new byte[16],
-                0, null,
-                out.length, out,
-                0x1234);
+        byte[] body = buildIoctlResponseBody(Smb2IoctlRequest.FSCTL_SRV_COPYCHUNK, new byte[16], 0, null, out.length, out, 0x1234);
         byte[] packet = new byte[header.length + body.length];
         System.arraycopy(header, 0, packet, 0, header.length);
         System.arraycopy(body, 0, packet, header.length, body.length);
@@ -235,12 +225,7 @@ class Smb2IoctlResponseTest {
         byte[] out = new byte[16];
         // leave all fields zero for simplicity
 
-        byte[] body = buildIoctlResponseBody(
-                Smb2IoctlRequest.FSCTL_PIPE_PEEK,
-                new byte[16],
-                0, null,
-                out.length, out,
-                0);
+        byte[] body = buildIoctlResponseBody(Smb2IoctlRequest.FSCTL_PIPE_PEEK, new byte[16], 0, null, out.length, out, 0);
         byte[] packet = new byte[header.length + body.length];
         System.arraycopy(header, 0, packet, 0, header.length);
         System.arraycopy(body, 0, packet, header.length, body.length);
@@ -260,4 +245,3 @@ class Smb2IoctlResponseTest {
         assertEquals(0, peek.getMessageLength());
     }
 }
-

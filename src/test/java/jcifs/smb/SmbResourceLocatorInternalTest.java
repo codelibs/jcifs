@@ -1,7 +1,16 @@
 package jcifs.smb;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -39,8 +48,7 @@ public class SmbResourceLocatorInternalTest {
 
         // Assert it's an interface and extends the right superinterface
         assertTrue(clazz.isInterface(), "Should be an interface");
-        assertTrue(Arrays.asList(clazz.getInterfaces()).contains(SmbResourceLocator.class),
-                "Should extend SmbResourceLocator");
+        assertTrue(Arrays.asList(clazz.getInterfaces()).contains(SmbResourceLocator.class), "Should extend SmbResourceLocator");
 
         // shouldForceSigning(): boolean, no params, no checked exceptions
         Method m1 = clazz.getMethod("shouldForceSigning");

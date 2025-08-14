@@ -1,8 +1,10 @@
 package jcifs.internal.smb2;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.Arrays;
 
@@ -84,8 +86,7 @@ class Smb3KeyDerivationTest {
         byte[] signingKey311 = Smb3KeyDerivation.deriveSigningKey(Smb2Constants.SMB2_DIALECT_0311, sessionKey, preauthIntegrity);
 
         // Then
-        assertFalse(Arrays.equals(signingKey300, signingKey311), 
-            "Signing keys should be different for different dialects");
+        assertFalse(Arrays.equals(signingKey300, signingKey311), "Signing keys should be different for different dialects");
     }
 
     @Test
@@ -126,8 +127,7 @@ class Smb3KeyDerivationTest {
         byte[] appKey311 = Smb3KeyDerivation.dervieApplicationKey(Smb2Constants.SMB2_DIALECT_0311, sessionKey, preauthIntegrity);
 
         // Then
-        assertFalse(Arrays.equals(appKey300, appKey311), 
-            "Application keys should be different for different dialects");
+        assertFalse(Arrays.equals(appKey300, appKey311), "Application keys should be different for different dialects");
     }
 
     @Test
@@ -168,8 +168,7 @@ class Smb3KeyDerivationTest {
         byte[] encKey311 = Smb3KeyDerivation.deriveEncryptionKey(Smb2Constants.SMB2_DIALECT_0311, sessionKey, preauthIntegrity);
 
         // Then
-        assertFalse(Arrays.equals(encKey300, encKey311), 
-            "Encryption keys should be different for different dialects");
+        assertFalse(Arrays.equals(encKey300, encKey311), "Encryption keys should be different for different dialects");
     }
 
     @Test
@@ -210,8 +209,7 @@ class Smb3KeyDerivationTest {
         byte[] decKey311 = Smb3KeyDerivation.deriveDecryptionKey(Smb2Constants.SMB2_DIALECT_0311, sessionKey, preauthIntegrity);
 
         // Then
-        assertFalse(Arrays.equals(decKey300, decKey311), 
-            "Decryption keys should be different for different dialects");
+        assertFalse(Arrays.equals(decKey300, decKey311), "Decryption keys should be different for different dialects");
     }
 
     @Test
@@ -295,7 +293,7 @@ class Smb3KeyDerivationTest {
     }
 
     @ParameterizedTest
-    @ValueSource(ints = {0x0300, 0x0302, 0x0310}) // Non-3.1.1 dialects
+    @ValueSource(ints = { 0x0300, 0x0302, 0x0310 }) // Non-3.1.1 dialects
     @DisplayName("Should use SMB 3.0.x context for non-3.1.1 dialects")
     void testDeriveKeys_NonSMB311Dialects(int dialect) {
         // When
@@ -304,7 +302,7 @@ class Smb3KeyDerivationTest {
         // Then
         assertNotNull(signingKey, "Should derive key for dialect: " + dialect);
         assertEquals(16, signingKey.length, "Should produce 16-byte key");
-        
+
         // Verify it's different from SMB 3.1.1
         byte[] signingKey311 = Smb3KeyDerivation.deriveSigningKey(Smb2Constants.SMB2_DIALECT_0311, sessionKey, preauthIntegrity);
         assertFalse(Arrays.equals(signingKey, signingKey311), "Should be different from SMB 3.1.1 key");
@@ -335,7 +333,7 @@ class Smb3KeyDerivationTest {
     @DisplayName("Should handle different session key sizes")
     void testDeriveKeys_DifferentSessionKeySizes() {
         // Test with various session key sizes
-        int[] keySizes = {8, 16, 24, 32, 64, 128};
+        int[] keySizes = { 8, 16, 24, 32, 64, 128 };
         int dialect = Smb2Constants.SMB2_DIALECT_0311;
 
         for (int size : keySizes) {
@@ -367,8 +365,7 @@ class Smb3KeyDerivationTest {
         byte[] signingKey2 = Smb3KeyDerivation.deriveSigningKey(dialect, sessionKey2, preauthIntegrity);
 
         // Then
-        assertFalse(Arrays.equals(signingKey1, signingKey2), 
-            "Different session keys should produce different derived keys");
+        assertFalse(Arrays.equals(signingKey1, signingKey2), "Different session keys should produce different derived keys");
     }
 
     @Test
@@ -386,8 +383,8 @@ class Smb3KeyDerivationTest {
         byte[] signingKey2 = Smb3KeyDerivation.deriveSigningKey(dialect, sessionKey, preauth2);
 
         // Then
-        assertFalse(Arrays.equals(signingKey1, signingKey2), 
-            "Different preauth values should produce different derived keys for SMB 3.1.1");
+        assertFalse(Arrays.equals(signingKey1, signingKey2),
+                "Different preauth values should produce different derived keys for SMB 3.1.1");
     }
 
     @Test
@@ -403,8 +400,7 @@ class Smb3KeyDerivationTest {
         // Then
         assertNotNull(signingKey, "Should handle all-zero session key");
         assertEquals(16, signingKey.length, "Should produce 16-byte key");
-        assertFalse(Arrays.equals(zeroSessionKey, signingKey), 
-            "Derived key should be different from all-zero input");
+        assertFalse(Arrays.equals(zeroSessionKey, signingKey), "Derived key should be different from all-zero input");
     }
 
     @Test
@@ -421,7 +417,6 @@ class Smb3KeyDerivationTest {
         // Then
         assertNotNull(signingKey, "Should handle all-0xFF session key");
         assertEquals(16, signingKey.length, "Should produce 16-byte key");
-        assertFalse(Arrays.equals(ffSessionKey, signingKey), 
-            "Derived key should be different from all-0xFF input");
+        assertFalse(Arrays.equals(ffSessionKey, signingKey), "Derived key should be different from all-0xFF input");
     }
 }

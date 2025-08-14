@@ -1,10 +1,15 @@
 package jcifs.smb1.smb1;
 
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import org.junit.jupiter.api.BeforeEach;
-import static org.junit.jupiter.api.Assertions.*;
-import org.mockito.Mockito;
-import static org.mockito.Mockito.*;
+import org.junit.jupiter.api.Test;
 
 public class DosFileFilterTest {
 

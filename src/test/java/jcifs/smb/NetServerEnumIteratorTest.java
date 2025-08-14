@@ -1,8 +1,17 @@
 package jcifs.smb;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -11,11 +20,11 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 import jcifs.CIFSException;
 import jcifs.Configuration;
@@ -32,11 +41,15 @@ import jcifs.SmbResourceLocator;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class NetServerEnumIteratorTest {
 
-    @Mock private SmbResourceLocator locator;
-    @Mock private SmbTreeHandleImpl treeHandle;
-    @Mock private Configuration config;
-    @Mock private ResourceNameFilter nameFilter;
-    
+    @Mock
+    private SmbResourceLocator locator;
+    @Mock
+    private SmbTreeHandleImpl treeHandle;
+    @Mock
+    private Configuration config;
+    @Mock
+    private ResourceNameFilter nameFilter;
+
     private SmbFile parent;
 
     @BeforeAll
@@ -67,10 +80,8 @@ class NetServerEnumIteratorTest {
         when(locator.getURL()).thenReturn(createSmbURL("smb://server/"));
 
         // When & Then: Constructor should throw SmbException
-        SmbException exception = assertThrows(SmbException.class, () ->
-            new NetServerEnumIterator(parent, treeHandle, "*", 0, null)
-        );
-        
+        SmbException exception = assertThrows(SmbException.class, () -> new NetServerEnumIterator(parent, treeHandle, "*", 0, null));
+
         assertTrue(exception.getMessage().contains("invalid"));
         verify(treeHandle, never()).acquire();
     }
@@ -79,9 +90,7 @@ class NetServerEnumIteratorTest {
     @DisplayName("Constructor should handle null parent")
     void testConstructor_NullParent_ThrowsNPE() {
         // When & Then: Null parent should cause NullPointerException
-        assertThrows(NullPointerException.class, () ->
-            new NetServerEnumIterator(null, treeHandle, "*", 0, null)
-        );
+        assertThrows(NullPointerException.class, () -> new NetServerEnumIterator(null, treeHandle, "*", 0, null));
     }
 
     @Test
@@ -92,9 +101,7 @@ class NetServerEnumIteratorTest {
         when(locator.getURL()).thenReturn(createSmbURL("smb://"));
 
         // When & Then: Null tree handle should cause NullPointerException
-        assertThrows(NullPointerException.class, () ->
-            new NetServerEnumIterator(parent, null, "*", 0, null)
-        );
+        assertThrows(NullPointerException.class, () -> new NetServerEnumIterator(parent, null, "*", 0, null));
     }
 
     @Test
@@ -103,7 +110,7 @@ class NetServerEnumIteratorTest {
         // Given: A valid iterator setup that will complete immediately
         when(locator.getType()).thenReturn(SmbConstants.TYPE_WORKGROUP);
         when(locator.getURL()).thenReturn(createSmbURL("smb://"));
-        
+
         // Mock successful but empty response
         when(treeHandle.send(any(), any(), (RequestParam[]) any())).thenAnswer(invocation -> {
             // The response is the second argument
@@ -114,12 +121,9 @@ class NetServerEnumIteratorTest {
 
         // When: Create iterator
         NetServerEnumIterator iterator = new NetServerEnumIterator(parent, treeHandle, "*", 0, null);
-        
+
         // Then: Remove should throw UnsupportedOperationException
-        UnsupportedOperationException exception = assertThrows(
-            UnsupportedOperationException.class,
-            iterator::remove
-        );
+        UnsupportedOperationException exception = assertThrows(UnsupportedOperationException.class, iterator::remove);
         assertEquals("remove", exception.getMessage());
     }
 
@@ -129,7 +133,7 @@ class NetServerEnumIteratorTest {
         // Given: A valid iterator setup
         when(locator.getType()).thenReturn(SmbConstants.TYPE_WORKGROUP);
         when(locator.getURL()).thenReturn(createSmbURL("smb://"));
-        
+
         // Mock successful but empty response
         when(treeHandle.send(any(), any(), (RequestParam[]) any())).thenAnswer(invocation -> {
             return invocation.getArgument(1);
@@ -137,10 +141,10 @@ class NetServerEnumIteratorTest {
 
         // When: Create iterator and close multiple times
         NetServerEnumIterator iterator = new NetServerEnumIterator(parent, treeHandle, "*", 0, null);
-        
+
         iterator.close();
         iterator.close(); // Second close should be safe
-        
+
         // Then: Tree handle should be released only once
         verify(treeHandle, times(1)).release();
     }
@@ -152,7 +156,7 @@ class NetServerEnumIteratorTest {
         when(locator.getType()).thenReturn(SmbConstants.TYPE_WORKGROUP);
         when(locator.getURL()).thenReturn(createSmbURL("smb://"));
         when(nameFilter.accept(any(SmbResource.class), anyString())).thenReturn(false);
-        
+
         // Mock response with one entry
         when(treeHandle.send(any(), any(), (RequestParam[]) any())).thenAnswer(invocation -> {
             return invocation.getArgument(1);
@@ -160,10 +164,10 @@ class NetServerEnumIteratorTest {
 
         // When: Create iterator with rejecting filter
         NetServerEnumIterator iterator = new NetServerEnumIterator(parent, treeHandle, "*", 0, nameFilter);
-        
+
         // Then: Iterator should have no elements
         assertFalse(iterator.hasNext());
-        
+
         // Cleanup
         iterator.close();
     }
@@ -174,9 +178,8 @@ class NetServerEnumIteratorTest {
         // Given: A filter that throws exception
         when(locator.getType()).thenReturn(SmbConstants.TYPE_WORKGROUP);
         when(locator.getURL()).thenReturn(createSmbURL("smb://"));
-        when(nameFilter.accept(any(SmbResource.class), anyString()))
-            .thenThrow(new CIFSException("Filter error"));
-        
+        when(nameFilter.accept(any(SmbResource.class), anyString())).thenThrow(new CIFSException("Filter error"));
+
         // Mock response
         when(treeHandle.send(any(), any(), (RequestParam[]) any())).thenAnswer(invocation -> {
             return invocation.getArgument(1);
@@ -184,10 +187,10 @@ class NetServerEnumIteratorTest {
 
         // When: Create iterator with throwing filter
         NetServerEnumIterator iterator = new NetServerEnumIterator(parent, treeHandle, "*", 0, nameFilter);
-        
+
         // Then: Iterator should skip the entry (log error and continue)
         assertFalse(iterator.hasNext());
-        
+
         // Cleanup
         iterator.close();
     }
@@ -198,7 +201,7 @@ class NetServerEnumIteratorTest {
         // Given: Workgroup type with empty host
         when(locator.getType()).thenReturn(SmbConstants.TYPE_WORKGROUP);
         when(locator.getURL()).thenReturn(createSmbURL("smb://"));
-        
+
         // Mock successful response
         when(treeHandle.send(any(), any(), (RequestParam[]) any())).thenAnswer(invocation -> {
             return invocation.getArgument(1);
@@ -206,14 +209,14 @@ class NetServerEnumIteratorTest {
 
         // When: Create iterator
         NetServerEnumIterator iterator = new NetServerEnumIterator(parent, treeHandle, "*", 0, null);
-        
+
         // Then: Should create successfully
         assertNotNull(iterator);
         assertFalse(iterator.hasNext()); // Empty results
-        
+
         // Verify tree handle was acquired
         verify(treeHandle).acquire();
-        
+
         // Cleanup
         iterator.close();
     }
@@ -224,7 +227,7 @@ class NetServerEnumIteratorTest {
         // Given: Workgroup type with non-empty host
         when(locator.getType()).thenReturn(SmbConstants.TYPE_WORKGROUP);
         when(locator.getURL()).thenReturn(createSmbURL("smb://workgroup/"));
-        
+
         // Mock successful response
         when(treeHandle.send(any(), any(), (RequestParam[]) any())).thenAnswer(invocation -> {
             return invocation.getArgument(1);
@@ -232,14 +235,14 @@ class NetServerEnumIteratorTest {
 
         // When: Create iterator
         NetServerEnumIterator iterator = new NetServerEnumIterator(parent, treeHandle, "*", 0, null);
-        
+
         // Then: Should create successfully
         assertNotNull(iterator);
         assertFalse(iterator.hasNext()); // Empty results
-        
+
         // Verify tree handle was acquired
         verify(treeHandle).acquire();
-        
+
         // Cleanup
         iterator.close();
     }

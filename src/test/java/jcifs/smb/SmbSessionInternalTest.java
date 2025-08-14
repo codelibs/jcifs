@@ -1,8 +1,18 @@
 package jcifs.smb;
 
-import jcifs.CIFSException;
-import jcifs.SmbTransport;
-import jcifs.SmbTree;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,9 +25,9 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import jcifs.CIFSException;
+import jcifs.SmbTransport;
+import jcifs.SmbTree;
 
 /**
  * Tests for SmbSessionInternal interface using Mockito to exercise
@@ -127,15 +137,13 @@ public class SmbSessionInternalTest {
     // Edge/invalid inputs: null or empty share/service cause IllegalArgumentException (mocked)
     @ParameterizedTest
     @DisplayName("getSmbTree invalid inputs (null/empty) throw IllegalArgumentException")
-    @CsvSource({
-            ",service",      // null share
-            " ,service",     // empty share
-            "share,",        // null service
-            "share, "        // empty service
+    @CsvSource({ ",service", // null share
+            " ,service", // empty share
+            "share,", // null service
+            "share, " // empty service
     })
     void getSmbTree_invalid(String share, String service) {
-        doThrow(new IllegalArgumentException("invalid share/service"))
-                .when(session).getSmbTree(eq(share), eq(service));
+        doThrow(new IllegalArgumentException("invalid share/service")).when(session).getSmbTree(eq(share), eq(service));
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> session.getSmbTree(share, service));
         assertTrue(ex.getMessage().contains("invalid"));
@@ -169,4 +177,3 @@ public class SmbSessionInternalTest {
         verify(session).reauthenticate();
     }
 }
-

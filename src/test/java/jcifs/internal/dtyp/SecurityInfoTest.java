@@ -1,7 +1,6 @@
 package jcifs.internal.dtyp;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.reflect.Field;
@@ -70,15 +69,12 @@ class SecurityInfoTest {
     @DisplayName("Test all constants are public static final")
     void testConstantsArePublicStaticFinal() {
         Field[] fields = SecurityInfo.class.getDeclaredFields();
-        
+
         for (Field field : fields) {
             int modifiers = field.getModifiers();
-            assertTrue(Modifier.isPublic(modifiers), 
-                "Field " + field.getName() + " should be public");
-            assertTrue(Modifier.isStatic(modifiers), 
-                "Field " + field.getName() + " should be static");
-            assertTrue(Modifier.isFinal(modifiers), 
-                "Field " + field.getName() + " should be final");
+            assertTrue(Modifier.isPublic(modifiers), "Field " + field.getName() + " should be public");
+            assertTrue(Modifier.isStatic(modifiers), "Field " + field.getName() + " should be static");
+            assertTrue(Modifier.isFinal(modifiers), "Field " + field.getName() + " should be final");
         }
     }
 
@@ -87,12 +83,11 @@ class SecurityInfoTest {
     void testConstantValuesAreUnique() throws IllegalAccessException {
         Field[] fields = SecurityInfo.class.getDeclaredFields();
         Set<Integer> values = new HashSet<>();
-        
+
         for (Field field : fields) {
             if (field.getType() == int.class) {
                 int value = field.getInt(null);
-                assertTrue(values.add(value), 
-                    "Duplicate value found for field: " + field.getName());
+                assertTrue(values.add(value), "Duplicate value found for field: " + field.getName());
             }
         }
     }
@@ -117,15 +112,13 @@ class SecurityInfoTest {
         // Test that flags can be combined using bitwise OR
         int combined = SecurityInfo.OWNER_SECURITY_INFO | SecurityInfo.GROUP_SECURITY_INFO;
         assertEquals(0x3, combined);
-        
+
         combined = SecurityInfo.DACL_SECURITY_INFO | SecurityInfo.SACL_SECURITY_INFO;
         assertEquals(0xC, combined);
-        
+
         // Test all standard security info combined
-        int allStandard = SecurityInfo.OWNER_SECURITY_INFO 
-            | SecurityInfo.GROUP_SECURITY_INFO 
-            | SecurityInfo.DACL_SECURITY_INFO 
-            | SecurityInfo.SACL_SECURITY_INFO;
+        int allStandard = SecurityInfo.OWNER_SECURITY_INFO | SecurityInfo.GROUP_SECURITY_INFO | SecurityInfo.DACL_SECURITY_INFO
+                | SecurityInfo.SACL_SECURITY_INFO;
         assertEquals(0xF, allStandard);
     }
 
@@ -133,11 +126,11 @@ class SecurityInfoTest {
     @DisplayName("Test flag checking with bitwise AND")
     void testFlagChecking() {
         int flags = SecurityInfo.OWNER_SECURITY_INFO | SecurityInfo.DACL_SECURITY_INFO;
-        
+
         // Test presence of flags
         assertTrue((flags & SecurityInfo.OWNER_SECURITY_INFO) != 0);
         assertTrue((flags & SecurityInfo.DACL_SECURITY_INFO) != 0);
-        
+
         // Test absence of flags
         assertTrue((flags & SecurityInfo.GROUP_SECURITY_INFO) == 0);
         assertTrue((flags & SecurityInfo.SACL_SECURITY_INFO) == 0);
@@ -147,20 +140,16 @@ class SecurityInfoTest {
     @DisplayName("Test interface extends Decodable")
     void testExtendsDecodable() {
         Class<?>[] interfaces = SecurityInfo.class.getInterfaces();
-        assertTrue(Arrays.asList(interfaces).contains(jcifs.Decodable.class),
-            "SecurityInfo should extend Decodable interface");
+        assertTrue(Arrays.asList(interfaces).contains(jcifs.Decodable.class), "SecurityInfo should extend Decodable interface");
     }
 
     @Test
     @DisplayName("Test all constant fields count")
     void testConstantFieldsCount() {
         Field[] fields = SecurityInfo.class.getDeclaredFields();
-        long constantCount = Arrays.stream(fields)
-            .filter(f -> f.getType() == int.class)
-            .filter(f -> Modifier.isStatic(f.getModifiers()))
-            .filter(f -> Modifier.isFinal(f.getModifiers()))
-            .count();
-        
+        long constantCount = Arrays.stream(fields).filter(f -> f.getType() == int.class).filter(f -> Modifier.isStatic(f.getModifiers()))
+                .filter(f -> Modifier.isFinal(f.getModifiers())).count();
+
         assertEquals(8, constantCount, "Should have exactly 8 constant fields");
     }
 
@@ -168,16 +157,14 @@ class SecurityInfoTest {
     @DisplayName("Test constant naming convention")
     void testConstantNamingConvention() {
         Field[] fields = SecurityInfo.class.getDeclaredFields();
-        
+
         for (Field field : fields) {
             if (field.getType() == int.class) {
                 String name = field.getName();
                 // Check that constant names follow UPPER_SNAKE_CASE convention
-                assertTrue(name.matches("[A-Z_]+"), 
-                    "Constant " + name + " should follow UPPER_SNAKE_CASE convention");
+                assertTrue(name.matches("[A-Z_]+"), "Constant " + name + " should follow UPPER_SNAKE_CASE convention");
                 // Check that all constants end with _SECURITY_INFO
-                assertTrue(name.endsWith("_SECURITY_INFO"), 
-                    "Constant " + name + " should end with _SECURITY_INFO");
+                assertTrue(name.endsWith("_SECURITY_INFO"), "Constant " + name + " should end with _SECURITY_INFO");
             }
         }
     }
@@ -186,26 +173,22 @@ class SecurityInfoTest {
     @DisplayName("Test SecurityInfo interface is public")
     void testInterfaceIsPublic() {
         int modifiers = SecurityInfo.class.getModifiers();
-        assertTrue(Modifier.isPublic(modifiers), 
-            "SecurityInfo interface should be public");
-        assertTrue(Modifier.isInterface(modifiers), 
-            "SecurityInfo should be an interface");
+        assertTrue(Modifier.isPublic(modifiers), "SecurityInfo interface should be public");
+        assertTrue(Modifier.isInterface(modifiers), "SecurityInfo should be an interface");
     }
 
     @Test
     @DisplayName("Test constant values range")
     void testConstantValuesRange() throws IllegalAccessException {
         Field[] fields = SecurityInfo.class.getDeclaredFields();
-        
+
         for (Field field : fields) {
             if (field.getType() == int.class) {
                 int value = field.getInt(null);
                 // All values should be positive
-                assertTrue(value > 0, 
-                    "Constant " + field.getName() + " should have positive value");
+                assertTrue(value > 0, "Constant " + field.getName() + " should have positive value");
                 // Values should be within reasonable range for security flags
-                assertTrue(value <= 0xFFFF, 
-                    "Constant " + field.getName() + " value seems unusually large");
+                assertTrue(value <= 0xFFFF, "Constant " + field.getName() + " value seems unusually large");
             }
         }
     }

@@ -4,8 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import java.net.MalformedURLException;
 
@@ -15,11 +13,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import jcifs.smb1.smb1.NtlmPasswordAuthentication;
-import jcifs.smb1.smb1.SmbException;
-import jcifs.smb1.smb1.SmbFile;
-import jcifs.smb1.UniAddress;
 
 /**
  * Unit tests for the SmbFile class.
@@ -77,7 +70,7 @@ public class SmbFileTest {
             SmbFile smbFile = new SmbFile(context, name);
             assertEquals("smb1://server/share/file.txt", smbFile.getCanonicalPath());
         }
-        
+
         @Test
         public void testConstructorWithIllegalShareAccess() {
             // Test that constructor throws RuntimeException for illegal shareAccess parameter
@@ -100,7 +93,7 @@ public class SmbFileTest {
             assertEquals("share/", new SmbFile("smb1://server/share/").getName());
             // Test server name extraction
             assertEquals("server/", new SmbFile("smb1://server/").getName());
-             // Test root name
+            // Test root name
             assertEquals("smb1://", new SmbFile("smb1://").getName());
         }
 
@@ -144,7 +137,7 @@ public class SmbFileTest {
             assertEquals("\\\\server\\share\\", new SmbFile("smb1://server/share/").getUncPath());
             assertEquals("\\\\server", new SmbFile("smb1://server/").getUncPath());
         }
-        
+
         @Test
         public void testGetShare() throws MalformedURLException {
             assertEquals("share", new SmbFile("smb1://server/share/file.txt").getShare());
@@ -159,7 +152,7 @@ public class SmbFileTest {
             assertEquals(null, new SmbFile("smb1://").getServer());
         }
     }
-    
+
     @Nested
     class AttributeAndStateTests {
 
@@ -181,14 +174,14 @@ public class SmbFileTest {
             // We expect an SmbException because it will try to connect.
             assertThrows(SmbException.class, () -> share.getType());
         }
-        
+
         @Test
         public void testIsHiddenForDollarShare() throws Exception {
             SmbFile hiddenShare = new SmbFile("smb1://server/C$/");
             assertTrue(hiddenShare.isHidden());
         }
     }
-    
+
     // Helper method to create a mock SmbFile for more advanced tests if needed
     private SmbFile createMockSmbFile(String url, NtlmPasswordAuthentication auth) throws MalformedURLException {
         // This is complex due to the class structure. A better approach would be

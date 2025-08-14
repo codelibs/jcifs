@@ -186,12 +186,12 @@ class PropertyConfigurationTest extends BaseTest {
         assertNotNull(winsServers);
         assertEquals(1, winsServers.length);
         assertEquals("192.168.1.1", winsServers[0].getHostAddress());
-        
+
         // getBroadcastAddress() returns InetAddress, not String
         InetAddress broadcastAddr = testConfig.getBroadcastAddress();
         assertNotNull(broadcastAddr);
         assertEquals("192.168.1.255", broadcastAddr.getHostAddress());
-        
+
         // getResolveOrder() returns List<ResolverType>
         List<ResolverType> resolveOrder = testConfig.getResolveOrder();
         assertNotNull(resolveOrder);
@@ -226,12 +226,12 @@ class PropertyConfigurationTest extends BaseTest {
         Properties props = new Properties();
         props.setProperty("jcifs.smb.client.connTimeout", "invalid");
         props.setProperty("jcifs.smb.client.useUnicode", "maybe");
-        
+
         // When creating configuration with invalid number
         PropertyConfiguration testConfig = new PropertyConfiguration(props);
         // Should use default values for invalid properties
         assertTrue(testConfig.getConnTimeout() > 0);
-        
+
         // Invalid dialect version should throw IllegalArgumentException
         Properties dialectProps = new Properties();
         dialectProps.setProperty("jcifs.smb.client.minVersion", "INVALID_VERSION");

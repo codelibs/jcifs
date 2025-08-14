@@ -1,8 +1,16 @@
 package jcifs.dcerpc.msrpc;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,7 +27,7 @@ class srvsvcTest {
 
     @Mock
     private NdrBuffer mockNdrBuffer;
-    
+
     @Mock
     private NdrBuffer mockDeferredBuffer;
 
@@ -68,7 +76,7 @@ class srvsvcTest {
     @Test
     void testShareInfo0DecodeWithNonNullNetname() throws NdrException {
         srvsvc.ShareInfo0 shareInfo0 = new srvsvc.ShareInfo0();
-        
+
         when(mockNdrBuffer.dec_ndr_long()).thenReturn(1); // non-zero pointer
         when(mockDeferredBuffer.dec_ndr_string()).thenReturn("DecodedShare");
 
@@ -83,7 +91,7 @@ class srvsvcTest {
     @Test
     void testShareInfo0DecodeWithNullNetname() throws NdrException {
         srvsvc.ShareInfo0 shareInfo0 = new srvsvc.ShareInfo0();
-        
+
         when(mockNdrBuffer.dec_ndr_long()).thenReturn(0); // null pointer
 
         shareInfo0.decode(mockNdrBuffer);
@@ -135,10 +143,10 @@ class srvsvcTest {
     @Test
     void testShareInfo1DecodeWithAllFields() throws NdrException {
         srvsvc.ShareInfo1 shareInfo1 = new srvsvc.ShareInfo1();
-        
+
         // Set up deferred buffer chain to avoid NPE
         mockDeferredBuffer.deferred = mockDeferredBuffer;
-        
+
         when(mockNdrBuffer.dec_ndr_long()).thenReturn(1, 2, 1); // netname pointer, type, remark pointer
         when(mockDeferredBuffer.dec_ndr_string()).thenReturn("DecodedShare", "Decoded Remark");
 
@@ -164,7 +172,7 @@ class srvsvcTest {
         shareInfo502.path = "C:\\test";
         shareInfo502.password = "password";
         shareInfo502.sd_size = 2;
-        shareInfo502.security_descriptor = new byte[]{1, 2};
+        shareInfo502.security_descriptor = new byte[] { 1, 2 };
 
         // Set up mocks for the security descriptor encoding
         mockDeferredBuffer.index = 0; // Set field directly
@@ -175,18 +183,18 @@ class srvsvcTest {
         // Verify the encode operations
         verify(mockNdrBuffer).align(4);
         verify(mockNdrBuffer).enc_ndr_referent("TestShare", 1);
-        verify(mockNdrBuffer).enc_ndr_long(1);  // type
+        verify(mockNdrBuffer).enc_ndr_long(1); // type
         verify(mockNdrBuffer).enc_ndr_referent("Test Remark", 1);
-        verify(mockNdrBuffer, times(2)).enc_ndr_long(2);  // permissions and sd_size both have value 2
+        verify(mockNdrBuffer, times(2)).enc_ndr_long(2); // permissions and sd_size both have value 2
         verify(mockNdrBuffer).enc_ndr_long(10); // max_uses
-        verify(mockNdrBuffer).enc_ndr_long(5);  // current_uses
+        verify(mockNdrBuffer).enc_ndr_long(5); // current_uses
         verify(mockNdrBuffer).enc_ndr_referent("C:\\test", 1);
         verify(mockNdrBuffer).enc_ndr_referent("password", 1);
         verify(mockNdrBuffer).enc_ndr_referent(shareInfo502.security_descriptor, 1);
-        
+
         // Verify string encodings
         verify(mockDeferredBuffer, times(4)).enc_ndr_string(anyString());
-        
+
         // Verify security descriptor encoding
         verify(mockDeferredBuffer).enc_ndr_long(2);
         verify(mockDeferredBuffer).advance(2);
@@ -221,7 +229,7 @@ class srvsvcTest {
     @Test
     void testShareInfoCtr0DecodeWithArray() throws NdrException {
         srvsvc.ShareInfoCtr0 ctr0 = new srvsvc.ShareInfoCtr0();
-        
+
         when(mockNdrBuffer.dec_ndr_long()).thenReturn(2, 1); // count, array pointer
         when(mockDeferredBuffer.dec_ndr_long()).thenReturn(2); // array size
         mockDeferredBuffer.index = 0; // Set field directly
@@ -285,7 +293,7 @@ class srvsvcTest {
     @Test
     void testShareInfoCtr502DecodeWithInvalidArraySize() throws NdrException {
         srvsvc.ShareInfoCtr502 ctr502 = new srvsvc.ShareInfoCtr502();
-        
+
         when(mockNdrBuffer.dec_ndr_long()).thenReturn(10, 1); // count, array pointer
         when(mockDeferredBuffer.dec_ndr_long()).thenReturn(0x10000); // invalid array size
 

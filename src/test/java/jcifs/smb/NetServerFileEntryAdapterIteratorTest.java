@@ -1,9 +1,12 @@
 package jcifs.smb;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
-import java.net.MalformedURLException;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -51,7 +54,7 @@ class NetServerFileEntryAdapterIteratorTest {
         // Use a real CIFS context to provide a working URLStreamHandler for smb:// URLs
         this.ctx = SingletonContext.getInstance();
     }
-    
+
     private void setupParentForUrlCreation() throws CIFSException {
         // Only set up parent mocks when they're actually needed for URL creation
         when(parent.getContext()).thenReturn(this.ctx);
@@ -71,28 +74,44 @@ class NetServerFileEntryAdapterIteratorTest {
         }
 
         @Override
-        public String getName() { return name; }
+        public String getName() {
+            return name;
+        }
 
         @Override
-        public int getType() { return type; }
+        public int getType() {
+            return type;
+        }
 
         @Override
-        public int getAttributes() { return 0; }
+        public int getAttributes() {
+            return 0;
+        }
 
         @Override
-        public long createTime() { return 0; }
+        public long createTime() {
+            return 0;
+        }
 
         @Override
-        public long lastModified() { return 0; }
+        public long lastModified() {
+            return 0;
+        }
 
         @Override
-        public long lastAccess() { return 0; }
+        public long lastAccess() {
+            return 0;
+        }
 
         @Override
-        public long length() { return 0; }
+        public long length() {
+            return 0;
+        }
 
         @Override
-        public int getFileIndex() { return 0; }
+        public int getFileIndex() {
+            return 0;
+        }
     }
 
     @Test
@@ -214,4 +233,3 @@ class NetServerFileEntryAdapterIteratorTest {
         assertFalse(itr.hasNext());
     }
 }
-

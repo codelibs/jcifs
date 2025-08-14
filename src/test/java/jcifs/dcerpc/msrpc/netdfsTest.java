@@ -37,7 +37,7 @@ public class netdfsTest {
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         // Create buffer for encoding - initially allocate some space
-        byte[] encodeBuffer = new byte[1024]; 
+        byte[] encodeBuffer = new byte[1024];
         NdrBuffer dst = new NdrBuffer(encodeBuffer, 0);
         info1.encode(dst);
 
@@ -57,7 +57,7 @@ public class netdfsTest {
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         // Create buffer for encoding - initially allocate some space
-        byte[] encodeBuffer = new byte[1024]; 
+        byte[] encodeBuffer = new byte[1024];
         NdrBuffer dst = new NdrBuffer(encodeBuffer, 0);
         info1.encode(dst);
 
@@ -82,7 +82,7 @@ public class netdfsTest {
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         // Create buffer for encoding - initially allocate some space
-        byte[] encodeBuffer = new byte[1024]; 
+        byte[] encodeBuffer = new byte[1024];
         NdrBuffer dst = new NdrBuffer(encodeBuffer, 0);
         enumArray1.encode(dst);
 
@@ -105,7 +105,7 @@ public class netdfsTest {
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         // Create buffer for encoding - initially allocate some space
-        byte[] encodeBuffer = new byte[1024]; 
+        byte[] encodeBuffer = new byte[1024];
         NdrBuffer dst = new NdrBuffer(encodeBuffer, 0);
         enumArray1.encode(dst);
 
@@ -128,7 +128,7 @@ public class netdfsTest {
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         // Create buffer for encoding - initially allocate some space
-        byte[] encodeBuffer = new byte[1024]; 
+        byte[] encodeBuffer = new byte[1024];
         NdrBuffer dst = new NdrBuffer(encodeBuffer, 0);
         enumArray1.encode(dst);
 
@@ -151,7 +151,7 @@ public class netdfsTest {
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         // Create buffer for encoding - initially allocate some space
-        byte[] encodeBuffer = new byte[1024]; 
+        byte[] encodeBuffer = new byte[1024];
         NdrBuffer dst = new NdrBuffer(encodeBuffer, 0);
         storageInfo.encode(dst);
 
@@ -175,7 +175,7 @@ public class netdfsTest {
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         // Create buffer for encoding - initially allocate some space
-        byte[] encodeBuffer = new byte[1024]; 
+        byte[] encodeBuffer = new byte[1024];
         NdrBuffer dst = new NdrBuffer(encodeBuffer, 0);
         storageInfo.encode(dst);
 
@@ -205,7 +205,7 @@ public class netdfsTest {
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         // Create buffer for encoding - initially allocate some space
-        byte[] encodeBuffer = new byte[1024]; 
+        byte[] encodeBuffer = new byte[1024];
         NdrBuffer dst = new NdrBuffer(encodeBuffer, 0);
         info3.encode(dst);
 
@@ -235,7 +235,7 @@ public class netdfsTest {
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         // Create buffer for encoding - initially allocate some space
-        byte[] encodeBuffer = new byte[1024]; 
+        byte[] encodeBuffer = new byte[1024];
         NdrBuffer dst = new NdrBuffer(encodeBuffer, 0);
         info3.encode(dst);
 
@@ -264,7 +264,7 @@ public class netdfsTest {
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         // Create buffer for encoding - initially allocate some space
-        byte[] encodeBuffer = new byte[1024]; 
+        byte[] encodeBuffer = new byte[1024];
         NdrBuffer dst = new NdrBuffer(encodeBuffer, 0);
         info3.encode(dst);
 
@@ -295,7 +295,7 @@ public class netdfsTest {
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         // Create buffer for encoding - initially allocate some space
-        byte[] encodeBuffer = new byte[1024]; 
+        byte[] encodeBuffer = new byte[1024];
         NdrBuffer dst = new NdrBuffer(encodeBuffer, 0);
         enumArray3.encode(dst);
 
@@ -322,7 +322,7 @@ public class netdfsTest {
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         // Create buffer for encoding - initially allocate some space
-        byte[] encodeBuffer = new byte[1024]; 
+        byte[] encodeBuffer = new byte[1024];
         NdrBuffer dst = new NdrBuffer(encodeBuffer, 0);
         enumArray3.encode(dst);
 
@@ -345,7 +345,7 @@ public class netdfsTest {
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         // Create buffer for encoding - initially allocate some space
-        byte[] encodeBuffer = new byte[1024]; 
+        byte[] encodeBuffer = new byte[1024];
         NdrBuffer dst = new NdrBuffer(encodeBuffer, 0);
         enumArray3.encode(dst);
 
@@ -366,7 +366,7 @@ public class netdfsTest {
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         // Create buffer for encoding - initially allocate some space
-        byte[] encodeBuffer = new byte[1024]; 
+        byte[] encodeBuffer = new byte[1024];
         NdrBuffer dst = new NdrBuffer(encodeBuffer, 0);
         info200.encode(dst);
 
@@ -386,7 +386,7 @@ public class netdfsTest {
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         // Create buffer for encoding - initially allocate some space
-        byte[] encodeBuffer = new byte[1024]; 
+        byte[] encodeBuffer = new byte[1024];
         NdrBuffer dst = new NdrBuffer(encodeBuffer, 0);
         info200.encode(dst);
 
@@ -409,7 +409,7 @@ public class netdfsTest {
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         // Create buffer for encoding - initially allocate some space
-        byte[] encodeBuffer = new byte[1024]; 
+        byte[] encodeBuffer = new byte[1024];
         NdrBuffer dst = new NdrBuffer(encodeBuffer, 0);
         enumArray200.encode(dst);
 
@@ -431,7 +431,7 @@ public class netdfsTest {
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         // Create buffer for encoding - initially allocate some space
-        byte[] encodeBuffer = new byte[1024]; 
+        byte[] encodeBuffer = new byte[1024];
         NdrBuffer dst = new NdrBuffer(encodeBuffer, 0);
         enumArray200.encode(dst);
 
@@ -454,7 +454,7 @@ public class netdfsTest {
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         // Create buffer for encoding - initially allocate some space
-        byte[] encodeBuffer = new byte[1024]; 
+        byte[] encodeBuffer = new byte[1024];
         NdrBuffer dst = new NdrBuffer(encodeBuffer, 0);
         enumArray200.encode(dst);
 
@@ -476,7 +476,7 @@ public class netdfsTest {
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         // Create buffer for encoding - initially allocate some space
-        byte[] encodeBuffer = new byte[1024]; 
+        byte[] encodeBuffer = new byte[1024];
         NdrBuffer dst = new NdrBuffer(encodeBuffer, 0);
         info300.encode(dst);
 
@@ -498,7 +498,7 @@ public class netdfsTest {
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         // Create buffer for encoding - initially allocate some space
-        byte[] encodeBuffer = new byte[1024]; 
+        byte[] encodeBuffer = new byte[1024];
         NdrBuffer dst = new NdrBuffer(encodeBuffer, 0);
         info300.encode(dst);
 
@@ -523,7 +523,7 @@ public class netdfsTest {
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         // Create buffer for encoding - initially allocate some space
-        byte[] encodeBuffer = new byte[1024]; 
+        byte[] encodeBuffer = new byte[1024];
         NdrBuffer dst = new NdrBuffer(encodeBuffer, 0);
         enumArray300.encode(dst);
 
@@ -546,7 +546,7 @@ public class netdfsTest {
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         // Create buffer for encoding - initially allocate some space
-        byte[] encodeBuffer = new byte[1024]; 
+        byte[] encodeBuffer = new byte[1024];
         NdrBuffer dst = new NdrBuffer(encodeBuffer, 0);
         enumArray300.encode(dst);
 
@@ -569,7 +569,7 @@ public class netdfsTest {
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         // Create buffer for encoding - initially allocate some space
-        byte[] encodeBuffer = new byte[1024]; 
+        byte[] encodeBuffer = new byte[1024];
         NdrBuffer dst = new NdrBuffer(encodeBuffer, 0);
         enumArray300.encode(dst);
 
@@ -595,7 +595,7 @@ public class netdfsTest {
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         // Create buffer for encoding - initially allocate some space
-        byte[] encodeBuffer = new byte[1024]; 
+        byte[] encodeBuffer = new byte[1024];
         NdrBuffer dst = new NdrBuffer(encodeBuffer, 0);
         enumStruct.encode(dst);
 
@@ -620,7 +620,7 @@ public class netdfsTest {
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         // Create buffer for encoding - initially allocate some space
-        byte[] encodeBuffer = new byte[1024]; 
+        byte[] encodeBuffer = new byte[1024];
         NdrBuffer dst = new NdrBuffer(encodeBuffer, 0);
         enumStruct.encode(dst);
 
@@ -671,7 +671,7 @@ public class netdfsTest {
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         // Create buffer for encoding - initially allocate some space
-        byte[] encodeBuffer = new byte[1024]; 
+        byte[] encodeBuffer = new byte[1024];
         NdrBuffer dst = new NdrBuffer(encodeBuffer, 0);
         enumEx.encode_in(dst);
 
@@ -720,7 +720,7 @@ public class netdfsTest {
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         // Create buffer for encoding - initially allocate some space
-        byte[] encodeBuffer = new byte[1024]; 
+        byte[] encodeBuffer = new byte[1024];
         NdrBuffer dst = new NdrBuffer(encodeBuffer, 0);
         enumEx.encode_in(dst);
 

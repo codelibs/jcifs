@@ -1,14 +1,24 @@
 package jcifs.internal.smb2;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Field;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
@@ -70,7 +80,7 @@ class Smb2EchoResponseTest {
         @DisplayName("Should handle different buffer positions")
         void testWriteBytesWireFormatDifferentPositions() {
             byte[] buffer = new byte[1024];
-            
+
             assertEquals(0, echoResponse.writeBytesWireFormat(buffer, 0));
             assertEquals(0, echoResponse.writeBytesWireFormat(buffer, 100));
             assertEquals(0, echoResponse.writeBytesWireFormat(buffer, 500));
@@ -81,9 +91,9 @@ class Smb2EchoResponseTest {
         void testWriteBytesWireFormatNoModification() {
             byte[] buffer = new byte[1024];
             byte[] originalBuffer = buffer.clone();
-            
+
             echoResponse.writeBytesWireFormat(buffer, 0);
-            
+
             assertArrayEquals(originalBuffer, buffer);
         }
     }
@@ -97,12 +107,12 @@ class Smb2EchoResponseTest {
         void testReadBytesWireFormatValid() throws SMBProtocolDecodingException {
             byte[] buffer = new byte[1024];
             int bufferIndex = 100;
-            
+
             // Write structure size = 4
             SMBUtil.writeInt2(4, buffer, bufferIndex);
-            
+
             int result = echoResponse.readBytesWireFormat(buffer, bufferIndex);
-            
+
             assertEquals(0, result);
         }
 
@@ -111,32 +121,28 @@ class Smb2EchoResponseTest {
         void testReadBytesWireFormatInvalidSize() {
             byte[] buffer = new byte[1024];
             int bufferIndex = 100;
-            
+
             // Write invalid structure size = 8
             SMBUtil.writeInt2(8, buffer, bufferIndex);
-            
-            SMBProtocolDecodingException exception = assertThrows(
-                SMBProtocolDecodingException.class,
-                () -> echoResponse.readBytesWireFormat(buffer, bufferIndex)
-            );
-            
+
+            SMBProtocolDecodingException exception =
+                    assertThrows(SMBProtocolDecodingException.class, () -> echoResponse.readBytesWireFormat(buffer, bufferIndex));
+
             assertEquals("Expected structureSize = 4", exception.getMessage());
         }
 
         @ParameterizedTest
-        @ValueSource(ints = {0, 1, 2, 3, 5, 6, 100, 65535})
+        @ValueSource(ints = { 0, 1, 2, 3, 5, 6, 100, 65535 })
         @DisplayName("Should throw exception for various invalid structure sizes")
         void testReadBytesWireFormatVariousInvalidSizes(int structureSize) {
             byte[] buffer = new byte[1024];
             int bufferIndex = 50;
-            
+
             SMBUtil.writeInt2(structureSize, buffer, bufferIndex);
-            
-            SMBProtocolDecodingException exception = assertThrows(
-                SMBProtocolDecodingException.class,
-                () -> echoResponse.readBytesWireFormat(buffer, bufferIndex)
-            );
-            
+
+            SMBProtocolDecodingException exception =
+                    assertThrows(SMBProtocolDecodingException.class, () -> echoResponse.readBytesWireFormat(buffer, bufferIndex));
+
             assertEquals("Expected structureSize = 4", exception.getMessage());
         }
 
@@ -144,13 +150,13 @@ class Smb2EchoResponseTest {
         @DisplayName("Should handle different buffer positions correctly")
         void testReadBytesWireFormatDifferentPositions() throws SMBProtocolDecodingException {
             byte[] buffer = new byte[1024];
-            
+
             // Test at different positions
-            int[] positions = {0, 50, 100, 500, 800};
-            
+            int[] positions = { 0, 50, 100, 500, 800 };
+
             for (int position : positions) {
                 SMBUtil.writeInt2(4, buffer, position);
-                
+
                 int result = echoResponse.readBytesWireFormat(buffer, position);
                 assertEquals(0, result, "Failed at position " + position);
             }
@@ -161,15 +167,15 @@ class Smb2EchoResponseTest {
         void testReadBytesWireFormatBoundary() throws SMBProtocolDecodingException {
             byte[] buffer = new byte[10];
             int bufferIndex = 0;
-            
+
             // Write structure size = 4
             SMBUtil.writeInt2(4, buffer, bufferIndex);
-            
+
             // Fill rest of buffer with garbage
             for (int i = 2; i < buffer.length; i++) {
                 buffer[i] = (byte) 0xFF;
             }
-            
+
             // Should only read the structure size (2 bytes) and not go beyond
             int result = echoResponse.readBytesWireFormat(buffer, bufferIndex);
             assertEquals(0, result);
@@ -184,9 +190,9 @@ class Smb2EchoResponseTest {
         @DisplayName("Should track received state")
         void testReceivedState() {
             assertFalse(echoResponse.isReceived());
-            
+
             echoResponse.received();
-            
+
             assertTrue(echoResponse.isReceived());
         }
 
@@ -194,9 +200,9 @@ class Smb2EchoResponseTest {
         @DisplayName("Should track error state")
         void testErrorState() {
             assertFalse(echoResponse.isError());
-            
+
             echoResponse.error();
-            
+
             assertTrue(echoResponse.isError());
         }
 
@@ -204,13 +210,13 @@ class Smb2EchoResponseTest {
         @DisplayName("Should handle exception")
         void testException() {
             Exception testException = new Exception("Test exception");
-            
+
             assertFalse(echoResponse.isError());
             assertFalse(echoResponse.isReceived());
             assertNull(echoResponse.getException());
-            
+
             echoResponse.exception(testException);
-            
+
             assertTrue(echoResponse.isError());
             assertTrue(echoResponse.isReceived());
             assertEquals(testException, echoResponse.getException());
@@ -221,9 +227,9 @@ class Smb2EchoResponseTest {
         void testClearReceived() {
             echoResponse.received();
             assertTrue(echoResponse.isReceived());
-            
+
             echoResponse.clearReceived();
-            
+
             assertFalse(echoResponse.isReceived());
         }
 
@@ -231,13 +237,13 @@ class Smb2EchoResponseTest {
         @DisplayName("Should handle async operations")
         void testAsyncOperations() {
             assertFalse(echoResponse.isAsyncHandled());
-            
+
             echoResponse.setAsyncHandled(true);
-            
+
             assertTrue(echoResponse.isAsyncHandled());
-            
+
             echoResponse.setAsyncHandled(false);
-            
+
             assertFalse(echoResponse.isAsyncHandled());
         }
     }
@@ -250,10 +256,10 @@ class Smb2EchoResponseTest {
         @DisplayName("Should manage expiration time")
         void testExpiration() {
             assertNull(echoResponse.getExpiration());
-            
+
             Long expiration = System.currentTimeMillis() + 10000L;
             echoResponse.setExpiration(expiration);
-            
+
             assertEquals(expiration, echoResponse.getExpiration());
         }
 
@@ -263,9 +269,9 @@ class Smb2EchoResponseTest {
             Long expiration = 1000L;
             echoResponse.setExpiration(expiration);
             assertEquals(expiration, echoResponse.getExpiration());
-            
+
             echoResponse.setExpiration(null);
-            
+
             assertNull(echoResponse.getExpiration());
         }
     }
@@ -280,12 +286,12 @@ class Smb2EchoResponseTest {
             byte[] buffer = new byte[1024];
             echoResponse.setDigest(mockDigest);
             setStatus(echoResponse, NtStatus.NT_STATUS_SUCCESS);
-            
+
             when(mockConfig.isRequireSecureNegotiate()).thenReturn(true);
             when(mockDigest.verify(buffer, 0, 100, 0, echoResponse)).thenReturn(false);
-            
+
             boolean result = echoResponse.verifySignature(buffer, 0, 100);
-            
+
             assertTrue(result);
             assertFalse(echoResponse.isVerifyFailed());
             verify(mockDigest).verify(buffer, 0, 100, 0, echoResponse);
@@ -297,12 +303,12 @@ class Smb2EchoResponseTest {
             byte[] buffer = new byte[1024];
             echoResponse.setDigest(mockDigest);
             setStatus(echoResponse, NtStatus.NT_STATUS_SUCCESS);
-            
+
             when(mockConfig.isRequireSecureNegotiate()).thenReturn(true);
             when(mockDigest.verify(buffer, 0, 100, 0, echoResponse)).thenReturn(true);
-            
+
             boolean result = echoResponse.verifySignature(buffer, 0, 100);
-            
+
             assertFalse(result);
             assertTrue(echoResponse.isVerifyFailed());
         }
@@ -312,9 +318,9 @@ class Smb2EchoResponseTest {
         void testVerifySignatureNoDigest() {
             byte[] buffer = new byte[1024];
             echoResponse.setDigest(null);
-            
+
             boolean result = echoResponse.verifySignature(buffer, 0, 100);
-            
+
             assertTrue(result);
             assertFalse(echoResponse.isVerifyFailed());
         }
@@ -325,9 +331,9 @@ class Smb2EchoResponseTest {
             byte[] buffer = new byte[1024];
             echoResponse.setDigest(mockDigest);
             setAsync(echoResponse, true);
-            
+
             boolean result = echoResponse.verifySignature(buffer, 0, 100);
-            
+
             assertTrue(result);
             assertFalse(echoResponse.isVerifyFailed());
             verify(mockDigest, never()).verify(any(), anyInt(), anyInt(), anyInt(), any());
@@ -343,7 +349,7 @@ class Smb2EchoResponseTest {
         void testGetGrantedCredits() {
             int credits = 15;
             echoResponse.setCredit(credits);
-            
+
             assertEquals(credits, echoResponse.getGrantedCredits());
         }
     }
@@ -357,7 +363,7 @@ class Smb2EchoResponseTest {
         void testGetErrorCode() throws Exception {
             int status = NtStatus.NT_STATUS_ACCESS_DENIED;
             setStatus(echoResponse, status);
-            
+
             assertEquals(status, echoResponse.getErrorCode());
         }
     }
@@ -370,9 +376,9 @@ class Smb2EchoResponseTest {
         @DisplayName("Should detect signed flag")
         void testIsSigned() {
             assertFalse(echoResponse.isSigned());
-            
+
             echoResponse.addFlags(ServerMessageBlock2.SMB2_FLAGS_SIGNED);
-            
+
             assertTrue(echoResponse.isSigned());
         }
 
@@ -381,7 +387,7 @@ class Smb2EchoResponseTest {
         void testIsSignedWithMultipleFlags() {
             echoResponse.addFlags(ServerMessageBlock2.SMB2_FLAGS_ASYNC_COMMAND);
             assertFalse(echoResponse.isSigned());
-            
+
             echoResponse.addFlags(ServerMessageBlock2.SMB2_FLAGS_SIGNED);
             assertTrue(echoResponse.isSigned());
         }
@@ -398,20 +404,20 @@ class Smb2EchoResponseTest {
             byte[] buffer = new byte[1024];
             int bufferIndex = 64;
             SMBUtil.writeInt2(4, buffer, bufferIndex);
-            
+
             // Configure response
             echoResponse.setDigest(mockDigest);
             setStatus(echoResponse, NtStatus.NT_STATUS_SUCCESS);
             when(mockConfig.isRequireSecureNegotiate()).thenReturn(false);
-            
+
             // Read the response
             int bytesRead = echoResponse.readBytesWireFormat(buffer, bufferIndex);
             assertEquals(0, bytesRead);
-            
+
             // Write response (echo responses don't write data)
             int bytesWritten = echoResponse.writeBytesWireFormat(buffer, 0);
             assertEquals(0, bytesWritten);
-            
+
             // Mark as received
             echoResponse.received();
             assertTrue(echoResponse.isReceived());
@@ -423,20 +429,17 @@ class Smb2EchoResponseTest {
         void testErrorScenario() {
             byte[] buffer = new byte[1024];
             int bufferIndex = 64;
-            
+
             // Write invalid structure size
             SMBUtil.writeInt2(10, buffer, bufferIndex);
-            
+
             // Should throw exception
-            assertThrows(
-                SMBProtocolDecodingException.class,
-                () -> echoResponse.readBytesWireFormat(buffer, bufferIndex)
-            );
-            
+            assertThrows(SMBProtocolDecodingException.class, () -> echoResponse.readBytesWireFormat(buffer, bufferIndex));
+
             // Set error state
             Exception error = new SMBProtocolDecodingException("Test error");
             echoResponse.exception(error);
-            
+
             assertTrue(echoResponse.isError());
             assertTrue(echoResponse.isReceived());
             assertEquals(error, echoResponse.getException());

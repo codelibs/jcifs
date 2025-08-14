@@ -1,14 +1,13 @@
 package jcifs.dcerpc;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
-
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class DcerpcBindingTest {
 
@@ -132,11 +131,9 @@ class DcerpcBindingTest {
 
     @Test
     void testSetOptionEndpointWithVariousValidPipes() throws DcerpcException {
-        Object[][] testData = {
-                {"\\pipe\\srvsvc", "srvsvc", "4B324FC8-1670-01D3-1278-5A47BF6EE188", 3, 0},
-                {"\\pipe\\lsarpc", "lsarpc", "12345778-1234-ABCD-EF00-0123456789AB", 2, 1},
-                {"\\pipe\\samr", "samr", "12345778-1234-ABCD-EF00-0123456789AC", 1, 0}
-        };
+        Object[][] testData = { { "\\pipe\\srvsvc", "srvsvc", "4B324FC8-1670-01D3-1278-5A47BF6EE188", 3, 0 },
+                { "\\pipe\\lsarpc", "lsarpc", "12345778-1234-ABCD-EF00-0123456789AB", 2, 1 },
+                { "\\pipe\\samr", "samr", "12345778-1234-ABCD-EF00-0123456789AC", 1, 0 } };
 
         for (Object[] data : testData) {
             String endpoint = (String) data[0];
@@ -168,7 +165,8 @@ class DcerpcBindingTest {
 
         assertEquals(newEndpoint, dcerpcBinding.getEndpoint(), "Endpoint should be set correctly for newly added interface.");
         assertNotNull(dcerpcBinding.getUuid(), "UUID should be set for newly added interface.");
-        assertEquals("11111111-2222-3333-4444-555555555555", dcerpcBinding.getUuid().toString(), "UUID should be parsed correctly for newly added interface.");
+        assertEquals("11111111-2222-3333-4444-555555555555", dcerpcBinding.getUuid().toString(),
+                "UUID should be parsed correctly for newly added interface.");
         assertEquals(1, dcerpcBinding.getMajor(), "Major version should be parsed correctly for newly added interface.");
         assertEquals(0, dcerpcBinding.getMinor(), "Minor version should be parsed correctly for newly added interface.");
     }

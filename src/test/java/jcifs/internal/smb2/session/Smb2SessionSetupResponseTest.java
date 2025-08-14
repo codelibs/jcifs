@@ -1,7 +1,14 @@
 package jcifs.internal.smb2.session;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -60,7 +67,7 @@ class Smb2SessionSetupResponseTest extends BaseTest {
         // SecurityBufferOffset (+4) and Length (+6)
         SMBUtil.writeInt2(secBufOffset, buf, bodyStart + 4);
         SMBUtil.writeInt2(blob != null ? blob.length : 0, buf, bodyStart + 6);
-        if ( blob != null && blob.length > 0 ) {
+        if (blob != null && blob.length > 0) {
             int blobStart = headerStart + secBufOffset;
             System.arraycopy(blob, 0, buf, blobStart, blob.length);
         }
@@ -216,4 +223,3 @@ class Smb2SessionSetupResponseTest extends BaseTest {
         assertEquals(0, written);
     }
 }
-

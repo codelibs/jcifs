@@ -1,24 +1,27 @@
 package jcifs.smb1.smb1;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.verify;
 
 import java.net.InetAddress;
-import jcifs.smb1.UniAddress;
-import jcifs.smb1.smb1.NtlmPasswordAuthentication;
-import jcifs.smb1.smb1.ServerMessageBlock;
-import jcifs.smb1.smb1.SmbComOpenAndX;
-import jcifs.smb1.smb1.SmbTransport;
-import jcifs.smb1.smb1.SmbSession;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import jcifs.smb1.UniAddress;
 
 /**
  * Very small test suite that exercises the most important state-changing
@@ -28,10 +31,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 public class SmbSessionTest {
 
-    @Mock UniAddress addr;
-    @Mock InetAddress inet;
+    @Mock
+    UniAddress addr;
+    @Mock
+    InetAddress inet;
     NtlmPasswordAuthentication auth;
-    @Mock SmbTransport transport;
+    @Mock
+    SmbTransport transport;
 
     // static helper that returns the mocked transport. The real class
     // performs several other operations, but for the purpose of the test
@@ -42,21 +48,20 @@ public class SmbSessionTest {
     void setUp() throws Exception {
         // Create a real NtlmPasswordAuthentication instance
         auth = new NtlmPasswordAuthentication("TESTDOMAIN", "testuser", "testpass");
-        
+
         // Initialize ServerData to avoid NullPointerException
         SmbTransport.ServerData serverData = transport.new ServerData();
         serverData.security = 0; // Set to 0 or appropriate value for SECURITY_SHARE
         serverData.encryptionKey = new byte[8]; // Initialize with empty encryption key
-        
+
         // Configure the mock transport with the server data
         transport.server = serverData;
-        
+
         smbtStatic = mockStatic(SmbTransport.class);
-        smbtStatic.when(() -> SmbTransport.getSmbTransport(addr, 445, inet, 0, null))
-                .thenReturn(transport);
+        smbtStatic.when(() -> SmbTransport.getSmbTransport(addr, 445, inet, 0, null)).thenReturn(transport);
         smbtStatic.when(() -> SmbTransport.getSmbTransport(addr, 445)).thenReturn(transport);
     }
-    
+
     @AfterEach
     void tearDown() {
         if (smbtStatic != null) {
@@ -84,7 +89,7 @@ public class SmbSessionTest {
         resp.received = true;
 
         session.transport(); // initialise transport
-        
+
         // Mock the sessionSetup behavior to avoid actual network calls
         // The sessionSetup method would normally send authentication messages
         // Only mark the sessionSetup response as received, not the actual request/response

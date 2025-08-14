@@ -26,22 +26,18 @@ class PacTest {
     void setUp() {
         keys = new HashMap<>();
         // Use ARCFOUR-HMAC encryption type (23) which matches KERB_CHECKSUM_HMAC_MD5
-        KerberosKey serverKey = new KerberosKey(
-            new KerberosPrincipal("test@EXAMPLE.COM"),
-            "serverKey1234567".getBytes(),
-            PacSignature.ETYPE_ARCFOUR_HMAC,
-            1
-        );
+        KerberosKey serverKey = new KerberosKey(new KerberosPrincipal("test@EXAMPLE.COM"), "serverKey1234567".getBytes(),
+                PacSignature.ETYPE_ARCFOUR_HMAC, 1);
         keys.put(PacSignature.ETYPE_ARCFOUR_HMAC, serverKey);
     }
-    
+
     private void writeLittleEndianInt(ByteArrayOutputStream baos, int value) {
         baos.write(value & 0xFF);
         baos.write((value >> 8) & 0xFF);
         baos.write((value >> 16) & 0xFF);
         baos.write((value >> 24) & 0xFF);
     }
-    
+
     private void writeLittleEndianLong(ByteArrayOutputStream baos, long value) {
         for (int i = 0; i < 8; i++) {
             baos.write((int) ((value >> (i * 8)) & 0xFF));
@@ -52,17 +48,17 @@ class PacTest {
     void testEmptyPac() {
         // Test that PAC with size <= 8 is rejected
         byte[] emptyData = new byte[8];
-        
+
         PACDecodingException e = assertThrows(PACDecodingException.class, () -> new Pac(emptyData, keys));
         // Any PACDecodingException is acceptable for this test
         assertNotNull(e.getMessage());
     }
-    
+
     @Test
     void testTooSmallPac() {
         // Test that PAC smaller than 8 bytes is rejected
         byte[] smallData = new byte[4];
-        
+
         PACDecodingException e = assertThrows(PACDecodingException.class, () -> new Pac(smallData, keys));
         // Any PACDecodingException is acceptable for this test
         assertNotNull(e.getMessage());
@@ -122,12 +118,12 @@ class PacTest {
         writeLittleEndianInt(baos, 100); // size
         writeLittleEndianLong(baos, 1000); // offset way out of bounds
         byte[] pacData = baos.toByteArray();
-        
+
         // This currently throws ArrayIndexOutOfBoundsException
         // but should be wrapped in PACDecodingException
         assertThrows(Exception.class, () -> new Pac(pacData, keys));
     }
-    
+
     @Test
     void testZeroBufferCount() throws IOException {
         // Test PAC with zero buffers (missing required buffers)
@@ -136,63 +132,62 @@ class PacTest {
         writeLittleEndianInt(baos, PacConstants.PAC_VERSION); // valid version
         baos.write(new byte[10]); // Some extra data
         byte[] pacData = baos.toByteArray();
-        
+
         PACDecodingException e = assertThrows(PACDecodingException.class, () -> new Pac(pacData, keys));
         // Should indicate missing required buffers
         assertNotNull(e.getMessage());
     }
-    
+
     @Test
     void testMockedSuccessfulParsing() throws PACDecodingException, IOException {
         // Test with mocked PacMac to avoid complex signature calculation
         try (MockedStatic<PacMac> pacMacMock = mockStatic(PacMac.class)) {
             // Mock the calculateMac method to return a valid checksum
             byte[] mockChecksum = new byte[16];
-            pacMacMock.when(() -> PacMac.calculateMac(anyInt(), any(), any()))
-                      .thenReturn(mockChecksum);
-            
+            pacMacMock.when(() -> PacMac.calculateMac(anyInt(), any(), any())).thenReturn(mockChecksum);
+
             // Create a minimal valid PAC structure
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             writeLittleEndianInt(baos, 3); // bufferCount = 3 (minimum required)
             writeLittleEndianInt(baos, PacConstants.PAC_VERSION); // version
-            
+
             // Buffer 1: LOGON_INFO
             writeLittleEndianInt(baos, PacConstants.LOGON_INFO);
             writeLittleEndianInt(baos, 8); // minimal size
             writeLittleEndianLong(baos, 72); // offset (aligned)
-            
+
             // Buffer 2: SERVER_CHECKSUM
             writeLittleEndianInt(baos, PacConstants.SERVER_CHECKSUM);
             writeLittleEndianInt(baos, 20); // signature size
             writeLittleEndianLong(baos, 80); // offset (aligned)
-            
+
             // Buffer 3: PRIVSVR_CHECKSUM
             writeLittleEndianInt(baos, PacConstants.PRIVSVR_CHECKSUM);
             writeLittleEndianInt(baos, 20); // signature size
             writeLittleEndianLong(baos, 104); // offset (aligned)
-            
+
             // Add buffer data
             while (baos.size() < 72) {
                 baos.write(0);
             }
             // LOGON_INFO data (minimal)
             baos.write(new byte[8]);
-            
+
             // SERVER_CHECKSUM data
             writeLittleEndianInt(baos, PacSignature.KERB_CHECKSUM_HMAC_MD5);
             baos.write(mockChecksum);
-            
+
             // Padding to align
             while (baos.size() < 104) {
                 baos.write(0);
             }
-            
+
             // PRIVSVR_CHECKSUM data
             writeLittleEndianInt(baos, PacSignature.KERB_CHECKSUM_HMAC_MD5);
             baos.write(mockChecksum);
-            
+
             byte[] pacData = baos.toByteArray();
-            
+
             // This will likely fail on PacLogonInfo parsing, but at least tests the basic structure
             try {
                 Pac pac = new Pac(pacData, keys);

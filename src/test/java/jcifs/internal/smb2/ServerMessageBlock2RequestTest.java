@@ -1,15 +1,27 @@
 package jcifs.internal.smb2;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static jcifs.internal.smb2.ServerMessageBlock2.SMB2_FLAGS_RELATED_OPERATIONS;
+import static jcifs.internal.smb2.ServerMessageBlock2.SMB2_NEGOTIATE;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.junit.jupiter.params.provider.NullSource;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -17,8 +29,6 @@ import jcifs.CIFSContext;
 import jcifs.Configuration;
 import jcifs.internal.CommonServerMessageBlockRequest;
 import jcifs.internal.CommonServerMessageBlockResponse;
-
-import static jcifs.internal.smb2.ServerMessageBlock2.*;
 
 class ServerMessageBlock2RequestTest {
 
@@ -124,7 +134,7 @@ class ServerMessageBlock2RequestTest {
         }
 
         @ParameterizedTest
-        @ValueSource(longs = {1L, 100L, Long.MAX_VALUE})
+        @ValueSource(longs = { 1L, 100L, Long.MAX_VALUE })
         @DisplayName("isResponseAsync should return true for various non-zero asyncIds")
         void testIsResponseAsyncWithDifferentValues(long asyncId) {
             testRequest.setAsyncId(asyncId);
@@ -275,10 +285,10 @@ class ServerMessageBlock2RequestTest {
         void testInitResponseChained() {
             TestServerMessageBlock2Response response1 = new TestServerMessageBlock2Response(mockConfig);
             TestServerMessageBlock2Response response2 = new TestServerMessageBlock2Response(mockConfig);
-            
+
             TestServerMessageBlock2Request nextRequest = new TestServerMessageBlock2Request(mockConfig);
             nextRequest.setTestResponse(response2);
-            
+
             testRequest.setTestResponse(response1);
             testRequest.setNext(nextRequest);
 
@@ -375,7 +385,8 @@ class ServerMessageBlock2RequestTest {
         }
 
         @Override
-        protected TestServerMessageBlock2Response createResponse(CIFSContext tc, ServerMessageBlock2Request<TestServerMessageBlock2Response> req) {
+        protected TestServerMessageBlock2Response createResponse(CIFSContext tc,
+                ServerMessageBlock2Request<TestServerMessageBlock2Response> req) {
             return testResponse;
         }
 
@@ -396,21 +407,21 @@ class ServerMessageBlock2RequestTest {
             int start = dstIndex;
             dstIndex += writeHeaderWireFormat(dst, dstIndex);
             dstIndex += writeBytesWireFormat(dst, dstIndex);
-            
+
             // Set the length field that will be checked by ServerMessageBlock2Request.encode()
             int calculatedLength = testEncodedLength;
             setLength(calculatedLength);
-            
+
             // Now call the ServerMessageBlock2Request's encode which will do the validation
             int exp = size();
             int actual = getLength();
             if (exp != actual) {
                 throw new IllegalStateException(String.format("Wrong size calculation have %d expect %d", exp, actual));
             }
-            
+
             return calculatedLength;
         }
-        
+
         private void setLength(int length) {
             try {
                 // Use reflection to set the protected length field

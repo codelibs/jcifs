@@ -1,16 +1,14 @@
 package jcifs.dcerpc.msrpc;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import jcifs.dcerpc.DcerpcConstants;
-import jcifs.dcerpc.msrpc.SamrDomainHandle;
 import jcifs.dcerpc.msrpc.samr.SamrSamArray;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * Tests for {@link MsrpcEnumerateAliasesInDomain}.
@@ -38,8 +36,7 @@ class MsrpcEnumerateAliasesInDomainTest {
         int acctFlags = 1;
 
         // When
-        MsrpcEnumerateAliasesInDomain request = new MsrpcEnumerateAliasesInDomain(mockDomainHandle, acctFlags,
-                mockSamArray);
+        MsrpcEnumerateAliasesInDomain request = new MsrpcEnumerateAliasesInDomain(mockDomainHandle, acctFlags, mockSamArray);
 
         // Then
         assertNotNull(request, "The request object should not be null.");

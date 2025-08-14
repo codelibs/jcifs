@@ -1,10 +1,15 @@
 package jcifs.smb1.smb1;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 import java.util.Arrays;
 import java.util.Optional;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -15,18 +20,14 @@ import org.junit.jupiter.api.Test;
  */
 public class DosErrorTest {
     private static Optional<Integer> findNtStatus(int dosErrorCode) {
-        return Arrays.stream(DosError.DOS_ERROR_CODES)
-                .filter(pair -> pair[0] == dosErrorCode)
-                .map(pair -> pair[1])
-                .findFirst();
+        return Arrays.stream(DosError.DOS_ERROR_CODES).filter(pair -> pair[0] == dosErrorCode).map(pair -> pair[1]).findFirst();
     }
 
     @Test
     @DisplayName("DOS_ERROR_CODES is non‑null and non‑empty")
     void testCodesArrayExistence() {
         assertNotNull(DosError.DOS_ERROR_CODES, "DOS_ERROR_CODES should be non‑null");
-        assertTrue(DosError.DOS_ERROR_CODES.length > 0,
-                "DOS_ERROR_CODES should contain at least one mapping");
+        assertTrue(DosError.DOS_ERROR_CODES.length > 0, "DOS_ERROR_CODES should contain at least one mapping");
     }
 
     @Test
@@ -34,8 +35,7 @@ public class DosErrorTest {
     void testEachPairLength() {
         for (int i = 0; i < DosError.DOS_ERROR_CODES.length; i++) {
             int[] pair = DosError.DOS_ERROR_CODES[i];
-            assertEquals(2, pair.length,
-                    String.format("Error mapping at index %d should contain two integers", i));
+            assertEquals(2, pair.length, String.format("Error mapping at index %d should contain two integers", i));
         }
     }
 
@@ -46,8 +46,7 @@ public class DosErrorTest {
         final int expectedNt = 0xc0000002;
         Optional<Integer> actual = findNtStatus(dosErr);
         assertTrue(actual.isPresent(), String.format("Mapping for %08x should exist", dosErr));
-        assertEquals(expectedNt, actual.get(),
-                String.format("NTSTATUS for %08x should be %08x", dosErr, expectedNt));
+        assertEquals(expectedNt, actual.get(), String.format("NTSTATUS for %08x should be %08x", dosErr, expectedNt));
     }
 
     @Test
@@ -63,7 +62,9 @@ public class DosErrorTest {
         final int dosErr = 0x00010001;
         final int expectedNt = 0xc0000002;
 
-        interface NtStatusConsumer { void consume(int ntStatus); }
+        interface NtStatusConsumer {
+            void consume(int ntStatus);
+        }
         NtStatusConsumer mock = mock(NtStatusConsumer.class);
         findNtStatus(dosErr).ifPresent(mock::consume);
         verify(mock).consume(expectedNt);
@@ -73,8 +74,6 @@ public class DosErrorTest {
     @DisplayName("DOS_ERROR_MESSAGES length matches expectations")
     void testMessageArrayLength() {
         assertNotNull(DosError.DOS_ERROR_MESSAGES, "DOS_ERROR_MESSAGES should be non‑null");
-        assertTrue(DosError.DOS_ERROR_MESSAGES.length >= DosError.DOS_ERROR_CODES.length,
-                "DOS_ERROR_MESSAGES should cover all codes");
+        assertTrue(DosError.DOS_ERROR_MESSAGES.length >= DosError.DOS_ERROR_CODES.length, "DOS_ERROR_MESSAGES should cover all codes");
     }
 }
-

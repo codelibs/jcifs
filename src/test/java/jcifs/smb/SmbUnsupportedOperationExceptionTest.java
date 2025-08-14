@@ -1,31 +1,34 @@
 package jcifs.smb;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
-import java.util.stream.Stream;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(MockitoExtension.class)
 class SmbUnsupportedOperationExceptionTest {
 
     // Provides a variety of messages including edge cases
     static Stream<String> messages() {
-        return Stream.of(
-            "custom message",
-            "",
-            " ",
-            "αβγ",
-            "x".repeat(1000),
-            null
-        );
+        return Stream.of("custom message", "", " ", "αβγ", "x".repeat(1000), null);
     }
 
     @Test
@@ -60,7 +63,7 @@ class SmbUnsupportedOperationExceptionTest {
         // toString behavior mirrors Throwable: includes message when not null
         String ts = ex.toString();
         assertTrue(ts.contains("SmbUnsupportedOperationException"), "toString should contain class name");
-        if ( msg != null ) {
+        if (msg != null) {
             assertTrue(ts.contains(msg), "toString should contain provided message");
         } else {
             assertFalse(ts.contains(":"), "toString should not contain ':' when message is null");
@@ -71,10 +74,9 @@ class SmbUnsupportedOperationExceptionTest {
     @DisplayName("assertThrows captures and exposes the default message")
     void assertThrows_capturesDefaultMessage() {
         // Act & Assert
-        SmbUnsupportedOperationException ex = assertThrows(
-                SmbUnsupportedOperationException.class,
-                () -> { throw new SmbUnsupportedOperationException(); }
-        );
+        SmbUnsupportedOperationException ex = assertThrows(SmbUnsupportedOperationException.class, () -> {
+            throw new SmbUnsupportedOperationException();
+        });
         assertEquals("Operation is not supported with the negotiated capabilities", ex.getMessage());
     }
 
@@ -104,7 +106,7 @@ class SmbUnsupportedOperationExceptionTest {
         // Act: simulate control flow where the exception happens before any collaborator is used
         try {
             throw new SmbUnsupportedOperationException();
-        } catch ( SmbUnsupportedOperationException ignored ) {
+        } catch (SmbUnsupportedOperationException ignored) {
             // ignore
         }
 
@@ -113,5 +115,3 @@ class SmbUnsupportedOperationExceptionTest {
         verifyNoMoreInteractions(r);
     }
 }
-
-

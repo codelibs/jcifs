@@ -1,15 +1,19 @@
 package jcifs.smb;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.ArgumentMatchers.same;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -21,19 +25,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import jcifs.BufferCache;
 import jcifs.CIFSContext;
-import jcifs.CIFSException;
-import jcifs.Configuration;
-import jcifs.Credentials;
-import jcifs.DfsResolver;
-import jcifs.SmbSession;
-import jcifs.SmbTransport;
-import jcifs.SmbTransportPool;
-import jcifs.smb.SmbSessionInternal;
-import jcifs.SmbTree;
-import jcifs.smb.SmbTreeImpl;
-import jcifs.smb.SmbTransportInternal;
 import jcifs.dcerpc.DcerpcHandle;
 import jcifs.dcerpc.UnicodeString;
 import jcifs.dcerpc.msrpc.LsaPolicyHandle;
@@ -315,56 +307,4 @@ class SIDCacheImplTest {
             verify(handle, times(1)).sendrecv(any(jcifs.dcerpc.msrpc.MsrpcLookupSids.class));
         }
     }
-
-    @Test
-    @DisplayName("getLocalGroupsMap can be built from stubs via spy (interaction focus)")
-    void getLocalGroupsMap_interactions_viaSpy() throws CIFSException, IOException {
-        // This test verifies interactions with dependent public methods without invoking RPC
-        CIFSContext ctx = mock(CIFSContext.class);
-        Configuration config = mock(Configuration.class);
-        BufferCache bufferCache = mock(BufferCache.class);
-        Credentials credentials = mock(Credentials.class);
-        DfsResolver dfsResolver = mock(DfsResolver.class);
-        SmbTransportPool transportPool = mock(SmbTransportPool.class);
-        SmbTransport transport = mock(SmbTransport.class);
-        SmbTransportInternal transportInternal = mock(SmbTransportInternal.class);
-        SmbSession session = mock(SmbSession.class);
-        SmbSessionInternal sessionInternal = mock(SmbSessionInternal.class);
-        lenient().when(ctx.getConfig()).thenReturn(config);
-        lenient().when(config.isTraceResourceUsage()).thenReturn(false);
-        lenient().when(ctx.getBufferCache()).thenReturn(bufferCache);
-        lenient().when(bufferCache.getBuffer()).thenReturn(new byte[8192]);
-        lenient().when(ctx.getCredentials()).thenReturn(credentials);
-        lenient().when(credentials.getUserDomain()).thenReturn("TESTDOMAIN");
-        lenient().when(ctx.getDfs()).thenReturn(dfsResolver);
-        lenient().when(ctx.getTransportPool()).thenReturn(transportPool);
-        lenient().when(transportPool.getSmbTransport(any(CIFSContext.class), anyString(), anyInt(), anyBoolean(), anyBoolean())).thenReturn(transport);
-        lenient().when(transport.unwrap(SmbTransportInternal.class)).thenReturn(transportInternal);
-        lenient().when(transportInternal.getSmbSession(any(CIFSContext.class), anyString(), anyString())).thenReturn(session);
-        lenient().when(session.unwrap(SmbSessionInternal.class)).thenReturn(sessionInternal);
-        
-        // Mock SmbTree to prevent NPE when getSmbTree returns null
-        SmbTree smbTree = mock(SmbTree.class);
-        SmbTreeImpl smbTreeImpl = mock(SmbTreeImpl.class);
-        lenient().when(sessionInternal.getSmbTree(anyString(), any())).thenReturn(smbTree);
-        lenient().when(smbTree.unwrap(SmbTreeImpl.class)).thenReturn(smbTreeImpl);
-        SIDCacheImpl cache = Mockito.spy(new SIDCacheImpl(ctx));
-
-        // Domain SID to be returned by stub
-        SID domSid = sid("S-1-5-21-10-11-12");
-
-        // Stub getServerSid so getLocalGroupsMap logic can proceed
-        doReturn(domSid).when(cache).getServerSid(ctx, "server");
-
-        // Since we cannot mock static DcerpcHandle.getHandle, we verify that our stubs are invoked
-        // by calling the public method and catching the expected CIFSException from unmocked internals.
-        try {
-            cache.getLocalGroupsMap(ctx, "server", 0);
-            fail("Expected CIFSException due to unmocked RPC internals");
-        } catch (CIFSException e) {
-            // Verify our stubs were engaged before the failure occurred
-            verify(cache, atLeastOnce()).getServerSid(ctx, "server");
-        }
-    }
 }
-

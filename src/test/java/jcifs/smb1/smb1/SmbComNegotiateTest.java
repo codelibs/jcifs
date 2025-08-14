@@ -1,10 +1,13 @@
 package jcifs.smb1.smb1;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.UnsupportedEncodingException;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests for the SmbComNegotiate class.
@@ -27,7 +30,8 @@ class SmbComNegotiateTest {
     @Test
     void testConstructor() {
         // Verify that the command is set to SMB_COM_NEGOTIATE
-        assertEquals(ServerMessageBlock.SMB_COM_NEGOTIATE, smbComNegotiate.command, "Constructor should set the command to SMB_COM_NEGOTIATE.");
+        assertEquals(ServerMessageBlock.SMB_COM_NEGOTIATE, smbComNegotiate.command,
+                "Constructor should set the command to SMB_COM_NEGOTIATE.");
         // Verify that flags2 is set to the default flags
         assertEquals(ServerMessageBlock.DEFAULT_FLAGS2, smbComNegotiate.flags2, "Constructor should set flags2 to DEFAULT_FLAGS2.");
     }

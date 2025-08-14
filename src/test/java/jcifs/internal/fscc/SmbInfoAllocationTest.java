@@ -1,10 +1,12 @@
 package jcifs.internal.fscc;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 import jcifs.internal.SMBProtocolDecodingException;
 import jcifs.internal.util.SMBUtil;
@@ -24,8 +26,7 @@ class SmbInfoAllocationTest {
     @Test
     @DisplayName("Test getFileSystemInformationClass returns SMB_INFO_ALLOCATION")
     void testGetFileSystemInformationClass() {
-        assertEquals(FileSystemInformation.SMB_INFO_ALLOCATION, 
-                     smbInfoAllocation.getFileSystemInformationClass());
+        assertEquals(FileSystemInformation.SMB_INFO_ALLOCATION, smbInfoAllocation.getFileSystemInformationClass());
     }
 
     @Test
@@ -45,24 +46,24 @@ class SmbInfoAllocationTest {
         offset += 4;
         SMBUtil.writeInt4(sectPerAlloc, buffer, offset);
         offset += 4;
-        SMBUtil.writeInt4((int)alloc, buffer, offset);
+        SMBUtil.writeInt4((int) alloc, buffer, offset);
         offset += 4;
-        SMBUtil.writeInt4((int)free, buffer, offset);
+        SMBUtil.writeInt4((int) free, buffer, offset);
         offset += 4;
         SMBUtil.writeInt2(bytesPerSect, buffer, offset);
         offset += 2;
-        
+
         // Decode
         int bytesDecoded = smbInfoAllocation.decode(buffer, 0, buffer.length);
 
         // Verify - actual implementation reads 20 bytes (4 + 4 + 4 + 4 + 4)
         // bytesPerSect is read as Int2 but advances by 4 bytes (padding)
         assertEquals(20, bytesDecoded);
-        
+
         // Verify capacity calculation: alloc * sectPerAlloc * bytesPerSect
         long expectedCapacity = alloc * sectPerAlloc * bytesPerSect;
         assertEquals(expectedCapacity, smbInfoAllocation.getCapacity());
-        
+
         // Verify free space calculation: free * sectPerAlloc * bytesPerSect
         long expectedFree = free * sectPerAlloc * bytesPerSect;
         assertEquals(expectedFree, smbInfoAllocation.getFree());
@@ -86,9 +87,9 @@ class SmbInfoAllocationTest {
         offset += 4;
         SMBUtil.writeInt4(sectPerAlloc, buffer, offset);
         offset += 4;
-        SMBUtil.writeInt4((int)alloc, buffer, offset);
+        SMBUtil.writeInt4((int) alloc, buffer, offset);
         offset += 4;
-        SMBUtil.writeInt4((int)free, buffer, offset);
+        SMBUtil.writeInt4((int) free, buffer, offset);
         offset += 4;
         SMBUtil.writeInt2(bytesPerSect, buffer, offset);
 
@@ -97,11 +98,11 @@ class SmbInfoAllocationTest {
 
         // Verify - actual implementation reads 20 bytes
         assertEquals(20, bytesDecoded);
-        
+
         // Verify calculations
         long expectedCapacity = alloc * sectPerAlloc * bytesPerSect;
         assertEquals(expectedCapacity, smbInfoAllocation.getCapacity());
-        
+
         long expectedFree = free * sectPerAlloc * bytesPerSect;
         assertEquals(expectedFree, smbInfoAllocation.getFree());
     }
@@ -111,7 +112,7 @@ class SmbInfoAllocationTest {
     void testGetCapacityWithZeroValues() throws SMBProtocolDecodingException {
         // Prepare test data with zeros
         byte[] buffer = new byte[22];
-        
+
         // All zeros
         for (int i = 0; i < buffer.length; i++) {
             buffer[i] = 0;
@@ -152,10 +153,10 @@ class SmbInfoAllocationTest {
         smbInfoAllocation.decode(buffer, 0, buffer.length);
 
         // Verify calculations work with large values
-        long expectedCapacity = (long)alloc * sectPerAlloc * bytesPerSect;
+        long expectedCapacity = (long) alloc * sectPerAlloc * bytesPerSect;
         assertEquals(expectedCapacity, smbInfoAllocation.getCapacity());
-        
-        long expectedFree = (long)free * sectPerAlloc * bytesPerSect;
+
+        long expectedFree = (long) free * sectPerAlloc * bytesPerSect;
         assertEquals(expectedFree, smbInfoAllocation.getFree());
     }
 
@@ -176,9 +177,9 @@ class SmbInfoAllocationTest {
         offset += 4;
         SMBUtil.writeInt4(sectPerAlloc, buffer, offset);
         offset += 4;
-        SMBUtil.writeInt4((int)alloc, buffer, offset);
+        SMBUtil.writeInt4((int) alloc, buffer, offset);
         offset += 4;
-        SMBUtil.writeInt4((int)free, buffer, offset);
+        SMBUtil.writeInt4((int) free, buffer, offset);
         offset += 4;
         SMBUtil.writeInt2(bytesPerSect, buffer, offset);
 
@@ -187,7 +188,7 @@ class SmbInfoAllocationTest {
 
         // Test toString
         String result = smbInfoAllocation.toString();
-        
+
         // Verify string contains expected values
         assertTrue(result.contains("SmbInfoAllocation"));
         assertTrue(result.contains("alloc=" + alloc));
@@ -213,9 +214,9 @@ class SmbInfoAllocationTest {
         offset += 4;
         SMBUtil.writeInt4(sectPerAlloc, buffer, offset);
         offset += 4;
-        SMBUtil.writeInt4((int)alloc, buffer, offset);
+        SMBUtil.writeInt4((int) alloc, buffer, offset);
         offset += 4;
-        SMBUtil.writeInt4((int)free, buffer, offset);
+        SMBUtil.writeInt4((int) free, buffer, offset);
         offset += 4;
         SMBUtil.writeInt2(bytesPerSect, buffer, offset);
 
@@ -244,9 +245,9 @@ class SmbInfoAllocationTest {
         offset += 4;
         SMBUtil.writeInt4(sectPerAlloc, buffer, offset);
         offset += 4;
-        SMBUtil.writeInt4((int)alloc, buffer, offset);
+        SMBUtil.writeInt4((int) alloc, buffer, offset);
         offset += 4;
-        SMBUtil.writeInt4((int)free, buffer, offset);
+        SMBUtil.writeInt4((int) free, buffer, offset);
         offset += 4;
         SMBUtil.writeInt2(bytesPerSect, buffer, offset);
 
@@ -256,7 +257,7 @@ class SmbInfoAllocationTest {
         // Verify calculations with large sector size
         long expectedCapacity = alloc * sectPerAlloc * bytesPerSect;
         assertEquals(expectedCapacity, smbInfoAllocation.getCapacity());
-        
+
         long expectedFree = free * sectPerAlloc * bytesPerSect;
         assertEquals(expectedFree, smbInfoAllocation.getFree());
     }
@@ -266,10 +267,10 @@ class SmbInfoAllocationTest {
     void testDecodeReadsCorrectBytes() throws SMBProtocolDecodingException {
         // Prepare test data
         byte[] buffer = new byte[22];
-        
+
         // Fill with pattern to verify we read correct bytes
         for (int i = 0; i < buffer.length; i++) {
-            buffer[i] = (byte)(i + 1);
+            buffer[i] = (byte) (i + 1);
         }
 
         // Decode
@@ -307,10 +308,10 @@ class SmbInfoAllocationTest {
         smbInfoAllocation.decode(buffer, 0, buffer.length);
 
         // Verify calculations use long arithmetic to avoid overflow
-        long expectedCapacity = (long)alloc * sectPerAlloc * bytesPerSect;
+        long expectedCapacity = (long) alloc * sectPerAlloc * bytesPerSect;
         assertEquals(expectedCapacity, smbInfoAllocation.getCapacity());
-        
-        long expectedFree = (long)free * sectPerAlloc * bytesPerSect;
+
+        long expectedFree = (long) free * sectPerAlloc * bytesPerSect;
         assertEquals(expectedFree, smbInfoAllocation.getFree());
     }
 
@@ -343,10 +344,10 @@ class SmbInfoAllocationTest {
         // The implementation reads values as signed integers and stores them as long
         // Negative values remain negative when stored in long fields
         // The calculations will result in negative values
-        long expectedCapacity = (long)alloc * sectPerAlloc * bytesPerSect;
+        long expectedCapacity = (long) alloc * sectPerAlloc * bytesPerSect;
         assertEquals(expectedCapacity, smbInfoAllocation.getCapacity());
-        
-        long expectedFree = (long)free * sectPerAlloc * bytesPerSect;
+
+        long expectedFree = (long) free * sectPerAlloc * bytesPerSect;
         assertEquals(expectedFree, smbInfoAllocation.getFree());
     }
 
@@ -367,10 +368,10 @@ class SmbInfoAllocationTest {
         SMBUtil.writeInt2(512, buffer1, offset); // bytesPerSect
 
         smbInfoAllocation.decode(buffer1, 0, buffer1.length);
-        
+
         long firstCapacity = smbInfoAllocation.getCapacity();
         long firstFree = smbInfoAllocation.getFree();
-        
+
         // Second decode with different values
         byte[] buffer2 = new byte[22];
         offset = 0;
@@ -385,11 +386,11 @@ class SmbInfoAllocationTest {
         SMBUtil.writeInt2(1024, buffer2, offset); // bytesPerSect
 
         smbInfoAllocation.decode(buffer2, 0, buffer2.length);
-        
+
         // Verify values are updated
         assertNotEquals(firstCapacity, smbInfoAllocation.getCapacity());
         assertNotEquals(firstFree, smbInfoAllocation.getFree());
-        
+
         // Verify new calculations
         assertEquals(2000L * 8 * 1024, smbInfoAllocation.getCapacity());
         assertEquals(1000L * 8 * 1024, smbInfoAllocation.getFree());

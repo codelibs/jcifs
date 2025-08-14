@@ -9,8 +9,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import jcifs.dcerpc.DcerpcConstants;
-import jcifs.dcerpc.msrpc.MsrpcLsarClose;
 import jcifs.dcerpc.rpc.policy_handle;
+import jcifs.dcerpc.msrpc.MsrpcLsarClose;
 
 class MsrpcLsarCloseTest {
 

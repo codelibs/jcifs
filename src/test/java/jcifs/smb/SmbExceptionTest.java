@@ -229,7 +229,7 @@ class SmbExceptionTest extends BaseTest {
         // Then
         assertNotNull(exception);
         assertTrue(exception.getMessage().toLowerCase().contains("logon") || exception.getMessage().toLowerCase().contains("authentication")
-                || exception.getMessage().toLowerCase().contains("login") || exception.getMessage().toLowerCase().contains("user") 
+                || exception.getMessage().toLowerCase().contains("login") || exception.getMessage().toLowerCase().contains("user")
                 || exception.getMessage().toLowerCase().contains("password"));
     }
 }

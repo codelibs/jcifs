@@ -1,11 +1,14 @@
 package jcifs.internal.smb1.trans;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -265,14 +268,8 @@ class TransWaitNamedPipeTest {
     @DisplayName("Test with various pipe name formats")
     void testVariousPipeNameFormats() {
         // Test various pipe name formats
-        String[] pipeNames = {
-            "\\\\server\\PIPE\\testpipe",
-            "\\PIPE\\LANMAN",
-            "\\PIPE\\srvsvc",
-            "\\PIPE\\wkssvc",
-            "PIPE\\test",
-            "testpipe"
-        };
+        String[] pipeNames =
+                { "\\\\server\\PIPE\\testpipe", "\\PIPE\\LANMAN", "\\PIPE\\srvsvc", "\\PIPE\\wkssvc", "PIPE\\test", "testpipe" };
 
         for (String pipeName : pipeNames) {
             // Act

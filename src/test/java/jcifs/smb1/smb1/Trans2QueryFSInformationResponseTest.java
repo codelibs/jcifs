@@ -1,10 +1,11 @@
 package jcifs.smb1.smb1;
 
-import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import jcifs.smb1.smb1.SmbComTransaction;
-import jcifs.smb1.smb1.Trans2QueryFSInformationResponse;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests for the Trans2QueryFSInformationResponse class.
@@ -16,9 +17,11 @@ class Trans2QueryFSInformationResponseTest {
      */
     @Test
     void testConstructor() {
-        Trans2QueryFSInformationResponse response = new Trans2QueryFSInformationResponse(Trans2QueryFSInformationResponse.SMB_INFO_ALLOCATION);
+        Trans2QueryFSInformationResponse response =
+                new Trans2QueryFSInformationResponse(Trans2QueryFSInformationResponse.SMB_INFO_ALLOCATION);
         assertEquals(SmbComTransaction.SMB_COM_TRANSACTION2, response.command, "Command should be SMB_COM_TRANSACTION2");
-        assertEquals(SmbComTransaction.TRANS2_QUERY_FS_INFORMATION, response.subCommand, "SubCommand should be TRANS2_QUERY_FS_INFORMATION");
+        assertEquals(SmbComTransaction.TRANS2_QUERY_FS_INFORMATION, response.subCommand,
+                "SubCommand should be TRANS2_QUERY_FS_INFORMATION");
     }
 
     /**
@@ -26,14 +29,15 @@ class Trans2QueryFSInformationResponseTest {
      */
     @Test
     void testReadDataWireFormat_SmbInfoAllocation() {
-        Trans2QueryFSInformationResponse response = new Trans2QueryFSInformationResponse(Trans2QueryFSInformationResponse.SMB_INFO_ALLOCATION);
+        Trans2QueryFSInformationResponse response =
+                new Trans2QueryFSInformationResponse(Trans2QueryFSInformationResponse.SMB_INFO_ALLOCATION);
         byte[] buffer = new byte[20];
         // Mock data for SmbInfoAllocation
         // idFileSystem (4 bytes, skipped)
-        writeInt4(100, buffer, 4);   // sectPerAlloc
-        writeInt4(1000, buffer, 8);  // alloc
-        writeInt4(500, buffer, 12);  // free
-        writeInt2(512, buffer, 16);  // bytesPerSect
+        writeInt4(100, buffer, 4); // sectPerAlloc
+        writeInt4(1000, buffer, 8); // alloc
+        writeInt4(500, buffer, 12); // free
+        writeInt2(512, buffer, 16); // bytesPerSect
 
         int bytesRead = response.readDataWireFormat(buffer, 0, buffer.length);
 
@@ -55,13 +59,14 @@ class Trans2QueryFSInformationResponseTest {
      */
     @Test
     void testReadDataWireFormat_SmbQueryFSSizeInfo() {
-        Trans2QueryFSInformationResponse response = new Trans2QueryFSInformationResponse(Trans2QueryFSInformationResponse.SMB_QUERY_FS_SIZE_INFO);
+        Trans2QueryFSInformationResponse response =
+                new Trans2QueryFSInformationResponse(Trans2QueryFSInformationResponse.SMB_QUERY_FS_SIZE_INFO);
         byte[] buffer = new byte[28];
         // Mock data for SmbQueryFSSizeInfo
-        writeInt8(2000, buffer, 0);   // total allocation units
-        writeInt8(1000, buffer, 8);   // free allocation units
-        writeInt4(8, buffer, 16);     // sectors per allocation unit
-        writeInt4(4096, buffer, 20);  // bytes per sector
+        writeInt8(2000, buffer, 0); // total allocation units
+        writeInt8(1000, buffer, 8); // free allocation units
+        writeInt4(8, buffer, 16); // sectors per allocation unit
+        writeInt4(4096, buffer, 20); // bytes per sector
 
         int bytesRead = response.readDataWireFormat(buffer, 0, buffer.length);
 
@@ -83,14 +88,15 @@ class Trans2QueryFSInformationResponseTest {
      */
     @Test
     void testReadDataWireFormat_FsFullSizeInformation() {
-        Trans2QueryFSInformationResponse response = new Trans2QueryFSInformationResponse(Trans2QueryFSInformationResponse.SMB_FS_FULL_SIZE_INFORMATION);
+        Trans2QueryFSInformationResponse response =
+                new Trans2QueryFSInformationResponse(Trans2QueryFSInformationResponse.SMB_FS_FULL_SIZE_INFORMATION);
         byte[] buffer = new byte[32];
         // Mock data for FsFullSizeInformation
-        writeInt8(3000, buffer, 0);   // total allocation units
-        writeInt8(1500, buffer, 8);   // caller available allocation units
-        writeInt8(1500, buffer, 16);  // actual free units (skipped)
-        writeInt4(4, buffer, 24);     // sectors per allocation unit
-        writeInt4(8192, buffer, 28);  // bytes per sector
+        writeInt8(3000, buffer, 0); // total allocation units
+        writeInt8(1500, buffer, 8); // caller available allocation units
+        writeInt8(1500, buffer, 16); // actual free units (skipped)
+        writeInt4(4, buffer, 24); // sectors per allocation unit
+        writeInt4(8192, buffer, 28); // bytes per sector
 
         int bytesRead = response.readDataWireFormat(buffer, 0, buffer.length);
 
@@ -124,7 +130,8 @@ class Trans2QueryFSInformationResponseTest {
      */
     @Test
     void testToString() {
-        Trans2QueryFSInformationResponse response = new Trans2QueryFSInformationResponse(Trans2QueryFSInformationResponse.SMB_INFO_ALLOCATION);
+        Trans2QueryFSInformationResponse response =
+                new Trans2QueryFSInformationResponse(Trans2QueryFSInformationResponse.SMB_INFO_ALLOCATION);
         String responseString = response.toString();
         assertTrue(responseString.startsWith("Trans2QueryFSInformationResponse["), "toString should start with the class name");
         // The toString implementation only includes the parent's toString, which may not include subCommand details
@@ -137,7 +144,8 @@ class Trans2QueryFSInformationResponseTest {
      */
     @Test
     void testSmbInfoAllocationToString() {
-        Trans2QueryFSInformationResponse response = new Trans2QueryFSInformationResponse(Trans2QueryFSInformationResponse.SMB_INFO_ALLOCATION);
+        Trans2QueryFSInformationResponse response =
+                new Trans2QueryFSInformationResponse(Trans2QueryFSInformationResponse.SMB_INFO_ALLOCATION);
         Trans2QueryFSInformationResponse.SmbInfoAllocation info = response.new SmbInfoAllocation();
         info.alloc = 1000;
         info.free = 500;

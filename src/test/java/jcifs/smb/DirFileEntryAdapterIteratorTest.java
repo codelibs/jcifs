@@ -67,7 +67,7 @@ class DirFileEntryAdapterIteratorTest {
         lenient().when(mockFileEntry1.getName()).thenReturn("file1.txt");
         lenient().when(mockFileEntry2.getName()).thenReturn("file2.txt");
         lenient().when(mockFileEntry3.getName()).thenReturn("file3.txt");
-        
+
         lenient().when(mockResource1.getName()).thenReturn("file1.txt");
         lenient().when(mockResource2.getName()).thenReturn("file2.txt");
         lenient().when(mockResource3.getName()).thenReturn("file3.txt");
@@ -86,9 +86,12 @@ class DirFileEntryAdapterIteratorTest {
         DirFileEntryAdapterIterator iterator = new DirFileEntryAdapterIterator(mockParent, mockDelegate, null) {
             @Override
             protected SmbResource adapt(FileEntry e) {
-                if (e == mockFileEntry1) return mockResource1;
-                if (e == mockFileEntry2) return mockResource2;
-                if (e == mockFileEntry3) return mockResource3;
+                if (e == mockFileEntry1)
+                    return mockResource1;
+                if (e == mockFileEntry2)
+                    return mockResource2;
+                if (e == mockFileEntry3)
+                    return mockResource3;
                 return mockResource1;
             }
         };
@@ -125,8 +128,10 @@ class DirFileEntryAdapterIteratorTest {
         DirFileEntryAdapterIterator iterator = new DirFileEntryAdapterIterator(mockParent, mockDelegate, mockFilter) {
             @Override
             protected SmbResource adapt(FileEntry e) {
-                if (e == mockFileEntry1) return mockResource1;
-                if (e == mockFileEntry2) return mockResource2;
+                if (e == mockFileEntry1)
+                    return mockResource1;
+                if (e == mockFileEntry2)
+                    return mockResource2;
                 return mockResource1;
             }
         };
@@ -143,7 +148,7 @@ class DirFileEntryAdapterIteratorTest {
         assertEquals("file2.txt", second.getName());
 
         assertFalse(iterator.hasNext(), "Should not have more elements");
-        
+
         // Verify filter was called for each element
         verify(mockFilter, times(2)).accept(any(SmbResource.class));
     }
@@ -161,15 +166,17 @@ class DirFileEntryAdapterIteratorTest {
         DirFileEntryAdapterIterator iterator = new DirFileEntryAdapterIterator(mockParent, mockDelegate, mockFilter) {
             @Override
             protected SmbResource adapt(FileEntry e) {
-                if (e == mockFileEntry1) return mockResource1;
-                if (e == mockFileEntry2) return mockResource2;
+                if (e == mockFileEntry1)
+                    return mockResource1;
+                if (e == mockFileEntry2)
+                    return mockResource2;
                 return mockResource1;
             }
         };
 
         // When/Then
         assertFalse(iterator.hasNext(), "Should not have elements when all are filtered");
-        
+
         // Verify filter was called for each element
         verify(mockFilter, times(2)).accept(any(SmbResource.class));
     }
@@ -202,7 +209,7 @@ class DirFileEntryAdapterIteratorTest {
     void testClose() throws CIFSException {
         // Given
         when(mockDelegate.hasNext()).thenReturn(false);
-        
+
         DirFileEntryAdapterIterator iterator = new DirFileEntryAdapterIterator(mockParent, mockDelegate, null) {
             @Override
             protected SmbResource adapt(FileEntry e) {
@@ -226,7 +233,7 @@ class DirFileEntryAdapterIteratorTest {
         when(mockDelegate.hasNext()).thenReturn(false);
         CIFSException exception = new CIFSException("Test exception");
         doThrow(exception).when(mockDelegate).close();
-        
+
         DirFileEntryAdapterIterator iterator = new DirFileEntryAdapterIterator(mockParent, mockDelegate, null) {
             @Override
             protected SmbResource adapt(FileEntry e) {
@@ -235,8 +242,7 @@ class DirFileEntryAdapterIteratorTest {
         };
 
         // When/Then
-        assertThrows(CIFSException.class, () -> iterator.close(),
-                    "Should propagate exception from delegate close");
+        assertThrows(CIFSException.class, () -> iterator.close(), "Should propagate exception from delegate close");
     }
 
     /**
@@ -247,14 +253,14 @@ class DirFileEntryAdapterIteratorTest {
         // Given
         when(mockDelegate.hasNext()).thenReturn(true, false);
         when(mockDelegate.next()).thenReturn(mockFileEntry1);
-        
+
         DirFileEntryAdapterIterator iterator = new DirFileEntryAdapterIterator(mockParent, mockDelegate, null) {
             @Override
             protected SmbResource adapt(FileEntry e) {
                 return mockResource1;
             }
         };
-        
+
         // When
         iterator.next(); // Move to first element
         iterator.remove();
@@ -283,13 +289,13 @@ class DirFileEntryAdapterIteratorTest {
         assertTrue(iterator.hasNext(), "First hasNext should return true");
         assertTrue(iterator.hasNext(), "Second hasNext should return true");
         assertTrue(iterator.hasNext(), "Third hasNext should return true");
-        
+
         SmbResource result = iterator.next();
         assertNotNull(result, "Should still be able to get element");
         assertEquals("file1.txt", result.getName());
-        
+
         assertFalse(iterator.hasNext(), "Should not have more elements");
-        
+
         // Verify delegate.next() was only called once
         verify(mockDelegate, times(1)).next();
     }
@@ -318,18 +324,18 @@ class DirFileEntryAdapterIteratorTest {
     /**
      * Test that the iterator handles null return from next correctly.
      */
-    @Test 
+    @Test
     void testNullReturnFromNext() {
         // Given
         when(mockDelegate.hasNext()).thenReturn(false);
-        
+
         DirFileEntryAdapterIterator iterator = new DirFileEntryAdapterIterator(mockParent, mockDelegate, null) {
             @Override
             protected SmbResource adapt(FileEntry e) {
                 return mockResource1;
             }
         };
-        
+
         // When/Then
         assertFalse(iterator.hasNext(), "Should not have next when advance returns null");
         // The iterator returns null when no elements, doesn't throw exception
@@ -344,7 +350,7 @@ class DirFileEntryAdapterIteratorTest {
         // Given
         when(mockDelegate.hasNext()).thenReturn(true, true, true, false);
         when(mockDelegate.next()).thenReturn(mockFileEntry1, mockFileEntry2, mockFileEntry3);
-        
+
         // Create a mock filter that accepts file1 and file3 but not file2
         when(mockFilter.accept(mockResource1)).thenReturn(true);
         when(mockFilter.accept(mockResource2)).thenReturn(false);
@@ -353,9 +359,12 @@ class DirFileEntryAdapterIteratorTest {
         DirFileEntryAdapterIterator iterator = new DirFileEntryAdapterIterator(mockParent, mockDelegate, mockFilter) {
             @Override
             protected SmbResource adapt(FileEntry e) {
-                if (e == mockFileEntry1) return mockResource1;
-                if (e == mockFileEntry2) return mockResource2;
-                if (e == mockFileEntry3) return mockResource3;
+                if (e == mockFileEntry1)
+                    return mockResource1;
+                if (e == mockFileEntry2)
+                    return mockResource2;
+                if (e == mockFileEntry3)
+                    return mockResource3;
                 return mockResource1;
             }
         };
@@ -365,14 +374,14 @@ class DirFileEntryAdapterIteratorTest {
         SmbResource first = iterator.next();
         assertNotNull(first, "First element should not be null");
         assertEquals("file1.txt", first.getName());
-        
+
         assertTrue(iterator.hasNext(), "Should have second element (file3, file2 was filtered)");
         SmbResource second = iterator.next();
         assertNotNull(second, "Second element should not be null");
         assertEquals("file3.txt", second.getName());
-        
+
         assertFalse(iterator.hasNext(), "Should not have more elements");
-        
+
         // Then
         verify(mockDelegate, times(3)).next();
         verify(mockFilter).accept(mockResource1);
@@ -388,9 +397,9 @@ class DirFileEntryAdapterIteratorTest {
         // Given
         when(mockDelegate.hasNext()).thenReturn(true, false);
         when(mockDelegate.next()).thenReturn(mockFileEntry1);
-        
+
         // Create iterator with custom adapt implementation
-        final boolean[] adaptCalled = {false};
+        final boolean[] adaptCalled = { false };
         DirFileEntryAdapterIterator iterator = new DirFileEntryAdapterIterator(mockParent, mockDelegate, null) {
             @Override
             protected SmbResource adapt(FileEntry e) {
@@ -399,10 +408,10 @@ class DirFileEntryAdapterIteratorTest {
                 return mockResource1;
             }
         };
-        
+
         // When
         SmbResource result = iterator.next();
-        
+
         // Then
         assertTrue(adaptCalled[0], "Adapt method should have been called");
         assertNotNull(result, "Result should not be null");

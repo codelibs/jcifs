@@ -1,18 +1,22 @@
 package jcifs.smb;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
  * Tests for SmbAuthException covering all constructors and inherited behavior.
@@ -27,11 +31,9 @@ public class SmbAuthExceptionTest {
      * - Non-NT small code to exercise default mapping to NT_STATUS_UNSUCCESSFUL
      */
     static Stream<Arguments> intErrorCodes() {
-        return Stream.of(
-            Arguments.of(NtStatus.NT_STATUS_ACCESS_DENIED, NtStatus.NT_STATUS_ACCESS_DENIED),
-            Arguments.of(NtStatus.NT_STATUS_SUCCESS, NtStatus.NT_STATUS_SUCCESS),
-            Arguments.of(0x00001234, NtStatus.NT_STATUS_UNSUCCESSFUL)
-        );
+        return Stream.of(Arguments.of(NtStatus.NT_STATUS_ACCESS_DENIED, NtStatus.NT_STATUS_ACCESS_DENIED),
+                Arguments.of(NtStatus.NT_STATUS_SUCCESS, NtStatus.NT_STATUS_SUCCESS),
+                Arguments.of(0x00001234, NtStatus.NT_STATUS_UNSUCCESSFUL));
     }
 
     @ParameterizedTest
@@ -68,10 +70,7 @@ public class SmbAuthExceptionTest {
     }
 
     static Stream<Arguments> messageProvider() {
-        return Stream.of(
-            Arguments.of((String) null),
-            Arguments.of("")
-        );
+        return Stream.of(Arguments.of((String) null), Arguments.of(""));
     }
 
     /**
@@ -115,4 +114,3 @@ public class SmbAuthExceptionTest {
         assertTrue(s.contains(msg));
     }
 }
-

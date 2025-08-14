@@ -7,8 +7,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doCallRealMethod;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
@@ -73,7 +71,7 @@ class DcerpcPipeHandleTest {
         lenient().when(mockDcerpcBinding.getServer()).thenReturn(TEST_SERVER);
         lenient().when(mockDcerpcBinding.getEndpoint()).thenReturn(TEST_ENDPOINT);
         lenient().when(mockContext.getBufferCache()).thenReturn(mockBufferCache);
-        
+
         // Setup buffer cache to return buffers for sendrecv operations
         lenient().when(mockBufferCache.getBuffer()).thenReturn(new byte[8192]);
     }
@@ -85,12 +83,12 @@ class DcerpcPipeHandleTest {
     private DcerpcPipeHandle createMockedDcerpcPipeHandle() throws Exception {
         // Create a mock without calling the constructor
         DcerpcPipeHandle handle = mock(DcerpcPipeHandle.class);
-        
+
         // Inject the binding using reflection
         Field bindingField = DcerpcHandle.class.getDeclaredField("binding");
         bindingField.setAccessible(true);
         bindingField.set(handle, mockDcerpcBinding);
-        
+
         // Inject the CIFSContext using reflection
         Field tcField = DcerpcHandle.class.getDeclaredField("transportContext");
         tcField.setAccessible(true);
@@ -120,7 +118,7 @@ class DcerpcPipeHandleTest {
         lenient().doCallRealMethod().when(handle).doSendFragment(any(byte[].class), anyInt(), anyInt());
         lenient().doCallRealMethod().when(handle).doReceiveFragment(any(byte[].class));
         lenient().doCallRealMethod().when(handle).close();
-        
+
         // Add getMaxRecv() to return correct value
         lenient().when(handle.getMaxRecv()).thenReturn(4280);
 
@@ -135,18 +133,16 @@ class DcerpcPipeHandleTest {
         @DisplayName("Should throw DcerpcException for invalid URL format")
         void testConstructor_InvalidUrl() {
             String invalidUrl = "invalid:server";
-            assertThrows(DcerpcException.class, 
-                () -> new DcerpcPipeHandle(invalidUrl, mockContext, false),
-                "Should throw DcerpcException for invalid protocol");
+            assertThrows(DcerpcException.class, () -> new DcerpcPipeHandle(invalidUrl, mockContext, false),
+                    "Should throw DcerpcException for invalid protocol");
         }
 
         @Test
         @DisplayName("Should throw DcerpcException for missing endpoint")
         void testConstructor_MissingEndpoint() {
             String urlWithoutEndpoint = "ncacn_np:server";
-            assertThrows(DcerpcException.class,
-                () -> new DcerpcPipeHandle(urlWithoutEndpoint, mockContext, false),
-                "Should throw DcerpcException for missing endpoint");
+            assertThrows(DcerpcException.class, () -> new DcerpcPipeHandle(urlWithoutEndpoint, mockContext, false),
+                    "Should throw DcerpcException for missing endpoint");
         }
     }
 
@@ -204,16 +200,16 @@ class DcerpcPipeHandleTest {
         @DisplayName("Should send and receive fragment successfully")
         void testDoSendReceiveFragment_Success() throws Exception {
             DcerpcPipeHandle handle = createMockedDcerpcPipeHandle();
-            
+
             byte[] buf = new byte[50];
             byte[] inB = new byte[100];
-            
+
             // Setup fragment length in response buffer
             Encdec.enc_uint16le((short) 40, inB, 8);
-            
+
             when(mockSmbPipeHandleInternal.isStale()).thenReturn(false);
             when(mockSmbPipeHandleInternal.sendrecv(buf, 0, 50, inB, 4280)).thenReturn(40);
-            
+
             int result = handle.doSendReceiveFragment(buf, 0, 50, inB);
             assertEquals(40, result);
             verify(mockSmbPipeHandleInternal).sendrecv(buf, 0, 50, inB, 4280);
@@ -223,17 +219,17 @@ class DcerpcPipeHandleTest {
         @DisplayName("Should handle multiple receives for fragment")
         void testDoSendReceiveFragment_MultipleReceives() throws Exception {
             DcerpcPipeHandle handle = createMockedDcerpcPipeHandle();
-            
+
             byte[] buf = new byte[50];
             byte[] inB = new byte[100];
-            
+
             // Setup fragment length requiring multiple receives
             Encdec.enc_uint16le((short) 80, inB, 8);
-            
+
             when(mockSmbPipeHandleInternal.isStale()).thenReturn(false);
             when(mockSmbPipeHandleInternal.sendrecv(buf, 0, 50, inB, 4280)).thenReturn(40);
             when(mockSmbPipeHandleInternal.recv(inB, 40, 40)).thenReturn(40);
-            
+
             int result = handle.doSendReceiveFragment(buf, 0, 50, inB);
             assertEquals(80, result);
             verify(mockSmbPipeHandleInternal).recv(inB, 40, 40);
@@ -244,45 +240,42 @@ class DcerpcPipeHandleTest {
         void testDoSendReceiveFragment_StaleHandle() throws Exception {
             DcerpcPipeHandle handle = createMockedDcerpcPipeHandle();
             when(mockSmbPipeHandleInternal.isStale()).thenReturn(true);
-            
-            assertThrows(IOException.class, 
-                () -> handle.doSendReceiveFragment(new byte[10], 0, 10, new byte[10]));
+
+            assertThrows(IOException.class, () -> handle.doSendReceiveFragment(new byte[10], 0, 10, new byte[10]));
         }
 
         @Test
         @DisplayName("Should throw IOException for fragment length exceeding max")
         void testDoSendReceiveFragment_FragmentTooLarge() throws Exception {
             DcerpcPipeHandle handle = createMockedDcerpcPipeHandle();
-            
+
             byte[] buf = new byte[50];
             byte[] inB = new byte[100];
-            
+
             // Setup fragment length exceeding max (4280)
             Encdec.enc_uint16le((short) 4281, inB, 8);
-            
+
             when(mockSmbPipeHandleInternal.isStale()).thenReturn(false);
             when(mockSmbPipeHandleInternal.sendrecv(buf, 0, 50, inB, 4280)).thenReturn(40);
-            
-            assertThrows(IOException.class, 
-                () -> handle.doSendReceiveFragment(buf, 0, 50, inB));
+
+            assertThrows(IOException.class, () -> handle.doSendReceiveFragment(buf, 0, 50, inB));
         }
 
         @Test
         @DisplayName("Should throw IOException on unexpected EOF")
         void testDoSendReceiveFragment_UnexpectedEOF() throws Exception {
             DcerpcPipeHandle handle = createMockedDcerpcPipeHandle();
-            
+
             byte[] buf = new byte[50];
             byte[] inB = new byte[100];
-            
+
             Encdec.enc_uint16le((short) 80, inB, 8);
-            
+
             when(mockSmbPipeHandleInternal.isStale()).thenReturn(false);
             when(mockSmbPipeHandleInternal.sendrecv(buf, 0, 50, inB, 4280)).thenReturn(40);
             when(mockSmbPipeHandleInternal.recv(inB, 40, 40)).thenReturn(0); // EOF
-            
-            assertThrows(IOException.class, 
-                () -> handle.doSendReceiveFragment(buf, 0, 50, inB));
+
+            assertThrows(IOException.class, () -> handle.doSendReceiveFragment(buf, 0, 50, inB));
         }
     }
 
@@ -294,10 +287,10 @@ class DcerpcPipeHandleTest {
         @DisplayName("Should send fragment successfully")
         void testDoSendFragment_Success() throws Exception {
             DcerpcPipeHandle handle = createMockedDcerpcPipeHandle();
-            
+
             byte[] buf = new byte[100];
             when(mockSmbPipeHandleInternal.isStale()).thenReturn(false);
-            
+
             handle.doSendFragment(buf, 10, 50);
             verify(mockSmbPipeHandleInternal).send(buf, 10, 50);
         }
@@ -307,9 +300,8 @@ class DcerpcPipeHandleTest {
         void testDoSendFragment_StaleHandle() throws Exception {
             DcerpcPipeHandle handle = createMockedDcerpcPipeHandle();
             when(mockSmbPipeHandleInternal.isStale()).thenReturn(true);
-            
-            assertThrows(IOException.class, 
-                () -> handle.doSendFragment(new byte[10], 0, 10));
+
+            assertThrows(IOException.class, () -> handle.doSendFragment(new byte[10], 0, 10));
         }
     }
 
@@ -321,9 +313,9 @@ class DcerpcPipeHandleTest {
         @DisplayName("Should receive fragment successfully")
         void testDoReceiveFragment_Success() throws Exception {
             DcerpcPipeHandle handle = createMockedDcerpcPipeHandle();
-            
-            byte[] buf = new byte[4280];  // Use maxRecv size
-            
+
+            byte[] buf = new byte[4280]; // Use maxRecv size
+
             // Mock initial receive with valid PDU header
             when(mockSmbPipeHandleInternal.recv(buf, 0, buf.length)).thenAnswer(invocation -> {
                 byte[] buffer = invocation.getArgument(0);
@@ -332,10 +324,10 @@ class DcerpcPipeHandleTest {
                 Encdec.enc_uint16le((short) 50, buffer, 8); // Fragment length
                 return 30; // Initial bytes received
             });
-            
+
             // Mock second receive to complete fragment
             when(mockSmbPipeHandleInternal.recv(buf, 30, 20)).thenReturn(20);
-            
+
             int result = handle.doReceiveFragment(buf);
             assertEquals(50, result);
             verify(mockSmbPipeHandleInternal, times(2)).recv(any(byte[].class), anyInt(), anyInt());
@@ -345,38 +337,36 @@ class DcerpcPipeHandleTest {
         @DisplayName("Should throw IllegalArgumentException for small buffer")
         void testDoReceiveFragment_BufferTooSmall() throws Exception {
             DcerpcPipeHandle handle = createMockedDcerpcPipeHandle();
-            
+
             byte[] buf = new byte[50]; // Less than maxRecv (4280)
-            
-            assertThrows(IllegalArgumentException.class, 
-                () -> handle.doReceiveFragment(buf));
+
+            assertThrows(IllegalArgumentException.class, () -> handle.doReceiveFragment(buf));
         }
 
         @Test
         @DisplayName("Should throw IOException for invalid PDU header")
         void testDoReceiveFragment_InvalidPDUHeader() throws Exception {
             DcerpcPipeHandle handle = createMockedDcerpcPipeHandle();
-            
+
             byte[] buf = new byte[4280];
-            
+
             when(mockSmbPipeHandleInternal.recv(buf, 0, buf.length)).thenAnswer(invocation -> {
                 byte[] buffer = invocation.getArgument(0);
                 buffer[0] = 1; // Invalid PDU version
                 buffer[1] = 0;
                 return 20;
             });
-            
-            assertThrows(IOException.class, 
-                () -> handle.doReceiveFragment(buf));
+
+            assertThrows(IOException.class, () -> handle.doReceiveFragment(buf));
         }
 
         @Test
         @DisplayName("Should throw IOException for fragment length exceeding max")
         void testDoReceiveFragment_FragmentTooLarge() throws Exception {
             DcerpcPipeHandle handle = createMockedDcerpcPipeHandle();
-            
+
             byte[] buf = new byte[4280];
-            
+
             when(mockSmbPipeHandleInternal.recv(buf, 0, buf.length)).thenAnswer(invocation -> {
                 byte[] buffer = invocation.getArgument(0);
                 buffer[0] = 5;
@@ -384,18 +374,17 @@ class DcerpcPipeHandleTest {
                 Encdec.enc_uint16le((short) 4281, buffer, 8); // Exceeds maxRecv
                 return 20;
             });
-            
-            assertThrows(IOException.class, 
-                () -> handle.doReceiveFragment(buf));
+
+            assertThrows(IOException.class, () -> handle.doReceiveFragment(buf));
         }
 
         @Test
         @DisplayName("Should throw IOException on unexpected EOF")
         void testDoReceiveFragment_UnexpectedEOF() throws Exception {
             DcerpcPipeHandle handle = createMockedDcerpcPipeHandle();
-            
+
             byte[] buf = new byte[4280];
-            
+
             when(mockSmbPipeHandleInternal.recv(buf, 0, buf.length)).thenAnswer(invocation -> {
                 byte[] buffer = invocation.getArgument(0);
                 buffer[0] = 5;
@@ -403,11 +392,10 @@ class DcerpcPipeHandleTest {
                 Encdec.enc_uint16le((short) 50, buffer, 8);
                 return 30;
             });
-            
+
             when(mockSmbPipeHandleInternal.recv(buf, 30, 20)).thenReturn(0); // EOF
-            
-            assertThrows(IOException.class, 
-                () -> handle.doReceiveFragment(buf));
+
+            assertThrows(IOException.class, () -> handle.doReceiveFragment(buf));
         }
     }
 
@@ -419,16 +407,16 @@ class DcerpcPipeHandleTest {
         @DisplayName("Should close handle and pipe successfully")
         void testClose_Success() throws Exception {
             DcerpcPipeHandle handle = createMockedDcerpcPipeHandle();
-            
+
             // Mock parent close() to do nothing - explicitly mock the super.close() behavior
             // The close method calls super.close(), then handle.close(), then pipe.close()
-            lenient().doNothing().when((DcerpcHandle)handle).close();
-            
+            lenient().doNothing().when((DcerpcHandle) handle).close();
+
             // Setup close to call real method which will then call our mocked components
             doCallRealMethod().when(handle).close();
-            
+
             handle.close();
-            
+
             verify(mockSmbPipeHandleInternal).close();
             verify(mockSmbNamedPipe).close();
         }
@@ -437,17 +425,16 @@ class DcerpcPipeHandleTest {
         @DisplayName("Should close pipe even when handle close fails")
         void testClose_HandleCloseFails() throws Exception {
             DcerpcPipeHandle handle = createMockedDcerpcPipeHandle();
-            
+
             // Mock parent close() method
-            lenient().doNothing().when((DcerpcHandle)handle).close();
-            
+            lenient().doNothing().when((DcerpcHandle) handle).close();
+
             IOException handleCloseException = new IOException("Handle close failed");
-            doThrow(handleCloseException)
-                .when(mockSmbPipeHandleInternal).close();
-            
+            doThrow(handleCloseException).when(mockSmbPipeHandleInternal).close();
+
             // Setup close to call real method
             doCallRealMethod().when(handle).close();
-            
+
             // The finally block ensures pipe is closed even if handle close fails
             // Since the real method will propagate the exception from handle.close(),
             // we need to catch it to verify that pipe.close() was still called
@@ -457,7 +444,7 @@ class DcerpcPipeHandleTest {
             } catch (IOException e) {
                 assertEquals("Handle close failed", e.getMessage());
             }
-            
+
             verify(mockSmbPipeHandleInternal).close();
             verify(mockSmbNamedPipe).close(); // Should still be called due to finally block
         }
@@ -471,11 +458,11 @@ class DcerpcPipeHandleTest {
         @DisplayName("Should generate correct pipe URL without options")
         void testMakePipeUrl_NoOptions() throws Exception {
             DcerpcPipeHandle handle = createMockedDcerpcPipeHandle();
-            
+
             Method makePipeUrlMethod = DcerpcPipeHandle.class.getDeclaredMethod("makePipeUrl");
             makePipeUrlMethod.setAccessible(true);
             String result = (String) makePipeUrlMethod.invoke(handle);
-            
+
             assertEquals("smb://server/IPC$/test", result);
         }
 
@@ -484,11 +471,11 @@ class DcerpcPipeHandleTest {
         void testMakePipeUrl_WithServerOption() throws Exception {
             when(mockDcerpcBinding.getOption("server")).thenReturn("customServer");
             DcerpcPipeHandle handle = createMockedDcerpcPipeHandle();
-            
+
             Method makePipeUrlMethod = DcerpcPipeHandle.class.getDeclaredMethod("makePipeUrl");
             makePipeUrlMethod.setAccessible(true);
             String result = (String) makePipeUrlMethod.invoke(handle);
-            
+
             assertEquals("smb://server/IPC$/test?server=customServer", result);
         }
 
@@ -498,11 +485,11 @@ class DcerpcPipeHandleTest {
             lenient().when(mockDcerpcBinding.getOption("server")).thenReturn(null);
             when(mockDcerpcBinding.getOption("address")).thenReturn("192.168.1.1");
             DcerpcPipeHandle handle = createMockedDcerpcPipeHandle();
-            
+
             Method makePipeUrlMethod = DcerpcPipeHandle.class.getDeclaredMethod("makePipeUrl");
             makePipeUrlMethod.setAccessible(true);
             String result = (String) makePipeUrlMethod.invoke(handle);
-            
+
             assertEquals("smb://server/IPC$/test?address=192.168.1.1", result);
         }
 
@@ -512,11 +499,11 @@ class DcerpcPipeHandleTest {
             when(mockDcerpcBinding.getOption("server")).thenReturn("customServer");
             when(mockDcerpcBinding.getOption("address")).thenReturn("192.168.1.1");
             DcerpcPipeHandle handle = createMockedDcerpcPipeHandle();
-            
+
             Method makePipeUrlMethod = DcerpcPipeHandle.class.getDeclaredMethod("makePipeUrl");
             makePipeUrlMethod.setAccessible(true);
             String result = (String) makePipeUrlMethod.invoke(handle);
-            
+
             assertEquals("smb://server/IPC$/test?server=customServer&address=192.168.1.1", result);
         }
     }

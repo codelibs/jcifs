@@ -1,11 +1,13 @@
 package jcifs.internal.smb1.trans2;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -42,7 +44,7 @@ class Trans2FindFirst2Test {
     void testConstructorWithStandardPath() {
         // Test standard path without trailing backslash
         trans2FindFirst2 = new Trans2FindFirst2(mockConfig, "\\test\\path", "*.txt", 0x16, 10, 1024);
-        
+
         assertEquals(ServerMessageBlock.SMB_COM_TRANSACTION2, trans2FindFirst2.getCommand());
         assertEquals(Trans2FindFirst2.TRANS2_FIND_FIRST2, trans2FindFirst2.getSubCommand());
         assertEquals("\\test\\path\\", trans2FindFirst2.getPath());
@@ -53,7 +55,7 @@ class Trans2FindFirst2Test {
     void testConstructorWithPathEndingInBackslash() {
         // Test path already ending with backslash
         trans2FindFirst2 = new Trans2FindFirst2(mockConfig, "\\test\\path\\", "*.doc", 0x16, 20, 2048);
-        
+
         assertEquals("\\test\\path\\", trans2FindFirst2.getPath());
     }
 
@@ -62,23 +64,23 @@ class Trans2FindFirst2Test {
     void testConstructorWithRootPath() {
         // Test root path
         trans2FindFirst2 = new Trans2FindFirst2(mockConfig, "\\", "*.*", 0x16, 15, 4096);
-        
+
         assertEquals("\\", trans2FindFirst2.getPath());
     }
 
     @ParameterizedTest
     @DisplayName("Test search attributes masking")
-    @ValueSource(ints = {0x00, 0x16, 0x37, 0xFF})
+    @ValueSource(ints = { 0x00, 0x16, 0x37, 0xFF })
     void testSearchAttributesMasking(int searchAttributes) {
         trans2FindFirst2 = new Trans2FindFirst2(mockConfig, "\\test", "*.*", searchAttributes, 10, 1024);
-        
+
         // Verify attributes are masked with 0x37
         int expectedAttributes = searchAttributes & 0x37;
-        
+
         // Write parameters to verify the masked value is used
         byte[] buffer = new byte[100];
         int written = trans2FindFirst2.writeParametersWireFormat(buffer, 0);
-        
+
         // Read back the search attributes
         int writtenAttributes = SMBUtil.readInt2(buffer, 0);
         assertEquals(expectedAttributes, writtenAttributes);
@@ -88,40 +90,40 @@ class Trans2FindFirst2Test {
     @DisplayName("Test writeSetupWireFormat")
     void testWriteSetupWireFormat() {
         trans2FindFirst2 = new Trans2FindFirst2(mockConfig, "\\test", "*.*", 0x16, 10, 1024);
-        
+
         byte[] buffer = new byte[10];
         int written = trans2FindFirst2.writeSetupWireFormat(buffer, 0);
-        
+
         assertEquals(2, written);
-        assertEquals((byte)Trans2FindFirst2.TRANS2_FIND_FIRST2, buffer[0]);
-        assertEquals((byte)0x00, buffer[1]);
+        assertEquals((byte) Trans2FindFirst2.TRANS2_FIND_FIRST2, buffer[0]);
+        assertEquals((byte) 0x00, buffer[1]);
     }
 
     @Test
     @DisplayName("Test writeParametersWireFormat")
     void testWriteParametersWireFormat() {
         trans2FindFirst2 = new Trans2FindFirst2(mockConfig, "\\test\\dir", "*.txt", 0xFF, 100, 8192);
-        
+
         byte[] buffer = new byte[256];
         int written = trans2FindFirst2.writeParametersWireFormat(buffer, 0);
-        
+
         assertTrue(written > 12); // Minimum size for fixed parameters
-        
+
         // Verify search attributes (masked with 0x37)
         assertEquals(0x37, SMBUtil.readInt2(buffer, 0));
-        
+
         // Verify max items
         assertEquals(100, SMBUtil.readInt2(buffer, 2));
-        
+
         // Verify flags (should be 0x00)
         assertEquals(0x00, SMBUtil.readInt2(buffer, 4));
-        
+
         // Verify information level (SMB_FILE_BOTH_DIRECTORY_INFO)
         assertEquals(Trans2FindFirst2.SMB_FILE_BOTH_DIRECTORY_INFO, SMBUtil.readInt2(buffer, 6));
-        
+
         // Verify search storage type (should be 0)
         assertEquals(0, SMBUtil.readInt4(buffer, 8));
-        
+
         // Verify the path is included
         String writtenPath = readStringFromBuffer(buffer, 12, written - 12);
         assertEquals("\\test\\dir\\*.txt", writtenPath);
@@ -129,18 +131,14 @@ class Trans2FindFirst2Test {
 
     @ParameterizedTest
     @DisplayName("Test writeParametersWireFormat with various wildcards")
-    @CsvSource({
-        "'\\path', '*.txt', '\\path\\*.txt'",
-        "'\\path\\', '*.doc', '\\path\\*.doc'",
-        "'\\', '*.*', '\\*.*'",
-        "'\\test', 'file?.txt', '\\test\\file?.txt'"
-    })
+    @CsvSource({ "'\\path', '*.txt', '\\path\\*.txt'", "'\\path\\', '*.doc', '\\path\\*.doc'", "'\\', '*.*', '\\*.*'",
+            "'\\test', 'file?.txt', '\\test\\file?.txt'" })
     void testWriteParametersWireFormatWithVariousWildcards(String path, String wildcard, String expectedFullPath) {
         trans2FindFirst2 = new Trans2FindFirst2(mockConfig, path, wildcard, 0x16, 10, 1024);
-        
+
         byte[] buffer = new byte[256];
         int written = trans2FindFirst2.writeParametersWireFormat(buffer, 0);
-        
+
         String writtenPath = readStringFromBuffer(buffer, 12, written - 12);
         assertEquals(expectedFullPath, writtenPath);
     }
@@ -149,10 +147,10 @@ class Trans2FindFirst2Test {
     @DisplayName("Test writeDataWireFormat returns 0")
     void testWriteDataWireFormat() {
         trans2FindFirst2 = new Trans2FindFirst2(mockConfig, "\\test", "*.*", 0x16, 10, 1024);
-        
+
         byte[] buffer = new byte[100];
         int written = trans2FindFirst2.writeDataWireFormat(buffer, 0);
-        
+
         assertEquals(0, written);
     }
 
@@ -160,10 +158,10 @@ class Trans2FindFirst2Test {
     @DisplayName("Test readSetupWireFormat returns 0")
     void testReadSetupWireFormat() {
         trans2FindFirst2 = new Trans2FindFirst2(mockConfig, "\\test", "*.*", 0x16, 10, 1024);
-        
+
         byte[] buffer = new byte[100];
         int read = trans2FindFirst2.readSetupWireFormat(buffer, 0, 100);
-        
+
         assertEquals(0, read);
     }
 
@@ -171,10 +169,10 @@ class Trans2FindFirst2Test {
     @DisplayName("Test readParametersWireFormat returns 0")
     void testReadParametersWireFormat() {
         trans2FindFirst2 = new Trans2FindFirst2(mockConfig, "\\test", "*.*", 0x16, 10, 1024);
-        
+
         byte[] buffer = new byte[100];
         int read = trans2FindFirst2.readParametersWireFormat(buffer, 0, 100);
-        
+
         assertEquals(0, read);
     }
 
@@ -182,10 +180,10 @@ class Trans2FindFirst2Test {
     @DisplayName("Test readDataWireFormat returns 0")
     void testReadDataWireFormat() {
         trans2FindFirst2 = new Trans2FindFirst2(mockConfig, "\\test", "*.*", 0x16, 10, 1024);
-        
+
         byte[] buffer = new byte[100];
         int read = trans2FindFirst2.readDataWireFormat(buffer, 0, 100);
-        
+
         assertEquals(0, read);
     }
 
@@ -193,9 +191,9 @@ class Trans2FindFirst2Test {
     @DisplayName("Test toString method")
     void testToString() {
         trans2FindFirst2 = new Trans2FindFirst2(mockConfig, "\\test\\path", "*.txt", 0x16, 50, 2048);
-        
+
         String result = trans2FindFirst2.toString();
-        
+
         assertNotNull(result);
         assertTrue(result.contains("Trans2FindFirst2"));
         assertTrue(result.contains("searchAttributes=0x16"));
@@ -215,7 +213,7 @@ class Trans2FindFirst2Test {
         assertEquals(0x04, Trans2FindFirst2.FLAGS_RETURN_RESUME_KEYS);
         assertEquals(0x08, Trans2FindFirst2.FLAGS_RESUME_FROM_PREVIOUS_END);
         assertEquals(0x10, Trans2FindFirst2.FLAGS_FIND_WITH_BACKUP_INTENT);
-        
+
         // Test information level constants
         assertEquals(1, Trans2FindFirst2.SMB_INFO_STANDARD);
         assertEquals(2, Trans2FindFirst2.SMB_INFO_QUERY_EA_SIZE);
@@ -230,10 +228,10 @@ class Trans2FindFirst2Test {
     @DisplayName("Test with empty wildcard")
     void testWithEmptyWildcard() {
         trans2FindFirst2 = new Trans2FindFirst2(mockConfig, "\\test", "", 0x16, 10, 1024);
-        
+
         byte[] buffer = new byte[256];
         int written = trans2FindFirst2.writeParametersWireFormat(buffer, 0);
-        
+
         String writtenPath = readStringFromBuffer(buffer, 12, written - 12);
         assertEquals("\\test\\", writtenPath);
     }
@@ -242,10 +240,10 @@ class Trans2FindFirst2Test {
     @DisplayName("Test with special characters in path")
     void testWithSpecialCharactersInPath() {
         trans2FindFirst2 = new Trans2FindFirst2(mockConfig, "\\test\\path with spaces", "*.txt", 0x16, 10, 1024);
-        
+
         byte[] buffer = new byte[256];
         int written = trans2FindFirst2.writeParametersWireFormat(buffer, 0);
-        
+
         String writtenPath = readStringFromBuffer(buffer, 12, written - 12);
         assertEquals("\\test\\path with spaces\\*.txt", writtenPath);
     }
@@ -254,13 +252,13 @@ class Trans2FindFirst2Test {
     @DisplayName("Test with maximum values")
     void testWithMaximumValues() {
         trans2FindFirst2 = new Trans2FindFirst2(mockConfig, "\\test", "*.*", 0xFFFF, 65535, Integer.MAX_VALUE);
-        
+
         byte[] buffer = new byte[256];
         int written = trans2FindFirst2.writeParametersWireFormat(buffer, 0);
-        
+
         // Verify search attributes are still masked
         assertEquals(0x37, SMBUtil.readInt2(buffer, 0));
-        
+
         // Verify max items
         assertEquals(65535, SMBUtil.readInt2(buffer, 2));
     }
@@ -269,10 +267,10 @@ class Trans2FindFirst2Test {
     @DisplayName("Test with minimum values")
     void testWithMinimumValues() {
         trans2FindFirst2 = new Trans2FindFirst2(mockConfig, "\\", "*", 0, 0, 0);
-        
+
         byte[] buffer = new byte[256];
         int written = trans2FindFirst2.writeParametersWireFormat(buffer, 0);
-        
+
         assertEquals(0, SMBUtil.readInt2(buffer, 0)); // search attributes
         assertEquals(0, SMBUtil.readInt2(buffer, 2)); // max items
     }

@@ -1,7 +1,15 @@
 package jcifs.smb;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -10,14 +18,13 @@ import java.net.URLConnection;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 import jcifs.CIFSContext;
 import jcifs.Configuration;
@@ -163,11 +170,9 @@ class HandlerTest {
 
     static Stream<Arguments> portSpecs() {
         return Stream.of(
-            // spec, expectedPort
-            Arguments.of("smb://server/share", SmbConstants.DEFAULT_PORT),
-            Arguments.of("smb://server:445/share", 445),
-            Arguments.of("smb://server:139/share", 139)
-        );
+                // spec, expectedPort
+                Arguments.of("smb://server/share", SmbConstants.DEFAULT_PORT), Arguments.of("smb://server:445/share", 445),
+                Arguments.of("smb://server:139/share", 139));
     }
 
     @ParameterizedTest(name = "parseURL: {0} -> port {1}")
@@ -193,4 +198,3 @@ class HandlerTest {
                 "Null spec should result in NPE via super.parseURL");
     }
 }
-

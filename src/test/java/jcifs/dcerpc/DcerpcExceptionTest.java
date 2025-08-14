@@ -136,7 +136,7 @@ class DcerpcExceptionTest {
     @Test
     void testGetMessageByDcerpcError_largerThanAny() {
         int unknownCode = 0x7FFFFFFF; // Max int value
-        
+
         // The current implementation has a bug in the binary search that causes ArrayIndexOutOfBoundsException
         assertThrows(ArrayIndexOutOfBoundsException.class, () -> {
             DcerpcException.getMessageByDcerpcError(unknownCode);

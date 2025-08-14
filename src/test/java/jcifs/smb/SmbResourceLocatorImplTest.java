@@ -1,7 +1,22 @@
 package jcifs.smb;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.net.URL;
 import java.net.URLConnection;
@@ -10,15 +25,13 @@ import java.net.UnknownHostException;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
@@ -30,19 +43,23 @@ import jcifs.Credentials;
 import jcifs.DfsReferralData;
 import jcifs.NameServiceClient;
 import jcifs.NetbiosAddress;
+import jcifs.RuntimeCIFSException;
 import jcifs.SmbConstants;
 import jcifs.SmbResourceLocator;
 import jcifs.netbios.UniAddress;
-import jcifs.RuntimeCIFSException;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class SmbResourceLocatorImplTest {
 
-    @Mock private CIFSContext ctx;
-    @Mock private Configuration config;
-    @Mock private Credentials creds;
-    @Mock private NameServiceClient nsc;
+    @Mock
+    private CIFSContext ctx;
+    @Mock
+    private Configuration config;
+    @Mock
+    private Credentials creds;
+    @Mock
+    private NameServiceClient nsc;
 
     // Minimal URLStreamHandler to allow creating smb:// URLs in tests
     private static final URLStreamHandler SMB_HANDLER = new URLStreamHandler() {
@@ -182,7 +199,7 @@ class SmbResourceLocatorImplTest {
         assertEquals(SmbConstants.TYPE_SHARE, locator("smb://server/share/").getType());
 
         // Workgroup when no authority
-        assertEquals(SmbConstants.TYPE_WORKGROUP, locator("smb:///" ).getType());
+        assertEquals(SmbConstants.TYPE_WORKGROUP, locator("smb:///").getType());
 
         // Server vs Workgroup depends on NetBIOS name type
         Address addr = mock(Address.class);
@@ -190,16 +207,16 @@ class SmbResourceLocatorImplTest {
         when(addr.unwrap(NetbiosAddress.class)).thenReturn(nb);
         when(nb.getNameType()).thenReturn(0x1d); // workgroup code
         // getFirstAddress branch: host given and path non-root -> possibleNTDomain=false
-        when(nsc.getAllByName(eq("server"), eq(false))).thenReturn(new Address[]{addr});
+        when(nsc.getAllByName(eq("server"), eq(false))).thenReturn(new Address[] { addr });
         SmbResourceLocatorImpl workgroupLike = locator("smb://server/");
         // path is "/" -> triggers possibleNTDomainOrWorkgroup true
-        when(nsc.getAllByName(eq("server"), eq(true))).thenReturn(new Address[]{addr});
+        when(nsc.getAllByName(eq("server"), eq(true))).thenReturn(new Address[] { addr });
         assertTrue(workgroupLike.isWorkgroup());
 
         // Server: return a NetBIOS type not 0x1d/0x1b
         when(nb.getNameType()).thenReturn(0x20);
         SmbResourceLocatorImpl server = locator("smb://server");
-        when(nsc.getAllByName(eq("server"), eq(true))).thenReturn(new Address[]{addr});
+        when(nsc.getAllByName(eq("server"), eq(true))).thenReturn(new Address[] { addr });
         assertEquals(SmbConstants.TYPE_SERVER, server.getType());
     }
 
@@ -212,7 +229,7 @@ class SmbResourceLocatorImplTest {
         NetbiosAddress nb = mock(NetbiosAddress.class);
         when(addr.unwrap(NetbiosAddress.class)).thenReturn(nb);
         when(nb.getNameType()).thenReturn(0x1b);
-        when(nsc.getAllByName(eq("server"), eq(true))).thenReturn(new Address[]{addr});
+        when(nsc.getAllByName(eq("server"), eq(true))).thenReturn(new Address[] { addr });
         SmbResourceLocatorImpl l = locator("smb://server/");
         assertTrue(l.isWorkgroup());
     }
@@ -234,7 +251,7 @@ class SmbResourceLocatorImplTest {
         // Host with root path -> possibleNTDomainOrWorkgroup=true
         UniAddress a2 = mock(UniAddress.class);
         UniAddress a3 = mock(UniAddress.class);
-        when(nsc.getAllByName("server", true)).thenReturn(new Address[]{a2, a3});
+        when(nsc.getAllByName("server", true)).thenReturn(new Address[] { a2, a3 });
         SmbResourceLocatorImpl l3 = locator("smb://server/");
         assertSame(a2, l3.getAddress());
         verify(nsc, times(1)).getAllByName("server", true);
@@ -253,8 +270,8 @@ class SmbResourceLocatorImplTest {
     @DisplayName("hashCode/equals based on address or server fallback")
     void testEqualsAndHashCode() throws Exception {
         UniAddress a = mock(UniAddress.class);
-        when(nsc.getAllByName(eq("server"), anyBoolean())).thenReturn(new Address[]{a});
-        when(nsc.getAllByName(eq("SERVER"), anyBoolean())).thenReturn(new Address[]{a});
+        when(nsc.getAllByName(eq("server"), anyBoolean())).thenReturn(new Address[] { a });
+        when(nsc.getAllByName(eq("SERVER"), anyBoolean())).thenReturn(new Address[] { a });
         SmbResourceLocatorImpl l1 = locator("smb://server/share/file");
         SmbResourceLocatorImpl l2 = locator("smb://SERVER/share/file");
         assertEquals(l1, l2);
@@ -263,7 +280,7 @@ class SmbResourceLocatorImplTest {
         // Different path -> not equal
         SmbResourceLocatorImpl l5 = locator("smb://server/share/other");
         assertNotEquals(l1, l5);
-        
+
         // Force address resolution failure -> fallback to server name compare
         // Use a fresh context to avoid affecting previous tests
         CIFSContext ctx2 = mock(CIFSContext.class);
@@ -274,7 +291,7 @@ class SmbResourceLocatorImplTest {
         when(ctx2.getCredentials()).thenReturn(creds2);
         when(ctx2.getNameServiceClient()).thenReturn(nsc2);
         when(nsc2.getAllByName(anyString(), anyBoolean())).thenThrow(new UnknownHostException("fail"));
-        
+
         SmbResourceLocatorImpl l3 = new SmbResourceLocatorImpl(ctx2, smbUrl("smb://host/share/file"));
         SmbResourceLocatorImpl l4 = new SmbResourceLocatorImpl(ctx2, smbUrl("smb://HOST/share/file"));
         assertEquals(l3, l4);
@@ -285,7 +302,7 @@ class SmbResourceLocatorImplTest {
     @DisplayName("overlaps requires same address and canonical URL prefix match")
     void testOverlaps() throws Exception {
         UniAddress a = mock(UniAddress.class);
-        when(nsc.getAllByName(anyString(), anyBoolean())).thenReturn(new Address[]{a});
+        when(nsc.getAllByName(anyString(), anyBoolean())).thenReturn(new Address[] { a });
         SmbResourceLocatorImpl base = locator("smb://server/share/dir");
         SmbResourceLocatorImpl child = locator("smb://server/share/dir/file");
         assertTrue(base.overlaps(child));
@@ -353,7 +370,7 @@ class SmbResourceLocatorImplTest {
     @DisplayName("clone copies state including addresses")
     void testCloneCopiesState() throws Exception {
         UniAddress a1 = mock(UniAddress.class);
-        when(nsc.getAllByName("server", false)).thenReturn(new Address[]{a1});
+        when(nsc.getAllByName("server", false)).thenReturn(new Address[] { a1 });
         SmbResourceLocatorImpl l = locator("smb://server/share/path");
         // Force address resolution and set type
         l.getAddress();
@@ -369,13 +386,8 @@ class SmbResourceLocatorImplTest {
 
     @ParameterizedTest
     @DisplayName("queryLookup extracts values case-insensitively")
-    @CsvSource({
-        "a=1&b=2,a,1",
-        "A=1&a=2,a,1", // first match before next param
-        "x=foo&Server=name,server,name",
-        "paramOnly=,paramOnly,''",
-        "noeq&other=1,other,1"
-    })
+    @CsvSource({ "a=1&b=2,a,1", "A=1&a=2,a,1", // first match before next param
+            "x=foo&Server=name,server,name", "paramOnly=,paramOnly,''", "noeq&other=1,other,1" })
     void testQueryLookup(String query, String key, String expected) {
         // No context mocks needed for static method test
         assertEquals(expected, SmbResourceLocatorImpl.queryLookup(query, key));

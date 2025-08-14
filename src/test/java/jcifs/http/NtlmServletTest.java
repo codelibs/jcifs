@@ -1,7 +1,7 @@
 package jcifs.http;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -32,10 +32,10 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import jcifs.Address;
 import jcifs.CIFSContext;
 import jcifs.CIFSException;
 import jcifs.Configuration;
-import jcifs.Address;
 import jcifs.NameServiceClient;
 import jcifs.smb.NtlmPasswordAuthentication;
 
@@ -49,12 +49,12 @@ class NtlmServletTest {
     // A concrete implementation of the abstract NtlmServlet for testing purposes.
     private static class TestNtlmServlet extends NtlmServlet {
         private static final long serialVersionUID = 1L;
-        
+
         @Override
         protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
             // Do nothing - just for testing
         }
-        
+
         @Override
         protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
             // Do nothing - just for testing
@@ -94,7 +94,7 @@ class NtlmServletTest {
     @BeforeEach
     void setUp() throws CIFSException {
         ntlmServlet = new TestNtlmServlet();
-        
+
         // Mock ServletConfig to provide initialization parameters
         Map<String, String> initParams = new HashMap<>();
         initParams.put("jcifs.smb.client.domain", "TEST_DOMAIN");
@@ -105,10 +105,10 @@ class NtlmServletTest {
 
         lenient().when(servletConfig.getInitParameterNames()).thenReturn(Collections.enumeration(initParams.keySet()));
         lenient().when(servletConfig.getInitParameter(anyString())).thenAnswer(invocation -> initParams.get(invocation.getArgument(0)));
-        
+
         // Mock HTTP method for request - this is required for HttpServlet.service()
         lenient().when(request.getMethod()).thenReturn("GET");
-        
+
         // Setup CIFSContext configuration mock
         lenient().when(cifsContext.getConfig()).thenReturn(configuration);
         lenient().when(configuration.getDefaultDomain()).thenReturn("TEST_DOMAIN");
@@ -135,10 +135,10 @@ class NtlmServletTest {
         Map<String, String> validParams = new HashMap<>();
         validParams.put("jcifs.smb.client.domain", "TEST_DOMAIN");
         validParams.put("jcifs.smb.client.soTimeout", "300000");
-        
+
         when(servletConfig.getInitParameterNames()).thenReturn(Collections.enumeration(validParams.keySet()));
         when(servletConfig.getInitParameter(anyString())).thenAnswer(invocation -> validParams.get(invocation.getArgument(0)));
-        
+
         // This should not throw an exception
         assertDoesNotThrow(() -> ntlmServlet.init(servletConfig));
     }
@@ -179,8 +179,7 @@ class NtlmServletTest {
         NtlmPasswordAuthentication ntlmAuth = new NtlmPasswordAuthentication(cifsContext, "TEST_DOMAIN", "user", "password");
 
         try (MockedStatic<NtlmSsp> ntlmSspMock = Mockito.mockStatic(NtlmSsp.class)) {
-            ntlmSspMock.when(() -> NtlmSsp.authenticate(any(), any(), any(), any()))
-                       .thenReturn(ntlmAuth);
+            ntlmSspMock.when(() -> NtlmSsp.authenticate(any(), any(), any(), any())).thenReturn(ntlmAuth);
 
             when(request.getHeader("Authorization")).thenReturn("NTLM TlRMTVNTUAABAAAAl4II4gAAAAAAAAAAAAAAAAAAAAAGAbAdAAAADw==");
             when(request.getSession()).thenReturn(session);
@@ -211,8 +210,7 @@ class NtlmServletTest {
 
         // Return null from NtlmSsp.authenticate to simulate initial NTLM handshake
         try (MockedStatic<NtlmSsp> ntlmSspMock = Mockito.mockStatic(NtlmSsp.class)) {
-            ntlmSspMock.when(() -> NtlmSsp.authenticate(any(), any(), any(), any()))
-                       .thenReturn(null);
+            ntlmSspMock.when(() -> NtlmSsp.authenticate(any(), any(), any(), any())).thenReturn(null);
 
             when(request.getHeader("Authorization")).thenReturn("NTLM TlRMTVNTUAABAAAAl4II4gAAAAAAAAAAAAAAAAAAAAAGAbAdAAAADw==");
 

@@ -9,15 +9,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
@@ -73,8 +69,7 @@ class SmbTransportPoolTest {
         @DisplayName("Should get transport by name with default parameters")
         void testGetSmbTransportByName() throws UnknownHostException, IOException {
             // Given
-            when(transportPool.getSmbTransport(context, TEST_HOST, DEFAULT_PORT, false, false))
-                .thenReturn(transport);
+            when(transportPool.getSmbTransport(context, TEST_HOST, DEFAULT_PORT, false, false)).thenReturn(transport);
 
             // When
             SmbTransport result = transportPool.getSmbTransport(context, TEST_HOST, DEFAULT_PORT, false, false);
@@ -89,8 +84,7 @@ class SmbTransportPoolTest {
         @DisplayName("Should get transport by name with exclusive connection")
         void testGetSmbTransportByNameExclusive() throws UnknownHostException, IOException {
             // Given
-            when(transportPool.getSmbTransport(context, TEST_HOST, DEFAULT_PORT, true, false))
-                .thenReturn(transport);
+            when(transportPool.getSmbTransport(context, TEST_HOST, DEFAULT_PORT, true, false)).thenReturn(transport);
 
             // When
             SmbTransport result = transportPool.getSmbTransport(context, TEST_HOST, DEFAULT_PORT, true, false);
@@ -105,8 +99,7 @@ class SmbTransportPoolTest {
         @DisplayName("Should get transport by name with forced signing")
         void testGetSmbTransportByNameForceSigning() throws UnknownHostException, IOException {
             // Given
-            when(transportPool.getSmbTransport(context, TEST_HOST, DEFAULT_PORT, false, true))
-                .thenReturn(transport);
+            when(transportPool.getSmbTransport(context, TEST_HOST, DEFAULT_PORT, false, true)).thenReturn(transport);
 
             // When
             SmbTransport result = transportPool.getSmbTransport(context, TEST_HOST, DEFAULT_PORT, false, true);
@@ -122,12 +115,11 @@ class SmbTransportPoolTest {
         void testGetSmbTransportUnknownHost() throws UnknownHostException, IOException {
             // Given
             when(transportPool.getSmbTransport(context, "unknown.host", DEFAULT_PORT, false, false))
-                .thenThrow(new UnknownHostException("Unknown host"));
+                    .thenThrow(new UnknownHostException("Unknown host"));
 
             // When & Then
-            assertThrows(UnknownHostException.class, () -> 
-                transportPool.getSmbTransport(context, "unknown.host", DEFAULT_PORT, false, false)
-            );
+            assertThrows(UnknownHostException.class,
+                    () -> transportPool.getSmbTransport(context, "unknown.host", DEFAULT_PORT, false, false));
         }
 
         @Test
@@ -135,20 +127,17 @@ class SmbTransportPoolTest {
         void testGetSmbTransportIOException() throws UnknownHostException, IOException {
             // Given
             when(transportPool.getSmbTransport(context, TEST_HOST, DEFAULT_PORT, false, false))
-                .thenThrow(new IOException("Connection failed"));
+                    .thenThrow(new IOException("Connection failed"));
 
             // When & Then
-            assertThrows(IOException.class, () -> 
-                transportPool.getSmbTransport(context, TEST_HOST, DEFAULT_PORT, false, false)
-            );
+            assertThrows(IOException.class, () -> transportPool.getSmbTransport(context, TEST_HOST, DEFAULT_PORT, false, false));
         }
 
         @Test
         @DisplayName("Should get transport by address without signing")
         void testGetSmbTransportByAddress() {
             // Given
-            when(transportPool.getSmbTransport(context, address, DEFAULT_PORT, false))
-                .thenReturn(transport);
+            when(transportPool.getSmbTransport(context, address, DEFAULT_PORT, false)).thenReturn(transport);
 
             // When
             SmbTransport result = transportPool.getSmbTransport(context, address, DEFAULT_PORT, false);
@@ -163,8 +152,7 @@ class SmbTransportPoolTest {
         @DisplayName("Should get transport by address with forced signing")
         void testGetSmbTransportByAddressWithSigning() {
             // Given
-            when(transportPool.getSmbTransport(context, address, DEFAULT_PORT, false, true))
-                .thenReturn(transport);
+            when(transportPool.getSmbTransport(context, address, DEFAULT_PORT, false, true)).thenReturn(transport);
 
             // When
             SmbTransport result = transportPool.getSmbTransport(context, address, DEFAULT_PORT, false, true);
@@ -180,48 +168,39 @@ class SmbTransportPoolTest {
         void testGetSmbTransportWithLocalBinding() {
             // Given
             when(transportPool.getSmbTransport(context, address, DEFAULT_PORT, localAddr, LOCAL_PORT, TEST_HOST, false))
-                .thenReturn(transport);
+                    .thenReturn(transport);
 
             // When
-            SmbTransport result = transportPool.getSmbTransport(
-                context, address, DEFAULT_PORT, localAddr, LOCAL_PORT, TEST_HOST, false
-            );
+            SmbTransport result = transportPool.getSmbTransport(context, address, DEFAULT_PORT, localAddr, LOCAL_PORT, TEST_HOST, false);
 
             // Then
             assertNotNull(result);
             assertEquals(transport, result);
-            verify(transportPool).getSmbTransport(
-                context, address, DEFAULT_PORT, localAddr, LOCAL_PORT, TEST_HOST, false
-            );
+            verify(transportPool).getSmbTransport(context, address, DEFAULT_PORT, localAddr, LOCAL_PORT, TEST_HOST, false);
         }
 
         @Test
         @DisplayName("Should get transport with local binding and forced signing")
         void testGetSmbTransportWithLocalBindingAndSigning() {
             // Given
-            when(transportPool.getSmbTransport(
-                context, address, DEFAULT_PORT, localAddr, LOCAL_PORT, TEST_HOST, false, true))
-                .thenReturn(transport);
+            when(transportPool.getSmbTransport(context, address, DEFAULT_PORT, localAddr, LOCAL_PORT, TEST_HOST, false, true))
+                    .thenReturn(transport);
 
             // When
-            SmbTransport result = transportPool.getSmbTransport(
-                context, address, DEFAULT_PORT, localAddr, LOCAL_PORT, TEST_HOST, false, true
-            );
+            SmbTransport result =
+                    transportPool.getSmbTransport(context, address, DEFAULT_PORT, localAddr, LOCAL_PORT, TEST_HOST, false, true);
 
             // Then
             assertNotNull(result);
             assertEquals(transport, result);
-            verify(transportPool).getSmbTransport(
-                context, address, DEFAULT_PORT, localAddr, LOCAL_PORT, TEST_HOST, false, true
-            );
+            verify(transportPool).getSmbTransport(context, address, DEFAULT_PORT, localAddr, LOCAL_PORT, TEST_HOST, false, true);
         }
 
         @Test
         @DisplayName("Should handle null address")
         void testGetSmbTransportNullAddress() {
             // Given
-            when(transportPool.getSmbTransport(context, null, DEFAULT_PORT, false))
-                .thenReturn(null);
+            when(transportPool.getSmbTransport(context, null, DEFAULT_PORT, false)).thenReturn(null);
 
             // When
             SmbTransport result = transportPool.getSmbTransport(context, null, DEFAULT_PORT, false);
@@ -234,8 +213,7 @@ class SmbTransportPoolTest {
         @DisplayName("Should handle negative port")
         void testGetSmbTransportNegativePort() {
             // Given
-            when(transportPool.getSmbTransport(context, address, -1, false))
-                .thenReturn(transport);
+            when(transportPool.getSmbTransport(context, address, -1, false)).thenReturn(transport);
 
             // When
             SmbTransport result = transportPool.getSmbTransport(context, address, -1, false);
@@ -386,8 +364,7 @@ class SmbTransportPoolTest {
         @DisplayName("Should handle authentication failure during logon")
         void testLogonAuthenticationFailure() throws CIFSException {
             // Given
-            doThrow(new CIFSException("Authentication failed"))
-                .when(transportPool).logon(context, address);
+            doThrow(new CIFSException("Authentication failed")).when(transportPool).logon(context, address);
 
             // When & Then
             assertThrows(CIFSException.class, () -> transportPool.logon(context, address));
@@ -397,7 +374,7 @@ class SmbTransportPoolTest {
         @DisplayName("Should get NTLM challenge with address")
         void testGetChallengeWithAddress() throws CIFSException {
             // Given
-            byte[] expectedChallenge = new byte[]{1, 2, 3, 4, 5, 6, 7, 8};
+            byte[] expectedChallenge = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 };
             when(transportPool.getChallenge(context, address)).thenReturn(expectedChallenge);
 
             // When
@@ -413,9 +390,8 @@ class SmbTransportPoolTest {
         @DisplayName("Should get NTLM challenge with address and port")
         void testGetChallengeWithAddressAndPort() throws CIFSException {
             // Given
-            byte[] expectedChallenge = new byte[]{8, 7, 6, 5, 4, 3, 2, 1};
-            when(transportPool.getChallenge(context, address, DEFAULT_PORT))
-                .thenReturn(expectedChallenge);
+            byte[] expectedChallenge = new byte[] { 8, 7, 6, 5, 4, 3, 2, 1 };
+            when(transportPool.getChallenge(context, address, DEFAULT_PORT)).thenReturn(expectedChallenge);
 
             // When
             byte[] result = transportPool.getChallenge(context, address, DEFAULT_PORT);
@@ -444,13 +420,10 @@ class SmbTransportPoolTest {
         @DisplayName("Should handle exception when getting challenge")
         void testGetChallengeException() throws CIFSException {
             // Given
-            when(transportPool.getChallenge(context, address))
-                .thenThrow(new CIFSException("Failed to get challenge"));
+            when(transportPool.getChallenge(context, address)).thenThrow(new CIFSException("Failed to get challenge"));
 
             // When & Then
-            assertThrows(CIFSException.class, () -> 
-                transportPool.getChallenge(context, address)
-            );
+            assertThrows(CIFSException.class, () -> transportPool.getChallenge(context, address));
         }
     }
 
@@ -462,8 +435,7 @@ class SmbTransportPoolTest {
         @DisplayName("Should handle null context")
         void testNullContext() {
             // Given
-            when(transportPool.getSmbTransport(null, address, DEFAULT_PORT, false))
-                .thenReturn(null);
+            when(transportPool.getSmbTransport(null, address, DEFAULT_PORT, false)).thenReturn(null);
 
             // When
             SmbTransport result = transportPool.getSmbTransport(null, address, DEFAULT_PORT, false);
@@ -476,8 +448,7 @@ class SmbTransportPoolTest {
         @DisplayName("Should handle zero port")
         void testZeroPort() {
             // Given
-            when(transportPool.getSmbTransport(context, address, 0, false))
-                .thenReturn(transport);
+            when(transportPool.getSmbTransport(context, address, 0, false)).thenReturn(transport);
 
             // When
             SmbTransport result = transportPool.getSmbTransport(context, address, 0, false);
@@ -492,8 +463,7 @@ class SmbTransportPoolTest {
         void testMaxPortValue() {
             // Given
             int maxPort = 65535;
-            when(transportPool.getSmbTransport(context, address, maxPort, false))
-                .thenReturn(transport);
+            when(transportPool.getSmbTransport(context, address, maxPort, false)).thenReturn(transport);
 
             // When
             SmbTransport result = transportPool.getSmbTransport(context, address, maxPort, false);
@@ -507,14 +477,10 @@ class SmbTransportPoolTest {
         @DisplayName("Should handle null hostname in local binding")
         void testNullHostnameInLocalBinding() {
             // Given
-            when(transportPool.getSmbTransport(
-                context, address, DEFAULT_PORT, localAddr, LOCAL_PORT, null, false))
-                .thenReturn(transport);
+            when(transportPool.getSmbTransport(context, address, DEFAULT_PORT, localAddr, LOCAL_PORT, null, false)).thenReturn(transport);
 
             // When
-            SmbTransport result = transportPool.getSmbTransport(
-                context, address, DEFAULT_PORT, localAddr, LOCAL_PORT, null, false
-            );
+            SmbTransport result = transportPool.getSmbTransport(context, address, DEFAULT_PORT, localAddr, LOCAL_PORT, null, false);
 
             // Then
             assertNotNull(result);
@@ -525,14 +491,10 @@ class SmbTransportPoolTest {
         @DisplayName("Should handle null local address")
         void testNullLocalAddress() {
             // Given
-            when(transportPool.getSmbTransport(
-                context, address, DEFAULT_PORT, null, LOCAL_PORT, TEST_HOST, false))
-                .thenReturn(transport);
+            when(transportPool.getSmbTransport(context, address, DEFAULT_PORT, null, LOCAL_PORT, TEST_HOST, false)).thenReturn(transport);
 
             // When
-            SmbTransport result = transportPool.getSmbTransport(
-                context, address, DEFAULT_PORT, null, LOCAL_PORT, TEST_HOST, false
-            );
+            SmbTransport result = transportPool.getSmbTransport(context, address, DEFAULT_PORT, null, LOCAL_PORT, TEST_HOST, false);
 
             // Then
             assertNotNull(result);
@@ -548,16 +510,11 @@ class SmbTransportPoolTest {
         @DisplayName("Should handle concurrent transport requests")
         void testConcurrentTransportRequests() throws InterruptedException {
             // Given
-            when(transportPool.getSmbTransport(any(), any(Address.class), anyInt(), anyBoolean()))
-                .thenReturn(transport);
+            when(transportPool.getSmbTransport(any(), any(Address.class), anyInt(), anyBoolean())).thenReturn(transport);
 
             // When - simulate concurrent requests
-            Thread thread1 = new Thread(() -> 
-                transportPool.getSmbTransport(context, address, DEFAULT_PORT, false)
-            );
-            Thread thread2 = new Thread(() -> 
-                transportPool.getSmbTransport(context, address, DEFAULT_PORT, true)
-            );
+            Thread thread1 = new Thread(() -> transportPool.getSmbTransport(context, address, DEFAULT_PORT, false));
+            Thread thread2 = new Thread(() -> transportPool.getSmbTransport(context, address, DEFAULT_PORT, true));
 
             thread1.start();
             thread2.start();
@@ -565,9 +522,7 @@ class SmbTransportPoolTest {
             thread2.join();
 
             // Then
-            verify(transportPool, times(2)).getSmbTransport(
-                any(), any(Address.class), anyInt(), anyBoolean()
-            );
+            verify(transportPool, times(2)).getSmbTransport(any(), any(Address.class), anyInt(), anyBoolean());
         }
 
         @Test
@@ -578,12 +533,8 @@ class SmbTransportPoolTest {
             doNothing().when(transportPool).removeTransport(any());
 
             // When - simulate concurrent removes
-            Thread thread1 = new Thread(() -> 
-                transportPool.removeTransport(transport)
-            );
-            Thread thread2 = new Thread(() -> 
-                transportPool.removeTransport(transport2)
-            );
+            Thread thread1 = new Thread(() -> transportPool.removeTransport(transport));
+            Thread thread2 = new Thread(() -> transportPool.removeTransport(transport2));
 
             thread1.start();
             thread2.start();
@@ -604,15 +555,12 @@ class SmbTransportPoolTest {
         @DisplayName("Should complete full connection lifecycle")
         void testFullConnectionLifecycle() throws Exception {
             // Given
-            when(transportPool.getSmbTransport(context, TEST_HOST, DEFAULT_PORT, false, false))
-                .thenReturn(transport);
+            when(transportPool.getSmbTransport(context, TEST_HOST, DEFAULT_PORT, false, false)).thenReturn(transport);
             doNothing().when(transportPool).removeTransport(transport);
             when(transportPool.close()).thenReturn(false);
 
             // When - complete lifecycle
-            SmbTransport retrievedTransport = transportPool.getSmbTransport(
-                context, TEST_HOST, DEFAULT_PORT, false, false
-            );
+            SmbTransport retrievedTransport = transportPool.getSmbTransport(context, TEST_HOST, DEFAULT_PORT, false, false);
             transportPool.removeTransport(retrievedTransport);
             boolean hasActiveTransports = transportPool.close();
 
@@ -628,7 +576,7 @@ class SmbTransportPoolTest {
         @DisplayName("Should handle authentication workflow")
         void testAuthenticationWorkflow() throws CIFSException {
             // Given
-            byte[] challenge = new byte[]{1, 2, 3, 4, 5, 6, 7, 8};
+            byte[] challenge = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 };
             when(transportPool.getChallenge(context, address)).thenReturn(challenge);
             doNothing().when(transportPool).logon(context, address);
 
@@ -651,12 +599,9 @@ class SmbTransportPoolTest {
             SmbTransport exclusiveTransport = mock(SmbTransport.class);
             SmbTransport signedTransport = mock(SmbTransport.class);
 
-            when(transportPool.getSmbTransport(context, address, DEFAULT_PORT, false))
-                .thenReturn(sharedTransport);
-            when(transportPool.getSmbTransport(context, address, DEFAULT_PORT, true))
-                .thenReturn(exclusiveTransport);
-            when(transportPool.getSmbTransport(context, address, DEFAULT_PORT, false, true))
-                .thenReturn(signedTransport);
+            when(transportPool.getSmbTransport(context, address, DEFAULT_PORT, false)).thenReturn(sharedTransport);
+            when(transportPool.getSmbTransport(context, address, DEFAULT_PORT, true)).thenReturn(exclusiveTransport);
+            when(transportPool.getSmbTransport(context, address, DEFAULT_PORT, false, true)).thenReturn(signedTransport);
 
             // When
             SmbTransport shared = transportPool.getSmbTransport(context, address, DEFAULT_PORT, false);

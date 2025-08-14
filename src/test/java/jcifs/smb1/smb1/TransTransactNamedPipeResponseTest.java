@@ -1,14 +1,15 @@
 package jcifs.smb1.smb1;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for the {@link TransTransactNamedPipeResponse} class.
@@ -145,8 +146,8 @@ class TransTransactNamedPipeResponseTest {
     @Test
     void testToStringFormat() {
         String str = response.toString();
-        assert(str.startsWith("TransTransactNamedPipeResponse["));
-        assert(str.endsWith("]"));
+        assert (str.startsWith("TransTransactNamedPipeResponse["));
+        assert (str.endsWith("]"));
     }
 }
 

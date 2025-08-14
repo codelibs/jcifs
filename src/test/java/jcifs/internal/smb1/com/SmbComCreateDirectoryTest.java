@@ -1,6 +1,5 @@
 package jcifs.internal.smb1.com;
 
-import jcifs.internal.smb1.ServerMessageBlock;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -11,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import jcifs.Configuration;
+import jcifs.internal.smb1.ServerMessageBlock;
 
 /**
  * Tests for the SmbComCreateDirectory class.
@@ -51,7 +51,7 @@ class SmbComCreateDirectoryTest {
         // Test the byte format written by the class
         String directoryName = "\testDir";
         SmbComCreateDirectory smbCom = new SmbComCreateDirectory(mockConfig, directoryName);
-        
+
         // Expected format: buffer format (0x04) + path string (null terminated)
         byte[] expected = new byte[directoryName.length() + 2];
         expected[0] = 0x04; // Buffer format
@@ -96,9 +96,12 @@ class SmbComCreateDirectoryTest {
         String actualString = smbCom.toString();
 
         // Check for key parts of the string representation
-        org.junit.jupiter.api.Assertions.assertTrue(actualString.startsWith("SmbComCreateDirectory["), "String should start with the class name.");
-        org.junit.jupiter.api.Assertions.assertTrue(actualString.contains("command=SMB_COM_CREATE_DIRECTORY"), "String should contain the command name.");
-        org.junit.jupiter.api.Assertions.assertTrue(actualString.contains("directoryName=myDir"), "String should contain the directory name.");
+        org.junit.jupiter.api.Assertions.assertTrue(actualString.startsWith("SmbComCreateDirectory["),
+                "String should start with the class name.");
+        org.junit.jupiter.api.Assertions.assertTrue(actualString.contains("command=SMB_COM_CREATE_DIRECTORY"),
+                "String should contain the command name.");
+        org.junit.jupiter.api.Assertions.assertTrue(actualString.contains("directoryName=myDir"),
+                "String should contain the directory name.");
         org.junit.jupiter.api.Assertions.assertTrue(actualString.endsWith("]"), "String should end with ']'");
     }
 }

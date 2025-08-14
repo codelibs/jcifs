@@ -3,8 +3,19 @@
  */
 package jcifs.internal.smb2.create;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.withSettings;
 
 import java.util.Arrays;
 
@@ -42,8 +53,8 @@ class Smb2CreateResponseTest {
     /**
      * Build a basic CREATE response body without create contexts.
      */
-    private static byte[] buildCreateBodyNoContexts(byte oplock, byte openFlags, int createAction, long ctime,
-            long atime, long mtime, long chtime, long allocSize, long eof, int attrs, byte[] fileId) {
+    private static byte[] buildCreateBodyNoContexts(byte oplock, byte openFlags, int createAction, long ctime, long atime, long mtime,
+            long chtime, long allocSize, long eof, int attrs, byte[] fileId) {
         byte[] body = new byte[2 + 2 + 4 + 8 + 8 + 8 + 8 + 8 + 8 + 4 + 4 + 16 + 4 + 4];
         int i = 0;
         SMBUtil.writeInt2(89, body, i); // StructureSize
@@ -90,8 +101,7 @@ class Smb2CreateResponseTest {
      */
     private static byte[] buildCreateBodyWithContext(byte[] fileId, int contextStartOffsetFromHeader) {
         // Base body part size (up to and including CreateContextsLength)
-        byte[] base = buildCreateBodyNoContexts((byte) 1, (byte) 2, 3, 1000L, 2000L, 3000L, 4000L,
-                512L, 1024L, 0x20, fileId);
+        byte[] base = buildCreateBodyNoContexts((byte) 1, (byte) 2, 3, 1000L, 2000L, 3000L, 4000L, 512L, 1024L, 0x20, fileId);
 
         // Create a simple context entry
         byte[] ctx = new byte[0x40];
@@ -152,12 +162,12 @@ class Smb2CreateResponseTest {
         Smb2CreateResponse resp = new Smb2CreateResponse(config, "file.txt");
 
         byte[] fileId = new byte[16];
-        for (int i = 0; i < fileId.length; i++) fileId[i] = (byte) (i + 1);
+        for (int i = 0; i < fileId.length; i++)
+            fileId[i] = (byte) (i + 1);
 
         byte[] header = buildSmb2Header();
-        byte[] body = buildCreateBodyNoContexts((byte) 0x7, (byte) 0x2, 0x11223344,
-                1111L, 2222L, 3333L, 4444L,
-                123456789L, 987654321L, 0xA5A5A5A5, fileId);
+        byte[] body = buildCreateBodyNoContexts((byte) 0x7, (byte) 0x2, 0x11223344, 1111L, 2222L, 3333L, 4444L, 123456789L, 987654321L,
+                0xA5A5A5A5, fileId);
         byte[] packet = buildPacket(header, body, null, null);
 
         int read = resp.decode(packet, 0, false);
@@ -228,15 +238,16 @@ class Smb2CreateResponseTest {
 
         // Give it a known fileId by decoding a minimal packet
         byte[] fileId = new byte[16];
-        for (int i = 0; i < 16; i++) fileId[i] = (byte) (0xF0 + i);
+        for (int i = 0; i < 16; i++)
+            fileId[i] = (byte) (0xF0 + i);
         byte[] header = buildSmb2Header();
         byte[] body = buildCreateBodyNoContexts((byte) 0, (byte) 0, 0, 0L, 0L, 0L, 0L, 0L, 0L, 0, fileId);
         byte[] packet = buildPacket(header, body, null, null);
         resp.decode(packet, 0, false); // marks as received
 
         // Create a request that implements both CommonServerMessageBlockRequest and RequestWithFileId
-        CommonServerMessageBlockRequest next = mock(CommonServerMessageBlockRequest.class,
-                withSettings().extraInterfaces(RequestWithFileId.class));
+        CommonServerMessageBlockRequest next =
+                mock(CommonServerMessageBlockRequest.class, withSettings().extraInterfaces(RequestWithFileId.class));
 
         resp.prepare(next);
 
@@ -248,8 +259,8 @@ class Smb2CreateResponseTest {
         Configuration config = Mockito.mock(Configuration.class);
         Smb2CreateResponse resp = new Smb2CreateResponse(config, "x");
 
-        CommonServerMessageBlockRequest next = mock(CommonServerMessageBlockRequest.class,
-                withSettings().extraInterfaces(RequestWithFileId.class));
+        CommonServerMessageBlockRequest next =
+                mock(CommonServerMessageBlockRequest.class, withSettings().extraInterfaces(RequestWithFileId.class));
 
         resp.prepare(next);
 
@@ -271,4 +282,3 @@ class Smb2CreateResponseTest {
         assertThrows(SMBProtocolDecodingException.class, () -> resp.decode(packet, 0, false));
     }
 }
-

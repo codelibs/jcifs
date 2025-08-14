@@ -1,7 +1,18 @@
 package jcifs.smb;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -149,16 +160,13 @@ class SmbTreeConnectionTraceTest {
     }
 
     static java.util.stream.Stream<Arguments> npePublicGetters() {
-        return java.util.stream.Stream.of(
-                Arguments.of("getTreeType()", (org.junit.jupiter.api.function.Executable) () -> {
-                    CIFSContext ctx = mock(CIFSContext.class);
-                    new SmbTreeConnectionTrace(ctx).getTreeType();
-                }),
-                Arguments.of("getConnectedShare()", (org.junit.jupiter.api.function.Executable) () -> {
-                    CIFSContext ctx = mock(CIFSContext.class);
-                    new SmbTreeConnectionTrace(ctx).getConnectedShare();
-                })
-        );
+        return java.util.stream.Stream.of(Arguments.of("getTreeType()", (org.junit.jupiter.api.function.Executable) () -> {
+            CIFSContext ctx = mock(CIFSContext.class);
+            new SmbTreeConnectionTrace(ctx).getTreeType();
+        }), Arguments.of("getConnectedShare()", (org.junit.jupiter.api.function.Executable) () -> {
+            CIFSContext ctx = mock(CIFSContext.class);
+            new SmbTreeConnectionTrace(ctx).getConnectedShare();
+        }));
     }
 
     @ParameterizedTest(name = "Invalid usage causes NPE: {0}")
@@ -171,10 +179,8 @@ class SmbTreeConnectionTraceTest {
     static java.util.stream.Stream<Arguments> wrapExceptions() {
         CIFSContext ctx = mock(CIFSContext.class);
         SmbResourceLocatorImpl loc = new SmbResourceLocatorImpl(ctx, smbUrl("smb://server/share"));
-        return java.util.stream.Stream.of(
-                Arguments.of(loc, new UnknownHostException("host not found")),
-                Arguments.of(loc, new IOException("io failed"))
-        );
+        return java.util.stream.Stream.of(Arguments.of(loc, new UnknownHostException("host not found")),
+                Arguments.of(loc, new IOException("io failed")));
     }
 
     @ParameterizedTest(name = "connectWrapException wraps {1} into SmbException")
@@ -206,4 +212,3 @@ class SmbTreeConnectionTraceTest {
         assertSame(original, ex);
     }
 }
-

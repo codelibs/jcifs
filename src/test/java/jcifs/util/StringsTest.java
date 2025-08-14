@@ -26,7 +26,6 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import jcifs.Configuration;
 import jcifs.RuntimeCIFSException;
-import jcifs.util.Strings;
 
 /**
  * Comprehensive test suite for Strings utility class.

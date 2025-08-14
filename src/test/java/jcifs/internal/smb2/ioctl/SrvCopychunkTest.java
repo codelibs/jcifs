@@ -1,11 +1,12 @@
 package jcifs.internal.smb2.ioctl;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -38,12 +39,9 @@ class SrvCopychunkTest {
 
         @ParameterizedTest
         @DisplayName("Should create instance with various offset values")
-        @CsvSource({
-            "0, 0, 1024",
-            "1024, 2048, 4096",
-            "9223372036854775807, 9223372036854775807, 2147483647", // Max long values
-            "-1, -1, -1", // Negative values (should still create instance)
-            "0, 9223372036854775807, 0" // Edge cases
+        @CsvSource({ "0, 0, 1024", "1024, 2048, 4096", "9223372036854775807, 9223372036854775807, 2147483647", // Max long values
+                "-1, -1, -1", // Negative values (should still create instance)
+                "0, 9223372036854775807, 0" // Edge cases
         })
         void testConstructorWithVariousValues(long sourceOffset, long targetOffset, int length) {
             // When
@@ -73,12 +71,7 @@ class SrvCopychunkTest {
 
         @ParameterizedTest
         @DisplayName("Should return same size regardless of values")
-        @CsvSource({
-            "0, 0, 0",
-            "1024, 2048, 4096",
-            "9223372036854775807, 9223372036854775807, 2147483647",
-            "-1, -1, -1"
-        })
+        @CsvSource({ "0, 0, 0", "1024, 2048, 4096", "9223372036854775807, 9223372036854775807, 2147483647", "-1, -1, -1" })
         void testSizeIsConstant(long sourceOffset, long targetOffset, int length) {
             // Given
             SrvCopychunk chunk = new SrvCopychunk(sourceOffset, targetOffset, length);
@@ -118,16 +111,16 @@ class SrvCopychunkTest {
 
             // Then
             assertEquals(EXPECTED_SIZE, bytesWritten);
-            
+
             // Verify source offset
             assertEquals(sourceOffset, SMBUtil.readInt8(buffer, startIndex));
-            
+
             // Verify target offset
             assertEquals(targetOffset, SMBUtil.readInt8(buffer, startIndex + 8));
-            
+
             // Verify length
             assertEquals(length, SMBUtil.readInt4(buffer, startIndex + 16));
-            
+
             // Verify reserved bytes are zeros
             for (int i = 0; i < RESERVED_BYTES; i++) {
                 assertEquals(0, buffer[startIndex + 20 + i]);
@@ -189,7 +182,7 @@ class SrvCopychunkTest {
 
         @ParameterizedTest
         @DisplayName("Should encode at various buffer positions")
-        @ValueSource(ints = {0, 1, 10, 50, 70})
+        @ValueSource(ints = { 0, 1, 10, 50, 70 })
         void testEncodeAtDifferentPositions(int position) {
             // Given
             byte[] largeBuffer = new byte[200];
@@ -224,7 +217,7 @@ class SrvCopychunkTest {
             for (int i = 0; i < startIndex; i++) {
                 assertEquals(testByte, buffer[i], "Byte at position " + i + " was modified");
             }
-            
+
             // Check bytes after encoded area
             for (int i = startIndex + EXPECTED_SIZE; i < buffer.length; i++) {
                 assertEquals(testByte, buffer[i], "Byte at position " + i + " was modified");
@@ -269,12 +262,12 @@ class SrvCopychunkTest {
             // Then
             assertEquals(EXPECTED_SIZE, bytesWritten);
             assertEquals(chunk.size(), bytesWritten);
-            
+
             // Verify complete structure
             assertEquals(sourceOffset, SMBUtil.readInt8(buffer, 0));
             assertEquals(targetOffset, SMBUtil.readInt8(buffer, 8));
             assertEquals(length, SMBUtil.readInt4(buffer, 16));
-            
+
             // Verify reserved section is zero
             assertEquals(0, SMBUtil.readInt4(buffer, 20));
         }
@@ -297,17 +290,17 @@ class SrvCopychunkTest {
             assertEquals(EXPECTED_SIZE, offset1);
             assertEquals(EXPECTED_SIZE, offset2);
             assertEquals(EXPECTED_SIZE, offset3);
-            
+
             // Verify first chunk
             assertEquals(100L, SMBUtil.readInt8(buffer, 0));
             assertEquals(200L, SMBUtil.readInt8(buffer, 8));
             assertEquals(300, SMBUtil.readInt4(buffer, 16));
-            
+
             // Verify second chunk
             assertEquals(400L, SMBUtil.readInt8(buffer, EXPECTED_SIZE));
             assertEquals(500L, SMBUtil.readInt8(buffer, EXPECTED_SIZE + 8));
             assertEquals(600, SMBUtil.readInt4(buffer, EXPECTED_SIZE + 16));
-            
+
             // Verify third chunk
             assertEquals(700L, SMBUtil.readInt8(buffer, EXPECTED_SIZE * 2));
             assertEquals(800L, SMBUtil.readInt8(buffer, EXPECTED_SIZE * 2 + 8));

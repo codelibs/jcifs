@@ -96,7 +96,7 @@ class HMACT64Test {
         HMACT64 hmac = new HMACT64(TEST_KEY);
         hmac.engineUpdate(TEST_DATA, 0, TEST_DATA.length);
         byte[] result = hmac.engineDigest();
-        
+
         assertNotNull(result);
         assertEquals(16, result.length); // MD5 produces 16 bytes
     }
@@ -106,10 +106,10 @@ class HMACT64Test {
         // Test engineDigest(byte[] buf, int offset, int len)
         HMACT64 hmac = new HMACT64(TEST_KEY);
         hmac.engineUpdate(TEST_DATA, 0, TEST_DATA.length);
-        
+
         byte[] buffer = new byte[32];
         int bytesWritten = hmac.engineDigest(buffer, 5, 16);
-        
+
         assertEquals(16, bytesWritten);
         // Check that bytes were written to the correct position
         byte[] extractedResult = Arrays.copyOfRange(buffer, 5, 21);
@@ -121,7 +121,7 @@ class HMACT64Test {
         // Test engineDigest with buffer too small
         HMACT64 hmac = new HMACT64(TEST_KEY);
         hmac.engineUpdate(TEST_DATA, 0, TEST_DATA.length);
-        
+
         byte[] buffer = new byte[10];
         // Should throw exception when buffer is too small
         assertThrows(IllegalStateException.class, () -> hmac.engineDigest(buffer, 0, 10));
@@ -132,19 +132,19 @@ class HMACT64Test {
         // Test clone() method
         HMACT64 originalHmac = new HMACT64(TEST_KEY);
         originalHmac.engineUpdate(TEST_DATA, 0, TEST_DATA.length / 2);
-        
+
         HMACT64 clonedHmac = (HMACT64) originalHmac.clone();
-        
+
         assertNotNull(clonedHmac);
         assertNotSame(originalHmac, clonedHmac);
-        
+
         // Both should produce the same result when given the same remaining data
         originalHmac.engineUpdate(TEST_DATA, TEST_DATA.length / 2, TEST_DATA.length - TEST_DATA.length / 2);
         clonedHmac.engineUpdate(TEST_DATA, TEST_DATA.length / 2, TEST_DATA.length - TEST_DATA.length / 2);
-        
+
         byte[] originalResult = originalHmac.engineDigest();
         byte[] clonedResult = clonedHmac.engineDigest();
-        
+
         assertArrayEquals(originalResult, clonedResult);
     }
 
@@ -153,19 +153,19 @@ class HMACT64Test {
         // Test multiple update calls
         HMACT64 hmac1 = new HMACT64(TEST_KEY);
         HMACT64 hmac2 = new HMACT64(TEST_KEY);
-        
+
         // Update hmac1 all at once
         hmac1.engineUpdate(TEST_DATA, 0, TEST_DATA.length);
-        
+
         // Update hmac2 byte by byte
         for (byte b : TEST_DATA) {
             hmac2.engineUpdate(b);
         }
-        
+
         // Both should produce the same result
         byte[] result1 = hmac1.engineDigest();
         byte[] result2 = hmac2.engineDigest();
-        
+
         assertArrayEquals(result1, result2);
     }
 
@@ -176,16 +176,16 @@ class HMACT64Test {
         byte[] key = new byte[16];
         Arrays.fill(key, (byte) 0x0b);
         byte[] data = "Hi There".getBytes();
-        
+
         // Expected result calculated manually for HMACT64 with this key and data
         HMACT64 hmac = new HMACT64(key);
         hmac.engineUpdate(data, 0, data.length);
         byte[] result = hmac.engineDigest();
-        
+
         // Verify it produces a valid MD5 hash (16 bytes)
         assertNotNull(result);
         assertEquals(16, result.length);
-        
+
         // Calculate the same using manual HMACT64 algorithm
         byte[] expectedResult = calculateHMACT64Manually(key, data);
         assertArrayEquals(expectedResult, result);
@@ -197,7 +197,7 @@ class HMACT64Test {
         HMACT64 hmac = new HMACT64(TEST_KEY);
         hmac.engineUpdate(EMPTY_DATA, 0, EMPTY_DATA.length);
         byte[] result = hmac.engineDigest();
-        
+
         assertNotNull(result);
         assertEquals(16, result.length);
     }
@@ -209,7 +209,7 @@ class HMACT64Test {
         HMACT64 hmac = new HMACT64(emptyKey);
         hmac.engineUpdate(TEST_DATA, 0, TEST_DATA.length);
         byte[] result = hmac.engineDigest();
-        
+
         assertNotNull(result);
         assertEquals(16, result.length);
     }
@@ -218,16 +218,16 @@ class HMACT64Test {
     void testResetAndReuse() {
         // Test that HMACT64 can be reset and reused
         HMACT64 hmac = new HMACT64(TEST_KEY);
-        
+
         // First use
         hmac.engineUpdate(TEST_DATA, 0, TEST_DATA.length);
         byte[] result1 = hmac.engineDigest();
-        
+
         // Reset and reuse with same data
         hmac.engineReset();
         hmac.engineUpdate(TEST_DATA, 0, TEST_DATA.length);
         byte[] result2 = hmac.engineDigest();
-        
+
         // Should produce the same result
         assertArrayEquals(result1, result2);
     }
@@ -237,16 +237,16 @@ class HMACT64Test {
         // Test that different keys produce different results
         byte[] key1 = "key1".getBytes();
         byte[] key2 = "key2".getBytes();
-        
+
         HMACT64 hmac1 = new HMACT64(key1);
         HMACT64 hmac2 = new HMACT64(key2);
-        
+
         hmac1.engineUpdate(TEST_DATA, 0, TEST_DATA.length);
         hmac2.engineUpdate(TEST_DATA, 0, TEST_DATA.length);
-        
+
         byte[] result1 = hmac1.engineDigest();
         byte[] result2 = hmac2.engineDigest();
-        
+
         // Results should be different
         boolean different = false;
         for (int i = 0; i < result1.length; i++) {
@@ -263,16 +263,16 @@ class HMACT64Test {
         // Test that different data produces different results
         byte[] data1 = "data1".getBytes();
         byte[] data2 = "data2".getBytes();
-        
+
         HMACT64 hmac1 = new HMACT64(TEST_KEY);
         HMACT64 hmac2 = new HMACT64(TEST_KEY);
-        
+
         hmac1.engineUpdate(data1, 0, data1.length);
         hmac2.engineUpdate(data2, 0, data2.length);
-        
+
         byte[] result1 = hmac1.engineDigest();
         byte[] result2 = hmac2.engineDigest();
-        
+
         // Results should be different
         boolean different = false;
         for (int i = 0; i < result1.length; i++) {
@@ -289,7 +289,7 @@ class HMACT64Test {
         MessageDigest md5 = MessageDigest.getInstance("MD5");
         byte[] ipad = new byte[64];
         byte[] opad = new byte[64];
-        
+
         // HMACT64 specific: truncate key to 64 bytes if needed
         int keyLen = Math.min(key.length, 64);
         for (int i = 0; i < keyLen; i++) {
@@ -300,13 +300,13 @@ class HMACT64Test {
             ipad[i] = 0x36;
             opad[i] = 0x5c;
         }
-        
+
         // Calculate inner hash
         md5.reset();
         md5.update(ipad);
         md5.update(data);
         byte[] innerHash = md5.digest();
-        
+
         // Calculate outer hash
         md5.reset();
         md5.update(opad);

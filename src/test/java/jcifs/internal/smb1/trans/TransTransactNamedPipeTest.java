@@ -1,13 +1,15 @@
 package jcifs.internal.smb1.trans;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.charset.StandardCharsets;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -37,9 +39,7 @@ class TransTransactNamedPipeTest {
     @DisplayName("Test constructor initializes fields correctly")
     void testConstructor() {
         // Act
-        TransTransactNamedPipe trans = new TransTransactNamedPipe(
-            mockConfig, TEST_FID, TEST_DATA, TEST_OFFSET, TEST_LENGTH
-        );
+        TransTransactNamedPipe trans = new TransTransactNamedPipe(mockConfig, TEST_FID, TEST_DATA, TEST_OFFSET, TEST_LENGTH);
 
         // Assert
         assertNotNull(trans);
@@ -54,9 +54,7 @@ class TransTransactNamedPipeTest {
     @DisplayName("Test writeSetupWireFormat writes correct data")
     void testWriteSetupWireFormat() {
         // Arrange
-        TransTransactNamedPipe trans = new TransTransactNamedPipe(
-            mockConfig, TEST_FID, TEST_DATA, TEST_OFFSET, TEST_LENGTH
-        );
+        TransTransactNamedPipe trans = new TransTransactNamedPipe(mockConfig, TEST_FID, TEST_DATA, TEST_OFFSET, TEST_LENGTH);
         byte[] dst = new byte[10];
         int dstIndex = 0;
 
@@ -67,7 +65,7 @@ class TransTransactNamedPipeTest {
         assertEquals(4, bytesWritten);
         assertEquals(SmbComTransaction.TRANS_TRANSACT_NAMED_PIPE, dst[0]);
         assertEquals(0x00, dst[1]);
-        
+
         // Verify FID is written correctly (little-endian)
         int writtenFid = SMBUtil.readInt2(dst, 2);
         assertEquals(TEST_FID, writtenFid);
@@ -77,9 +75,7 @@ class TransTransactNamedPipeTest {
     @DisplayName("Test writeDataWireFormat with sufficient buffer")
     void testWriteDataWireFormatSufficientBuffer() {
         // Arrange
-        TransTransactNamedPipe trans = new TransTransactNamedPipe(
-            mockConfig, TEST_FID, TEST_DATA, TEST_OFFSET, TEST_LENGTH
-        );
+        TransTransactNamedPipe trans = new TransTransactNamedPipe(mockConfig, TEST_FID, TEST_DATA, TEST_OFFSET, TEST_LENGTH);
         byte[] dst = new byte[100];
         int dstIndex = 10;
 
@@ -88,7 +84,7 @@ class TransTransactNamedPipeTest {
 
         // Assert
         assertEquals(TEST_LENGTH, bytesWritten);
-        
+
         // Verify data is copied correctly
         byte[] copiedData = new byte[TEST_LENGTH];
         System.arraycopy(dst, dstIndex, copiedData, 0, TEST_LENGTH);
@@ -99,9 +95,7 @@ class TransTransactNamedPipeTest {
     @DisplayName("Test writeDataWireFormat with insufficient buffer")
     void testWriteDataWireFormatInsufficientBuffer() {
         // Arrange
-        TransTransactNamedPipe trans = new TransTransactNamedPipe(
-            mockConfig, TEST_FID, TEST_DATA, TEST_OFFSET, TEST_LENGTH
-        );
+        TransTransactNamedPipe trans = new TransTransactNamedPipe(mockConfig, TEST_FID, TEST_DATA, TEST_OFFSET, TEST_LENGTH);
         byte[] dst = new byte[5]; // Buffer too small
         int dstIndex = 0;
 
@@ -116,9 +110,7 @@ class TransTransactNamedPipeTest {
     @DisplayName("Test writeDataWireFormat with exact buffer size")
     void testWriteDataWireFormatExactBuffer() {
         // Arrange
-        TransTransactNamedPipe trans = new TransTransactNamedPipe(
-            mockConfig, TEST_FID, TEST_DATA, TEST_OFFSET, TEST_LENGTH
-        );
+        TransTransactNamedPipe trans = new TransTransactNamedPipe(mockConfig, TEST_FID, TEST_DATA, TEST_OFFSET, TEST_LENGTH);
         byte[] dst = new byte[TEST_LENGTH];
         int dstIndex = 0;
 
@@ -136,9 +128,7 @@ class TransTransactNamedPipeTest {
         // Arrange
         int partialOffset = 5;
         int partialLength = 8;
-        TransTransactNamedPipe trans = new TransTransactNamedPipe(
-            mockConfig, TEST_FID, TEST_DATA, partialOffset, partialLength
-        );
+        TransTransactNamedPipe trans = new TransTransactNamedPipe(mockConfig, TEST_FID, TEST_DATA, partialOffset, partialLength);
         byte[] dst = new byte[100];
         int dstIndex = 0;
 
@@ -147,7 +137,7 @@ class TransTransactNamedPipeTest {
 
         // Assert
         assertEquals(partialLength, bytesWritten);
-        
+
         // Verify correct portion of data is copied
         byte[] expectedData = new byte[partialLength];
         System.arraycopy(TEST_DATA, partialOffset, expectedData, 0, partialLength);
@@ -160,9 +150,7 @@ class TransTransactNamedPipeTest {
     @DisplayName("Test writeParametersWireFormat returns 0")
     void testWriteParametersWireFormat() {
         // Arrange
-        TransTransactNamedPipe trans = new TransTransactNamedPipe(
-            mockConfig, TEST_FID, TEST_DATA, TEST_OFFSET, TEST_LENGTH
-        );
+        TransTransactNamedPipe trans = new TransTransactNamedPipe(mockConfig, TEST_FID, TEST_DATA, TEST_OFFSET, TEST_LENGTH);
         byte[] dst = new byte[10];
 
         // Act
@@ -176,9 +164,7 @@ class TransTransactNamedPipeTest {
     @DisplayName("Test readSetupWireFormat returns 0")
     void testReadSetupWireFormat() {
         // Arrange
-        TransTransactNamedPipe trans = new TransTransactNamedPipe(
-            mockConfig, TEST_FID, TEST_DATA, TEST_OFFSET, TEST_LENGTH
-        );
+        TransTransactNamedPipe trans = new TransTransactNamedPipe(mockConfig, TEST_FID, TEST_DATA, TEST_OFFSET, TEST_LENGTH);
         byte[] buffer = new byte[10];
 
         // Act
@@ -192,9 +178,7 @@ class TransTransactNamedPipeTest {
     @DisplayName("Test readParametersWireFormat returns 0")
     void testReadParametersWireFormat() {
         // Arrange
-        TransTransactNamedPipe trans = new TransTransactNamedPipe(
-            mockConfig, TEST_FID, TEST_DATA, TEST_OFFSET, TEST_LENGTH
-        );
+        TransTransactNamedPipe trans = new TransTransactNamedPipe(mockConfig, TEST_FID, TEST_DATA, TEST_OFFSET, TEST_LENGTH);
         byte[] buffer = new byte[10];
 
         // Act
@@ -208,9 +192,7 @@ class TransTransactNamedPipeTest {
     @DisplayName("Test readDataWireFormat returns 0")
     void testReadDataWireFormat() {
         // Arrange
-        TransTransactNamedPipe trans = new TransTransactNamedPipe(
-            mockConfig, TEST_FID, TEST_DATA, TEST_OFFSET, TEST_LENGTH
-        );
+        TransTransactNamedPipe trans = new TransTransactNamedPipe(mockConfig, TEST_FID, TEST_DATA, TEST_OFFSET, TEST_LENGTH);
         byte[] buffer = new byte[10];
 
         // Act
@@ -224,9 +206,7 @@ class TransTransactNamedPipeTest {
     @DisplayName("Test toString method")
     void testToString() {
         // Arrange
-        TransTransactNamedPipe trans = new TransTransactNamedPipe(
-            mockConfig, TEST_FID, TEST_DATA, TEST_OFFSET, TEST_LENGTH
-        );
+        TransTransactNamedPipe trans = new TransTransactNamedPipe(mockConfig, TEST_FID, TEST_DATA, TEST_OFFSET, TEST_LENGTH);
 
         // Act
         String result = trans.toString();
@@ -241,9 +221,7 @@ class TransTransactNamedPipeTest {
     @DisplayName("Test with null data array")
     void testWithNullData() {
         // Arrange & Act
-        TransTransactNamedPipe trans = new TransTransactNamedPipe(
-            mockConfig, TEST_FID, null, 0, 0
-        );
+        TransTransactNamedPipe trans = new TransTransactNamedPipe(mockConfig, TEST_FID, null, 0, 0);
 
         // Assert
         assertNotNull(trans);
@@ -255,9 +233,7 @@ class TransTransactNamedPipeTest {
     @DisplayName("Test with zero length data")
     void testWithZeroLengthData() {
         // Arrange
-        TransTransactNamedPipe trans = new TransTransactNamedPipe(
-            mockConfig, TEST_FID, TEST_DATA, TEST_OFFSET, 0
-        );
+        TransTransactNamedPipe trans = new TransTransactNamedPipe(mockConfig, TEST_FID, TEST_DATA, TEST_OFFSET, 0);
         byte[] dst = new byte[10];
 
         // Act
@@ -272,9 +248,7 @@ class TransTransactNamedPipeTest {
     void testWithLargeFid() {
         // Arrange
         int largeFid = 0xFFFF;
-        TransTransactNamedPipe trans = new TransTransactNamedPipe(
-            mockConfig, largeFid, TEST_DATA, TEST_OFFSET, TEST_LENGTH
-        );
+        TransTransactNamedPipe trans = new TransTransactNamedPipe(mockConfig, largeFid, TEST_DATA, TEST_OFFSET, TEST_LENGTH);
         byte[] dst = new byte[10];
 
         // Act
@@ -290,9 +264,7 @@ class TransTransactNamedPipeTest {
     @DisplayName("Test boundary condition with buffer size equal to data length minus one")
     void testBoundaryBufferSize() {
         // Arrange
-        TransTransactNamedPipe trans = new TransTransactNamedPipe(
-            mockConfig, TEST_FID, TEST_DATA, TEST_OFFSET, TEST_LENGTH
-        );
+        TransTransactNamedPipe trans = new TransTransactNamedPipe(mockConfig, TEST_FID, TEST_DATA, TEST_OFFSET, TEST_LENGTH);
         byte[] dst = new byte[TEST_LENGTH - 1]; // One byte short
         int dstIndex = 0;
 
@@ -309,14 +281,12 @@ class TransTransactNamedPipeTest {
         // Arrange
         byte[] largeData = new byte[1000];
         for (int i = 0; i < largeData.length; i++) {
-            largeData[i] = (byte)(i % 256);
+            largeData[i] = (byte) (i % 256);
         }
         int offset = 990;
         int length = 10;
-        
-        TransTransactNamedPipe trans = new TransTransactNamedPipe(
-            mockConfig, TEST_FID, largeData, offset, length
-        );
+
+        TransTransactNamedPipe trans = new TransTransactNamedPipe(mockConfig, TEST_FID, largeData, offset, length);
         byte[] dst = new byte[100];
 
         // Act
@@ -324,7 +294,7 @@ class TransTransactNamedPipeTest {
 
         // Assert
         assertEquals(length, bytesWritten);
-        
+
         // Verify correct data portion
         for (int i = 0; i < length; i++) {
             assertEquals(largeData[offset + i], dst[i]);

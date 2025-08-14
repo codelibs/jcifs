@@ -1,7 +1,15 @@
 package jcifs.smb;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -114,9 +122,9 @@ class BufferCacheImplTest {
         impl.releaseBuffer(c); // goes to slot 1
         impl.releaseBuffer(d); // dropped (cache full)
 
-        byte[] first = impl.getBuffer();  // should return slot 0 -> a
+        byte[] first = impl.getBuffer(); // should return slot 0 -> a
         byte[] second = impl.getBuffer(); // then slot 1 -> c
-        byte[] third = impl.getBuffer();  // cache empty -> new with size 3
+        byte[] third = impl.getBuffer(); // cache empty -> new with size 3
 
         assertSame(a, first, "First get should return first cached buffer");
         assertSame(c, second, "Second get should return second cached buffer");
@@ -126,7 +134,7 @@ class BufferCacheImplTest {
 
     // Parameterized: exercise small variations of cache size for a simple reuse cycle
     @ParameterizedTest
-    @ValueSource(ints = {1, 2})
+    @ValueSource(ints = { 1, 2 })
     @DisplayName("Parameterized: buffer reuse works for various small cache sizes")
     void reuseWorksForVariousCacheSizes(int cacheSize) {
         BufferCacheImpl impl = new BufferCacheImpl(cacheSize, 6);
@@ -180,4 +188,3 @@ class BufferCacheImplTest {
         assertEquals(7, r2.length);
     }
 }
-

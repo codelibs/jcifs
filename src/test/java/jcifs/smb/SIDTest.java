@@ -1,10 +1,25 @@
 package jcifs.smb;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.same;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import java.io.IOException;
 import java.util.Arrays;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -38,7 +53,7 @@ class SIDTest {
     @Nested
     @DisplayName("Basic Constructor and Utility Tests")
     class BasicTests {
-        
+
         @Test
         @DisplayName("Textual constructor happy path and toString consistency")
         void testTextualConstructorAndToString() throws Exception {
@@ -89,7 +104,7 @@ class SIDTest {
         @DisplayName("Binary constructor happy path and round-trip via toByteArray")
         void testBinaryConstructorAndToByteArray() {
             // Arrange: revision=1, count=2, identAuth zeros except last byte, subauth 10, 20
-            byte[] ident = new byte[] {0, 0, 0, 0, 0, 5};
+            byte[] ident = new byte[] { 0, 0, 0, 0, 0, 5 };
             rpc.sid_t st = buildSidT((byte) 1, ident, 10, 20);
 
             byte[] bytes = SID.toByteArray(st);
@@ -148,7 +163,7 @@ class SIDTest {
         @DisplayName("Constructor from sid_t with decrementAuthority drops last subauthority")
         void testConstructorFromSidTWithDecrement() {
             // Arrange
-            byte[] ident = new byte[] {0, 0, 0, 0, 0, 5};
+            byte[] ident = new byte[] { 0, 0, 0, 0, 0, 5 };
             rpc.sid_t st = buildSidT((byte) 1, ident, 10, 20, 30);
 
             // Act: type USER, decrement true
@@ -178,9 +193,9 @@ class SIDTest {
             SID s1 = new SID("S-1-5");
             assertTrue(s1.isEmpty());
             // isBlank will fail if sub_authority is null, so we skip that check for s1
-            
+
             // All-zero subauthorities
-            byte[] ident = new byte[] {0, 0, 0, 0, 0, 0};
+            byte[] ident = new byte[] { 0, 0, 0, 0, 0, 0 };
             rpc.sid_t st = buildSidT((byte) 1, ident, 0, 0);
             SID s2 = new SID(st, jcifs.SID.SID_TYPE_USE_NONE, null, null, false);
             assertFalse(s2.isEmpty());
@@ -188,20 +203,11 @@ class SIDTest {
         }
 
         @ParameterizedTest(name = "type {0} -> {1}")
-        @CsvSource({
-            "0, 0",
-            "1, User",
-            "2, Domain group",
-            "3, Domain",
-            "4, Local group",
-            "5, Builtin group",
-            "6, Deleted",
-            "7, Invalid",
-            "8, Unknown"
-        })
+        @CsvSource({ "0, 0", "1, User", "2, Domain group", "3, Domain", "4, Local group", "5, Builtin group", "6, Deleted", "7, Invalid",
+                "8, Unknown" })
         @DisplayName("getType and getTypeText cover all types")
         void testGetTypeAndText(int type, String text) {
-            byte[] ident = new byte[] {0, 0, 0, 0, 0, 5};
+            byte[] ident = new byte[] { 0, 0, 0, 0, 0, 5 };
             SID sid = new SID(buildSidT((byte) 1, ident, 42), type, "DOM", "acct", false);
             assertEquals(type, sid.getType());
             assertEquals(text, sid.getTypeText());
@@ -210,7 +216,7 @@ class SIDTest {
         @Test
         @DisplayName("getDomainName and getAccountName behaviors for unknown, domain, and user")
         void testNamesByType() {
-            byte[] ident = new byte[] {0, 0, 0, 0, 0, 5};
+            byte[] ident = new byte[] { 0, 0, 0, 0, 0, 5 };
             // Unknown: domainName derived from numeric SID, accountName = RID
             SID unknown = new SID(buildSidT((byte) 1, ident, 10, 20, 30), jcifs.SID.SID_TYPE_UNKNOWN, null, null, false);
             assertEquals("S-1-5-10-20", unknown.getDomainName());
@@ -231,7 +237,7 @@ class SIDTest {
         @Test
         @DisplayName("toDisplayString for BUILTIN and well-known group cases")
         void testDisplayStringBuiltinAndWkn() {
-            byte[] ident = new byte[] {0, 0, 0, 0, 0, 5};
+            byte[] ident = new byte[] { 0, 0, 0, 0, 0, 5 };
             // Well-known group
             SID wkn = new SID(buildSidT((byte) 1, ident, 32), jcifs.SID.SID_TYPE_WKN_GRP, "BUILTIN", "Administrators", false);
             assertEquals("Administrators", wkn.toDisplayString());
@@ -248,7 +254,7 @@ class SIDTest {
         @Test
         @DisplayName("toString uses hex authority when high bytes are non-zero")
         void testToStringHexAuthority() {
-            byte[] ident = new byte[] {1, 2, 3, 4, 5, 6}; // high bytes non-zero -> hex representation
+            byte[] ident = new byte[] { 1, 2, 3, 4, 5, 6 }; // high bytes non-zero -> hex representation
             SID sid = new SID(buildSidT((byte) 1, ident, 7, 8), jcifs.SID.SID_TYPE_USE_NONE, null, null, false);
             String s = sid.toString();
             assertTrue(s.startsWith("S-1-0x010203040506"));
@@ -272,7 +278,7 @@ class SIDTest {
         @Test
         @DisplayName("getRid throws for domain SIDs")
         void testGetRidForDomainThrows() {
-            byte[] ident = new byte[] {0, 0, 0, 0, 0, 5};
+            byte[] ident = new byte[] { 0, 0, 0, 0, 0, 5 };
             SID domain = new SID(buildSidT((byte) 1, ident, 10, 20), jcifs.SID.SID_TYPE_DOMAIN, "DOM", null, false);
             IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, domain::getRid);
             assertTrue(ex.getMessage().contains("domain sid"));
@@ -330,7 +336,7 @@ class SIDTest {
         @Test
         @DisplayName("getGroupMemberSids: non-group types return empty and do not call resolver")
         void testGetGroupMemberSidsNonGroup() throws Exception {
-            byte[] ident = new byte[] {0, 0, 0, 0, 0, 5};
+            byte[] ident = new byte[] { 0, 0, 0, 0, 0, 5 };
             SID user = new SID(buildSidT((byte) 1, ident, 10, 99), jcifs.SID.SID_TYPE_USER, "DOM", "alice", false);
 
             jcifs.SID[] res = user.getGroupMemberSids("srv", mockCtx, 0);
@@ -343,14 +349,13 @@ class SIDTest {
         @Test
         @DisplayName("getGroupMemberSids: group types call resolver with domainSid and rid")
         void testGetGroupMemberSidsGroup() throws Exception {
-            byte[] ident = new byte[] {0, 0, 0, 0, 0, 5};
+            byte[] ident = new byte[] { 0, 0, 0, 0, 0, 5 };
             // Build a group SID with domain name and RID 512
             SID group = new SID(buildSidT((byte) 1, ident, 10, 20, 512), jcifs.SID.SID_TYPE_DOM_GRP, "DOM", "Domain Admins", false);
 
             jcifs.SID member = new SID("S-1-5-21-1000");
             jcifs.SID[] expected = new jcifs.SID[] { member };
-            when(mockResolver.getGroupMemberSids(eq(mockCtx), eq("srv"), any(jcifs.SID.class), eq(512), eq(123)))
-                .thenReturn(expected);
+            when(mockResolver.getGroupMemberSids(eq(mockCtx), eq("srv"), any(jcifs.SID.class), eq(512), eq(123))).thenReturn(expected);
 
             // Act
             jcifs.SID[] res = group.getGroupMemberSids("srv", mockCtx, 123);

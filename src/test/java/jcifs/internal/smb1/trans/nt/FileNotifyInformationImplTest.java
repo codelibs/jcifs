@@ -1,17 +1,20 @@
 package jcifs.internal.smb1.trans.nt;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import jcifs.FileNotifyInformation;
 import jcifs.internal.SMBProtocolDecodingException;
@@ -23,7 +26,7 @@ import jcifs.internal.util.SMBUtil;
 class FileNotifyInformationImplTest {
 
     private FileNotifyInformationImpl notifyInfo;
-    
+
     @BeforeEach
     void setUp() {
         notifyInfo = new FileNotifyInformationImpl();
@@ -43,9 +46,9 @@ class FileNotifyInformationImplTest {
     void testConstructorWithBuffer() throws IOException {
         // Create test buffer with notification data
         byte[] buffer = createValidNotificationBuffer("testfile.txt", FileNotifyInformation.FILE_ACTION_ADDED);
-        
+
         FileNotifyInformationImpl info = new FileNotifyInformationImpl(buffer, 0, buffer.length);
-        
+
         assertNotNull(info);
         assertEquals(FileNotifyInformation.FILE_ACTION_ADDED, info.getAction());
         assertEquals("testfile.txt", info.getFileName());
@@ -57,9 +60,9 @@ class FileNotifyInformationImplTest {
         String fileName = "document.pdf";
         int action = FileNotifyInformation.FILE_ACTION_MODIFIED;
         byte[] buffer = createValidNotificationBuffer(fileName, action);
-        
+
         int bytesRead = notifyInfo.decode(buffer, 0, buffer.length);
-        
+
         assertTrue(bytesRead > 0);
         assertEquals(0, notifyInfo.getNextEntryOffset()); // Single entry has 0 offset
         assertEquals(action, notifyInfo.getAction());
@@ -72,11 +75,11 @@ class FileNotifyInformationImplTest {
         String fileName = "test.txt";
         int action = FileNotifyInformation.FILE_ACTION_REMOVED;
         int nextOffset = 64; // Aligned to 4 bytes
-        
+
         byte[] buffer = createNotificationBufferWithNextOffset(fileName, action, nextOffset);
-        
+
         int bytesRead = notifyInfo.decode(buffer, 0, buffer.length);
-        
+
         assertTrue(bytesRead > 0);
         assertEquals(nextOffset, notifyInfo.getNextEntryOffset());
         assertEquals(action, notifyInfo.getAction());
@@ -87,9 +90,9 @@ class FileNotifyInformationImplTest {
     @DisplayName("Test decode with empty buffer returns 0")
     void testDecodeEmptyBuffer() throws SMBProtocolDecodingException {
         byte[] buffer = new byte[0];
-        
+
         int bytesRead = notifyInfo.decode(buffer, 0, 0);
-        
+
         assertEquals(0, bytesRead);
         assertEquals(0, notifyInfo.getAction());
         assertNull(notifyInfo.getFileName());
@@ -99,9 +102,9 @@ class FileNotifyInformationImplTest {
     @DisplayName("Test decode with zero length returns 0")
     void testDecodeZeroLength() throws SMBProtocolDecodingException {
         byte[] buffer = new byte[100];
-        
+
         int bytesRead = notifyInfo.decode(buffer, 0, 0);
-        
+
         assertEquals(0, bytesRead);
     }
 
@@ -113,7 +116,7 @@ class FileNotifyInformationImplTest {
         SMBUtil.writeInt4(7, buffer, 0); // 7 is not aligned to 4 bytes
         SMBUtil.writeInt4(FileNotifyInformation.FILE_ACTION_ADDED, buffer, 4);
         SMBUtil.writeInt4(8, buffer, 8); // file name length
-        
+
         assertThrows(SMBProtocolDecodingException.class, () -> {
             notifyInfo.decode(buffer, 0, buffer.length);
         }, "Non aligned nextEntryOffset");
@@ -121,23 +124,17 @@ class FileNotifyInformationImplTest {
 
     @ParameterizedTest
     @DisplayName("Test decode with various action values")
-    @ValueSource(ints = {
-        FileNotifyInformation.FILE_ACTION_ADDED,
-        FileNotifyInformation.FILE_ACTION_REMOVED,
-        FileNotifyInformation.FILE_ACTION_MODIFIED,
-        FileNotifyInformation.FILE_ACTION_RENAMED_OLD_NAME,
-        FileNotifyInformation.FILE_ACTION_RENAMED_NEW_NAME,
-        FileNotifyInformation.FILE_ACTION_ADDED_STREAM,
-        FileNotifyInformation.FILE_ACTION_REMOVED_STREAM,
-        FileNotifyInformation.FILE_ACTION_MODIFIED_STREAM,
-        FileNotifyInformation.FILE_ACTION_REMOVED_BY_DELETE
-    })
+    @ValueSource(ints = { FileNotifyInformation.FILE_ACTION_ADDED, FileNotifyInformation.FILE_ACTION_REMOVED,
+            FileNotifyInformation.FILE_ACTION_MODIFIED, FileNotifyInformation.FILE_ACTION_RENAMED_OLD_NAME,
+            FileNotifyInformation.FILE_ACTION_RENAMED_NEW_NAME, FileNotifyInformation.FILE_ACTION_ADDED_STREAM,
+            FileNotifyInformation.FILE_ACTION_REMOVED_STREAM, FileNotifyInformation.FILE_ACTION_MODIFIED_STREAM,
+            FileNotifyInformation.FILE_ACTION_REMOVED_BY_DELETE })
     void testDecodeWithVariousActions(int action) throws SMBProtocolDecodingException {
         String fileName = "file.dat";
         byte[] buffer = createValidNotificationBuffer(fileName, action);
-        
+
         int bytesRead = notifyInfo.decode(buffer, 0, buffer.length);
-        
+
         assertTrue(bytesRead > 0);
         assertEquals(action, notifyInfo.getAction());
         assertEquals(fileName, notifyInfo.getFileName());
@@ -145,18 +142,13 @@ class FileNotifyInformationImplTest {
 
     @ParameterizedTest
     @DisplayName("Test decode with various file names")
-    @CsvSource({
-        "a.txt",
-        "very_long_filename_with_many_characters_to_test_buffer_handling.docx",
-        "file with spaces.pdf",
-        "文件.txt", // Unicode filename
-        "file-with-special-chars!@#$%^&().bin"
-    })
+    @CsvSource({ "a.txt", "very_long_filename_with_many_characters_to_test_buffer_handling.docx", "file with spaces.pdf", "文件.txt", // Unicode filename
+            "file-with-special-chars!@#$%^&().bin" })
     void testDecodeWithVariousFileNames(String fileName) throws SMBProtocolDecodingException {
         byte[] buffer = createValidNotificationBuffer(fileName, FileNotifyInformation.FILE_ACTION_ADDED);
-        
+
         int bytesRead = notifyInfo.decode(buffer, 0, buffer.length);
-        
+
         assertTrue(bytesRead > 0);
         assertEquals(fileName, notifyInfo.getFileName());
     }
@@ -167,13 +159,13 @@ class FileNotifyInformationImplTest {
         String fileName = "offset_test.txt";
         int action = FileNotifyInformation.FILE_ACTION_MODIFIED;
         int offset = 50;
-        
+
         byte[] smallBuffer = createValidNotificationBuffer(fileName, action);
         byte[] buffer = new byte[smallBuffer.length + offset + 50];
         System.arraycopy(smallBuffer, 0, buffer, offset, smallBuffer.length);
-        
+
         int bytesRead = notifyInfo.decode(buffer, offset, smallBuffer.length);
-        
+
         assertTrue(bytesRead > 0);
         assertEquals(action, notifyInfo.getAction());
         assertEquals(fileName, notifyInfo.getFileName());
@@ -184,9 +176,9 @@ class FileNotifyInformationImplTest {
     void testDecodeBytesReadCalculation() throws SMBProtocolDecodingException {
         String fileName = "test123.doc";
         byte[] buffer = createValidNotificationBuffer(fileName, FileNotifyInformation.FILE_ACTION_ADDED);
-        
+
         int bytesRead = notifyInfo.decode(buffer, 0, buffer.length);
-        
+
         // Should be: 4 (nextOffset) + 4 (action) + 4 (nameLength) + fileName bytes
         int expectedBytes = 12 + (fileName.length() * 2); // Unicode is 2 bytes per char
         assertEquals(expectedBytes, bytesRead);
@@ -197,9 +189,9 @@ class FileNotifyInformationImplTest {
     void testGetAction() throws SMBProtocolDecodingException {
         int expectedAction = FileNotifyInformation.FILE_ACTION_RENAMED_NEW_NAME;
         byte[] buffer = createValidNotificationBuffer("renamed.txt", expectedAction);
-        
+
         notifyInfo.decode(buffer, 0, buffer.length);
-        
+
         assertEquals(expectedAction, notifyInfo.getAction());
     }
 
@@ -208,9 +200,9 @@ class FileNotifyInformationImplTest {
     void testGetFileName() throws SMBProtocolDecodingException {
         String expectedFileName = "important_document.xlsx";
         byte[] buffer = createValidNotificationBuffer(expectedFileName, FileNotifyInformation.FILE_ACTION_ADDED);
-        
+
         notifyInfo.decode(buffer, 0, buffer.length);
-        
+
         assertEquals(expectedFileName, notifyInfo.getFileName());
     }
 
@@ -218,11 +210,10 @@ class FileNotifyInformationImplTest {
     @DisplayName("Test getNextEntryOffset returns correct value")
     void testGetNextEntryOffset() throws SMBProtocolDecodingException {
         int expectedOffset = 128;
-        byte[] buffer = createNotificationBufferWithNextOffset("file.txt", 
-            FileNotifyInformation.FILE_ACTION_ADDED, expectedOffset);
-        
+        byte[] buffer = createNotificationBufferWithNextOffset("file.txt", FileNotifyInformation.FILE_ACTION_ADDED, expectedOffset);
+
         notifyInfo.decode(buffer, 0, buffer.length);
-        
+
         assertEquals(expectedOffset, notifyInfo.getNextEntryOffset());
     }
 
@@ -232,10 +223,10 @@ class FileNotifyInformationImplTest {
         String fileName = "log.txt";
         int action = FileNotifyInformation.FILE_ACTION_MODIFIED;
         byte[] buffer = createValidNotificationBuffer(fileName, action);
-        
+
         notifyInfo.decode(buffer, 0, buffer.length);
         String result = notifyInfo.toString();
-        
+
         assertNotNull(result);
         assertTrue(result.contains("FileNotifyInformation"));
         assertTrue(result.contains("nextEntry="));
@@ -250,7 +241,7 @@ class FileNotifyInformationImplTest {
     @DisplayName("Test toString with empty object")
     void testToStringEmpty() {
         String result = notifyInfo.toString();
-        
+
         assertNotNull(result);
         assertTrue(result.contains("FileNotifyInformation"));
         assertTrue(result.contains("nextEntry=0"));
@@ -260,24 +251,22 @@ class FileNotifyInformationImplTest {
 
     @ParameterizedTest
     @DisplayName("Test decode with aligned next entry offsets")
-    @ValueSource(ints = {0, 4, 8, 16, 32, 64, 128, 256, 1024})
+    @ValueSource(ints = { 0, 4, 8, 16, 32, 64, 128, 256, 1024 })
     void testDecodeWithAlignedOffsets(int nextOffset) throws SMBProtocolDecodingException {
-        byte[] buffer = createNotificationBufferWithNextOffset("aligned.txt", 
-            FileNotifyInformation.FILE_ACTION_ADDED, nextOffset);
-        
+        byte[] buffer = createNotificationBufferWithNextOffset("aligned.txt", FileNotifyInformation.FILE_ACTION_ADDED, nextOffset);
+
         int bytesRead = notifyInfo.decode(buffer, 0, buffer.length);
-        
+
         assertTrue(bytesRead > 0);
         assertEquals(nextOffset, notifyInfo.getNextEntryOffset());
     }
 
     @ParameterizedTest
     @DisplayName("Test decode with non-aligned offsets throws exception")
-    @ValueSource(ints = {1, 2, 3, 5, 6, 7, 9, 15, 17, 31, 33})
+    @ValueSource(ints = { 1, 2, 3, 5, 6, 7, 9, 15, 17, 31, 33 })
     void testDecodeWithNonAlignedOffsetsThrows(int nextOffset) {
-        byte[] buffer = createNotificationBufferWithNextOffset("nonaligned.txt", 
-            FileNotifyInformation.FILE_ACTION_ADDED, nextOffset);
-        
+        byte[] buffer = createNotificationBufferWithNextOffset("nonaligned.txt", FileNotifyInformation.FILE_ACTION_ADDED, nextOffset);
+
         assertThrows(SMBProtocolDecodingException.class, () -> {
             notifyInfo.decode(buffer, 0, buffer.length);
         });
@@ -292,11 +281,11 @@ class FileNotifyInformationImplTest {
             sb.append('A');
         }
         String longFileName = sb.toString();
-        
+
         byte[] buffer = createValidNotificationBuffer(longFileName, FileNotifyInformation.FILE_ACTION_ADDED);
-        
+
         int bytesRead = notifyInfo.decode(buffer, 0, buffer.length);
-        
+
         assertTrue(bytesRead > 0);
         assertEquals(longFileName, notifyInfo.getFileName());
     }
@@ -305,9 +294,9 @@ class FileNotifyInformationImplTest {
     @DisplayName("Test decode with empty file name")
     void testDecodeEmptyFileName() throws SMBProtocolDecodingException {
         byte[] buffer = createValidNotificationBuffer("", FileNotifyInformation.FILE_ACTION_ADDED);
-        
+
         int bytesRead = notifyInfo.decode(buffer, 0, buffer.length);
-        
+
         assertTrue(bytesRead >= 12); // At least the header bytes
         assertEquals("", notifyInfo.getFileName());
     }
@@ -326,19 +315,19 @@ class FileNotifyInformationImplTest {
         byte[] fileNameBytes = fileName.getBytes(StandardCharsets.UTF_16LE);
         int totalSize = 12 + fileNameBytes.length + 50; // Extra space for safety
         byte[] buffer = new byte[totalSize];
-        
+
         // Write next entry offset (4 bytes)
         SMBUtil.writeInt4(nextOffset, buffer, 0);
-        
+
         // Write action (4 bytes)
         SMBUtil.writeInt4(action, buffer, 4);
-        
+
         // Write file name length (4 bytes)
         SMBUtil.writeInt4(fileNameBytes.length, buffer, 8);
-        
+
         // Write file name
         System.arraycopy(fileNameBytes, 0, buffer, 12, fileNameBytes.length);
-        
+
         return buffer;
     }
 }

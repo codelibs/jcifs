@@ -1,7 +1,9 @@
 package jcifs.smb1.smb1;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Unit tests for the Trans2FindNext2 class.
@@ -181,4 +183,3 @@ class Trans2FindNext2Test {
         assertTrue(s.endsWith("]"), "toString should end with closing bracket");
     }
 }
-

@@ -1,16 +1,17 @@
 package jcifs.internal.smb2.lock;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.Arrays;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import jcifs.internal.util.SMBUtil;
 
@@ -84,12 +85,7 @@ class Smb2LockTest {
 
         @ParameterizedTest
         @DisplayName("Should return 24 bytes regardless of parameters")
-        @CsvSource({
-            "0, 0, 0",
-            "100, 200, 1",
-            "9223372036854775807, 9223372036854775807, 2147483647",
-            "-1, -1, -1"
-        })
+        @CsvSource({ "0, 0, 0", "100, 200, 1", "9223372036854775807, 9223372036854775807, 2147483647", "-1, -1, -1" })
         void testSizeWithDifferentValues(long offset, long length, int flags) {
             lock = new Smb2Lock(offset, length, flags);
 
@@ -150,9 +146,7 @@ class Smb2LockTest {
         void testEncodingWithAllFlags() {
             long offset = 512L;
             long length = 1024L;
-            int allFlags = Smb2Lock.SMB2_LOCKFLAG_SHARED_LOCK
-                    | Smb2Lock.SMB2_LOCKFLAG_EXCLUSIVE_LOCK
-                    | Smb2Lock.SMB2_LOCKFLAG_UNLOCK
+            int allFlags = Smb2Lock.SMB2_LOCKFLAG_SHARED_LOCK | Smb2Lock.SMB2_LOCKFLAG_EXCLUSIVE_LOCK | Smb2Lock.SMB2_LOCKFLAG_UNLOCK
                     | Smb2Lock.SMB2_LOCKFLAG_FAIL_IMMEDIATELY;
 
             lock = new Smb2Lock(offset, length, allFlags);
@@ -250,9 +244,8 @@ class Smb2LockTest {
         @Test
         @DisplayName("Should allow flag combinations")
         void testFlagCombinations() {
-            int sharedWithFailImmediately = Smb2Lock.SMB2_LOCKFLAG_SHARED_LOCK 
-                    | Smb2Lock.SMB2_LOCKFLAG_FAIL_IMMEDIATELY;
-            
+            int sharedWithFailImmediately = Smb2Lock.SMB2_LOCKFLAG_SHARED_LOCK | Smb2Lock.SMB2_LOCKFLAG_FAIL_IMMEDIATELY;
+
             lock = new Smb2Lock(100L, 200L, sharedWithFailImmediately);
             lock.encode(buffer, 0);
 
@@ -280,7 +273,7 @@ class Smb2LockTest {
 
         @ParameterizedTest
         @DisplayName("Should encode consistently with various flag values")
-        @ValueSource(ints = {0, 1, 2, 4, 16, 0xFF, 0xFFFF, 0xFFFFFF, 0x7FFFFFFF, -1})
+        @ValueSource(ints = { 0, 1, 2, 4, 16, 0xFF, 0xFFFF, 0xFFFFFF, 0x7FFFFFFF, -1 })
         void testEncodingWithVariousFlags(int flags) {
             lock = new Smb2Lock(1024L, 2048L, flags);
             int encoded = lock.encode(buffer, 0);

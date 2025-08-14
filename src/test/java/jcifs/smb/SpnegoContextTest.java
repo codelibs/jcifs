@@ -1,18 +1,31 @@
 package jcifs.smb;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 import jcifs.CIFSException;
 import jcifs.Configuration;
@@ -70,8 +83,7 @@ class SpnegoContextTest {
 
         // The initial token path should ask the mechanism for a zero-length optimistic token
         when(this.mechContext.getFlags()).thenReturn(0x1234);
-        when(this.mechContext.initSecContext(any(byte[].class), eq(0), eq(0)))
-                .thenReturn(new byte[] { 0x01, 0x02 });
+        when(this.mechContext.initSecContext(any(byte[].class), eq(0), eq(0))).thenReturn(new byte[] { 0x01, 0x02 });
 
         // Act: len==0 triggers initial token construction
         byte[] out = ctx.initSecContext(null, 0, 0);
@@ -219,4 +231,3 @@ class SpnegoContextTest {
         assertEquals("SPNEGO[MECHCTX]", ctx.toString());
     }
 }
-

@@ -83,8 +83,7 @@ class SamrPolicyHandleTest {
             public int getErrorCode() {
                 return DcerpcError.DCERPC_FAULT_OP_RNG_ERROR;
             }
-        })
-                .when(mockHandle).sendrecv(any(MsrpcSamrConnect4.class));
+        }).when(mockHandle).sendrecv(any(MsrpcSamrConnect4.class));
         // Subsequent call for MsrpcSamrConnect2 should succeed
         doNothing().when(mockHandle).sendrecv(any(MsrpcSamrConnect2.class));
 

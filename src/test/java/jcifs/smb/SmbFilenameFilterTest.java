@@ -1,16 +1,22 @@
 package jcifs.smb;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -30,7 +36,7 @@ class SmbFilenameFilterTest {
      */
     @ParameterizedTest
     @DisplayName("accepts any non-null/any string")
-    @ValueSource(strings = {"file.txt", "data.DAT", "a", "x.y.z", "  spaced  "})
+    @ValueSource(strings = { "file.txt", "data.DAT", "a", "x.y.z", "  spaced  " })
     void acceptsAnyNameReturnsTrue(String input) throws Exception {
         SmbFilenameFilter filter = (dir, name) -> true;
 
@@ -45,7 +51,7 @@ class SmbFilenameFilterTest {
      */
     @ParameterizedTest
     @DisplayName("rejects every provided name")
-    @ValueSource(strings = {"file.txt", "data.DAT", "a", "", "   "})
+    @ValueSource(strings = { "file.txt", "data.DAT", "a", "", "   " })
     void rejectsAnyNameReturnsFalse(String input) throws Exception {
         SmbFilenameFilter filter = (dir, name) -> false;
 
@@ -60,13 +66,7 @@ class SmbFilenameFilterTest {
      */
     @ParameterizedTest
     @DisplayName("name-based filter matches .txt case-insensitively")
-    @CsvSource({
-        "notes.txt,true",
-        "REPORT.TXT,true",
-        "image.png,false",
-        "archive.tar.gz,false",
-        "txt,false"
-    })
+    @CsvSource({ "notes.txt,true", "REPORT.TXT,true", "image.png,false", "archive.tar.gz,false", "txt,false" })
     void nameBasedFilterTxt(String name, boolean expected) throws Exception {
         SmbFilenameFilter filter = (dir, n) -> n != null && n.toLowerCase().endsWith(".txt");
 
@@ -82,7 +82,7 @@ class SmbFilenameFilterTest {
     @ParameterizedTest
     @DisplayName("null and empty names are handled explicitly")
     @NullAndEmptySource
-    @ValueSource(strings = {" \t\n"})
+    @ValueSource(strings = { " \t\n" })
     void handlesNullAndEmptyNames(String name) throws Exception {
         // Filter accepts only when name is exactly null, otherwise false
         SmbFilenameFilter filter = (dir, n) -> n == null;
@@ -137,7 +137,8 @@ class SmbFilenameFilterTest {
 
         // Implementation uses dir.getPath() to check if file should be in that path
         SmbFilenameFilter filter = (dir, name) -> {
-            if (dir == null) return false;
+            if (dir == null)
+                return false;
             String path = dir.getPath();
             // Accept files in /share/folder/ that are text files
             return path.equals("/share/folder/") && name != null && name.endsWith(".txt");
@@ -147,7 +148,7 @@ class SmbFilenameFilterTest {
         assertTrue(filter.accept(mockDir, "document.txt"), "Should accept .txt files in the correct path");
         assertFalse(filter.accept(mockDir, "image.png"), "Should reject non-.txt files");
         assertFalse(filter.accept(mockDir, null), "Should reject null names");
-        
+
         // Verify getPath was called three times (once for each accept call)
         verify(mockDir, times(3)).getPath();
         verifyNoMoreInteractions(mockDir);
@@ -160,7 +161,7 @@ class SmbFilenameFilterTest {
     @DisplayName("implementation explicitly rejects nulls with NPE")
     void implementationRejectsNulls() {
         SmbFilenameFilter filter = (dir, name) -> {
-            if ( dir == null || name == null ) {
+            if (dir == null || name == null) {
                 throw new NullPointerException("dir and name must be non-null");
             }
             return true;
@@ -192,4 +193,3 @@ class SmbFilenameFilterTest {
         verifyNoInteractions(mockDir);
     }
 }
-

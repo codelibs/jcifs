@@ -1,17 +1,18 @@
 package jcifs.smb1.smb1;
 
-import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.MethodSource;
-import org.mockito.junit.jupiter.MockitoExtension;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
  * Unit tests for {@code NtTransQuerySecurityDesc}.
@@ -42,11 +43,9 @@ class NtTransQuerySecurityDescTest {
      * Provide a range of values that are valid for the constructor.
      */
     static Stream<org.junit.jupiter.params.provider.Arguments> validInputs() {
-        return Stream.of(
-                org.junit.jupiter.params.provider.Arguments.of(0x0001, 0x00000000),
+        return Stream.of(org.junit.jupiter.params.provider.Arguments.of(0x0001, 0x00000000),
                 org.junit.jupiter.params.provider.Arguments.of(0xFFFF, 0x12345678),
-                org.junit.jupiter.params.provider.Arguments.of(-1, -123456)
-        );
+                org.junit.jupiter.params.provider.Arguments.of(-1, -123456));
     }
 
     @ParameterizedTest
@@ -91,10 +90,9 @@ class NtTransQuerySecurityDescTest {
     }
 
     @ParameterizedTest
-    @CsvSource({
-            "0, 0",                           // all zeros
-            "-1, 2147483647",                 // negative fid, max positive security
-            "12345, 999"                       // arbitrary numbers
+    @CsvSource({ "0, 0", // all zeros
+            "-1, 2147483647", // negative fid, max positive security
+            "12345, 999" // arbitrary numbers
     })
     void toString_includesCorrectHexValues(int fid, int securityInformation) {
         NtTransQuerySecurityDesc cmd = new NtTransQuerySecurityDesc(fid, securityInformation);
@@ -102,10 +100,7 @@ class NtTransQuerySecurityDescTest {
         assertTrue(result.startsWith("NtTransQuerySecurityDesc["), "toString should start with class name");
         String hexFid = String.format("%04X", fid & 0xFFFF);
         String hexSec = String.format("%08X", securityInformation & 0xFFFFFFFFL);
-        assertTrue(result.contains("fid=0x" + hexFid),
-                () -> "Expected hex fid " + hexFid + " in: " + result);
-        assertTrue(result.contains("securityInformation=0x" + hexSec),
-                () -> "Expected hex sec " + hexSec + " in: " + result);
+        assertTrue(result.contains("fid=0x" + hexFid), () -> "Expected hex fid " + hexFid + " in: " + result);
+        assertTrue(result.contains("securityInformation=0x" + hexSec), () -> "Expected hex sec " + hexSec + " in: " + result);
     }
 }
-

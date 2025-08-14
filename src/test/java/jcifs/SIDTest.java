@@ -2,12 +2,9 @@ package jcifs;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -18,9 +15,6 @@ import java.io.IOException;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
-import jcifs.CIFSContext;
-import jcifs.RuntimeCIFSException;
-import jcifs.SidResolver;
 import jcifs.dcerpc.rpc;
 import jcifs.smb.SID;
 import jcifs.smb.SmbException;
@@ -32,9 +26,7 @@ class SIDTest {
 
     // A well-known SID for "Administrators"
     private final String adminSidString = "S-1-5-32-544";
-    private final byte[] adminSidBytes = new byte[] {
-            1, 2, 0, 0, 0, 0, 0, 5, 32, 0, 0, 0, 32, 2, 0, 0
-    };
+    private final byte[] adminSidBytes = new byte[] { 1, 2, 0, 0, 0, 0, 0, 5, 32, 0, 0, 0, 32, 2, 0, 0 };
 
     /**
      * Test constructor with a valid SID string.
@@ -123,9 +115,7 @@ class SIDTest {
         SID domainSid = new SID("S-1-5-21-123-456-789");
         SID relativeSid = new SID("S-1-5-1000"); // This is not a valid relative SID, but tests the logic
         relativeSid.sub_authority_count = 1;
-        relativeSid.sub_authority = new int[] {
-                1000
-        };
+        relativeSid.sub_authority = new int[] { 1000 };
 
         SID userSid = new SID(domainSid, relativeSid);
         assertEquals(domainSid.sub_authority_count + relativeSid.sub_authority_count, userSid.sub_authority_count);
@@ -140,12 +130,8 @@ class SIDTest {
         rpc.sid_t rpcSid = new rpc.sid_t();
         rpcSid.revision = 1;
         rpcSid.sub_authority_count = 2;
-        rpcSid.identifier_authority = new byte[] {
-                0, 0, 0, 0, 0, 5
-        };
-        rpcSid.sub_authority = new int[] {
-                32, 544
-        };
+        rpcSid.identifier_authority = new byte[] { 0, 0, 0, 0, 0, 5 };
+        rpcSid.sub_authority = new int[] { 32, 544 };
 
         SID sid = new SID(rpcSid, SID.SID_TYPE_WKN_GRP, "BUILTIN", "Administrators", false);
         assertEquals(SID.SID_TYPE_WKN_GRP, sid.getType());
@@ -204,12 +190,8 @@ class SIDTest {
         rpc.sid_t rpcSid = new rpc.sid_t();
         rpcSid.revision = 1;
         rpcSid.sub_authority_count = 2;
-        rpcSid.identifier_authority = new byte[] {
-                0, 0, 0, 0, 0, 5
-        };
-        rpcSid.sub_authority = new int[] {
-                32, 544
-        };
+        rpcSid.identifier_authority = new byte[] { 0, 0, 0, 0, 0, 5 };
+        rpcSid.sub_authority = new int[] { 32, 544 };
 
         SID sid = new SID(rpcSid, SID.SID_TYPE_ALIAS, "MYDOMAIN", "MyAlias", false);
         assertEquals("MYDOMAIN\\MyAlias", sid.toDisplayString());
@@ -242,10 +224,10 @@ class SIDTest {
         // Create a mock RPC SID to simulate a user SID
         rpc.sid_t rpcSid = new rpc.sid_t();
         rpcSid.revision = 1;
-        rpcSid.sub_authority_count = 5;  // Fixed: should be 5 for domain SID with RID
+        rpcSid.sub_authority_count = 5; // Fixed: should be 5 for domain SID with RID
         rpcSid.identifier_authority = new byte[] { 0, 0, 0, 0, 0, 5 };
         rpcSid.sub_authority = new int[] { 21, 123, 456, 789, 1000 };
-        
+
         SID userSid = new SID(rpcSid, SID.SID_TYPE_USER, "MYDOMAIN", "user", false);
         SID domainSid = userSid.getDomainSid();
         assertEquals("S-1-5-21-123-456-789", domainSid.toString());
@@ -262,10 +244,10 @@ class SIDTest {
         // Create a mock RPC SID to simulate a user SID
         rpc.sid_t rpcSid = new rpc.sid_t();
         rpcSid.revision = 1;
-        rpcSid.sub_authority_count = 5;  // Fixed: should be 5 for domain SID with RID
+        rpcSid.sub_authority_count = 5; // Fixed: should be 5 for domain SID with RID
         rpcSid.identifier_authority = new byte[] { 0, 0, 0, 0, 0, 5 };
         rpcSid.sub_authority = new int[] { 21, 123, 456, 789, 1000 };
-        
+
         SID userSid = new SID(rpcSid, SID.SID_TYPE_USER, "MYDOMAIN", "user", false);
         assertEquals(1000, userSid.getRid());
     }
@@ -280,10 +262,10 @@ class SIDTest {
         // Create a mock RPC SID to simulate a domain SID
         rpc.sid_t rpcSid = new rpc.sid_t();
         rpcSid.revision = 1;
-        rpcSid.sub_authority_count = 4;  // Fixed: should be 4 to properly represent domain SID
+        rpcSid.sub_authority_count = 4; // Fixed: should be 4 to properly represent domain SID
         rpcSid.identifier_authority = new byte[] { 0, 0, 0, 0, 0, 5 };
         rpcSid.sub_authority = new int[] { 21, 123, 456, 789 };
-        
+
         SID domainSid = new SID(rpcSid, SID.SID_TYPE_DOMAIN, "MYDOMAIN", null, true);
         assertThrows(IllegalArgumentException.class, domainSid::getRid);
     }
@@ -302,9 +284,7 @@ class SIDTest {
 
         SID unknownSid = new SID(rpcSid, SID.SID_TYPE_UNKNOWN, null, null, false);
         unknownSid.sub_authority_count = 1;
-        unknownSid.sub_authority = new int[] {
-                123
-        };
+        unknownSid.sub_authority = new int[] { 123 };
         assertEquals("123", unknownSid.getAccountName());
     }
 
@@ -372,7 +352,7 @@ class SIDTest {
         rpcSid.sub_authority_count = 2;
         rpcSid.identifier_authority = new byte[] { 0, 0, 0, 0, 0, 5 };
         rpcSid.sub_authority = new int[] { 32, 544 };
-        
+
         SID groupSid = new SID(rpcSid, SID.SID_TYPE_DOM_GRP, "BUILTIN", "Administrators", false);
 
         String server = "myserver";
@@ -393,10 +373,10 @@ class SIDTest {
         // Create a mock RPC SID to simulate a user SID
         rpc.sid_t rpcSid = new rpc.sid_t();
         rpcSid.revision = 1;
-        rpcSid.sub_authority_count = 5;  // Fixed: should be 5 for domain SID with RID
+        rpcSid.sub_authority_count = 5; // Fixed: should be 5 for domain SID with RID
         rpcSid.identifier_authority = new byte[] { 0, 0, 0, 0, 0, 5 };
         rpcSid.sub_authority = new int[] { 21, 123, 456, 789, 1000 };
-        
+
         SID userSid = new SID(rpcSid, SID.SID_TYPE_USER, "MYDOMAIN", "user", false);
 
         jcifs.SID[] members = userSid.getGroupMemberSids("myserver", null, 0);

@@ -1,12 +1,22 @@
 package jcifs;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-
 
 @DisplayName("SmbSession Interface Contract Tests")
 class SmbSessionTest {
@@ -18,8 +28,7 @@ class SmbSessionTest {
         @Test
         @DisplayName("Should implement AutoCloseable interface")
         void shouldImplementAutoCloseable() {
-            assertTrue(AutoCloseable.class.isAssignableFrom(SmbSession.class),
-                    "SmbSession should implement AutoCloseable interface");
+            assertTrue(AutoCloseable.class.isAssignableFrom(SmbSession.class), "SmbSession should implement AutoCloseable interface");
         }
 
         @Test
@@ -54,8 +63,7 @@ class SmbSessionTest {
             Exception testException = new Exception("Test close exception");
             doThrow(testException).when(mockSession).close();
 
-            Exception thrownException = assertThrows(Exception.class, mockSession::close,
-                    "close() should propagate exceptions");
+            Exception thrownException = assertThrows(Exception.class, mockSession::close, "close() should propagate exceptions");
             assertEquals("Test close exception", thrownException.getMessage());
         }
     }
@@ -209,9 +217,8 @@ class SmbSessionTest {
         @DisplayName("Should have all required method names")
         void shouldHaveAllRequiredMethodNames() {
             java.lang.reflect.Method[] methods = SmbSession.class.getDeclaredMethods();
-            java.util.Set<String> methodNames = java.util.Arrays.stream(methods)
-                    .map(java.lang.reflect.Method::getName)
-                    .collect(java.util.stream.Collectors.toSet());
+            java.util.Set<String> methodNames =
+                    java.util.Arrays.stream(methods).map(java.lang.reflect.Method::getName).collect(java.util.stream.Collectors.toSet());
 
             assertTrue(methodNames.contains("close"), "Should contain close method");
             assertTrue(methodNames.contains("getConfig"), "Should contain getConfig method");
@@ -223,8 +230,7 @@ class SmbSessionTest {
         @DisplayName("Should be a public interface")
         void shouldBePublicInterface() {
             assertTrue(SmbSession.class.isInterface(), "SmbSession should be an interface");
-            assertTrue(java.lang.reflect.Modifier.isPublic(SmbSession.class.getModifiers()),
-                    "SmbSession should be public");
+            assertTrue(java.lang.reflect.Modifier.isPublic(SmbSession.class.getModifiers()), "SmbSession should be public");
         }
     }
 
@@ -236,7 +242,7 @@ class SmbSessionTest {
         @DisplayName("Should support try-with-resources pattern")
         void shouldSupportTryWithResourcesPattern() {
             SmbSession mockSession = mock(SmbSession.class);
-            
+
             assertDoesNotThrow(() -> {
                 try (SmbSession session = mockSession) {
                     // Resource usage simulation
@@ -295,7 +301,7 @@ class SmbSessionTest {
         void shouldSupportPartialMockingScenarios() {
             SmbSession mockSession = mock(SmbSession.class);
             Configuration mockConfig = mock(Configuration.class);
-            
+
             // Only mock getConfig, leave others with default behavior
             when(mockSession.getConfig()).thenReturn(mockConfig);
 
@@ -317,8 +323,7 @@ class SmbSessionTest {
             when(mockSession.getConfig()).thenReturn(mockConfig);
 
             for (int i = 0; i < 10; i++) {
-                assertSame(mockConfig, mockSession.getConfig(),
-                        "getConfig should return same result on call " + i);
+                assertSame(mockConfig, mockSession.getConfig(), "getConfig should return same result on call " + i);
             }
 
             verify(mockSession, times(10)).getConfig();

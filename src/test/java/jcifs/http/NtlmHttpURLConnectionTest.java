@@ -8,16 +8,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -29,9 +22,7 @@ import java.net.HttpURLConnection;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.net.URLStreamHandler;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -46,10 +37,10 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
 import jcifs.CIFSContext;
+import jcifs.NameServiceClient;
 import jcifs.RuntimeCIFSException;
 import jcifs.config.PropertyConfiguration;
 import jcifs.context.BaseContext;
-import jcifs.NameServiceClient;
 import jcifs.smb.NtlmPasswordAuthentication;
 
 /**
@@ -67,7 +58,7 @@ class NtlmHttpURLConnectionTest {
 
     @Mock
     private CIFSContext mockCifsContext;
-    
+
     @Mock
     private NameServiceClient mockNameServiceClient;
 
@@ -81,17 +72,18 @@ class NtlmHttpURLConnectionTest {
     void setUp() throws IOException {
         // Create a real URL instead of mocking to avoid protocol issues
         mockUrl = new URL("http://test.example.com/path");
-        
+
         // Basic setup for mocks to avoid NullPointerExceptions
         when(mockConnection.getURL()).thenReturn(mockUrl);
         when(mockConnection.getRequestProperties()).thenReturn(new HashMap<>());
-        
+
         // Mock CIFSContext behavior
-        NtlmPasswordAuthentication creds = new NtlmPasswordAuthentication(new BaseContext(new PropertyConfiguration(System.getProperties())), "domain", "user", "password");
+        NtlmPasswordAuthentication creds = new NtlmPasswordAuthentication(
+                new BaseContext(new PropertyConfiguration(System.getProperties())), "domain", "user", "password");
         when(mockCifsContext.getCredentials()).thenReturn(creds);
         when(mockCifsContext.getConfig()).thenReturn(new PropertyConfiguration(System.getProperties()));
         when(mockCifsContext.getNameServiceClient()).thenReturn(mockNameServiceClient);
-        
+
         ntlmConnection = new NtlmHttpURLConnection(mockConnection, mockCifsContext);
     }
 
@@ -192,10 +184,9 @@ class NtlmHttpURLConnectionTest {
     void testSuccessfulHandshake() throws IOException, SecurityException {
         // This test is simplified to verify basic handshake behavior
         // Full NTLM handshake testing would require more complex mocking
-        
+
         // Arrange - Mock a server that supports NTLM
-        mockResponse(HTTP_UNAUTHORIZED, "Unauthorized",
-                Collections.singletonMap("WWW-Authenticate", Collections.singletonList("NTLM")),
+        mockResponse(HTTP_UNAUTHORIZED, "Unauthorized", Collections.singletonMap("WWW-Authenticate", Collections.singletonList("NTLM")),
                 new ByteArrayInputStream(new byte[0]));
 
         // Act - Trigger handshake
@@ -203,7 +194,7 @@ class NtlmHttpURLConnectionTest {
 
         // Assert - Verify we got the 401 response (simplified test)
         assertEquals(HTTP_UNAUTHORIZED, responseCode);
-        
+
         // In a real scenario, the connection would reconnect and send Type1/Type3 messages
         // This simplified test just verifies the initial handshake detection
     }
@@ -237,7 +228,7 @@ class NtlmHttpURLConnectionTest {
         // Enable output mode
         when(mockConnection.getDoOutput()).thenReturn(true);
         ntlmConnection.setDoOutput(true);
-        
+
         // Mock initial connection's output stream (needed for CacheStream)
         OutputStream initialOutputStream = mock(OutputStream.class);
         when(mockConnection.getOutputStream()).thenReturn(initialOutputStream);
@@ -257,7 +248,7 @@ class NtlmHttpURLConnectionTest {
         verify(initialOutputStream).flush();
         verify(initialOutputStream).close();
     }
-    
+
     /**
      * Test that a RuntimeCIFSException is thrown when the handshake fails due to an underlying exception.
      * @throws IOException
@@ -284,8 +275,10 @@ class NtlmHttpURLConnectionTest {
     /**
      * Helper method to mock the response of a specific HttpURLConnection instance.
      */
-    private void mockResponse(HttpURLConnection conn, int code, String message, Map<String, List<String>> headers, InputStream stream) throws IOException {
-        if (conn == null) return;
+    private void mockResponse(HttpURLConnection conn, int code, String message, Map<String, List<String>> headers, InputStream stream)
+            throws IOException {
+        if (conn == null)
+            return;
 
         String statusLine = "HTTP/1.1 " + code + " " + message;
         when(conn.getResponseCode()).thenReturn(code);
@@ -303,7 +296,7 @@ class NtlmHttpURLConnectionTest {
             for (Map.Entry<String, List<String>> entry : headers.entrySet()) {
                 when(conn.getHeaderField(entry.getKey())).thenReturn(entry.getValue().get(0));
             }
-            
+
             // Mock by index - getHeaderField(int) 
             // Index 0 is status line, then headers in order
             int index = 1;
@@ -318,18 +311,18 @@ class NtlmHttpURLConnectionTest {
             when(conn.getInputStream()).thenReturn(stream);
         }
     }
-    
+
     /**
      * Test helper class for mocking URL.openConnection() behavior
      */
     static class TestURLStreamHandler extends java.net.URLStreamHandler {
         private final List<HttpURLConnection> connections = new ArrayList<>();
         private int currentIndex = 0;
-        
+
         void addConnection(HttpURLConnection conn) {
             connections.add(conn);
         }
-        
+
         @Override
         protected URLConnection openConnection(URL u) throws IOException {
             if (currentIndex < connections.size()) {

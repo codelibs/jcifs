@@ -30,7 +30,7 @@ class UUIDTest {
     @Nested
     @DisplayName("Constructor Tests")
     class ConstructorTests {
-        
+
         @Test
         @DisplayName("Constructor with rpc.uuid_t should copy all fields correctly")
         void testConstructorWithRpcUuidT() {
@@ -79,7 +79,8 @@ class UUIDTest {
             // Assert
             assertEquals(TIME_LOW, uuid.time_low, "time_low should be parsed correctly with lowercase hex");
             assertEquals(TIME_MID, uuid.time_mid, "time_mid should be parsed correctly with lowercase hex");
-            assertEquals(TIME_HI_AND_VERSION, uuid.time_hi_and_version, "time_hi_and_version should be parsed correctly with lowercase hex");
+            assertEquals(TIME_HI_AND_VERSION, uuid.time_hi_and_version,
+                    "time_hi_and_version should be parsed correctly with lowercase hex");
             assertEquals(CLOCK_SEQ_HI_AND_RESERVED, uuid.clock_seq_hi_and_reserved,
                     "clock_seq_hi_and_reserved should be parsed correctly with lowercase hex");
             assertEquals(CLOCK_SEQ_LOW, uuid.clock_seq_low, "clock_seq_low should be parsed correctly with lowercase hex");
@@ -157,7 +158,7 @@ class UUIDTest {
     @Nested
     @DisplayName("toString() Tests")
     class ToStringTests {
-        
+
         @Test
         @DisplayName("toString() should return correctly formatted UUID string")
         void testToString() {
@@ -225,8 +226,7 @@ class UUIDTest {
             String result = uuid.toString();
 
             // Assert
-            assertEquals("00000000-0000-0000-0000-000000000000", result,
-                    "toString() should correctly format zero UUID");
+            assertEquals("00000000-0000-0000-0000-000000000000", result, "toString() should correctly format zero UUID");
         }
 
         @Test
@@ -247,15 +247,14 @@ class UUIDTest {
             String result = uuid.toString();
 
             // Assert
-            assertEquals("FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF", result,
-                    "toString() should correctly format maximum value UUID");
+            assertEquals("FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF", result, "toString() should correctly format maximum value UUID");
         }
     }
 
     @Nested
     @DisplayName("Edge Case Tests")
     class EdgeCaseTests {
-        
+
         @Test
         @DisplayName("UUID with mixed case should parse correctly")
         void testMixedCaseUuid() {

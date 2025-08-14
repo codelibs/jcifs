@@ -55,27 +55,27 @@ class DosFileFilterTest {
      */
     @ParameterizedTest(name = "Filter: {0}, File: {1}, Expected: {2}")
     @CsvSource({
-        // Positive cases (should be accepted)
-        "1, 1, true",   // ATTR_READONLY
-        "2, 2, true",   // ATTR_HIDDEN
-        "4, 4, true",   // ATTR_SYSTEM
-        "16, 16, true", // ATTR_DIRECTORY
-        "32, 32, true", // ATTR_ARCHIVE
-        "3, 1, true",   // READONLY | HIDDEN vs READONLY
-        "3, 2, true",   // READONLY | HIDDEN vs HIDDEN
-        "3, 3, true",   // READONLY | HIDDEN vs READONLY | HIDDEN
-        "48, 16, true", // DIRECTORY | ARCHIVE vs DIRECTORY
-        "48, 32, true", // DIRECTORY | ARCHIVE vs ARCHIVE
-        "21, 5, true",  // READONLY | SYSTEM | DIRECTORY vs READONLY | SYSTEM
+            // Positive cases (should be accepted)
+            "1, 1, true", // ATTR_READONLY
+            "2, 2, true", // ATTR_HIDDEN
+            "4, 4, true", // ATTR_SYSTEM
+            "16, 16, true", // ATTR_DIRECTORY
+            "32, 32, true", // ATTR_ARCHIVE
+            "3, 1, true", // READONLY | HIDDEN vs READONLY
+            "3, 2, true", // READONLY | HIDDEN vs HIDDEN
+            "3, 3, true", // READONLY | HIDDEN vs READONLY | HIDDEN
+            "48, 16, true", // DIRECTORY | ARCHIVE vs DIRECTORY
+            "48, 32, true", // DIRECTORY | ARCHIVE vs ARCHIVE
+            "21, 5, true", // READONLY | SYSTEM | DIRECTORY vs READONLY | SYSTEM
 
-        // Negative cases (should be rejected)
-        "1, 2, false",  // READONLY vs HIDDEN
-        "2, 1, false",  // HIDDEN vs READONLY
-        "16, 32, false",// DIRECTORY vs ARCHIVE
-        "3, 4, false",  // READONLY | HIDDEN vs SYSTEM
-        "0, 1, false",  // No filter attributes
-        "1, 0, false",  // No file attributes
-        "0, 0, false"   // No attributes on either
+            // Negative cases (should be rejected)
+            "1, 2, false", // READONLY vs HIDDEN
+            "2, 1, false", // HIDDEN vs READONLY
+            "16, 32, false", // DIRECTORY vs ARCHIVE
+            "3, 4, false", // READONLY | HIDDEN vs SYSTEM
+            "0, 1, false", // No filter attributes
+            "1, 0, false", // No file attributes
+            "0, 0, false" // No attributes on either
     })
     void testAccept(int filterAttributes, int fileAttributes, boolean expectedResult) throws SmbException {
         // Given a DosFileFilter with specific attributes

@@ -1,14 +1,15 @@
 package jcifs.internal;
 
-import org.junit.jupiter.api.*;
+import java.util.stream.Stream;
+
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.junit.jupiter.api.extension.ExtendWith;
-
-import java.util.stream.Stream;
-import org.junit.jupiter.params.provider.Arguments;
 
 /**
  * Tests for SmbBasicFileInfo interface.
@@ -93,12 +94,11 @@ public class SmbBasicFileInfoTest {
 
     // Supplies a range of normal and edge case values.
     private static Stream<Arguments> valueProvider() {
-        return Stream.of(
-                Arguments.of(0, 0L, 0L, 0L, 0L),                      // all zeros
-                Arguments.of(1, 1L, 1L, 1L, 1L),                      // ones
-                Arguments.of(123, 456L, 789L, 101112L, 131415L),      // arbitrary positives
+        return Stream.of(Arguments.of(0, 0L, 0L, 0L, 0L), // all zeros
+                Arguments.of(1, 1L, 1L, 1L, 1L), // ones
+                Arguments.of(123, 456L, 789L, 101112L, 131415L), // arbitrary positives
                 Arguments.of(Integer.MAX_VALUE, Long.MAX_VALUE, Long.MIN_VALUE, 999_999_999_999L, -1L), // extremes
-                Arguments.of(-1, -2L, -3L, -4L, -5L)                  // negative values
+                Arguments.of(-1, -2L, -3L, -4L, -5L) // negative values
         );
     }
 
@@ -149,4 +149,3 @@ public class SmbBasicFileInfoTest {
         });
     }
 }
-

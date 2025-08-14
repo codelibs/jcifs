@@ -5,17 +5,12 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.util.HashMap;
 
 import org.junit.jupiter.api.AfterEach;
@@ -28,11 +23,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
-import jcifs.smb1.smb1.NtlmPasswordAuthentication;
-import jcifs.smb1.smb1.SmbAuthException;
-import jcifs.smb1.smb1.Dfs;
-import jcifs.smb1.smb1.DfsReferral;
-import jcifs.smb1.smb1.SmbTransport;
 import jcifs.smb1.Config;
 import jcifs.smb1.UniAddress;
 import jcifs.smb1.util.LogStream;
@@ -64,36 +54,36 @@ class DfsTest {
     // Test subclass to control DISABLED flag
     private static class TestDfs extends Dfs {
         private boolean disabled;
-        
+
         public void setDisabled(boolean disabled) {
             this.disabled = disabled;
         }
-        
+
         @Override
         public HashMap getTrustedDomains(NtlmPasswordAuthentication auth) throws SmbAuthException {
             if (disabled || auth.domain == "?")
                 return null;
             return super.getTrustedDomains(auth);
         }
-        
+
         @Override
         public SmbTransport getDc(String domain, NtlmPasswordAuthentication auth) throws SmbAuthException {
             if (disabled)
                 return null;
             return super.getDc(domain, auth);
         }
-        
+
         @Override
-        public DfsReferral getReferral(SmbTransport trans, String domain, String root, String path,
-                NtlmPasswordAuthentication auth) throws SmbAuthException {
+        public DfsReferral getReferral(SmbTransport trans, String domain, String root, String path, NtlmPasswordAuthentication auth)
+                throws SmbAuthException {
             if (disabled)
                 return null;
             return super.getReferral(trans, domain, root, path, auth);
         }
-        
+
         @Override
-        public synchronized DfsReferral resolve(String domain, String root, String path,
-                NtlmPasswordAuthentication auth) throws SmbAuthException {
+        public synchronized DfsReferral resolve(String domain, String root, String path, NtlmPasswordAuthentication auth)
+                throws SmbAuthException {
             if (disabled || root.equals("IPC$")) {
                 return null;
             }
@@ -105,14 +95,14 @@ class DfsTest {
     void setUp() {
         dfs = new Dfs();
         testDfs = new TestDfs();
-        
+
         // Mock static methods
         logStreamMockedStatic = mockStatic(LogStream.class);
         lenient().when(LogStream.getInstance()).thenReturn(mock(LogStream.class));
-        
+
         uniAddressMockedStatic = mockStatic(UniAddress.class);
         smbTransportMockedStatic = mockStatic(SmbTransport.class);
-        
+
         configMockedStatic = mockStatic(Config.class);
         lenient().when(Config.getBoolean("jcifs.smb1.smb.client.dfs.strictView", false)).thenReturn(false);
         lenient().when(Config.getLong("jcifs.smb1.smb.client.dfs.ttl", 300)).thenReturn(300L);
@@ -121,10 +111,14 @@ class DfsTest {
 
     @AfterEach
     void tearDown() {
-        if (logStreamMockedStatic != null) logStreamMockedStatic.close();
-        if (uniAddressMockedStatic != null) uniAddressMockedStatic.close();
-        if (smbTransportMockedStatic != null) smbTransportMockedStatic.close();
-        if (configMockedStatic != null) configMockedStatic.close();
+        if (logStreamMockedStatic != null)
+            logStreamMockedStatic.close();
+        if (uniAddressMockedStatic != null)
+            uniAddressMockedStatic.close();
+        if (smbTransportMockedStatic != null)
+            smbTransportMockedStatic.close();
+        if (configMockedStatic != null)
+            configMockedStatic.close();
     }
 
     @Test
@@ -139,7 +133,8 @@ class DfsTest {
         // Test with TTL = 0, should use default TTL
         Dfs.CacheEntry cacheEntryDefault = new Dfs.CacheEntry(0);
         long expectedExpirationDefault = System.currentTimeMillis() + 300L * 1000L; // Default TTL is 300
-        assertTrue(cacheEntryDefault.expiration >= expectedExpirationDefault - 100 && cacheEntryDefault.expiration <= expectedExpirationDefault + 100);
+        assertTrue(cacheEntryDefault.expiration >= expectedExpirationDefault - 100
+                && cacheEntryDefault.expiration <= expectedExpirationDefault + 100);
     }
 
     @Test
@@ -168,7 +163,7 @@ class DfsTest {
         testDfs.setDisabled(true); // Set disabled to avoid NullPointerException
 
         when(auth.getDomain()).thenReturn("domain.com");
-        
+
         assertNull(testDfs.getTrustedDomains(auth));
     }
 
@@ -179,7 +174,7 @@ class DfsTest {
         testDfs.setDisabled(true);
         assertNull(testDfs.getTrustedDomains(auth));
     }
-    
+
     @Test
     void testIsTrustedDomain() throws SmbAuthException {
         Dfs.CacheEntry cacheEntry = new Dfs.CacheEntry(300);
@@ -261,7 +256,7 @@ class DfsTest {
         String key = "\\server\\share\\folder";
         assertTrue(dfs.referrals.map.containsKey(key.toLowerCase()));
     }
-    
+
     @Test
     void testInsert_WithTrailingSlash() {
         String path = "\\server\\share\\folder\\";

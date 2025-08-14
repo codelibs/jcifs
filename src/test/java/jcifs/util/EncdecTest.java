@@ -1,10 +1,8 @@
 package jcifs.util;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Date;
 
@@ -116,7 +114,7 @@ class EncdecTest extends BaseTest {
         // Given
         String testString = "Hello";
         byte[] buffer = new byte[testString.length()];
-        
+
         // When - Manual string encoding using individual bytes
         byte[] strBytes = testString.getBytes();
         System.arraycopy(strBytes, 0, buffer, 0, strBytes.length);

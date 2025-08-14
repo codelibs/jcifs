@@ -23,7 +23,7 @@ class lsarpcIntegrationTest {
         domainInfo.name.length = 10;
         domainInfo.name.maximum_length = 20;
         domainInfo.name.buffer = new short[] { 'T', 'e', 's', 't', '1' };
-        
+
         // Create a simple test SID
         domainInfo.sid = new rpc.sid_t();
         domainInfo.sid.revision = 1;
@@ -46,7 +46,7 @@ class lsarpcIntegrationTest {
         assertEquals(domainInfo.name.maximum_length, decodedInfo.name.maximum_length);
         assertNotNull(decodedInfo.name.buffer);
         assertEquals(domainInfo.name.maximum_length / 2, decodedInfo.name.buffer.length);
-        
+
         // Verify SID
         assertNotNull(decodedInfo.sid);
         assertEquals(domainInfo.sid.revision, decodedInfo.sid.revision);
@@ -82,22 +82,22 @@ class lsarpcIntegrationTest {
     void testLsarDnsDomainInfoEncodeDecodeRoundTrip() throws NdrException {
         // Create DNS domain info with test data
         lsarpc.LsarDnsDomainInfo dnsDomainInfo = new lsarpc.LsarDnsDomainInfo();
-        
+
         dnsDomainInfo.name = new rpc.unicode_string();
         dnsDomainInfo.name.length = 8;
         dnsDomainInfo.name.maximum_length = 16;
         dnsDomainInfo.name.buffer = new short[] { 'T', 'E', 'S', 'T' };
-        
+
         dnsDomainInfo.dns_domain = new rpc.unicode_string();
         dnsDomainInfo.dns_domain.length = 16;
         dnsDomainInfo.dns_domain.maximum_length = 32;
         dnsDomainInfo.dns_domain.buffer = new short[] { 't', 'e', 's', 't', '.', 'c', 'o', 'm' };
-        
+
         dnsDomainInfo.dns_forest = new rpc.unicode_string();
         dnsDomainInfo.dns_forest.length = 12;
         dnsDomainInfo.dns_forest.maximum_length = 24;
         dnsDomainInfo.dns_forest.buffer = new short[] { 'f', 'o', 'r', 'e', 's', 't' };
-        
+
         dnsDomainInfo.domain_guid = new rpc.uuid_t();
         dnsDomainInfo.domain_guid.time_low = 0x12345678;
         dnsDomainInfo.domain_guid.time_mid = 0x1234;
@@ -105,7 +105,7 @@ class lsarpcIntegrationTest {
         dnsDomainInfo.domain_guid.clock_seq_hi_and_reserved = 0x12;
         dnsDomainInfo.domain_guid.clock_seq_low = 0x34;
         dnsDomainInfo.domain_guid.node = new byte[] { 1, 2, 3, 4, 5, 6 };
-        
+
         dnsDomainInfo.sid = new rpc.sid_t();
         dnsDomainInfo.sid.revision = 1;
         dnsDomainInfo.sid.identifier_authority = new byte[] { 0, 0, 0, 0, 0, 5 };
@@ -126,13 +126,13 @@ class lsarpcIntegrationTest {
         assertEquals(dnsDomainInfo.name.length, decodedInfo.name.length);
         assertEquals(dnsDomainInfo.dns_domain.length, decodedInfo.dns_domain.length);
         assertEquals(dnsDomainInfo.dns_forest.length, decodedInfo.dns_forest.length);
-        
+
         // Verify GUID
         assertEquals(dnsDomainInfo.domain_guid.time_low, decodedInfo.domain_guid.time_low);
         assertEquals(dnsDomainInfo.domain_guid.time_mid, decodedInfo.domain_guid.time_mid);
         assertNotNull(decodedInfo.domain_guid.node);
         assertEquals(6, decodedInfo.domain_guid.node.length);
-        
+
         // Verify SID
         assertNotNull(decodedInfo.sid);
         assertEquals(dnsDomainInfo.sid.revision, decodedInfo.sid.revision);
@@ -146,7 +146,7 @@ class lsarpcIntegrationTest {
         trustInfo.name.length = 14;
         trustInfo.name.maximum_length = 28;
         trustInfo.name.buffer = new short[] { 'T', 'R', 'U', 'S', 'T', 'E', 'D' };
-        
+
         trustInfo.sid = new rpc.sid_t();
         trustInfo.sid.revision = 1;
         trustInfo.sid.identifier_authority = new byte[] { 0, 0, 0, 0, 0, 5 };
@@ -167,7 +167,7 @@ class lsarpcIntegrationTest {
         assertEquals(trustInfo.name.length, decodedInfo.name.length);
         assertEquals(trustInfo.name.maximum_length, decodedInfo.name.maximum_length);
         assertNotNull(decodedInfo.name.buffer);
-        
+
         // Verify SID
         assertNotNull(decodedInfo.sid);
         assertEquals(trustInfo.sid.revision, decodedInfo.sid.revision);
@@ -180,14 +180,14 @@ class lsarpcIntegrationTest {
         lsarpc.LsarSidArray sidArray = new lsarpc.LsarSidArray();
         sidArray.num_sids = 2;
         sidArray.sids = new lsarpc.LsarSidPtr[2];
-        
+
         sidArray.sids[0] = new lsarpc.LsarSidPtr();
         sidArray.sids[0].sid = new rpc.sid_t();
         sidArray.sids[0].sid.revision = 1;
         sidArray.sids[0].sid.identifier_authority = new byte[] { 0, 0, 0, 0, 0, 5 };
         sidArray.sids[0].sid.sub_authority_count = 1;
         sidArray.sids[0].sid.sub_authority = new int[] { 500 };
-        
+
         sidArray.sids[1] = new lsarpc.LsarSidPtr();
         sidArray.sids[1].sid = new rpc.sid_t();
         sidArray.sids[1].sid.revision = 1;
@@ -209,12 +209,12 @@ class lsarpcIntegrationTest {
         assertEquals(sidArray.num_sids, decodedArray.num_sids);
         assertNotNull(decodedArray.sids);
         assertEquals(2, decodedArray.sids.length);
-        
+
         // Verify first SID
         assertNotNull(decodedArray.sids[0]);
         assertNotNull(decodedArray.sids[0].sid);
         assertEquals(500, decodedArray.sids[0].sid.sub_authority[0]);
-        
+
         // Verify second SID
         assertNotNull(decodedArray.sids[1]);
         assertNotNull(decodedArray.sids[1].sid);

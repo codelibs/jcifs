@@ -1,13 +1,19 @@
 package jcifs.internal.smb1.com;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -55,7 +61,7 @@ public class ServerDataTest {
      * Test setting and getting byte field (sflags)
      */
     @ParameterizedTest
-    @ValueSource(bytes = {0x00, 0x01, 0x7F, (byte) 0x80, (byte) 0xFF})
+    @ValueSource(bytes = { 0x00, 0x01, 0x7F, (byte) 0x80, (byte) 0xFF })
     @DisplayName("Test sflags field with various byte values")
     public void testSflagsField(byte value) {
         // When
@@ -186,7 +192,7 @@ public class ServerDataTest {
     @DisplayName("Test byte array fields (encryptionKey and guid)")
     public void testByteArrayFields() {
         // Test encryptionKey
-        byte[] key = new byte[]{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
+        byte[] key = new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 };
         serverData.encryptionKey = key;
         assertNotNull(serverData.encryptionKey);
         assertArrayEquals(key, serverData.encryptionKey);
@@ -216,7 +222,7 @@ public class ServerDataTest {
     @DisplayName("Test byte array reference behavior")
     public void testByteArrayReference() {
         // Given
-        byte[] originalKey = new byte[]{0x01, 0x02, 0x03, 0x04};
+        byte[] originalKey = new byte[] { 0x01, 0x02, 0x03, 0x04 };
         serverData.encryptionKey = originalKey;
 
         // When - modify the original array
@@ -273,8 +279,7 @@ public class ServerDataTest {
 
         // Verify all fields are public
         for (Field field : fields) {
-            assertTrue(java.lang.reflect.Modifier.isPublic(field.getModifiers()),
-                    "Field " + field.getName() + " should be public");
+            assertTrue(java.lang.reflect.Modifier.isPublic(field.getModifiers()), "Field " + field.getName() + " should be public");
         }
     }
 
@@ -302,7 +307,7 @@ public class ServerDataTest {
         serverData.serverTime = System.currentTimeMillis();
         serverData.serverTimeZone = -480; // PST
         serverData.encryptionKeyLength = 8;
-        serverData.encryptionKey = new byte[]{0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, (byte) 0x88};
+        serverData.encryptionKey = new byte[] { 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, (byte) 0x88 };
         serverData.guid = new byte[16];
 
         // Then - verify all values are set correctly
@@ -397,16 +402,16 @@ public class ServerDataTest {
     public void testUseInCollections() {
         // Given
         java.util.List<ServerData> serverList = new java.util.ArrayList<>();
-        
+
         // When
         ServerData server1 = new ServerData();
         server1.oemDomainName = "SERVER1";
         ServerData server2 = new ServerData();
         server2.oemDomainName = "SERVER2";
-        
+
         serverList.add(server1);
         serverList.add(server2);
-        
+
         // Then
         assertEquals(2, serverList.size());
         assertEquals("SERVER1", serverList.get(0).oemDomainName);

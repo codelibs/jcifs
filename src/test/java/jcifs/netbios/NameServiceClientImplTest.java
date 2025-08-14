@@ -1,10 +1,13 @@
 package jcifs.netbios;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -38,13 +41,13 @@ class NameServiceClientImplTest {
 
     @Mock
     private CIFSContext mockContext;
-    
+
     @Mock
     private Configuration mockConfig;
-    
+
     @Mock
     private NetbiosAddress mockNetbiosAddress;
-    
+
     @Mock
     private Address mockAddress;
 
@@ -54,7 +57,7 @@ class NameServiceClientImplTest {
     void setUp() throws UnknownHostException {
         // Configure mock context
         when(mockContext.getConfig()).thenReturn(mockConfig);
-        
+
         // Setup basic configuration values
         when(mockConfig.getNetbiosSoTimeout()).thenReturn(5000);
         when(mockConfig.getNetbiosRetryTimeout()).thenReturn(3000);
@@ -64,16 +67,18 @@ class NameServiceClientImplTest {
         when(mockConfig.getBroadcastAddress()).thenReturn(InetAddress.getByName("255.255.255.255"));
         when(mockConfig.getNetbiosSndBufSize()).thenReturn(576);
         when(mockConfig.getNetbiosRcvBufSize()).thenReturn(576);
-        when(mockConfig.getResolveOrder()).thenReturn(Arrays.asList(ResolverType.RESOLVER_LMHOSTS, ResolverType.RESOLVER_DNS, ResolverType.RESOLVER_BCAST));
+        when(mockConfig.getResolveOrder())
+                .thenReturn(Arrays.asList(ResolverType.RESOLVER_LMHOSTS, ResolverType.RESOLVER_DNS, ResolverType.RESOLVER_BCAST));
         when(mockConfig.getNetbiosHostname()).thenReturn("TESTHOST");
         when(mockConfig.getNetbiosScope()).thenReturn(null);
         when(mockConfig.getNetbiosCachePolicy()).thenReturn(SmbConstants.FOREVER);
         when(mockConfig.getWinsServers()).thenReturn(new InetAddress[0]);
         when(mockConfig.getOemEncoding()).thenReturn("Cp850");
-        
+
         // Setup mock Name constructor behavior
-        lenient().when(mockConfig.getResolveOrder()).thenReturn(Arrays.asList(ResolverType.RESOLVER_LMHOSTS, ResolverType.RESOLVER_DNS, ResolverType.RESOLVER_BCAST));
-        
+        lenient().when(mockConfig.getResolveOrder())
+                .thenReturn(Arrays.asList(ResolverType.RESOLVER_LMHOSTS, ResolverType.RESOLVER_DNS, ResolverType.RESOLVER_BCAST));
+
         // Create the name service client with mock context
         nameServiceClient = new NameServiceClientImpl(mockContext);
     }
@@ -83,7 +88,7 @@ class NameServiceClientImplTest {
     void testGetLocalName() {
         // When
         NetbiosName localName = nameServiceClient.getLocalName();
-        
+
         // Then
         assertNotNull(localName, "Local name should not be null");
         assertTrue(localName.getName().length() > 0, "Local name should not be empty");
@@ -94,7 +99,7 @@ class NameServiceClientImplTest {
     void testGetUnknownName() {
         // When
         NetbiosName unknownName = nameServiceClient.getUnknownName();
-        
+
         // Then
         assertNotNull(unknownName, "Unknown name should not be null");
         assertEquals("0.0.0.0", unknownName.getName(), "Unknown name should be 0.0.0.0");
@@ -123,7 +128,7 @@ class NameServiceClientImplTest {
     void testGetByNameWithLocalhost() throws UnknownHostException {
         // When
         Address address = nameServiceClient.getByName("localhost");
-        
+
         // Then
         assertNotNull(address, "Should return address for localhost");
     }
@@ -133,7 +138,7 @@ class NameServiceClientImplTest {
     void testGetByNameWithIPAddress() throws UnknownHostException {
         // When
         Address address = nameServiceClient.getByName("127.0.0.1");
-        
+
         // Then
         assertNotNull(address, "Should return address for IP address");
         assertEquals("127.0.0.1", address.getHostAddress(), "Should return correct IP address");
@@ -144,7 +149,7 @@ class NameServiceClientImplTest {
     void testGetAllByName() throws UnknownHostException {
         // When
         Address[] addresses = nameServiceClient.getAllByName("localhost", false);
-        
+
         // Then
         assertNotNull(addresses, "Should return addresses array");
         assertTrue(addresses.length > 0, "Should return at least one address");
@@ -157,12 +162,10 @@ class NameServiceClientImplTest {
         UnknownHostException exception = assertThrows(UnknownHostException.class, () -> {
             nameServiceClient.getNbtByName("NONEXISTENT");
         }, "Should throw UnknownHostException for non-existent NetBIOS name");
-        
+
         // Verify the exception message indicates name resolution failure
-        assertTrue(exception.getMessage().contains("NONEXISTENT") || 
-                   exception.getMessage().contains("unknown") ||
-                   exception.getMessage().contains("not found"),
-                   "Exception message should indicate name resolution failure");
+        assertTrue(exception.getMessage().contains("NONEXISTENT") || exception.getMessage().contains("unknown")
+                || exception.getMessage().contains("not found"), "Exception message should indicate name resolution failure");
     }
 
     @Test
@@ -172,12 +175,10 @@ class NameServiceClientImplTest {
         UnknownHostException exception = assertThrows(UnknownHostException.class, () -> {
             nameServiceClient.getNbtByName("NONEXISTENT", 0x20, null);
         }, "Should throw UnknownHostException for non-existent NetBIOS name with type");
-        
+
         // Verify the exception message indicates name resolution failure
-        assertTrue(exception.getMessage().contains("NONEXISTENT") || 
-                   exception.getMessage().contains("unknown") ||
-                   exception.getMessage().contains("not found"),
-                   "Exception message should indicate name resolution failure");
+        assertTrue(exception.getMessage().contains("NONEXISTENT") || exception.getMessage().contains("unknown")
+                || exception.getMessage().contains("not found"), "Exception message should indicate name resolution failure");
     }
 
     @Test
@@ -187,12 +188,10 @@ class NameServiceClientImplTest {
         UnknownHostException exception = assertThrows(UnknownHostException.class, () -> {
             nameServiceClient.getNbtAllByAddress("NONEXISTENT");
         }, "Should throw UnknownHostException for non-existent NetBIOS name");
-        
+
         // Verify the exception message indicates name resolution failure
-        assertTrue(exception.getMessage().contains("NONEXISTENT") || 
-                   exception.getMessage().contains("unknown") ||
-                   exception.getMessage().contains("not found"),
-                   "Exception message should indicate name resolution failure");
+        assertTrue(exception.getMessage().contains("NONEXISTENT") || exception.getMessage().contains("unknown")
+                || exception.getMessage().contains("not found"), "Exception message should indicate name resolution failure");
     }
 
     @Test
@@ -200,7 +199,7 @@ class NameServiceClientImplTest {
     void testConstructor() {
         // When
         NameServiceClientImpl client = new NameServiceClientImpl(mockContext);
-        
+
         // Then
         assertNotNull(client, "Should create client instance");
     }
@@ -214,7 +213,6 @@ class NameServiceClientImplTest {
         }, "Should throw exception for null context");
     }
 
-
     @Test
     @DisplayName("Should handle node status for mock address")
     void testGetNodeStatus() throws UnknownHostException {
@@ -222,7 +220,7 @@ class NameServiceClientImplTest {
         InetAddress realInetAddress = InetAddress.getByName("127.0.0.1");
         when(mockNetbiosAddress.toInetAddress()).thenReturn(realInetAddress);
         when(mockNetbiosAddress.unwrap(NbtAddress.class)).thenReturn(null);
-        
+
         // When/Then - This will throw UnknownHostException when trying to get node status
         assertThrows(UnknownHostException.class, () -> {
             nameServiceClient.getNodeStatus(mockNetbiosAddress);
@@ -234,7 +232,7 @@ class NameServiceClientImplTest {
     void testGetByNameWithFlag() throws UnknownHostException {
         // When
         Address address = nameServiceClient.getByName("localhost", false);
-        
+
         // Then
         assertNotNull(address, "Should return address for localhost");
     }
@@ -244,7 +242,7 @@ class NameServiceClientImplTest {
     void testContextAccess() {
         // When
         NameServiceClientImpl client = new NameServiceClientImpl(mockContext);
-        
+
         // Then
         assertNotNull(client, "Client should be created successfully");
         verify(mockContext, atLeastOnce()).getConfig();

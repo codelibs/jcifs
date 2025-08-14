@@ -1,7 +1,9 @@
 package jcifs.smb1.smb1;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for the DfsReferral class.
@@ -41,8 +43,10 @@ class DfsReferralTest {
         initialReferral.append(appendedReferral);
 
         // Then
-        assertEquals(appendedReferral, initialReferral.next, "The 'next' property of the initial referral should point to the appended referral.");
-        assertEquals(initialReferral, appendedReferral.next, "The 'next' property of the appended referral should point back to the initial referral, closing the loop.");
+        assertEquals(appendedReferral, initialReferral.next,
+                "The 'next' property of the initial referral should point to the appended referral.");
+        assertEquals(initialReferral, appendedReferral.next,
+                "The 'next' property of the appended referral should point back to the initial referral, closing the loop.");
     }
 
     /**
@@ -64,7 +68,8 @@ class DfsReferralTest {
         referral.resolveHashes = true;
 
         // When
-        String expectedString = "DfsReferral[pathConsumed=20,server=testServer,share=testShare,link=testLink,path=/test/path,ttl=300,expiration=1234567890,resolveHashes=true]";
+        String expectedString =
+                "DfsReferral[pathConsumed=20,server=testServer,share=testShare,link=testLink,path=/test/path,ttl=300,expiration=1234567890,resolveHashes=true]";
         String actualString = referral.toString();
 
         // Then

@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -239,7 +238,7 @@ class Smb2TransformHeaderTest extends BaseTest {
         invalidBuffer[1] = 0x00;
         invalidBuffer[2] = 0x00;
         invalidBuffer[3] = 0x00;
-        
+
         assertThrows(IllegalArgumentException.class, () -> {
             Smb2TransformHeader.decode(invalidBuffer, 0);
         });

@@ -1,6 +1,11 @@
 package jcifs.internal.dfs;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -32,30 +37,30 @@ public class ReferralTest {
     public void testDecodeVersion3WithoutNameList() {
         // Prepare test data
         ByteBuffer bb = ByteBuffer.wrap(testBuffer).order(ByteOrder.LITTLE_ENDIAN);
-        
+
         // Header
-        bb.putShort((short) 3);     // version
-        bb.putShort((short) 100);   // size (large enough for all strings)
-        bb.putShort((short) 1);     // serverType
-        bb.putShort((short) 0);     // rflags (no name list)
-        bb.putShort((short) 5);     // proximity
-        bb.putShort((short) 300);   // ttl
-        bb.putShort((short) 22);    // pathOffset (relative to start of referral)
-        bb.putShort((short) 54);    // altPathOffset
-        bb.putShort((short) 76);    // nodeOffset
-        
+        bb.putShort((short) 3); // version
+        bb.putShort((short) 100); // size (large enough for all strings)
+        bb.putShort((short) 1); // serverType
+        bb.putShort((short) 0); // rflags (no name list)
+        bb.putShort((short) 5); // proximity
+        bb.putShort((short) 300); // ttl
+        bb.putShort((short) 22); // pathOffset (relative to start of referral)
+        bb.putShort((short) 54); // altPathOffset
+        bb.putShort((short) 76); // nodeOffset
+
         // Path string at offset 22 (relative to start of referral at position 0)
         bb.position(22);
         String path = "\\\\server\\share";
         bb.put(path.getBytes(StandardCharsets.UTF_16LE));
         bb.putShort((short) 0);
-        
+
         // Alt path string at offset 54
         bb.position(54);
         String altPath = "\\\\alt\\path";
         bb.put(altPath.getBytes(StandardCharsets.UTF_16LE));
         bb.putShort((short) 0);
-        
+
         // Node string at offset 76
         bb.position(76);
         String node = "NODE01";
@@ -84,27 +89,27 @@ public class ReferralTest {
     public void testDecodeVersion3WithNameList() {
         // Prepare test data
         ByteBuffer bb = ByteBuffer.wrap(testBuffer).order(ByteOrder.LITTLE_ENDIAN);
-        
+
         // Header
-        bb.putShort((short) 3);     // version
-        bb.putShort((short) 100);   // size (must be large enough for all data)
-        bb.putShort((short) 2);     // serverType
+        bb.putShort((short) 3); // version
+        bb.putShort((short) 100); // size (must be large enough for all data)
+        bb.putShort((short) 2); // serverType
         bb.putShort((short) Trans2GetDfsReferralResponse.FLAGS_NAME_LIST_REFERRAL); // rflags with name list
-        bb.putShort((short) 10);    // proximity
-        bb.putShort((short) 600);   // ttl
-        bb.putShort((short) 22);    // specialNameOffset
-        bb.putShort((short) 3);     // numExpanded
-        bb.putShort((short) 44);    // expandedNameOffset
-        
+        bb.putShort((short) 10); // proximity
+        bb.putShort((short) 600); // ttl
+        bb.putShort((short) 22); // specialNameOffset
+        bb.putShort((short) 3); // numExpanded
+        bb.putShort((short) 44); // expandedNameOffset
+
         // Special name at offset 22
         bb.position(22);
         String specialName = "SPECIAL";
         bb.put(specialName.getBytes(StandardCharsets.UTF_16LE));
         bb.putShort((short) 0);
-        
+
         // Expanded names at offset 44
         bb.position(44);
-        String[] expandedNames = {"NAME1", "NAME2", "NAME3"};
+        String[] expandedNames = { "NAME1", "NAME2", "NAME3" };
         for (String name : expandedNames) {
             bb.put(name.getBytes(StandardCharsets.UTF_16LE));
             bb.putShort((short) 0);
@@ -132,16 +137,16 @@ public class ReferralTest {
     public void testVersion3WithZeroOffsets() {
         // Prepare test data with zero offsets
         ByteBuffer bb = ByteBuffer.wrap(testBuffer).order(ByteOrder.LITTLE_ENDIAN);
-        
-        bb.putShort((short) 3);     // version
-        bb.putShort((short) 34);    // size
-        bb.putShort((short) 1);     // serverType
-        bb.putShort((short) 0);     // rflags
-        bb.putShort((short) 5);     // proximity
-        bb.putShort((short) 300);   // ttl
-        bb.putShort((short) 0);     // pathOffset (zero)
-        bb.putShort((short) 0);     // altPathOffset (zero)
-        bb.putShort((short) 0);     // nodeOffset (zero)
+
+        bb.putShort((short) 3); // version
+        bb.putShort((short) 34); // size
+        bb.putShort((short) 1); // serverType
+        bb.putShort((short) 0); // rflags
+        bb.putShort((short) 5); // proximity
+        bb.putShort((short) 300); // ttl
+        bb.putShort((short) 0); // pathOffset (zero)
+        bb.putShort((short) 0); // altPathOffset (zero)
+        bb.putShort((short) 0); // nodeOffset (zero)
 
         // Decode
         int decodedSize = referral.decode(testBuffer, 0, testBuffer.length);
@@ -156,16 +161,16 @@ public class ReferralTest {
     @Test
     public void testVersion3WithEmptyExpandedNames() {
         ByteBuffer bb = ByteBuffer.wrap(testBuffer).order(ByteOrder.LITTLE_ENDIAN);
-        
-        bb.putShort((short) 3);     // version
-        bb.putShort((short) 34);    // size
-        bb.putShort((short) 2);     // serverType
+
+        bb.putShort((short) 3); // version
+        bb.putShort((short) 34); // size
+        bb.putShort((short) 2); // serverType
         bb.putShort((short) Trans2GetDfsReferralResponse.FLAGS_NAME_LIST_REFERRAL);
-        bb.putShort((short) 10);    // proximity
-        bb.putShort((short) 600);   // ttl
-        bb.putShort((short) 0);     // specialNameOffset (zero)
-        bb.putShort((short) 0);     // numExpanded (zero)
-        bb.putShort((short) 0);     // expandedNameOffset (zero)
+        bb.putShort((short) 10); // proximity
+        bb.putShort((short) 600); // ttl
+        bb.putShort((short) 0); // specialNameOffset (zero)
+        bb.putShort((short) 0); // numExpanded (zero)
+        bb.putShort((short) 0); // expandedNameOffset (zero)
 
         // Decode
         int decodedSize = referral.decode(testBuffer, 0, testBuffer.length);
@@ -182,12 +187,12 @@ public class ReferralTest {
     public void testDecodeVersion1() {
         // Prepare test data
         ByteBuffer bb = ByteBuffer.wrap(testBuffer).order(ByteOrder.LITTLE_ENDIAN);
-        
-        bb.putShort((short) 1);     // version
-        bb.putShort((short) 24);    // size
-        bb.putShort((short) 1);     // serverType
-        bb.putShort((short) 0);     // rflags
-        
+
+        bb.putShort((short) 1); // version
+        bb.putShort((short) 24); // size
+        bb.putShort((short) 1); // serverType
+        bb.putShort((short) 0); // rflags
+
         // Node string immediately follows header
         String node = "\\\\SERVER\\SHARE";
         bb.put(node.getBytes(StandardCharsets.UTF_16LE));
@@ -203,7 +208,7 @@ public class ReferralTest {
         assertEquals(1, referral.getServerType());
         assertEquals(0, referral.getRFlags());
         assertEquals(node, referral.getNode());
-        
+
         // Version 1 doesn't have these fields
         assertEquals(0, referral.getProximity());
         assertEquals(0, referral.getTtl());
@@ -216,7 +221,7 @@ public class ReferralTest {
 
     @Test
     public void testUnsupportedVersions() {
-        int[] versions = {0, 2, 4, 5, 100, 65535};
+        int[] versions = { 0, 2, 4, 5, 100, 65535 };
         for (int version : versions) {
             ByteBuffer bb = ByteBuffer.wrap(testBuffer).order(ByteOrder.LITTLE_ENDIAN);
             bb.putShort((short) version);
@@ -225,14 +230,12 @@ public class ReferralTest {
             bb.putShort((short) 0);
 
             Referral ref = new Referral();
-            RuntimeCIFSException exception = assertThrows(RuntimeCIFSException.class, 
-                () -> ref.decode(testBuffer, 0, testBuffer.length),
-                "Should have thrown exception for version " + version);
-            
+            RuntimeCIFSException exception = assertThrows(RuntimeCIFSException.class, () -> ref.decode(testBuffer, 0, testBuffer.length),
+                    "Should have thrown exception for version " + version);
+
             assertTrue(exception.getMessage().contains("Version " + version + " referral not supported"),
-                "Exception message should contain version");
-            assertTrue(exception.getMessage().contains("jcifs at samba dot org"),
-                "Exception message should contain contact info");
+                    "Exception message should contain version");
+            assertTrue(exception.getMessage().contains("jcifs at samba dot org"), "Exception message should contain contact info");
         }
     }
 
@@ -242,19 +245,19 @@ public class ReferralTest {
     public void testOddBufferIndexAlignment() {
         // Create buffer with odd starting position
         ByteBuffer bb = ByteBuffer.wrap(testBuffer).order(ByteOrder.LITTLE_ENDIAN);
-        
+
         // Start at position 1 (odd)
         bb.position(1);
-        bb.putShort((short) 3);     // version
-        bb.putShort((short) 34);    // size
-        bb.putShort((short) 1);     // serverType
-        bb.putShort((short) 0);     // rflags
-        bb.putShort((short) 5);     // proximity
-        bb.putShort((short) 300);   // ttl
-        bb.putShort((short) 23);    // pathOffset (22 + 1 for odd start)
-        bb.putShort((short) 0);     // altPathOffset
-        bb.putShort((short) 0);     // nodeOffset
-        
+        bb.putShort((short) 3); // version
+        bb.putShort((short) 34); // size
+        bb.putShort((short) 1); // serverType
+        bb.putShort((short) 0); // rflags
+        bb.putShort((short) 5); // proximity
+        bb.putShort((short) 300); // ttl
+        bb.putShort((short) 23); // pathOffset (22 + 1 for odd start)
+        bb.putShort((short) 0); // altPathOffset
+        bb.putShort((short) 0); // nodeOffset
+
         // Path string at offset 23 (which should be aligned to 24)
         bb.position(24); // Aligned position
         String path = "\\\\test";
@@ -272,17 +275,17 @@ public class ReferralTest {
     @Test
     public void testUnicodeStringHandling() {
         ByteBuffer bb = ByteBuffer.wrap(testBuffer).order(ByteOrder.LITTLE_ENDIAN);
-        
-        bb.putShort((short) 3);     // version
-        bb.putShort((short) 100);   // size (larger to accommodate unicode strings)
-        bb.putShort((short) 1);     // serverType
-        bb.putShort((short) 0);     // rflags
-        bb.putShort((short) 5);     // proximity
-        bb.putShort((short) 300);   // ttl
-        bb.putShort((short) 22);    // pathOffset
-        bb.putShort((short) 0);     // altPathOffset
-        bb.putShort((short) 0);     // nodeOffset
-        
+
+        bb.putShort((short) 3); // version
+        bb.putShort((short) 100); // size (larger to accommodate unicode strings)
+        bb.putShort((short) 1); // serverType
+        bb.putShort((short) 0); // rflags
+        bb.putShort((short) 5); // proximity
+        bb.putShort((short) 300); // ttl
+        bb.putShort((short) 22); // pathOffset
+        bb.putShort((short) 0); // altPathOffset
+        bb.putShort((short) 0); // nodeOffset
+
         // Unicode string with special characters
         bb.position(22);
         String path = "\\\\пример\\分享\\例え";
@@ -297,31 +300,31 @@ public class ReferralTest {
     }
 
     // Debug Test
-    
-    @Test 
+
+    @Test
     public void testSimpleVersion3() {
         ByteBuffer bb = ByteBuffer.wrap(testBuffer).order(ByteOrder.LITTLE_ENDIAN);
-        
+
         // Write the header
-        bb.putShort((short) 3);     // version
-        bb.putShort((short) 100);   // size
-        bb.putShort((short) 1);     // serverType
-        bb.putShort((short) 0);     // rflags
-        bb.putShort((short) 5);     // proximity
-        bb.putShort((short) 300);   // ttl
-        bb.putShort((short) 22);    // pathOffset
-        bb.putShort((short) 0);     // altPathOffset (0 = null)
-        bb.putShort((short) 0);     // nodeOffset (0 = null)
-        
+        bb.putShort((short) 3); // version
+        bb.putShort((short) 100); // size
+        bb.putShort((short) 1); // serverType
+        bb.putShort((short) 0); // rflags
+        bb.putShort((short) 5); // proximity
+        bb.putShort((short) 300); // ttl
+        bb.putShort((short) 22); // pathOffset
+        bb.putShort((short) 0); // altPathOffset (0 = null)
+        bb.putShort((short) 0); // nodeOffset (0 = null)
+
         // Write path string at offset 22
         bb.position(22);
         String expectedPath = "\\\\test";
         bb.put(expectedPath.getBytes(StandardCharsets.UTF_16LE));
-        bb.putShort((short) 0);  // null terminator
-        
+        bb.putShort((short) 0); // null terminator
+
         // Decode
         referral.decode(testBuffer, 0, testBuffer.length);
-        
+
         // Check
         assertEquals(3, referral.getVersion());
         assertEquals(100, referral.getSize());
@@ -336,31 +339,31 @@ public class ReferralTest {
     public void testGetters() {
         // Setup a complete referral
         ByteBuffer bb = ByteBuffer.wrap(testBuffer).order(ByteOrder.LITTLE_ENDIAN);
-        
+
         bb.putShort((short) 3);
         bb.putShort((short) 100);
         bb.putShort((short) 7);
-        bb.putShort((short) 1);     // rflags without name list flag
+        bb.putShort((short) 1); // rflags without name list flag
         bb.putShort((short) 20);
         bb.putShort((short) 3600);
         bb.putShort((short) 22);
         bb.putShort((short) 38);
         bb.putShort((short) 52);
-        
+
         bb.position(22);
         bb.put("\\\\path".getBytes(StandardCharsets.UTF_16LE));
         bb.putShort((short) 0);
-        
+
         bb.position(38);
         bb.put("\\\\alt".getBytes(StandardCharsets.UTF_16LE));
         bb.putShort((short) 0);
-        
+
         bb.position(52);
         bb.put("NODE".getBytes(StandardCharsets.UTF_16LE));
         bb.putShort((short) 0);
-        
+
         referral.decode(testBuffer, 0, testBuffer.length);
-        
+
         assertEquals(3, referral.getVersion());
         assertEquals(100, referral.getSize());
         assertEquals(7, referral.getServerType());
@@ -377,31 +380,31 @@ public class ReferralTest {
     @Test
     public void testToString() {
         ByteBuffer bb = ByteBuffer.wrap(testBuffer).order(ByteOrder.LITTLE_ENDIAN);
-        
+
         bb.putShort((short) 3);
-        bb.putShort((short) 200);   // increased size
+        bb.putShort((short) 200); // increased size
         bb.putShort((short) 1);
-        bb.putShort((short) 0);     // rflags without name list flag  
+        bb.putShort((short) 0); // rflags without name list flag  
         bb.putShort((short) 10);
         bb.putShort((short) 600);
-        bb.putShort((short) 22);    // pathOffset
-        bb.putShort((short) 60);    // altPathOffset - with proper spacing
-        bb.putShort((short) 90);    // nodeOffset - with proper spacing
-        
+        bb.putShort((short) 22); // pathOffset
+        bb.putShort((short) 60); // altPathOffset - with proper spacing
+        bb.putShort((short) 90); // nodeOffset - with proper spacing
+
         bb.position(22);
         bb.put("\\\\server\\\\share".getBytes(StandardCharsets.UTF_16LE));
         bb.putShort((short) 0);
-        
-        bb.position(60);  // Properly spaced
+
+        bb.position(60); // Properly spaced
         bb.put("\\\\alt\\\\path".getBytes(StandardCharsets.UTF_16LE));
         bb.putShort((short) 0);
-        
-        bb.position(90);  // Properly spaced
+
+        bb.position(90); // Properly spaced
         bb.put("NODE01".getBytes(StandardCharsets.UTF_16LE));
         bb.putShort((short) 0);
-        
+
         referral.decode(testBuffer, 0, testBuffer.length);
-        
+
         // First verify the referral was parsed correctly
         assertNotNull(referral.getRpath());
         assertNotNull(referral.getAltPath());
@@ -409,12 +412,12 @@ public class ReferralTest {
         assertEquals("\\\\server\\\\share", referral.getRpath());
         assertEquals("\\\\alt\\\\path", referral.getAltPath());
         assertEquals("NODE01", referral.getNode());
-        
+
         String result = referral.toString();
-        
+
         assertTrue(result.contains("Referral["));
         assertTrue(result.contains("version=3"));
-        assertTrue(result.contains("size=200"));  // updated size
+        assertTrue(result.contains("size=200")); // updated size
         assertTrue(result.contains("serverType=1"));
         assertTrue(result.contains("flags=0"));
         assertTrue(result.contains("proximity=10"));
@@ -430,18 +433,18 @@ public class ReferralTest {
     public void testToStringWithNulls() {
         // Create minimal referral
         ByteBuffer bb = ByteBuffer.wrap(testBuffer).order(ByteOrder.LITTLE_ENDIAN);
-        
+
         bb.putShort((short) 1);
         bb.putShort((short) 24);
         bb.putShort((short) 0);
         bb.putShort((short) 0);
         bb.put("NODE".getBytes(StandardCharsets.UTF_16LE));
         bb.putShort((short) 0);
-        
+
         referral.decode(testBuffer, 0, testBuffer.length);
-        
+
         String result = referral.toString();
-        
+
         assertTrue(result.contains("path=null"));
         assertTrue(result.contains("altPath=null"));
         assertTrue(result.contains("node=NODE"));
@@ -452,9 +455,9 @@ public class ReferralTest {
     @Test
     public void testMaximumValues() {
         ByteBuffer bb = ByteBuffer.wrap(testBuffer).order(ByteOrder.LITTLE_ENDIAN);
-        
+
         bb.putShort((short) 3);
-        bb.putShort((short) 65535);  // max unsigned short
+        bb.putShort((short) 65535); // max unsigned short
         bb.putShort((short) 65535);
         bb.putShort((short) 65535);
         bb.putShort((short) 65535);
@@ -462,9 +465,9 @@ public class ReferralTest {
         bb.putShort((short) 0);
         bb.putShort((short) 0);
         bb.putShort((short) 0);
-        
+
         int decodedSize = referral.decode(testBuffer, 0, testBuffer.length);
-        
+
         assertEquals(65535, decodedSize);
         assertEquals(65535, referral.getSize());
         assertEquals(65535, referral.getServerType());
@@ -476,7 +479,7 @@ public class ReferralTest {
     @Test
     public void testEmptyStrings() {
         ByteBuffer bb = ByteBuffer.wrap(testBuffer).order(ByteOrder.LITTLE_ENDIAN);
-        
+
         bb.putShort((short) 3);
         bb.putShort((short) 34);
         bb.putShort((short) 1);
@@ -486,7 +489,7 @@ public class ReferralTest {
         bb.putShort((short) 22);
         bb.putShort((short) 24);
         bb.putShort((short) 26);
-        
+
         // Empty strings (just null terminators)
         bb.position(22);
         bb.putShort((short) 0);
@@ -494,9 +497,9 @@ public class ReferralTest {
         bb.putShort((short) 0);
         bb.position(26);
         bb.putShort((short) 0);
-        
+
         referral.decode(testBuffer, 0, testBuffer.length);
-        
+
         assertEquals("", referral.getRpath());
         assertEquals("", referral.getAltPath());
         assertEquals("", referral.getNode());
@@ -504,20 +507,15 @@ public class ReferralTest {
 
     @Test
     public void testVariousFieldValues() {
-        int[][] testCases = {
-            {0, 0, 0},
-            {100, 200, 300},
-            {32767, 32767, 32767},
-            {65535, 65535, 65535}
-        };
-        
+        int[][] testCases = { { 0, 0, 0 }, { 100, 200, 300 }, { 32767, 32767, 32767 }, { 65535, 65535, 65535 } };
+
         for (int[] testCase : testCases) {
             int serverType = testCase[0];
             int proximity = testCase[1];
             int ttl = testCase[2];
-            
+
             ByteBuffer bb = ByteBuffer.wrap(testBuffer).order(ByteOrder.LITTLE_ENDIAN);
-            
+
             bb.putShort((short) 3);
             bb.putShort((short) 34);
             bb.putShort((short) serverType);
@@ -527,10 +525,10 @@ public class ReferralTest {
             bb.putShort((short) 0);
             bb.putShort((short) 0);
             bb.putShort((short) 0);
-            
+
             Referral ref = new Referral();
             ref.decode(testBuffer, 0, testBuffer.length);
-            
+
             assertEquals(serverType, ref.getServerType());
             assertEquals(proximity, ref.getProximity());
             assertEquals(ttl, ref.getTtl());
@@ -543,7 +541,7 @@ public class ReferralTest {
     public void testDecodeFromNonZeroIndex() {
         int offset = 100;
         ByteBuffer bb = ByteBuffer.wrap(testBuffer).order(ByteOrder.LITTLE_ENDIAN);
-        
+
         bb.position(offset);
         bb.putShort((short) 1);
         bb.putShort((short) 24);
@@ -551,9 +549,9 @@ public class ReferralTest {
         bb.putShort((short) 0);
         bb.put("TEST".getBytes(StandardCharsets.UTF_16LE));
         bb.putShort((short) 0);
-        
+
         int decodedSize = referral.decode(testBuffer, offset, testBuffer.length - offset);
-        
+
         assertEquals(24, decodedSize);
         assertEquals(1, referral.getVersion());
         assertEquals("TEST", referral.getNode());
@@ -562,18 +560,18 @@ public class ReferralTest {
     @Test
     public void testDifferentBufferLengths() {
         ByteBuffer bb = ByteBuffer.wrap(testBuffer).order(ByteOrder.LITTLE_ENDIAN);
-        
+
         bb.putShort((short) 1);
         bb.putShort((short) 24);
         bb.putShort((short) 1);
         bb.putShort((short) 0);
         bb.put("NODE".getBytes(StandardCharsets.UTF_16LE));
         bb.putShort((short) 0);
-        
+
         // Decode with exact length
         int decodedSize = referral.decode(testBuffer, 0, 24);
         assertEquals(24, decodedSize);
-        
+
         // Decode with excess length
         Referral referral2 = new Referral();
         decodedSize = referral2.decode(testBuffer, 0, 512);
@@ -585,23 +583,23 @@ public class ReferralTest {
     @Test
     public void testSingleExpandedName() {
         ByteBuffer bb = ByteBuffer.wrap(testBuffer).order(ByteOrder.LITTLE_ENDIAN);
-        
+
         bb.putShort((short) 3);
         bb.putShort((short) 100);
         bb.putShort((short) 2);
         bb.putShort((short) Trans2GetDfsReferralResponse.FLAGS_NAME_LIST_REFERRAL);
         bb.putShort((short) 10);
         bb.putShort((short) 600);
-        bb.putShort((short) 0);     // no special name
-        bb.putShort((short) 1);     // one expanded name
-        bb.putShort((short) 22);    // expandedNameOffset
-        
+        bb.putShort((short) 0); // no special name
+        bb.putShort((short) 1); // one expanded name
+        bb.putShort((short) 22); // expandedNameOffset
+
         bb.position(22);
         bb.put("SINGLE".getBytes(StandardCharsets.UTF_16LE));
         bb.putShort((short) 0);
-        
+
         referral.decode(testBuffer, 0, testBuffer.length);
-        
+
         String[] expanded = referral.getExpandedNames();
         assertEquals(1, expanded.length);
         assertEquals("SINGLE", expanded[0]);
@@ -610,26 +608,26 @@ public class ReferralTest {
     @Test
     public void testManyExpandedNames() {
         ByteBuffer bb = ByteBuffer.wrap(testBuffer).order(ByteOrder.LITTLE_ENDIAN);
-        
+
         bb.putShort((short) 3);
-        bb.putShort((short) 150);   // larger size for multiple names
+        bb.putShort((short) 150); // larger size for multiple names
         bb.putShort((short) 2);
         bb.putShort((short) Trans2GetDfsReferralResponse.FLAGS_NAME_LIST_REFERRAL);
         bb.putShort((short) 10);
         bb.putShort((short) 600);
         bb.putShort((short) 0);
-        bb.putShort((short) 5);     // five expanded names
+        bb.putShort((short) 5); // five expanded names
         bb.putShort((short) 22);
-        
+
         bb.position(22);
-        String[] expectedNames = {"NAME1", "NAME2", "NAME3", "NAME4", "NAME5"};
+        String[] expectedNames = { "NAME1", "NAME2", "NAME3", "NAME4", "NAME5" };
         for (String name : expectedNames) {
             bb.put(name.getBytes(StandardCharsets.UTF_16LE));
             bb.putShort((short) 0);
         }
-        
+
         referral.decode(testBuffer, 0, testBuffer.length);
-        
+
         assertArrayEquals(expectedNames, referral.getExpandedNames());
     }
 }

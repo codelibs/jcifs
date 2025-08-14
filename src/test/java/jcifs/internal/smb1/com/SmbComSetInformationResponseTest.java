@@ -1,15 +1,18 @@
 package jcifs.internal.smb1.com;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -27,14 +30,14 @@ public class SmbComSetInformationResponseTest {
 
     @Mock
     private Configuration mockConfig;
-    
+
     private SmbComSetInformationResponse response;
-    
+
     @BeforeEach
     void setUp() {
         // Setup mock configuration to avoid NPE
         when(mockConfig.getPid()).thenReturn(12345);
-        
+
         response = new SmbComSetInformationResponse(mockConfig);
     }
 
@@ -47,7 +50,7 @@ public class SmbComSetInformationResponseTest {
     @Nested
     @DisplayName("writeParameterWordsWireFormat tests")
     class WriteParameterWords {
-        
+
         @Test
         @DisplayName("Returns 0 with null array")
         void nullArray() {
@@ -55,7 +58,7 @@ public class SmbComSetInformationResponseTest {
         }
 
         @ParameterizedTest
-        @ValueSource(ints = {0, 5, 9})
+        @ValueSource(ints = { 0, 5, 9 })
         @DisplayName("Returns 0 with valid array and various indices")
         void nonNullArray(int index) {
             byte[] arr = new byte[10];
@@ -66,7 +69,7 @@ public class SmbComSetInformationResponseTest {
     @Nested
     @DisplayName("writeBytesWireFormat tests")
     class WriteBytes {
-        
+
         @Test
         @DisplayName("Returns 0 with null array")
         void nullArray() {
@@ -74,7 +77,7 @@ public class SmbComSetInformationResponseTest {
         }
 
         @ParameterizedTest
-        @ValueSource(ints = {0, 7})
+        @ValueSource(ints = { 0, 7 })
         @DisplayName("Returns 0 with valid array and various indices")
         void nonNullArray(int idx) {
             byte[] arr = new byte[10];
@@ -85,15 +88,15 @@ public class SmbComSetInformationResponseTest {
     @Nested
     @DisplayName("readParameterWordsWireFormat tests")
     class ReadParameterWords {
-        
+
         @Test
         @DisplayName("Returns 0 with null array")
         void nullArray() {
             assertEquals(0, response.readParameterWordsWireFormat(null, 0));
         }
-        
+
         @ParameterizedTest
-        @ValueSource(ints = {1, 6})
+        @ValueSource(ints = { 1, 6 })
         @DisplayName("Returns 0 with valid array and various indices")
         void normalArray(int idx) {
             byte[] arr = new byte[15];
@@ -104,15 +107,15 @@ public class SmbComSetInformationResponseTest {
     @Nested
     @DisplayName("readBytesWireFormat tests")
     class ReadBytes {
-        
+
         @Test
         @DisplayName("Returns 0 with null array")
         void nullArray() {
             assertEquals(0, response.readBytesWireFormat(null, 0));
         }
-        
+
         @ParameterizedTest
-        @ValueSource(ints = {2, 9})
+        @ValueSource(ints = { 2, 9 })
         @DisplayName("Returns 0 with valid array and various indices")
         void normalArray(int idx) {
             byte[] arr = new byte[12];
@@ -131,4 +134,3 @@ public class SmbComSetInformationResponseTest {
         assertTrue(s.length() > "SmbComSetInformationResponse[]".length());
     }
 }
-

@@ -1,9 +1,10 @@
 package jcifs.smb1.smb1;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
-
-import java.io.IOException;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -52,7 +53,7 @@ class SmbExceptionTest {
      * - Positive values not in DOS_ERROR_CODES map to NT_STATUS_UNSUCCESSFUL
      */
     @ParameterizedTest
-    @ValueSource(ints = {0, 1, 123, -7})
+    @ValueSource(ints = { 0, 1, 123, -7 })
     void testGetNtStatusVariousCodes(int errcode) {
         SmbException ex = new SmbException(errcode, false);
         int expected;
@@ -65,8 +66,7 @@ class SmbExceptionTest {
             // Positive values not in DOS_ERROR_CODES map to NT_STATUS_UNSUCCESSFUL
             expected = NtStatus.NT_STATUS_UNSUCCESSFUL;
         }
-        assertEquals(expected, ex.getNtStatus(),
-                "Status should match mapping or fallback");
+        assertEquals(expected, ex.getNtStatus(), "Status should match mapping or fallback");
     }
 
     /**
@@ -111,8 +111,7 @@ class SmbExceptionTest {
     void testToStringWithRootCause() {
         RuntimeException cause = new RuntimeException("boom");
         SmbException ex = new SmbException(0, cause);
-        assertTrue(ex.toString().contains("RuntimeException"),
-                "String representation must include the root cause stack trace");
+        assertTrue(ex.toString().contains("RuntimeException"), "String representation must include the root cause stack trace");
     }
 
     /**
@@ -126,4 +125,3 @@ class SmbExceptionTest {
         assertEquals("jcifs.smb1.smb1.SmbException: NT_STATUS_SUCCESS", ex.toString());
     }
 }
-

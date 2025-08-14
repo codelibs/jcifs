@@ -1,6 +1,6 @@
 package jcifs.smb1.smb1;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.stream.Stream;
 
@@ -38,10 +38,8 @@ class SmbAuthExceptionTest {
     @MethodSource("errorCodes")
     void constructorInitialisesMessageAndStatus(int code, String expectedMsg) {
         SmbAuthException e = new SmbAuthException(code);
-        assertEquals(expectedMsg, e.getMessage(),
-                "message for code " + Integer.toHexString(code));
-        assertEquals(SmbException.getStatusByCode(code), e.getNtStatus(),
-                "status for code " + Integer.toHexString(code));
+        assertEquals(expectedMsg, e.getMessage(), "message for code " + Integer.toHexString(code));
+        assertEquals(SmbException.getStatusByCode(code), e.getNtStatus(), "status for code " + Integer.toHexString(code));
     }
 
     @Test
@@ -58,4 +56,3 @@ class SmbAuthExceptionTest {
         assertEquals(SmbException.getStatusByCode(0), e.getNtStatus());
     }
 }
-

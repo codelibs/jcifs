@@ -1,17 +1,26 @@
 package jcifs.internal.smb2;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
-import java.util.Arrays;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -19,7 +28,6 @@ import jcifs.Configuration;
 import jcifs.internal.CommonServerMessageBlockResponse;
 import jcifs.internal.SMBProtocolDecodingException;
 import jcifs.internal.util.SMBUtil;
-import jcifs.smb.SmbException;
 
 class ServerMessageBlock2Test {
 
@@ -246,8 +254,7 @@ class ServerMessageBlock2Test {
             testMessage.addFlags(ServerMessageBlock2.SMB2_FLAGS_SIGNED);
             assertEquals(ServerMessageBlock2.SMB2_FLAGS_SIGNED, testMessage.getFlags());
             testMessage.addFlags(ServerMessageBlock2.SMB2_FLAGS_DFS_OPERATIONS);
-            assertEquals(ServerMessageBlock2.SMB2_FLAGS_SIGNED | ServerMessageBlock2.SMB2_FLAGS_DFS_OPERATIONS, 
-                        testMessage.getFlags());
+            assertEquals(ServerMessageBlock2.SMB2_FLAGS_SIGNED | ServerMessageBlock2.SMB2_FLAGS_DFS_OPERATIONS, testMessage.getFlags());
         }
 
         @Test
@@ -305,7 +312,7 @@ class ServerMessageBlock2Test {
         @DisplayName("Should get and set raw payload")
         void testRawPayload() {
             assertNull(testMessage.getRawPayload());
-            byte[] payload = new byte[]{1, 2, 3, 4, 5};
+            byte[] payload = new byte[] { 1, 2, 3, 4, 5 };
             testMessage.setRawPayload(payload);
             assertArrayEquals(payload, testMessage.getRawPayload());
         }
@@ -352,10 +359,10 @@ class ServerMessageBlock2Test {
         void testMultipleChain() {
             TestServerMessageBlock2 second = new TestServerMessageBlock2(mockConfig);
             TestServerMessageBlock2 third = new TestServerMessageBlock2(mockConfig);
-            
+
             assertTrue(testMessage.chain(second));
             assertTrue(testMessage.chain(third));
-            
+
             assertEquals(second, testMessage.getNext());
             assertEquals(third, second.getNext());
         }
@@ -380,9 +387,9 @@ class ServerMessageBlock2Test {
             testMessage.setDigest(mockDigest);
             testMessage.setSessionId(123L);
             testMessage.setTreeId(456);
-            
+
             testMessage.reset();
-            
+
             assertEquals(0, testMessage.getFlags());
             assertNull(testMessage.getDigest());
             assertEquals(0, testMessage.getSessionId());
@@ -442,13 +449,13 @@ class ServerMessageBlock2Test {
             testMessage.setTreeId(789);
             testMessage.setCommand(ServerMessageBlock2.SMB2_CREATE);
             testMessage.setCredit(100);
-            
+
             int len = testMessage.encode(buffer, 0);
-            
+
             assertTrue(len > 0);
             assertEquals(0, testMessage.getHeaderStart());
             assertTrue(testMessage.getLength() > 0);
-            
+
             // Verify SMB2 header
             assertEquals((byte) 0xFE, buffer[0]);
             assertEquals((byte) 'S', buffer[1]);
@@ -462,9 +469,9 @@ class ServerMessageBlock2Test {
             byte[] buffer = new byte[1024];
             testMessage.setBytesWritten(10);
             testMessage.setDigest(mockDigest);
-            
+
             int len = testMessage.encode(buffer, 0);
-            
+
             verify(mockDigest).sign(eq(buffer), eq(0), anyInt(), eq(testMessage), isNull());
         }
 
@@ -474,9 +481,9 @@ class ServerMessageBlock2Test {
             byte[] buffer = new byte[1024];
             testMessage.setBytesWritten(10);
             testMessage.retainPayload();
-            
+
             int len = testMessage.encode(buffer, 0);
-            
+
             assertNotNull(testMessage.getRawPayload());
             assertEquals(len, testMessage.getRawPayload().length);
         }
@@ -486,9 +493,9 @@ class ServerMessageBlock2Test {
         void testDecodeSync() throws SMBProtocolDecodingException {
             byte[] buffer = createValidSyncMessage();
             testMessage.setBytesRead(10);
-            
+
             int len = testMessage.decode(buffer, 0);
-            
+
             assertTrue(len > 0);
             assertFalse(testMessage.isAsync());
             assertEquals(123, testMessage.getTreeId());
@@ -500,9 +507,9 @@ class ServerMessageBlock2Test {
         void testDecodeAsync() throws SMBProtocolDecodingException {
             byte[] buffer = createValidAsyncMessage();
             testMessage.setBytesRead(10);
-            
+
             int len = testMessage.decode(buffer, 0);
-            
+
             assertTrue(len > 0);
             assertTrue(testMessage.isAsync());
             assertEquals(789L, testMessage.getAsyncId());
@@ -514,9 +521,9 @@ class ServerMessageBlock2Test {
         void testDecodeErrorResponse() throws SMBProtocolDecodingException {
             byte[] buffer = createErrorResponseMessage();
             testMessage.setBytesRead(0);
-            
+
             int len = testMessage.decode(buffer, 0);
-            
+
             assertTrue(len > 0);
             assertNotNull(testMessage.getErrorData());
             assertEquals(5, testMessage.getErrorData().length);
@@ -528,9 +535,9 @@ class ServerMessageBlock2Test {
             byte[] buffer = createCompoundMessage();
             testMessage.setBytesRead(10);
             testMessage.setReadSize(100);
-            
+
             int len = testMessage.decode(buffer, 0, true);
-            
+
             assertTrue(len > 0);
         }
 
@@ -541,7 +548,7 @@ class ServerMessageBlock2Test {
             TestServerMessageBlock2 next = new TestServerMessageBlock2(mockConfig);
             testMessage.setNext(next);
             testMessage.setBytesRead(10);
-            
+
             assertThrows(SMBProtocolDecodingException.class, () -> {
                 testMessage.decode(buffer, 0);
             });
@@ -552,7 +559,7 @@ class ServerMessageBlock2Test {
         void testDecodeException() {
             byte[] buffer = createValidSyncMessage();
             testMessage.setThrowOnRead(true);
-            
+
             assertThrows(SMBProtocolDecodingException.class, () -> {
                 testMessage.decode(buffer, 0);
             });
@@ -582,20 +589,20 @@ class ServerMessageBlock2Test {
             byte[] buffer = new byte[256];
             System.arraycopy(SMBUtil.SMB2_HEADER, 0, buffer, 0, 4);
             SMBUtil.writeInt4(0x80000005, buffer, 8); // status (error)
-            
+
             // Error response structure
             int errorStart = 64;
             SMBUtil.writeInt2(9, buffer, errorStart); // structure size
             buffer[errorStart + 2] = 1; // error context count
             SMBUtil.writeInt4(5, buffer, errorStart + 4); // byte count
-            
+
             // Error data
             buffer[errorStart + 8] = 1;
             buffer[errorStart + 9] = 2;
             buffer[errorStart + 10] = 3;
             buffer[errorStart + 11] = 4;
             buffer[errorStart + 12] = 5;
-            
+
             return buffer;
         }
 
@@ -670,7 +677,7 @@ class ServerMessageBlock2Test {
             TestServerMessageBlock2 other = new TestServerMessageBlock2(mockConfig);
             testMessage.setMid(12345L);
             other.setMid(12345L);
-            
+
             assertTrue(testMessage.equals(other));
         }
 
@@ -680,7 +687,7 @@ class ServerMessageBlock2Test {
             TestServerMessageBlock2 other = new TestServerMessageBlock2(mockConfig);
             testMessage.setMid(12345L);
             other.setMid(67890L);
-            
+
             assertFalse(testMessage.equals(other));
         }
 
@@ -710,15 +717,12 @@ class ServerMessageBlock2Test {
 
         @ParameterizedTest
         @DisplayName("Should format command name correctly")
-        @ValueSource(shorts = {
-            0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-            0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
-            0x10, 0x11, 0x12
-        })
+        @ValueSource(shorts = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x10, 0x11,
+                0x12 })
         void testToStringCommandNames(short command) {
             testMessage.setCommand(command);
             String result = testMessage.toString();
-            
+
             assertNotNull(result);
             assertTrue(result.contains("command="));
             assertFalse(result.contains("command=UNKNOWN"));
@@ -729,7 +733,7 @@ class ServerMessageBlock2Test {
         void testToStringUnknownCommand() {
             testMessage.setCommand(0xFF);
             String result = testMessage.toString();
-            
+
             assertTrue(result.contains("command=UNKNOWN"));
         }
 
@@ -739,9 +743,9 @@ class ServerMessageBlock2Test {
             testMessage.setCommand(ServerMessageBlock2.SMB2_CREATE);
             testMessage.setMid(12345L);
             testMessage.addFlags(0x1234);
-            
+
             String result = testMessage.toString();
-            
+
             assertTrue(result.contains("command=SMB2_CREATE"));
             assertTrue(result.contains("status=0"));
             assertTrue(result.contains("flags=0x1234"));
@@ -796,19 +800,19 @@ class ServerMessageBlock2Test {
         void testReadErrorResponseValid() throws SMBProtocolDecodingException {
             byte[] buffer = new byte[256];
             int bufferIndex = 0;
-            
+
             // Write error response structure
             SMBUtil.writeInt2(9, buffer, bufferIndex); // structure size
             buffer[bufferIndex + 2] = 2; // error context count
             SMBUtil.writeInt4(10, buffer, bufferIndex + 4); // byte count
-            
+
             // Write error data
             for (int i = 0; i < 10; i++) {
                 buffer[bufferIndex + 8 + i] = (byte) i;
             }
-            
+
             int bytesRead = testMessage.readErrorResponse(buffer, bufferIndex);
-            
+
             assertEquals(18, bytesRead); // 8 header + 10 data
             assertEquals(2, testMessage.getErrorContextCount());
             assertNotNull(testMessage.getErrorData());
@@ -820,7 +824,7 @@ class ServerMessageBlock2Test {
         void testReadErrorResponseInvalidStructureSize() {
             byte[] buffer = new byte[256];
             SMBUtil.writeInt2(8, buffer, 0); // wrong structure size
-            
+
             assertThrows(SMBProtocolDecodingException.class, () -> {
                 testMessage.readErrorResponse(buffer, 0);
             });
@@ -831,13 +835,13 @@ class ServerMessageBlock2Test {
         void testReadErrorResponseZeroByteCount() throws SMBProtocolDecodingException {
             byte[] buffer = new byte[256];
             int bufferIndex = 0;
-            
+
             SMBUtil.writeInt2(9, buffer, bufferIndex); // structure size
             buffer[bufferIndex + 2] = 0; // error context count
             SMBUtil.writeInt4(0, buffer, bufferIndex + 4); // zero byte count
-            
+
             int bytesRead = testMessage.readErrorResponse(buffer, bufferIndex);
-            
+
             assertEquals(8, bytesRead);
             assertEquals(0, testMessage.getErrorContextCount());
             assertNull(testMessage.getErrorData());
@@ -853,15 +857,15 @@ class ServerMessageBlock2Test {
         void testEncodeChained() {
             TestServerMessageBlock2 second = new TestServerMessageBlock2(mockConfig);
             second.setBytesWritten(15);
-            
+
             testMessage.setBytesWritten(10);
             testMessage.chain(second);
-            
+
             byte[] buffer = new byte[1024];
             int totalLen = testMessage.encode(buffer, 0);
-            
+
             assertTrue(totalLen > testMessage.getLength());
-            
+
             // Check next command offset was written
             int nextOffset = SMBUtil.readInt4(buffer, 20);
             assertTrue(nextOffset > 0);
@@ -872,14 +876,14 @@ class ServerMessageBlock2Test {
         void testEncodeChainedWithDigest() {
             TestServerMessageBlock2 second = new TestServerMessageBlock2(mockConfig);
             second.setBytesWritten(15);
-            
+
             testMessage.setBytesWritten(10);
             testMessage.chain(second);
             testMessage.setDigest(mockDigest);
-            
+
             byte[] buffer = new byte[1024];
             testMessage.encode(buffer, 0);
-            
+
             // Both messages should be signed
             verify(mockDigest, times(2)).sign(any(), anyInt(), anyInt(), any(), any());
         }
@@ -894,24 +898,24 @@ class ServerMessageBlock2Test {
         void testHaveResponseCalled() throws SMBProtocolDecodingException {
             TestServerMessageBlock2 customMessage = new TestServerMessageBlock2(mockConfig) {
                 boolean haveResponseCalled = false;
-                
+
                 @Override
                 protected void haveResponse(byte[] buffer, int start, int len) throws SMBProtocolDecodingException {
                     haveResponseCalled = true;
                     super.haveResponse(buffer, start, len);
                 }
             };
-            
+
             byte[] buffer = new byte[256];
             System.arraycopy(SMBUtil.SMB2_HEADER, 0, buffer, 0, 4);
             // Set up sync message fields
             SMBUtil.writeInt4(0, buffer, 16); // flags (no async flag)
             SMBUtil.writeInt4(123, buffer, 36); // tree ID
             SMBUtil.writeInt8(456L, buffer, 40); // session ID
-            
+
             customMessage.setBytesRead(10);
             customMessage.decode(buffer, 0);
-            
+
             // Can't directly test protected method, but decode should work without exception
             assertTrue(customMessage.getLength() > 0);
         }
@@ -936,7 +940,7 @@ class ServerMessageBlock2Test {
             long largeMid = Long.MAX_VALUE;
             testMessage.setMid(largeMid);
             assertEquals(largeMid, testMessage.getMid());
-            
+
             // HashCode should handle overflow correctly
             int hash = testMessage.hashCode();
             assertEquals((int) largeMid, hash);
@@ -948,22 +952,22 @@ class ServerMessageBlock2Test {
             byte[] buffer = new byte[256];
             System.arraycopy(SMBUtil.SMB2_HEADER, 0, buffer, 0, 4);
             SMBUtil.writeInt4(-1, buffer, 8); // negative status
-            
+
             // Write error response structure at offset 64
             int errorStart = 64;
             SMBUtil.writeInt2(9, buffer, errorStart); // structure size
             buffer[errorStart + 2] = 1; // error context count
             SMBUtil.writeInt4(4, buffer, errorStart + 4); // byte count
-            
+
             // Write some error data
             buffer[errorStart + 8] = (byte) 0xFF;
             buffer[errorStart + 9] = (byte) 0xFE;
             buffer[errorStart + 10] = (byte) 0xFD;
             buffer[errorStart + 11] = (byte) 0xFC;
-            
+
             testMessage.setBytesRead(0);
             testMessage.decode(buffer, 0);
-            
+
             assertEquals(-1, testMessage.getStatus());
             assertTrue(testMessage.isErrorResponseStatus());
             assertNotNull(testMessage.getErrorData());
@@ -992,7 +996,7 @@ class ServerMessageBlock2Test {
             int allFlags = 0xFFFFFFFF;
             testMessage.addFlags(allFlags);
             assertEquals(allFlags, testMessage.getFlags());
-            
+
             // Should still be able to clear specific flags
             testMessage.clearFlags(ServerMessageBlock2.SMB2_FLAGS_SIGNED);
             assertEquals(allFlags & ~ServerMessageBlock2.SMB2_FLAGS_SIGNED, testMessage.getFlags());
@@ -1004,12 +1008,12 @@ class ServerMessageBlock2Test {
             byte[] buffer = new byte[1024];
             int offset = 100;
             testMessage.setBytesWritten(20);
-            
+
             int len = testMessage.encode(buffer, offset);
-            
+
             assertTrue(len > 0);
             assertEquals(offset, testMessage.getHeaderStart());
-            
+
             // Verify SMB2 header at correct offset
             assertEquals((byte) 0xFE, buffer[offset]);
             assertEquals((byte) 'S', buffer[offset + 1]);
@@ -1027,7 +1031,7 @@ class ServerMessageBlock2Test {
                     assertTrue(messages[0].chain(messages[i]));
                 }
             }
-            
+
             // Verify chain is properly linked
             ServerMessageBlock2 current = messages[0];
             for (int i = 1; i < messages.length; i++) {
@@ -1042,16 +1046,16 @@ class ServerMessageBlock2Test {
             byte[] buffer = new byte[256];
             System.arraycopy(SMBUtil.SMB2_HEADER, 0, buffer, 0, 4);
             SMBUtil.writeInt4(0x80000001, buffer, 8); // error status
-            
+
             // Error response with zero data
             int errorStart = 64;
             SMBUtil.writeInt2(9, buffer, errorStart); // structure size
             buffer[errorStart + 2] = 0; // no error context
             SMBUtil.writeInt4(0, buffer, errorStart + 4); // zero byte count
-            
+
             testMessage.setBytesRead(0);
             int len = testMessage.decode(buffer, 0);
-            
+
             assertTrue(len > 0);
             assertTrue(testMessage.isErrorResponseStatus());
             assertNull(testMessage.getErrorData());
@@ -1062,19 +1066,19 @@ class ServerMessageBlock2Test {
         void testPreserveSignatureDuringDecode() throws SMBProtocolDecodingException {
             byte[] buffer = new byte[256];
             System.arraycopy(SMBUtil.SMB2_HEADER, 0, buffer, 0, 4);
-            
+
             // Create signature pattern
             byte[] testSignature = new byte[16];
             for (int i = 0; i < 16; i++) {
                 testSignature[i] = (byte) (i + 1);
             }
-            
+
             // Write signature to buffer (at offset 48 for sync messages)
             System.arraycopy(testSignature, 0, buffer, 48, 16);
-            
+
             testMessage.setBytesRead(10);
             testMessage.decode(buffer, 0);
-            
+
             // Signature is stored internally but not directly accessible
             // Verify decode completes successfully
             assertTrue(testMessage.getLength() > 0);
@@ -1091,12 +1095,12 @@ class ServerMessageBlock2Test {
             byte[] buffer = new byte[512];
             System.arraycopy(SMBUtil.SMB2_HEADER, 0, buffer, 0, 4);
             SMBUtil.writeInt4(0, buffer, 20); // nextCommand = 0 (final)
-            
+
             testMessage.setBytesRead(10);
             testMessage.setReadSize(200); // Total read size
-            
+
             int len = testMessage.decode(buffer, 0, true);
-            
+
             // Should include remaining bytes for final response
             assertTrue(len > Smb2Constants.SMB2_HEADER_LENGTH);
         }
@@ -1107,11 +1111,11 @@ class ServerMessageBlock2Test {
             byte[] buffer = new byte[512];
             System.arraycopy(SMBUtil.SMB2_HEADER, 0, buffer, 0, 4);
             SMBUtil.writeInt4(128, buffer, 20); // nextCommand = 128 (not final)
-            
+
             testMessage.setBytesRead(10);
-            
+
             int len = testMessage.decode(buffer, 0, false);
-            
+
             // Length should include padding for alignment
             assertTrue(len >= testMessage.getLength());
         }

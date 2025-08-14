@@ -1,8 +1,16 @@
 package jcifs.internal.fscc;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -90,9 +98,9 @@ class FileSystemInformationTest {
         @DisplayName("Should return configured file system information class")
         void testGetFileSystemInformationClass() {
             when(mockFileSystemInfo.getFileSystemInformationClass()).thenReturn(FileSystemInformation.FS_SIZE_INFO);
-            
+
             byte result = mockFileSystemInfo.getFileSystemInformationClass();
-            
+
             assertEquals(FileSystemInformation.FS_SIZE_INFO, result);
             verify(mockFileSystemInfo, times(1)).getFileSystemInformationClass();
         }
@@ -102,9 +110,9 @@ class FileSystemInformationTest {
         void testDecode() throws SMBProtocolDecodingException {
             byte[] buffer = new byte[100];
             when(mockFileSystemInfo.decode(any(byte[].class), anyInt(), anyInt())).thenReturn(24);
-            
+
             int result = mockFileSystemInfo.decode(buffer, 0, 100);
-            
+
             assertEquals(24, result);
             verify(mockFileSystemInfo, times(1)).decode(buffer, 0, 100);
         }
@@ -114,8 +122,8 @@ class FileSystemInformationTest {
         void testDecodeException() throws SMBProtocolDecodingException {
             byte[] buffer = new byte[100];
             when(mockFileSystemInfo.decode(any(byte[].class), anyInt(), anyInt()))
-                .thenThrow(new SMBProtocolDecodingException("Test error"));
-            
+                    .thenThrow(new SMBProtocolDecodingException("Test error"));
+
             assertThrows(SMBProtocolDecodingException.class, () -> {
                 mockFileSystemInfo.decode(buffer, 0, 100);
             });
@@ -139,9 +147,9 @@ class FileSystemInformationTest {
         void testDecodeWithTestImplementation() throws SMBProtocolDecodingException {
             TestFileSystemInformation testImpl = new TestFileSystemInformation(FileSystemInformation.FS_SIZE_INFO);
             byte[] buffer = new byte[50];
-            
+
             int result = testImpl.decode(buffer, 10, 40);
-            
+
             assertEquals(0, result); // Test implementation returns 0
         }
     }
@@ -170,12 +178,15 @@ class FileSystemInformationTest {
             byte[] buffer = new byte[24];
             // Skip idFileSystem (4 bytes)
             buffer[4] = 0x08; // sectPerAlloc = 8
-            buffer[8] = 0x00; buffer[9] = 0x10; // alloc = 4096
-            buffer[12] = 0x00; buffer[13] = 0x08; // free = 2048
-            buffer[16] = 0x00; buffer[17] = 0x02; // bytesPerSect = 512
+            buffer[8] = 0x00;
+            buffer[9] = 0x10; // alloc = 4096
+            buffer[12] = 0x00;
+            buffer[13] = 0x08; // free = 2048
+            buffer[16] = 0x00;
+            buffer[17] = 0x02; // bytesPerSect = 512
 
             int bytesDecoded = smbInfoAllocation.decode(buffer, 0, buffer.length);
-            
+
             assertEquals(20, bytesDecoded);
             assertEquals(8L * 4096L * 512L, smbInfoAllocation.getCapacity());
             assertEquals(8L * 2048L * 512L, smbInfoAllocation.getFree());
@@ -186,11 +197,13 @@ class FileSystemInformationTest {
         void testCapacityCalculation() throws SMBProtocolDecodingException {
             byte[] buffer = new byte[24];
             buffer[4] = 0x04; // sectPerAlloc = 4
-            buffer[8] = 0x00; buffer[9] = 0x20; // alloc = 8192
-            buffer[16] = 0x00; buffer[17] = 0x04; // bytesPerSect = 1024
-            
+            buffer[8] = 0x00;
+            buffer[9] = 0x20; // alloc = 8192
+            buffer[16] = 0x00;
+            buffer[17] = 0x04; // bytesPerSect = 1024
+
             smbInfoAllocation.decode(buffer, 0, buffer.length);
-            
+
             assertEquals(4L * 8192L * 1024L, smbInfoAllocation.getCapacity());
         }
 
@@ -198,9 +211,9 @@ class FileSystemInformationTest {
         @DisplayName("Should handle zero values")
         void testZeroValues() throws SMBProtocolDecodingException {
             byte[] buffer = new byte[24];
-            
+
             smbInfoAllocation.decode(buffer, 0, buffer.length);
-            
+
             assertEquals(0, smbInfoAllocation.getCapacity());
             assertEquals(0, smbInfoAllocation.getFree());
         }
@@ -209,7 +222,7 @@ class FileSystemInformationTest {
         @DisplayName("Should provide string representation")
         void testToString() {
             String result = smbInfoAllocation.toString();
-            
+
             assertNotNull(result);
             assertTrue(result.contains("SmbInfoAllocation"));
             assertTrue(result.contains("alloc="));
@@ -247,10 +260,11 @@ class FileSystemInformationTest {
             // sectPerAlloc (4 bytes) - 8
             buffer[16] = 0x08;
             // bytesPerSect (4 bytes) - 512
-            buffer[20] = 0x00; buffer[21] = 0x02;
-            
+            buffer[20] = 0x00;
+            buffer[21] = 0x02;
+
             int bytesDecoded = fileFsSizeInfo.decode(buffer, 0, buffer.length);
-            
+
             assertEquals(24, bytesDecoded);
             assertTrue(fileFsSizeInfo.getCapacity() > 0);
             assertTrue(fileFsSizeInfo.getFree() > 0);
@@ -261,13 +275,14 @@ class FileSystemInformationTest {
         void testDecodeWithOffset() throws SMBProtocolDecodingException {
             byte[] buffer = new byte[100];
             int offset = 50;
-            
+
             // Set data at offset
             buffer[offset + 16] = 0x04; // sectPerAlloc
-            buffer[offset + 20] = 0x00; buffer[offset + 21] = 0x02; // bytesPerSect
-            
+            buffer[offset + 20] = 0x00;
+            buffer[offset + 21] = 0x02; // bytesPerSect
+
             int bytesDecoded = fileFsSizeInfo.decode(buffer, offset, 24);
-            
+
             assertEquals(24, bytesDecoded);
         }
 
@@ -275,7 +290,7 @@ class FileSystemInformationTest {
         @DisplayName("Should provide string representation")
         void testToString() {
             String result = fileFsSizeInfo.toString();
-            
+
             assertNotNull(result);
             assertTrue(result.contains("SmbInfoAllocation")); // Note: toString() uses this name
             assertTrue(result.contains("alloc="));
@@ -309,14 +324,16 @@ class FileSystemInformationTest {
             // caller available allocation units (8 bytes)
             buffer[12] = 0x01;
             // actual free units (8 bytes) - should be skipped
-            buffer[20] = (byte) 0xFF; buffer[21] = (byte) 0xFF;
+            buffer[20] = (byte) 0xFF;
+            buffer[21] = (byte) 0xFF;
             // sectPerAlloc (4 bytes)
             buffer[24] = 0x08;
             // bytesPerSect (4 bytes)
-            buffer[28] = 0x00; buffer[29] = 0x02;
-            
+            buffer[28] = 0x00;
+            buffer[29] = 0x02;
+
             int bytesDecoded = fileFsFullSizeInfo.decode(buffer, 0, buffer.length);
-            
+
             assertEquals(32, bytesDecoded);
             // Should use caller available units, not actual free units
             assertTrue(fileFsFullSizeInfo.getFree() > 0);
@@ -327,12 +344,14 @@ class FileSystemInformationTest {
         void testLargeCapacityCalculation() throws SMBProtocolDecodingException {
             byte[] buffer = new byte[32];
             // Set large values to test 64-bit arithmetic
-            buffer[0] = (byte) 0xFF; buffer[1] = (byte) 0xFF; // Large alloc
+            buffer[0] = (byte) 0xFF;
+            buffer[1] = (byte) 0xFF; // Large alloc
             buffer[24] = (byte) 0xFF; // Large sectPerAlloc
-            buffer[28] = (byte) 0xFF; buffer[29] = (byte) 0xFF; // Large bytesPerSect
-            
+            buffer[28] = (byte) 0xFF;
+            buffer[29] = (byte) 0xFF; // Large bytesPerSect
+
             int bytesDecoded = fileFsFullSizeInfo.decode(buffer, 0, buffer.length);
-            
+
             assertEquals(32, bytesDecoded);
             assertTrue(fileFsFullSizeInfo.getCapacity() != 0);
         }
@@ -348,7 +367,7 @@ class FileSystemInformationTest {
         @DisplayName("Should provide string representation")
         void testToString() {
             String result = fileFsFullSizeInfo.toString();
-            
+
             assertNotNull(result);
             assertTrue(result.contains("SmbInfoAllocation")); // Note: toString() uses this name
         }
@@ -362,7 +381,7 @@ class FileSystemInformationTest {
         @DisplayName("Should handle null buffer in decode")
         void testNullBuffer() {
             FileFsSizeInformation info = new FileFsSizeInformation();
-            
+
             assertThrows(NullPointerException.class, () -> {
                 info.decode(null, 0, 0);
             });
@@ -373,7 +392,7 @@ class FileSystemInformationTest {
         void testInsufficientBufferLength() {
             FileFsSizeInformation info = new FileFsSizeInformation();
             byte[] buffer = new byte[10]; // Too small
-            
+
             // Should throw ArrayIndexOutOfBoundsException for insufficient buffer
             assertThrows(ArrayIndexOutOfBoundsException.class, () -> {
                 info.decode(buffer, 0, buffer.length);
@@ -381,17 +400,12 @@ class FileSystemInformationTest {
         }
 
         @ParameterizedTest
-        @CsvSource({
-            "0, 0, 0",
-            "100, 0, 0",
-            "100, 50, 50",
-            "1000, 999, 1"
-        })
+        @CsvSource({ "0, 0, 0", "100, 0, 0", "100, 50, 50", "1000, 999, 1" })
         @DisplayName("Should handle various buffer configurations")
         void testVariousBufferConfigurations(int bufferSize, int offset, int length) {
             byte[] buffer = new byte[bufferSize];
             FileFsSizeInformation info = new FileFsSizeInformation();
-            
+
             if (offset + length <= bufferSize && length >= 24) {
                 assertDoesNotThrow(() -> {
                     info.decode(buffer, offset, length);
@@ -425,12 +439,12 @@ class FileSystemInformationTest {
             SmbInfoAllocation smbInfo = new SmbInfoAllocation();
             FileFsSizeInformation sizeInfo = new FileFsSizeInformation();
             FileFsFullSizeInformation fullSizeInfo = new FileFsFullSizeInformation();
-            
+
             // All should be FileSystemInformation
             assertTrue(smbInfo instanceof FileSystemInformation);
             assertTrue(sizeInfo instanceof FileSystemInformation);
             assertTrue(fullSizeInfo instanceof FileSystemInformation);
-            
+
             // All should be AllocInfo
             assertTrue(smbInfo instanceof AllocInfo);
             assertTrue(sizeInfo instanceof AllocInfo);
@@ -447,16 +461,16 @@ class FileSystemInformationTest {
         void testMaximumValues() throws SMBProtocolDecodingException {
             FileFsFullSizeInformation info = new FileFsFullSizeInformation();
             byte[] buffer = new byte[32];
-            
+
             // Set all bytes to 0xFF for maximum values
             for (int i = 0; i < buffer.length; i++) {
                 buffer[i] = (byte) 0xFF;
             }
-            
+
             assertDoesNotThrow(() -> {
                 info.decode(buffer, 0, buffer.length);
             });
-            
+
             // Capacity should not be negative (overflow check)
             assertTrue(info.getCapacity() != 0);
         }
@@ -466,24 +480,24 @@ class FileSystemInformationTest {
         void testLargeBufferDecoding() throws SMBProtocolDecodingException {
             byte[] largeBuffer = new byte[10000];
             FileFsSizeInformation info = new FileFsSizeInformation();
-            
+
             long startTime = System.nanoTime();
             info.decode(largeBuffer, 0, 24);
             long endTime = System.nanoTime();
-            
+
             // Should complete quickly (under 1ms)
             assertTrue((endTime - startTime) < 1_000_000);
         }
 
         @ParameterizedTest
-        @ValueSource(ints = {24, 32, 100, 1000, 10000})
+        @ValueSource(ints = { 24, 32, 100, 1000, 10000 })
         @DisplayName("Should handle various buffer sizes correctly")
         void testVariousBufferSizes(int bufferSize) throws SMBProtocolDecodingException {
             byte[] buffer = new byte[bufferSize];
             FileFsSizeInformation info = new FileFsSizeInformation();
-            
+
             int decoded = info.decode(buffer, 0, Math.min(bufferSize, 24));
-            
+
             assertEquals(24, decoded);
         }
     }

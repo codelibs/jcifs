@@ -6,16 +6,21 @@ package jcifs.smb1.smb1;
  * Each method is exercised for normal inputs, extreme or edge cases, and
  * interaction verification.
  */
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("FileEntry interface contract tests")
@@ -62,7 +67,7 @@ class FileEntryTest {
     }
 
     @ParameterizedTest(name = "getType returns {0}")
-    @ValueSource(ints = {0, 1, -5, Integer.MAX_VALUE})
+    @ValueSource(ints = { 0, 1, -5, Integer.MAX_VALUE })
     @DisplayName("Parameterized type values")
     void typeParameterized(int type) {
         FileEntry mock = mock(FileEntry.class);
@@ -81,4 +86,3 @@ class FileEntryTest {
         verifyNoMoreInteractions(mock);
     }
 }
-

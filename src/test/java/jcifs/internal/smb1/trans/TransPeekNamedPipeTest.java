@@ -1,20 +1,20 @@
 package jcifs.internal.smb1.trans;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.ValueSource;
-import org.junit.jupiter.params.provider.NullSource;
-import org.junit.jupiter.params.provider.EmptySource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -63,7 +63,7 @@ class TransPeekNamedPipeTest {
     }
 
     @ParameterizedTest
-    @ValueSource(ints = {0, 1, -1, Integer.MAX_VALUE, Integer.MIN_VALUE, 0xFFFF})
+    @ValueSource(ints = { 0, 1, -1, Integer.MAX_VALUE, Integer.MIN_VALUE, 0xFFFF })
     @DisplayName("Constructor should handle various FID values")
     void testConstructorWithVariousFids(int fid) {
         // Act
@@ -89,7 +89,7 @@ class TransPeekNamedPipeTest {
         assertEquals(4, bytesWritten);
         assertEquals(SmbComTransaction.TRANS_PEEK_NAMED_PIPE, buffer[offset]);
         assertEquals((byte) 0x00, buffer[offset + 1]);
-        
+
         // Verify FID is written correctly (little-endian)
         int writtenFid = SMBUtil.readInt2(buffer, offset + 2);
         assertEquals(TEST_FID, writtenFid);
@@ -131,13 +131,9 @@ class TransPeekNamedPipeTest {
     }
 
     private static Stream<Arguments> provideFidTestCases() {
-        return Stream.of(
-            Arguments.of(0x0000, (byte) 0x00, (byte) 0x00),
-            Arguments.of(0x00FF, (byte) 0xFF, (byte) 0x00),
-            Arguments.of(0xFF00, (byte) 0x00, (byte) 0xFF),
-            Arguments.of(0xFFFF, (byte) 0xFF, (byte) 0xFF),
-            Arguments.of(0x1234, (byte) 0x34, (byte) 0x12)
-        );
+        return Stream.of(Arguments.of(0x0000, (byte) 0x00, (byte) 0x00), Arguments.of(0x00FF, (byte) 0xFF, (byte) 0x00),
+                Arguments.of(0xFF00, (byte) 0x00, (byte) 0xFF), Arguments.of(0xFFFF, (byte) 0xFF, (byte) 0xFF),
+                Arguments.of(0x1234, (byte) 0x34, (byte) 0x12));
     }
 
     @Test
@@ -242,7 +238,7 @@ class TransPeekNamedPipeTest {
 
     @ParameterizedTest
     @NullAndEmptySource
-    @ValueSource(strings = {"\\PIPE\\test", "testpipe", "\\\\server\\pipe\\test", " ", "pipe with spaces"})
+    @ValueSource(strings = { "\\PIPE\\test", "testpipe", "\\\\server\\pipe\\test", " ", "pipe with spaces" })
     @DisplayName("toString should handle various pipe names")
     void testToStringWithVariousPipeNames(String pipeName) {
         // Arrange

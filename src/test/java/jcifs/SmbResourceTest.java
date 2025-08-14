@@ -1,15 +1,24 @@
 package jcifs;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.Iterator;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -84,8 +93,7 @@ class SmbResourceTest {
         @DisplayName("SmbResource should extend AutoCloseable")
         void testInterfaceInheritance() {
             // Then
-            assertTrue(AutoCloseable.class.isAssignableFrom(SmbResource.class),
-                      "SmbResource should extend AutoCloseable");
+            assertTrue(AutoCloseable.class.isAssignableFrom(SmbResource.class), "SmbResource should extend AutoCloseable");
         }
 
         @Test
@@ -309,8 +317,7 @@ class SmbResourceTest {
             int newAttributes = 0x01; // FILE_ATTRIBUTE_READONLY
 
             // When/Then
-            assertDoesNotThrow(() -> mockResource.setAttributes(newAttributes),
-                              "Setting attributes should not throw exception");
+            assertDoesNotThrow(() -> mockResource.setAttributes(newAttributes), "Setting attributes should not throw exception");
             verify(mockResource).setAttributes(newAttributes);
         }
     }
@@ -352,7 +359,7 @@ class SmbResourceTest {
 
             // When/Then
             assertDoesNotThrow(() -> mockResource.setFileTimes(createTime, lastModified, lastAccess),
-                              "Setting file times should not throw exception");
+                    "Setting file times should not throw exception");
             verify(mockResource).setFileTimes(createTime, lastModified, lastAccess);
         }
 
@@ -451,8 +458,7 @@ class SmbResourceTest {
         @DisplayName("delete operation should work correctly")
         void testDelete() throws CIFSException {
             // When/Then
-            assertDoesNotThrow(() -> mockResource.delete(),
-                              "Delete operation should not throw exception");
+            assertDoesNotThrow(() -> mockResource.delete(), "Delete operation should not throw exception");
             verify(mockResource).delete();
         }
 
@@ -463,8 +469,7 @@ class SmbResourceTest {
             SmbResource destination = mock(SmbResource.class);
 
             // When/Then
-            assertDoesNotThrow(() -> mockResource.copyTo(destination),
-                              "Copy operation should not throw exception");
+            assertDoesNotThrow(() -> mockResource.copyTo(destination), "Copy operation should not throw exception");
             verify(mockResource).copyTo(destination);
         }
 
@@ -492,7 +497,7 @@ class SmbResourceTest {
 
             // When/Then
             assertThrows(NullPointerException.class, () -> mockResource.renameTo(null),
-                        "Should throw NullPointerException for null destination");
+                    "Should throw NullPointerException for null destination");
         }
     }
 
@@ -647,7 +652,7 @@ class SmbResourceTest {
         @DisplayName("security operations should work correctly")
         void testSecurityOperations() throws IOException {
             // Given
-            ACE[] expectedACEs = {mockACE};
+            ACE[] expectedACEs = { mockACE };
             when(mockResource.getSecurity()).thenReturn(expectedACEs);
             when(mockResource.getSecurity(true)).thenReturn(expectedACEs);
             when(mockResource.getShareSecurity(false)).thenReturn(expectedACEs);
@@ -686,11 +691,10 @@ class SmbResourceTest {
             // Verify core SMB resource requirements
             assertNotNull(resource.getContext(), "Should have CIFS context for SMB operations");
             assertNotNull(resource.getLocator(), "Should have resource locator for SMB addressing");
-            
+
             // Verify interface provides SMB-specific functionality
             assertTrue(SmbResource.class.isInterface(), "Should be an interface");
-            assertTrue(AutoCloseable.class.isAssignableFrom(SmbResource.class), 
-                      "Should be closeable for resource management");
+            assertTrue(AutoCloseable.class.isAssignableFrom(SmbResource.class), "Should be closeable for resource management");
         }
 
         @Test
@@ -735,7 +739,7 @@ class SmbResourceTest {
         @DisplayName("SmbResource should support SMB security model")
         void testSMBSecurityCompliance() throws IOException {
             // Given
-            ACE[] expectedACEs = {mockACE};
+            ACE[] expectedACEs = { mockACE };
             when(mockResource.getSecurity()).thenReturn(expectedACEs);
             when(mockResource.getOwnerUser()).thenReturn(mockSID);
 
@@ -773,8 +777,7 @@ class SmbResourceTest {
         @DisplayName("close operation should work correctly")
         void testClose() {
             // When/Then
-            assertDoesNotThrow(() -> mockResource.close(),
-                              "Close operation should not throw exception");
+            assertDoesNotThrow(() -> mockResource.close(), "Close operation should not throw exception");
             verify(mockResource).close();
         }
 
@@ -805,7 +808,7 @@ class SmbResourceTest {
             assertTrue(resource.exists(), "Resource should exist");
             assertTrue(resource.isFile(), "Should be a file");
             assertTrue(resource.canWrite(), "Should be writable");
-            
+
             // Should be able to perform file operations
             assertDoesNotThrow(() -> {
                 resource.setReadOnly();

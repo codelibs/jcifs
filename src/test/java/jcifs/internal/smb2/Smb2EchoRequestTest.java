@@ -1,20 +1,26 @@
 package jcifs.internal.smb2;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.lang.reflect.Field;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import jcifs.CIFSContext;
 import jcifs.Configuration;
 import jcifs.internal.util.SMBUtil;
-
-import java.lang.reflect.Field;
 
 class Smb2EchoRequestTest {
 
@@ -42,10 +48,10 @@ class Smb2EchoRequestTest {
         void testConstructor() throws Exception {
             Smb2EchoRequest request = new Smb2EchoRequest(mockConfig);
             assertNotNull(request);
-            
+
             // Verify command is set to SMB2_ECHO (0x000D)
             assertEquals(0x000D, request.getCommand());
-            
+
             // Verify configuration is set
             Field configField = ServerMessageBlock2.class.getDeclaredField("config");
             configField.setAccessible(true);
@@ -70,7 +76,7 @@ class Smb2EchoRequestTest {
         @DisplayName("Should create correct response type")
         void testCreateResponse() {
             Smb2EchoResponse response = echoRequest.createResponse(mockContext, echoRequest);
-            
+
             assertNotNull(response);
             assertInstanceOf(Smb2EchoResponse.class, response);
         }
@@ -79,7 +85,7 @@ class Smb2EchoRequestTest {
         @DisplayName("Should create response with correct configuration")
         void testCreateResponseConfiguration() throws Exception {
             Smb2EchoResponse response = echoRequest.createResponse(mockContext, echoRequest);
-            
+
             // Verify the response has the correct configuration
             Field configField = ServerMessageBlock2.class.getDeclaredField("config");
             configField.setAccessible(true);
@@ -91,7 +97,7 @@ class Smb2EchoRequestTest {
         void testCreateResponseWithNullContext() {
             CIFSContext nullContext = mock(CIFSContext.class);
             when(nullContext.getConfig()).thenReturn(null);
-            
+
             assertDoesNotThrow(() -> {
                 Smb2EchoResponse response = echoRequest.createResponse(nullContext, echoRequest);
                 assertNotNull(response);
@@ -109,7 +115,7 @@ class Smb2EchoRequestTest {
             int expectedSize = Smb2Constants.SMB2_HEADER_LENGTH + 4;
             // size8 rounds up to 8-byte boundary
             int expectedAlignedSize = (expectedSize + 7) & ~7;
-            
+
             assertEquals(expectedAlignedSize, echoRequest.size());
         }
 
@@ -118,7 +124,7 @@ class Smb2EchoRequestTest {
         void testSizeConsistency() {
             int size1 = echoRequest.size();
             int size2 = echoRequest.size();
-            
+
             assertEquals(size1, size2);
         }
 
@@ -140,12 +146,12 @@ class Smb2EchoRequestTest {
         void testWriteBytesWireFormat() {
             byte[] buffer = new byte[100];
             int startIndex = 10;
-            
+
             int bytesWritten = echoRequest.writeBytesWireFormat(buffer, startIndex);
-            
+
             // Should write 4 bytes
             assertEquals(4, bytesWritten);
-            
+
             // Should write structure size of 4
             assertEquals(4, SMBUtil.readInt2(buffer, startIndex));
         }
@@ -158,15 +164,15 @@ class Smb2EchoRequestTest {
             for (int i = 0; i < buffer.length; i++) {
                 buffer[i] = (byte) 0xFF;
             }
-            
+
             int startIndex = 50;
             echoRequest.writeBytesWireFormat(buffer, startIndex);
-            
+
             // Check bytes before written area are unchanged
             for (int i = 0; i < startIndex; i++) {
                 assertEquals((byte) 0xFF, buffer[i]);
             }
-            
+
             // Check bytes after written area are unchanged
             for (int i = startIndex + 4; i < buffer.length; i++) {
                 assertEquals((byte) 0xFF, buffer[i]);
@@ -177,9 +183,9 @@ class Smb2EchoRequestTest {
         @DisplayName("Should handle zero offset")
         void testWriteBytesAtZeroOffset() {
             byte[] buffer = new byte[10];
-            
+
             int bytesWritten = echoRequest.writeBytesWireFormat(buffer, 0);
-            
+
             assertEquals(4, bytesWritten);
             assertEquals(4, SMBUtil.readInt2(buffer, 0));
         }
@@ -189,9 +195,9 @@ class Smb2EchoRequestTest {
         void testWriteBytesAtMaxOffset() {
             byte[] buffer = new byte[1000];
             int offset = buffer.length - 4;
-            
+
             int bytesWritten = echoRequest.writeBytesWireFormat(buffer, offset);
-            
+
             assertEquals(4, bytesWritten);
             assertEquals(4, SMBUtil.readInt2(buffer, offset));
         }
@@ -205,9 +211,9 @@ class Smb2EchoRequestTest {
         @DisplayName("Should always return 0")
         void testReadBytesWireFormat() {
             byte[] buffer = new byte[100];
-            
+
             int bytesRead = echoRequest.readBytesWireFormat(buffer, 0);
-            
+
             assertEquals(0, bytesRead);
         }
 
@@ -219,7 +225,7 @@ class Smb2EchoRequestTest {
             for (int i = 0; i < fullBuffer.length; i++) {
                 fullBuffer[i] = (byte) i;
             }
-            
+
             assertEquals(0, echoRequest.readBytesWireFormat(emptyBuffer, 0));
             assertEquals(0, echoRequest.readBytesWireFormat(fullBuffer, 50));
         }
@@ -244,20 +250,20 @@ class Smb2EchoRequestTest {
         void testCompleteRequestResponseCycle() {
             // Create request
             Smb2EchoRequest request = new Smb2EchoRequest(mockConfig);
-            
+
             // Verify request properties
             assertEquals(0x000D, request.getCommand());
             assertEquals(72, request.size());
-            
+
             // Create response
             Smb2EchoResponse response = request.createResponse(mockContext, request);
             assertNotNull(response);
-            
+
             // Write request to buffer
             byte[] buffer = new byte[100];
             int written = request.writeBytesWireFormat(buffer, 0);
             assertEquals(4, written);
-            
+
             // Verify written data
             assertEquals(4, SMBUtil.readInt2(buffer, 0));
         }
@@ -267,18 +273,18 @@ class Smb2EchoRequestTest {
         void testMultipleRequests() {
             Smb2EchoRequest request1 = new Smb2EchoRequest(mockConfig);
             Smb2EchoRequest request2 = new Smb2EchoRequest(mockConfig);
-            
+
             // Both should have same properties
             assertEquals(request1.getCommand(), request2.getCommand());
             assertEquals(request1.size(), request2.size());
-            
+
             // But be different objects
             assertNotSame(request1, request2);
-            
+
             // Both should create valid responses
             Smb2EchoResponse response1 = request1.createResponse(mockContext, request1);
             Smb2EchoResponse response2 = request2.createResponse(mockContext, request2);
-            
+
             assertNotNull(response1);
             assertNotNull(response2);
             assertNotSame(response1, response2);
@@ -297,7 +303,7 @@ class Smb2EchoRequestTest {
             int written = echoRequest.writeBytesWireFormat(minBuffer, 0);
             assertEquals(4, written);
             assertEquals(4, SMBUtil.readInt2(minBuffer, 0));
-            
+
             // Large buffer
             byte[] largeBuffer = new byte[10000];
             written = echoRequest.writeBytesWireFormat(largeBuffer, 5000);
@@ -311,7 +317,7 @@ class Smb2EchoRequestTest {
             int threadCount = 10;
             Thread[] threads = new Thread[threadCount];
             boolean[] success = new boolean[threadCount];
-            
+
             for (int i = 0; i < threadCount; i++) {
                 final int index = i;
                 threads[i] = new Thread(() -> {
@@ -326,11 +332,11 @@ class Smb2EchoRequestTest {
                 });
                 threads[i].start();
             }
-            
+
             for (Thread thread : threads) {
                 thread.join();
             }
-            
+
             for (boolean s : success) {
                 assertTrue(s);
             }

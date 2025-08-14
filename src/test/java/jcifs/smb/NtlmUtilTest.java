@@ -1,7 +1,14 @@
 package jcifs.smb;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
@@ -19,7 +26,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import jcifs.CIFSContext;
 import jcifs.Configuration;
 import jcifs.util.Encdec;
-import jcifs.util.Strings;
 
 @ExtendWith(MockitoExtension.class)
 class NtlmUtilTest {
@@ -63,11 +69,11 @@ class NtlmUtilTest {
         // Arrange
         String password1 = "password";
         String password2 = "Password";
-        
+
         // Act
         byte[] hash1 = NtlmUtil.getNTHash(password1);
         byte[] hash2 = NtlmUtil.getNTHash(password2);
-        
+
         // Assert
         assertFalse(Arrays.equals(hash1, hash2), "Different passwords should produce different hashes");
         assertEquals(16, hash1.length, "NT hash should be 16 bytes");
@@ -82,7 +88,7 @@ class NtlmUtilTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"", "password", "pässwörd", "1234567890abcdef"})
+    @ValueSource(strings = { "", "password", "pässwörd", "1234567890abcdef" })
     @DisplayName("nTOWFv1 equals getNTHash across inputs")
     void testNTOWFv1_delegatesToGetNTHash(String password) {
         // Act
@@ -277,8 +283,7 @@ class NtlmUtilTest {
         when(configuration.getOemEncoding()).thenReturn("X-INVALID-ENCODING-NOT-EXISTENT");
 
         // Act + Assert
-        RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> NtlmUtil.getPreNTLMResponse(cifsContext, "password", new byte[8]));
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> NtlmUtil.getPreNTLMResponse(cifsContext, "password", new byte[8]));
         assertTrue(ex.getMessage().contains("Unsupported OEM encoding"));
         verify(cifsContext, atLeastOnce()).getConfig();
         verify(configuration, atLeastOnce()).getOemEncoding();
@@ -304,4 +309,3 @@ class NtlmUtilTest {
         assertFalse(Arrays.equals(new byte[8], Arrays.copyOfRange(out14, 8, 16)));
     }
 }
-

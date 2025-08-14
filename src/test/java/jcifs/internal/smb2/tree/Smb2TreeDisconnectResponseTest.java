@@ -7,22 +7,15 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.doThrow;
 
-import java.io.IOException;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import jcifs.BaseTest;
 import jcifs.Configuration;
@@ -76,7 +69,7 @@ class Smb2TreeDisconnectResponseTest extends BaseTest {
 
     @DisplayName("Should write zero bytes at various offsets")
     @ParameterizedTest
-    @ValueSource(ints = {0, 1, 10, 50, 100, 255})
+    @ValueSource(ints = { 0, 1, 10, 50, 100, 255 })
     void testWriteBytesWireFormatAtDifferentOffsets(int offset) {
         // Given
         byte[] buffer = new byte[256];
@@ -94,7 +87,7 @@ class Smb2TreeDisconnectResponseTest extends BaseTest {
         // Given
         byte[] buffer = new byte[256];
         int offset = 10;
-        
+
         // Write structure size (4) at offset
         SMBUtil.writeInt2(4, buffer, offset);
         SMBUtil.writeInt2(0, buffer, offset + 2); // Reserved field
@@ -108,30 +101,28 @@ class Smb2TreeDisconnectResponseTest extends BaseTest {
 
     @DisplayName("Should throw exception for invalid structure size")
     @ParameterizedTest
-    @ValueSource(ints = {0, 1, 2, 3, 5, 10, 100, 65535})
+    @ValueSource(ints = { 0, 1, 2, 3, 5, 10, 100, 65535 })
     void testReadBytesWireFormatInvalidStructureSize(int structureSize) {
         // Given
         byte[] buffer = new byte[256];
         int offset = 0;
-        
+
         // Write invalid structure size
         SMBUtil.writeInt2(structureSize, buffer, offset);
 
         // When & Then
-        SMBProtocolDecodingException exception = assertThrows(
-            SMBProtocolDecodingException.class, 
-            () -> response.readBytesWireFormat(buffer, offset)
-        );
+        SMBProtocolDecodingException exception =
+                assertThrows(SMBProtocolDecodingException.class, () -> response.readBytesWireFormat(buffer, offset));
         assertEquals("Structure size != 4", exception.getMessage());
     }
 
     @DisplayName("Should read structure correctly at different offsets")
     @ParameterizedTest
-    @ValueSource(ints = {0, 10, 50, 100, 200})
+    @ValueSource(ints = { 0, 10, 50, 100, 200 })
     void testReadBytesWireFormatAtDifferentOffsets(int offset) throws SMBProtocolDecodingException {
         // Given
         byte[] buffer = new byte[256];
-        
+
         // Write valid structure at offset
         SMBUtil.writeInt2(4, buffer, offset);
         SMBUtil.writeInt2(0, buffer, offset + 2);
@@ -148,7 +139,7 @@ class Smb2TreeDisconnectResponseTest extends BaseTest {
     void testReadBytesWireFormatMinimumBuffer() throws SMBProtocolDecodingException {
         // Given
         byte[] buffer = new byte[4];
-        
+
         // Write valid structure
         SMBUtil.writeInt2(4, buffer, 0);
         SMBUtil.writeInt2(0, buffer, 2);
@@ -200,7 +191,7 @@ class Smb2TreeDisconnectResponseTest extends BaseTest {
         // Given
         byte[] buffer1 = new byte[256];
         byte[] buffer2 = new byte[256];
-        
+
         // Prepare both buffers with valid structure
         SMBUtil.writeInt2(4, buffer1, 0);
         SMBUtil.writeInt2(0, buffer1, 2);
@@ -221,7 +212,7 @@ class Smb2TreeDisconnectResponseTest extends BaseTest {
     void testExactStructureSizeValue() throws SMBProtocolDecodingException {
         // Given
         byte[] buffer = new byte[256];
-        
+
         // Write exact structure size value (4)
         buffer[0] = 0x04;
         buffer[1] = 0x00;
@@ -237,16 +228,11 @@ class Smb2TreeDisconnectResponseTest extends BaseTest {
 
     @DisplayName("Should handle structure with different reserved values")
     @ParameterizedTest
-    @CsvSource({
-        "0, 0",
-        "255, 255",
-        "0, 65535",
-        "100, 200"
-    })
+    @CsvSource({ "0, 0", "255, 255", "0, 65535", "100, 200" })
     void testReadWithDifferentReservedValues(int byte2, int byte3) throws SMBProtocolDecodingException {
         // Given
         byte[] buffer = new byte[256];
-        
+
         // Write structure size (4)
         SMBUtil.writeInt2(4, buffer, 0);
         // Write reserved field (any value is acceptable)
@@ -266,20 +252,14 @@ class Smb2TreeDisconnectResponseTest extends BaseTest {
         // Test minimum invalid size (0)
         byte[] buffer = new byte[256];
         SMBUtil.writeInt2(0, buffer, 0);
-        
-        SMBProtocolDecodingException ex1 = assertThrows(
-            SMBProtocolDecodingException.class,
-            () -> response.readBytesWireFormat(buffer, 0)
-        );
+
+        SMBProtocolDecodingException ex1 = assertThrows(SMBProtocolDecodingException.class, () -> response.readBytesWireFormat(buffer, 0));
         assertEquals("Structure size != 4", ex1.getMessage());
 
         // Test maximum 2-byte value (65535)
         SMBUtil.writeInt2(65535, buffer, 0);
-        
-        SMBProtocolDecodingException ex2 = assertThrows(
-            SMBProtocolDecodingException.class,
-            () -> response.readBytesWireFormat(buffer, 0)
-        );
+
+        SMBProtocolDecodingException ex2 = assertThrows(SMBProtocolDecodingException.class, () -> response.readBytesWireFormat(buffer, 0));
         assertEquals("Structure size != 4", ex2.getMessage());
     }
 
@@ -287,7 +267,7 @@ class Smb2TreeDisconnectResponseTest extends BaseTest {
     @DisplayName("Should verify response state methods from parent")
     void testResponseStateMethods() throws Exception {
         // Test that response inherits state tracking from ServerMessageBlock2Response
-        
+
         // Initially not received
         Method isReceivedMethod = ServerMessageBlock2Response.class.getDeclaredMethod("isReceived");
         isReceivedMethod.setAccessible(true);
@@ -325,11 +305,10 @@ class Smb2TreeDisconnectResponseTest extends BaseTest {
     @DisplayName("Should verify wire format protocol compliance")
     void testWireFormatProtocolCompliance() throws SMBProtocolDecodingException {
         // Given - exact SMB2 TREE_DISCONNECT response structure
-        byte[] wireData = new byte[] {
-            0x04, 0x00,  // StructureSize (must be 4)
-            0x00, 0x00   // Reserved
+        byte[] wireData = new byte[] { 0x04, 0x00, // StructureSize (must be 4)
+                0x00, 0x00 // Reserved
         };
-        
+
         // When
         int bytesRead = response.readBytesWireFormat(wireData, 0);
 
@@ -361,21 +340,18 @@ class Smb2TreeDisconnectResponseTest extends BaseTest {
     @DisplayName("Should validate structure size before processing")
     void testStructureSizeValidation() {
         // Given various invalid structure sizes
-        int[] invalidSizes = {-1, 0, 1, 2, 3, 5, 6, 8, 16, 32, 64, 128, 256, 512, 1024};
-        
+        int[] invalidSizes = { -1, 0, 1, 2, 3, 5, 6, 8, 16, 32, 64, 128, 256, 512, 1024 };
+
         for (int invalidSize : invalidSizes) {
             byte[] buffer = new byte[256];
-            
+
             // Handle negative values (will wrap around in writeInt2)
             if (invalidSize >= 0) {
                 SMBUtil.writeInt2(invalidSize, buffer, 0);
-                
+
                 // When & Then
-                SMBProtocolDecodingException exception = assertThrows(
-                    SMBProtocolDecodingException.class,
-                    () -> response.readBytesWireFormat(buffer, 0),
-                    "Should throw exception for structure size: " + invalidSize
-                );
+                SMBProtocolDecodingException exception = assertThrows(SMBProtocolDecodingException.class,
+                        () -> response.readBytesWireFormat(buffer, 0), "Should throw exception for structure size: " + invalidSize);
                 assertEquals("Structure size != 4", exception.getMessage());
             }
         }
@@ -405,7 +381,7 @@ class Smb2TreeDisconnectResponseTest extends BaseTest {
     void testNullConfiguration() {
         // When - constructor accepts null config without throwing
         Smb2TreeDisconnectResponse responseWithNull = new Smb2TreeDisconnectResponse(null);
-        
+
         // Then - response is created successfully
         assertNotNull(responseWithNull);
     }
@@ -418,10 +394,10 @@ class Smb2TreeDisconnectResponseTest extends BaseTest {
             byte[] buffer = new byte[256];
             SMBUtil.writeInt2(4, buffer, i * 10);
             SMBUtil.writeInt2(i, buffer, i * 10 + 2); // Different reserved values
-            
+
             // When
             int bytesRead = response.readBytesWireFormat(buffer, i * 10);
-            
+
             // Then
             assertEquals(4, bytesRead, "Iteration " + i + " should read 4 bytes");
         }
@@ -431,9 +407,8 @@ class Smb2TreeDisconnectResponseTest extends BaseTest {
     @DisplayName("Should verify complete response structure parsing")
     void testCompleteResponseParsing() throws SMBProtocolDecodingException {
         // Given - complete SMB2 TREE_DISCONNECT response
-        byte[] completeResponse = new byte[] {
-            0x04, 0x00,  // StructureSize = 4
-            0x00, 0x00   // Reserved = 0
+        byte[] completeResponse = new byte[] { 0x04, 0x00, // StructureSize = 4
+                0x00, 0x00 // Reserved = 0
         };
 
         // When

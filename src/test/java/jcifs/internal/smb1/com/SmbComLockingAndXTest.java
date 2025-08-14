@@ -1,20 +1,21 @@
 package jcifs.internal.smb1.com;
 
-import jcifs.Configuration;
-import jcifs.internal.SMBProtocolDecodingException;
-import jcifs.internal.util.SMBUtil;
-import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.Mockito.mock;
+
+import java.lang.reflect.Field;
+
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.lang.reflect.Field;
-import java.util.Arrays;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import jcifs.Configuration;
+import jcifs.internal.util.SMBUtil;
 
 /**
  * Tests for {@link SmbComLockingAndX}.  The source class exposes
@@ -75,8 +76,8 @@ class SmbComLockingAndXTest {
         setField(unlock, "pid", 456);
         setField(unlock, "byteOffset", 300L);
         setField(unlock, "lengthInBytes", 400L);
-        setField(cmd, "locks", new LockingAndXRange[]{lock});
-        setField(cmd, "unlocks", new LockingAndXRange[]{unlock});
+        setField(cmd, "locks", new LockingAndXRange[] { lock });
+        setField(cmd, "unlocks", new LockingAndXRange[] { unlock });
         setField(cmd, "largeFile", false);
 
         byte[] buffer = new byte[20];
@@ -86,7 +87,7 @@ class SmbComLockingAndXTest {
         assertEquals(getField(cmd, "fid"), SMBUtil.readInt2(buffer, 0));
         assertEquals(getField(cmd, "typeOfLock"), buffer[2]);
         assertEquals(getField(cmd, "newOpLockLevel"), buffer[3]);
-        assertEquals(getField(cmd, "timeout"), (long)SMBUtil.readInt4(buffer, 4));
+        assertEquals(getField(cmd, "timeout"), (long) SMBUtil.readInt4(buffer, 4));
         assertEquals(1, SMBUtil.readInt2(buffer, 8));
         assertEquals(1, SMBUtil.readInt2(buffer, 10));
     }
@@ -95,7 +96,7 @@ class SmbComLockingAndXTest {
      * Test that a large file lock (bit 0x10 set) is encoded and decoded correctly.
      */
     @ParameterizedTest
-    @ValueSource(ints={0x10, 0x11})
+    @ValueSource(ints = { 0x10, 0x11 })
     void largeFileFlagSet_and_decoded_according_to_type(int type) throws Exception {
         Configuration cfg = mock(Configuration.class);
         SmbComLockingAndX cmd = new SmbComLockingAndX(cfg);
@@ -106,7 +107,7 @@ class SmbComLockingAndXTest {
         setField(cmd, "locks", new LockingAndXRange[0]);
         setField(cmd, "unlocks", new LockingAndXRange[0]);
         setField(cmd, "largeFile", false);
-        byte[] buf = new byte[12];  // Buffer needs to be at least 12 bytes for the parameter words
+        byte[] buf = new byte[12]; // Buffer needs to be at least 12 bytes for the parameter words
         cmd.writeParameterWordsWireFormat(buf, 0);
         // The flag must be present so the command recognises largeFile
         SmbComLockingAndX copy = new SmbComLockingAndX(cfg);
@@ -140,8 +141,8 @@ class SmbComLockingAndXTest {
         Configuration cfg = mock(Configuration.class);
         SmbComLockingAndX cmd = new SmbComLockingAndX(cfg);
         // arrays of size 1 so internal method will attempt to decode a range
-        setField(cmd, "unlocks", new LockingAndXRange[]{new LockingAndXRange(false)});
-        setField(cmd, "locks", new LockingAndXRange[]{new LockingAndXRange(false)});
+        setField(cmd, "unlocks", new LockingAndXRange[] { new LockingAndXRange(false) });
+        setField(cmd, "locks", new LockingAndXRange[] { new LockingAndXRange(false) });
         setField(cmd, "largeFile", false);
         // create a buffer that is empty, readBytesWireFormat should throw
         byte[] buffer = new byte[0];
@@ -170,4 +171,3 @@ class SmbComLockingAndXTest {
         assertEquals(654321L, decoded.getLengthInBytes());
     }
 }
-

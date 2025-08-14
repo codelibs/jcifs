@@ -1,11 +1,15 @@
 package jcifs.internal.smb1.trans;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
@@ -134,7 +138,7 @@ class TransPeekNamedPipeResponseTest {
         byte[] buffer = new byte[10];
         int bufferIndex = 0;
         int len = 6;
-        
+
         // Set up buffer with test data
         // available = 0x1234 (4660 in decimal)
         SMBUtil.writeInt2(0x1234, buffer, bufferIndex);
@@ -156,22 +160,18 @@ class TransPeekNamedPipeResponseTest {
     @DisplayName("readParametersWireFormat should handle different status values")
     void testReadParametersWireFormatWithDifferentStatuses() {
         // Test all status constants
-        int[] statusValues = {
-            TransPeekNamedPipeResponse.STATUS_DISCONNECTED,
-            TransPeekNamedPipeResponse.STATUS_LISTENING,
-            TransPeekNamedPipeResponse.STATUS_CONNECTION_OK,
-            TransPeekNamedPipeResponse.STATUS_SERVER_END_CLOSED
-        };
+        int[] statusValues = { TransPeekNamedPipeResponse.STATUS_DISCONNECTED, TransPeekNamedPipeResponse.STATUS_LISTENING,
+                TransPeekNamedPipeResponse.STATUS_CONNECTION_OK, TransPeekNamedPipeResponse.STATUS_SERVER_END_CLOSED };
 
         for (int status : statusValues) {
             // Arrange
             byte[] buffer = new byte[10];
             int bufferIndex = 0;
-            
+
             SMBUtil.writeInt2(100, buffer, bufferIndex);
             SMBUtil.writeInt2(0, buffer, bufferIndex + 2);
             SMBUtil.writeInt2(status, buffer, bufferIndex + 4);
-            
+
             TransPeekNamedPipeResponse testResponse = new TransPeekNamedPipeResponse(mockConfig);
 
             // Act
@@ -185,13 +185,13 @@ class TransPeekNamedPipeResponseTest {
     }
 
     @ParameterizedTest
-    @ValueSource(ints = {0, 1, 100, 255, 1000, 32767, 65535})
+    @ValueSource(ints = { 0, 1, 100, 255, 1000, 32767, 65535 })
     @DisplayName("readParametersWireFormat should handle various available values")
     void testReadParametersWireFormatWithVariousAvailableValues(int available) {
         // Arrange
         byte[] buffer = new byte[10];
         int bufferIndex = 0;
-        
+
         SMBUtil.writeInt2(available, buffer, bufferIndex);
         SMBUtil.writeInt2(0, buffer, bufferIndex + 2);
         SMBUtil.writeInt2(TransPeekNamedPipeResponse.STATUS_CONNECTION_OK, buffer, bufferIndex + 4);
@@ -210,7 +210,7 @@ class TransPeekNamedPipeResponseTest {
         // Arrange
         byte[] buffer = new byte[20];
         int bufferIndex = 10;
-        
+
         // Write data at offset
         SMBUtil.writeInt2(500, buffer, bufferIndex);
         SMBUtil.writeInt2(0, buffer, bufferIndex + 2);
@@ -277,7 +277,7 @@ class TransPeekNamedPipeResponseTest {
         SMBUtil.writeInt2(100, buffer, 0);
         SMBUtil.writeInt2(0, buffer, 2);
         SMBUtil.writeInt2(TransPeekNamedPipeResponse.STATUS_CONNECTION_OK, buffer, 4);
-        
+
         response1.readParametersWireFormat(buffer, 0, 6);
 
         // Assert
@@ -325,7 +325,7 @@ class TransPeekNamedPipeResponseTest {
         assertEquals(0, response.writeDataWireFormat(emptyBuffer, 0));
         assertEquals(0, response.readSetupWireFormat(emptyBuffer, 0, 0));
         assertEquals(0, response.readDataWireFormat(emptyBuffer, 0, 0));
-        
+
         // readParametersWireFormat would throw exception due to buffer underflow
         assertThrows(Exception.class, () -> {
             response.readParametersWireFormat(emptyBuffer, 0, 0);
@@ -338,7 +338,7 @@ class TransPeekNamedPipeResponseTest {
         // Test that response inherits from SmbComTransactionResponse
         assertTrue(response.hasMoreElements());
         assertNotNull(response.nextElement());
-        
+
         // Test reset behavior
         response.reset();
         assertTrue(response.hasMoreElements());
@@ -349,10 +349,10 @@ class TransPeekNamedPipeResponseTest {
     void testConfigurationPassedToParent() {
         // Arrange
         Configuration testConfig = mock(Configuration.class);
-        
+
         // Act
         TransPeekNamedPipeResponse testResponse = new TransPeekNamedPipeResponse(testConfig);
-        
+
         // Assert
         assertNotNull(testResponse);
     }
@@ -382,10 +382,10 @@ class TransPeekNamedPipeResponseTest {
         SMBUtil.writeInt2(0, buffer, 0);
         SMBUtil.writeInt2(0, buffer, 2);
         SMBUtil.writeInt2(TransPeekNamedPipeResponse.STATUS_CONNECTION_OK, buffer, 4);
-        
+
         response.readParametersWireFormat(buffer, 0, 6);
         assertEquals(0, response.getAvailable());
-        
+
         // Test maximum unsigned 16-bit value (65535)
         SMBUtil.writeInt2(0xFFFF, buffer, 0);
         TransPeekNamedPipeResponse response2 = new TransPeekNamedPipeResponse(mockConfig);
@@ -398,7 +398,7 @@ class TransPeekNamedPipeResponseTest {
     void testLargeBufferHandling() {
         // Arrange
         byte[] largeBuffer = new byte[65536]; // 64KB buffer
-        
+
         // Act & Assert
         assertEquals(0, response.writeSetupWireFormat(largeBuffer, 0));
         assertEquals(0, response.writeParametersWireFormat(largeBuffer, 32768));
@@ -452,17 +452,17 @@ class TransPeekNamedPipeResponseTest {
         SMBUtil.writeInt2(100, buffer1, 0);
         SMBUtil.writeInt2(0, buffer1, 2);
         SMBUtil.writeInt2(TransPeekNamedPipeResponse.STATUS_CONNECTION_OK, buffer1, 4);
-        
+
         response.readParametersWireFormat(buffer1, 0, 6);
         assertEquals(100, response.getAvailable());
         assertEquals(TransPeekNamedPipeResponse.STATUS_CONNECTION_OK, response.getStatus());
-        
+
         // Second read - should update values
         byte[] buffer2 = new byte[10];
         SMBUtil.writeInt2(500, buffer2, 0);
         SMBUtil.writeInt2(0, buffer2, 2);
         SMBUtil.writeInt2(TransPeekNamedPipeResponse.STATUS_DISCONNECTED, buffer2, 4);
-        
+
         response.readParametersWireFormat(buffer2, 0, 6);
         assertEquals(500, response.getAvailable());
         assertEquals(TransPeekNamedPipeResponse.STATUS_DISCONNECTED, response.getStatus());

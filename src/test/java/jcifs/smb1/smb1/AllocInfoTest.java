@@ -1,16 +1,18 @@
 package jcifs.smb1.smb1;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.Mock;
-import org.mockito.InjectMocks;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
  * Tests for the {@link AllocInfo} interface.
@@ -44,7 +46,7 @@ public class AllocInfoTest {
      * zero and negative capacities.
      */
     @ParameterizedTest
-    @ValueSource(longs = {0L, -1L, Long.MAX_VALUE})
+    @ValueSource(longs = { 0L, -1L, Long.MAX_VALUE })
     @DisplayName("capacity may be any long value")
     void testCapacityEdgeValues(long capacity) {
         when(mockAllocInfo.getCapacity()).thenReturn(capacity);
@@ -64,4 +66,3 @@ public class AllocInfoTest {
         assertThrows(NullPointerException.class, () -> nullRef.getFree());
     }
 }
-

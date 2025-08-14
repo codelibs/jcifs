@@ -1,6 +1,7 @@
 package jcifs.smb1.netbios;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -32,15 +33,9 @@ class NbtExceptionTest {
     }
 
     @ParameterizedTest(name = "session error {1} -\\u003e {2}")
-    @CsvSource({
-            "-1,Connection refused",
-            "0x80,Not listening on called name",
-            "0x81,Not listening for calling name",
-            "0x82,Called name not present",
-            "0x83,Called name present, but insufficient resources",
-            "0x8F,Unspecified error",
-            "999,Unknown error code: 999"
-    })
+    @CsvSource({ "-1,Connection refused", "0x80,Not listening on called name", "0x81,Not listening for calling name",
+            "0x82,Called name not present", "0x83,Called name present, but insufficient resources", "0x8F,Unspecified error",
+            "999,Unknown error code: 999" })
     @DisplayName("getErrorString for SSN service errors")
     void testSessionServiceErrors(int errorCode, String description) {
         int errSsn = NbtException.ERR_SSN_SRVC;

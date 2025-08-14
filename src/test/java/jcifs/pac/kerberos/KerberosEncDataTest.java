@@ -1,5 +1,22 @@
 package jcifs.pac.kerberos;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.security.GeneralSecurityException;
+import java.security.Key;
+import java.security.NoSuchAlgorithmException;
+import java.util.Collections;
+
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.security.auth.kerberos.KerberosKey;
+
 import org.bouncycastle.asn1.ASN1EncodableVector;
 import org.bouncycastle.asn1.ASN1Integer;
 import org.bouncycastle.asn1.BERTags;
@@ -8,22 +25,8 @@ import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.DERTaggedObject;
 import org.junit.jupiter.api.Test;
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
-import javax.security.auth.kerberos.KerberosKey;
+
 import jcifs.pac.PACDecodingException;
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.security.GeneralSecurityException;
-import java.security.Key;
-import java.security.NoSuchAlgorithmException;
-import java.util.Collections;
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests for KerberosEncData.
@@ -61,7 +64,7 @@ class KerberosEncDataTest {
         ASN1EncodableVector authElementVector = new ASN1EncodableVector();
         // Use an auth type that doesn't require complex parsing (e.g., 999 - unknown type)
         authElementVector.add(new DERTaggedObject(0, new ASN1Integer(999))); // ad-type
-        authElementVector.add(new DERTaggedObject(1, new DEROctetString(new byte[]{1, 2, 3, 4})));
+        authElementVector.add(new DERTaggedObject(1, new DEROctetString(new byte[] { 1, 2, 3, 4 })));
         authDataVector.add(new DERSequence(authElementVector));
         vector.add(new DERTaggedObject(10, new DERSequence(authDataVector)));
 
@@ -85,7 +88,7 @@ class KerberosEncDataTest {
      */
     @Test
     void testConstructorMalformed() {
-        byte[] malformedToken = new byte[]{0x01, 0x02, 0x03, 0x04};
+        byte[] malformedToken = new byte[] { 0x01, 0x02, 0x03, 0x04 };
         assertThrows(PACDecodingException.class, () -> new KerberosEncData(malformedToken, Collections.emptyMap()));
     }
 

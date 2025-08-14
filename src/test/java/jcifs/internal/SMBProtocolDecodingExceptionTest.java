@@ -1,6 +1,12 @@
 package jcifs.internal;
 
-import jcifs.CIFSException;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,8 +17,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import jcifs.CIFSException;
 
 /**
  * Tests for SMBProtocolDecodingException covering all constructors and observable behavior.
@@ -35,16 +40,15 @@ public class SMBProtocolDecodingExceptionTest {
         assertTrue(ex instanceof CIFSException, "Should be a CIFSException subtype");
 
         // Assert throwing/catching behavior with assertThrows
-        SMBProtocolDecodingException thrown = assertThrows(
-                SMBProtocolDecodingException.class,
-                () -> { throw new SMBProtocolDecodingException(); },
-                "Should be throwable via assertThrows");
+        SMBProtocolDecodingException thrown = assertThrows(SMBProtocolDecodingException.class, () -> {
+            throw new SMBProtocolDecodingException();
+        }, "Should be throwable via assertThrows");
         assertTrue(thrown instanceof CIFSException, "Thrown instance should also be CIFSException subtype");
     }
 
     @ParameterizedTest
     @NullAndEmptySource
-    @ValueSource(strings = {"hello", " ", "unicode-∑"})
+    @ValueSource(strings = { "hello", " ", "unicode-∑" })
     @DisplayName("Message-only constructor: preserves provided message; null cause")
     void messageOnlyConstructor_preservesMessage(String message) {
         // Arrange & Act
@@ -92,7 +96,7 @@ public class SMBProtocolDecodingExceptionTest {
 
     @ParameterizedTest
     @NullAndEmptySource
-    @ValueSource(strings = {"oops", "multi word", "中文"})
+    @ValueSource(strings = { "oops", "multi word", "中文" })
     @DisplayName("Message+Cause constructor: preserves both values; no interactions with cause")
     void messageAndCauseConstructor_preservesBoth(String message) {
         // Arrange & Act
@@ -113,4 +117,3 @@ public class SMBProtocolDecodingExceptionTest {
         verifyNoInteractions(mockCause);
     }
 }
-

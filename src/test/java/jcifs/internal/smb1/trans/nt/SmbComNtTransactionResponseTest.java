@@ -1,13 +1,16 @@
 package jcifs.internal.smb1.trans.nt;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Field;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -32,7 +35,7 @@ class SmbComNtTransactionResponseTest {
 
     // Concrete implementation for testing
     private static class TestSmbComNtTransactionResponse extends SmbComNtTransactionResponse {
-        
+
         public TestSmbComNtTransactionResponse(Configuration config) {
             super(config);
         }
@@ -91,63 +94,63 @@ class SmbComNtTransactionResponseTest {
     void testReadParameterWordsWireFormatZeroSetupCount() throws Exception {
         byte[] buffer = new byte[100];
         int bufferIndex = 10;
-        
+
         // Prepare buffer with test data
         // Reserved bytes (3 bytes)
         buffer[bufferIndex] = 0x00;
         buffer[bufferIndex + 1] = 0x00;
         buffer[bufferIndex + 2] = 0x00;
-        
+
         // totalParameterCount (4 bytes)
         SMBUtil.writeInt4(1000, buffer, bufferIndex + 3);
-        
+
         // totalDataCount (4 bytes)
         SMBUtil.writeInt4(2000, buffer, bufferIndex + 7);
-        
+
         // parameterCount (4 bytes)
         SMBUtil.writeInt4(100, buffer, bufferIndex + 11);
-        
+
         // parameterOffset (4 bytes)
         SMBUtil.writeInt4(64, buffer, bufferIndex + 15);
-        
+
         // parameterDisplacement (4 bytes)
         SMBUtil.writeInt4(0, buffer, bufferIndex + 19);
-        
+
         // dataCount (4 bytes)
         SMBUtil.writeInt4(200, buffer, bufferIndex + 23);
-        
+
         // dataOffset (4 bytes)
         SMBUtil.writeInt4(128, buffer, bufferIndex + 27);
-        
+
         // dataDisplacement (4 bytes)
         SMBUtil.writeInt4(0, buffer, bufferIndex + 31);
-        
+
         // setupCount (1 byte) + 1 reserved byte
         buffer[bufferIndex + 35] = 0x00; // setupCount = 0
         buffer[bufferIndex + 36] = 0x00; // reserved
-        
+
         int bytesRead = response.readParameterWordsWireFormat(buffer, bufferIndex);
-        
+
         // Verify the correct number of bytes were read (37 bytes total)
         assertEquals(37, bytesRead);
-        
+
         // Verify values through reflection
         Field totalParamField = response.getClass().getSuperclass().getSuperclass().getDeclaredField("totalParameterCount");
         totalParamField.setAccessible(true);
         assertEquals(1000, totalParamField.get(response));
-        
+
         Field totalDataField = response.getClass().getSuperclass().getSuperclass().getDeclaredField("totalDataCount");
         totalDataField.setAccessible(true);
         assertEquals(2000, totalDataField.get(response));
-        
+
         Field paramCountField = response.getClass().getSuperclass().getSuperclass().getDeclaredField("parameterCount");
         paramCountField.setAccessible(true);
         assertEquals(100, paramCountField.get(response));
-        
+
         Field dataCountField = response.getClass().getSuperclass().getSuperclass().getDeclaredField("dataCount");
         dataCountField.setAccessible(true);
         assertEquals(200, dataCountField.get(response));
-        
+
         Field setupCountField = response.getClass().getSuperclass().getSuperclass().getDeclaredField("setupCount");
         setupCountField.setAccessible(true);
         assertEquals(0, setupCountField.get(response));
@@ -158,46 +161,46 @@ class SmbComNtTransactionResponseTest {
     void testReadParameterWordsWireFormatNonZeroSetupCount() throws Exception {
         byte[] buffer = new byte[100];
         int bufferIndex = 10;
-        
+
         // Prepare buffer with test data
         // Reserved bytes (3 bytes)
         buffer[bufferIndex] = 0x00;
         buffer[bufferIndex + 1] = 0x00;
         buffer[bufferIndex + 2] = 0x00;
-        
+
         // totalParameterCount (4 bytes)
         SMBUtil.writeInt4(500, buffer, bufferIndex + 3);
-        
+
         // totalDataCount (4 bytes)
         SMBUtil.writeInt4(1500, buffer, bufferIndex + 7);
-        
+
         // parameterCount (4 bytes)
         SMBUtil.writeInt4(50, buffer, bufferIndex + 11);
-        
+
         // parameterOffset (4 bytes)
         SMBUtil.writeInt4(80, buffer, bufferIndex + 15);
-        
+
         // parameterDisplacement (4 bytes)
         SMBUtil.writeInt4(10, buffer, bufferIndex + 19);
-        
+
         // dataCount (4 bytes)
         SMBUtil.writeInt4(150, buffer, bufferIndex + 23);
-        
+
         // dataOffset (4 bytes)
         SMBUtil.writeInt4(160, buffer, bufferIndex + 27);
-        
+
         // dataDisplacement (4 bytes)
         SMBUtil.writeInt4(20, buffer, bufferIndex + 31);
-        
+
         // setupCount (1 byte) + 1 reserved byte
         buffer[bufferIndex + 35] = 0x05; // setupCount = 5
         buffer[bufferIndex + 36] = 0x00; // reserved
-        
+
         int bytesRead = response.readParameterWordsWireFormat(buffer, bufferIndex);
-        
+
         // Verify the correct number of bytes were read
         assertEquals(37, bytesRead);
-        
+
         // Verify setupCount through reflection
         Field setupCountField = response.getClass().getSuperclass().getSuperclass().getDeclaredField("setupCount");
         setupCountField.setAccessible(true);
@@ -206,24 +209,19 @@ class SmbComNtTransactionResponseTest {
 
     @ParameterizedTest
     @DisplayName("Test readParameterWordsWireFormat with various parameter values")
-    @CsvSource({
-        "0, 0, 0, 0, 0, 0, 0, 0, 0",
-        "100, 200, 10, 64, 0, 20, 128, 0, 1",
-        "65535, 65535, 1024, 256, 512, 2048, 512, 1024, 10",
-        "1, 1, 1, 1, 0, 1, 1, 0, 255"
-    })
-    void testReadParameterWordsWireFormatWithVariousValues(
-            int totalParams, int totalData, int paramCount, int paramOffset,
-            int paramDisp, int dataCount, int dataOffset, int dataDisp, int setupCount) throws Exception {
-        
+    @CsvSource({ "0, 0, 0, 0, 0, 0, 0, 0, 0", "100, 200, 10, 64, 0, 20, 128, 0, 1", "65535, 65535, 1024, 256, 512, 2048, 512, 1024, 10",
+            "1, 1, 1, 1, 0, 1, 1, 0, 255" })
+    void testReadParameterWordsWireFormatWithVariousValues(int totalParams, int totalData, int paramCount, int paramOffset, int paramDisp,
+            int dataCount, int dataOffset, int dataDisp, int setupCount) throws Exception {
+
         byte[] buffer = new byte[100];
         int bufferIndex = 5;
-        
+
         // Reserved bytes
         buffer[bufferIndex] = 0x00;
         buffer[bufferIndex + 1] = 0x00;
         buffer[bufferIndex + 2] = 0x00;
-        
+
         SMBUtil.writeInt4(totalParams, buffer, bufferIndex + 3);
         SMBUtil.writeInt4(totalData, buffer, bufferIndex + 7);
         SMBUtil.writeInt4(paramCount, buffer, bufferIndex + 11);
@@ -232,22 +230,22 @@ class SmbComNtTransactionResponseTest {
         SMBUtil.writeInt4(dataCount, buffer, bufferIndex + 23);
         SMBUtil.writeInt4(dataOffset, buffer, bufferIndex + 27);
         SMBUtil.writeInt4(dataDisp, buffer, bufferIndex + 31);
-        buffer[bufferIndex + 35] = (byte)(setupCount & 0xFF);
+        buffer[bufferIndex + 35] = (byte) (setupCount & 0xFF);
         buffer[bufferIndex + 36] = 0x00;
-        
+
         int bytesRead = response.readParameterWordsWireFormat(buffer, bufferIndex);
-        
+
         assertEquals(37, bytesRead);
-        
+
         // Verify all fields through reflection
         Field field = response.getClass().getSuperclass().getSuperclass().getDeclaredField("totalParameterCount");
         field.setAccessible(true);
         assertEquals(totalParams, field.get(response));
-        
+
         field = response.getClass().getSuperclass().getSuperclass().getDeclaredField("totalDataCount");
         field.setAccessible(true);
         assertEquals(totalData, field.get(response));
-        
+
         field = response.getClass().getSuperclass().getSuperclass().getDeclaredField("setupCount");
         field.setAccessible(true);
         assertEquals(setupCount, field.get(response));
@@ -258,25 +256,25 @@ class SmbComNtTransactionResponseTest {
     void testBufDataStartInitialization() throws Exception {
         byte[] buffer = new byte[100];
         int bufferIndex = 0;
-        
+
         // Set bufDataStart to 0 initially
         Field bufDataStartField = response.getClass().getSuperclass().getSuperclass().getDeclaredField("bufDataStart");
         bufDataStartField.setAccessible(true);
         bufDataStartField.set(response, 0);
-        
+
         // Prepare buffer with totalParameterCount = 1500
         buffer[bufferIndex] = 0x00;
         buffer[bufferIndex + 1] = 0x00;
         buffer[bufferIndex + 2] = 0x00;
         SMBUtil.writeInt4(1500, buffer, bufferIndex + 3);
-        
+
         // Fill rest of required fields
         for (int i = 7; i < 37; i++) {
             buffer[bufferIndex + i] = 0x00;
         }
-        
+
         response.readParameterWordsWireFormat(buffer, bufferIndex);
-        
+
         // Verify bufDataStart was set to totalParameterCount
         assertEquals(1500, bufDataStartField.get(response));
     }
@@ -286,41 +284,41 @@ class SmbComNtTransactionResponseTest {
     void testBufDataStartNotChangedWhenNonZero() throws Exception {
         byte[] buffer = new byte[100];
         int bufferIndex = 0;
-        
+
         // Set bufDataStart to a non-zero value
         Field bufDataStartField = response.getClass().getSuperclass().getSuperclass().getDeclaredField("bufDataStart");
         bufDataStartField.setAccessible(true);
         bufDataStartField.set(response, 999);
-        
+
         // Prepare buffer with totalParameterCount = 1500
         buffer[bufferIndex] = 0x00;
         buffer[bufferIndex + 1] = 0x00;
         buffer[bufferIndex + 2] = 0x00;
         SMBUtil.writeInt4(1500, buffer, bufferIndex + 3);
-        
+
         // Fill rest of required fields
         for (int i = 7; i < 37; i++) {
             buffer[bufferIndex + i] = 0x00;
         }
-        
+
         response.readParameterWordsWireFormat(buffer, bufferIndex);
-        
+
         // Verify bufDataStart was not changed
         assertEquals(999, bufDataStartField.get(response));
     }
 
     @ParameterizedTest
     @DisplayName("Test reserved bytes are properly skipped")
-    @ValueSource(bytes = {0x00, 0x01, (byte)0xFF, 0x7F, (byte)0x80})
+    @ValueSource(bytes = { 0x00, 0x01, (byte) 0xFF, 0x7F, (byte) 0x80 })
     void testReservedBytesSkipped(byte reservedValue) throws Exception {
         byte[] buffer = new byte[100];
         int bufferIndex = 0;
-        
+
         // Set reserved bytes to non-zero values (should be ignored)
         buffer[bufferIndex] = reservedValue;
         buffer[bufferIndex + 1] = reservedValue;
         buffer[bufferIndex + 2] = reservedValue;
-        
+
         // Set valid data for other fields
         SMBUtil.writeInt4(100, buffer, bufferIndex + 3);
         for (int i = 7; i < 35; i++) {
@@ -328,9 +326,9 @@ class SmbComNtTransactionResponseTest {
         }
         buffer[bufferIndex + 35] = 0x00;
         buffer[bufferIndex + 36] = reservedValue; // Reserved byte after setupCount
-        
+
         int bytesRead = response.readParameterWordsWireFormat(buffer, bufferIndex);
-        
+
         // Should still read 37 bytes regardless of reserved byte values
         assertEquals(37, bytesRead);
     }
@@ -340,12 +338,12 @@ class SmbComNtTransactionResponseTest {
     void testMaximumValues() throws Exception {
         byte[] buffer = new byte[100];
         int bufferIndex = 0;
-        
+
         // Reserved bytes
         buffer[bufferIndex] = 0x00;
         buffer[bufferIndex + 1] = 0x00;
         buffer[bufferIndex + 2] = 0x00;
-        
+
         // Set all fields to maximum 32-bit values
         SMBUtil.writeInt4(Integer.MAX_VALUE, buffer, bufferIndex + 3);
         SMBUtil.writeInt4(Integer.MAX_VALUE, buffer, bufferIndex + 7);
@@ -355,13 +353,13 @@ class SmbComNtTransactionResponseTest {
         SMBUtil.writeInt4(Integer.MAX_VALUE, buffer, bufferIndex + 23);
         SMBUtil.writeInt4(Integer.MAX_VALUE, buffer, bufferIndex + 27);
         SMBUtil.writeInt4(Integer.MAX_VALUE, buffer, bufferIndex + 31);
-        buffer[bufferIndex + 35] = (byte)0xFF; // Maximum setup count (255)
+        buffer[bufferIndex + 35] = (byte) 0xFF; // Maximum setup count (255)
         buffer[bufferIndex + 36] = 0x00;
-        
+
         int bytesRead = response.readParameterWordsWireFormat(buffer, bufferIndex);
-        
+
         assertEquals(37, bytesRead);
-        
+
         // Verify maximum values are correctly handled
         Field setupCountField = response.getClass().getSuperclass().getSuperclass().getDeclaredField("setupCount");
         setupCountField.setAccessible(true);
@@ -373,14 +371,14 @@ class SmbComNtTransactionResponseTest {
     void testNegativeValuesAsUnsigned() throws Exception {
         byte[] buffer = new byte[100];
         int bufferIndex = 0;
-        
+
         // Reserved bytes
-        buffer[bufferIndex] = (byte)0xFF;
-        buffer[bufferIndex + 1] = (byte)0xFF;
-        buffer[bufferIndex + 2] = (byte)0xFF;
-        
+        buffer[bufferIndex] = (byte) 0xFF;
+        buffer[bufferIndex + 1] = (byte) 0xFF;
+        buffer[bufferIndex + 2] = (byte) 0xFF;
+
         // Set fields with negative values (should be treated as unsigned)
-        SMBUtil.writeInt4(-1, buffer, bufferIndex + 3);  // Should be read as 0xFFFFFFFF
+        SMBUtil.writeInt4(-1, buffer, bufferIndex + 3); // Should be read as 0xFFFFFFFF
         SMBUtil.writeInt4(-100, buffer, bufferIndex + 7);
         SMBUtil.writeInt4(-1000, buffer, bufferIndex + 11);
         SMBUtil.writeInt4(0, buffer, bufferIndex + 15);
@@ -388,13 +386,13 @@ class SmbComNtTransactionResponseTest {
         SMBUtil.writeInt4(-5000, buffer, bufferIndex + 23);
         SMBUtil.writeInt4(0, buffer, bufferIndex + 27);
         SMBUtil.writeInt4(0, buffer, bufferIndex + 31);
-        buffer[bufferIndex + 35] = (byte)0x80; // 128 as unsigned
-        buffer[bufferIndex + 36] = (byte)0xFF;
-        
+        buffer[bufferIndex + 35] = (byte) 0x80; // 128 as unsigned
+        buffer[bufferIndex + 36] = (byte) 0xFF;
+
         int bytesRead = response.readParameterWordsWireFormat(buffer, bufferIndex);
-        
+
         assertEquals(37, bytesRead);
-        
+
         // Verify setupCount treats byte as unsigned
         Field setupCountField = response.getClass().getSuperclass().getSuperclass().getDeclaredField("setupCount");
         setupCountField.setAccessible(true);
@@ -405,24 +403,24 @@ class SmbComNtTransactionResponseTest {
     @DisplayName("Test reading from different buffer positions")
     void testReadFromDifferentPositions() throws Exception {
         byte[] buffer = new byte[200];
-        
+
         // Test at various positions in the buffer
-        int[] positions = {0, 10, 50, 100, 150};
-        
+        int[] positions = { 0, 10, 50, 100, 150 };
+
         for (int pos : positions) {
             when(mockConfig.getPid()).thenReturn(1234); // Mock getPid for each new instance
             response = new TestSmbComNtTransactionResponse(mockConfig); // Reset response
-            
+
             // Fill buffer at position
             for (int i = 0; i < 37; i++) {
                 buffer[pos + i] = 0x00;
             }
             SMBUtil.writeInt4(pos * 10, buffer, pos + 3); // Unique value per position
-            
+
             int bytesRead = response.readParameterWordsWireFormat(buffer, pos);
-            
+
             assertEquals(37, bytesRead, "Failed at position " + pos);
-            
+
             // Verify unique value was read correctly
             Field totalParamField = response.getClass().getSuperclass().getSuperclass().getDeclaredField("totalParameterCount");
             totalParamField.setAccessible(true);

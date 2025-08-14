@@ -1,22 +1,37 @@
 package jcifs.smb;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Field;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 import jcifs.CIFSContext;
 import jcifs.CIFSException;
@@ -26,17 +41,21 @@ import jcifs.RuntimeCIFSException;
 import jcifs.internal.SMBSigningDigest;
 import jcifs.internal.smb2.Smb2EncryptionContext;
 import jcifs.internal.smb2.session.Smb2SessionSetupResponse;
-import jcifs.smb.SmbException;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class SmbSessionImplTest {
 
-    @Mock private CIFSContext cifsContext;
-    @Mock private Configuration configuration;
-    @Mock private Credentials credentials;
-    @Mock private CredentialsInternal credentialsInternal;
-    @Mock private SmbTransportImpl transport;
+    @Mock
+    private CIFSContext cifsContext;
+    @Mock
+    private Configuration configuration;
+    @Mock
+    private Credentials credentials;
+    @Mock
+    private CredentialsInternal credentialsInternal;
+    @Mock
+    private SmbTransportImpl transport;
 
     private SmbSessionImpl newSession() {
         return new SmbSessionImpl(cifsContext, "server.example", "EXAMPLE", transport);
@@ -46,7 +65,7 @@ class SmbSessionImplTest {
     void setup() {
         // Base context configuration - always needed
         when(cifsContext.getConfig()).thenReturn(configuration);
-        
+
         // Context and credentials wiring - used by most tests
         when(cifsContext.getCredentials()).thenReturn(credentials);
         when(credentials.unwrap(CredentialsInternal.class)).thenReturn(credentialsInternal);
@@ -63,8 +82,7 @@ class SmbSessionImplTest {
             Field f = target.getClass().getDeclaredField(name);
             f.setAccessible(true);
             f.set(target, value);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
@@ -234,28 +252,28 @@ class SmbSessionImplTest {
         SmbSessionImpl session = newSession();
 
         // No encryption context -> throws
-        CIFSException notEnabled = assertThrows(CIFSException.class, () -> session.encryptMessage(new byte[] {1}));
+        CIFSException notEnabled = assertThrows(CIFSException.class, () -> session.encryptMessage(new byte[] { 1 }));
         assertTrue(notEnabled.getMessage().contains("Encryption not enabled"));
-        assertThrows(CIFSException.class, () -> session.decryptMessage(new byte[] {1}));
+        assertThrows(CIFSException.class, () -> session.decryptMessage(new byte[] { 1 }));
 
         // Set encryption context and verify delegation
         Smb2EncryptionContext enc = mock(Smb2EncryptionContext.class);
         setField(session, "encryptionContext", enc);
         setField(session, "sessionId", 99L);
 
-        when(enc.encryptMessage(any(byte[].class), eq(99L))).thenReturn(new byte[] {9, 9});
-        when(enc.decryptMessage(any(byte[].class))).thenReturn(new byte[] {7, 7});
+        when(enc.encryptMessage(any(byte[].class), eq(99L))).thenReturn(new byte[] { 9, 9 });
+        when(enc.decryptMessage(any(byte[].class))).thenReturn(new byte[] { 7, 7 });
 
         assertTrue(session.isEncryptionEnabled());
         assertSame(enc, session.getEncryptionContext());
 
-        byte[] encOut = session.encryptMessage(new byte[] {1, 2, 3});
-        assertArrayEquals(new byte[] {9, 9}, encOut);
-        verify(enc, times(1)).encryptMessage(eq(new byte[] {1, 2, 3}), eq(99L));
+        byte[] encOut = session.encryptMessage(new byte[] { 1, 2, 3 });
+        assertArrayEquals(new byte[] { 9, 9 }, encOut);
+        verify(enc, times(1)).encryptMessage(eq(new byte[] { 1, 2, 3 }), eq(99L));
 
-        byte[] decOut = session.decryptMessage(new byte[] {5});
-        assertArrayEquals(new byte[] {7, 7}, decOut);
-        verify(enc, times(1)).decryptMessage(eq(new byte[] {5}));
+        byte[] decOut = session.decryptMessage(new byte[] { 5 });
+        assertArrayEquals(new byte[] { 7, 7 }, decOut);
+        verify(enc, times(1)).decryptMessage(eq(new byte[] { 5 }));
     }
 
     @Test

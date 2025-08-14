@@ -5,9 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
-import jcifs.smb1.smb1.ServerMessageBlock;
-import jcifs.smb1.smb1.SmbComOpenAndX;
-import jcifs.smb1.smb1.SmbFile;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

@@ -1,8 +1,23 @@
 package jcifs.smb;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -140,11 +155,11 @@ class SmbPipeHandleInternalTest {
     void sendrecv_smb2_ioctl() throws Exception {
         // Arrange
         SmbPipeHandleImpl handle = newHandleWithBasicStubs(0, "\\\\pipe\\\\x");
-        
+
         // Setup the tree handle properly
         when(pipe.ensureTreeConnected()).thenReturn(tree);
         when(tree.acquire()).thenReturn(tree);
-        
+
         // Setup for ensureOpen
         when(tree.isSMB2()).thenReturn(true);
         when(pipe.openUnshared(anyString(), anyInt(), anyInt(), anyInt(), anyInt(), anyInt())).thenReturn(fh);
@@ -152,7 +167,7 @@ class SmbPipeHandleInternalTest {
         lenient().when(fh.isValid()).thenReturn(true);
         lenient().when(fh.getTree()).thenReturn(tree);
         when(fh.getFileId()).thenReturn(new byte[16]);
-        
+
         // Setup for ioctl request
         when(tree.send(any(Smb2IoctlRequest.class), eq(RequestParam.NO_RETRY))).thenReturn(ioctlResp);
         when(ioctlResp.getOutputLength()).thenReturn(42);
@@ -176,11 +191,11 @@ class SmbPipeHandleInternalTest {
         // Arrange
         int type = SmbPipeResource.PIPE_TYPE_TRANSACT | SmbPipeResource.PIPE_TYPE_RDWR;
         SmbPipeHandleImpl handle = newHandleWithBasicStubs(type, "\\\\pipe\\\\t");
-        
+
         // Setup the tree handle properly
         when(pipe.ensureTreeConnected()).thenReturn(tree);
         when(tree.acquire()).thenReturn(tree);
-        
+
         // Setup for ensureOpen
         when(tree.isSMB2()).thenReturn(false);
         when(tree.hasCapability(SmbConstants.CAP_NT_SMBS)).thenReturn(true);
@@ -191,9 +206,8 @@ class SmbPipeHandleInternalTest {
         when(fh.getFid()).thenReturn(99);
 
         // Mock send to just echo the provided response instance
-        when(tree.send(any(TransTransactNamedPipe.class), any(TransTransactNamedPipeResponse.class),
-                eq(RequestParam.NO_RETRY)))
-            .thenAnswer(inv -> inv.getArgument(1));
+        when(tree.send(any(TransTransactNamedPipe.class), any(TransTransactNamedPipeResponse.class), eq(RequestParam.NO_RETRY)))
+                .thenAnswer(inv -> inv.getArgument(1));
 
         int n = handle.sendrecv(new byte[10], 0, 0, new byte[20], 100);
         assertEquals(0, n, "Default response length is 0 unless protocol fills it");
@@ -204,11 +218,11 @@ class SmbPipeHandleInternalTest {
     void sendrecv_call_branch() throws Exception {
         int type = SmbPipeResource.PIPE_TYPE_CALL | SmbPipeResource.PIPE_TYPE_RDWR;
         SmbPipeHandleImpl handle = newHandleWithBasicStubs(type, "\\\\pipe\\\\c");
-        
+
         // Setup the tree handle properly
         when(pipe.ensureTreeConnected()).thenReturn(tree);
         when(tree.acquire()).thenReturn(tree);
-        
+
         // Setup for ensureOpen
         when(tree.isSMB2()).thenReturn(false);
         when(tree.hasCapability(SmbConstants.CAP_NT_SMBS)).thenReturn(true);
@@ -218,10 +232,8 @@ class SmbPipeHandleInternalTest {
         lenient().when(fh.getTree()).thenReturn(tree);
 
         // Mock both sends and return response
-        when(tree.send(any(TransWaitNamedPipe.class), any(TransWaitNamedPipeResponse.class)))
-            .thenAnswer(inv -> inv.getArgument(1));
-        when(tree.send(any(TransCallNamedPipe.class), any(TransCallNamedPipeResponse.class)))
-            .thenAnswer(inv -> inv.getArgument(1));
+        when(tree.send(any(TransWaitNamedPipe.class), any(TransWaitNamedPipeResponse.class))).thenAnswer(inv -> inv.getArgument(1));
+        when(tree.send(any(TransCallNamedPipe.class), any(TransCallNamedPipeResponse.class))).thenAnswer(inv -> inv.getArgument(1));
 
         int n = handle.sendrecv(new byte[3], 0, 3, new byte[8], 64);
         assertEquals(0, n, "Default response length is 0 unless protocol fills it");
@@ -232,7 +244,7 @@ class SmbPipeHandleInternalTest {
     void sendrecv_stream_fallback_uses_streams() throws Exception {
         // Arrange - use non-transact, non-call pipe type 
         SmbPipeHandleImpl handle = newHandleWithBasicStubs(SmbPipeResource.PIPE_TYPE_RDWR, "\\\\pipe\\\\x");
-        
+
         // Setup for ensureOpen to avoid NullPointer
         when(pipe.ensureTreeConnected()).thenReturn(tree);
         when(tree.acquire()).thenReturn(tree);
@@ -243,16 +255,16 @@ class SmbPipeHandleInternalTest {
         lenient().when(fh.isValid()).thenReturn(true);
         lenient().when(fh.getTree()).thenReturn(tree);
         lenient().when(tree.getReceiveBufferSize()).thenReturn(4096);
-        
+
         // Mock the streams
         SmbPipeInputStream mockIn = mock(SmbPipeInputStream.class);
         SmbPipeOutputStream mockOut = mock(SmbPipeOutputStream.class);
-        
+
         // Create spy and override getInput/getOutput
         SmbPipeHandleImpl spyHandle = spy(handle);
         doReturn(mockIn).when(spyHandle).getInput();
         doReturn(mockOut).when(spyHandle).getOutput();
-        
+
         // Setup mock behavior
         when(mockIn.read(any(byte[].class))).thenReturn(7);
 
@@ -271,14 +283,14 @@ class SmbPipeHandleInternalTest {
     @DisplayName("recv delegates to input.readDirect with args")
     void recv_delegates_readDirect() throws Exception {
         SmbPipeHandleImpl handle = newHandleWithBasicStubs(0, "\\\\pipe\\\\y");
-        
+
         // Mock the stream directly
         SmbPipeInputStream mockIn = mock(SmbPipeInputStream.class);
-        
+
         // Create spy and override getInput
         SmbPipeHandleImpl spyHandle = spy(handle);
         doReturn(mockIn).when(spyHandle).getInput();
-        
+
         when(mockIn.readDirect(any(byte[].class), anyInt(), anyInt())).thenReturn(5);
 
         byte[] b = new byte[10];
@@ -291,10 +303,10 @@ class SmbPipeHandleInternalTest {
     @DisplayName("send delegates to output.writeDirect with args")
     void send_delegates_writeDirect() throws Exception {
         SmbPipeHandleImpl handle = newHandleWithBasicStubs(0, "\\\\pipe\\\\y");
-        
+
         // Mock the stream directly
         SmbPipeOutputStream mockOut = mock(SmbPipeOutputStream.class);
-        
+
         // Create spy and override getOutput
         SmbPipeHandleImpl spyHandle = spy(handle);
         doReturn(mockOut).when(spyHandle).getOutput();
@@ -318,19 +330,38 @@ class SmbPipeHandleInternalTest {
         // Invalid type
         class OtherPipeHandle implements SmbPipeHandle {
             @Override
-            public SmbPipeResource getPipe() { return mock(SmbPipeResource.class); }
+            public SmbPipeResource getPipe() {
+                return mock(SmbPipeResource.class);
+            }
+
             @Override
-            public SmbPipeInputStream getInput() throws CIFSException { return null; }
+            public SmbPipeInputStream getInput() throws CIFSException {
+                return null;
+            }
+
             @Override
-            public SmbPipeOutputStream getOutput() throws CIFSException { return null; }
+            public SmbPipeOutputStream getOutput() throws CIFSException {
+                return null;
+            }
+
             @Override
-            public boolean isOpen() { return false; }
+            public boolean isOpen() {
+                return false;
+            }
+
             @Override
-            public boolean isStale() { return false; }
+            public boolean isStale() {
+                return false;
+            }
+
             @Override
-            public void close() throws CIFSException {}
+            public void close() throws CIFSException {
+            }
+
             @Override
-            public <T extends SmbPipeHandle> T unwrap(Class<T> type) { return null; }
+            public <T extends SmbPipeHandle> T unwrap(Class<T> type) {
+                return null;
+            }
         }
         assertThrows(ClassCastException.class, () -> {
             OtherPipeHandle result = handle.unwrap(OtherPipeHandle.class);
@@ -378,13 +409,12 @@ class SmbPipeHandleInternalTest {
         SmbPipeHandleImpl handle = newHandleWithBasicStubs(0, "\\\\pipe\\\\sess");
         when(pipe.ensureTreeConnected()).thenReturn(tree);
         when(tree.acquire()).thenReturn(tree);
-        
+
         // Use doThrow for unchecked exception wrapping the CIFSException
-        doThrow(new RuntimeException(new CIFSException("session fail")))
-            .when(tree).getSession();
-        
+        doThrow(new RuntimeException(new CIFSException("session fail"))).when(tree).getSession();
+
         Exception ex = assertThrows(Exception.class, handle::getSessionKey);
-        assertTrue(ex.getMessage().contains("session fail") || 
-                  (ex.getCause() != null && ex.getCause().getMessage().contains("session fail")));
+        assertTrue(
+                ex.getMessage().contains("session fail") || (ex.getCause() != null && ex.getCause().getMessage().contains("session fail")));
     }
 }

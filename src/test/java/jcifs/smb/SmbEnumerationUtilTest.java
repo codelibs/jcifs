@@ -1,16 +1,27 @@
 package jcifs.smb;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.util.stream.Stream;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -18,17 +29,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import jcifs.CIFSException;
 import jcifs.ResourceFilter;
-import jcifs.ResourceNameFilter;
 import jcifs.SmbResource;
 import jcifs.SmbResourceLocator;
-
-import java.util.stream.Stream;
 
 @ExtendWith(MockitoExtension.class)
 class SmbEnumerationUtilTest {
@@ -70,11 +77,10 @@ class SmbEnumerationUtilTest {
 
         static Stream<Arguments> invalidShareEnumCases() {
             return Stream.of(
-                // Missing trailing slash -> should complain about directory ending
-                Arguments.of("smb://server/share", "/share", true),
-                // Not a server root -> invalid list operation
-                Arguments.of("smb://server/share/", "/share/", false)
-            );
+                    // Missing trailing slash -> should complain about directory ending
+                    Arguments.of("smb://server/share", "/share", true),
+                    // Not a server root -> invalid list operation
+                    Arguments.of("smb://server/share/", "/share/", false));
         }
 
         @ParameterizedTest(name = "invalid path: {0}")
@@ -84,17 +90,15 @@ class SmbEnumerationUtilTest {
             SmbFile parent = new SmbFile(url);
 
             // Act + Assert
-            SmbException ex = assertThrows(SmbException.class, () ->
-                SmbEnumerationUtil.doShareEnum(parent, "*", 0, null, null)
-            );
+            SmbException ex = assertThrows(SmbException.class, () -> SmbEnumerationUtil.doShareEnum(parent, "*", 0, null, null));
 
             // Assert message indicates which validation failed
             if (expectDirSlashMsg) {
                 assertTrue(ex.getMessage().contains("directory must end with '/'"),
-                    "Expected trailing slash message, was: " + ex.getMessage());
+                        "Expected trailing slash message, was: " + ex.getMessage());
             } else {
                 assertTrue(ex.getMessage().contains("invalid") || ex.getMessage().contains("invalid:"),
-                    "Expected invalid list operation message, was: " + ex.getMessage());
+                        "Expected invalid list operation message, was: " + ex.getMessage());
             }
         }
     }
@@ -102,7 +106,7 @@ class SmbEnumerationUtilTest {
     @Nested
     @DisplayName("Master browser enumeration tests")
     class MasterBrowserEnumerationTests {
-        
+
         @Test
         @DisplayName("doEnum with empty host throws SmbUnsupportedOperationException when master browser not found")
         void doEnum_withEmptyHost_throwsUnsupportedWithoutNetwork() throws Exception {
@@ -117,9 +121,7 @@ class SmbEnumerationUtilTest {
             when(locator.getAddress()).thenThrow(new CIFSException("no master", new UnknownHostException("MB")));
 
             // Act + Assert: the code maps this case to SmbUnsupportedOperationException
-            assertThrows(SmbUnsupportedOperationException.class, () ->
-                SmbEnumerationUtil.doEnum(parent, "*", 0, null, null)
-            );
+            assertThrows(SmbUnsupportedOperationException.class, () -> SmbEnumerationUtil.doEnum(parent, "*", 0, null, null));
         }
 
         @Test
@@ -133,9 +135,8 @@ class SmbEnumerationUtilTest {
             when(locator.getAddress()).thenThrow(new CIFSException("no master", new UnknownHostException("MB")));
 
             // Act + Assert: doEnum throws SmbUnsupportedOperationException which is returned as-is
-            SmbUnsupportedOperationException ex = assertThrows(SmbUnsupportedOperationException.class, () ->
-                SmbEnumerationUtil.list(parent, "*", 0, null, null)
-            );
+            SmbUnsupportedOperationException ex =
+                    assertThrows(SmbUnsupportedOperationException.class, () -> SmbEnumerationUtil.list(parent, "*", 0, null, null));
             // SmbUnsupportedOperationException is directly thrown, not wrapped
             assertNotNull(ex);
         }
@@ -151,9 +152,8 @@ class SmbEnumerationUtilTest {
             when(locator.getAddress()).thenThrow(new CIFSException("no master", new UnknownHostException("MB")));
 
             // Act + Assert: doEnum throws SmbUnsupportedOperationException which is returned as-is
-            SmbUnsupportedOperationException ex = assertThrows(SmbUnsupportedOperationException.class, () ->
-                SmbEnumerationUtil.listFiles(parent, "*", 0, null, null)
-            );
+            SmbUnsupportedOperationException ex =
+                    assertThrows(SmbUnsupportedOperationException.class, () -> SmbEnumerationUtil.listFiles(parent, "*", 0, null, null));
             // SmbUnsupportedOperationException is directly thrown, not wrapped
             assertNotNull(ex);
         }
@@ -162,31 +162,25 @@ class SmbEnumerationUtilTest {
     @Nested
     @DisplayName("Input validation tests")
     class InputValidationTests {
-        
+
         @Test
         @DisplayName("list with null root throws NullPointerException")
         void list_withNullRoot_throwsNpe() {
             // Intent: null root is invalid input
-            assertThrows(NullPointerException.class, () ->
-                SmbEnumerationUtil.list(null, "*", 0, null, null)
-            );
+            assertThrows(NullPointerException.class, () -> SmbEnumerationUtil.list(null, "*", 0, null, null));
         }
-        
+
         @Test
         @DisplayName("listFiles with null root throws NullPointerException")
         void listFiles_withNullRoot_throwsNpe() {
             // Intent: null root is invalid input
-            assertThrows(NullPointerException.class, () ->
-                SmbEnumerationUtil.listFiles(null, "*", 0, null, null)
-            );
+            assertThrows(NullPointerException.class, () -> SmbEnumerationUtil.listFiles(null, "*", 0, null, null));
         }
-        
+
         @Test
         @DisplayName("doEnum with null parent throws NullPointerException")
         void doEnum_withNullParent_throwsNpe() {
-            assertThrows(NullPointerException.class, () ->
-                SmbEnumerationUtil.doEnum(null, "*", 0, null, null)
-            );
+            assertThrows(NullPointerException.class, () -> SmbEnumerationUtil.doEnum(null, "*", 0, null, null));
         }
     }
 
@@ -236,7 +230,8 @@ class SmbEnumerationUtilTest {
             SmbResource notAFileParent = mock(SmbResource.class);
 
             // Act
-            boolean result = (boolean) invokePrivate(wrapper, "accept", new Class<?>[] { SmbResource.class, String.class }, notAFileParent, "name");
+            boolean result =
+                    (boolean) invokePrivate(wrapper, "accept", new Class<?>[] { SmbResource.class, String.class }, notAFileParent, "name");
 
             // Assert
             assertFalse(result);
@@ -305,22 +300,22 @@ class SmbEnumerationUtilTest {
             Object unwrapped = invokePrivate(SmbEnumerationUtil.class, "unwrapDOSFilter", new Class<?>[] { ResourceFilter.class }, rf);
             assertNull(unwrapped);
         }
-        
+
         @Test
         void unwrapDOSFilter_returnsNull_whenWrapperButNotDosFilter() throws Exception {
             // Wrapper but not wrapping a DosFileFilter
             SmbFileFilter nonDosFilter = mock(SmbFileFilter.class);
             Object wrapper = newPrivateInner("ResourceFilterWrapper", new Class<?>[] { SmbFileFilter.class }, nonDosFilter);
-            
+
             Object unwrapped = invokePrivate(SmbEnumerationUtil.class, "unwrapDOSFilter", new Class<?>[] { ResourceFilter.class }, wrapper);
             assertNull(unwrapped);
         }
     }
-    
+
     @Nested
     @DisplayName("Exception handling tests")
     class ExceptionHandlingTests {
-        
+
         @Test
         @DisplayName("doEnum rethrows CIFSException when not UnknownHostException")
         void doEnum_rethrowsCIFSException_whenNotUnknownHost() throws Exception {
@@ -332,14 +327,12 @@ class SmbEnumerationUtilTest {
             // Throw CIFSException with different cause
             CIFSException differentException = new CIFSException("different error");
             when(locator.getAddress()).thenThrow(differentException);
-            
+
             // Act + Assert
-            CIFSException thrown = assertThrows(CIFSException.class, () ->
-                SmbEnumerationUtil.doEnum(parent, "*", 0, null, null)
-            );
+            CIFSException thrown = assertThrows(CIFSException.class, () -> SmbEnumerationUtil.doEnum(parent, "*", 0, null, null));
             assertSame(differentException, thrown);
         }
-        
+
         @Test
         @DisplayName("list wraps non-SmbException CIFSException properly")
         void list_wrapsOtherCIFSException() throws Exception {
@@ -350,39 +343,38 @@ class SmbEnumerationUtilTest {
             when(locator.getURL()).thenReturn(new URL("file:/"));
             CIFSException cifsEx = new CIFSException("test error");
             when(locator.getAddress()).thenThrow(cifsEx);
-            
+
             // Act + Assert
-            SmbException thrown = assertThrows(SmbException.class, () ->
-                SmbEnumerationUtil.list(parent, "*", 0, null, null)
-            );
+            SmbException thrown = assertThrows(SmbException.class, () -> SmbEnumerationUtil.list(parent, "*", 0, null, null));
             assertSame(cifsEx, thrown.getCause());
         }
     }
-    
+
     @Nested
     @DisplayName("DosFileFilter integration tests")
     class DosFileFilterTests {
-        
+
         @Test
         @DisplayName("DosFileFilter wildcard and attributes are preserved through unwrap")
         void dosFileFilter_preservesFieldsThroughUnwrap() throws Exception {
             // Test with various wildcard patterns and attribute masks
-            String[] wildcards = {"*.txt", "test*", null};
-            int[] attributes = {0x10, 0x20, 0x07};
-            
+            String[] wildcards = { "*.txt", "test*", null };
+            int[] attributes = { 0x10, 0x20, 0x07 };
+
             for (int i = 0; i < wildcards.length; i++) {
                 DosFileFilter dos = new DosFileFilter(wildcards[i], attributes[i]);
                 Object wrapper = newPrivateInner("ResourceFilterWrapper", new Class<?>[] { SmbFileFilter.class }, dos);
-                
-                Object unwrapped = invokePrivate(SmbEnumerationUtil.class, "unwrapDOSFilter", new Class<?>[] { ResourceFilter.class }, wrapper);
+
+                Object unwrapped =
+                        invokePrivate(SmbEnumerationUtil.class, "unwrapDOSFilter", new Class<?>[] { ResourceFilter.class }, wrapper);
                 assertNotNull(unwrapped);
                 assertTrue(unwrapped instanceof DosFileFilter);
-                
+
                 var wildcardField = DosFileFilter.class.getDeclaredField("wildcard");
                 wildcardField.setAccessible(true);
                 var attributesField = DosFileFilter.class.getDeclaredField("attributes");
                 attributesField.setAccessible(true);
-                
+
                 assertEquals(wildcards[i], wildcardField.get(unwrapped));
                 assertEquals(attributes[i], attributesField.get(unwrapped));
             }

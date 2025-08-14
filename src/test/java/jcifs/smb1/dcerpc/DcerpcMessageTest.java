@@ -1,13 +1,13 @@
 package jcifs.smb1.dcerpc;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.stream.Stream;
-
-import org.junit.jupiter.api.*;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.api.Test;
 
 import jcifs.smb1.dcerpc.ndr.NdrBuffer;
 import jcifs.smb1.dcerpc.ndr.NdrException;
@@ -26,7 +26,7 @@ public class DcerpcMessageTest {
      */
     private static class TestMessage extends DcerpcMessage {
         int decodedValue = 0;
-        
+
         TestMessage() {
             /* nothing */
         }
@@ -110,17 +110,17 @@ public class DcerpcMessageTest {
         m.ptype = 0; // Request type
         NdrBuffer buf = new NdrBuffer(new byte[1024], 0);
         m.encode(buf);
-        
+
         buf.setIndex(0);
         // Decode will throw exception as ptype 0 is not a valid response type
         assertThrows(NdrException.class, () -> m.decode(buf));
     }
-    
+
     @Test
     void testRoundTripEncodeDecodeForResponseType() throws Exception {
         // Create a properly formatted response message
         NdrBuffer buf = new NdrBuffer(new byte[1024], 0);
-        
+
         // Manually encode a response header
         buf.enc_ndr_small(5); // RPC version
         buf.enc_ndr_small(0); // minor version
@@ -130,27 +130,27 @@ public class DcerpcMessageTest {
         buf.enc_ndr_short(20); // length
         buf.enc_ndr_short(0); // auth length
         buf.enc_ndr_long(0); // call_id
-        
+
         // Response body
         buf.enc_ndr_long(4); // alloc_hint
         buf.enc_ndr_short(0); // context_id
         buf.enc_ndr_short(0); // cancel_count
         buf.enc_ndr_small(0xAB); // test data for decode_out
-        
+
         // Decode
         buf.setIndex(0);
         TestMessage m = new TestMessage();
         m.decode(buf);
-        
+
         assertEquals(2, m.ptype);
         assertEquals(0xAB, m.decodedValue);
     }
-    
+
     @Test
     void testRoundTripEncodeDecodeForFaultType() throws Exception {
         // Create a properly formatted fault message
         NdrBuffer buf = new NdrBuffer(new byte[1024], 0);
-        
+
         // Manually encode a fault header
         buf.enc_ndr_small(5); // RPC version
         buf.enc_ndr_small(0); // minor version
@@ -160,18 +160,18 @@ public class DcerpcMessageTest {
         buf.enc_ndr_short(20); // length
         buf.enc_ndr_short(0); // auth length
         buf.enc_ndr_long(0); // call_id
-        
+
         // Fault body
         buf.enc_ndr_long(0); // alloc_hint
         buf.enc_ndr_short(0); // context_id
         buf.enc_ndr_short(0); // cancel_count
         buf.enc_ndr_long(0xDEADBEEF); // fault status
-        
+
         // Decode
         buf.setIndex(0);
         TestMessage m = new TestMessage();
         m.decode(buf);
-        
+
         assertEquals(3, m.ptype);
         assertEquals(0xDEADBEEF, m.result);
         assertNotNull(m.getResult());
@@ -192,13 +192,13 @@ public class DcerpcMessageTest {
         m.ptype = 0;
         m.flags = 0x05;
         m.call_id = 0x123;
-        
+
         NdrBuffer buf = new NdrBuffer(new byte[1024], 0);
         m.encode(buf);
-        
+
         // Reset to read what was written
         buf.setIndex(0);
-        
+
         // Verify header was written correctly
         assertEquals(5, buf.dec_ndr_small()); // RPC version
         assertEquals(0, buf.dec_ndr_small()); // minor version  
@@ -212,14 +212,14 @@ public class DcerpcMessageTest {
 
     @Test
     void testEncodeWithDifferentFlags() throws Exception {
-        for (int flag : new int[]{0, 0xFF, 0x01, 0x80}) {
+        for (int flag : new int[] { 0, 0xFF, 0x01, 0x80 }) {
             TestMessage m = new TestMessage();
             m.ptype = 0;
             m.flags = flag;
-            
+
             NdrBuffer buf = new NdrBuffer(new byte[1024], 0);
             m.encode(buf);
-            
+
             // Reset and skip to flags field
             buf.setIndex(3);
             assertEquals(flag, buf.dec_ndr_small());

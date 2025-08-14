@@ -1,8 +1,9 @@
 package jcifs.pac;
 
-import org.bouncycastle.asn1.*;
-import org.junit.jupiter.api.Test;
-import jcifs.pac.PACDecodingException;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.ByteArrayInputStream;
 import java.io.EOFException;
@@ -10,7 +11,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Vector;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.bouncycastle.asn1.ASN1Boolean;
+import org.bouncycastle.asn1.ASN1EncodableVector;
+import org.bouncycastle.asn1.ASN1InputStream;
+import org.bouncycastle.asn1.ASN1Integer;
+import org.bouncycastle.asn1.ASN1Sequence;
+import org.bouncycastle.asn1.ASN1TaggedObject;
+import org.bouncycastle.asn1.DERSequence;
+import org.bouncycastle.asn1.DERTaggedObject;
+import org.bouncycastle.asn1.DLSequence;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests for the {@link ASN1Util} class.
@@ -146,17 +156,17 @@ class ASN1UtilTest {
     @Test
     void testReadUnparsedTagged_Success() throws IOException {
         // Tag [1] IMPLICIT, content is 0x01 0x02 0x03
-        byte[] data = new byte[]{(byte) 0xA1, 0x03, 0x01, 0x02, 0x03};
+        byte[] data = new byte[] { (byte) 0xA1, 0x03, 0x01, 0x02, 0x03 };
         ByteArrayInputStream bais = new ByteArrayInputStream(data);
         ASN1InputStream ais = new ASN1InputStream(bais);
         byte[] result = ASN1Util.readUnparsedTagged(1, 10, ais);
-        assertArrayEquals(new byte[]{0x01, 0x02, 0x03}, result);
+        assertArrayEquals(new byte[] { 0x01, 0x02, 0x03 }, result);
     }
 
     @Test
     void testReadUnparsedTagged_WrongTag() {
         // Expecting tag 2, but data has tag 1
-        byte[] data = new byte[]{(byte) 0xA1, 0x03, 0x01, 0x02, 0x03};
+        byte[] data = new byte[] { (byte) 0xA1, 0x03, 0x01, 0x02, 0x03 };
         ByteArrayInputStream bais = new ByteArrayInputStream(data);
         ASN1InputStream ais = new ASN1InputStream(bais);
         assertThrows(IOException.class, () -> {
@@ -169,7 +179,7 @@ class ASN1UtilTest {
     @Test
     void testReadTagNumber_Simple() throws IOException {
         // Simple tag 5
-        InputStream s = new ByteArrayInputStream(new byte[]{});
+        InputStream s = new ByteArrayInputStream(new byte[] {});
         int tagNo = ASN1Util.readTagNumber(s, 0x05);
         assertEquals(5, tagNo);
     }
@@ -177,7 +187,7 @@ class ASN1UtilTest {
     @Test
     void testReadTagNumber_HighTag() throws IOException {
         // High tag number (31)
-        InputStream s = new ByteArrayInputStream(new byte[]{0x1F});
+        InputStream s = new ByteArrayInputStream(new byte[] { 0x1F });
         int tagNo = ASN1Util.readTagNumber(s, 0x1F);
         assertEquals(31, tagNo);
     }
@@ -185,7 +195,7 @@ class ASN1UtilTest {
     @Test
     void testReadTagNumber_MultiByte() throws IOException {
         // Multi-byte tag (e.g., 80)
-        InputStream s = new ByteArrayInputStream(new byte[]{(byte) 0x81, 0x00});
+        InputStream s = new ByteArrayInputStream(new byte[] { (byte) 0x81, 0x00 });
         int tagNo = ASN1Util.readTagNumber(s, 0x1F);
         assertEquals(128, tagNo);
     }
@@ -193,7 +203,7 @@ class ASN1UtilTest {
     @Test
     void testReadTagNumber_CorruptedHighTag() {
         // High tag < 31
-        InputStream s = new ByteArrayInputStream(new byte[]{0x1E});
+        InputStream s = new ByteArrayInputStream(new byte[] { 0x1E });
         assertThrows(IOException.class, () -> {
             ASN1Util.readTagNumber(s, 0x1F);
         });
@@ -202,7 +212,7 @@ class ASN1UtilTest {
     @Test
     void testReadTagNumber_EOF() {
         // EOF inside tag value
-        InputStream s = new ByteArrayInputStream(new byte[]{});
+        InputStream s = new ByteArrayInputStream(new byte[] {});
         assertThrows(EOFException.class, () -> {
             ASN1Util.readTagNumber(s, 0x1F);
         });
@@ -213,7 +223,7 @@ class ASN1UtilTest {
     @Test
     void testReadLength_ShortForm() throws IOException {
         // Definite-length short form (length 10)
-        InputStream s = new ByteArrayInputStream(new byte[]{0x0A});
+        InputStream s = new ByteArrayInputStream(new byte[] { 0x0A });
         int length = ASN1Util.readLength(s, 100, false);
         assertEquals(10, length);
     }
@@ -221,7 +231,7 @@ class ASN1UtilTest {
     @Test
     void testReadLength_LongForm() throws IOException {
         // Definite-length long form (length 256)
-        InputStream s = new ByteArrayInputStream(new byte[]{(byte) 0x82, 0x01, 0x00});
+        InputStream s = new ByteArrayInputStream(new byte[] { (byte) 0x82, 0x01, 0x00 });
         int length = ASN1Util.readLength(s, 500, false);
         assertEquals(256, length);
     }
@@ -229,7 +239,7 @@ class ASN1UtilTest {
     @Test
     void testReadLength_Indefinite() throws IOException {
         // Indefinite-length
-        InputStream s = new ByteArrayInputStream(new byte[]{(byte) 0x80});
+        InputStream s = new ByteArrayInputStream(new byte[] { (byte) 0x80 });
         int length = ASN1Util.readLength(s, 100, false);
         assertEquals(-1, length);
     }
@@ -237,7 +247,7 @@ class ASN1UtilTest {
     @Test
     void testReadLength_EOF() {
         // EOF when length expected
-        InputStream s = new ByteArrayInputStream(new byte[]{});
+        InputStream s = new ByteArrayInputStream(new byte[] {});
         assertThrows(EOFException.class, () -> {
             ASN1Util.readLength(s, 100, false);
         });
@@ -246,7 +256,7 @@ class ASN1UtilTest {
     @Test
     void testReadLength_OutOfBounds() {
         // Length out of bounds
-        InputStream s = new ByteArrayInputStream(new byte[]{(byte) 0x81, (byte) 0xFF}); // length 255
+        InputStream s = new ByteArrayInputStream(new byte[] { (byte) 0x81, (byte) 0xFF }); // length 255
         assertThrows(IOException.class, () -> {
             ASN1Util.readLength(s, 200, false); // limit 200
         });

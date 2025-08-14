@@ -1,6 +1,11 @@
 package jcifs.spnego;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 
@@ -53,7 +58,7 @@ class SpnegoTokenTest {
     @DisplayName("Setter and getter for mechanismToken work")
     void setGetMechanismToken() {
         TestSpnegoToken t = new TestSpnegoToken();
-        byte[] data = new byte[] {1, 2, 3};
+        byte[] data = new byte[] { 1, 2, 3 };
         t.setMechanismToken(data);
         assertArrayEquals(data, t.getMechanismToken(), "mechanismToken should round-trip");
 
@@ -66,7 +71,7 @@ class SpnegoTokenTest {
     @DisplayName("Setter and getter for mechanismListMIC work")
     void setGetMechanismListMIC() {
         TestSpnegoToken t = new TestSpnegoToken();
-        byte[] mic = new byte[] {7, 8, 9, 10};
+        byte[] mic = new byte[] { 7, 8, 9, 10 };
         t.setMechanismListMIC(mic);
         assertArrayEquals(mic, t.getMechanismListMIC(), "mechanismListMIC should round-trip");
 
@@ -79,7 +84,7 @@ class SpnegoTokenTest {
     @DisplayName("parse sets mechanismToken and flags parsed")
     void parseSetsMechanismToken() throws IOException {
         TestSpnegoToken t = new TestSpnegoToken();
-        byte[] raw = new byte[] {5, 6};
+        byte[] raw = new byte[] { 5, 6 };
         t.parse(raw);
         assertTrue(t.isParsed(), "parse should mark parsed");
         assertArrayEquals(raw, t.getMechanismToken(), "parse should set mechanismToken");
@@ -89,8 +94,7 @@ class SpnegoTokenTest {
     @DisplayName("parse throws IOException on null input")
     void parseThrowsOnNull() {
         TestSpnegoToken t = new TestSpnegoToken();
-        IOException ex = assertThrows(IOException.class, () -> t.parse(null),
-                "parse should throw IOException on null");
+        IOException ex = assertThrows(IOException.class, () -> t.parse(null), "parse should throw IOException on null");
         assertTrue(ex.getMessage().toLowerCase().contains("null"));
     }
 
@@ -105,7 +109,7 @@ class SpnegoTokenTest {
     @DisplayName("toByteArray returns mechanismToken reference when present")
     void toByteArrayReturnsToken() throws IOException {
         TestSpnegoToken t = new TestSpnegoToken();
-        byte[] raw = new byte[] {11, 12, 13};
+        byte[] raw = new byte[] { 11, 12, 13 };
         t.parse(raw);
         // Current behavior of test impl: returns same reference
         assertSame(raw, t.toByteArray(), "should return the same reference as mechanismToken");
@@ -121,4 +125,3 @@ class SpnegoTokenTest {
         assertNull(t.getMechanismListMIC(), "mechanismListMIC should be null after setting null");
     }
 }
-

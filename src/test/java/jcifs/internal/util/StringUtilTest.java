@@ -1,17 +1,16 @@
 package jcifs.internal.util;
 
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.NullSource;
-import org.junit.jupiter.params.provider.EmptySource;
-import org.junit.jupiter.params.provider.ValueSource;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 /**
  * Test class for StringUtil utility methods
@@ -133,15 +132,8 @@ class StringUtilTest {
     }
 
     private static Stream<Arguments> provideDelimiters() {
-        return Stream.of(
-            Arguments.of(",", "A,B,C"),
-            Arguments.of(", ", "A, B, C"),
-            Arguments.of(" ", "A B C"),
-            Arguments.of("|", "A|B|C"),
-            Arguments.of("::", "A::B::C"),
-            Arguments.of("\n", "A\nB\nC"),
-            Arguments.of("\r\n", "A\r\nB\r\nC")
-        );
+        return Stream.of(Arguments.of(",", "A,B,C"), Arguments.of(", ", "A, B, C"), Arguments.of(" ", "A B C"), Arguments.of("|", "A|B|C"),
+                Arguments.of("::", "A::B::C"), Arguments.of("\n", "A\nB\nC"), Arguments.of("\r\n", "A\r\nB\r\nC"));
     }
 
     @Test
@@ -174,14 +166,14 @@ class StringUtilTest {
 
     @ParameterizedTest
     @DisplayName("Should handle various element counts")
-    @ValueSource(ints = {1, 2, 5, 10, 20, 50, 100})
+    @ValueSource(ints = { 1, 2, 5, 10, 20, 50, 100 })
     void testJoinWithVariousElementCounts(int count) {
         CharSequence[] elements = new CharSequence[count];
         for (int i = 0; i < count; i++) {
             elements[i] = String.valueOf(i);
         }
         String result = StringUtil.join(",", elements);
-        
+
         // Verify result contains all elements
         String[] parts = result.split(",");
         assertEquals(count, parts.length);

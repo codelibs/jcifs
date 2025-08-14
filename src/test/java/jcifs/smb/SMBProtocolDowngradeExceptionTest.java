@@ -1,6 +1,10 @@
 package jcifs.smb;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.util.stream.Stream;
@@ -24,11 +28,7 @@ class SMBProtocolDowngradeExceptionTest {
      * Provides messages including edge cases (null and empty) for parameterized testing.
      */
     static Stream<Arguments> messages() {
-        return Stream.of(
-                Arguments.of((String) null),
-                Arguments.of(""),
-                Arguments.of("unexpected downgrade")
-        );
+        return Stream.of(Arguments.of((String) null), Arguments.of(""), Arguments.of("unexpected downgrade"));
     }
 
     @Test
@@ -127,11 +127,9 @@ class SMBProtocolDowngradeExceptionTest {
         String msg = "downgrade not allowed";
 
         // Act & Assert - verify thrown type and message
-        SMBProtocolDowngradeException thrown = assertThrows(
-                SMBProtocolDowngradeException.class,
-                () -> { throw new SMBProtocolDowngradeException(msg); }
-        );
+        SMBProtocolDowngradeException thrown = assertThrows(SMBProtocolDowngradeException.class, () -> {
+            throw new SMBProtocolDowngradeException(msg);
+        });
         assertEquals(msg, thrown.getMessage());
     }
 }
-

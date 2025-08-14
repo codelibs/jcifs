@@ -1,7 +1,5 @@
 package jcifs.internal.smb1.com;
 
-import jcifs.CIFSException;
-import jcifs.internal.smb1.ServerMessageBlock;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -14,8 +12,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import jcifs.CIFSContext;
+import jcifs.CIFSException;
 import jcifs.config.PropertyConfiguration;
 import jcifs.internal.smb1.SMB1SigningDigest;
+import jcifs.internal.smb1.ServerMessageBlock;
 import jcifs.internal.util.SMBUtil;
 
 /**

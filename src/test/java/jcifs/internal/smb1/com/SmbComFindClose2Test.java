@@ -1,13 +1,16 @@
 package jcifs.internal.smb1.com;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import jcifs.Configuration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import jcifs.Configuration;
 
 /**
  * Unit tests for {@link SmbComFindClose2}.
@@ -59,7 +62,7 @@ class SmbComFindClose2Test {
         byte[] dst = new byte[2];
         int written = neg.writeParameterWordsWireFormat(dst, 0);
         assertEquals(2, written);
-        assertArrayEquals(new byte[]{(byte) 0xFF, (byte) 0xFF}, dst, "Negative sid should wrap to 0xFFFF");
+        assertArrayEquals(new byte[] { (byte) 0xFF, (byte) 0xFF }, dst, "Negative sid should wrap to 0xFFFF");
     }
 
     @Test
@@ -85,4 +88,3 @@ class SmbComFindClose2Test {
         assertEquals(0, rc, "SmbComFindClose2 has no body to write");
     }
 }
-

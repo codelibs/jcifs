@@ -1,15 +1,17 @@
 package jcifs.internal.smb1.com;
 
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.Properties;
+
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jcifs.CIFSException;
 import jcifs.Configuration;
 import jcifs.config.PropertyConfiguration;
-
-import static org.junit.jupiter.api.Assertions.*;
-
-import java.util.Properties;
 
 public class SmbComWriteAndXResponseTest {
 

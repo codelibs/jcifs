@@ -1,9 +1,11 @@
 package jcifs.smb1.smb1;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
 import org.mockito.Mockito;
-import java.io.IOException;
 
 /**
  * Tests for {@link SmbFilenameFilter}. Since the interface only defines
@@ -43,4 +45,3 @@ class SmbFilenameFilterTest {
         assertTrue(e instanceof SmbException);
     }
 }
-

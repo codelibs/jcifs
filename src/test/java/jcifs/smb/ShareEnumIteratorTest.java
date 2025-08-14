@@ -1,8 +1,16 @@
 package jcifs.smb;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.net.MalformedURLException;
 import java.util.Arrays;
@@ -18,7 +26,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -51,10 +58,7 @@ class ShareEnumIteratorTest {
     @DisplayName("Happy path without filter: iterates all entries in order")
     void happyPath_noFilter_returnsAll() throws Exception {
         SmbFile parent = newParent();
-        List<FileEntry> entries = Arrays.asList(
-            entry("foo", SmbConstants.TYPE_SHARE),
-            entry("bar", SmbConstants.TYPE_SHARE)
-        );
+        List<FileEntry> entries = Arrays.asList(entry("foo", SmbConstants.TYPE_SHARE), entry("bar", SmbConstants.TYPE_SHARE));
         ShareEnumIterator it = new ShareEnumIterator(parent, entries.iterator(), null);
 
         // hasNext/next sequence over two elements
@@ -77,11 +81,8 @@ class ShareEnumIteratorTest {
     @DisplayName("With filter: only accepted entries are returned and filter is invoked per entry")
     void withFilter_acceptsSome_skipsOthers_andVerifiesInteractions() throws Exception {
         SmbFile parent = newParent();
-        List<FileEntry> entries = Arrays.asList(
-            entry("keep1", SmbConstants.TYPE_SHARE),
-            entry("skip1", SmbConstants.TYPE_SHARE),
-            entry("keep2", SmbConstants.TYPE_SHARE)
-        );
+        List<FileEntry> entries = Arrays.asList(entry("keep1", SmbConstants.TYPE_SHARE), entry("skip1", SmbConstants.TYPE_SHARE),
+                entry("keep2", SmbConstants.TYPE_SHARE));
 
         // Filter accepts names starting with "keep"
         when(filter.accept(any())).thenAnswer(inv -> {
@@ -106,15 +107,10 @@ class ShareEnumIteratorTest {
     @DisplayName("Filter throws CIFSException: entry is skipped and iteration continues")
     void filterThrows_skipsAndContinues() throws Exception {
         SmbFile parent = newParent();
-        List<FileEntry> entries = Arrays.asList(
-            entry("bad", SmbConstants.TYPE_SHARE),
-            entry("good", SmbConstants.TYPE_SHARE)
-        );
+        List<FileEntry> entries = Arrays.asList(entry("bad", SmbConstants.TYPE_SHARE), entry("good", SmbConstants.TYPE_SHARE));
 
         // First call throws, second accepts
-        when(filter.accept(any()))
-            .thenThrow(new CIFSException("boom"))
-            .thenReturn(true);
+        when(filter.accept(any())).thenThrow(new CIFSException("boom")).thenReturn(true);
 
         ShareEnumIterator it = new ShareEnumIterator(parent, entries.iterator(), filter);
 
@@ -128,12 +124,7 @@ class ShareEnumIteratorTest {
     }
 
     static Stream<Arguments> invalidNamesAndFilterFlag() {
-        return Stream.of(
-            Arguments.of(null, false),
-            Arguments.of("", false),
-            Arguments.of(null, true),
-            Arguments.of("", true)
-        );
+        return Stream.of(Arguments.of(null, false), Arguments.of("", false), Arguments.of(null, true), Arguments.of("", true));
     }
 
     @ParameterizedTest(name = "Invalid name=''{0}'' with filter={1} is skipped")
@@ -146,7 +137,7 @@ class ShareEnumIteratorTest {
         Iterator<FileEntry> delegate = Arrays.asList(invalid, valid).iterator();
 
         ResourceFilter f = useFilter ? filter : null;
-        if ( useFilter ) {
+        if (useFilter) {
             when(filter.accept(any())).thenReturn(true);
         }
 
@@ -156,7 +147,7 @@ class ShareEnumIteratorTest {
         assertFalse(it.hasNext());
 
         // When filter is used, it must not be called for the invalid entry
-        if ( useFilter ) {
+        if (useFilter) {
             verify(filter, times(1)).accept(any());
         }
     }
@@ -178,7 +169,7 @@ class ShareEnumIteratorTest {
     @DisplayName("remove() throws UnsupportedOperationException")
     void removeThrows() throws Exception {
         SmbFile parent = newParent();
-        ShareEnumIterator it = new ShareEnumIterator(parent, Collections.<FileEntry>emptyList().iterator(), null);
+        ShareEnumIterator it = new ShareEnumIterator(parent, Collections.<FileEntry> emptyList().iterator(), null);
         UnsupportedOperationException ex = assertThrows(UnsupportedOperationException.class, it::remove);
         assertEquals("remove", ex.getMessage());
     }
@@ -204,10 +195,9 @@ class ShareEnumIteratorTest {
         @DisplayName("Empty iterator: hasNext() is false and next() returns null")
         void emptyIterator_behavesAsEmpty() throws Exception {
             SmbFile parent = newParent();
-            ShareEnumIterator it = new ShareEnumIterator(parent, Collections.<FileEntry>emptyList().iterator(), null);
+            ShareEnumIterator it = new ShareEnumIterator(parent, Collections.<FileEntry> emptyList().iterator(), null);
             assertFalse(it.hasNext());
             assertNull(it.next());
         }
     }
 }
-

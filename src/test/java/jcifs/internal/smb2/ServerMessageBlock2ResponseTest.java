@@ -1,15 +1,28 @@
 package jcifs.internal.smb2;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
@@ -39,7 +52,7 @@ class ServerMessageBlock2ResponseTest {
 
     // Test implementation of abstract ServerMessageBlock2Response
     private static class TestServerMessageBlock2Response extends ServerMessageBlock2Response {
-        
+
         private ServerMessageBlock2 nextBlock;
         private boolean async = false;
         private boolean retainPayload = false;
@@ -151,7 +164,7 @@ class ServerMessageBlock2ResponseTest {
     @Nested
     @DisplayName("Constructor Tests")
     class ConstructorTests {
-        
+
         @Test
         @DisplayName("Should construct with config only")
         void testConstructorWithConfig() {
@@ -173,15 +186,15 @@ class ServerMessageBlock2ResponseTest {
     @Nested
     @DisplayName("Response Chaining Tests")
     class ResponseChainingTests {
-        
+
         @Test
         @DisplayName("Should return next response")
         void testGetNextResponse() {
             TestServerMessageBlock2Response nextResponse = new TestServerMessageBlock2Response(mockConfig);
             response.setNext(nextResponse);
-            
+
             CommonServerMessageBlockResponse result = response.getNextResponse();
-            
+
             assertSame(nextResponse, result);
         }
 
@@ -189,7 +202,7 @@ class ServerMessageBlock2ResponseTest {
         @DisplayName("Should return null when no next response")
         void testGetNextResponseNull() {
             CommonServerMessageBlockResponse result = response.getNextResponse();
-            
+
             assertNull(result);
         }
 
@@ -198,9 +211,9 @@ class ServerMessageBlock2ResponseTest {
         void testPrepare() {
             TestServerMessageBlock2Response nextResponse = mock(TestServerMessageBlock2Response.class);
             response.setNext(nextResponse);
-            
+
             response.prepare(mockRequest);
-            
+
             verify(nextResponse).prepare(mockRequest);
         }
 
@@ -214,17 +227,17 @@ class ServerMessageBlock2ResponseTest {
     @Nested
     @DisplayName("State Management Tests")
     class StateManagementTests {
-        
+
         @Test
         @DisplayName("Should reset state correctly")
         void testReset() {
             // Set initial state
             response.received();
             assertTrue(response.isReceived());
-            
+
             // Reset
             response.reset();
-            
+
             assertFalse(response.isReceived());
         }
 
@@ -232,7 +245,7 @@ class ServerMessageBlock2ResponseTest {
         @DisplayName("Should handle received notification")
         void testReceived() throws InterruptedException {
             CountDownLatch latch = new CountDownLatch(1);
-            
+
             Thread waiter = new Thread(() -> {
                 synchronized (response) {
                     try {
@@ -245,12 +258,12 @@ class ServerMessageBlock2ResponseTest {
                     }
                 }
             });
-            
+
             waiter.start();
             Thread.sleep(50); // Give waiter time to start
-            
+
             response.received();
-            
+
             assertTrue(latch.await(500, TimeUnit.MILLISECONDS));
             assertTrue(response.isReceived());
         }
@@ -260,9 +273,9 @@ class ServerMessageBlock2ResponseTest {
         void testReceivedAsyncPending() throws InterruptedException {
             response.setAsync(true);
             response.setStatusForTest(NtStatus.NT_STATUS_PENDING);
-            
+
             CountDownLatch latch = new CountDownLatch(1);
-            
+
             Thread waiter = new Thread(() -> {
                 synchronized (response) {
                     try {
@@ -273,12 +286,12 @@ class ServerMessageBlock2ResponseTest {
                     }
                 }
             });
-            
+
             waiter.start();
             Thread.sleep(50);
-            
+
             response.received();
-            
+
             assertTrue(latch.await(500, TimeUnit.MILLISECONDS));
             assertFalse(response.isReceived()); // Should not be marked as received
         }
@@ -287,9 +300,9 @@ class ServerMessageBlock2ResponseTest {
         @DisplayName("Should handle exception")
         void testException() {
             Exception testException = new Exception("Test exception");
-            
+
             response.exception(testException);
-            
+
             assertTrue(response.isError());
             assertTrue(response.isReceived());
             assertSame(testException, response.getException());
@@ -299,7 +312,7 @@ class ServerMessageBlock2ResponseTest {
         @DisplayName("Should handle error")
         void testError() throws InterruptedException {
             CountDownLatch latch = new CountDownLatch(1);
-            
+
             Thread waiter = new Thread(() -> {
                 synchronized (response) {
                     try {
@@ -312,12 +325,12 @@ class ServerMessageBlock2ResponseTest {
                     }
                 }
             });
-            
+
             waiter.start();
             Thread.sleep(50);
-            
+
             response.error();
-            
+
             assertTrue(latch.await(500, TimeUnit.MILLISECONDS));
             assertTrue(response.isError());
         }
@@ -327,9 +340,9 @@ class ServerMessageBlock2ResponseTest {
         void testClearReceived() {
             response.received();
             assertTrue(response.isReceived());
-            
+
             response.clearReceived();
-            
+
             assertFalse(response.isReceived());
         }
     }
@@ -337,12 +350,12 @@ class ServerMessageBlock2ResponseTest {
     @Nested
     @DisplayName("Signature Tests")
     class SignatureTests {
-        
+
         @Test
         @DisplayName("Should detect signed packet")
         void testIsSigned() {
             response.setFlagsForTest(ServerMessageBlock2.SMB2_FLAGS_SIGNED);
-            
+
             assertTrue(response.isSigned());
         }
 
@@ -350,7 +363,7 @@ class ServerMessageBlock2ResponseTest {
         @DisplayName("Should detect unsigned packet")
         void testIsNotSigned() {
             response.setFlagsForTest(0);
-            
+
             assertFalse(response.isSigned());
         }
 
@@ -360,9 +373,9 @@ class ServerMessageBlock2ResponseTest {
             byte[] buffer = new byte[100];
             response.setDigest(mockDigest);
             when(mockDigest.verify(buffer, 0, 100, 0, response)).thenReturn(false);
-            
+
             boolean result = response.verifySignature(buffer, 0, 100);
-            
+
             assertTrue(result);
             assertFalse(response.isVerifyFailed());
         }
@@ -373,9 +386,9 @@ class ServerMessageBlock2ResponseTest {
             byte[] buffer = new byte[100];
             response.setDigest(mockDigest);
             when(mockDigest.verify(buffer, 0, 100, 0, response)).thenReturn(true);
-            
+
             boolean result = response.verifySignature(buffer, 0, 100);
-            
+
             assertFalse(result);
             assertTrue(response.isVerifyFailed());
         }
@@ -386,9 +399,9 @@ class ServerMessageBlock2ResponseTest {
             byte[] buffer = new byte[100];
             response.setDigest(mockDigest);
             response.setAsync(true);
-            
+
             boolean result = response.verifySignature(buffer, 0, 100);
-            
+
             assertTrue(result);
             verify(mockDigest, never()).verify(any(), anyInt(), anyInt(), anyInt(), any());
         }
@@ -397,9 +410,9 @@ class ServerMessageBlock2ResponseTest {
         @DisplayName("Should skip verification when digest is null")
         void testVerifySignatureNoDigest() {
             byte[] buffer = new byte[100];
-            
+
             boolean result = response.verifySignature(buffer, 0, 100);
-            
+
             assertTrue(result);
         }
 
@@ -411,9 +424,9 @@ class ServerMessageBlock2ResponseTest {
             response.setStatusForTest(NtStatus.NT_STATUS_ACCESS_DENIED);
             when(mockConfig.isRequireSecureNegotiate()).thenReturn(true);
             when(mockDigest.verify(buffer, 0, 100, 0, response)).thenReturn(false);
-            
+
             boolean result = response.verifySignature(buffer, 0, 100);
-            
+
             assertTrue(result);
             verify(mockDigest).verify(buffer, 0, 100, 0, response);
         }
@@ -422,14 +435,14 @@ class ServerMessageBlock2ResponseTest {
     @Nested
     @DisplayName("Expiration Tests")
     class ExpirationTests {
-        
+
         @Test
         @DisplayName("Should get and set expiration")
         void testExpiration() {
             Long expiration = 1000L;
-            
+
             response.setExpiration(expiration);
-            
+
             assertEquals(expiration, response.getExpiration());
         }
 
@@ -437,7 +450,7 @@ class ServerMessageBlock2ResponseTest {
         @DisplayName("Should handle null expiration")
         void testNullExpiration() {
             response.setExpiration(null);
-            
+
             assertNull(response.getExpiration());
         }
     }
@@ -445,14 +458,14 @@ class ServerMessageBlock2ResponseTest {
     @Nested
     @DisplayName("Async Handling Tests")
     class AsyncHandlingTests {
-        
+
         @Test
         @DisplayName("Should get and set async handled")
         void testAsyncHandled() {
             assertFalse(response.isAsyncHandled());
-            
+
             response.setAsyncHandled(true);
-            
+
             assertTrue(response.isAsyncHandled());
         }
     }
@@ -460,13 +473,13 @@ class ServerMessageBlock2ResponseTest {
     @Nested
     @DisplayName("Error Code Tests")
     class ErrorCodeTests {
-        
+
         @Test
         @DisplayName("Should return status as error code")
         void testGetErrorCode() {
             int status = NtStatus.NT_STATUS_ACCESS_DENIED;
             response.setStatusForTest(status);
-            
+
             assertEquals(status, response.getErrorCode());
         }
     }
@@ -474,13 +487,13 @@ class ServerMessageBlock2ResponseTest {
     @Nested
     @DisplayName("Credit Tests")
     class CreditTests {
-        
+
         @Test
         @DisplayName("Should return credit as granted credits")
         void testGetGrantedCredits() {
             int credits = 10;
             response.setCreditForTest(credits);
-            
+
             assertEquals(credits, response.getGrantedCredits());
         }
     }
@@ -488,20 +501,20 @@ class ServerMessageBlock2ResponseTest {
     @Nested
     @DisplayName("Payload Handling Tests")
     class PayloadHandlingTests {
-        
+
         @Test
         @DisplayName("Should handle response with retained payload")
         void testHaveResponseWithRetainedPayload() throws SMBProtocolDecodingException {
-            byte[] buffer = {1, 2, 3, 4, 5};
+            byte[] buffer = { 1, 2, 3, 4, 5 };
             response.setRetainPayload(true);
             response.setDigest(null);
-            
+
             response.haveResponse(buffer, 1, 3);
-            
+
             byte[] payload = response.getRawPayload();
             assertNotNull(payload);
             assertEquals(3, payload.length);
-            assertArrayEquals(new byte[]{2, 3, 4}, payload);
+            assertArrayEquals(new byte[] { 2, 3, 4 }, payload);
             assertTrue(response.isReceived());
             assertFalse(response.isAsyncHandled());
         }
@@ -509,12 +522,12 @@ class ServerMessageBlock2ResponseTest {
         @Test
         @DisplayName("Should handle response without retained payload")
         void testHaveResponseWithoutRetainedPayload() throws SMBProtocolDecodingException {
-            byte[] buffer = {1, 2, 3, 4, 5};
+            byte[] buffer = { 1, 2, 3, 4, 5 };
             response.setRetainPayload(false);
             response.setDigest(null);
-            
+
             response.haveResponse(buffer, 1, 3);
-            
+
             assertNull(response.getRawPayload());
             assertTrue(response.isReceived());
         }
@@ -525,12 +538,10 @@ class ServerMessageBlock2ResponseTest {
             byte[] buffer = new byte[100];
             response.setDigest(mockDigest);
             when(mockDigest.verify(buffer, 0, 100, 0, response)).thenReturn(true);
-            
-            SMBProtocolDecodingException exception = assertThrows(
-                SMBProtocolDecodingException.class,
-                () -> response.haveResponse(buffer, 0, 100)
-            );
-            
+
+            SMBProtocolDecodingException exception =
+                    assertThrows(SMBProtocolDecodingException.class, () -> response.haveResponse(buffer, 0, 100));
+
             assertTrue(exception.getMessage().contains("Signature verification failed"));
         }
     }
@@ -538,14 +549,14 @@ class ServerMessageBlock2ResponseTest {
     @Nested
     @DisplayName("Concurrency Tests")
     class ConcurrencyTests {
-        
+
         @Test
         @DisplayName("Should handle concurrent received notifications")
         void testConcurrentReceived() throws InterruptedException {
             int threadCount = 10;
             CountDownLatch startLatch = new CountDownLatch(1);
             CountDownLatch endLatch = new CountDownLatch(threadCount);
-            
+
             for (int i = 0; i < threadCount; i++) {
                 new Thread(() -> {
                     try {
@@ -557,7 +568,7 @@ class ServerMessageBlock2ResponseTest {
                     }
                 }).start();
             }
-            
+
             startLatch.countDown();
             assertTrue(endLatch.await(1, TimeUnit.SECONDS));
             assertTrue(response.isReceived());
@@ -569,7 +580,7 @@ class ServerMessageBlock2ResponseTest {
             int threadCount = 10;
             CountDownLatch startLatch = new CountDownLatch(1);
             CountDownLatch endLatch = new CountDownLatch(threadCount);
-            
+
             for (int i = 0; i < threadCount; i++) {
                 new Thread(() -> {
                     try {
@@ -581,7 +592,7 @@ class ServerMessageBlock2ResponseTest {
                     }
                 }).start();
             }
-            
+
             startLatch.countDown();
             assertTrue(endLatch.await(1, TimeUnit.SECONDS));
             assertTrue(response.isError());
@@ -589,12 +600,8 @@ class ServerMessageBlock2ResponseTest {
     }
 
     @ParameterizedTest
-    @ValueSource(ints = {
-        NtStatus.NT_STATUS_SUCCESS,
-        NtStatus.NT_STATUS_PENDING,
-        NtStatus.NT_STATUS_ACCESS_DENIED,
-        NtStatus.NT_STATUS_INVALID_PARAMETER
-    })
+    @ValueSource(ints = { NtStatus.NT_STATUS_SUCCESS, NtStatus.NT_STATUS_PENDING, NtStatus.NT_STATUS_ACCESS_DENIED,
+            NtStatus.NT_STATUS_INVALID_PARAMETER })
     @DisplayName("Should handle various status codes")
     void testVariousStatusCodes(int status) {
         response.setStatusForTest(status);
@@ -602,7 +609,7 @@ class ServerMessageBlock2ResponseTest {
     }
 
     @ParameterizedTest
-    @ValueSource(ints = {0, 1, 10, 100, 255})
+    @ValueSource(ints = { 0, 1, 10, 100, 255 })
     @DisplayName("Should handle various credit values")
     void testVariousCreditValues(int credits) {
         response.setCreditForTest(credits);

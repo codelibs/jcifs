@@ -1,8 +1,14 @@
 package jcifs.smb1.smb1;
 
-import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.lang.reflect.Field;
+
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for {@link SmbComTransactionResponse}.
@@ -19,7 +25,7 @@ public class SmbComTransactionResponseTest {
         DummyResponse() {
             super();
         }
-        
+
         // Expose protected/private fields for testing
         boolean getIsPrimary() {
             return isPrimary;
@@ -77,7 +83,7 @@ public class SmbComTransactionResponseTest {
                 throw new RuntimeException("Failed to set field " + fieldName, e);
             }
         }
-        
+
         protected Object getFieldValue(String fieldName) {
             try {
                 Field field = null;
@@ -131,51 +137,51 @@ public class SmbComTransactionResponseTest {
         boolean isHasMore() {
             return hasMore;
         }
-        
+
         void setErrorCode(int code) {
             errorCode = code;
         }
-        
+
         void setHasMore(boolean val) {
             hasMore = val;
         }
-        
+
         boolean getParametersDone() {
             return (boolean) getFieldValue("parametersDone");
         }
-        
+
         boolean getDataDone() {
             return (boolean) getFieldValue("dataDone");
         }
-        
+
         int getBufferParameterStart() {
             return bufParameterStart;
         }
-        
+
         int getBufferDataStart() {
             return bufDataStart;
         }
-        
+
         byte[] getTxnBuf() {
             return txn_buf;
         }
-        
+
         int getParameterDisplacement() {
             return parameterDisplacement;
         }
-        
+
         int getDataDisplacement() {
             return dataDisplacement;
         }
-        
+
         int getParameterOffset() {
             return parameterOffset;
         }
-        
+
         int getDataOffset() {
             return dataOffset;
         }
-        
+
         boolean getHasMore() {
             return hasMore;
         }
@@ -245,7 +251,7 @@ public class SmbComTransactionResponseTest {
         buf[16] = 9; // dataDisplacement low
         buf[17] = 0; // high
         buf[18] = 1; // setupCount (only one byte)
-        
+
         // Call the method under test
         d.readParameterWordsWireFormat(buf, 0);
 
@@ -281,16 +287,16 @@ public class SmbComTransactionResponseTest {
         d.dataOffset = 10; // Absolute offset in the SMB message
         d.dataDisplacement = 0;
         d.headerStart = 0; // Set headerStart (bufferIndex will be 0)
-        
+
         // Prepare buffer with test data
         byte[] buf = new byte[100];
         for (int i = 0; i < buf.length; i++) {
             buf[i] = (byte) ('A' + (i % 26));
         }
-        
+
         // Call the method under test
         d.readBytesWireFormat(buf, 0);
-        
+
         // After a full read both flags should be set and hasMore should be false
         assertTrue(d.getParametersDone(), "parametersDone should be true after reading");
         assertTrue(d.getDataDone(), "dataDone should be true after reading");
@@ -318,10 +324,10 @@ public class SmbComTransactionResponseTest {
         d.dataOffset = 10;
         d.dataDisplacement = 0;
         d.headerStart = 0;
-        
+
         byte[] buf = new byte[100];
         d.readBytesWireFormat(buf, 0);
-        
+
         // Flags should not be set for partial read
         assertFalse(d.getParametersDone(), "parametersDone should be false for partial read");
         assertFalse(d.getDataDone(), "dataDone should be false for partial read");
@@ -345,10 +351,10 @@ public class SmbComTransactionResponseTest {
         d.parameterCount = 0;
         d.dataCount = 0;
         d.headerStart = 0;
-        
+
         byte[] buf = new byte[100];
         int result = d.readBytesWireFormat(buf, 0);
-        
+
         // Should handle empty read gracefully
         assertEquals(0, result, "Should return 0 for no data");
         assertTrue(d.getParametersDone(), "parametersDone should be true when total is 0");

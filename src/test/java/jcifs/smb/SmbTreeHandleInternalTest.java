@@ -1,7 +1,19 @@
 package jcifs.smb;
 
-import jcifs.CIFSException;
-import jcifs.SmbSession;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,8 +25,8 @@ import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import jcifs.CIFSException;
+import jcifs.SmbSession;
 
 /**
  * Tests for SmbTreeHandleInternal interface using Mockito to verify
@@ -56,8 +68,7 @@ public class SmbTreeHandleInternalTest {
     @DisplayName("ensureDFSResolved(): throws CIFSException when underlying call fails")
     void ensureDFSResolved_throws() throws Exception {
         // Arrange: configure the mock to throw
-        doThrow(new CIFSException("DFS resolution failed"))
-                .when(handle).ensureDFSResolved();
+        doThrow(new CIFSException("DFS resolution failed")).when(handle).ensureDFSResolved();
 
         // Act + Assert: exception is propagated with message
         CIFSException ex = assertThrows(CIFSException.class, () -> handle.ensureDFSResolved());
@@ -66,7 +77,7 @@ public class SmbTreeHandleInternalTest {
     }
 
     @ParameterizedTest
-    @ValueSource(ints = {0, 1, -1, Integer.MIN_VALUE, Integer.MAX_VALUE})
+    @ValueSource(ints = { 0, 1, -1, Integer.MIN_VALUE, Integer.MAX_VALUE })
     @DisplayName("hasCapability(cap): returns configured value and captures argument across edge caps")
     void hasCapability_variousCaps_returnsTrue_andCapturesArgument(int cap) throws Exception {
         // Arrange: stub to return true regardless of input
@@ -260,4 +271,3 @@ public class SmbTreeHandleInternalTest {
         inOrder.verifyNoMoreInteractions();
     }
 }
-

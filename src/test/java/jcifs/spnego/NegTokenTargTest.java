@@ -1,12 +1,15 @@
 package jcifs.spnego;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.IOException;
 
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 
 /**
  * Unit tests for {@link NegTokenTarg}. The class has no external
@@ -20,8 +23,8 @@ class NegTokenTargTest {
     void testRoundTripFull() throws IOException {
         // Arrange – create a fully populated token
         ASN1ObjectIdentifier mech = new ASN1ObjectIdentifier("1.2.840.113554.1.2.2");
-        byte[] tokenArray = new byte[] {1, 2, 3};
-        byte[] mic = new byte[] {9, 9, 9};
+        byte[] tokenArray = new byte[] { 1, 2, 3 };
+        byte[] mic = new byte[] { 9, 9, 9 };
         NegTokenTarg original = new NegTokenTarg(NegTokenTarg.ACCEPT_COMPLETED, mech, tokenArray, mic);
 
         // Act – serialise and parse back
@@ -61,9 +64,8 @@ class NegTokenTargTest {
     @Test
     @DisplayName("parsing malformed token throws IOException")
     void testMalformedToken() {
-        byte[] bad = new byte[] {0x01, 0x02, 0x03}; // not a valid ASN.1 tagged object
-        assertThrows(IOException.class, () -> new NegTokenTarg(bad),
-                "Malformed byte[] should cause IOException");
+        byte[] bad = new byte[] { 0x01, 0x02, 0x03 }; // not a valid ASN.1 tagged object
+        assertThrows(IOException.class, () -> new NegTokenTarg(bad), "Malformed byte[] should cause IOException");
     }
 
     @Test

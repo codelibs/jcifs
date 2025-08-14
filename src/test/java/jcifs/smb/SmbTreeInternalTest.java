@@ -1,14 +1,17 @@
 package jcifs.smb;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import jcifs.CIFSContext;
-import jcifs.CIFSException;
-import jcifs.SmbTree;
-import jcifs.internal.CommonServerMessageBlockResponse;
-import jcifs.internal.Request;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,6 +19,12 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import jcifs.CIFSContext;
+import jcifs.CIFSException;
+import jcifs.SmbTree;
+import jcifs.internal.CommonServerMessageBlockResponse;
+import jcifs.internal.Request;
 
 /**
  * Tests for SmbTreeInternal interface behavior via mocks.
@@ -88,8 +97,7 @@ class SmbTreeInternalTest {
     @DisplayName("send with multiple params returns the stubbed response")
     void send_withParams_returnsResponse() throws Exception {
         // Arrange
-        when(tree.send(eq(request), eq(RequestParam.NO_TIMEOUT), eq(RequestParam.NO_RETRY)))
-            .thenReturn(response);
+        when(tree.send(eq(request), eq(RequestParam.NO_TIMEOUT), eq(RequestParam.NO_RETRY))).thenReturn(response);
 
         // Act
         CommonServerMessageBlockResponse out = tree.send(request, RequestParam.NO_TIMEOUT, RequestParam.NO_RETRY);
@@ -156,4 +164,3 @@ class SmbTreeInternalTest {
         verify(tree).close();
     }
 }
-

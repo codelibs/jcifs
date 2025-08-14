@@ -1,6 +1,7 @@
 package jcifs;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.Arrays;
 import java.util.stream.Stream;
@@ -19,12 +20,12 @@ class EncodableTest {
     // Generates a few representative slices and destination indices.
     static Stream<Arguments> byteEncodableArgs() {
         return Stream.of(
-            // srcLen, off, len, dstIndex
-            Arguments.of(makeSeq(8), 0, 8, 0),   // full copy at index 0
-            Arguments.of(makeSeq(10), 2, 5, 3),  // middle slice, non-zero dst index
-            Arguments.of(makeSeq(4), 4, 0, 0),   // zero-length slice at end
-            Arguments.of(makeSeq(16), 7, 3, 0),  // small slice from middle
-            Arguments.of(makeSeq(16), 0, 0, 5)   // zero-length with non-zero dst index
+                // srcLen, off, len, dstIndex
+                Arguments.of(makeSeq(8), 0, 8, 0), // full copy at index 0
+                Arguments.of(makeSeq(10), 2, 5, 3), // middle slice, non-zero dst index
+                Arguments.of(makeSeq(4), 4, 0, 0), // zero-length slice at end
+                Arguments.of(makeSeq(16), 7, 3, 0), // small slice from middle
+                Arguments.of(makeSeq(16), 0, 0, 5) // zero-length with non-zero dst index
         );
     }
 
@@ -93,7 +94,7 @@ class EncodableTest {
         byte[] dst = new byte[4]; // too small
 
         assertThrows(ArrayIndexOutOfBoundsException.class, () -> enc.encode(dst, 0),
-            "System.arraycopy should throw for insufficient destination space");
+                "System.arraycopy should throw for insufficient destination space");
     }
 
     @Test
@@ -104,7 +105,7 @@ class EncodableTest {
         byte[] dst = new byte[6]; // size is 6, but index 2 + len 5 -> overflow
 
         assertThrows(ArrayIndexOutOfBoundsException.class, () -> enc.encode(dst, 2),
-            "System.arraycopy should throw when dstIndex + len exceeds dst length");
+                "System.arraycopy should throw when dstIndex + len exceeds dst length");
     }
 
     @Test
@@ -115,7 +116,6 @@ class EncodableTest {
         byte[] dst = new byte[3];
 
         assertThrows(ArrayIndexOutOfBoundsException.class, () -> enc.encode(dst, -1),
-            "System.arraycopy should throw for negative dstIndex");
+                "System.arraycopy should throw for negative dstIndex");
     }
 }
-

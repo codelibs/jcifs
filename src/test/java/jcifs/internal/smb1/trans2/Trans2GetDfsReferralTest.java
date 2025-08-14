@@ -1,18 +1,27 @@
 package jcifs.internal.smb1.trans2;
 
-import jcifs.Configuration;
-import jcifs.internal.dfs.DfsReferralRequestBuffer;
-import jcifs.internal.smb1.trans.SmbComTransaction;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.DisplayName;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Field;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+import jcifs.Configuration;
+import jcifs.internal.dfs.DfsReferralRequestBuffer;
+import jcifs.internal.smb1.trans.SmbComTransaction;
 
 class Trans2GetDfsReferralTest {
 
@@ -31,15 +40,15 @@ class Trans2GetDfsReferralTest {
     void testConstructor() throws Exception {
         // Given
         String filename = "\\\\server\\share\\file.txt";
-        
+
         // When
         trans2GetDfsReferral = new Trans2GetDfsReferral(mockConfig, filename);
-        
+
         // Then
         // These fields are protected in parent class, so we can't access them directly
         // We verify the object was created successfully instead
         assertNotNull(trans2GetDfsReferral);
-        
+
         // Verify that request buffer was created with correct parameters
         Field requestField = Trans2GetDfsReferral.class.getDeclaredField("request");
         requestField.setAccessible(true);
@@ -66,10 +75,10 @@ class Trans2GetDfsReferralTest {
     void testIsForceUnicode() {
         // Given
         trans2GetDfsReferral = new Trans2GetDfsReferral(mockConfig, "test");
-        
+
         // When
         boolean result = trans2GetDfsReferral.isForceUnicode();
-        
+
         // Then
         assertTrue(result);
     }
@@ -81,10 +90,10 @@ class Trans2GetDfsReferralTest {
         trans2GetDfsReferral = new Trans2GetDfsReferral(mockConfig, "test");
         byte[] dst = new byte[10];
         int dstIndex = 0;
-        
+
         // When
         int bytesWritten = trans2GetDfsReferral.writeSetupWireFormat(dst, dstIndex);
-        
+
         // Then
         assertEquals(2, bytesWritten);
         assertEquals(SmbComTransaction.TRANS2_GET_DFS_REFERRAL, dst[0]);
@@ -98,10 +107,10 @@ class Trans2GetDfsReferralTest {
         trans2GetDfsReferral = new Trans2GetDfsReferral(mockConfig, "test");
         byte[] dst = new byte[20];
         int dstIndex = 5;
-        
+
         // When
         int bytesWritten = trans2GetDfsReferral.writeSetupWireFormat(dst, dstIndex);
-        
+
         // Then
         assertEquals(2, bytesWritten);
         assertEquals(SmbComTransaction.TRANS2_GET_DFS_REFERRAL, dst[5]);
@@ -116,10 +125,10 @@ class Trans2GetDfsReferralTest {
         trans2GetDfsReferral = new Trans2GetDfsReferral(mockConfig, filename);
         byte[] dst = new byte[256];
         int dstIndex = 0;
-        
+
         // When
         int bytesWritten = trans2GetDfsReferral.writeParametersWireFormat(dst, dstIndex);
-        
+
         // Then
         assertTrue(bytesWritten > 0);
         // The actual encoding depends on DfsReferralRequestBuffer implementation
@@ -131,22 +140,22 @@ class Trans2GetDfsReferralTest {
         // Given
         String filename = "\\\\server\\share";
         trans2GetDfsReferral = new Trans2GetDfsReferral(mockConfig, filename);
-        
+
         // Mock the request buffer
         DfsReferralRequestBuffer mockRequest = mock(DfsReferralRequestBuffer.class);
         when(mockRequest.encode(any(byte[].class), anyInt())).thenReturn(10);
-        
+
         // Inject mock request
         Field requestField = Trans2GetDfsReferral.class.getDeclaredField("request");
         requestField.setAccessible(true);
         requestField.set(trans2GetDfsReferral, mockRequest);
-        
+
         byte[] dst = new byte[256];
         int dstIndex = 0;
-        
+
         // When
         int bytesWritten = trans2GetDfsReferral.writeParametersWireFormat(dst, dstIndex);
-        
+
         // Then
         assertEquals(10, bytesWritten);
         verify(mockRequest, times(1)).encode(dst, dstIndex);
@@ -159,10 +168,10 @@ class Trans2GetDfsReferralTest {
         trans2GetDfsReferral = new Trans2GetDfsReferral(mockConfig, "test");
         byte[] dst = new byte[10];
         int dstIndex = 0;
-        
+
         // When
         int bytesWritten = trans2GetDfsReferral.writeDataWireFormat(dst, dstIndex);
-        
+
         // Then
         assertEquals(0, bytesWritten);
     }
@@ -173,10 +182,10 @@ class Trans2GetDfsReferralTest {
         // Given
         trans2GetDfsReferral = new Trans2GetDfsReferral(mockConfig, "test");
         byte[] buffer = new byte[10];
-        
+
         // When
         int bytesRead = trans2GetDfsReferral.readSetupWireFormat(buffer, 0, 10);
-        
+
         // Then
         assertEquals(0, bytesRead);
     }
@@ -187,10 +196,10 @@ class Trans2GetDfsReferralTest {
         // Given
         trans2GetDfsReferral = new Trans2GetDfsReferral(mockConfig, "test");
         byte[] buffer = new byte[10];
-        
+
         // When
         int bytesRead = trans2GetDfsReferral.readParametersWireFormat(buffer, 0, 10);
-        
+
         // Then
         assertEquals(0, bytesRead);
     }
@@ -201,10 +210,10 @@ class Trans2GetDfsReferralTest {
         // Given
         trans2GetDfsReferral = new Trans2GetDfsReferral(mockConfig, "test");
         byte[] buffer = new byte[10];
-        
+
         // When
         int bytesRead = trans2GetDfsReferral.readDataWireFormat(buffer, 0, 10);
-        
+
         // Then
         assertEquals(0, bytesRead);
     }
@@ -215,15 +224,15 @@ class Trans2GetDfsReferralTest {
         // Given
         String filename = "\\\\server\\share\\file.txt";
         trans2GetDfsReferral = new Trans2GetDfsReferral(mockConfig, filename);
-        
+
         // Set path field (inherited from parent)
         Field pathField = trans2GetDfsReferral.getClass().getSuperclass().getSuperclass().getDeclaredField("path");
         pathField.setAccessible(true);
         pathField.set(trans2GetDfsReferral, filename);
-        
+
         // When
         String result = trans2GetDfsReferral.toString();
-        
+
         // Then
         assertNotNull(result);
         assertTrue(result.contains("Trans2GetDfsReferral"));
@@ -236,10 +245,10 @@ class Trans2GetDfsReferralTest {
     void testToStringWithNullPath() {
         // Given
         trans2GetDfsReferral = new Trans2GetDfsReferral(mockConfig, "test");
-        
+
         // When
         String result = trans2GetDfsReferral.toString();
-        
+
         // Then
         assertNotNull(result);
         assertTrue(result.contains("Trans2GetDfsReferral"));
@@ -251,12 +260,12 @@ class Trans2GetDfsReferralTest {
     void testMaxReferralLevelInitialization() throws Exception {
         // Given
         trans2GetDfsReferral = new Trans2GetDfsReferral(mockConfig, "test");
-        
+
         // When
         Field maxReferralLevelField = Trans2GetDfsReferral.class.getDeclaredField("maxReferralLevel");
         maxReferralLevelField.setAccessible(true);
         int maxReferralLevel = (int) maxReferralLevelField.get(trans2GetDfsReferral);
-        
+
         // Then
         assertEquals(3, maxReferralLevel);
     }
@@ -266,13 +275,13 @@ class Trans2GetDfsReferralTest {
     void testVariousFilenameFormats() {
         // Test UNC path
         assertDoesNotThrow(() -> new Trans2GetDfsReferral(mockConfig, "\\\\server\\share"));
-        
+
         // Test forward slashes
         assertDoesNotThrow(() -> new Trans2GetDfsReferral(mockConfig, "//server/share"));
-        
+
         // Test with spaces
         assertDoesNotThrow(() -> new Trans2GetDfsReferral(mockConfig, "\\\\server\\my share\\file.txt"));
-        
+
         // Test with special characters
         assertDoesNotThrow(() -> new Trans2GetDfsReferral(mockConfig, "\\\\server\\share\\file$name.txt"));
     }
@@ -282,15 +291,15 @@ class Trans2GetDfsReferralTest {
     void testBufferBoundaryConditions() {
         // Given
         trans2GetDfsReferral = new Trans2GetDfsReferral(mockConfig, "test");
-        
+
         // Test with minimum size buffer
         byte[] smallBuffer = new byte[2];
         assertEquals(2, trans2GetDfsReferral.writeSetupWireFormat(smallBuffer, 0));
-        
+
         // Test with exact size buffer
         byte[] exactBuffer = new byte[2];
         assertEquals(2, trans2GetDfsReferral.writeSetupWireFormat(exactBuffer, 0));
-        
+
         // Test read methods with empty buffer
         byte[] emptyBuffer = new byte[0];
         assertEquals(0, trans2GetDfsReferral.readSetupWireFormat(emptyBuffer, 0, 0));
@@ -306,13 +315,13 @@ class Trans2GetDfsReferralTest {
         for (int i = 0; i < 100; i++) {
             longFilename.append("\\verylongdirectoryname");
         }
-        
+
         trans2GetDfsReferral = new Trans2GetDfsReferral(mockConfig, longFilename.toString());
         byte[] dst = new byte[8192]; // Large buffer for long filename
-        
+
         // When
         int bytesWritten = trans2GetDfsReferral.writeParametersWireFormat(dst, 0);
-        
+
         // Then
         assertTrue(bytesWritten > 0);
         // Verify that encoding doesn't overflow

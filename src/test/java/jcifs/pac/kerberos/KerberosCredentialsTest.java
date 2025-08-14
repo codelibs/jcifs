@@ -11,10 +11,12 @@ import static org.mockito.Mockito.when;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+
 import javax.security.auth.Subject;
 import javax.security.auth.kerberos.KerberosKey;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -55,11 +57,10 @@ class KerberosCredentialsTest {
      */
     @Test
     void testConstructor_Success() throws LoginException {
-        try (MockedConstruction<LoginContext> mocked = Mockito.mockConstruction(LoginContext.class,
-                (mock, context) -> {
-                    when(mock.getSubject()).thenReturn(subject);
-                    doNothing().when(mock).login();
-                })) {
+        try (MockedConstruction<LoginContext> mocked = Mockito.mockConstruction(LoginContext.class, (mock, context) -> {
+            when(mock.getSubject()).thenReturn(subject);
+            doNothing().when(mock).login();
+        })) {
             KerberosCredentials credentials = new KerberosCredentials(LOGIN_CONTEXT_NAME);
             assertNotNull(credentials.getSubject());
             assertEquals(subject, credentials.getSubject());
@@ -72,10 +73,9 @@ class KerberosCredentialsTest {
     @Test
     void testConstructor_LoginFailure() {
         assertThrows(LoginException.class, () -> {
-            try (MockedConstruction<LoginContext> mocked = Mockito.mockConstruction(LoginContext.class,
-                    (mock, context) -> {
-                        doThrow(new LoginException("Login failed")).when(mock).login();
-                    })) {
+            try (MockedConstruction<LoginContext> mocked = Mockito.mockConstruction(LoginContext.class, (mock, context) -> {
+                doThrow(new LoginException("Login failed")).when(mock).login();
+            })) {
                 new KerberosCredentials(LOGIN_CONTEXT_NAME);
             }
         });
@@ -93,10 +93,9 @@ class KerberosCredentialsTest {
         privateCredentials.add(key2);
         when(subject.getPrivateCredentials()).thenReturn(privateCredentials);
 
-        try (MockedConstruction<LoginContext> mocked = Mockito.mockConstruction(LoginContext.class,
-                (mock, context) -> {
-                    when(mock.getSubject()).thenReturn(subject);
-                })) {
+        try (MockedConstruction<LoginContext> mocked = Mockito.mockConstruction(LoginContext.class, (mock, context) -> {
+            when(mock.getSubject()).thenReturn(subject);
+        })) {
             KerberosCredentials credentials = new KerberosCredentials(LOGIN_CONTEXT_NAME);
             KerberosKey[] keys = credentials.getKeys();
             assertEquals(2, keys.length);
@@ -112,10 +111,9 @@ class KerberosCredentialsTest {
     void testGetKeys_NoKeys() throws LoginException {
         when(subject.getPrivateCredentials()).thenReturn(Collections.emptySet());
 
-        try (MockedConstruction<LoginContext> mocked = Mockito.mockConstruction(LoginContext.class,
-                (mock, context) -> {
-                    when(mock.getSubject()).thenReturn(subject);
-                })) {
+        try (MockedConstruction<LoginContext> mocked = Mockito.mockConstruction(LoginContext.class, (mock, context) -> {
+            when(mock.getSubject()).thenReturn(subject);
+        })) {
             KerberosCredentials credentials = new KerberosCredentials(LOGIN_CONTEXT_NAME);
             KerberosKey[] keys = credentials.getKeys();
             assertEquals(0, keys.length);
@@ -134,10 +132,9 @@ class KerberosCredentialsTest {
         privateCredentials.add(12345L);
         when(subject.getPrivateCredentials()).thenReturn(privateCredentials);
 
-        try (MockedConstruction<LoginContext> mocked = Mockito.mockConstruction(LoginContext.class,
-                (mock, context) -> {
-                    when(mock.getSubject()).thenReturn(subject);
-                })) {
+        try (MockedConstruction<LoginContext> mocked = Mockito.mockConstruction(LoginContext.class, (mock, context) -> {
+            when(mock.getSubject()).thenReturn(subject);
+        })) {
             KerberosCredentials credentials = new KerberosCredentials(LOGIN_CONTEXT_NAME);
             KerberosKey[] keys = credentials.getKeys();
             assertEquals(0, keys.length);
@@ -158,10 +155,9 @@ class KerberosCredentialsTest {
         privateCredentials.add(key2);
         when(subject.getPrivateCredentials()).thenReturn(privateCredentials);
 
-        try (MockedConstruction<LoginContext> mocked = Mockito.mockConstruction(LoginContext.class,
-                (mock, context) -> {
-                    when(mock.getSubject()).thenReturn(subject);
-                })) {
+        try (MockedConstruction<LoginContext> mocked = Mockito.mockConstruction(LoginContext.class, (mock, context) -> {
+            when(mock.getSubject()).thenReturn(subject);
+        })) {
             KerberosCredentials credentials = new KerberosCredentials(LOGIN_CONTEXT_NAME);
             KerberosKey foundKey = credentials.getKey(KEY_TYPE_1);
             assertNotNull(foundKey);
@@ -181,10 +177,9 @@ class KerberosCredentialsTest {
         privateCredentials.add(key1);
         when(subject.getPrivateCredentials()).thenReturn(privateCredentials);
 
-        try (MockedConstruction<LoginContext> mocked = Mockito.mockConstruction(LoginContext.class,
-                (mock, context) -> {
-                    when(mock.getSubject()).thenReturn(subject);
-                })) {
+        try (MockedConstruction<LoginContext> mocked = Mockito.mockConstruction(LoginContext.class, (mock, context) -> {
+            when(mock.getSubject()).thenReturn(subject);
+        })) {
             KerberosCredentials credentials = new KerberosCredentials(LOGIN_CONTEXT_NAME);
             KerberosKey foundKey = credentials.getKey(KEY_TYPE_2);
             assertNull(foundKey);
@@ -198,10 +193,9 @@ class KerberosCredentialsTest {
      */
     @Test
     void testGetSubject() throws LoginException {
-        try (MockedConstruction<LoginContext> mocked = Mockito.mockConstruction(LoginContext.class,
-                (mock, context) -> {
-                    when(mock.getSubject()).thenReturn(subject);
-                })) {
+        try (MockedConstruction<LoginContext> mocked = Mockito.mockConstruction(LoginContext.class, (mock, context) -> {
+            when(mock.getSubject()).thenReturn(subject);
+        })) {
             KerberosCredentials credentials = new KerberosCredentials(LOGIN_CONTEXT_NAME);
             assertEquals(subject, credentials.getSubject());
         }

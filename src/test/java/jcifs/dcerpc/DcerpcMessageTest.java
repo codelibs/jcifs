@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -30,7 +29,7 @@ class DcerpcMessageTest {
 
     @Mock
     private NdrBuffer mockBuffer;
-    
+
     private TestDcerpcMessage message;
 
     // Concrete implementation for testing abstract DcerpcMessage
@@ -67,7 +66,7 @@ class DcerpcMessageTest {
     @Nested
     @DisplayName("Flag Management Tests")
     class FlagManagementTests {
-        
+
         @Test
         @DisplayName("isFlagSet should correctly identify set flags")
         void testIsFlagSet() {
@@ -121,18 +120,18 @@ class DcerpcMessageTest {
             assertTrue(message.isFlagSet(DcerpcConstants.RPC_C_PF_NO_FRAGMENT));
         }
     }
-    
+
     @Nested
     @DisplayName("Result Management Tests")
     class ResultManagementTests {
-        
+
         @Test
         @DisplayName("getResult should return null for success (result=0)")
         void testGetResultSuccess() {
             message.result = 0;
             assertNull(message.getResult());
         }
-        
+
         @Test
         @DisplayName("getResult should return DcerpcException for non-zero result")
         void testGetResultError() {
@@ -146,7 +145,7 @@ class DcerpcMessageTest {
     @Nested
     @DisplayName("Header Encoding Tests")
     class HeaderEncodingTests {
-        
+
         @Test
         @DisplayName("encode_header should write all header fields")
         void testEncodeHeader() throws NdrException {
@@ -176,7 +175,7 @@ class DcerpcMessageTest {
     @Nested
     @DisplayName("Header Decoding Tests")
     class HeaderDecodingTests {
-        
+
         @Test
         @DisplayName("decode_header should successfully parse valid header")
         void testDecodeHeaderSuccess() throws NdrException {
@@ -234,7 +233,7 @@ class DcerpcMessageTest {
     @Nested
     @DisplayName("Message Encoding Tests")
     class MessageEncodingTests {
-        
+
         @Test
         @DisplayName("encode should handle REQUEST ptype correctly")
         void testEncodeRequestPtype() throws NdrException {
@@ -289,7 +288,7 @@ class DcerpcMessageTest {
     @Nested
     @DisplayName("Message Decoding Tests")
     class MessageDecodingTests {
-        
+
         @Test
         @DisplayName("decode should handle RESPONSE ptype correctly")
         void testDecodeResponsePtype() throws NdrException {

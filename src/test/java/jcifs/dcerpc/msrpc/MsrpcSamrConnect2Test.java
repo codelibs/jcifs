@@ -100,21 +100,20 @@ public class MsrpcSamrConnect2Test {
     @DisplayName("Should work with different access masks")
     void shouldWorkWithDifferentAccessMasks() {
         // Test with different access masks
-        int[] accessMasks = {
-            0x00000001, // SAM_SERVER_CONNECT
-            0x00000002, // SAM_SERVER_SHUTDOWN
-            0x00000004, // SAM_SERVER_INITIALIZE
-            0x00000008, // SAM_SERVER_CREATE_DOMAIN
-            0x00000010, // SAM_SERVER_ENUMERATE_DOMAINS
-            0x00000020, // SAM_SERVER_LOOKUP_DOMAIN
-            0x000F003F, // SAM_SERVER_ALL_ACCESS
-            0x02000000  // MAXIMUM_ALLOWED
+        int[] accessMasks = { 0x00000001, // SAM_SERVER_CONNECT
+                0x00000002, // SAM_SERVER_SHUTDOWN
+                0x00000004, // SAM_SERVER_INITIALIZE
+                0x00000008, // SAM_SERVER_CREATE_DOMAIN
+                0x00000010, // SAM_SERVER_ENUMERATE_DOMAINS
+                0x00000020, // SAM_SERVER_LOOKUP_DOMAIN
+                0x000F003F, // SAM_SERVER_ALL_ACCESS
+                0x02000000 // MAXIMUM_ALLOWED
         };
 
         for (int accessMask : accessMasks) {
             // When
             MsrpcSamrConnect2 msrpcSamrConnect2 = new MsrpcSamrConnect2(testServer, accessMask, mockPolicyHandle);
-            
+
             // Then
             assertNotNull(msrpcSamrConnect2, "Should work with access mask: 0x" + Integer.toHexString(accessMask));
         }
@@ -128,11 +127,9 @@ public class MsrpcSamrConnect2Test {
 
         // Then - Test public methods
         assertEquals(0, msrpcSamrConnect2.getPtype(), "getPtype() should return 0");
-        assertEquals(DcerpcConstants.DCERPC_FIRST_FRAG | DcerpcConstants.DCERPC_LAST_FRAG, 
-                    msrpcSamrConnect2.getFlags(), "getFlags() should return correct flags");
-        assertTrue(msrpcSamrConnect2.isFlagSet(DcerpcConstants.DCERPC_FIRST_FRAG), 
-                  "DCERPC_FIRST_FRAG should be set");
-        assertTrue(msrpcSamrConnect2.isFlagSet(DcerpcConstants.DCERPC_LAST_FRAG), 
-                  "DCERPC_LAST_FRAG should be set");
+        assertEquals(DcerpcConstants.DCERPC_FIRST_FRAG | DcerpcConstants.DCERPC_LAST_FRAG, msrpcSamrConnect2.getFlags(),
+                "getFlags() should return correct flags");
+        assertTrue(msrpcSamrConnect2.isFlagSet(DcerpcConstants.DCERPC_FIRST_FRAG), "DCERPC_FIRST_FRAG should be set");
+        assertTrue(msrpcSamrConnect2.isFlagSet(DcerpcConstants.DCERPC_LAST_FRAG), "DCERPC_LAST_FRAG should be set");
     }
 }

@@ -75,7 +75,7 @@ class HandlerTest {
         Map<String, URLStreamHandler> handlers = (Map<String, URLStreamHandler>) handlersField.get(null);
         handlers.clear();
     }
-    
+
     /**
      * Pre-populates the protocol handlers cache with mock handlers for testing.
      * This avoids the need for actual protocol handlers to be available.
@@ -85,7 +85,7 @@ class HandlerTest {
         handlersField.setAccessible(true);
         @SuppressWarnings("unchecked")
         Map<String, URLStreamHandler> handlers = (Map<String, URLStreamHandler>) handlersField.get(null);
-        
+
         // Create mock HTTP handler
         URLStreamHandler httpHandler = new URLStreamHandler() {
             @Override
@@ -93,7 +93,7 @@ class HandlerTest {
                 return mock(HttpURLConnection.class);
             }
         };
-        
+
         // Create mock HTTPS handler
         URLStreamHandler httpsHandler = new URLStreamHandler() {
             @Override
@@ -101,7 +101,7 @@ class HandlerTest {
                 return mock(HttpURLConnection.class);
             }
         };
-        
+
         handlers.put("http", httpHandler);
         handlers.put("https", httpsHandler);
     }
@@ -172,7 +172,7 @@ class HandlerTest {
         // This test verifies that if a custom URLStreamHandlerFactory is set, it is used
         // to create the stream handler for the connection.
         URLStreamHandlerFactory mockFactory = mock(URLStreamHandlerFactory.class);
-        
+
         // Create a concrete URLStreamHandler subclass instead of mocking
         URLStreamHandler mockStreamHandler = new URLStreamHandler() {
             @Override
@@ -180,7 +180,7 @@ class HandlerTest {
                 return mock(HttpURLConnection.class);
             }
         };
-        
+
         URL url = new URL("http://custom.protocol/path");
 
         // Configure the mock factory to return our handler for the 'http' protocol.
@@ -205,13 +205,13 @@ class HandlerTest {
         System.setProperty("java.protocol.handler.pkgs", "jcifs");
         setupMockProtocolHandlers();
         URL url = new URL("http://example.com/resource");
-        
+
         URLConnection connection = handler.openConnection(url);
-        
+
         assertNotNull(connection, "Connection should not be null even when jcifs is in handler path.");
         assertTrue(connection instanceof NtlmHttpURLConnection, "Should use cached handler and wrap it.");
     }
-    
+
     @Test
     void testOpenConnection_NullSystemProperty_UsesDefaultHandlers() throws Exception {
         // This test verifies that when the system property is null, the handler
@@ -219,13 +219,13 @@ class HandlerTest {
         System.clearProperty("java.protocol.handler.pkgs");
         setupMockProtocolHandlers();
         URL url = new URL("http://example.com/resource");
-        
+
         URLConnection connection = handler.openConnection(url);
-        
+
         assertNotNull(connection, "Connection should not be null when system property is null.");
         assertTrue(connection instanceof NtlmHttpURLConnection, "Should use cached handler and wrap it.");
     }
-    
+
     @Test
     void testOpenConnection_EmptySystemProperty_UsesDefaultHandlers() throws Exception {
         // This test verifies that when the system property is empty, the handler
@@ -233,23 +233,23 @@ class HandlerTest {
         System.setProperty("java.protocol.handler.pkgs", "");
         setupMockProtocolHandlers();
         URL url = new URL("http://example.com/resource");
-        
+
         URLConnection connection = handler.openConnection(url);
-        
+
         assertNotNull(connection, "Connection should not be null when system property is empty.");
         assertTrue(connection instanceof NtlmHttpURLConnection, "Should use cached handler and wrap it.");
     }
-    
+
     @Test
     void testOpenConnection_CachedHandler_ReusesExistingHandler() throws Exception {
         // This test verifies that once a handler is cached, subsequent calls reuse it.
         setupMockProtocolHandlers();
         URL url1 = new URL("http://example.com/resource1");
         URL url2 = new URL("http://example.com/resource2");
-        
+
         URLConnection connection1 = handler.openConnection(url1);
         URLConnection connection2 = handler.openConnection(url2);
-        
+
         assertNotNull(connection1, "First connection should not be null.");
         assertNotNull(connection2, "Second connection should not be null.");
         assertTrue(connection1 instanceof NtlmHttpURLConnection, "First connection should be wrapped.");

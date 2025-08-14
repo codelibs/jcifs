@@ -1,14 +1,18 @@
 package jcifs.smb1.smb1;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.junit.jupiter.MockitoExtension;
-import java.lang.reflect.Field;
-import java.nio.charset.StandardCharsets;
 
 /**
  * Test suite for {@link Trans2GetDfsReferral}.
@@ -50,7 +54,7 @@ class Trans2GetDfsReferralTest {
     void testConstructor() throws Exception {
         Trans2GetDfsReferral cmd = new Trans2GetDfsReferral("/file");
         assertEquals("/file", getPrivateField(cmd, "path"));
-        assertEquals((byte)0x00, getPrivateField(cmd, "maxSetupCount"));
+        assertEquals((byte) 0x00, getPrivateField(cmd, "maxSetupCount"));
         assertEquals(4096, getPrivateField(cmd, "maxDataCount"));
     }
 
@@ -63,7 +67,7 @@ class Trans2GetDfsReferralTest {
         assertEquals(2, r);
         byte subCmd = (byte) getPrivateField(cmd, "subCommand");
         assertEquals(subCmd, buf[0]);
-        assertEquals((byte)0x00, buf[1]);
+        assertEquals((byte) 0x00, buf[1]);
     }
 
     @Test
@@ -97,9 +101,21 @@ class Trans2GetDfsReferralTest {
     @DisplayName("read methods are no‑ops")
     class ReadMethods {
         Trans2GetDfsReferral cmd = new Trans2GetDfsReferral("/foo");
-        @Test void setup() { assertEquals(0, cmd.readSetupWireFormat(new byte[10],0,0)); }
-        @Test void parameters() { assertEquals(0, cmd.readParametersWireFormat(new byte[10],0,0)); }
-        @Test void data() { assertEquals(0, cmd.readDataWireFormat(new byte[10],0,0)); }
+
+        @Test
+        void setup() {
+            assertEquals(0, cmd.readSetupWireFormat(new byte[10], 0, 0));
+        }
+
+        @Test
+        void parameters() {
+            assertEquals(0, cmd.readParametersWireFormat(new byte[10], 0, 0));
+        }
+
+        @Test
+        void data() {
+            assertEquals(0, cmd.readDataWireFormat(new byte[10], 0, 0));
+        }
     }
 
     @Test
@@ -113,7 +129,7 @@ class Trans2GetDfsReferralTest {
     }
 
     @ParameterizedTest
-    @ValueSource(ints = {0, 5, -1, 65534})
+    @ValueSource(ints = { 0, 5, -1, 65534 })
     @DisplayName("referral level variations")
     void testLevels(int level) throws Exception {
         Trans2GetDfsReferral cmd = new Trans2GetDfsReferral("foo");
@@ -126,7 +142,7 @@ class Trans2GetDfsReferralTest {
         int expected = level & 0xFFFF;
         assertEquals(expected, written);
     }
-    
+
     // Helper method to extract string from buffer
     private String extractStringFromBuffer(byte[] buffer, int offset, int maxLen) {
         int end = offset;
@@ -136,4 +152,3 @@ class Trans2GetDfsReferralTest {
         return new String(buffer, offset, end - offset, StandardCharsets.UTF_8);
     }
 }
-

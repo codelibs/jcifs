@@ -1,20 +1,22 @@
 package jcifs.config;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.TimeZone;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 import jcifs.CIFSException;
 import jcifs.DialectVersion;
@@ -37,7 +39,7 @@ class BaseConfigurationTest {
     @DisplayName("Test constructor with initDefaults true")
     void testConstructorWithInitDefaults() throws CIFSException {
         BaseConfiguration configWithDefaults = new BaseConfiguration(true);
-        
+
         assertNotNull(configWithDefaults.getRandom());
         assertNotNull(configWithDefaults.getLocalTimezone());
         assertNotNull(configWithDefaults.getMachineId());
@@ -55,7 +57,7 @@ class BaseConfigurationTest {
     @DisplayName("Test default constructor")
     void testDefaultConstructor() throws CIFSException {
         BaseConfiguration defaultConfig = new TestableBaseConfiguration();
-        
+
         assertNotNull(defaultConfig.getRandom(), "Random should not be null");
         assertNotNull(defaultConfig.getLocalTimezone(), "Local timezone should not be null");
         assertNotNull(defaultConfig.getMachineId(), "Machine ID should not be null");
@@ -183,10 +185,10 @@ class BaseConfigurationTest {
     void testGetBatchLimit() {
         // Test default batch limit
         assertEquals(0, config.getBatchLimit("TreeConnectAndX.QueryInformation"));
-        
+
         // Test unspecified batch limit
         assertEquals(1, config.getBatchLimit("UnknownCommand"));
-        
+
         // Test caching behavior
         assertEquals(0, config.getBatchLimit("TreeConnectAndX.QueryInformation"));
     }
@@ -203,7 +205,7 @@ class BaseConfigurationTest {
                 return null;
             }
         };
-        
+
         assertEquals(5, customConfig.getBatchLimit("CustomCommand"));
         assertEquals(1, customConfig.getBatchLimit("UnknownCommand"));
     }
@@ -213,10 +215,10 @@ class BaseConfigurationTest {
     void testIsAllowCompound() {
         // Default behavior when disallowCompound is null
         assertTrue(config.isAllowCompound("AnyCommand"));
-        
+
         // Set disallowCompound
         config.disallowCompound = new HashSet<>(Arrays.asList("Command1", "Command2"));
-        
+
         assertFalse(config.isAllowCompound("Command1"));
         assertFalse(config.isAllowCompound("Command2"));
         assertTrue(config.isAllowCompound("Command3"));
@@ -227,7 +229,7 @@ class BaseConfigurationTest {
     void testInitResolverOrderWithNullInput() {
         config.winsServer = new InetAddress[0];
         config.initResolverOrder(null);
-        
+
         List<ResolverType> order = config.getResolveOrder();
         assertEquals(3, order.size());
         assertEquals(ResolverType.RESOLVER_LMHOSTS, order.get(0));
@@ -240,7 +242,7 @@ class BaseConfigurationTest {
     void testInitResolverOrderWithWinsServer() throws UnknownHostException {
         config.winsServer = new InetAddress[] { InetAddress.getByName("192.168.1.1") };
         config.initResolverOrder(null);
-        
+
         List<ResolverType> order = config.getResolveOrder();
         assertEquals(4, order.size());
         assertEquals(ResolverType.RESOLVER_LMHOSTS, order.get(0));
@@ -254,7 +256,7 @@ class BaseConfigurationTest {
     void testInitResolverOrderWithCustomOrder() throws UnknownHostException {
         config.winsServer = new InetAddress[] { InetAddress.getByName("192.168.1.1") };
         config.initResolverOrder("DNS,WINS,LMHOSTS,BCAST");
-        
+
         List<ResolverType> order = config.getResolveOrder();
         assertEquals(4, order.size());
         assertEquals(ResolverType.RESOLVER_DNS, order.get(0));
@@ -268,7 +270,7 @@ class BaseConfigurationTest {
     void testInitResolverOrderWithInvalidResolver() {
         config.winsServer = new InetAddress[0];
         config.initResolverOrder("DNS,INVALID,WINS,LMHOSTS");
-        
+
         List<ResolverType> order = config.getResolveOrder();
         assertEquals(2, order.size());
         assertEquals(ResolverType.RESOLVER_DNS, order.get(0));
@@ -279,7 +281,7 @@ class BaseConfigurationTest {
     @DisplayName("Test initProtocolVersions with strings")
     void testInitProtocolVersionsWithStrings() {
         config.initProtocolVersions("SMB202", "SMB311");
-        
+
         assertEquals(DialectVersion.SMB202, config.getMinimumVersion());
         assertEquals(DialectVersion.SMB311, config.getMaximumVersion());
     }
@@ -288,7 +290,7 @@ class BaseConfigurationTest {
     @DisplayName("Test initProtocolVersions with null/empty strings")
     void testInitProtocolVersionsWithNullStrings() {
         config.initProtocolVersions(null, "");
-        
+
         assertEquals(DialectVersion.SMB1, config.getMinimumVersion());
         assertEquals(DialectVersion.SMB311, config.getMaximumVersion());
     }
@@ -297,7 +299,7 @@ class BaseConfigurationTest {
     @DisplayName("Test initProtocolVersions with min >= max")
     void testInitProtocolVersionsWithMinGreaterThanMax() {
         config.initProtocolVersions("SMB311", "SMB202");
-        
+
         assertEquals(DialectVersion.SMB311, config.getMinimumVersion());
         assertEquals(DialectVersion.SMB311, config.getMaximumVersion());
     }
@@ -306,7 +308,7 @@ class BaseConfigurationTest {
     @DisplayName("Test initProtocolVersions with DialectVersion objects")
     void testInitProtocolVersionsWithDialectVersions() {
         config.initProtocolVersions(DialectVersion.SMB210, DialectVersion.SMB300);
-        
+
         assertEquals(DialectVersion.SMB210, config.getMinimumVersion());
         assertEquals(DialectVersion.SMB300, config.getMaximumVersion());
     }
@@ -315,7 +317,7 @@ class BaseConfigurationTest {
     @DisplayName("Test initProtocolVersions with null DialectVersions")
     void testInitProtocolVersionsWithNullDialectVersions() {
         config.initProtocolVersions((DialectVersion) null, null);
-        
+
         assertEquals(DialectVersion.SMB1, config.getMinimumVersion());
         assertEquals(DialectVersion.SMB311, config.getMaximumVersion());
     }
@@ -324,7 +326,7 @@ class BaseConfigurationTest {
     @DisplayName("Test initDisallowCompound with null")
     void testInitDisallowCompoundWithNull() {
         config.initDisallowCompound(null);
-        
+
         assertNull(config.disallowCompound);
     }
 
@@ -332,7 +334,7 @@ class BaseConfigurationTest {
     @DisplayName("Test initDisallowCompound with command list")
     void testInitDisallowCompoundWithCommandList() {
         config.initDisallowCompound("Command1, Command2 , Command3");
-        
+
         assertNotNull(config.disallowCompound);
         assertEquals(3, config.disallowCompound.size());
         assertTrue(config.disallowCompound.contains("Command1"));
@@ -345,43 +347,43 @@ class BaseConfigurationTest {
     void testInitDefaultsSetsAllFields() throws CIFSException {
         BaseConfiguration testConfig = new BaseConfiguration(false);
         testConfig.initDefaults();
-        
+
         // Check random and time zone
         assertNotNull(testConfig.getRandom());
         assertNotNull(testConfig.getLocalTimezone());
-        
+
         // Check PID is set
         assertTrue(testConfig.getPid() >= 0);
         assertTrue(testConfig.getPid() < 65536);
-        
+
         // Check machine ID
         assertNotNull(testConfig.getMachineId());
         assertEquals(32, testConfig.getMachineId().length);
-        
+
         // Check native OS
         assertNotNull(testConfig.getNativeOs());
         assertEquals(System.getProperty("os.name"), testConfig.getNativeOs());
-        
+
         // Check flags2
         assertTrue(testConfig.getFlags2() > 0);
         assertTrue((testConfig.getFlags2() & SmbConstants.FLAGS2_LONG_FILENAMES) != 0);
         assertTrue((testConfig.getFlags2() & SmbConstants.FLAGS2_EXTENDED_ATTRIBUTES) != 0);
-        
+
         // Check capabilities  
         assertTrue(testConfig.getCapabilities() != 0, "Capabilities should be non-zero");
-        
+
         // Check broadcast address
         assertNotNull(testConfig.getBroadcastAddress());
         assertEquals("255.255.255.255", testConfig.getBroadcastAddress().getHostAddress());
-        
+
         // Check resolver order
         assertNotNull(testConfig.getResolveOrder());
         assertFalse(testConfig.getResolveOrder().isEmpty());
-        
+
         // Check protocol versions
         assertNotNull(testConfig.getMinimumVersion());
         assertNotNull(testConfig.getMaximumVersion());
-        
+
         // Check disallow compound
         assertNotNull(testConfig.disallowCompound);
         assertTrue(testConfig.disallowCompound.contains("Smb2SessionSetupRequest"));
@@ -394,14 +396,14 @@ class BaseConfigurationTest {
         BaseConfiguration testConfig = new BaseConfiguration(false);
         byte[] customMachineId = new byte[32];
         Arrays.fill(customMachineId, (byte) 0xFF);
-        
+
         // Use reflection to set private field
         java.lang.reflect.Field machineIdField = BaseConfiguration.class.getDeclaredField("machineId");
         machineIdField.setAccessible(true);
         machineIdField.set(testConfig, customMachineId);
-        
+
         testConfig.initDefaults();
-        
+
         assertArrayEquals(customMachineId, testConfig.getMachineId());
     }
 
@@ -410,9 +412,9 @@ class BaseConfigurationTest {
     void testInitDefaultsWithPresetNativeOs() throws CIFSException {
         BaseConfiguration testConfig = new BaseConfiguration(false);
         testConfig.nativeOs = "CustomOS";
-        
+
         testConfig.initDefaults();
-        
+
         assertEquals("CustomOS", testConfig.getNativeOs());
     }
 
@@ -425,9 +427,9 @@ class BaseConfigurationTest {
         testConfig.useNtStatus = true;
         testConfig.useUnicode = true;
         testConfig.forceUnicode = true;
-        
+
         testConfig.initDefaults();
-        
+
         assertTrue((testConfig.getFlags2() & SmbConstants.FLAGS2_EXTENDED_SECURITY_NEGOTIATION) != 0);
         assertTrue((testConfig.getFlags2() & SmbConstants.FLAGS2_SECURITY_SIGNATURES) != 0);
         assertTrue((testConfig.getFlags2() & SmbConstants.FLAGS2_STATUS32) != 0);
@@ -443,9 +445,9 @@ class BaseConfigurationTest {
         testConfig.useExtendedSecurity = true;
         testConfig.useLargeReadWrite = true;
         testConfig.useUnicode = true;
-        
+
         testConfig.initDefaults();
-        
+
         assertTrue((testConfig.getCapabilities() & SmbConstants.CAP_NT_SMBS) != 0);
         assertTrue((testConfig.getCapabilities() & SmbConstants.CAP_STATUS32) != 0);
         assertTrue((testConfig.getCapabilities() & SmbConstants.CAP_EXTENDED_SECURITY) != 0);
@@ -460,9 +462,9 @@ class BaseConfigurationTest {
         BaseConfiguration testConfig = new BaseConfiguration(false);
         testConfig.flags2 = 0x1234;
         testConfig.capabilities = 0x5678;
-        
+
         testConfig.initDefaults();
-        
+
         assertEquals(0x1234, testConfig.getFlags2());
         assertEquals(0x5678, testConfig.getCapabilities());
     }
@@ -472,9 +474,9 @@ class BaseConfigurationTest {
     void testInitDefaultsWithPresetResolverOrder() throws CIFSException {
         BaseConfiguration testConfig = new BaseConfiguration(false);
         testConfig.resolverOrder = Arrays.asList(ResolverType.RESOLVER_DNS);
-        
+
         testConfig.initDefaults();
-        
+
         assertEquals(1, testConfig.getResolveOrder().size());
         assertEquals(ResolverType.RESOLVER_DNS, testConfig.getResolveOrder().get(0));
     }
@@ -485,9 +487,9 @@ class BaseConfigurationTest {
         BaseConfiguration testConfig = new BaseConfiguration(false);
         testConfig.minVersion = DialectVersion.SMB210;
         testConfig.maxVersion = DialectVersion.SMB300;
-        
+
         testConfig.initDefaults();
-        
+
         assertEquals(DialectVersion.SMB210, testConfig.getMinimumVersion());
         assertEquals(DialectVersion.SMB300, testConfig.getMaximumVersion());
     }
@@ -498,9 +500,9 @@ class BaseConfigurationTest {
         BaseConfiguration testConfig = new BaseConfiguration(false);
         Set<String> customDisallow = new HashSet<>(Arrays.asList("CustomCommand"));
         testConfig.disallowCompound = customDisallow;
-        
+
         testConfig.initDefaults();
-        
+
         assertEquals(customDisallow, testConfig.disallowCompound);
     }
 

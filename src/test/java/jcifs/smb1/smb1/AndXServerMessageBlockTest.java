@@ -1,6 +1,11 @@
 package jcifs.smb1.smb1;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -212,7 +217,7 @@ class AndXServerMessageBlockTest {
 
         byte[] buf = new byte[128];
         // After header at 0..32
-        buf[33] = 4;         // wordCount
+        buf[33] = 4; // wordCount
         buf[34] = (byte) 0xFF; // andxCommand
         // andxOffset (ignored when 0xFF)
         buf[36] = 0;
@@ -233,8 +238,8 @@ class AndXServerMessageBlockTest {
         block.headerStart = 0;
 
         byte[] buf = new byte[64];
-        buf[0] = 4;           // wordCount
-        buf[1] = 0x42;        // andxCommand
+        buf[0] = 4; // wordCount
+        buf[1] = 0x42; // andxCommand
         // andxOffset = 0 triggers workaround -> treat as no andx
         ServerMessageBlock.writeInt2(0, buf, 3);
         ServerMessageBlock.writeInt2(10, buf, 9); // byteCount
@@ -254,8 +259,8 @@ class AndXServerMessageBlockTest {
             }
         };
         byte[] buf = new byte[128];
-        buf[33] = 4;            // wordCount
-        buf[34] = 0x55;         // andxCommand != 0xFF
+        buf[33] = 4; // wordCount
+        buf[34] = 0x55; // andxCommand != 0xFF
         // andxOffset arbitrarily > 0
         ServerMessageBlock.writeInt2(80, buf, 36);
         // byteCount position: 33 + 1 + 8 = 42
@@ -276,8 +281,8 @@ class AndXServerMessageBlockTest {
         block.headerStart = 0;
 
         byte[] buf = new byte[256];
-        buf[0] = 4;            // wordCount for main block
-        buf[1] = 0x66;         // andxCommand
+        buf[0] = 4; // wordCount for main block
+        buf[1] = 0x66; // andxCommand
         ServerMessageBlock.writeInt2(50, buf, 3); // andxOffset
         ServerMessageBlock.writeInt2(20, buf, 9); // byteCount for main block
 
@@ -302,8 +307,8 @@ class AndXServerMessageBlockTest {
         block.headerStart = 0;
 
         byte[] buf = new byte[64];
-        buf[0] = 4;           // wordCount
-        buf[1] = 0x42;        // andxCommand present
+        buf[0] = 4; // wordCount
+        buf[1] = 0x42; // andxCommand present
         ServerMessageBlock.writeInt2(50, buf, 3);
         ServerMessageBlock.writeInt2(10, buf, 9);
 
@@ -326,8 +331,8 @@ class AndXServerMessageBlockTest {
         resp.isExtended = true;
 
         byte[] buf = new byte[256];
-        buf[33] = 34;             // baseline wordCount reported by server
-        buf[34] = (byte) 0xFF;    // no further andx
+        buf[33] = 34; // baseline wordCount reported by server
+        buf[34] = (byte) 0xFF; // no further andx
         // byteCount at 33 + 1 + 34*2 = 102
         ServerMessageBlock.writeInt2(0, buf, 102);
 
@@ -352,4 +357,3 @@ class AndXServerMessageBlockTest {
         assertTrue(s.contains("andxOffset="));
     }
 }
-

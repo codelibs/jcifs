@@ -1,10 +1,11 @@
 package jcifs.internal.fscc;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 import jcifs.internal.SMBProtocolDecodingException;
 import jcifs.internal.util.SMBUtil;
@@ -280,7 +281,7 @@ class FileStandardInfoTest {
 
         // Test toString
         String result = fileStandardInfo.toString();
-        
+
         // Verify string contains expected values
         assertTrue(result.contains("SmbQueryInfoStandard"));
         assertTrue(result.contains("allocationSize=" + expectedAllocationSize));

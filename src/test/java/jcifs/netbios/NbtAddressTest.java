@@ -9,14 +9,11 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-
-import jcifs.Address;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -92,7 +89,7 @@ class NbtAddressTest {
         NetbiosAddress netbiosUnwrapped = nbtAddress.unwrap(NetbiosAddress.class);
         assertNotNull(netbiosUnwrapped);
         assertSame(nbtAddress, netbiosUnwrapped);
-        
+
         // Test unwrap for truly incompatible type
         assertNull(nbtAddress.unwrap(UniAddress.class));
     }

@@ -1,7 +1,9 @@
 package jcifs.smb1.smb1;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Unit tests for the Trans2QueryPathInformation class.
@@ -23,7 +25,8 @@ class Trans2QueryPathInformationTest {
         // Then
         assertEquals(filename, trans.path, "The path should be set correctly.");
         assertEquals(ServerMessageBlock.SMB_COM_TRANSACTION2, trans.command, "The command should be SMB_COM_TRANSACTION2.");
-        assertEquals(SmbComTransaction.TRANS2_QUERY_PATH_INFORMATION, trans.subCommand, "The subCommand should be TRANS2_QUERY_PATH_INFORMATION.");
+        assertEquals(SmbComTransaction.TRANS2_QUERY_PATH_INFORMATION, trans.subCommand,
+                "The subCommand should be TRANS2_QUERY_PATH_INFORMATION.");
         assertEquals(0, trans.totalDataCount, "The totalDataCount should be 0.");
         assertEquals(2, trans.maxParameterCount, "The maxParameterCount should be 2.");
         assertEquals(40, trans.maxDataCount, "The maxDataCount should be 40.");

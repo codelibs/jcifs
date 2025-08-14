@@ -5,21 +5,17 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.*;
+
+import java.util.Properties;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import jcifs.Configuration;
 import jcifs.config.PropertyConfiguration;
-import jcifs.internal.fscc.FileBothDirectoryInfo;
 import jcifs.internal.smb1.ServerMessageBlock;
 import jcifs.internal.smb1.trans.SmbComTransaction;
-import jcifs.smb.FileEntry;
-
-import java.util.Properties;
 
 class Trans2FindFirst2ResponseTest {
 
@@ -82,7 +78,7 @@ class Trans2FindFirst2ResponseTest {
     void testReadParametersWireFormat() {
         // Test reading parameters from a properly formatted buffer
         byte[] buffer = new byte[20];
-        
+
         // Set up the buffer with test data
         // sid (2 bytes)
         buffer[0] = 0x01;
@@ -99,9 +95,9 @@ class Trans2FindFirst2ResponseTest {
         // lastNameOffset (2 bytes)
         buffer[8] = 0x10;
         buffer[9] = 0x00;
-        
+
         int result = response.readParametersWireFormat(buffer, 0, 10);
-        
+
         // Should read 10 bytes
         assertEquals(10, result);
         // Check the values were parsed correctly
@@ -114,23 +110,23 @@ class Trans2FindFirst2ResponseTest {
     void testReadDataWireFormat_emptyBuffer() throws Exception {
         // Test reading data from an empty buffer
         byte[] buffer = new byte[10];
-        
+
         // Set data count to test return value
         response.setDataCount(5);
-        
+
         // With 0 entries, should return dataCount
         int result = response.readDataWireFormat(buffer, 0, 0);
         // Should return dataCount
         assertEquals(5, result);
     }
-    
+
     @Test
     void testGetSid() {
         // Test the getSid method
         // By default, it should be 0
         assertEquals(0, response.getSid());
     }
-    
+
     @Test
     void testGetResumeKey() {
         // Test the getResumeKey method
@@ -149,12 +145,12 @@ class Trans2FindFirst2ResponseTest {
         assertTrue(result.contains("isEndOfSearch="));
         assertTrue(result.contains("lastName="));
     }
-    
+
     @Test
     void testReadParametersWireFormat_NotFindFirst() {
         // Test reading parameters when subcommand is not TRANS2_FIND_FIRST2
         response.setSubCommand(SmbComTransaction.TRANS2_FIND_NEXT2);
-        
+
         byte[] buffer = new byte[20];
         // numEntries (2 bytes) - sid is skipped for FIND_NEXT
         buffer[0] = 0x03;
@@ -168,9 +164,9 @@ class Trans2FindFirst2ResponseTest {
         // lastNameOffset (2 bytes)
         buffer[6] = 0x08;
         buffer[7] = 0x00;
-        
+
         int result = response.readParametersWireFormat(buffer, 0, 8);
-        
+
         // Should read 8 bytes (no sid for FIND_NEXT)
         assertEquals(8, result);
         assertEquals(3, response.getNumEntries());

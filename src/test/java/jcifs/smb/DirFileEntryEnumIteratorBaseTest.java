@@ -1,13 +1,23 @@
 package jcifs.smb;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -26,15 +36,50 @@ class DirFileEntryEnumIteratorBaseTest {
     // Simple FileEntry implementation used for tests
     private static FileEntry entry(String name) {
         return new FileEntry() {
-            @Override public String getName() { return name; }
-            @Override public int getType() { return 0; }
-            @Override public int getAttributes() { return 0; }
-            @Override public long createTime() { return 0; }
-            @Override public long lastModified() { return 0; }
-            @Override public long lastAccess() { return 0; }
-            @Override public long length() { return 0; }
-            @Override public int getFileIndex() { return 0; }
-            @Override public String toString() { return "Entry(" + name + ")"; }
+            @Override
+            public String getName() {
+                return name;
+            }
+
+            @Override
+            public int getType() {
+                return 0;
+            }
+
+            @Override
+            public int getAttributes() {
+                return 0;
+            }
+
+            @Override
+            public long createTime() {
+                return 0;
+            }
+
+            @Override
+            public long lastModified() {
+                return 0;
+            }
+
+            @Override
+            public long lastAccess() {
+                return 0;
+            }
+
+            @Override
+            public long length() {
+                return 0;
+            }
+
+            @Override
+            public int getFileIndex() {
+                return 0;
+            }
+
+            @Override
+            public String toString() {
+                return "Entry(" + name + ")";
+            }
         };
     }
 
@@ -43,48 +88,45 @@ class DirFileEntryEnumIteratorBaseTest {
         private static FileEntry staticInitial;
         private static List<FileEntry[]> staticPages;
         private static boolean staticThrowOnOpen;
-        
-        private int pageIdx = -1;  // Start before first page
+
+        private int pageIdx = -1; // Start before first page
         private boolean done = false;
         private boolean throwOnFetch;
         private boolean throwOnCloseInternal;
-        
+
         // Use static factory method to work around constructor ordering
-        static TestIterator create(
-                SmbTreeHandleImpl th,
-                SmbResource parent,
-                String wildcard,
-                ResourceNameFilter filter,
-                int searchAttributes,
-                FileEntry initial,
-                List<FileEntry[]> pages
-        ) throws CIFSException {
+        static TestIterator create(SmbTreeHandleImpl th, SmbResource parent, String wildcard, ResourceNameFilter filter,
+                int searchAttributes, FileEntry initial, List<FileEntry[]> pages) throws CIFSException {
             staticInitial = initial;
             staticPages = new ArrayList<>(pages);
             // Don't reset staticThrowOnOpen here - it's controlled by tests
             return new TestIterator(th, parent, wildcard, filter, searchAttributes);
         }
 
-        private TestIterator(
-                SmbTreeHandleImpl th,
-                SmbResource parent,
-                String wildcard,
-                ResourceNameFilter filter,
-                int searchAttributes
-        ) throws CIFSException {
+        private TestIterator(SmbTreeHandleImpl th, SmbResource parent, String wildcard, ResourceNameFilter filter, int searchAttributes)
+                throws CIFSException {
             super(th, parent, wildcard, filter, searchAttributes);
         }
 
-        TestIterator throwOnOpen() { 
+        TestIterator throwOnOpen() {
             // This method doesn't make sense anymore with static approach
-            return this; 
+            return this;
         }
-        TestIterator throwOnFetch() { this.throwOnFetch = true; return this; }
-        TestIterator throwOnCloseInternal() { this.throwOnCloseInternal = true; return this; }
+
+        TestIterator throwOnFetch() {
+            this.throwOnFetch = true;
+            return this;
+        }
+
+        TestIterator throwOnCloseInternal() {
+            this.throwOnCloseInternal = true;
+            return this;
+        }
 
         @Override
         protected FileEntry open() throws CIFSException {
-            if (staticThrowOnOpen) throw new CIFSException("open fail");
+            if (staticThrowOnOpen)
+                throw new CIFSException("open fail");
             // Simulate fetching first page during open
             if (staticPages != null && !staticPages.isEmpty()) {
                 pageIdx = 0;
@@ -94,13 +136,14 @@ class DirFileEntryEnumIteratorBaseTest {
         }
 
         @Override
-        protected boolean isDone() { 
-            return this.done; 
+        protected boolean isDone() {
+            return this.done;
         }
 
         @Override
         protected boolean fetchMore() throws CIFSException {
-            if (throwOnFetch) throw new CIFSException("fetchMore fail");
+            if (throwOnFetch)
+                throw new CIFSException("fetchMore fail");
             // Move to next page if available
             if (staticPages != null && pageIdx + 1 < staticPages.size()) {
                 pageIdx++;
@@ -122,13 +165,17 @@ class DirFileEntryEnumIteratorBaseTest {
 
         @Override
         protected void doCloseInternal() throws CIFSException {
-            if (throwOnCloseInternal) throw new CIFSException("closeInternal fail");
+            if (throwOnCloseInternal)
+                throw new CIFSException("closeInternal fail");
         }
     }
 
-    @Mock SmbTreeHandleImpl tree;
-    @Mock SmbResource parent;
-    @Mock ResourceNameFilter nameFilter;
+    @Mock
+    SmbTreeHandleImpl tree;
+    @Mock
+    SmbResource parent;
+    @Mock
+    ResourceNameFilter nameFilter;
 
     private void stubAcquireReturnsSelf() {
         when(tree.acquire()).thenReturn(tree);
@@ -179,11 +226,11 @@ class DirFileEntryEnumIteratorBaseTest {
 
         // Act + Assert
         CIFSException ex = assertThrows(CIFSException.class, () -> {
-            TestIterator.staticThrowOnOpen = true;  // Set flag before constructor
+            TestIterator.staticThrowOnOpen = true; // Set flag before constructor
             try {
                 TestIterator.create(tree, parent, "*", null, 0, entry("first"), pages);
             } finally {
-                TestIterator.staticThrowOnOpen = false;  // Reset flag
+                TestIterator.staticThrowOnOpen = false; // Reset flag
             }
         });
         assertEquals("open fail", ex.getMessage());
@@ -210,7 +257,7 @@ class DirFileEntryEnumIteratorBaseTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"", "file.txt", "subdir"})
+    @ValueSource(strings = { "", "file.txt", "subdir" })
     @DisplayName("Name filter interaction: accept calls and rejections")
     void nameFilterAccepts(String acceptedName) throws Exception {
         // Arrange
@@ -278,8 +325,8 @@ class DirFileEntryEnumIteratorBaseTest {
         stubAcquireReturnsSelf();
         // No results in current page, not done, and fetchMore will throw
         FileEntry initial = entry("one");
-        TestIterator it = TestIterator.create(tree, parent, "*", null, 0, initial, List.of(new FileEntry[][] { new FileEntry[0] }))
-                .throwOnFetch();
+        TestIterator it =
+                TestIterator.create(tree, parent, "*", null, 0, initial, List.of(new FileEntry[][] { new FileEntry[0] })).throwOnFetch();
 
         // Act
         assertTrue(it.hasNext());
@@ -347,9 +394,7 @@ class DirFileEntryEnumIteratorBaseTest {
         SmbTreeHandleImpl nullTree = null;
 
         // Act + Assert
-        assertThrows(NullPointerException.class, () ->
-                TestIterator.create(nullTree, parent, "*", null, 0, entry("a"), List.of(new FileEntry[][] { new FileEntry[] {} }))
-        );
+        assertThrows(NullPointerException.class,
+                () -> TestIterator.create(nullTree, parent, "*", null, 0, entry("a"), List.of(new FileEntry[][] { new FileEntry[] {} })));
     }
 }
-

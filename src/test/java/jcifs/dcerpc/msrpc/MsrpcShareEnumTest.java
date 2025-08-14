@@ -29,7 +29,7 @@ class MsrpcShareEnumTest {
         // Test that the constructor initializes the object correctly
         MsrpcShareEnum shareEnum = new MsrpcShareEnum(TEST_SERVER_NAME);
         assertNotNull(shareEnum);
-        
+
         // Verify the server name is properly formatted with double backslashes
         try {
             Field servernameField = srvsvc.ShareEnumAll.class.getDeclaredField("servername");
@@ -75,7 +75,7 @@ class MsrpcShareEnumTest {
         assertNotNull(entry1);
         assertEquals("Share1", entry1.getName());
         assertEquals(8, entry1.getType()); // TYPE_SHARE constant
-        
+
         // Access remark through SmbShareInfo methods if available
         assertTrue(entry1 instanceof SmbShareInfo);
         SmbShareInfo shareInfo = (SmbShareInfo) entry1;
@@ -132,7 +132,7 @@ class MsrpcShareEnumTest {
 
         assertNotNull(entries);
         assertEquals(1, entries.length);
-        
+
         FileEntry entry = entries[0];
         assertNotNull(entry);
         assertEquals("SingleShare", entry.getName());
@@ -148,13 +148,12 @@ class MsrpcShareEnumTest {
         shareInfo1.remark = "Test remark";
 
         // Test MsrpcShareInfo1 inner class
-        MsrpcShareEnum.MsrpcShareInfo1 msrpcShareInfo1 = 
-            new MsrpcShareEnum(TEST_SERVER_NAME).new MsrpcShareInfo1(shareInfo1);
+        MsrpcShareEnum.MsrpcShareInfo1 msrpcShareInfo1 = new MsrpcShareEnum(TEST_SERVER_NAME).new MsrpcShareInfo1(shareInfo1);
 
         assertNotNull(msrpcShareInfo1);
         assertEquals("TestShare", msrpcShareInfo1.getName());
         assertEquals(8, msrpcShareInfo1.getType()); // TYPE_SHARE constant
-        
+
         // Verify remark field
         Field remarkField = SmbShareInfo.class.getDeclaredField("remark");
         remarkField.setAccessible(true);

@@ -1,19 +1,24 @@
 package jcifs.internal.smb2.io;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.security.SecureRandom;
 import java.util.Arrays;
-import java.util.Random;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -44,7 +49,7 @@ class Smb2ReadRequestTest {
     void setUp() {
         MockitoAnnotations.openMocks(this);
         when(mockContext.getConfig()).thenReturn(mockConfig);
-        
+
         testFileId = new byte[16];
         new SecureRandom().nextBytes(testFileId);
         outputBuffer = new byte[4096];
@@ -140,7 +145,7 @@ class Smb2ReadRequestTest {
         void testSetFileId() {
             byte[] newFileId = new byte[16];
             new SecureRandom().nextBytes(newFileId);
-            
+
             assertDoesNotThrow(() -> request.setFileId(newFileId));
         }
 
@@ -156,7 +161,7 @@ class Smb2ReadRequestTest {
             byte[] shortFileId = new byte[8];
             byte[] standardFileId = new byte[16];
             byte[] longFileId = new byte[32];
-            
+
             assertDoesNotThrow(() -> request.setFileId(shortFileId));
             assertDoesNotThrow(() -> request.setFileId(standardFileId));
             assertDoesNotThrow(() -> request.setFileId(longFileId));
@@ -218,21 +223,21 @@ class Smb2ReadRequestTest {
 
         @ParameterizedTest
         @DisplayName("Should handle various padding values")
-        @ValueSource(ints = {0, 1, 15, 127, 255})
+        @ValueSource(ints = { 0, 1, 15, 127, 255 })
         void testVariousPadding(int padding) {
             assertDoesNotThrow(() -> request.setPadding((byte) padding));
         }
 
         @ParameterizedTest
         @DisplayName("Should handle various read lengths")
-        @ValueSource(ints = {0, 1, 512, 1024, 4096, 65536, 1048576})
+        @ValueSource(ints = { 0, 1, 512, 1024, 4096, 65536, 1048576 })
         void testVariousReadLengths(int length) {
             assertDoesNotThrow(() -> request.setReadLength(length));
         }
 
         @ParameterizedTest
         @DisplayName("Should handle various offsets")
-        @ValueSource(longs = {0L, 1L, 512L, 1024L, 4096L, 1048576L, Long.MAX_VALUE})
+        @ValueSource(longs = { 0L, 1L, 512L, 1024L, 4096L, 1048576L, Long.MAX_VALUE })
         void testVariousOffsets(long offset) {
             assertDoesNotThrow(() -> request.setOffset(offset));
         }
@@ -260,13 +265,13 @@ class Smb2ReadRequestTest {
         @DisplayName("Should have consistent size regardless of parameters")
         void testSizeConsistency() {
             int originalSize = request.size();
-            
+
             request.setReadLength(65536);
             assertEquals(originalSize, request.size());
-            
+
             request.setOffset(Long.MAX_VALUE);
             assertEquals(originalSize, request.size());
-            
+
             request.setMinimumCount(1024);
             assertEquals(originalSize, request.size());
         }
@@ -286,12 +291,12 @@ class Smb2ReadRequestTest {
             request.setOffset(8192L);
             request.setMinimumCount(512);
             request.setRemainingBytes(1024);
-            
+
             byte[] buffer = new byte[256];
-            
+
             // Execute
             int bytesWritten = request.writeBytesWireFormat(buffer, 0);
-            
+
             // Verify structure
             assertEquals(49, SMBUtil.readInt2(buffer, 0)); // Structure size
             assertEquals(2, buffer[2]); // Padding
@@ -302,14 +307,14 @@ class Smb2ReadRequestTest {
             assertEquals(512, SMBUtil.readInt4(buffer, 32)); // Minimum count
             assertEquals(Smb2ReadRequest.SMB2_CHANNEL_NONE, SMBUtil.readInt4(buffer, 36)); // Channel
             assertEquals(1024, SMBUtil.readInt4(buffer, 40)); // Remaining bytes
-            
+
             // ReadChannelInfo
             assertEquals(0, SMBUtil.readInt2(buffer, 44)); // ReadChannelInfoOffset
             assertEquals(0, SMBUtil.readInt2(buffer, 46)); // ReadChannelInfoLength
-            
+
             // Buffer byte
             assertEquals(0, buffer[48]); // One byte in buffer must be zero
-            
+
             // Verify total bytes written
             assertEquals(49, bytesWritten);
         }
@@ -319,7 +324,7 @@ class Smb2ReadRequestTest {
         void testWriteBytesWireFormatDefaults() {
             byte[] buffer = new byte[256];
             int bytesWritten = request.writeBytesWireFormat(buffer, 0);
-            
+
             assertEquals(49, bytesWritten);
             assertEquals(49, SMBUtil.readInt2(buffer, 0)); // Structure size
             assertEquals(0, buffer[2]); // Default padding
@@ -340,10 +345,10 @@ class Smb2ReadRequestTest {
             request.setOffset(Long.MAX_VALUE);
             request.setMinimumCount(Integer.MAX_VALUE);
             request.setRemainingBytes(Integer.MAX_VALUE);
-            
+
             byte[] buffer = new byte[256];
             int bytesWritten = request.writeBytesWireFormat(buffer, 0);
-            
+
             assertEquals(49, bytesWritten);
             assertEquals((byte) 0xFF, buffer[2]);
             assertEquals((byte) 0xFF, buffer[3]);
@@ -358,14 +363,14 @@ class Smb2ReadRequestTest {
         void testWriteAtDifferentPositions() {
             request.setReadLength(2048);
             request.setOffset(4096L);
-            
+
             byte[] buffer = new byte[512];
-            
+
             // Test at position 0
             int bytesWritten = request.writeBytesWireFormat(buffer, 0);
             assertEquals(49, bytesWritten);
             assertEquals(2048, SMBUtil.readInt4(buffer, 4));
-            
+
             // Test at position 100
             Arrays.fill(buffer, (byte) 0);
             bytesWritten = request.writeBytesWireFormat(buffer, 100);
@@ -379,11 +384,10 @@ class Smb2ReadRequestTest {
         void testWriteWithNullFileId() {
             request.setFileId(null);
             request.setReadLength(1024);
-            
+
             byte[] buffer = new byte[256];
-            
-            assertThrows(NullPointerException.class,
-                () -> request.writeBytesWireFormat(buffer, 0));
+
+            assertThrows(NullPointerException.class, () -> request.writeBytesWireFormat(buffer, 0));
         }
 
         @Test
@@ -393,24 +397,23 @@ class Smb2ReadRequestTest {
             byte[] standardFileId = new byte[16];
             Arrays.fill(standardFileId, (byte) 0xAB);
             request.setFileId(standardFileId);
-            
+
             byte[] buffer = new byte[256];
             int bytesWritten = request.writeBytesWireFormat(buffer, 0);
-            
+
             assertEquals(49, bytesWritten);
             assertArrayEquals(standardFileId, Arrays.copyOfRange(buffer, 16, 32));
-            
+
             // Test with longer file ID (should copy only first 16 bytes)
             byte[] longFileId = new byte[32];
             Arrays.fill(longFileId, (byte) 0xCD);
             request.setFileId(longFileId);
-            
+
             Arrays.fill(buffer, (byte) 0);
             bytesWritten = request.writeBytesWireFormat(buffer, 0);
-            
+
             assertEquals(49, bytesWritten);
-            assertArrayEquals(Arrays.copyOfRange(longFileId, 0, 16), 
-                            Arrays.copyOfRange(buffer, 16, 32));
+            assertArrayEquals(Arrays.copyOfRange(longFileId, 0, 16), Arrays.copyOfRange(buffer, 16, 32));
         }
     }
 
@@ -477,7 +480,7 @@ class Smb2ReadRequestTest {
             byte[] specificBuffer = new byte[2048];
             int offset = 128;
             Smb2ReadRequest requestWithBuffer = new Smb2ReadRequest(mockConfig, testFileId, specificBuffer, offset);
-            
+
             Smb2ReadResponse response = requestWithBuffer.createResponse(mockContext, requestWithBuffer);
             assertNotNull(response);
             // Response should be created with same buffer and offset
@@ -499,16 +502,16 @@ class Smb2ReadRequestTest {
             request.setOffset(16384L);
             request.setMinimumCount(1024);
             request.setRemainingBytes(4096);
-            
+
             // Calculate expected size
             int expectedSize = ((Smb2Constants.SMB2_HEADER_LENGTH + 49 + 7) / 8) * 8;
             assertEquals(expectedSize, request.size());
-            
+
             // Write to buffer
             byte[] buffer = new byte[256];
             int bytesWritten = request.writeBytesWireFormat(buffer, 50);
             assertEquals(49, bytesWritten);
-            
+
             // Verify written structure
             assertEquals(49, SMBUtil.readInt2(buffer, 50)); // Structure size
             assertEquals(1, buffer[52]); // Padding
@@ -526,7 +529,7 @@ class Smb2ReadRequestTest {
             request.setReadLength(1000);
             request.setOffset(500L);
             request.setMinimumCount(100);
-            
+
             // Update parameters
             request.setReadLength(2000);
             request.setOffset(1000L);
@@ -534,16 +537,16 @@ class Smb2ReadRequestTest {
             request.setRemainingBytes(3000);
             request.setPadding((byte) 4);
             request.setReadFlags((byte) 0x02);
-            
+
             // Update file ID
             byte[] newFileId = new byte[16];
             Arrays.fill(newFileId, (byte) 0xEF);
             request.setFileId(newFileId);
-            
+
             // Write and verify
             byte[] buffer = new byte[256];
             int bytesWritten = request.writeBytesWireFormat(buffer, 0);
-            
+
             assertEquals(49, bytesWritten);
             assertEquals(2000, SMBUtil.readInt4(buffer, 4));
             assertEquals(1000L, SMBUtil.readInt8(buffer, 8));
@@ -561,10 +564,10 @@ class Smb2ReadRequestTest {
             request.setOffset(0L);
             // Note: channel is private and not settable via public API
             // This test documents that channel defaults to SMB2_CHANNEL_NONE
-            
+
             byte[] buffer = new byte[256];
             request.writeBytesWireFormat(buffer, 0);
-            
+
             assertEquals(Smb2ReadRequest.SMB2_CHANNEL_NONE, SMBUtil.readInt4(buffer, 36));
         }
     }
@@ -578,10 +581,10 @@ class Smb2ReadRequestTest {
         void testNegativeOffset() {
             request.setOffset(-1L);
             request.setReadLength(1024);
-            
+
             byte[] buffer = new byte[256];
             int bytesWritten = request.writeBytesWireFormat(buffer, 0);
-            
+
             // Negative value should be written as-is (interpreted as unsigned by receiver)
             assertEquals(-1L, SMBUtil.readInt8(buffer, 8));
         }
@@ -591,10 +594,10 @@ class Smb2ReadRequestTest {
         void testZeroLengthRead() {
             request.setReadLength(0);
             request.setMinimumCount(0);
-            
+
             byte[] buffer = new byte[256];
             int bytesWritten = request.writeBytesWireFormat(buffer, 0);
-            
+
             assertEquals(49, bytesWritten);
             assertEquals(0, SMBUtil.readInt4(buffer, 4));
             assertEquals(0, SMBUtil.readInt4(buffer, 32));
@@ -605,10 +608,10 @@ class Smb2ReadRequestTest {
         void testMinimumCountGreaterThanReadLength() {
             request.setReadLength(1024);
             request.setMinimumCount(2048);
-            
+
             byte[] buffer = new byte[256];
             int bytesWritten = request.writeBytesWireFormat(buffer, 0);
-            
+
             assertEquals(49, bytesWritten);
             assertEquals(1024, SMBUtil.readInt4(buffer, 4));
             assertEquals(2048, SMBUtil.readInt4(buffer, 32));
@@ -620,12 +623,11 @@ class Smb2ReadRequestTest {
             byte[] shortFileId = new byte[8];
             Arrays.fill(shortFileId, (byte) 0xAB);
             request.setFileId(shortFileId);
-            
+
             byte[] buffer = new byte[256];
-            
+
             // Should handle gracefully or throw appropriate exception
-            assertThrows(ArrayIndexOutOfBoundsException.class,
-                () -> request.writeBytesWireFormat(buffer, 0));
+            assertThrows(ArrayIndexOutOfBoundsException.class, () -> request.writeBytesWireFormat(buffer, 0));
         }
 
         @Test
@@ -637,10 +639,10 @@ class Smb2ReadRequestTest {
             request.setOffset(Long.MAX_VALUE);
             request.setMinimumCount(Integer.MAX_VALUE);
             request.setRemainingBytes(Integer.MAX_VALUE);
-            
+
             byte[] buffer = new byte[256];
             int bytesWritten = request.writeBytesWireFormat(buffer, 0);
-            
+
             assertEquals(49, bytesWritten);
             // Verify structure integrity with maximum values
             assertEquals(49, SMBUtil.readInt2(buffer, 0));
@@ -650,24 +652,22 @@ class Smb2ReadRequestTest {
         @DisplayName("Should handle buffer overflow protection")
         void testBufferOverflowProtection() {
             request.setReadLength(65536);
-            
+
             byte[] smallBuffer = new byte[48]; // Smaller than required 49 bytes
-            
+
             // Should not overflow buffer
-            assertThrows(ArrayIndexOutOfBoundsException.class,
-                () -> request.writeBytesWireFormat(smallBuffer, 0));
+            assertThrows(ArrayIndexOutOfBoundsException.class, () -> request.writeBytesWireFormat(smallBuffer, 0));
         }
 
         @Test
         @DisplayName("Should handle write at buffer boundary")
         void testWriteAtBufferBoundary() {
             request.setReadLength(1024);
-            
+
             byte[] buffer = new byte[100];
-            
+
             // Try to write at position that would exceed buffer
-            assertThrows(ArrayIndexOutOfBoundsException.class,
-                () -> request.writeBytesWireFormat(buffer, 52)); // 52 + 49 > 100
+            assertThrows(ArrayIndexOutOfBoundsException.class, () -> request.writeBytesWireFormat(buffer, 52)); // 52 + 49 > 100
         }
     }
 }

@@ -1,12 +1,12 @@
 package jcifs.smb1.smb1;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for the {@link SmbComReadAndXResponse} class.
@@ -94,9 +94,9 @@ public class SmbComReadAndXResponseTest {
         response.dataCompactionMode = 1;
         response.dataLength = 1024;
         response.dataOffset = 54;
-        
+
         String result = response.toString();
-        
+
         // Verify that toString includes the key fields
         assertNotNull(result);
         assertTrue(result.contains("SmbComReadAndXResponse"));

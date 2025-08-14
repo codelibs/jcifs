@@ -1,9 +1,11 @@
 package jcifs.dcerpc.ndr;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -35,10 +37,9 @@ class NdrShortTest {
             // Given: An input value
             // When: Creating NdrShort with that value
             NdrShort ndrShort = new NdrShort(inputValue);
-            
+
             // Then: Value should be masked with 0xFF (lower 8 bits)
-            assertEquals(inputValue & 0xFF, ndrShort.value, 
-                        "Constructor should mask value with 0xFF");
+            assertEquals(inputValue & 0xFF, ndrShort.value, "Constructor should mask value with 0xFF");
         }
 
         @Test
@@ -46,7 +47,7 @@ class NdrShortTest {
         void testConstructorZero() {
             // Given/When: Creating NdrShort with zero
             NdrShort ndrShort = new NdrShort(0);
-            
+
             // Then: Value should be zero
             assertEquals(0, ndrShort.value);
         }
@@ -56,7 +57,7 @@ class NdrShortTest {
         void testConstructorMaxByte() {
             // Given/When: Creating NdrShort with max byte value
             NdrShort ndrShort = new NdrShort(255);
-            
+
             // Then: Value should be 255
             assertEquals(255, ndrShort.value);
         }
@@ -66,7 +67,7 @@ class NdrShortTest {
         void testConstructorOverflow() {
             // Given/When: Creating NdrShort with value > 255
             NdrShort ndrShort = new NdrShort(300);
-            
+
             // Then: Value should be masked (300 & 0xFF = 44)
             assertEquals(44, ndrShort.value);
         }
@@ -214,7 +215,7 @@ class NdrShortTest {
             // Given: Original value that fits in byte range
             int originalValue = 150;
             NdrShort ndrShort1 = new NdrShort(originalValue);
-            
+
             // Create separate mocks for encoding and decoding to simulate real buffer
             NdrBuffer encodeBuffer = mock(NdrBuffer.class);
             NdrBuffer decodeBuffer = mock(NdrBuffer.class);
@@ -222,7 +223,7 @@ class NdrShortTest {
 
             // When: Encoding then decoding
             ndrShort1.encode(encodeBuffer);
-            
+
             NdrShort ndrShort2 = new NdrShort(0);
             ndrShort2.decode(decodeBuffer);
 
@@ -239,14 +240,14 @@ class NdrShortTest {
             int originalValue = 300; // Will be masked to 44
             int maskedValue = originalValue & 0xFF; // 44
             NdrShort ndrShort1 = new NdrShort(originalValue);
-            
+
             NdrBuffer encodeBuffer = mock(NdrBuffer.class);
             NdrBuffer decodeBuffer = mock(NdrBuffer.class);
             when(decodeBuffer.dec_ndr_short()).thenReturn(maskedValue);
 
             // When: Encoding then decoding
             ndrShort1.encode(encodeBuffer);
-            
+
             NdrShort ndrShort2 = new NdrShort(0);
             ndrShort2.decode(decodeBuffer);
 

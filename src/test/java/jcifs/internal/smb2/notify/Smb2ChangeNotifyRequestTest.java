@@ -4,9 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.lenient;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
@@ -44,11 +44,11 @@ class Smb2ChangeNotifyRequestTest {
         mockContext = mock(CIFSContext.class);
         testFileId = new byte[16];
         Arrays.fill(testFileId, (byte) 0xAB);
-        
+
         // Use lenient stubbing for default configuration values
         lenient().when(mockConfig.getNotifyBufferSize()).thenReturn(8192);
         lenient().when(mockContext.getConfig()).thenReturn(mockConfig);
-        
+
         request = new Smb2ChangeNotifyRequest(mockConfig, testFileId);
     }
 
@@ -58,7 +58,7 @@ class Smb2ChangeNotifyRequestTest {
         // Given
         Configuration config = mock(Configuration.class);
         when(config.getNotifyBufferSize()).thenReturn(8192);
-        
+
         // When
         Smb2ChangeNotifyRequest req = new Smb2ChangeNotifyRequest(config, testFileId);
 
@@ -87,9 +87,8 @@ class Smb2ChangeNotifyRequestTest {
     @DisplayName("Should set completion filter correctly")
     void testSetCompletionFilter() throws Exception {
         // Given
-        int filter = Smb2ChangeNotifyRequest.FILE_NOTIFY_CHANGE_FILE_NAME | 
-                    Smb2ChangeNotifyRequest.FILE_NOTIFY_CHANGE_DIR_NAME |
-                    Smb2ChangeNotifyRequest.FILE_NOTIFY_CHANGE_ATTRIBUTES;
+        int filter = Smb2ChangeNotifyRequest.FILE_NOTIFY_CHANGE_FILE_NAME | Smb2ChangeNotifyRequest.FILE_NOTIFY_CHANGE_DIR_NAME
+                | Smb2ChangeNotifyRequest.FILE_NOTIFY_CHANGE_ATTRIBUTES;
 
         // When
         request.setCompletionFilter(filter);
@@ -139,25 +138,24 @@ class Smb2ChangeNotifyRequestTest {
 
         // Then
         assertEquals(32, bytesWritten);
-        
+
         // Verify structure size (32)
         assertEquals(32, SMBUtil.readInt2(buffer, offset));
-        
+
         // Verify notify flags
         assertEquals(Smb2ChangeNotifyRequest.SMB2_WATCH_TREE, SMBUtil.readInt2(buffer, offset + 2));
-        
+
         // Verify output buffer length
         assertEquals(8192, SMBUtil.readInt4(buffer, offset + 4));
-        
+
         // Verify file ID
         byte[] readFileId = new byte[16];
         System.arraycopy(buffer, offset + 8, readFileId, 0, 16);
         assertArrayEquals(testFileId, readFileId);
-        
+
         // Verify completion filter
-        assertEquals(Smb2ChangeNotifyRequest.FILE_NOTIFY_CHANGE_FILE_NAME, 
-                    SMBUtil.readInt4(buffer, offset + 24));
-        
+        assertEquals(Smb2ChangeNotifyRequest.FILE_NOTIFY_CHANGE_FILE_NAME, SMBUtil.readInt4(buffer, offset + 24));
+
         // Verify reserved field is zero
         assertEquals(0, SMBUtil.readInt4(buffer, offset + 28));
     }
@@ -178,20 +176,10 @@ class Smb2ChangeNotifyRequestTest {
 
     @DisplayName("Should handle different completion filter combinations")
     @ParameterizedTest
-    @CsvSource({
-        "1, FILE_NOTIFY_CHANGE_FILE_NAME",
-        "2, FILE_NOTIFY_CHANGE_DIR_NAME",
-        "4, FILE_NOTIFY_CHANGE_ATTRIBUTES",
-        "8, FILE_NOTIFY_CHANGE_SIZE",
-        "16, FILE_NOTIFY_CHANGE_LAST_WRITE",
-        "32, FILE_NOTIFY_CHANGE_LAST_ACCESS",
-        "64, FILE_NOTIFY_CHANGE_CREATION",
-        "128, FILE_NOTIFY_CHANGE_EA",
-        "256, FILE_NOTIFY_CHANGE_SECURITY",
-        "512, FILE_NOTIFY_CHANGE_STREAM_NAME",
-        "1024, FILE_NOTIFY_CHANGE_STREAM_SIZE",
-        "2048, FILE_NOTIFY_CHANGE_STREAM_WRITE"
-    })
+    @CsvSource({ "1, FILE_NOTIFY_CHANGE_FILE_NAME", "2, FILE_NOTIFY_CHANGE_DIR_NAME", "4, FILE_NOTIFY_CHANGE_ATTRIBUTES",
+            "8, FILE_NOTIFY_CHANGE_SIZE", "16, FILE_NOTIFY_CHANGE_LAST_WRITE", "32, FILE_NOTIFY_CHANGE_LAST_ACCESS",
+            "64, FILE_NOTIFY_CHANGE_CREATION", "128, FILE_NOTIFY_CHANGE_EA", "256, FILE_NOTIFY_CHANGE_SECURITY",
+            "512, FILE_NOTIFY_CHANGE_STREAM_NAME", "1024, FILE_NOTIFY_CHANGE_STREAM_SIZE", "2048, FILE_NOTIFY_CHANGE_STREAM_WRITE" })
     void testCompletionFilterConstants(int value, String description) {
         // Given & When
         request.setCompletionFilter(value);
@@ -207,12 +195,9 @@ class Smb2ChangeNotifyRequestTest {
     @DisplayName("Should handle combined completion filters")
     void testCombinedCompletionFilters() {
         // Given
-        int combinedFilter = 
-            Smb2ChangeNotifyRequest.FILE_NOTIFY_CHANGE_FILE_NAME |
-            Smb2ChangeNotifyRequest.FILE_NOTIFY_CHANGE_DIR_NAME |
-            Smb2ChangeNotifyRequest.FILE_NOTIFY_CHANGE_ATTRIBUTES |
-            Smb2ChangeNotifyRequest.FILE_NOTIFY_CHANGE_SIZE |
-            Smb2ChangeNotifyRequest.FILE_NOTIFY_CHANGE_LAST_WRITE;
+        int combinedFilter = Smb2ChangeNotifyRequest.FILE_NOTIFY_CHANGE_FILE_NAME | Smb2ChangeNotifyRequest.FILE_NOTIFY_CHANGE_DIR_NAME
+                | Smb2ChangeNotifyRequest.FILE_NOTIFY_CHANGE_ATTRIBUTES | Smb2ChangeNotifyRequest.FILE_NOTIFY_CHANGE_SIZE
+                | Smb2ChangeNotifyRequest.FILE_NOTIFY_CHANGE_LAST_WRITE;
 
         // When
         request.setCompletionFilter(combinedFilter);
@@ -229,19 +214,12 @@ class Smb2ChangeNotifyRequestTest {
     @DisplayName("Should handle all file change notifications")
     void testAllFileChangeNotifications() {
         // Given - all possible filters
-        int allFilters = 
-            Smb2ChangeNotifyRequest.FILE_NOTIFY_CHANGE_FILE_NAME |
-            Smb2ChangeNotifyRequest.FILE_NOTIFY_CHANGE_DIR_NAME |
-            Smb2ChangeNotifyRequest.FILE_NOTIFY_CHANGE_ATTRIBUTES |
-            Smb2ChangeNotifyRequest.FILE_NOTIFY_CHANGE_SIZE |
-            Smb2ChangeNotifyRequest.FILE_NOTIFY_CHANGE_LAST_WRITE |
-            Smb2ChangeNotifyRequest.FILE_NOTIFY_CHANGE_LAST_ACCESS |
-            Smb2ChangeNotifyRequest.FILE_NOTIFY_CHANGE_CREATION |
-            Smb2ChangeNotifyRequest.FILE_NOTIFY_CHANGE_EA |
-            Smb2ChangeNotifyRequest.FILE_NOTIFY_CHANGE_SECURITY |
-            Smb2ChangeNotifyRequest.FILE_NOTIFY_CHANGE_STREAM_NAME |
-            Smb2ChangeNotifyRequest.FILE_NOTIFY_CHANGE_STREAM_SIZE |
-            Smb2ChangeNotifyRequest.FILE_NOTIFY_CHANGE_STREAM_WRITE;
+        int allFilters = Smb2ChangeNotifyRequest.FILE_NOTIFY_CHANGE_FILE_NAME | Smb2ChangeNotifyRequest.FILE_NOTIFY_CHANGE_DIR_NAME
+                | Smb2ChangeNotifyRequest.FILE_NOTIFY_CHANGE_ATTRIBUTES | Smb2ChangeNotifyRequest.FILE_NOTIFY_CHANGE_SIZE
+                | Smb2ChangeNotifyRequest.FILE_NOTIFY_CHANGE_LAST_WRITE | Smb2ChangeNotifyRequest.FILE_NOTIFY_CHANGE_LAST_ACCESS
+                | Smb2ChangeNotifyRequest.FILE_NOTIFY_CHANGE_CREATION | Smb2ChangeNotifyRequest.FILE_NOTIFY_CHANGE_EA
+                | Smb2ChangeNotifyRequest.FILE_NOTIFY_CHANGE_SECURITY | Smb2ChangeNotifyRequest.FILE_NOTIFY_CHANGE_STREAM_NAME
+                | Smb2ChangeNotifyRequest.FILE_NOTIFY_CHANGE_STREAM_SIZE | Smb2ChangeNotifyRequest.FILE_NOTIFY_CHANGE_STREAM_WRITE;
 
         // When
         request.setCompletionFilter(allFilters);
@@ -307,10 +285,10 @@ class Smb2ChangeNotifyRequestTest {
         // Given
         byte[] fileId1 = new byte[16];
         Arrays.fill(fileId1, (byte) 0x11);
-        
+
         byte[] fileId2 = new byte[16];
         Arrays.fill(fileId2, (byte) 0xFF);
-        
+
         byte[] fileId3 = new byte[16];
         for (int i = 0; i < 16; i++) {
             fileId3[i] = (byte) i;
@@ -328,7 +306,7 @@ class Smb2ChangeNotifyRequestTest {
         Smb2ChangeNotifyRequest req = new Smb2ChangeNotifyRequest(config, fileId);
         byte[] buffer = new byte[512];
         req.writeBytesWireFormat(buffer, 0);
-        
+
         byte[] readFileId = new byte[16];
         System.arraycopy(buffer, 8, readFileId, 0, 16);
         assertArrayEquals(fileId, readFileId);
@@ -347,14 +325,14 @@ class Smb2ChangeNotifyRequestTest {
 
         // Then
         assertEquals(32, written);
-        
+
         // Verify complete structure
-        assertEquals(32, SMBUtil.readInt2(buffer, 0));      // StructureSize
-        assertEquals(0x0001, SMBUtil.readInt2(buffer, 2));  // Flags
-        assertEquals(8192, SMBUtil.readInt4(buffer, 4));    // OutputBufferLength
+        assertEquals(32, SMBUtil.readInt2(buffer, 0)); // StructureSize
+        assertEquals(0x0001, SMBUtil.readInt2(buffer, 2)); // Flags
+        assertEquals(8192, SMBUtil.readInt4(buffer, 4)); // OutputBufferLength
         // FileId at offset 8-23
         assertEquals(0x00000FFF, SMBUtil.readInt4(buffer, 24)); // CompletionFilter
-        assertEquals(0, SMBUtil.readInt4(buffer, 28));      // Reserved
+        assertEquals(0, SMBUtil.readInt4(buffer, 28)); // Reserved
     }
 
     @Test
@@ -444,7 +422,7 @@ class Smb2ChangeNotifyRequestTest {
     void testAllConstants() {
         // Verify notify flags
         assertEquals(0x1, Smb2ChangeNotifyRequest.SMB2_WATCH_TREE);
-        
+
         // Verify completion filter constants
         assertEquals(0x1, Smb2ChangeNotifyRequest.FILE_NOTIFY_CHANGE_FILE_NAME);
         assertEquals(0x2, Smb2ChangeNotifyRequest.FILE_NOTIFY_CHANGE_DIR_NAME);

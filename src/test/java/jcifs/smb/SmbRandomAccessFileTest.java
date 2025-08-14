@@ -1,20 +1,32 @@
 package jcifs.smb;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import java.net.MalformedURLException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
@@ -22,7 +34,6 @@ import org.mockito.quality.Strictness;
 import jcifs.CIFSException;
 import jcifs.Configuration;
 import jcifs.SmbConstants;
-import jcifs.internal.fscc.FileEndOfFileInformation;
 import jcifs.internal.smb1.com.SmbComWrite;
 import jcifs.internal.smb1.com.SmbComWriteResponse;
 import jcifs.internal.smb1.trans2.Trans2SetFileInformation;
@@ -37,8 +48,7 @@ import jcifs.internal.smb2.info.Smb2SetInfoRequest;
 public class SmbRandomAccessFileTest {
 
     // Helper: build a minimally wired instance with mocks; avoids real I/O
-    private SmbRandomAccessFile newInstance(String mode, boolean smb2, boolean ntSmbsCap, boolean unshared)
-            throws CIFSException {
+    private SmbRandomAccessFile newInstance(String mode, boolean smb2, boolean ntSmbsCap, boolean unshared) throws CIFSException {
         SmbFile file = mock(SmbFile.class);
         SmbTreeHandleImpl tree = mock(SmbTreeHandleImpl.class);
         Configuration cfg = mock(Configuration.class);
@@ -206,8 +216,8 @@ public class SmbRandomAccessFileTest {
 
         raf.setLength(200L);
 
-        verify(tree, times(1))
-                .send(any(Trans2SetFileInformation.class), any(Trans2SetFileInformationResponse.class), eq(RequestParam.NO_RETRY));
+        verify(tree, times(1)).send(any(Trans2SetFileInformation.class), any(Trans2SetFileInformationResponse.class),
+                eq(RequestParam.NO_RETRY));
     }
 
     @Test
@@ -263,7 +273,10 @@ public class SmbRandomAccessFileTest {
         doAnswer(inv -> {
             byte[] b = inv.getArgument(0);
             int off = inv.getArgument(1);
-            b[off] = 0x01; b[off+1] = 0x02; b[off+2] = 0x03; b[off+3] = 0x04;
+            b[off] = 0x01;
+            b[off + 1] = 0x02;
+            b[off + 2] = 0x03;
+            b[off + 3] = 0x04;
             return 4;
         }).when(raf).read(any(byte[].class), anyInt(), eq(4));
         assertEquals(0x01020304, raf.readInt());
@@ -272,8 +285,14 @@ public class SmbRandomAccessFileTest {
         doAnswer(inv -> {
             byte[] b = inv.getArgument(0);
             int off = inv.getArgument(1);
-            b[off]=0x01; b[off+1]=0x02; b[off+2]=0x03; b[off+3]=0x04;
-            b[off+4]=0x05; b[off+5]=0x06; b[off+6]=0x07; b[off+7]=0x08;
+            b[off] = 0x01;
+            b[off + 1] = 0x02;
+            b[off + 2] = 0x03;
+            b[off + 3] = 0x04;
+            b[off + 4] = 0x05;
+            b[off + 5] = 0x06;
+            b[off + 6] = 0x07;
+            b[off + 7] = 0x08;
             return 8;
         }).when(raf).read(any(byte[].class), anyInt(), eq(8));
         assertEquals(0x0102030405060708L, raf.readLong());
@@ -282,7 +301,10 @@ public class SmbRandomAccessFileTest {
         doAnswer(inv -> {
             byte[] b = inv.getArgument(0);
             int off = inv.getArgument(1);
-            b[off]=0x3F; b[off+1]=(byte)0x80; b[off+2]=0x00; b[off+3]=0x00;
+            b[off] = 0x3F;
+            b[off + 1] = (byte) 0x80;
+            b[off + 2] = 0x00;
+            b[off + 3] = 0x00;
             return 4;
         }).when(raf).read(any(byte[].class), anyInt(), eq(4));
         assertEquals(1.0f, raf.readFloat(), 0.00001);
@@ -291,8 +313,14 @@ public class SmbRandomAccessFileTest {
         doAnswer(inv -> {
             byte[] b = inv.getArgument(0);
             int off = inv.getArgument(1);
-            b[off]=0x3F; b[off+1]=(byte)0xF0; b[off+2]=0x00; b[off+3]=0x00;
-            b[off+4]=0x00; b[off+5]=0x00; b[off+6]=0x00; b[off+7]=0x00;
+            b[off] = 0x3F;
+            b[off + 1] = (byte) 0xF0;
+            b[off + 2] = 0x00;
+            b[off + 3] = 0x00;
+            b[off + 4] = 0x00;
+            b[off + 5] = 0x00;
+            b[off + 6] = 0x00;
+            b[off + 7] = 0x00;
             return 8;
         }).when(raf).read(any(byte[].class), anyInt(), eq(8));
         assertEquals(1.0d, raf.readDouble(), 0.0000001);
@@ -303,10 +331,10 @@ public class SmbRandomAccessFileTest {
     void readLine_reads() throws Exception {
         SmbRandomAccessFile raf = spy(newInstance("r", false, false, false));
         // Sequence: 'a','b','\r','\n','c','\n'
-        when(raf.read()).thenReturn((int)'a', (int)'b', (int)'\r', (int)'\n');
+        when(raf.read()).thenReturn((int) 'a', (int) 'b', (int) '\r', (int) '\n');
         assertEquals("ab", raf.readLine());
 
-        when(raf.read()).thenReturn((int)'c', (int)'\n');
+        when(raf.read()).thenReturn((int) 'c', (int) '\n');
         assertEquals("c", raf.readLine());
 
         when(raf.read()).thenReturn(-1);
@@ -322,7 +350,9 @@ public class SmbRandomAccessFileTest {
         doAnswer(inv -> {
             byte[] b = inv.getArgument(0);
             int off = inv.getArgument(1);
-            b[off]= 'a'; b[off+1] = 'b'; b[off+2] = 'c';
+            b[off] = 'a';
+            b[off + 1] = 'b';
+            b[off + 2] = 'c';
             return 3;
         }).when(raf).read(any(byte[].class), anyInt(), eq(3));
         assertEquals("abc", raf.readUTF());
@@ -392,8 +422,7 @@ public class SmbRandomAccessFileTest {
     void write_lenZero_noIO() throws Exception {
         SmbRandomAccessFile raf = spy(newInstance("rw", false, true, false));
         // If ensureOpen is called, fail the test
-        doThrow(new AssertionError("ensureOpen should not be called"))
-                .when(raf).ensureOpen();
+        doThrow(new AssertionError("ensureOpen should not be called")).when(raf).ensureOpen();
         raf.write(new byte[1], 0, 0);
     }
 
@@ -428,4 +457,3 @@ public class SmbRandomAccessFileTest {
         }
     }
 }
-

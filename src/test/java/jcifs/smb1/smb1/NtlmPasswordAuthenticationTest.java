@@ -1,17 +1,18 @@
 package jcifs.smb1.smb1;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
-
-import java.util.Arrays;
-
-import static org.junit.jupiter.api.Assertions.*;
-
-import jcifs.smb1.smb1.NtlmPasswordAuthentication;
 
 /**
  * Tests for NtlmPasswordAuthentication class.
@@ -55,7 +56,7 @@ class NtlmPasswordAuthenticationTest {
         assertEquals("user", auth.getUsername());
         assertEquals("password", auth.getPassword());
     }
-    
+
     // Test constructor with user info string without domain
     @Test
     void testConstructorWithUserInfoNoDomain() {
@@ -95,7 +96,7 @@ class NtlmPasswordAuthenticationTest {
         NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication("DOMAIN", "user", "password");
         assertEquals("DOMAIN\\user", auth.getName());
     }
-    
+
     // Test getName method with default domain
     @Test
     void testGetNameWithDefaultDomain() {
@@ -128,7 +129,7 @@ class NtlmPasswordAuthenticationTest {
     // Test getPreNTLMResponse
     @Test
     void testGetPreNTLMResponse() {
-        byte[] challenge = {1, 2, 3, 4, 5, 6, 7, 8};
+        byte[] challenge = { 1, 2, 3, 4, 5, 6, 7, 8 };
         byte[] response = NtlmPasswordAuthentication.getPreNTLMResponse("password", challenge);
         assertNotNull(response);
         assertEquals(24, response.length);
@@ -137,7 +138,7 @@ class NtlmPasswordAuthenticationTest {
     // Test getNTLMResponse
     @Test
     void testGetNTLMResponse() {
-        byte[] challenge = {1, 2, 3, 4, 5, 6, 7, 8};
+        byte[] challenge = { 1, 2, 3, 4, 5, 6, 7, 8 };
         byte[] response = NtlmPasswordAuthentication.getNTLMResponse("password", challenge);
         assertNotNull(response);
         assertEquals(24, response.length);
@@ -146,8 +147,8 @@ class NtlmPasswordAuthenticationTest {
     // Test getLMv2Response
     @Test
     void testGetLMv2Response() {
-        byte[] challenge = {1, 2, 3, 4, 5, 6, 7, 8};
-        byte[] clientChallenge = {9, 10, 11, 12, 13, 14, 15, 16};
+        byte[] challenge = { 1, 2, 3, 4, 5, 6, 7, 8 };
+        byte[] clientChallenge = { 9, 10, 11, 12, 13, 14, 15, 16 };
         byte[] response = NtlmPasswordAuthentication.getLMv2Response("DOMAIN", "user", "password", challenge, clientChallenge);
         assertNotNull(response);
         assertEquals(24, response.length);
@@ -157,8 +158,8 @@ class NtlmPasswordAuthenticationTest {
     @Test
     void testGetNTLM2Response() {
         byte[] nTOWFv1 = NtlmPasswordAuthentication.nTOWFv1("password");
-        byte[] serverChallenge = {1, 2, 3, 4, 5, 6, 7, 8};
-        byte[] clientChallenge = {9, 10, 11, 12, 13, 14, 15, 16};
+        byte[] serverChallenge = { 1, 2, 3, 4, 5, 6, 7, 8 };
+        byte[] clientChallenge = { 9, 10, 11, 12, 13, 14, 15, 16 };
         byte[] response = NtlmPasswordAuthentication.getNTLM2Response(nTOWFv1, serverChallenge, clientChallenge);
         assertNotNull(response);
         assertEquals(24, response.length);
@@ -171,7 +172,7 @@ class NtlmPasswordAuthenticationTest {
         assertNotNull(hash);
         assertEquals(16, hash.length);
     }
-    
+
     // Test nTOWFv2
     @Test
     void testNTOWFv2() {
@@ -182,12 +183,7 @@ class NtlmPasswordAuthenticationTest {
 
     // Test unescape method
     @ParameterizedTest
-    @CsvSource({
-            "'test%20string', 'test string'",
-            "'test%25string', 'test%string'",
-            "'test', 'test'",
-            "'' , ''"
-    })
+    @CsvSource({ "'test%20string', 'test string'", "'test%25string', 'test%string'", "'test', 'test'", "'' , ''" })
     void testUnescape(String input, String expected) throws Exception {
         assertEquals(expected, NtlmPasswordAuthentication.unescape(input));
     }
@@ -196,7 +192,7 @@ class NtlmPasswordAuthenticationTest {
     @Test
     void testGetAnsiHashAlwaysReturns24Bytes() {
         NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication("DOMAIN", "user", "password");
-        byte[] challenge = {1, 2, 3, 4, 5, 6, 7, 8};
+        byte[] challenge = { 1, 2, 3, 4, 5, 6, 7, 8 };
         byte[] hash = auth.getAnsiHash(challenge);
         assertNotNull(hash);
         // getAnsiHash always returns 24 bytes for all lmCompatibility levels
@@ -209,32 +205,32 @@ class NtlmPasswordAuthenticationTest {
     void testGetUnicodeHashWithDefaultLmCompatibility() {
         // With default lmCompatibility=3, getUnicodeHash returns empty array for NTLMv2
         NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication("DOMAIN", "user", "password");
-        byte[] challenge = {1, 2, 3, 4, 5, 6, 7, 8};
+        byte[] challenge = { 1, 2, 3, 4, 5, 6, 7, 8 };
         byte[] hash = auth.getUnicodeHash(challenge);
         assertNotNull(hash);
         // For lmCompatibility 3,4,5 (NTLMv2), returns empty array
         assertEquals(0, hash.length);
     }
-    
+
     // Test that changing lmCompatibility at runtime doesn't affect already loaded static value
     @ParameterizedTest
-    @ValueSource(strings = {"0", "1", "2", "3", "4", "5"})
+    @ValueSource(strings = { "0", "1", "2", "3", "4", "5" })
     void testLmCompatibilityStaticInitialization(String lmCompatibility) {
         // Attempt to change the property (won't affect static final LM_COMPATIBILITY)
         jcifs.smb1.Config.setProperty("jcifs.smb1.smb.lmCompatibility", lmCompatibility);
         NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication("DOMAIN", "user", "password");
-        byte[] challenge = {1, 2, 3, 4, 5, 6, 7, 8};
-        
+        byte[] challenge = { 1, 2, 3, 4, 5, 6, 7, 8 };
+
         // Behavior is determined by static initialization, not runtime config
         byte[] unicodeHash = auth.getUnicodeHash(challenge);
         byte[] ansiHash = auth.getAnsiHash(challenge);
-        
+
         // Unicode hash returns empty array due to static LM_COMPATIBILITY=3
         assertEquals(0, unicodeHash.length);
         // ANSI hash always returns 24 bytes
         assertEquals(24, ansiHash.length);
     }
-    
+
     // Test ANONYMOUS constant
     @Test
     void testAnonymousConstant() {

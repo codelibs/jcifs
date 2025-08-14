@@ -1,12 +1,13 @@
 package jcifs.smb1.smb1;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.util.Date;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
-
-import jcifs.smb1.smb1.SmbComQueryInformationResponse;
-import jcifs.smb1.smb1.ServerMessageBlock;
 
 /**
  * Unit tests for the SmbComQueryInformationResponse class.
@@ -119,7 +120,7 @@ public class SmbComQueryInformationResponseTest {
         assertEquals(sampleTimeMillis + serverTimeZoneOffset, response.getLastWriteTime());
         assertEquals(1024, response.getSize());
     }
-    
+
     /**
      * Test of readParameterWordsWireFormat method with zero word count.
      */

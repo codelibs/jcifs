@@ -22,7 +22,6 @@ import jcifs.Credentials;
 import jcifs.smb.CredentialsInternal;
 import jcifs.smb.NtlmAuthenticator;
 import jcifs.smb.NtlmPasswordAuthenticator;
-import jcifs.smb.NtStatus;
 import jcifs.smb.SmbAuthException;
 import jcifs.smb.SmbRenewableCredentials;
 

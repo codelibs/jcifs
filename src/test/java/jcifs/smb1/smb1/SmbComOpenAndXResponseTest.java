@@ -1,10 +1,11 @@
 package jcifs.smb1.smb1;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
-
-import jcifs.smb1.smb1.SmbComOpenAndXResponse;
 
 /**
  * Unit tests for the SmbComOpenAndXResponse class.
@@ -116,7 +117,7 @@ class SmbComOpenAndXResponseTest {
     void testWriteParameterWordsWireFormat() {
         byte[] dst = new byte[1024];
         int result = response.writeParameterWordsWireFormat(dst, 0);
-        
+
         // The method should write parameter words
         assertTrue(result >= 0, "writeParameterWordsWireFormat should return non-negative value");
     }
@@ -125,7 +126,7 @@ class SmbComOpenAndXResponseTest {
     void testReadParameterWordsWireFormat() {
         byte[] buffer = new byte[1024];
         int result = response.readParameterWordsWireFormat(buffer, 0);
-        
+
         // The method should read parameter words
         assertTrue(result >= 0, "readParameterWordsWireFormat should return non-negative value");
     }
@@ -134,7 +135,7 @@ class SmbComOpenAndXResponseTest {
     void testWriteBytesWireFormat() {
         byte[] dst = new byte[1024];
         int result = response.writeBytesWireFormat(dst, 0);
-        
+
         // The method should write bytes
         assertEquals(0, result, "writeBytesWireFormat should return 0 for response");
     }
@@ -143,7 +144,7 @@ class SmbComOpenAndXResponseTest {
     void testReadBytesWireFormat() {
         byte[] buffer = new byte[1024];
         int result = response.readBytesWireFormat(buffer, 0);
-        
+
         // The method should read bytes
         assertEquals(0, result, "readBytesWireFormat should return 0 for response");
     }

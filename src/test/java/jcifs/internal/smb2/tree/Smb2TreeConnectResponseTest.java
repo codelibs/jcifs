@@ -7,36 +7,31 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.verify;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import jcifs.BaseTest;
 import jcifs.Configuration;
-import jcifs.internal.CommonServerMessageBlockRequest;
-import jcifs.internal.CommonServerMessageBlockResponse;
 import jcifs.internal.SMBProtocolDecodingException;
 import jcifs.internal.TreeConnectResponse;
 import jcifs.internal.smb2.ServerMessageBlock2;
 import jcifs.internal.smb2.ServerMessageBlock2Request;
 import jcifs.internal.smb2.ServerMessageBlock2Response;
 import jcifs.internal.util.SMBUtil;
-
-import java.util.stream.Stream;
 
 /**
  * Test class for Smb2TreeConnectResponse functionality
@@ -125,7 +120,7 @@ class Smb2TreeConnectResponseTest extends BaseTest {
         // Given
         byte[] buffer = new byte[256];
         int offset = 10;
-        
+
         // Write valid structure (16 bytes)
         SMBUtil.writeInt2(16, buffer, offset); // Structure size
         buffer[offset + 2] = (byte) 0x01; // Share type (DISK)
@@ -147,41 +142,38 @@ class Smb2TreeConnectResponseTest extends BaseTest {
 
     @DisplayName("Should throw exception for invalid structure size")
     @ParameterizedTest
-    @ValueSource(ints = {0, 1, 2, 4, 8, 15, 17, 32, 64, 65535})
+    @ValueSource(ints = { 0, 1, 2, 4, 8, 15, 17, 32, 64, 65535 })
     void testReadBytesWireFormatInvalidStructureSize(int structureSize) {
         // Given
         byte[] buffer = new byte[256];
         int offset = 0;
-        
+
         // Write invalid structure size
         SMBUtil.writeInt2(structureSize, buffer, offset);
 
         // When & Then
-        SMBProtocolDecodingException exception = assertThrows(
-            SMBProtocolDecodingException.class, 
-            () -> response.readBytesWireFormat(buffer, offset)
-        );
+        SMBProtocolDecodingException exception =
+                assertThrows(SMBProtocolDecodingException.class, () -> response.readBytesWireFormat(buffer, offset));
         assertEquals("Structure size is not 16", exception.getMessage());
     }
 
     @DisplayName("Should parse different share types correctly")
     @ParameterizedTest
-    @CsvSource({
-        "1, 1",   // DISK
-        "2, 2",   // PIPE  
-        "3, 3",   // PRINT
-        "0, 0",   // Unknown
-        "255, -1" // Byte overflow to signed
+    @CsvSource({ "1, 1", // DISK
+            "2, 2", // PIPE  
+            "3, 3", // PRINT
+            "0, 0", // Unknown
+            "255, -1" // Byte overflow to signed
     })
     void testDifferentShareTypes(int shareTypeValue, int expectedValue) throws SMBProtocolDecodingException {
         // Given
         byte[] buffer = new byte[256];
         SMBUtil.writeInt2(16, buffer, 0);
         buffer[2] = (byte) shareTypeValue;
-        
+
         // When
         response.readBytesWireFormat(buffer, 0);
-        
+
         // Then
         assertEquals((byte) expectedValue, response.getShareType());
     }
@@ -270,12 +262,12 @@ class Smb2TreeConnectResponseTest extends BaseTest {
     void testPrepareWhenReceived() throws Exception {
         // Given
         ServerMessageBlock2Request mockNext = mock(ServerMessageBlock2Request.class);
-        
+
         // Set response as received using reflection
         Method setReceivedMethod = ServerMessageBlock2Response.class.getDeclaredMethod("received");
         setReceivedMethod.setAccessible(true);
         setReceivedMethod.invoke(response);
-        
+
         // Set tree ID
         Method setTreeIdMethod = ServerMessageBlock2.class.getDeclaredMethod("setTreeId", int.class);
         setTreeIdMethod.setAccessible(true);
@@ -307,24 +299,22 @@ class Smb2TreeConnectResponseTest extends BaseTest {
     void testShareFlagCombinations(int flags, boolean expectedDfs) throws SMBProtocolDecodingException {
         // Given
         byte[] buffer = createValidResponseBuffer(0, flags, 0, 0);
-        
+
         // When
         response.readBytesWireFormat(buffer, 0);
-        
+
         // Then
         assertEquals(flags, response.getShareFlags());
         assertEquals(expectedDfs, response.isShareDfs());
     }
 
     private static Stream<Arguments> provideFlagCombinations() {
-        return Stream.of(
-            Arguments.of(0x0, false),
-            Arguments.of(0x1, true),  // DFS
-            Arguments.of(0x2, true),  // DFS_ROOT
-            Arguments.of(0x3, true),  // DFS | DFS_ROOT
-            Arguments.of(0x8000, false), // ENCRYPT_DATA only
-            Arguments.of(0x8001, true),  // ENCRYPT_DATA | DFS
-            Arguments.of(0xFFFF, true)   // All flags including DFS
+        return Stream.of(Arguments.of(0x0, false), Arguments.of(0x1, true), // DFS
+                Arguments.of(0x2, true), // DFS_ROOT
+                Arguments.of(0x3, true), // DFS | DFS_ROOT
+                Arguments.of(0x8000, false), // ENCRYPT_DATA only
+                Arguments.of(0x8001, true), // ENCRYPT_DATA | DFS
+                Arguments.of(0xFFFF, true) // All flags including DFS
         );
     }
 
@@ -380,7 +370,7 @@ class Smb2TreeConnectResponseTest extends BaseTest {
 
     @DisplayName("Should read at different offsets correctly")
     @ParameterizedTest
-    @ValueSource(ints = {0, 10, 50, 100, 200})
+    @ValueSource(ints = { 0, 10, 50, 100, 200 })
     void testReadAtDifferentOffsets(int offset) throws SMBProtocolDecodingException {
         // Given
         byte[] buffer = new byte[offset + 20];
@@ -406,15 +396,14 @@ class Smb2TreeConnectResponseTest extends BaseTest {
     @DisplayName("Should verify complete protocol compliance")
     void testProtocolCompliance() throws SMBProtocolDecodingException {
         // Given - exact SMB2 TREE_CONNECT response structure
-        byte[] wireData = new byte[] {
-            0x10, 0x00,  // StructureSize (must be 16)
-            0x01,        // ShareType (DISK)
-            0x00,        // Reserved
-            0x01, 0x00, 0x00, 0x00,  // ShareFlags
-            0x08, 0x00, 0x00, 0x00,  // Capabilities  
-            (byte)0xFF, 0x01, 0x1F, 0x00   // MaximalAccess
+        byte[] wireData = new byte[] { 0x10, 0x00, // StructureSize (must be 16)
+                0x01, // ShareType (DISK)
+                0x00, // Reserved
+                0x01, 0x00, 0x00, 0x00, // ShareFlags
+                0x08, 0x00, 0x00, 0x00, // Capabilities  
+                (byte) 0xFF, 0x01, 0x1F, 0x00 // MaximalAccess
         };
-        
+
         // When
         int bytesRead = response.readBytesWireFormat(wireData, 0);
 
@@ -450,7 +439,7 @@ class Smb2TreeConnectResponseTest extends BaseTest {
     void testNullConfiguration() {
         // When
         Smb2TreeConnectResponse responseWithNull = new Smb2TreeConnectResponse(null);
-        
+
         // Then
         assertNotNull(responseWithNull);
     }
@@ -460,10 +449,10 @@ class Smb2TreeConnectResponseTest extends BaseTest {
     void testEncryptionFlagDetection() throws SMBProtocolDecodingException {
         // Given - response with encryption flag set
         byte[] buffer = createValidResponseBuffer(0, 0x8000, 0, 0);
-        
+
         // When
         response.readBytesWireFormat(buffer, 0);
-        
+
         // Then
         assertEquals(0x8000, response.getShareFlags() & 0x8000);
         assertTrue((response.getShareFlags() & Smb2TreeConnectResponse.SMB2_SHAREFLAG_ENCRYPT_DATA) != 0);
@@ -473,14 +462,10 @@ class Smb2TreeConnectResponseTest extends BaseTest {
     @DisplayName("Should handle all capability flags")
     void testAllCapabilityFlags() throws SMBProtocolDecodingException {
         // Test each capability flag individually
-        int[] capabilityFlags = {
-            Smb2TreeConnectResponse.SMB2_SHARE_CAP_DFS,
-            Smb2TreeConnectResponse.SMB2_SHARE_CAP_CONTINUOUS_AVAILABILITY,
-            Smb2TreeConnectResponse.SMB2_SHARE_CAP_SCALEOUT,
-            Smb2TreeConnectResponse.SMB2_SHARE_CAP_CLUSTER,
-            Smb2TreeConnectResponse.SMB2_SHARE_CAP_ASYMMETRIC
-        };
-        
+        int[] capabilityFlags = { Smb2TreeConnectResponse.SMB2_SHARE_CAP_DFS,
+                Smb2TreeConnectResponse.SMB2_SHARE_CAP_CONTINUOUS_AVAILABILITY, Smb2TreeConnectResponse.SMB2_SHARE_CAP_SCALEOUT,
+                Smb2TreeConnectResponse.SMB2_SHARE_CAP_CLUSTER, Smb2TreeConnectResponse.SMB2_SHARE_CAP_ASYMMETRIC };
+
         for (int flag : capabilityFlags) {
             response = new Smb2TreeConnectResponse(mockConfig);
             byte[] buffer = createValidResponseBuffer(0, 0, flag, 0);
@@ -493,17 +478,15 @@ class Smb2TreeConnectResponseTest extends BaseTest {
     @DisplayName("Should handle combined capability flags")
     void testCombinedCapabilityFlags() throws SMBProtocolDecodingException {
         // Given - all capabilities combined
-        int allCapabilities = Smb2TreeConnectResponse.SMB2_SHARE_CAP_DFS |
-                            Smb2TreeConnectResponse.SMB2_SHARE_CAP_CONTINUOUS_AVAILABILITY |
-                            Smb2TreeConnectResponse.SMB2_SHARE_CAP_SCALEOUT |
-                            Smb2TreeConnectResponse.SMB2_SHARE_CAP_CLUSTER |
-                            Smb2TreeConnectResponse.SMB2_SHARE_CAP_ASYMMETRIC;
-        
+        int allCapabilities = Smb2TreeConnectResponse.SMB2_SHARE_CAP_DFS | Smb2TreeConnectResponse.SMB2_SHARE_CAP_CONTINUOUS_AVAILABILITY
+                | Smb2TreeConnectResponse.SMB2_SHARE_CAP_SCALEOUT | Smb2TreeConnectResponse.SMB2_SHARE_CAP_CLUSTER
+                | Smb2TreeConnectResponse.SMB2_SHARE_CAP_ASYMMETRIC;
+
         byte[] buffer = createValidResponseBuffer(0, 0, allCapabilities, 0);
-        
+
         // When
         response.readBytesWireFormat(buffer, 0);
-        
+
         // Then
         assertEquals(allCapabilities, response.getCapabilities());
     }
@@ -513,7 +496,7 @@ class Smb2TreeConnectResponseTest extends BaseTest {
     void testTreeConnectResponseInterface() {
         // Then
         assertTrue(response instanceof TreeConnectResponse);
-        
+
         // Test all interface methods
         assertNull(response.getService()); // getService returns null in SMB2
         assertEquals(response.getTreeId(), response.getTid());

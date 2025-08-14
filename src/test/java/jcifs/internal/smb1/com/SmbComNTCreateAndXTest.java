@@ -1,26 +1,26 @@
 package jcifs.internal.smb1.com;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.when;
 
-import java.nio.charset.StandardCharsets;
-
-import jcifs.Configuration;
-import jcifs.CIFSContext;
-import jcifs.internal.smb1.ServerMessageBlock;
-import jcifs.SmbConstants;
-import jcifs.internal.util.SMBUtil;
-
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.junit.jupiter.api.extension.ExtendWith;
+
+import jcifs.CIFSContext;
+import jcifs.Configuration;
+import jcifs.SmbConstants;
+import jcifs.internal.smb1.ServerMessageBlock;
 
 /**
  * Unit tests for {@link SmbComNTCreateAndX}.  The tests exercise the
@@ -31,25 +31,22 @@ import org.junit.jupiter.api.extension.ExtendWith;
  */
 @ExtendWith(MockitoExtension.class)
 class SmbComNTCreateAndXTest {
-    @Mock Configuration mockConfig;
-    @Mock ServerMessageBlock mockAndX;
-    @Mock CIFSContext mockContext;
+    @Mock
+    Configuration mockConfig;
+    @Mock
+    ServerMessageBlock mockAndX;
+    @Mock
+    CIFSContext mockContext;
 
     /**
      * Helper that creates a request instance with the supplied flags.
      * The other arguments are simple constants.
      */
     private SmbComNTCreateAndX createRequest(int flags, int createOptions) {
-        return new SmbComNTCreateAndX(
-                mockConfig,
-                "test.txt",
-                flags,
-                SmbConstants.FILE_READ_EA, // desired access
+        return new SmbComNTCreateAndX(mockConfig, "test.txt", flags, SmbConstants.FILE_READ_EA, // desired access
                 0, // shareAccess
                 0, // extFileAttributes
-                createOptions,
-                mockAndX
-        );
+                createOptions, mockAndX);
     }
 
     @Nested
@@ -60,9 +57,7 @@ class SmbComNTCreateAndXTest {
                     Arguments.of(SmbConstants.O_TRUNC | SmbConstants.O_CREAT, SmbComNTCreateAndX.FILE_OVERWRITE_IF),
                     Arguments.of(SmbConstants.O_TRUNC, SmbComNTCreateAndX.FILE_OVERWRITE),
                     Arguments.of(SmbConstants.O_CREAT | SmbConstants.O_EXCL, SmbComNTCreateAndX.FILE_CREATE),
-                    Arguments.of(SmbConstants.O_CREAT, SmbComNTCreateAndX.FILE_OPEN_IF),
-                    Arguments.of(0, SmbComNTCreateAndX.FILE_OPEN)
-            );
+                    Arguments.of(SmbConstants.O_CREAT, SmbComNTCreateAndX.FILE_OPEN_IF), Arguments.of(0, SmbComNTCreateAndX.FILE_OPEN));
         }
 
         @ParameterizedTest
@@ -71,12 +66,12 @@ class SmbComNTCreateAndXTest {
             SmbComNTCreateAndX req = createRequest(flags, 0);
             // Use reflection to read the private field createDisposition
             int actual = (int) getPrivateField(req, "createDisposition");
-            assertEquals(expected, actual, "createDisposition should match" );
+            assertEquals(expected, actual, "createDisposition should match");
         }
     }
 
     @Test
-    @DisplayName("CreateOptions default padding" )
+    @DisplayName("CreateOptions default padding")
     void createOptionsAddedWhenLow() {
         // createOptions less than 0x0001 (i.e., 0) should be padded with 0x0040
         SmbComNTCreateAndX req = createRequest(0, 0);
@@ -94,7 +89,7 @@ class SmbComNTCreateAndXTest {
         // Calling again should combine rather than overwrite
         req.addFlags0(0x20);
         flags0 = (int) getPrivateField(req, "flags0");
-        assertTrue((flags0 & 0x20) != 0, "flag should accumulate" );
+        assertTrue((flags0 & 0x20) != 0, "flag should accumulate");
     }
 
     @Test
@@ -141,4 +136,3 @@ class SmbComNTCreateAndXTest {
         }
     }
 }
-

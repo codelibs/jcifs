@@ -1,12 +1,20 @@
 package jcifs.smb;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import java.lang.reflect.Field;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -15,21 +23,15 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.stream.Stream;
-
 @ExtendWith(MockitoExtension.class)
 class SecurityBlobTest {
 
     // Parameter source for toString() hex rendering cases
     static Stream<Arguments> hexCases() {
-        return Stream.of(
-                Arguments.of(new byte[] {}, ""),
-                Arguments.of(new byte[] { (byte) 0x00 }, "00"),
-                Arguments.of(new byte[] { (byte) 0x0F }, "0f"),
-                Arguments.of(new byte[] { (byte) 0x10 }, "10"),
+        return Stream.of(Arguments.of(new byte[] {}, ""), Arguments.of(new byte[] { (byte) 0x00 }, "00"),
+                Arguments.of(new byte[] { (byte) 0x0F }, "0f"), Arguments.of(new byte[] { (byte) 0x10 }, "10"),
                 Arguments.of(new byte[] { (byte) 0xAB }, "ab"),
-                Arguments.of(new byte[] { (byte) 0x7F, (byte) 0x80, (byte) 0xFF }, "7f80ff")
-        );
+                Arguments.of(new byte[] { (byte) 0x7F, (byte) 0x80, (byte) 0xFF }, "7f80ff"));
     }
 
     // Verifies that toString() formats bytes as lower-case hex with zero-padding

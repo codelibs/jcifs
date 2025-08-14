@@ -1,9 +1,24 @@
 package jcifs.smb;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
-import java.io.IOException;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.timeout;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -24,7 +39,7 @@ public class SmbCopyUtilTest {
     // --- Tests for openCopyTargetFile ---
 
     @ParameterizedTest
-    @ValueSource(booleans = {true, false})
+    @ValueSource(booleans = { true, false })
     @DisplayName("openCopyTargetFile sets correct access flags depending on alsoRead")
     void openCopyTargetFile_accessMask_respectsAlsoRead(boolean alsoRead) throws Exception {
         // Arrange
@@ -55,9 +70,8 @@ public class SmbCopyUtilTest {
         SmbFileHandleImpl handle = mock(SmbFileHandleImpl.class);
         SmbAuthException authEx = new SmbAuthException("denied");
 
-        when(dest.openUnshared(anyInt(), anyInt(), anyInt(), anyInt(), anyInt()))
-            .thenThrow(authEx) // first attempt fails with auth
-            .thenReturn(handle); // second attempt succeeds
+        when(dest.openUnshared(anyInt(), anyInt(), anyInt(), anyInt(), anyInt())).thenThrow(authEx) // first attempt fails with auth
+                .thenReturn(handle); // second attempt succeeds
 
         // dest currently has READONLY attribute set
         int currentAttrs = SmbConstants.ATTR_READONLY | SmbConstants.ATTR_ARCHIVE;
@@ -85,9 +99,8 @@ public class SmbCopyUtilTest {
         when(dest.getAttributes()).thenReturn(SmbConstants.ATTR_ARCHIVE); // no READONLY bit
 
         // Act + Assert
-        SmbAuthException thrown = assertThrows(SmbAuthException.class, () ->
-            SmbCopyUtil.openCopyTargetFile(dest, SmbConstants.ATTR_NORMAL, false)
-        );
+        SmbAuthException thrown =
+                assertThrows(SmbAuthException.class, () -> SmbCopyUtil.openCopyTargetFile(dest, SmbConstants.ATTR_NORMAL, false));
         assertSame(authEx, thrown, "Should rethrow the same SmbAuthException instance");
         verify(dest, times(1)).getAttributes();
         verify(dest, never()).setPathInformation(anyInt(), anyLong(), anyLong(), anyLong());
@@ -100,9 +113,7 @@ public class SmbCopyUtilTest {
         SmbFile dest = null;
 
         // Act + Assert
-        assertThrows(NullPointerException.class, () ->
-            SmbCopyUtil.openCopyTargetFile(dest, SmbConstants.ATTR_NORMAL, false)
-        );
+        assertThrows(NullPointerException.class, () -> SmbCopyUtil.openCopyTargetFile(dest, SmbConstants.ATTR_NORMAL, false));
     }
 
     // --- Tests for copyFile exception handling branch ---
@@ -145,9 +156,8 @@ public class SmbCopyUtilTest {
             when(dest.toString()).thenReturn("smb://dest");
 
             // Act + Assert
-            SmbException ex = assertThrows(SmbException.class, () ->
-                SmbCopyUtil.copyFile(src, dest, buffers, 8, new WriterThread(), sh, dh)
-            );
+            SmbException ex =
+                    assertThrows(SmbException.class, () -> SmbCopyUtil.copyFile(src, dest, buffers, 8, new WriterThread(), sh, dh));
             assertTrue(ex.getMessage().contains("smb://src"));
             assertTrue(ex.getMessage().contains("smb://dest"));
         }
@@ -168,9 +178,7 @@ public class SmbCopyUtilTest {
             byte[][] buffers = new byte[][] { new byte[8], new byte[8] };
 
             // Act + Assert (no exception)
-            assertDoesNotThrow(() ->
-                SmbCopyUtil.copyFile(src, dest, buffers, 8, new WriterThread(), sh, dh)
-            );
+            assertDoesNotThrow(() -> SmbCopyUtil.copyFile(src, dest, buffers, 8, new WriterThread(), sh, dh));
         }
     }
 
@@ -193,7 +201,7 @@ public class SmbCopyUtilTest {
         SmbFileHandleImpl sfd = mock(SmbFileHandleImpl.class);
         when(sfd.getInitialSize()).thenReturn(0L);
         when(src.openUnshared(eq(0), eq(SmbConstants.O_RDONLY), eq(SmbConstants.FILE_SHARE_READ), eq(SmbConstants.ATTR_NORMAL), eq(0)))
-            .thenReturn(sfd);
+                .thenReturn(sfd);
 
         // openCopyTargetFile should be called by serverSideCopy, so dest.openUnshared must succeed
         SmbFileHandleImpl dfd = mock(SmbFileHandleImpl.class);
@@ -203,9 +211,7 @@ public class SmbCopyUtilTest {
         byte[][] buffers = new byte[][] { new byte[1], new byte[1] };
 
         // Act + Assert (no exception expected)
-        assertDoesNotThrow(() ->
-            SmbCopyUtil.copyFile(src, dest, buffers, 1, new WriterThread(), sh, dh)
-        );
+        assertDoesNotThrow(() -> SmbCopyUtil.copyFile(src, dest, buffers, 1, new WriterThread(), sh, dh));
 
         // Verify that server-side path engaged at least the initial opens
         verify(src, times(1)).openUnshared(anyInt(), anyInt(), anyInt(), anyInt(), anyInt());
@@ -220,7 +226,7 @@ public class SmbCopyUtilTest {
         // Arrange
         WriterThread w = new WriterThread();
         SmbFileOutputStream out = mock(SmbFileOutputStream.class);
-        byte[] payload = new byte[] {1,2,3,4};
+        byte[] payload = new byte[] { 1, 2, 3, 4 };
 
         w.start();
 
@@ -254,7 +260,7 @@ public class SmbCopyUtilTest {
         // Arrange
         WriterThread w = new WriterThread();
         SmbFileOutputStream out = mock(SmbFileOutputStream.class);
-        byte[] payload = new byte[] {9,8,7};
+        byte[] payload = new byte[] { 9, 8, 7 };
 
         doThrow(new SmbException("fail")).when(out).write(any(byte[].class), anyInt(), anyInt());
 
@@ -267,10 +273,10 @@ public class SmbCopyUtilTest {
                 w.wait(10);
             }
             assertTrue(w.isReady(), "WriterThread should be ready");
-            
+
             // Submit a write that will throw inside the writer thread
             w.write(payload, payload.length, out);
-            
+
             // Give the writer thread time to process and set exception
             w.wait(100);
         }

@@ -22,7 +22,6 @@ import jcifs.SmbConstants;
 import jcifs.config.BaseConfiguration;
 import jcifs.context.BaseContext;
 import jcifs.internal.SmbNegotiationRequest;
-import jcifs.internal.smb1.ServerMessageBlock;
 import jcifs.internal.util.SMBUtil;
 import jcifs.util.Hexdump;
 

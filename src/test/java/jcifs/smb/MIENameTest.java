@@ -1,7 +1,13 @@
 package jcifs.smb;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import java.nio.charset.StandardCharsets;
 import java.util.stream.Stream;
@@ -10,12 +16,11 @@ import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
-import org.mockito.Mockito;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class MIENameTest {
@@ -104,21 +109,21 @@ class MIENameTest {
         byte[] nameBytes = "bob".getBytes(StandardCharsets.US_ASCII);
 
         return Stream.of(
-            // Too short for TOK_ID + MECH_OID_LEN
-            Arguments.of("too short header", new byte[] { 0x04, 0x01, 0x00 }, IllegalArgumentException.class),
+                // Too short for TOK_ID + MECH_OID_LEN
+                Arguments.of("too short header", new byte[] { 0x04, 0x01, 0x00 }, IllegalArgumentException.class),
 
-            // Wrong TOK_ID
-            Arguments.of("wrong TOK_ID", new byte[] { 0x00, 0x02, 0x00, 0x01 }, IllegalArgumentException.class),
+                // Wrong TOK_ID
+                Arguments.of("wrong TOK_ID", new byte[] { 0x00, 0x02, 0x00, 0x01 }, IllegalArgumentException.class),
 
-            // OID length claims more than available
-            Arguments.of("oid length exceeds buffer", new byte[] { 0x04, 0x01, 0x00, 0x10, 0x06 }, IllegalArgumentException.class),
+                // OID length claims more than available
+                Arguments.of("oid length exceeds buffer", new byte[] { 0x04, 0x01, 0x00, 0x10, 0x06 }, IllegalArgumentException.class),
 
-            // Missing NAME_LEN (not enough bytes for 4-byte length)
-            Arguments.of("missing NAME_LEN bytes", new byte[] { 0x04, 0x01, 0x00, (byte) der.length, der[0] }, IllegalArgumentException.class),
+                // Missing NAME_LEN (not enough bytes for 4-byte length)
+                Arguments.of("missing NAME_LEN bytes", new byte[] { 0x04, 0x01, 0x00, (byte) der.length, der[0] },
+                        IllegalArgumentException.class),
 
-            // Name length larger than remaining bytes - use method reference
-            Arguments.of("name length exceeds remaining", 
-                (java.util.function.Supplier<byte[]>) () -> {
+                // Name length larger than remaining bytes - use method reference
+                Arguments.of("name length exceeds remaining", (java.util.function.Supplier<byte[]>) () -> {
                     byte[] buf = buildBuffer(der, nameBytes);
                     // Corrupt NAME_LEN to be larger than actual by +5
                     int i = 2 + 2 + der.length; // index where NAME_LEN starts
@@ -130,9 +135,8 @@ class MIENameTest {
                     return buf;
                 }, IllegalArgumentException.class),
 
-            // Negative NAME_LEN (0xFFFFFFFF) causes StringIndexOutOfBoundsException
-            Arguments.of("negative name length triggers SIOOBE", 
-                (java.util.function.Supplier<byte[]>) () -> {
+                // Negative NAME_LEN (0xFFFFFFFF) causes StringIndexOutOfBoundsException
+                Arguments.of("negative name length triggers SIOOBE", (java.util.function.Supplier<byte[]>) () -> {
                     byte[] tok = new byte[] { 0x04, 0x01 };
                     byte[] buf = new byte[2 + 2 + der.length + 4];
                     int p = 0;
@@ -148,8 +152,7 @@ class MIENameTest {
                     buf[p++] = (byte) 0xFF;
                     buf[p++] = (byte) 0xFF;
                     return buf;
-                }, StringIndexOutOfBoundsException.class)
-        );
+                }, StringIndexOutOfBoundsException.class));
     }
 
     @ParameterizedTest(name = "{0}")

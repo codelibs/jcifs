@@ -136,7 +136,7 @@ class HexdumpTest extends BaseTest {
         assertEquals("000000FF", Hexdump.toHexString(255, 8));
         assertEquals("00001000", Hexdump.toHexString(4096, 8));
         assertEquals("FFFFFFFF", Hexdump.toHexString(-1, 8));
-        
+
         // Test different sizes
         assertEquals("00", Hexdump.toHexString(0, 2));
         assertEquals("FF", Hexdump.toHexString(255, 2));
@@ -150,7 +150,7 @@ class HexdumpTest extends BaseTest {
         assertEquals("0000000000000000", Hexdump.toHexString(0L, 16));
         assertEquals("00000000000000FF", Hexdump.toHexString(255L, 16));
         assertEquals("FFFFFFFFFFFFFFFF", Hexdump.toHexString(-1L, 16));
-        
+
         // Test different sizes
         assertEquals("00000000", Hexdump.toHexString(0L, 8));
         assertEquals("12345678", Hexdump.toHexString(0x12345678L, 8));
@@ -160,13 +160,12 @@ class HexdumpTest extends BaseTest {
     @DisplayName("Should handle special byte values correctly")
     void testSpecialByteValues() {
         // Test boundary values
-        byte[] data = { 
-            (byte) 0x00,  // min value
-            (byte) 0xFF,  // max value (-1 as signed byte)
-            (byte) 0x7F,  // max positive
-            (byte) 0x80   // min negative
+        byte[] data = { (byte) 0x00, // min value
+                (byte) 0xFF, // max value (-1 as signed byte)
+                (byte) 0x7F, // max positive
+                (byte) 0x80 // min negative
         };
-        
+
         String result = Hexdump.toHexString(data);
         assertEquals("00FF7F80", result);
     }
@@ -176,11 +175,11 @@ class HexdumpTest extends BaseTest {
     void testLargeByteArray() {
         // Create a larger test array
         byte[] data = createTestData(1024);
-        
+
         // Test full array conversion
         String result = Hexdump.toHexString(data);
         assertEquals(2048, result.length()); // 1024 bytes * 2 chars
-        
+
         // Test partial conversion
         String partial = Hexdump.toHexString(data, 512, 256);
         assertEquals(512, partial.length()); // 256 bytes * 2 chars

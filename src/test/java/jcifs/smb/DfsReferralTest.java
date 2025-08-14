@@ -44,6 +44,7 @@ class DfsReferralTest {
         DfsReferral dfsReferral = new DfsReferral(mockData);
 
         // Verify that toString() returns the expected string from the mock data object
-        assertEquals(expectedToString, dfsReferral.toString(), "toString() should return the result of the wrapped DfsReferralData's toString() method.");
+        assertEquals(expectedToString, dfsReferral.toString(),
+                "toString() should return the result of the wrapped DfsReferralData's toString() method.");
     }
 }

@@ -1,7 +1,18 @@
 package jcifs.smb;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.net.MalformedURLException;
 
@@ -102,7 +113,7 @@ class FileEntryAdapterIteratorTest {
         // Setup: first entry rejected, second accepted
         FileEntry entry1 = mock(FileEntry.class);
         FileEntry entry2 = mock(FileEntry.class);
-        
+
         when(delegate.hasNext()).thenReturn(true, true, false);
         when(delegate.next()).thenReturn(entry1, entry2);
         when(filter.accept(resource)).thenReturn(false, true);
@@ -125,12 +136,10 @@ class FileEntryAdapterIteratorTest {
         // Setup: first attempt throws, second succeeds
         FileEntry entry1 = mock(FileEntry.class);
         FileEntry entry2 = mock(FileEntry.class);
-        
+
         when(delegate.hasNext()).thenReturn(true, true, false);
         when(delegate.next()).thenReturn(entry1, entry2);
-        when(filter.accept(resource))
-            .thenThrow(new CIFSException("Error"))
-            .thenReturn(true);
+        when(filter.accept(resource)).thenThrow(new CIFSException("Error")).thenReturn(true);
 
         TestIterator iterator = new TestIterator(filter);
 
@@ -150,7 +159,7 @@ class FileEntryAdapterIteratorTest {
         FileEntry entry1 = mock(FileEntry.class);
         FileEntry entry2 = mock(FileEntry.class);
         FileEntry entry3 = mock(FileEntry.class);
-        
+
         // Constructor gets entry1, first next() returns it and gets entry2,
         // second next() returns entry2 and gets entry3, 
         // third next() returns entry3 and exhausts
@@ -162,13 +171,13 @@ class FileEntryAdapterIteratorTest {
         // Verify iteration
         assertTrue(iterator.hasNext());
         assertSame(resource, iterator.next());
-        
+
         assertTrue(iterator.hasNext());
         assertSame(resource, iterator.next());
-        
+
         assertTrue(iterator.hasNext());
         assertSame(resource, iterator.next());
-        
+
         assertFalse(iterator.hasNext());
         assertNull(iterator.next());
 
@@ -190,10 +199,10 @@ class FileEntryAdapterIteratorTest {
     @DisplayName("Close delegates to underlying iterator")
     void closeDelegation() throws CIFSException {
         when(delegate.hasNext()).thenReturn(false);
-        
+
         TestIterator iterator = new TestIterator(null);
         iterator.close();
-        
+
         verify(delegate).close();
     }
 
@@ -202,9 +211,9 @@ class FileEntryAdapterIteratorTest {
     void closeException() throws CIFSException {
         when(delegate.hasNext()).thenReturn(false);
         doThrow(new CIFSException("Close failed")).when(delegate).close();
-        
+
         TestIterator iterator = new TestIterator(null);
-        
+
         CIFSException ex = assertThrows(CIFSException.class, iterator::close);
         assertEquals("Close failed", ex.getMessage());
     }
@@ -213,10 +222,10 @@ class FileEntryAdapterIteratorTest {
     @DisplayName("Remove delegates to underlying iterator")
     void removeDelegation() {
         when(delegate.hasNext()).thenReturn(false);
-        
+
         TestIterator iterator = new TestIterator(null);
         iterator.remove();
-        
+
         verify(delegate).remove();
     }
 
@@ -225,9 +234,9 @@ class FileEntryAdapterIteratorTest {
     void removeException() {
         when(delegate.hasNext()).thenReturn(false);
         doThrow(new UnsupportedOperationException("Not supported")).when(delegate).remove();
-        
+
         TestIterator iterator = new TestIterator(null);
-        
+
         UnsupportedOperationException ex = assertThrows(UnsupportedOperationException.class, iterator::remove);
         assertEquals("Not supported", ex.getMessage());
     }
@@ -252,15 +261,12 @@ class FileEntryAdapterIteratorTest {
         FileEntry entry1 = mock(FileEntry.class);
         FileEntry entry2 = mock(FileEntry.class);
         FileEntry entry3 = mock(FileEntry.class);
-        
+
         when(delegate.hasNext()).thenReturn(true, true, true, false);
         when(delegate.next()).thenReturn(entry1, entry2, entry3);
-        
+
         // First rejected, second throws exception, third accepted
-        when(filter.accept(resource))
-            .thenReturn(false)
-            .thenThrow(new CIFSException("Error"))
-            .thenReturn(true);
+        when(filter.accept(resource)).thenReturn(false).thenThrow(new CIFSException("Error")).thenReturn(true);
 
         TestIterator iterator = new TestIterator(filter);
 
@@ -281,7 +287,7 @@ class FileEntryAdapterIteratorTest {
         // Setup
         FileEntry entry1 = mock(FileEntry.class);
         FileEntry entry2 = mock(FileEntry.class);
-        
+
         when(delegate.hasNext()).thenReturn(true, true, false);
         when(delegate.next()).thenReturn(entry1, entry2);
 
@@ -304,7 +310,7 @@ class FileEntryAdapterIteratorTest {
         // Setup
         FileEntry entry1 = mock(FileEntry.class);
         FileEntry entry2 = mock(FileEntry.class);
-        
+
         when(delegate.hasNext()).thenReturn(true, true, false);
         when(delegate.next()).thenReturn(entry1, entry2);
 

@@ -8,15 +8,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
@@ -25,10 +21,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EmptySource;
-import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
-
 
 /**
  * Test class for CreateContextRequest interface
@@ -56,8 +49,7 @@ class CreateContextRequestTest {
         public TestCreateContextRequest(byte[] name, byte[] data) {
             this.name = name;
             this.data = data;
-            this.encodedSize = (name != null ? name.length : 0) + 
-                               (data != null ? data.length : 0) + 16;
+            this.encodedSize = (name != null ? name.length : 0) + (data != null ? data.length : 0) + 16;
         }
 
         @Override
@@ -80,28 +72,28 @@ class CreateContextRequestTest {
             if (dstIndex + encodedSize > dst.length) {
                 throw new ArrayIndexOutOfBoundsException("Buffer overflow");
             }
-            
+
             // Simulate encoding: write header (8 bytes)
             Arrays.fill(dst, dstIndex, dstIndex + 8, (byte) 0xFF);
             int offset = dstIndex + 8;
-            
+
             // Write name if present
             if (name != null && name.length > 0) {
                 System.arraycopy(name, 0, dst, offset, name.length);
                 offset += name.length;
             }
-            
+
             // Write data if present
             if (data != null && data.length > 0) {
                 System.arraycopy(data, 0, dst, offset, data.length);
                 offset += data.length;
             }
-            
+
             // Pad to 8-byte boundary
             while ((offset - dstIndex) % 8 != 0) {
                 dst[offset++] = 0;
             }
-            
+
             return offset - dstIndex;
         }
 
@@ -233,11 +225,9 @@ class CreateContextRequestTest {
         void testEncodeWithException() {
             CreateContextRequest request = mock(CreateContextRequest.class);
             byte[] buffer = new byte[100];
-            when(request.encode(any(byte[].class), anyInt()))
-                .thenThrow(new RuntimeException("Test error"));
+            when(request.encode(any(byte[].class), anyInt())).thenThrow(new RuntimeException("Test error"));
 
-            assertThrows(RuntimeException.class, 
-                () -> request.encode(buffer, 0));
+            assertThrows(RuntimeException.class, () -> request.encode(buffer, 0));
         }
     }
 
@@ -273,10 +263,10 @@ class CreateContextRequestTest {
         @DisplayName("Should encode data correctly")
         void testEncode() {
             int result = testRequest.encode(testBuffer, 10);
-            
+
             assertTrue(result > 0);
             assertEquals(1, testRequest.getEncodeCallCount());
-            
+
             // Verify header was written
             for (int i = 10; i < 18; i++) {
                 assertEquals((byte) 0xFF, testBuffer[i]);
@@ -287,17 +277,16 @@ class CreateContextRequestTest {
         @DisplayName("Should encode with data correctly")
         void testEncodeWithData() {
             byte[] data = "CONTEXT_DATA".getBytes(StandardCharsets.UTF_8);
-            TestCreateContextRequest requestWithData = 
-                new TestCreateContextRequest(testName, data);
-            
+            TestCreateContextRequest requestWithData = new TestCreateContextRequest(testName, data);
+
             int result = requestWithData.encode(testBuffer, 0);
             assertTrue(result > 0);
-            
+
             // Verify header
             for (int i = 0; i < 8; i++) {
                 assertEquals((byte) 0xFF, testBuffer[i]);
             }
-            
+
             // Verify name was copied
             byte[] nameCheck = new byte[testName.length];
             System.arraycopy(testBuffer, 8, nameCheck, 0, testName.length);
@@ -323,37 +312,32 @@ class CreateContextRequestTest {
         @Test
         @DisplayName("Should throw exception on null buffer")
         void testEncodeWithNullBuffer() {
-            assertThrows(IllegalArgumentException.class,
-                () -> testRequest.encode(null, 0),
-                "Should throw exception for null buffer");
+            assertThrows(IllegalArgumentException.class, () -> testRequest.encode(null, 0), "Should throw exception for null buffer");
         }
 
         @Test
         @DisplayName("Should throw exception on negative index")
         void testEncodeWithNegativeIndex() {
-            assertThrows(IllegalArgumentException.class,
-                () -> testRequest.encode(testBuffer, -1),
-                "Should throw exception for negative index");
+            assertThrows(IllegalArgumentException.class, () -> testRequest.encode(testBuffer, -1),
+                    "Should throw exception for negative index");
         }
 
         @Test
         @DisplayName("Should throw exception on buffer overflow")
         void testEncodeWithBufferOverflow() {
             byte[] smallBuffer = new byte[10];
-            assertThrows(ArrayIndexOutOfBoundsException.class,
-                () -> testRequest.encode(smallBuffer, 5),
-                "Should throw exception when buffer is too small");
+            assertThrows(ArrayIndexOutOfBoundsException.class, () -> testRequest.encode(smallBuffer, 5),
+                    "Should throw exception when buffer is too small");
         }
 
         @Test
         @DisplayName("Should handle zero-length name")
         void testZeroLengthName() {
-            TestCreateContextRequest emptyNameRequest = 
-                new TestCreateContextRequest(new byte[0]);
-            
+            TestCreateContextRequest emptyNameRequest = new TestCreateContextRequest(new byte[0]);
+
             assertNotNull(emptyNameRequest.getName());
             assertEquals(0, emptyNameRequest.getName().length);
-            
+
             int result = emptyNameRequest.encode(testBuffer, 0);
             assertTrue(result >= 8); // At least header size
         }
@@ -363,17 +347,17 @@ class CreateContextRequestTest {
         void testMethodCallCounting() {
             assertEquals(0, testRequest.getSizeCallCount());
             assertEquals(0, testRequest.getEncodeCallCount());
-            
+
             testRequest.size();
             assertEquals(1, testRequest.getSizeCallCount());
-            
+
             testRequest.encode(testBuffer, 0);
             assertEquals(1, testRequest.getEncodeCallCount());
-            
+
             testRequest.size();
             testRequest.size();
             assertEquals(3, testRequest.getSizeCallCount());
-            
+
             testRequest.encode(testBuffer, 50);
             assertEquals(2, testRequest.getEncodeCallCount());
         }
@@ -382,20 +366,16 @@ class CreateContextRequestTest {
         @DisplayName("Should throw configured exception on encode")
         void testConfiguredExceptionOnEncode() {
             testRequest.setThrowOnEncode(true);
-            
-            assertThrows(RuntimeException.class,
-                () -> testRequest.encode(testBuffer, 0),
-                "Should throw configured exception");
+
+            assertThrows(RuntimeException.class, () -> testRequest.encode(testBuffer, 0), "Should throw configured exception");
         }
 
         @Test
         @DisplayName("Should throw configured exception on size")
         void testConfiguredExceptionOnSize() {
             testRequest.setThrowOnSize(true);
-            
-            assertThrows(RuntimeException.class,
-                () -> testRequest.size(),
-                "Should throw configured exception");
+
+            assertThrows(RuntimeException.class, () -> testRequest.size(), "Should throw configured exception");
         }
 
         @Test
@@ -406,23 +386,22 @@ class CreateContextRequestTest {
                 byte[] name = new byte[nameLen];
                 Arrays.fill(name, (byte) 'A');
                 TestCreateContextRequest req = new TestCreateContextRequest(name);
-                
+
                 byte[] buffer = new byte[256];
                 int encodedSize = req.encode(buffer, 0);
-                
+
                 // Verify 8-byte alignment
-                assertEquals(0, encodedSize % 8, 
-                    "Encoded size should be 8-byte aligned for name length " + nameLen);
+                assertEquals(0, encodedSize % 8, "Encoded size should be 8-byte aligned for name length " + nameLen);
             }
         }
 
         @ParameterizedTest
-        @ValueSource(ints = {0, 10, 50, 100, 200})
+        @ValueSource(ints = { 0, 10, 50, 100, 200 })
         @DisplayName("Should handle various buffer offsets")
         void testVariousBufferOffsets(int offset) {
             byte[] largeBuffer = new byte[512];
             int result = testRequest.encode(largeBuffer, offset);
-            
+
             assertTrue(result > 0);
             // Verify header at correct offset
             for (int i = offset; i < offset + 8; i++) {
@@ -440,7 +419,7 @@ class CreateContextRequestTest {
         void testMockWithStringName() {
             String nameStr = "MOCK_CONTEXT";
             MockCreateContextRequest mock = new MockCreateContextRequest(nameStr);
-            
+
             assertArrayEquals(nameStr.getBytes(StandardCharsets.UTF_8), mock.getName());
             assertEquals(32, mock.size());
         }
@@ -457,14 +436,14 @@ class CreateContextRequestTest {
         void testMockEncode() {
             MockCreateContextRequest mock = new MockCreateContextRequest("TEST", 64);
             byte[] buffer = new byte[100];
-            
+
             int result = mock.encode(buffer, 0);
             assertEquals(64, result);
             assertEquals(64, mock.size());
         }
 
         @ParameterizedTest
-        @ValueSource(strings = {"", "SHORT", "VERY_LONG_CONTEXT_NAME_FOR_TESTING", "特殊字符"})
+        @ValueSource(strings = { "", "SHORT", "VERY_LONG_CONTEXT_NAME_FOR_TESTING", "特殊字符" })
         @DisplayName("Should handle various name strings")
         void testVariousNameStrings(String name) {
             MockCreateContextRequest mock = new MockCreateContextRequest(name);
@@ -472,7 +451,7 @@ class CreateContextRequestTest {
         }
 
         @ParameterizedTest
-        @ValueSource(ints = {8, 16, 32, 64, 128, 256})
+        @ValueSource(ints = { 8, 16, 32, 64, 128, 256 })
         @DisplayName("Should handle various sizes")
         void testVariousSizes(int size) {
             MockCreateContextRequest mock = new MockCreateContextRequest("TEST", size);
@@ -492,13 +471,12 @@ class CreateContextRequestTest {
             Arrays.fill(largeName, (byte) 'X');
             byte[] largeData = new byte[2048];
             Arrays.fill(largeData, (byte) 'Y');
-            
-            TestCreateContextRequest request = 
-                new TestCreateContextRequest(largeName, largeData);
-            
+
+            TestCreateContextRequest request = new TestCreateContextRequest(largeName, largeData);
+
             byte[] buffer = new byte[8192];
             int result = request.encode(buffer, 100);
-            
+
             assertTrue(result > 0);
             assertTrue(result <= buffer.length - 100);
         }
@@ -508,9 +486,8 @@ class CreateContextRequestTest {
         void testEmptyDataArray() {
             byte[] emptyData = new byte[0];
             byte[] name = "TEST_DATA".getBytes(StandardCharsets.UTF_8);
-            TestCreateContextRequest request = 
-                new TestCreateContextRequest(name, emptyData);
-            
+            TestCreateContextRequest request = new TestCreateContextRequest(name, emptyData);
+
             assertNotNull(request.getData());
             assertEquals(0, request.getData().length);
         }
@@ -521,15 +498,15 @@ class CreateContextRequestTest {
             byte[] buffer = new byte[256];
             byte[] name = "BOUNDARY".getBytes(StandardCharsets.UTF_8);
             TestCreateContextRequest request = new TestCreateContextRequest(name);
-            
+
             // Test at buffer start
             int result1 = request.encode(buffer, 0);
             assertTrue(result1 > 0);
-            
+
             // Test at buffer middle
             int result2 = request.encode(buffer, 128);
             assertTrue(result2 > 0);
-            
+
             // Test near buffer end (should still fit)
             request.setEncodedSize(16);
             int result3 = request.encode(buffer, 240);
@@ -542,7 +519,7 @@ class CreateContextRequestTest {
             byte[] maxName = new byte[65536]; // 64KB
             Arrays.fill(maxName, (byte) 'M');
             TestCreateContextRequest request = new TestCreateContextRequest(maxName);
-            
+
             assertArrayEquals(maxName, request.getName());
             assertTrue(request.size() > maxName.length);
         }
@@ -550,20 +527,19 @@ class CreateContextRequestTest {
         @Test
         @DisplayName("Should handle concurrent encoding")
         void testConcurrentEncoding() {
-            TestCreateContextRequest request = 
-                new TestCreateContextRequest("CONCURRENT".getBytes(StandardCharsets.UTF_8));
-            
+            TestCreateContextRequest request = new TestCreateContextRequest("CONCURRENT".getBytes(StandardCharsets.UTF_8));
+
             byte[] buffer1 = new byte[256];
             byte[] buffer2 = new byte[256];
-            
+
             // Encode to different buffers
             int result1 = request.encode(buffer1, 0);
             int result2 = request.encode(buffer2, 50);
-            
+
             // Both should succeed independently
             assertTrue(result1 > 0);
             assertTrue(result2 > 0);
-            
+
             // Verify headers in both buffers
             for (int i = 0; i < 8; i++) {
                 assertEquals((byte) 0xFF, buffer1[i]);
@@ -584,7 +560,7 @@ class CreateContextRequestTest {
             contexts[0] = new TestCreateContextRequest("CONTEXT1".getBytes(StandardCharsets.UTF_8));
             contexts[1] = new TestCreateContextRequest("CONTEXT2".getBytes(StandardCharsets.UTF_8));
             contexts[2] = new TestCreateContextRequest("CONTEXT3".getBytes(StandardCharsets.UTF_8));
-            
+
             // Encode all contexts
             byte[] buffer = new byte[512];
             int offset = 0;
@@ -593,7 +569,7 @@ class CreateContextRequestTest {
                 assertTrue(encoded > 0);
                 offset += encoded;
             }
-            
+
             // Verify each context was encoded
             assertTrue(offset > 0);
             // The actual encoded size might be different from size() due to padding
@@ -606,15 +582,13 @@ class CreateContextRequestTest {
         @Test
         @DisplayName("Should handle array of context requests with varying sizes")
         void testArrayOfContextRequestsWithVaryingSizes() {
-            CreateContextRequest[] contexts = new CreateContextRequest[] {
-                new MockCreateContextRequest("SHORT", 16),
-                new MockCreateContextRequest("MEDIUM_LENGTH_NAME", 32),
-                new MockCreateContextRequest("VERY_LONG_CONTEXT_NAME_FOR_TESTING", 64)
-            };
-            
+            CreateContextRequest[] contexts = new CreateContextRequest[] { new MockCreateContextRequest("SHORT", 16),
+                    new MockCreateContextRequest("MEDIUM_LENGTH_NAME", 32),
+                    new MockCreateContextRequest("VERY_LONG_CONTEXT_NAME_FOR_TESTING", 64) };
+
             byte[] buffer = new byte[512];
             int offset = 0;
-            
+
             for (CreateContextRequest context : contexts) {
                 assertNotNull(context.getName());
                 int size = context.size();
@@ -622,7 +596,7 @@ class CreateContextRequestTest {
                 assertEquals(size, encoded);
                 offset += encoded;
             }
-            
+
             // Verify total offset
             assertEquals(16 + 32 + 64, offset);
         }
@@ -635,18 +609,18 @@ class CreateContextRequestTest {
             contexts[1] = null; // Null context
             contexts[2] = new MockCreateContextRequest("THIRD");
             contexts[3] = new MockCreateContextRequest("FOURTH");
-            
+
             byte[] buffer = new byte[256];
             int offset = 0;
             int validCount = 0;
-            
+
             for (CreateContextRequest context : contexts) {
                 if (context != null) {
                     offset += context.encode(buffer, offset);
                     validCount++;
                 }
             }
-            
+
             assertEquals(3, validCount);
             assertTrue(offset > 0);
         }
@@ -655,19 +629,19 @@ class CreateContextRequestTest {
         @DisplayName("Should calculate combined size for multiple contexts")
         void testCombinedSizeCalculation() {
             CreateContextRequest[] contexts = new CreateContextRequest[5];
-            int[] expectedSizes = {16, 24, 32, 40, 48};
-            
+            int[] expectedSizes = { 16, 24, 32, 40, 48 };
+
             for (int i = 0; i < contexts.length; i++) {
                 contexts[i] = new MockCreateContextRequest("CTX" + i, expectedSizes[i]);
             }
-            
+
             // Calculate total size
             int totalSize = 0;
             for (int i = 0; i < contexts.length; i++) {
                 assertEquals(expectedSizes[i], contexts[i].size());
                 totalSize += contexts[i].size();
             }
-            
+
             assertEquals(160, totalSize); // 16+24+32+40+48
         }
 
@@ -675,21 +649,20 @@ class CreateContextRequestTest {
         @DisplayName("Should handle special SMB2 context names")
         void testSMB2ContextNames() {
             // Common SMB2 create context names
-            String[] contextNames = {
-                "DHnQ", // Durable handle request
-                "DHnC", // Durable handle reconnect
-                "AlSi", // Allocation size
-                "MxAc", // Max access
-                "TWrp", // Timewarp
-                "QFid", // Query on disk ID
-                "RqLs", // Request lease
-                "DH2Q", // Durable handle request V2
-                "DH2C", // Durable handle reconnect V2
-                "ExtA", // Extended attributes
-                "SecD", // Security descriptor
-                "AppI"  // App instance ID
+            String[] contextNames = { "DHnQ", // Durable handle request
+                    "DHnC", // Durable handle reconnect
+                    "AlSi", // Allocation size
+                    "MxAc", // Max access
+                    "TWrp", // Timewarp
+                    "QFid", // Query on disk ID
+                    "RqLs", // Request lease
+                    "DH2Q", // Durable handle request V2
+                    "DH2C", // Durable handle reconnect V2
+                    "ExtA", // Extended attributes
+                    "SecD", // Security descriptor
+                    "AppI" // App instance ID
             };
-            
+
             for (String name : contextNames) {
                 MockCreateContextRequest context = new MockCreateContextRequest(name);
                 assertNotNull(context.getName());
@@ -706,32 +679,30 @@ class CreateContextRequestTest {
         @Test
         @DisplayName("Should handle repeated encoding efficiently")
         void testRepeatedEncoding() {
-            TestCreateContextRequest request = 
-                new TestCreateContextRequest("PERFORMANCE".getBytes(StandardCharsets.UTF_8));
+            TestCreateContextRequest request = new TestCreateContextRequest("PERFORMANCE".getBytes(StandardCharsets.UTF_8));
             byte[] buffer = new byte[256];
-            
+
             // Encode multiple times
             for (int i = 0; i < 1000; i++) {
                 int result = request.encode(buffer, 0);
                 assertTrue(result > 0);
             }
-            
+
             assertEquals(1000, request.getEncodeCallCount());
         }
 
         @Test
         @DisplayName("Should handle repeated size calls efficiently")
         void testRepeatedSizeCalls() {
-            TestCreateContextRequest request = 
-                new TestCreateContextRequest("SIZE_TEST".getBytes(StandardCharsets.UTF_8));
-            
+            TestCreateContextRequest request = new TestCreateContextRequest("SIZE_TEST".getBytes(StandardCharsets.UTF_8));
+
             int expectedSize = request.size();
-            
+
             // Call size multiple times
             for (int i = 0; i < 1000; i++) {
                 assertEquals(expectedSize, request.size());
             }
-            
+
             assertEquals(1001, request.getSizeCallCount()); // Including initial call
         }
     }

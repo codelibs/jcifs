@@ -1,7 +1,23 @@
 package jcifs.smb;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -9,7 +25,6 @@ import java.io.OutputStream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -22,15 +37,8 @@ import jcifs.CIFSException;
 import jcifs.Configuration;
 import jcifs.SmbPipeHandle;
 import jcifs.SmbPipeResource;
-import jcifs.internal.smb1.trans.TransCallNamedPipe;
-import jcifs.internal.smb1.trans.TransCallNamedPipeResponse;
-import jcifs.internal.smb1.trans.TransTransactNamedPipe;
-import jcifs.internal.smb1.trans.TransTransactNamedPipeResponse;
-import jcifs.internal.smb1.trans.TransWaitNamedPipe;
-import jcifs.internal.smb1.trans.TransWaitNamedPipeResponse;
 import jcifs.internal.smb2.ioctl.Smb2IoctlRequest;
 import jcifs.internal.smb2.ioctl.Smb2IoctlResponse;
-import jcifs.smb.RequestParam;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -55,13 +63,13 @@ class SmbPipeHandleImplTest {
         // Default pipe characteristics: neither transact nor call; RDWR for access
         when(pipe.getPipeType()).thenReturn(SmbPipeResource.PIPE_TYPE_RDWR);
         when(pipe.getUncPath()).thenReturn("\\\\pipe\\\\my-pipe");
-        
+
         // Setup tree with configuration
         when(tree.getConfig()).thenReturn(config);
         when(tree.getSendBufferSize()).thenReturn(65536);
         when(config.getPid()).thenReturn(12345);
         when(config.getSendBufferSize()).thenReturn(65536);
-        
+
         target = new SmbPipeHandleImpl(pipe);
     }
 
@@ -75,19 +83,38 @@ class SmbPipeHandleImplTest {
         // Incompatible type: expect ClassCastException
         class OtherPipeHandle implements SmbPipeHandle {
             @Override
-            public SmbPipeResource getPipe() { return mock(SmbPipeResource.class); }
+            public SmbPipeResource getPipe() {
+                return mock(SmbPipeResource.class);
+            }
+
             @Override
-            public InputStream getInput() throws CIFSException { return null; }
+            public InputStream getInput() throws CIFSException {
+                return null;
+            }
+
             @Override
-            public OutputStream getOutput() throws CIFSException { return null; }
+            public OutputStream getOutput() throws CIFSException {
+                return null;
+            }
+
             @Override
-            public boolean isOpen() { return false; }
+            public boolean isOpen() {
+                return false;
+            }
+
             @Override
-            public boolean isStale() { return false; }
+            public boolean isStale() {
+                return false;
+            }
+
             @Override
-            public void close() throws CIFSException {}
+            public void close() throws CIFSException {
+            }
+
             @Override
-            public <T extends SmbPipeHandle> T unwrap(Class<T> type) { return null; }
+            public <T extends SmbPipeHandle> T unwrap(Class<T> type) {
+                return null;
+            }
         }
         assertThrows(ClassCastException.class, () -> {
             OtherPipeHandle result = target.unwrap(OtherPipeHandle.class);
@@ -114,8 +141,7 @@ class SmbPipeHandleImplTest {
         when(tree.acquire()).thenReturn(tree); // method returns itself per implementation
 
         // Act: call twice
-        try (SmbTreeHandleImpl t1 = target.ensureTreeConnected();
-             SmbTreeHandleImpl t2 = target.ensureTreeConnected()) {
+        try (SmbTreeHandleImpl t1 = target.ensureTreeConnected(); SmbTreeHandleImpl t2 = target.ensureTreeConnected()) {
             assertSame(tree, t1);
             assertSame(tree, t2);
         }
@@ -209,10 +235,10 @@ class SmbPipeHandleImplTest {
         when(tree.acquire()).thenReturn(tree);
         SmbSessionImpl session = mock(SmbSessionImpl.class);
         when(tree.getSession()).thenReturn(session);
-        when(session.getSessionKey()).thenReturn(new byte[] {1,2,3});
+        when(session.getSessionKey()).thenReturn(new byte[] { 1, 2, 3 });
 
         byte[] key = target.getSessionKey();
-        assertArrayEquals(new byte[] {1,2,3}, key);
+        assertArrayEquals(new byte[] { 1, 2, 3 }, key);
         verify(tree, times(1)).getSession();
         verify(session, times(1)).getSessionKey();
     }
@@ -235,7 +261,7 @@ class SmbPipeHandleImplTest {
         when(tree.send(any(Smb2IoctlRequest.class), any())).thenReturn(resp);
 
         byte[] out = new byte[10];
-        int read = target.sendrecv(new byte[] {9,8,7}, 0, 3, out, 1024);
+        int read = target.sendrecv(new byte[] { 9, 8, 7 }, 0, 3, out, 1024);
         assertEquals(42, read);
 
         // Verify we issued an SMB2 IOCTL
@@ -265,7 +291,7 @@ class SmbPipeHandleImplTest {
         SmbPipeOutputStream out = mock(SmbPipeOutputStream.class);
         doReturn(out).when(spyTarget).getOutput();
 
-        byte[] b = new byte[] {10, 11, 12};
+        byte[] b = new byte[] { 10, 11, 12 };
         spyTarget.send(b, 1, 2);
         verify(out).writeDirect(b, 1, 2, 1);
     }
@@ -284,4 +310,3 @@ class SmbPipeHandleImplTest {
         assertThrows(NullPointerException.class, () -> target.sendrecv(null, 0, 0, new byte[1], 0));
     }
 }
-

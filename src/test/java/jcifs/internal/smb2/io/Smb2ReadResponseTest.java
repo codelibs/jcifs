@@ -9,15 +9,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.Arrays;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import jcifs.BaseTest;
 import jcifs.Configuration;
@@ -100,7 +99,7 @@ class Smb2ReadResponseTest extends BaseTest {
 
     @DisplayName("Should write zero bytes at various offsets")
     @ParameterizedTest
-    @ValueSource(ints = {0, 1, 10, 50, 100, 255})
+    @ValueSource(ints = { 0, 1, 10, 50, 100, 255 })
     void testWriteBytesWireFormatAtDifferentOffsets(int offset) {
         // Given
         byte[] buffer = new byte[256];
@@ -118,29 +117,29 @@ class Smb2ReadResponseTest extends BaseTest {
         // Given
         byte[] buffer = new byte[256];
         int bufferIndex = 0;
-        
+
         // Write structure size (9) - indicates error response
         SMBUtil.writeInt2(9, buffer, bufferIndex);
         // Write error context and error data
         buffer[bufferIndex + 2] = 1; // Error context count
         buffer[bufferIndex + 3] = 0; // Reserved
         SMBUtil.writeInt4(0, buffer, bufferIndex + 4); // ByteCount (0 for error)
-        
+
         // Create a custom test response that tracks if readErrorResponse was called
         class TestSmb2ReadResponse extends Smb2ReadResponse {
             boolean errorResponseCalled = false;
-            
+
             TestSmb2ReadResponse(Configuration config, byte[] outputBuffer, int outputBufferOffset) {
                 super(config, outputBuffer, outputBufferOffset);
             }
-            
+
             @Override
             protected int readErrorResponse(byte[] buf, int bufIndex) throws SMBProtocolDecodingException {
                 errorResponseCalled = true;
                 return super.readErrorResponse(buf, bufIndex);
             }
         }
-        
+
         TestSmb2ReadResponse testResponse = new TestSmb2ReadResponse(mockConfig, outputBuffer, outputBufferOffset);
 
         // When
@@ -153,20 +152,18 @@ class Smb2ReadResponseTest extends BaseTest {
 
     @DisplayName("Should throw exception for invalid structure size")
     @ParameterizedTest
-    @ValueSource(ints = {0, 1, 8, 10, 16, 18, 100, 65535})
+    @ValueSource(ints = { 0, 1, 8, 10, 16, 18, 100, 65535 })
     void testReadBytesWireFormatInvalidStructureSize(int structureSize) {
         // Given
         byte[] buffer = new byte[256];
         int bufferIndex = 0;
-        
+
         // Write invalid structure size
         SMBUtil.writeInt2(structureSize, buffer, bufferIndex);
 
         // When & Then
-        SMBProtocolDecodingException exception = assertThrows(
-            SMBProtocolDecodingException.class,
-            () -> response.readBytesWireFormat(buffer, bufferIndex)
-        );
+        SMBProtocolDecodingException exception =
+                assertThrows(SMBProtocolDecodingException.class, () -> response.readBytesWireFormat(buffer, bufferIndex));
         assertEquals("Expected structureSize = 17", exception.getMessage());
     }
 
@@ -177,10 +174,10 @@ class Smb2ReadResponseTest extends BaseTest {
         byte[] buffer = new byte[512];
         int headerStart = 0;
         int bodyStart = Smb2Constants.SMB2_HEADER_LENGTH;
-        
+
         // Write SMB2 header (64 bytes)
         // Protocol ID
-        System.arraycopy(new byte[]{(byte)0xFE, 'S', 'M', 'B'}, 0, buffer, headerStart, 4);
+        System.arraycopy(new byte[] { (byte) 0xFE, 'S', 'M', 'B' }, 0, buffer, headerStart, 4);
         // Structure size (64)
         SMBUtil.writeInt2(64, buffer, headerStart + 4);
         // Credit charge
@@ -202,17 +199,17 @@ class Smb2ReadResponseTest extends BaseTest {
         // Session ID
         SMBUtil.writeInt8(0, buffer, headerStart + 40);
         // Signature
-        Arrays.fill(buffer, headerStart + 48, headerStart + 64, (byte)0);
-        
+        Arrays.fill(buffer, headerStart + 48, headerStart + 64, (byte) 0);
+
         // Write READ response body
         int dataLength = 20;
         int dataRemaining = 0;
         int dataOffsetFromHeader = 80;
-        
+
         // Structure size (17 = 0x11)
         SMBUtil.writeInt2(17, buffer, bodyStart);
         // Data offset (byte - offset from header start)
-        buffer[bodyStart + 2] = (byte)dataOffsetFromHeader;
+        buffer[bodyStart + 2] = (byte) dataOffsetFromHeader;
         // Reserved
         buffer[bodyStart + 3] = 0;
         // Data length
@@ -221,14 +218,14 @@ class Smb2ReadResponseTest extends BaseTest {
         SMBUtil.writeInt4(dataRemaining, buffer, bodyStart + 8);
         // Reserved2
         SMBUtil.writeInt4(0, buffer, bodyStart + 12);
-        
+
         // Write test data at the specified offset
         byte[] testData = new byte[dataLength];
         for (int i = 0; i < dataLength; i++) {
-            testData[i] = (byte)(i & 0xFF);
+            testData[i] = (byte) (i & 0xFF);
         }
         System.arraycopy(testData, 0, buffer, dataOffsetFromHeader, dataLength);
-        
+
         // Use reflection to set headerStart
         Field headerStartField = ServerMessageBlock2.class.getDeclaredField("headerStart");
         headerStartField.setAccessible(true);
@@ -241,7 +238,7 @@ class Smb2ReadResponseTest extends BaseTest {
         assertEquals(dataOffsetFromHeader + dataLength - bodyStart, bytesRead);
         assertEquals(dataLength, response.getDataLength());
         assertEquals(dataRemaining, response.getDataRemaining());
-        
+
         // Verify data was copied to output buffer
         byte[] copiedData = Arrays.copyOfRange(outputBuffer, 0, dataLength);
         assertArrayEquals(testData, copiedData);
@@ -253,29 +250,27 @@ class Smb2ReadResponseTest extends BaseTest {
         // Given
         byte[] smallOutputBuffer = new byte[10];
         Smb2ReadResponse smallBufferResponse = new Smb2ReadResponse(mockConfig, smallOutputBuffer, 0);
-        
+
         byte[] buffer = new byte[256];
         int bodyStart = 0;
         int dataLength = 20; // Larger than output buffer
         int dataOffsetFromHeader = 80;
-        
+
         // Write valid structure
         SMBUtil.writeInt2(17, buffer, bodyStart);
-        buffer[bodyStart + 2] = (byte)dataOffsetFromHeader;
+        buffer[bodyStart + 2] = (byte) dataOffsetFromHeader;
         SMBUtil.writeInt4(dataLength, buffer, bodyStart + 4);
         SMBUtil.writeInt4(0, buffer, bodyStart + 8);
         SMBUtil.writeInt4(0, buffer, bodyStart + 12);
-        
+
         // Use reflection to set headerStart
         Field headerStartField = ServerMessageBlock2.class.getDeclaredField("headerStart");
         headerStartField.setAccessible(true);
         headerStartField.set(smallBufferResponse, 0);
 
         // When & Then
-        SMBProtocolDecodingException exception = assertThrows(
-            SMBProtocolDecodingException.class,
-            () -> smallBufferResponse.readBytesWireFormat(buffer, bodyStart)
-        );
+        SMBProtocolDecodingException exception =
+                assertThrows(SMBProtocolDecodingException.class, () -> smallBufferResponse.readBytesWireFormat(buffer, bodyStart));
         assertEquals("Buffer to small for read response", exception.getMessage());
     }
 
@@ -286,26 +281,26 @@ class Smb2ReadResponseTest extends BaseTest {
         int offset = 100;
         byte[] largeOutputBuffer = new byte[1024];
         Smb2ReadResponse offsetResponse = new Smb2ReadResponse(mockConfig, largeOutputBuffer, offset);
-        
+
         byte[] buffer = new byte[256];
         int bodyStart = 0;
         int dataLength = 50;
         int dataOffsetFromHeader = 80;
-        
+
         // Write structure
         SMBUtil.writeInt2(17, buffer, bodyStart);
-        buffer[bodyStart + 2] = (byte)dataOffsetFromHeader;
+        buffer[bodyStart + 2] = (byte) dataOffsetFromHeader;
         SMBUtil.writeInt4(dataLength, buffer, bodyStart + 4);
         SMBUtil.writeInt4(100, buffer, bodyStart + 8);
         SMBUtil.writeInt4(0, buffer, bodyStart + 12);
-        
+
         // Write test data
         byte[] testData = new byte[dataLength];
         for (int i = 0; i < dataLength; i++) {
-            testData[i] = (byte)(0xAA + i);
+            testData[i] = (byte) (0xAA + i);
         }
         System.arraycopy(testData, 0, buffer, dataOffsetFromHeader, dataLength);
-        
+
         // Use reflection to set headerStart
         Field headerStartField = ServerMessageBlock2.class.getDeclaredField("headerStart");
         headerStartField.setAccessible(true);
@@ -317,7 +312,7 @@ class Smb2ReadResponseTest extends BaseTest {
         // Then
         assertEquals(dataOffsetFromHeader + dataLength - bodyStart, bytesRead);
         assertEquals(dataLength, offsetResponse.getDataLength());
-        
+
         // Verify data was copied to correct offset in output buffer
         byte[] copiedData = Arrays.copyOfRange(largeOutputBuffer, offset, offset + dataLength);
         assertArrayEquals(testData, copiedData);
@@ -370,35 +365,30 @@ class Smb2ReadResponseTest extends BaseTest {
 
     @DisplayName("Should handle various data lengths")
     @ParameterizedTest
-    @CsvSource({
-        "0, 0",
-        "1, 10",
-        "100, 200",
-        "512, 1024"
-    })
+    @CsvSource({ "0, 0", "1, 10", "100, 200", "512, 1024" })
     void testReadBytesWireFormatVariousDataLengths(int dataLength, int dataRemaining) throws Exception {
         // Given
         byte[] largeBuffer = new byte[2048];
         byte[] largeOutputBuffer = new byte[2048];
         Smb2ReadResponse largeResponse = new Smb2ReadResponse(mockConfig, largeOutputBuffer, 0);
-        
+
         int bodyStart = 0;
         int dataOffsetFromHeader = 80;
-        
+
         // Write structure
         SMBUtil.writeInt2(17, largeBuffer, bodyStart);
-        largeBuffer[bodyStart + 2] = (byte)dataOffsetFromHeader;
+        largeBuffer[bodyStart + 2] = (byte) dataOffsetFromHeader;
         SMBUtil.writeInt4(dataLength, largeBuffer, bodyStart + 4);
         SMBUtil.writeInt4(dataRemaining, largeBuffer, bodyStart + 8);
         SMBUtil.writeInt4(0, largeBuffer, bodyStart + 12);
-        
+
         // Write test data
         if (dataLength > 0) {
             byte[] testData = new byte[dataLength];
-            Arrays.fill(testData, (byte)0x42);
+            Arrays.fill(testData, (byte) 0x42);
             System.arraycopy(testData, 0, largeBuffer, dataOffsetFromHeader, dataLength);
         }
-        
+
         // Use reflection to set headerStart
         Field headerStartField = ServerMessageBlock2.class.getDeclaredField("headerStart");
         headerStartField.setAccessible(true);
@@ -422,14 +412,14 @@ class Smb2ReadResponseTest extends BaseTest {
         int dataLength = 0;
         int dataRemaining = 0;
         int dataOffsetFromHeader = 80;
-        
+
         // Write structure with zero data length
         SMBUtil.writeInt2(17, buffer, bodyStart);
-        buffer[bodyStart + 2] = (byte)dataOffsetFromHeader;
+        buffer[bodyStart + 2] = (byte) dataOffsetFromHeader;
         SMBUtil.writeInt4(dataLength, buffer, bodyStart + 4);
         SMBUtil.writeInt4(dataRemaining, buffer, bodyStart + 8);
         SMBUtil.writeInt4(0, buffer, bodyStart + 12);
-        
+
         // Use reflection to set headerStart
         Field headerStartField = ServerMessageBlock2.class.getDeclaredField("headerStart");
         headerStartField.setAccessible(true);
@@ -454,17 +444,17 @@ class Smb2ReadResponseTest extends BaseTest {
         int dataLength = 5;
         // Use a small offset value that is safe
         byte dataOffsetByte = 100;
-        
+
         // Write structure
         SMBUtil.writeInt2(17, buffer, bodyStart);
         buffer[bodyStart + 2] = dataOffsetByte;
         SMBUtil.writeInt4(dataLength, buffer, bodyStart + 4);
         SMBUtil.writeInt4(0, buffer, bodyStart + 8);
         SMBUtil.writeInt4(0, buffer, bodyStart + 12);
-        
+
         // Write data at the offset
-        Arrays.fill(buffer, 100, 100 + dataLength, (byte)0xCC);
-        
+        Arrays.fill(buffer, 100, 100 + dataLength, (byte) 0xCC);
+
         // Use reflection to set headerStart
         Field headerStartField = ServerMessageBlock2.class.getDeclaredField("headerStart");
         headerStartField.setAccessible(true);
@@ -493,7 +483,7 @@ class Smb2ReadResponseTest extends BaseTest {
         byte[] buffer = new byte[256];
         // Fill buffer with test pattern
         for (int i = 0; i < buffer.length; i++) {
-            buffer[i] = (byte)(i & 0xFF);
+            buffer[i] = (byte) (i & 0xFF);
         }
         byte[] originalBuffer = buffer.clone();
 
@@ -510,7 +500,7 @@ class Smb2ReadResponseTest extends BaseTest {
     void testNullConfiguration() {
         // When - constructor accepts null config without throwing
         Smb2ReadResponse responseWithNull = new Smb2ReadResponse(null, outputBuffer, outputBufferOffset);
-        
+
         // Then - response is created successfully
         assertNotNull(responseWithNull);
     }
@@ -524,19 +514,19 @@ class Smb2ReadResponseTest extends BaseTest {
         int dataLength = 10;
         // Use a large but safe offset value that fits in signed byte range (120)
         int dataOffsetValue = 120;
-        
+
         // Write structure
         SMBUtil.writeInt2(17, buffer, bodyStart);
-        buffer[bodyStart + 2] = (byte)dataOffsetValue;
+        buffer[bodyStart + 2] = (byte) dataOffsetValue;
         SMBUtil.writeInt4(dataLength, buffer, bodyStart + 4);
         SMBUtil.writeInt4(0, buffer, bodyStart + 8);
         SMBUtil.writeInt4(0, buffer, bodyStart + 12);
-        
+
         // Write test data at the offset
         byte[] testData = new byte[dataLength];
-        Arrays.fill(testData, (byte)0xFF);
+        Arrays.fill(testData, (byte) 0xFF);
         System.arraycopy(testData, 0, buffer, dataOffsetValue, dataLength);
-        
+
         // Use reflection to set headerStart
         Field headerStartField = ServerMessageBlock2.class.getDeclaredField("headerStart");
         headerStartField.setAccessible(true);
@@ -558,24 +548,21 @@ class Smb2ReadResponseTest extends BaseTest {
         int bodyStart = 0;
         int dataLength = 50;
         int dataOffsetValue = 80; // Data would extend beyond buffer
-        
+
         // Write structure
         SMBUtil.writeInt2(17, smallBuffer, bodyStart);
-        smallBuffer[bodyStart + 2] = (byte)dataOffsetValue;
+        smallBuffer[bodyStart + 2] = (byte) dataOffsetValue;
         SMBUtil.writeInt4(dataLength, smallBuffer, bodyStart + 4);
         SMBUtil.writeInt4(0, smallBuffer, bodyStart + 8);
         SMBUtil.writeInt4(0, smallBuffer, bodyStart + 12);
-        
+
         // Use reflection to set headerStart
         Field headerStartField = ServerMessageBlock2.class.getDeclaredField("headerStart");
         headerStartField.setAccessible(true);
         headerStartField.set(response, 0);
 
         // When & Then - should throw when trying to read beyond buffer
-        assertThrows(
-            ArrayIndexOutOfBoundsException.class,
-            () -> response.readBytesWireFormat(smallBuffer, bodyStart)
-        );
+        assertThrows(ArrayIndexOutOfBoundsException.class, () -> response.readBytesWireFormat(smallBuffer, bodyStart));
     }
 
     @Test
@@ -586,17 +573,17 @@ class Smb2ReadResponseTest extends BaseTest {
         int bodyStart = 0;
         int dataOffsetFromHeader = 80;
         int reserved2Value = 0x12345678;
-        
+
         // Write structure
         SMBUtil.writeInt2(17, buffer, bodyStart);
-        buffer[bodyStart + 2] = (byte)dataOffsetFromHeader;
+        buffer[bodyStart + 2] = (byte) dataOffsetFromHeader;
         SMBUtil.writeInt4(10, buffer, bodyStart + 4);
         SMBUtil.writeInt4(0, buffer, bodyStart + 8);
         SMBUtil.writeInt4(reserved2Value, buffer, bodyStart + 12); // Reserved2
-        
+
         // Write some test data
-        Arrays.fill(buffer, dataOffsetFromHeader, dataOffsetFromHeader + 10, (byte)0x55);
-        
+        Arrays.fill(buffer, dataOffsetFromHeader, dataOffsetFromHeader + 10, (byte) 0x55);
+
         // Use reflection to set headerStart
         Field headerStartField = ServerMessageBlock2.class.getDeclaredField("headerStart");
         headerStartField.setAccessible(true);

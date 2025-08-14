@@ -1,18 +1,13 @@
 package jcifs.smb1.smb1;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
-import org.mockito.ArgumentCaptor;
 
 import jcifs.smb1.util.Hexdump;
 
@@ -72,13 +67,13 @@ class Trans2QueryFSInformationTest {
         int level = 0x1234;
         Trans2QueryFSInformation cmd = new Trans2QueryFSInformation(level);
         byte[] buf = newBuffer(10);
-        
+
         int written = cmd.writeParametersWireFormat(buf, 0);
         assertEquals(2, written, "writeParametersWireFormat should write exactly 2 bytes");
-        
+
         // Verify little-endian encoding (0x1234 -> 0x34 0x12)
-        assertEquals((byte)0x34, buf[0], "First byte should be low byte of level");
-        assertEquals((byte)0x12, buf[1], "Second byte should be high byte of level");
+        assertEquals((byte) 0x34, buf[0], "First byte should be low byte of level");
+        assertEquals((byte) 0x12, buf[1], "Second byte should be high byte of level");
     }
 
     @Test

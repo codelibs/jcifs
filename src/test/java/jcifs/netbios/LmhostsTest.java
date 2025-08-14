@@ -5,11 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
@@ -17,7 +13,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringReader;
 import java.lang.reflect.Field;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 
@@ -55,9 +50,9 @@ class LmhostsTest {
     void testGetByNameWithNullLmHostsFile() {
         // Test when lmhosts file is not configured
         when(mockConfig.getLmHostsFileName()).thenReturn(null);
-        
+
         NbtAddress result = lmhosts.getByName("TEST_HOST", mockContext);
-        
+
         assertNull(result);
     }
 
@@ -65,9 +60,9 @@ class LmhostsTest {
     void testGetByNameWithNonExistentFile() {
         // Test with non-existent file
         when(mockConfig.getLmHostsFileName()).thenReturn("/non/existent/lmhosts");
-        
+
         NbtAddress result = lmhosts.getByName("TEST_HOST", mockContext);
-        
+
         assertNull(result);
     }
 
@@ -79,14 +74,14 @@ class LmhostsTest {
             writer.write("192.168.1.100 TESTHOST\n");
             writer.write("10.0.0.1      SERVER01\n");
         }
-        
+
         when(mockConfig.getLmHostsFileName()).thenReturn(lmhostsFile.getAbsolutePath());
-        
+
         // Test first host
         NbtAddress result = lmhosts.getByName("TESTHOST", mockContext);
         assertNotNull(result);
         assertEquals("TESTHOST", result.getHostName());
-        
+
         // Test second host
         result = lmhosts.getByName("SERVER01", mockContext);
         assertNotNull(result);
@@ -100,13 +95,13 @@ class LmhostsTest {
         try (FileWriter writer = new FileWriter(lmhostsFile)) {
             writer.write("192.168.1.100 TESTHOST\n");
         }
-        
+
         when(mockConfig.getLmHostsFileName()).thenReturn(lmhostsFile.getAbsolutePath());
-        
+
         // First call should read the file
         NbtAddress result1 = lmhosts.getByName("TESTHOST", mockContext);
         assertNotNull(result1);
-        
+
         // Second call should use cached data (file not modified)
         NbtAddress result2 = lmhosts.getByName("TESTHOST", mockContext);
         assertNotNull(result2);
@@ -120,23 +115,23 @@ class LmhostsTest {
         try (FileWriter writer = new FileWriter(lmhostsFile)) {
             writer.write("192.168.1.100 TESTHOST\n");
         }
-        
+
         when(mockConfig.getLmHostsFileName()).thenReturn(lmhostsFile.getAbsolutePath());
-        
+
         // First read
         NbtAddress result = lmhosts.getByName("TESTHOST", mockContext);
         assertNotNull(result);
-        
+
         // Modify file with a delay to ensure different lastModified time
         Thread.sleep(100);
         try (FileWriter writer = new FileWriter(lmhostsFile)) {
             writer.write("192.168.1.200 NEWHOST\n");
         }
-        
+
         // Should reload file and find new host
         result = lmhosts.getByName("NEWHOST", mockContext);
         assertNotNull(result);
-        
+
         // Old host should not be found
         result = lmhosts.getByName("TESTHOST", mockContext);
         assertNull(result);
@@ -152,9 +147,9 @@ class LmhostsTest {
             writer.write("   \n");
             writer.write("192.168.1.101 HOST2\n");
         }
-        
+
         when(mockConfig.getLmHostsFileName()).thenReturn(lmhostsFile.getAbsolutePath());
-        
+
         // Use getByName to trigger populate
         NbtAddress result = lmhosts.getByName("HOST1", mockContext);
         assertNotNull(result);
@@ -172,9 +167,9 @@ class LmhostsTest {
             writer.write("#192.168.1.101 COMMENTED_HOST\n");
             writer.write("192.168.1.102 HOST2\n");
         }
-        
+
         when(mockConfig.getLmHostsFileName()).thenReturn(lmhostsFile.getAbsolutePath());
-        
+
         // Use getByName to trigger populate
         NbtAddress result = lmhosts.getByName("HOST1", mockContext);
         assertNotNull(result);
@@ -194,9 +189,9 @@ class LmhostsTest {
             writer.write("255.255.255.255 HOST3\n");
             writer.write("10.0.0.1 HOST4\n");
         }
-        
+
         when(mockConfig.getLmHostsFileName()).thenReturn(lmhostsFile.getAbsolutePath());
-        
+
         // Use getByName to trigger populate
         assertNotNull(lmhosts.getByName("HOST1", mockContext));
         assertNotNull(lmhosts.getByName("HOST2", mockContext));
@@ -213,9 +208,9 @@ class LmhostsTest {
             writer.write("192.168.1.101\tHOST2\t\n");
             writer.write("192.168.1.102 \t HOST3 \t \n");
         }
-        
+
         when(mockConfig.getLmHostsFileName()).thenReturn(lmhostsFile.getAbsolutePath());
-        
+
         // Use getByName to trigger populate
         assertNotNull(lmhosts.getByName("HOST1", mockContext));
         assertNotNull(lmhosts.getByName("HOST2", mockContext));
@@ -226,24 +221,24 @@ class LmhostsTest {
     void testPopulateWithInclude() throws Exception {
         // Test that include directives are processed (even if the include fails)
         // The main file content should still be loaded
-        
+
         // Create a temporary lmhosts file with include directive
         File lmhostsFile = tempDir.resolve("lmhosts_include").toFile();
-        
+
         try (FileWriter writer = new FileWriter(lmhostsFile)) {
             // Write main content without include directive to simplify test
             writer.write("192.168.1.100 HOST1\n");
             writer.write("# Test comment\n");
             writer.write("192.168.1.101 HOST2\n");
         }
-        
+
         when(mockConfig.getLmHostsFileName()).thenReturn(lmhostsFile.getAbsolutePath());
-        
+
         // Use getByName to trigger populate
         NbtAddress result = lmhosts.getByName("HOST1", mockContext);
         assertNotNull(result);
         assertEquals("HOST1", result.getHostName());
-        
+
         result = lmhosts.getByName("HOST2", mockContext);
         assertNotNull(result);
         assertEquals("HOST2", result.getHostName());
@@ -259,9 +254,9 @@ class LmhostsTest {
             writer.write("#END_ALTERNATE\n");
             writer.write("192.168.1.101 HOST2\n");
         }
-        
+
         when(mockConfig.getLmHostsFileName()).thenReturn(lmhostsFile.getAbsolutePath());
-        
+
         // Use getByName to trigger populate
         // Both hosts should be added in this simple case
         assertNotNull(lmhosts.getByName("HOST1", mockContext));
@@ -273,19 +268,19 @@ class LmhostsTest {
         // Create a temporary lmhosts file with invalid IP formats
         File lmhostsFile = tempDir.resolve("lmhosts_invalid").toFile();
         try (FileWriter writer = new FileWriter(lmhostsFile)) {
-            writer.write("192.168 HOST1\n");  // Invalid IP - missing 2 octets (should be skipped)
+            writer.write("192.168 HOST1\n"); // Invalid IP - missing 2 octets (should be skipped)
             writer.write("192.168.1.100 VALIDHOST\n");
-            writer.write("not.an.ip HOST2\n");  // Invalid IP format
-            writer.write("192.168.1.256 HOST3\n");  // Invalid octet value > 255
+            writer.write("not.an.ip HOST2\n"); // Invalid IP format
+            writer.write("192.168.1.256 HOST3\n"); // Invalid octet value > 255
         }
-        
+
         when(mockConfig.getLmHostsFileName()).thenReturn(lmhostsFile.getAbsolutePath());
-        
+
         // Use getByName to trigger populate
         // Only valid host should be added
         NbtAddress validHost = lmhosts.getByName("VALIDHOST", mockContext);
         assertNotNull(validHost);
-        
+
         // Invalid entries should not be found or may have incorrect parsing
         // Note: The actual Lmhosts parser may accept "192.168.1" and parse it differently
         // than expected, so we're not asserting null for HOST1
@@ -299,9 +294,9 @@ class LmhostsTest {
         try (FileWriter writer = new FileWriter(lmhostsFile)) {
             writer.write("192.168.1.100 " + longHostname + "\n");
         }
-        
+
         when(mockConfig.getLmHostsFileName()).thenReturn(lmhostsFile.getAbsolutePath());
-        
+
         // Use getByName to trigger populate
         assertNotNull(lmhosts.getByName(longHostname, mockContext));
     }
@@ -311,9 +306,9 @@ class LmhostsTest {
         // Test the internal getByName method that takes a Name object
         Name name = new Name(mockConfig, "TESTHOST", 0x20, null);
         when(mockConfig.getLmHostsFileName()).thenReturn(null);
-        
+
         NbtAddress result = lmhosts.getByName(name, mockContext);
-        
+
         assertNull(result);
     }
 
@@ -327,9 +322,9 @@ class LmhostsTest {
             writer.write("192.168.255.255 HOST3\n");
             writer.write("10.20.30.40 HOST4\n");
         }
-        
+
         when(mockConfig.getLmHostsFileName()).thenReturn(lmhostsFile.getAbsolutePath());
-        
+
         // Use getByName to trigger populate
         assertNotNull(lmhosts.getByName("HOST1", mockContext));
         assertNotNull(lmhosts.getByName("HOST2", mockContext));
@@ -344,9 +339,9 @@ class LmhostsTest {
         try (FileWriter writer = new FileWriter(lmhostsFile)) {
             writer.write("192.168.1.100 hostname\n");
         }
-        
+
         when(mockConfig.getLmHostsFileName()).thenReturn(lmhostsFile.getAbsolutePath());
-        
+
         // Use getByName to trigger populate
         // Content is converted to uppercase internally
         assertNotNull(lmhosts.getByName("HOSTNAME", mockContext));
@@ -360,9 +355,9 @@ class LmhostsTest {
             writer.write("192.168.1.100 TESTHOST\n");
             writer.write("192.168.1.200 TESTHOST\n");
         }
-        
+
         when(mockConfig.getLmHostsFileName()).thenReturn(lmhostsFile.getAbsolutePath());
-        
+
         // Use getByName to trigger populate
         // Last entry should win
         NbtAddress result = lmhosts.getByName("TESTHOST", mockContext);
@@ -374,21 +369,21 @@ class LmhostsTest {
         // Create a file that exists but will cause an IOException when read
         File lmhostsFile = tempDir.resolve("lmhosts").toFile();
         lmhostsFile.createNewFile();
-        
+
         // Make file unreadable on Unix-like systems
         boolean isWindows = System.getProperty("os.name").toLowerCase().contains("windows");
         if (!isWindows) {
             assertTrue(lmhostsFile.setReadable(false));
         }
-        
+
         when(mockConfig.getLmHostsFileName()).thenReturn(lmhostsFile.getAbsolutePath());
-        
+
         if (!isWindows) {
             // Should handle IOException gracefully and return null
             NbtAddress result = lmhosts.getByName("ANYHOST", mockContext);
             assertNull(result);
         }
-        
+
         // Cleanup
         lmhostsFile.setReadable(true);
     }
@@ -396,19 +391,18 @@ class LmhostsTest {
     @Test
     void testPopulateDirectCall() throws Exception {
         // Test direct populate call for code coverage
-        String content = "192.168.1.100 HOST1\n" +
-                        "192.168.1.101 HOST2\n";
-        
+        String content = "192.168.1.100 HOST1\n" + "192.168.1.101 HOST2\n";
+
         lmhosts.populate(new StringReader(content), mockContext);
-        
+
         // Access the internal table to verify entries were added
         Field tableField = Lmhosts.class.getDeclaredField("table");
         tableField.setAccessible(true);
         Map<Name, NbtAddress> table = (Map<Name, NbtAddress>) tableField.get(lmhosts);
-        
+
         Name name1 = new Name(mockConfig, "HOST1", 0x20, null);
         Name name2 = new Name(mockConfig, "HOST2", 0x20, null);
-        
+
         assertNotNull(table.get(name1));
         assertNotNull(table.get(name2));
     }
@@ -416,15 +410,14 @@ class LmhostsTest {
     @Test
     void testPopulateWithIncludeDirective() throws Exception {
         // Test that #INCLUDE directive is handled (even if the include fails)
-        String content = "#INCLUDE \\\\server\\share\\lmhosts\n" +
-                        "192.168.1.100 MAINHOST\n";
-        
+        String content = "#INCLUDE \\\\server\\share\\lmhosts\n" + "192.168.1.100 MAINHOST\n";
+
         // Mock SmbFileInputStream to simulate include file
-        try (MockedConstruction<SmbFileInputStream> mockedConstruction = 
+        try (MockedConstruction<SmbFileInputStream> mockedConstruction =
                 Mockito.mockConstruction(SmbFileInputStream.class, (mock, context) -> {
                     // Mock the read method to return simple content
                     byte[] includeContent = "192.168.1.200 INCLUDEHOST\n".getBytes();
-                    int[] index = {0};
+                    int[] index = { 0 };
                     when(mock.read()).thenAnswer(inv -> {
                         if (index[0] < includeContent.length) {
                             return (int) includeContent[index[0]++] & 0xFF;
@@ -456,20 +449,20 @@ class LmhostsTest {
                         return toRead;
                     });
                 })) {
-            
+
             lmhosts.populate(new StringReader(content), mockContext);
-            
+
             // Verify include was attempted
             assertTrue(mockedConstruction.constructed().size() > 0);
-            
+
             // Access the internal table to verify main entry was added
             Field tableField = Lmhosts.class.getDeclaredField("table");
             tableField.setAccessible(true);
             Map<Name, NbtAddress> table = (Map<Name, NbtAddress>) tableField.get(lmhosts);
-            
+
             Name mainName = new Name(mockConfig, "MAINHOST", 0x20, null);
             assertNotNull(table.get(mainName));
-            
+
             // Included host should also be present
             Name includeName = new Name(mockConfig, "INCLUDEHOST", 0x20, null);
             assertNotNull(table.get(includeName));

@@ -1,11 +1,19 @@
 package jcifs.internal.smb2.nego;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.Date;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -13,7 +21,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -22,7 +29,6 @@ import jcifs.Configuration;
 import jcifs.DialectVersion;
 import jcifs.internal.CommonServerMessageBlock;
 import jcifs.internal.SMBProtocolDecodingException;
-import jcifs.internal.SmbNegotiationRequest;
 import jcifs.internal.SmbNegotiationResponse;
 import jcifs.internal.smb2.ServerMessageBlock2;
 import jcifs.internal.smb2.ServerMessageBlock2Response;
@@ -47,7 +53,7 @@ class Smb2NegotiateResponseTest {
         mockContext = mock(CIFSContext.class);
         mockRequest = mock(Smb2NegotiateRequest.class);
         response = new Smb2NegotiateResponse(mockConfig);
-        
+
         // Default configuration
         when(mockConfig.isDfsDisabled()).thenReturn(false);
         when(mockConfig.isEncryptionEnabled()).thenReturn(true);
@@ -271,8 +277,8 @@ class Smb2NegotiateResponseTest {
         setPrivateField(response, "commonCapabilities", 0x2F); // 0010 1111
 
         // Then
-        assertTrue(response.haveCapabilitiy(0x01));  // Has this bit
-        assertTrue(response.haveCapabilitiy(0x0F));  // Has all these bits
+        assertTrue(response.haveCapabilitiy(0x01)); // Has this bit
+        assertTrue(response.haveCapabilitiy(0x0F)); // Has all these bits
         assertFalse(response.haveCapabilitiy(0x10)); // Doesn't have this bit
         assertFalse(response.haveCapabilitiy(0x40)); // Doesn't have this bit
     }
@@ -339,16 +345,12 @@ class Smb2NegotiateResponseTest {
         // Setup valid request
         when(mockRequest.isSigningEnforced()).thenReturn(false);
         when(mockRequest.getCapabilities()).thenReturn(Smb2Constants.SMB2_GLOBAL_CAP_DFS);
-        when(mockRequest.getNegotiateContexts()).thenReturn(new NegotiateContextRequest[] {
-            createMockPreauthContext(),
-            createMockEncryptionContext()
-        });
+        when(mockRequest.getNegotiateContexts())
+                .thenReturn(new NegotiateContextRequest[] { createMockPreauthContext(), createMockEncryptionContext() });
 
         // Setup negotiate contexts
-        NegotiateContextResponse[] contexts = new NegotiateContextResponse[] {
-            createValidPreauthResponse(),
-            createValidEncryptionResponse()
-        };
+        NegotiateContextResponse[] contexts =
+                new NegotiateContextResponse[] { createValidPreauthResponse(), createValidEncryptionResponse() };
         setPrivateField(response, "negotiateContexts", contexts);
 
         // When
@@ -443,8 +445,8 @@ class Smb2NegotiateResponseTest {
         assertTrue(response.isSigningNegotiated());
 
         // Test both flags
-        setPrivateField(response, "securityMode", 
-            Smb2Constants.SMB2_NEGOTIATE_SIGNING_ENABLED | Smb2Constants.SMB2_NEGOTIATE_SIGNING_REQUIRED);
+        setPrivateField(response, "securityMode",
+                Smb2Constants.SMB2_NEGOTIATE_SIGNING_ENABLED | Smb2Constants.SMB2_NEGOTIATE_SIGNING_REQUIRED);
         assertTrue(response.isSigningEnabled());
         assertTrue(response.isSigningRequired());
         assertTrue(response.isSigningNegotiated());
@@ -520,16 +522,14 @@ class Smb2NegotiateResponseTest {
 
     @ParameterizedTest
     @DisplayName("Should throw exception for invalid structure size")
-    @ValueSource(ints = {0, 1, 64, 66, 128})
+    @ValueSource(ints = { 0, 1, 64, 66, 128 })
     void testReadBytesWireFormatInvalidStructureSize(int structureSize) {
         // Given
         byte[] buffer = new byte[256];
         SMBUtil.writeInt2(structureSize, buffer, 0);
 
         // When & Then
-        assertThrows(SMBProtocolDecodingException.class, 
-            () -> response.readBytesWireFormat(buffer, 0),
-            "Structure size is not 65");
+        assertThrows(SMBProtocolDecodingException.class, () -> response.readBytesWireFormat(buffer, 0), "Structure size is not 65");
     }
 
     @Test
@@ -564,14 +564,12 @@ class Smb2NegotiateResponseTest {
     @DisplayName("Should create correct context types")
     void testCreateContext() {
         // Test encryption context
-        NegotiateContextResponse enc = Smb2NegotiateResponse.createContext(
-            EncryptionNegotiateContext.NEGO_CTX_ENC_TYPE);
+        NegotiateContextResponse enc = Smb2NegotiateResponse.createContext(EncryptionNegotiateContext.NEGO_CTX_ENC_TYPE);
         assertNotNull(enc);
         assertTrue(enc instanceof EncryptionNegotiateContext);
 
         // Test preauth context
-        NegotiateContextResponse preauth = Smb2NegotiateResponse.createContext(
-            PreauthIntegrityNegotiateContext.NEGO_CTX_PREAUTH_TYPE);
+        NegotiateContextResponse preauth = Smb2NegotiateResponse.createContext(PreauthIntegrityNegotiateContext.NEGO_CTX_PREAUTH_TYPE);
         assertNotNull(preauth);
         assertTrue(preauth instanceof PreauthIntegrityNegotiateContext);
 
@@ -608,17 +606,13 @@ class Smb2NegotiateResponseTest {
         setResponseAsReceived(response);
         setPrivateField(response, "dialectRevision", 0x0311);
         setPrivateField(response, "capabilities", Smb2Constants.SMB2_GLOBAL_CAP_ENCRYPTION);
-        
-        when(mockRequest.getCapabilities()).thenReturn(Smb2Constants.SMB2_GLOBAL_CAP_ENCRYPTION);
-        when(mockRequest.getNegotiateContexts()).thenReturn(new NegotiateContextRequest[] {
-            createMockPreauthContext(),
-            createMockEncryptionContext()
-        });
 
-        NegotiateContextResponse[] contexts = new NegotiateContextResponse[] {
-            createValidPreauthResponse(),
-            createValidEncryptionResponse()
-        };
+        when(mockRequest.getCapabilities()).thenReturn(Smb2Constants.SMB2_GLOBAL_CAP_ENCRYPTION);
+        when(mockRequest.getNegotiateContexts())
+                .thenReturn(new NegotiateContextRequest[] { createMockPreauthContext(), createMockEncryptionContext() });
+
+        NegotiateContextResponse[] contexts =
+                new NegotiateContextResponse[] { createValidPreauthResponse(), createValidEncryptionResponse() };
         setPrivateField(response, "negotiateContexts", contexts);
 
         // When
@@ -651,17 +645,13 @@ class Smb2NegotiateResponseTest {
         // Given
         setResponseAsReceived(response);
         setPrivateField(response, "dialectRevision", 0x0311);
-        
-        NegotiateContextResponse[] contexts = new NegotiateContextResponse[] {
-            createValidPreauthResponse(),
-            createValidPreauthResponse() // Duplicate
+
+        NegotiateContextResponse[] contexts = new NegotiateContextResponse[] { createValidPreauthResponse(), createValidPreauthResponse() // Duplicate
         };
         setPrivateField(response, "negotiateContexts", contexts);
 
         when(mockRequest.getCapabilities()).thenReturn(0);
-        when(mockRequest.getNegotiateContexts()).thenReturn(new NegotiateContextRequest[] {
-            createMockPreauthContext()
-        });
+        when(mockRequest.getNegotiateContexts()).thenReturn(new NegotiateContextRequest[] { createMockPreauthContext() });
 
         // When
         boolean valid = response.isValid(mockContext, mockRequest);
@@ -677,19 +667,15 @@ class Smb2NegotiateResponseTest {
         setResponseAsReceived(response);
         setPrivateField(response, "dialectRevision", 0x0311);
         setPrivateField(response, "capabilities", Smb2Constants.SMB2_GLOBAL_CAP_ENCRYPTION);
-        
-        NegotiateContextResponse[] contexts = new NegotiateContextResponse[] {
-            createValidPreauthResponse(),
-            createValidEncryptionResponse(),
-            createValidEncryptionResponse() // Duplicate
+
+        NegotiateContextResponse[] contexts = new NegotiateContextResponse[] { createValidPreauthResponse(),
+                createValidEncryptionResponse(), createValidEncryptionResponse() // Duplicate
         };
         setPrivateField(response, "negotiateContexts", contexts);
 
         when(mockRequest.getCapabilities()).thenReturn(Smb2Constants.SMB2_GLOBAL_CAP_ENCRYPTION);
-        when(mockRequest.getNegotiateContexts()).thenReturn(new NegotiateContextRequest[] {
-            createMockPreauthContext(),
-            createMockEncryptionContext()
-        });
+        when(mockRequest.getNegotiateContexts())
+                .thenReturn(new NegotiateContextRequest[] { createMockPreauthContext(), createMockEncryptionContext() });
 
         // When
         boolean valid = response.isValid(mockContext, mockRequest);
@@ -704,18 +690,12 @@ class Smb2NegotiateResponseTest {
         // Given
         setResponseAsReceived(response);
         setPrivateField(response, "dialectRevision", 0x0311);
-        
-        NegotiateContextResponse[] contexts = new NegotiateContextResponse[] {
-            null,
-            createValidPreauthResponse(),
-            null
-        };
+
+        NegotiateContextResponse[] contexts = new NegotiateContextResponse[] { null, createValidPreauthResponse(), null };
         setPrivateField(response, "negotiateContexts", contexts);
 
         when(mockRequest.getCapabilities()).thenReturn(0);
-        when(mockRequest.getNegotiateContexts()).thenReturn(new NegotiateContextRequest[] {
-            createMockPreauthContext()
-        });
+        when(mockRequest.getNegotiateContexts()).thenReturn(new NegotiateContextRequest[] { createMockPreauthContext() });
 
         // When
         boolean valid = response.isValid(mockContext, mockRequest);
@@ -733,7 +713,7 @@ class Smb2NegotiateResponseTest {
         setPrivateField(response, "maxReadSize", 1048576);
         setPrivateField(response, "maxWriteSize", 1048576);
         setPrivateField(response, "maxTransactSize", 1048576);
-        
+
         when(mockConfig.getTransactionBufferSize()).thenReturn(65536);
         when(mockConfig.getReceiveBufferSize()).thenReturn(32768);
         when(mockConfig.getSendBufferSize()).thenReturn(32768);
@@ -753,22 +733,17 @@ class Smb2NegotiateResponseTest {
     @ParameterizedTest
     @DisplayName("Should validate different dialect versions")
     @MethodSource("provideDialectVersions")
-    void testDifferentDialectVersions(int dialectValue, DialectVersion expectedDialect, 
-                                     boolean shouldBeValid) throws Exception {
+    void testDifferentDialectVersions(int dialectValue, DialectVersion expectedDialect, boolean shouldBeValid) throws Exception {
         // Given
         setResponseAsReceived(response);
         setPrivateField(response, "dialectRevision", dialectValue);
         when(mockRequest.getCapabilities()).thenReturn(0);
-        
+
         // For SMB 3.1.1, we need negotiate contexts
         if (dialectValue == 0x0311) {
-            NegotiateContextResponse[] contexts = new NegotiateContextResponse[] {
-                createValidPreauthResponse()
-            };
+            NegotiateContextResponse[] contexts = new NegotiateContextResponse[] { createValidPreauthResponse() };
             setPrivateField(response, "negotiateContexts", contexts);
-            when(mockRequest.getNegotiateContexts()).thenReturn(new NegotiateContextRequest[] {
-                createMockPreauthContext()
-            });
+            when(mockRequest.getNegotiateContexts()).thenReturn(new NegotiateContextRequest[] { createMockPreauthContext() });
         }
 
         // When
@@ -782,14 +757,10 @@ class Smb2NegotiateResponseTest {
     }
 
     private static Stream<Arguments> provideDialectVersions() {
-        return Stream.of(
-            Arguments.of(0x0202, DialectVersion.SMB202, true),
-            Arguments.of(0x0210, DialectVersion.SMB210, true),
-            Arguments.of(0x0300, DialectVersion.SMB300, true),
-            Arguments.of(0x0302, DialectVersion.SMB302, true),
-            Arguments.of(0x0311, DialectVersion.SMB311, true),
-            Arguments.of(0xFFFF, null, false), // SMB2_DIALECT_ANY
-            Arguments.of(0x9999, null, false)  // Unknown dialect
+        return Stream.of(Arguments.of(0x0202, DialectVersion.SMB202, true), Arguments.of(0x0210, DialectVersion.SMB210, true),
+                Arguments.of(0x0300, DialectVersion.SMB300, true), Arguments.of(0x0302, DialectVersion.SMB302, true),
+                Arguments.of(0x0311, DialectVersion.SMB311, true), Arguments.of(0xFFFF, null, false), // SMB2_DIALECT_ANY
+                Arguments.of(0x9999, null, false) // Unknown dialect
         );
     }
 
@@ -810,131 +781,130 @@ class Smb2NegotiateResponseTest {
     private byte[] createValidNegotiateResponseBuffer() {
         byte[] buffer = new byte[256];
         int offset = 0;
-        
+
         // Structure size (65)
         SMBUtil.writeInt2(65, buffer, offset);
-        
+
         // Security mode
         SMBUtil.writeInt2(Smb2Constants.SMB2_NEGOTIATE_SIGNING_REQUIRED, buffer, offset + 2);
-        
+
         // Dialect revision
         SMBUtil.writeInt2(0x0311, buffer, offset + 4);
-        
+
         // Negotiate context count
         SMBUtil.writeInt2(0, buffer, offset + 6);
-        
+
         // Server GUID (16 bytes)
         for (int i = 0; i < 16; i++) {
             buffer[offset + 8 + i] = (byte) i;
         }
-        
+
         // Capabilities
         SMBUtil.writeInt4(Smb2Constants.SMB2_GLOBAL_CAP_DFS, buffer, offset + 24);
-        
+
         // Max transact size
         SMBUtil.writeInt4(1048576, buffer, offset + 28);
-        
+
         // Max read size
         SMBUtil.writeInt4(1048576, buffer, offset + 32);
-        
+
         // Max write size
         SMBUtil.writeInt4(1048576, buffer, offset + 36);
-        
+
         // System time
         SMBUtil.writeTime(System.currentTimeMillis(), buffer, offset + 40);
-        
+
         // Server start time
         SMBUtil.writeTime(System.currentTimeMillis() - 3600000, buffer, offset + 48);
-        
+
         // Security buffer offset and length
         SMBUtil.writeInt2(128, buffer, offset + 56); // Offset
-        SMBUtil.writeInt2(0, buffer, offset + 58);   // Length
-        
+        SMBUtil.writeInt2(0, buffer, offset + 58); // Length
+
         // Negotiate context offset
         SMBUtil.writeInt4(0, buffer, offset + 60);
-        
+
         return buffer;
     }
 
     private byte[] createValidNegotiateResponseBufferWithContexts() {
         byte[] buffer = new byte[512];
         int offset = 0;
-        
+
         // Structure size (65)
         SMBUtil.writeInt2(65, buffer, offset);
-        
+
         // Security mode
         SMBUtil.writeInt2(Smb2Constants.SMB2_NEGOTIATE_SIGNING_REQUIRED, buffer, offset + 2);
-        
+
         // Dialect revision
         SMBUtil.writeInt2(0x0311, buffer, offset + 4);
-        
+
         // Negotiate context count
         SMBUtil.writeInt2(2, buffer, offset + 6);
-        
+
         // Server GUID (16 bytes)
         for (int i = 0; i < 16; i++) {
             buffer[offset + 8 + i] = (byte) i;
         }
-        
+
         // Capabilities
-        SMBUtil.writeInt4(Smb2Constants.SMB2_GLOBAL_CAP_DFS | Smb2Constants.SMB2_GLOBAL_CAP_ENCRYPTION, 
-                         buffer, offset + 24);
-        
+        SMBUtil.writeInt4(Smb2Constants.SMB2_GLOBAL_CAP_DFS | Smb2Constants.SMB2_GLOBAL_CAP_ENCRYPTION, buffer, offset + 24);
+
         // Max transact size
         SMBUtil.writeInt4(1048576, buffer, offset + 28);
-        
+
         // Max read size
         SMBUtil.writeInt4(1048576, buffer, offset + 32);
-        
+
         // Max write size
         SMBUtil.writeInt4(1048576, buffer, offset + 36);
-        
+
         // System time
         SMBUtil.writeTime(System.currentTimeMillis(), buffer, offset + 40);
-        
+
         // Server start time
         SMBUtil.writeTime(System.currentTimeMillis() - 3600000, buffer, offset + 48);
-        
+
         // Security buffer offset and length
         SMBUtil.writeInt2(128, buffer, offset + 56); // Offset
-        SMBUtil.writeInt2(0, buffer, offset + 58);   // Length
-        
+        SMBUtil.writeInt2(0, buffer, offset + 58); // Length
+
         // Negotiate context offset
         SMBUtil.writeInt4(144, buffer, offset + 60); // Point to contexts
-        
+
         // Add negotiate contexts at offset 144
         int ctxOffset = 144;
-        
+
         // Preauth integrity context
         SMBUtil.writeInt2(PreauthIntegrityNegotiateContext.NEGO_CTX_PREAUTH_TYPE, buffer, ctxOffset);
         SMBUtil.writeInt2(38, buffer, ctxOffset + 2); // Data length
         ctxOffset += 8; // Skip reserved
-        
+
         // Hash algorithm count and salt length
         SMBUtil.writeInt2(1, buffer, ctxOffset);
         SMBUtil.writeInt2(32, buffer, ctxOffset + 2);
         SMBUtil.writeInt2(PreauthIntegrityNegotiateContext.HASH_ALGO_SHA512, buffer, ctxOffset + 4);
         ctxOffset += 6;
-        
+
         // Salt (32 bytes)
         for (int i = 0; i < 32; i++) {
             buffer[ctxOffset + i] = (byte) i;
         }
         ctxOffset += 32;
-        
+
         // Padding for 8-byte alignment
         ctxOffset = (ctxOffset + 7) & ~7;
-        
+
         // Encryption context
         SMBUtil.writeInt2(EncryptionNegotiateContext.NEGO_CTX_ENC_TYPE, buffer, ctxOffset);
         SMBUtil.writeInt2(4, buffer, ctxOffset + 2); // Data length
         ctxOffset += 8; // Skip reserved
-        
+
         // Cipher count and cipher
         SMBUtil.writeInt2(1, buffer, ctxOffset);
         SMBUtil.writeInt2(EncryptionNegotiateContext.CIPHER_AES128_GCM, buffer, ctxOffset + 2);
-        
+
         return buffer;
     }
 
@@ -951,10 +921,8 @@ class Smb2NegotiateResponseTest {
     private NegotiateContextRequest createMockEncryptionContext() {
         EncryptionNegotiateContext ctx = new EncryptionNegotiateContext();
         try {
-            setPrivateField(ctx, "ciphers", new int[] { 
-                EncryptionNegotiateContext.CIPHER_AES128_GCM,
-                EncryptionNegotiateContext.CIPHER_AES128_CCM
-            });
+            setPrivateField(ctx, "ciphers",
+                    new int[] { EncryptionNegotiateContext.CIPHER_AES128_GCM, EncryptionNegotiateContext.CIPHER_AES128_CCM });
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

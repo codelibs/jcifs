@@ -1,15 +1,15 @@
 package jcifs.smb1.smb1;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-import jcifs.smb1.util.Hexdump;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.reflect.Field;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import jcifs.smb1.util.Hexdump;
 
 public class SmbComDeleteTest {
 
@@ -71,12 +71,12 @@ public class SmbComDeleteTest {
         // Test the string representation of the object
         String result = smbComDelete.toString();
         assertNotNull(result);
-        
+
         // Verify the result contains expected components
         assertTrue(result.startsWith("SmbComDelete["));
         assertTrue(result.contains("searchAttributes=0x"));
         assertTrue(result.contains("fileName=" + TEST_FILE_NAME));
-        
+
         // Get private searchAttributes field to verify the hex value
         int searchAttributes = getSearchAttributes(smbComDelete);
         String expectedSearchAttributes = "searchAttributes=0x" + Hexdump.toHexString(searchAttributes, 4);

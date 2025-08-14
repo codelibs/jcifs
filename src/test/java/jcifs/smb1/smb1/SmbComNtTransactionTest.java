@@ -1,12 +1,9 @@
 package jcifs.smb1.smb1;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import jcifs.smb1.smb1.SmbComNtTransaction;
-import jcifs.smb1.smb1.ServerMessageBlock;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 class SmbComNtTransactionTest {
 
@@ -91,12 +88,15 @@ class SmbComNtTransactionTest {
 
         // Verify some key values
         assertEquals(smbComNtTransaction.maxSetupCount, dst[0], "maxSetupCount should be written correctly");
-        assertEquals(smbComNtTransaction.totalParameterCount, SmbComTransaction.readInt4(dst, 3), "totalParameterCount should be written correctly");
+        assertEquals(smbComNtTransaction.totalParameterCount, SmbComTransaction.readInt4(dst, 3),
+                "totalParameterCount should be written correctly");
         assertEquals(smbComNtTransaction.totalDataCount, SmbComTransaction.readInt4(dst, 7), "totalDataCount should be written correctly");
-        assertEquals(smbComNtTransaction.maxParameterCount, SmbComTransaction.readInt4(dst, 11), "maxParameterCount should be written correctly");
+        assertEquals(smbComNtTransaction.maxParameterCount, SmbComTransaction.readInt4(dst, 11),
+                "maxParameterCount should be written correctly");
         assertEquals(smbComNtTransaction.maxDataCount, SmbComTransaction.readInt4(dst, 15), "maxDataCount should be written correctly");
         assertEquals(smbComNtTransaction.parameterCount, SmbComTransaction.readInt4(dst, 19), "parameterCount should be written correctly");
-        assertEquals(smbComNtTransaction.parameterOffset, SmbComTransaction.readInt4(dst, 23), "parameterOffset should be written correctly");
+        assertEquals(smbComNtTransaction.parameterOffset, SmbComTransaction.readInt4(dst, 23),
+                "parameterOffset should be written correctly");
         assertEquals(smbComNtTransaction.dataCount, SmbComTransaction.readInt4(dst, 27), "dataCount should be written correctly");
         assertEquals(smbComNtTransaction.dataOffset, SmbComTransaction.readInt4(dst, 31), "dataOffset should be written correctly");
         assertEquals(smbComNtTransaction.setupCount, dst[35], "setupCount should be written correctly");
@@ -126,14 +126,18 @@ class SmbComNtTransactionTest {
 
         // Verify some key values
         assertEquals(0, dst[0], "First byte should be 0 for secondary transaction");
-        assertEquals(smbComNtTransaction.totalParameterCount, SmbComTransaction.readInt4(dst, 3), "totalParameterCount should be written correctly");
+        assertEquals(smbComNtTransaction.totalParameterCount, SmbComTransaction.readInt4(dst, 3),
+                "totalParameterCount should be written correctly");
         assertEquals(smbComNtTransaction.totalDataCount, SmbComTransaction.readInt4(dst, 7), "totalDataCount should be written correctly");
         assertEquals(smbComNtTransaction.parameterCount, SmbComTransaction.readInt4(dst, 11), "parameterCount should be written correctly");
-        assertEquals(smbComNtTransaction.parameterOffset, SmbComTransaction.readInt4(dst, 15), "parameterOffset should be written correctly");
-        assertEquals(smbComNtTransaction.parameterDisplacement, SmbComTransaction.readInt4(dst, 19), "parameterDisplacement should be written correctly");
+        assertEquals(smbComNtTransaction.parameterOffset, SmbComTransaction.readInt4(dst, 15),
+                "parameterOffset should be written correctly");
+        assertEquals(smbComNtTransaction.parameterDisplacement, SmbComTransaction.readInt4(dst, 19),
+                "parameterDisplacement should be written correctly");
         assertEquals(smbComNtTransaction.dataCount, SmbComTransaction.readInt4(dst, 23), "dataCount should be written correctly");
         assertEquals(smbComNtTransaction.dataOffset, SmbComTransaction.readInt4(dst, 27), "dataOffset should be written correctly");
-        assertEquals(smbComNtTransaction.dataDisplacement, SmbComTransaction.readInt4(dst, 31), "dataDisplacement should be written correctly");
+        assertEquals(smbComNtTransaction.dataDisplacement, SmbComTransaction.readInt4(dst, 31),
+                "dataDisplacement should be written correctly");
         assertEquals(0, dst[35], "Reserved byte should be 0");
     }
 
@@ -145,7 +149,6 @@ class SmbComNtTransactionTest {
         smbComNtTransaction.dataCount = 0;
         smbComNtTransaction.parameterOffset = 100;
         smbComNtTransaction.dataOffset = 200;
-
 
         byte[] dst = new byte[100];
         smbComNtTransaction.writeParameterWordsWireFormat(dst, 0);

@@ -1,7 +1,13 @@
 package jcifs.internal;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -32,7 +38,7 @@ class RequestWithPathTest {
         // Test with mock
         String expectedPath = "/share/folder/file.txt";
         when(requestWithPath.getPath()).thenReturn(expectedPath);
-        
+
         assertEquals(expectedPath, requestWithPath.getPath());
         verify(requestWithPath, times(1)).getPath();
 
@@ -47,7 +53,7 @@ class RequestWithPathTest {
         // Test with mock
         String newPath = "/new/path/file.txt";
         doNothing().when(requestWithPath).setPath(newPath);
-        
+
         requestWithPath.setPath(newPath);
         verify(requestWithPath, times(1)).setPath(newPath);
 
@@ -62,7 +68,7 @@ class RequestWithPathTest {
         // Test with mock
         String expectedServer = "server.example.com";
         when(requestWithPath.getServer()).thenReturn(expectedServer);
-        
+
         assertEquals(expectedServer, requestWithPath.getServer());
         verify(requestWithPath, times(1)).getServer();
 
@@ -77,7 +83,7 @@ class RequestWithPathTest {
         // Test with mock
         String expectedDomain = "WORKGROUP";
         when(requestWithPath.getDomain()).thenReturn(expectedDomain);
-        
+
         assertEquals(expectedDomain, requestWithPath.getDomain());
         verify(requestWithPath, times(1)).getDomain();
 
@@ -92,7 +98,7 @@ class RequestWithPathTest {
         // Test with mock
         String expectedUNCPath = "\\\\server\\share\\folder\\file.txt";
         when(requestWithPath.getFullUNCPath()).thenReturn(expectedUNCPath);
-        
+
         assertEquals(expectedUNCPath, requestWithPath.getFullUNCPath());
         verify(requestWithPath, times(1)).getFullUNCPath();
 
@@ -108,10 +114,10 @@ class RequestWithPathTest {
         String domain = "TESTDOMAIN";
         String server = "testserver";
         String fullPath = "\\\\testserver\\share\\test";
-        
+
         doNothing().when(requestWithPath).setFullUNCPath(domain, server, fullPath);
         requestWithPath.setFullUNCPath(domain, server, fullPath);
-        
+
         verify(requestWithPath, times(1)).setFullUNCPath(domain, server, fullPath);
 
         // Test with implementation
@@ -128,7 +134,7 @@ class RequestWithPathTest {
         doNothing().when(requestWithPath).setResolveInDfs(true);
         requestWithPath.setResolveInDfs(true);
         verify(requestWithPath, times(1)).setResolveInDfs(true);
-        
+
         doNothing().when(requestWithPath).setResolveInDfs(false);
         requestWithPath.setResolveInDfs(false);
         verify(requestWithPath, times(1)).setResolveInDfs(false);
@@ -136,7 +142,7 @@ class RequestWithPathTest {
         // Test with implementation
         testImplementation.setResolveInDfs(true);
         assertTrue(testImplementation.isResolveInDfs());
-        
+
         testImplementation.setResolveInDfs(false);
         assertFalse(testImplementation.isResolveInDfs());
     }
@@ -148,7 +154,7 @@ class RequestWithPathTest {
         when(requestWithPath.isResolveInDfs()).thenReturn(true);
         assertTrue(requestWithPath.isResolveInDfs());
         verify(requestWithPath, times(1)).isResolveInDfs();
-        
+
         when(requestWithPath.isResolveInDfs()).thenReturn(false);
         assertFalse(requestWithPath.isResolveInDfs());
         verify(requestWithPath, times(2)).isResolveInDfs();
@@ -156,7 +162,7 @@ class RequestWithPathTest {
         // Test with implementation
         testImplementation.setResolveInDfs(true);
         assertTrue(testImplementation.isResolveInDfs());
-        
+
         testImplementation.setResolveInDfs(false);
         assertFalse(testImplementation.isResolveInDfs());
     }
@@ -167,7 +173,7 @@ class RequestWithPathTest {
         // Test null path
         testImplementation.setPath(null);
         assertNull(testImplementation.getPath());
-        
+
         // Test null UNC path components
         testImplementation.setFullUNCPath(null, null, null);
         assertNull(testImplementation.getDomain());
@@ -181,7 +187,7 @@ class RequestWithPathTest {
         // Test empty path
         testImplementation.setPath("");
         assertEquals("", testImplementation.getPath());
-        
+
         // Test empty UNC path components
         testImplementation.setFullUNCPath("", "", "");
         assertEquals("", testImplementation.getDomain());
@@ -196,7 +202,7 @@ class RequestWithPathTest {
         String specialPath = "/share/folder name/file with spaces & special!@#$%.txt";
         testImplementation.setPath(specialPath);
         assertEquals(specialPath, testImplementation.getPath());
-        
+
         // Test UNC path with special characters
         String specialUNCPath = "\\\\server\\share\\folder with spaces\\file!@#$.txt";
         testImplementation.setFullUNCPath("DOMAIN", "server", specialUNCPath);
@@ -210,13 +216,13 @@ class RequestWithPathTest {
         String standardUNC = "\\\\server\\share\\folder\\file.txt";
         testImplementation.setFullUNCPath("DOMAIN", "server", standardUNC);
         assertEquals(standardUNC, testImplementation.getFullUNCPath());
-        
+
         // UNC path with IP address
         String ipUNC = "\\\\192.168.1.100\\share\\folder\\file.txt";
         testImplementation.setFullUNCPath("WORKGROUP", "192.168.1.100", ipUNC);
         assertEquals(ipUNC, testImplementation.getFullUNCPath());
         assertEquals("192.168.1.100", testImplementation.getServer());
-        
+
         // UNC path with FQDN
         String fqdnUNC = "\\\\server.example.com\\share\\folder\\file.txt";
         testImplementation.setFullUNCPath("EXAMPLE", "server.example.com", fqdnUNC);
@@ -229,15 +235,15 @@ class RequestWithPathTest {
     void testResolveInDfsToggle() {
         // Initial state should be false
         assertFalse(testImplementation.isResolveInDfs());
-        
+
         // Toggle to true
         testImplementation.setResolveInDfs(true);
         assertTrue(testImplementation.isResolveInDfs());
-        
+
         // Toggle back to false
         testImplementation.setResolveInDfs(false);
         assertFalse(testImplementation.isResolveInDfs());
-        
+
         // Multiple toggles
         for (int i = 0; i < 10; i++) {
             boolean expectedValue = (i % 2 == 0);

@@ -1,10 +1,20 @@
 package jcifs.smb;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Field;
-import java.net.InetAddress;
 import java.net.Socket;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -40,9 +50,12 @@ import jcifs.util.transport.Request;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class SmbTransportImplTest {
 
-    @Mock private CIFSContext ctx;
-    @Mock private Configuration cfg;
-    @Mock private Address address;
+    @Mock
+    private CIFSContext ctx;
+    @Mock
+    private Configuration cfg;
+    @Mock
+    private Address address;
 
     private SmbTransportImpl transport;
 
@@ -83,7 +96,7 @@ class SmbTransportImplTest {
             throw new RuntimeException(e);
         }
     }
-    
+
     // Helper: find field in class hierarchy
     private static Field findField(Class<?> clazz, String name) throws NoSuchFieldException {
         Class<?> current = clazz;
@@ -213,9 +226,9 @@ class SmbTransportImplTest {
         // SMB1 negotiation with server data
         SmbComNegotiateResponse smb1 = new SmbComNegotiateResponse(ctx);
         ServerData sd = smb1.getServerData();
-        sd.encryptionKey = new byte[] {1,2,3};
+        sd.encryptionKey = new byte[] { 1, 2, 3 };
         setField(transport, "negotiated", smb1);
-        assertArrayEquals(new byte[] {1,2,3}, transport.getServerEncryptionKey());
+        assertArrayEquals(new byte[] { 1, 2, 3 }, transport.getServerEncryptionKey());
 
         // SMB2 negotiation never exposes key via this API
         setField(transport, "negotiated", new Smb2NegotiateResponse(cfg));
@@ -255,17 +268,17 @@ class SmbTransportImplTest {
             public String getRemoteHostName() {
                 return "test";
             }
-            
+
             @Override
             public Address getRemoteAddress() {
                 return mock(Address.class);
             }
-            
+
             @Override
             public CIFSContext getContext() {
                 return mock(CIFSContext.class);
             }
-            
+
             @Override
             public <T extends SmbTransport> T unwrap(Class<T> type) {
                 if (type.isInstance(this)) {
@@ -273,7 +286,7 @@ class SmbTransportImplTest {
                 }
                 throw new ClassCastException("Cannot unwrap to " + type.getName());
             }
-            
+
             @Override
             public void close() {
                 // no-op for test
@@ -309,9 +322,7 @@ class SmbTransportImplTest {
     @Test
     @DisplayName("DFS referrals: invalid double-slash prefix triggers exception")
     void dfsReferrals_invalidPath() {
-        CIFSException ex = assertThrows(CIFSException.class, () ->
-            transport.getDfsReferrals(ctx, "\\\\server\\share", null, null, 1)
-        );
+        CIFSException ex = assertThrows(CIFSException.class, () -> transport.getDfsReferrals(ctx, "\\\\server\\share", null, null, 1));
         assertTrue(ex.getMessage().contains("double slash"));
     }
 
@@ -322,15 +333,11 @@ class SmbTransportImplTest {
         @DisplayName("calculatePreauthHash rejects non-SMB2 or missing negotiation")
         void preauthHash_rejectsWhenUnsupported() {
             // Not SMB2
-            assertThrows(SmbUnsupportedOperationException.class, () ->
-                transport.calculatePreauthHash(new byte[] {1}, 0, 1, null)
-            );
+            assertThrows(SmbUnsupportedOperationException.class, () -> transport.calculatePreauthHash(new byte[] { 1 }, 0, 1, null));
 
             // SMB2 flag set but no negotiation
             setField(transport, "smb2", true);
-            assertThrows(SmbUnsupportedOperationException.class, () ->
-                transport.calculatePreauthHash(new byte[] {1}, 0, 1, null)
-            );
+            assertThrows(SmbUnsupportedOperationException.class, () -> transport.calculatePreauthHash(new byte[] { 1 }, 0, 1, null));
         }
 
         @Test
@@ -341,9 +348,7 @@ class SmbTransportImplTest {
             // selectedDialect: SMB300
             setField(nego, "selectedDialect", DialectVersion.SMB300);
             setField(transport, "negotiated", nego);
-            assertThrows(SmbUnsupportedOperationException.class, () ->
-                transport.calculatePreauthHash(new byte[] {1,2,3}, 0, 3, null)
-            );
+            assertThrows(SmbUnsupportedOperationException.class, () -> transport.calculatePreauthHash(new byte[] { 1, 2, 3 }, 0, 3, null));
         }
 
         @Test
@@ -355,12 +360,12 @@ class SmbTransportImplTest {
             setField(nego, "selectedPreauthHash", 1); // 1 => SHA-512
             setField(transport, "negotiated", nego);
 
-            byte[] input = new byte[] {10,20,30,40};
+            byte[] input = new byte[] { 10, 20, 30, 40 };
             byte[] hash1 = transport.calculatePreauthHash(input, 0, input.length, null);
             assertNotNull(hash1);
             assertEquals(64, hash1.length, "SHA-512 size");
 
-            byte[] hash2 = transport.calculatePreauthHash(new byte[] {50}, 0, 1, hash1);
+            byte[] hash2 = transport.calculatePreauthHash(new byte[] { 50 }, 0, 1, hash1);
             assertNotNull(hash2);
             assertEquals(64, hash2.length);
             assertNotEquals(new String(hash1), new String(hash2), "Chained hash should differ");
@@ -369,9 +374,7 @@ class SmbTransportImplTest {
         @Test
         @DisplayName("createEncryptionContext rejects when SMB2/3 not negotiated")
         void createEncryptionContext_rejects_noNegotiation() {
-            assertThrows(SmbUnsupportedOperationException.class, () ->
-                transport.createEncryptionContext(new byte[] {1}, null)
-            );
+            assertThrows(SmbUnsupportedOperationException.class, () -> transport.createEncryptionContext(new byte[] { 1 }, null));
         }
 
         @Test
@@ -381,9 +384,7 @@ class SmbTransportImplTest {
             Smb2NegotiateResponse nego = new Smb2NegotiateResponse(cfg);
             setField(nego, "selectedDialect", DialectVersion.SMB210);
             setField(transport, "negotiated", nego);
-            assertThrows(SmbUnsupportedOperationException.class, () ->
-                transport.createEncryptionContext(new byte[] {1,2,3,4}, null)
-            );
+            assertThrows(SmbUnsupportedOperationException.class, () -> transport.createEncryptionContext(new byte[] { 1, 2, 3, 4 }, null));
         }
 
         @Test

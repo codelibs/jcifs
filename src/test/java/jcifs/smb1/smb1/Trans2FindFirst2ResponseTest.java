@@ -1,12 +1,15 @@
 package jcifs.smb1.smb1;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jcifs.smb.SmbFile;
 
@@ -54,22 +57,13 @@ class Trans2FindFirst2ResponseTest {
         info.fileNameLength = 8;
         info.eaSize = 0;
         info.shortNameLength = 8;
-        
-        String expected = "SmbFindFileBothDirectoryInfo[" +
-                "nextEntryOffset=" + info.nextEntryOffset +
-                ",fileIndex=" + info.fileIndex +
-                ",creationTime=" + new Date(info.creationTime) +
-                ",lastAccessTime=" + new Date(info.lastAccessTime) +
-                ",lastWriteTime=" + new Date(info.lastWriteTime) +
-                ",changeTime=" + new Date(info.changeTime) +
-                ",endOfFile=" + info.endOfFile +
-                ",allocationSize=" + info.allocationSize +
-                ",extFileAttributes=" + info.extFileAttributes +
-                ",fileNameLength=" + info.fileNameLength +
-                ",eaSize=" + info.eaSize +
-                ",shortNameLength=" + info.shortNameLength +
-                ",shortName=" + info.shortName +
-                ",filename=" + info.filename + "]";
+
+        String expected = "SmbFindFileBothDirectoryInfo[" + "nextEntryOffset=" + info.nextEntryOffset + ",fileIndex=" + info.fileIndex
+                + ",creationTime=" + new Date(info.creationTime) + ",lastAccessTime=" + new Date(info.lastAccessTime) + ",lastWriteTime="
+                + new Date(info.lastWriteTime) + ",changeTime=" + new Date(info.changeTime) + ",endOfFile=" + info.endOfFile
+                + ",allocationSize=" + info.allocationSize + ",extFileAttributes=" + info.extFileAttributes + ",fileNameLength="
+                + info.fileNameLength + ",eaSize=" + info.eaSize + ",shortNameLength=" + info.shortNameLength + ",shortName="
+                + info.shortName + ",filename=" + info.filename + "]";
         assertEquals(expected, info.toString());
     }
 
@@ -93,7 +87,7 @@ class Trans2FindFirst2ResponseTest {
         // The method should remove the null terminator
         assertEquals(expected, result.substring(0, expected.length()));
     }
-    
+
     @Test
     void testReadString_Oem_NoNullTerminator() {
         response.useUnicode = false;
@@ -127,7 +121,7 @@ class Trans2FindFirst2ResponseTest {
         assertEquals(3, response.eaErrorOffset);
         assertEquals(4, response.lastNameOffset);
     }
-    
+
     @Test
     void testReadParametersWireFormat_FindNext2() {
         // In FindNext2, sid is not read
@@ -156,7 +150,7 @@ class Trans2FindFirst2ResponseTest {
         response.numEntries = 1;
         response.lastNameOffset = 94; // Pointing to the start of the filename
         response.useUnicode = false; // Use OEM for simplicity
-        
+
         byte[] buffer = new byte[120];
         int bufferIndex = 0;
 
@@ -167,11 +161,11 @@ class Trans2FindFirst2ResponseTest {
         writeTime(1672617600000L, buffer, bufferIndex + 24); // lastWriteTime
         writeInt8(2048, buffer, bufferIndex + 40); // endOfFile
         writeInt4(SmbFile.ATTR_DIRECTORY, buffer, bufferIndex + 56); // extFileAttributes
-        
+
         String filename = "directory1";
         byte[] filenameBytes = filename.getBytes(StandardCharsets.UTF_8);
         writeInt4(filenameBytes.length, buffer, bufferIndex + 60); // fileNameLength
-        
+
         // Copy filename into buffer at offset 94
         System.arraycopy(filenameBytes, 0, buffer, 94, filenameBytes.length);
 
@@ -180,8 +174,9 @@ class Trans2FindFirst2ResponseTest {
 
         assertEquals(response.dataCount, bytesRead);
         assertEquals(1, response.results.length);
-        
-        Trans2FindFirst2Response.SmbFindFileBothDirectoryInfo info = (Trans2FindFirst2Response.SmbFindFileBothDirectoryInfo) response.results[0];
+
+        Trans2FindFirst2Response.SmbFindFileBothDirectoryInfo info =
+                (Trans2FindFirst2Response.SmbFindFileBothDirectoryInfo) response.results[0];
         assertEquals(1, info.fileIndex);
         assertEquals(2048, info.endOfFile);
         assertEquals(SmbFile.ATTR_DIRECTORY, info.getAttributes());
@@ -208,7 +203,7 @@ class Trans2FindFirst2ResponseTest {
         response.eaErrorOffset = 0;
         response.lastNameOffset = 100;
         response.lastName = "file5.txt";
-        
+
         String actual = response.toString();
         assertTrue(actual.startsWith("Trans2FindFirst2Response["));
         assertTrue(actual.contains("sid=123"));
@@ -217,7 +212,7 @@ class Trans2FindFirst2ResponseTest {
         assertTrue(actual.contains("lastName=file5.txt"));
         assertTrue(actual.endsWith("]"));
     }
-    
+
     @Test
     void testToString_FindNext2() {
         response.subCommand = SmbComTransaction.TRANS2_FIND_NEXT2;
@@ -237,10 +232,10 @@ class Trans2FindFirst2ResponseTest {
         dst[dstIndex + 2] = (byte) (val >> 16);
         dst[dstIndex + 3] = (byte) (val >> 24);
     }
-    
+
     private void writeInt8(long val, byte[] dst, int dstIndex) {
-        writeInt4((int)(val & 0xFFFFFFFFL), dst, dstIndex);
-        writeInt4((int)(val >> 32), dst, dstIndex + 4);
+        writeInt4((int) (val & 0xFFFFFFFFL), dst, dstIndex);
+        writeInt4((int) (val >> 32), dst, dstIndex + 4);
     }
 
     private void writeTime(long t, byte[] dst, int dstIndex) {

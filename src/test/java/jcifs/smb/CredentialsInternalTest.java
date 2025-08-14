@@ -1,7 +1,19 @@
 package jcifs.smb;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import java.util.stream.Stream;
 
@@ -113,12 +125,8 @@ class CredentialsInternalTest {
     }
 
     static Stream<boolean[]> anonGuestFlags() {
-        return Stream.of(
-                new boolean[] { false, false },
-                new boolean[] { true, false },
-                new boolean[] { false, true },
-                new boolean[] { true, true }
-        );
+        return Stream.of(new boolean[] { false, false }, new boolean[] { true, false }, new boolean[] { false, true },
+                new boolean[] { true, true });
     }
 
     @ParameterizedTest
@@ -201,8 +209,7 @@ class CredentialsInternalTest {
         TestCredentials creds = new TestCredentials("D", false, false, new Subject(), false);
 
         // Act & Assert
-        NullPointerException npe = assertThrows(NullPointerException.class,
-                () -> creds.createContext(null, "T", "h", new byte[0], false));
+        NullPointerException npe = assertThrows(NullPointerException.class, () -> creds.createContext(null, "T", "h", new byte[0], false));
         assertEquals("tc", npe.getMessage());
     }
 

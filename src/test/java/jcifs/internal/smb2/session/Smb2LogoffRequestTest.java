@@ -1,7 +1,13 @@
 package jcifs.internal.smb2.session;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -14,8 +20,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import jcifs.CIFSContext;
 import jcifs.Configuration;
-import jcifs.internal.util.SMBUtil;
 import jcifs.internal.smb2.Smb2Constants;
+import jcifs.internal.util.SMBUtil;
 
 @ExtendWith(MockitoExtension.class)
 class Smb2LogoffRequestTest {
@@ -47,7 +53,7 @@ class Smb2LogoffRequestTest {
     }
 
     @ParameterizedTest
-    @ValueSource(ints = {0, 1, 5})
+    @ValueSource(ints = { 0, 1, 5 })
     @DisplayName("writeBytesWireFormat writes StructureSize=4 and Reserved=0 at given offset")
     void writeBytesWireFormat_writesExpectedValuesAtOffset(int offset) {
         // Arrange
@@ -95,7 +101,7 @@ class Smb2LogoffRequestTest {
 
         // Act
         int resultWithNull = req.readBytesWireFormat(null, 0);
-        int resultWithData = req.readBytesWireFormat(new byte[] {1,2,3}, 1);
+        int resultWithData = req.readBytesWireFormat(new byte[] { 1, 2, 3 }, 1);
 
         // Assert
         assertEquals(0, resultWithNull, "Should return 0 for null buffer");
@@ -149,4 +155,3 @@ class Smb2LogoffRequestTest {
         }
     }
 }
-

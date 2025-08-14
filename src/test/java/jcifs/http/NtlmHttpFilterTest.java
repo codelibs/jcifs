@@ -6,7 +6,6 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -31,8 +30,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
@@ -68,14 +65,14 @@ class NtlmHttpFilterTest {
 
     @Mock
     private HttpSession httpSession;
-    
+
     @Mock
     private ServletOutputStream servletOutputStream;
 
     @BeforeEach
     void setUp() throws Exception {
         filter = new NtlmHttpFilter();
-        
+
         // Setup lenient stubs for common mock interactions
         lenient().when(request.getSession()).thenReturn(httpSession);
         lenient().when(request.getSession(anyBoolean())).thenReturn(httpSession);
@@ -93,8 +90,7 @@ class NtlmHttpFilterTest {
         initParams.put("jcifs.http.basicRealm", "TestRealm");
 
         when(filterConfig.getInitParameterNames()).thenReturn(Collections.enumeration(initParams.keySet()));
-        when(filterConfig.getInitParameter(anyString())).thenAnswer(invocation -> 
-            initParams.get(invocation.getArgument(0)));
+        when(filterConfig.getInitParameter(anyString())).thenAnswer(invocation -> initParams.get(invocation.getArgument(0)));
 
         assertDoesNotThrow(() -> filter.init(filterConfig));
     }
@@ -106,8 +102,7 @@ class NtlmHttpFilterTest {
         initParams.put("jcifs.smb.client.domain", "MINIMAL_DOMAIN");
 
         when(filterConfig.getInitParameterNames()).thenReturn(Collections.enumeration(initParams.keySet()));
-        when(filterConfig.getInitParameter(anyString())).thenAnswer(invocation -> 
-            initParams.get(invocation.getArgument(0)));
+        when(filterConfig.getInitParameter(anyString())).thenAnswer(invocation -> initParams.get(invocation.getArgument(0)));
 
         assertDoesNotThrow(() -> filter.init(filterConfig));
     }
@@ -122,7 +117,7 @@ class NtlmHttpFilterTest {
     void testDoFilter_noAuthorizationHeader_shouldChallengeClient() throws Exception {
         // Initialize filter first
         initializeFilter();
-        
+
         // Test request without Authorization header should challenge client
         when(request.getHeader("Authorization")).thenReturn(null);
         when(httpSession.getAttribute("NtlmHttpAuth")).thenReturn(null);
@@ -139,13 +134,13 @@ class NtlmHttpFilterTest {
     void testDoFilter_alreadyAuthenticated_shouldProceed() throws Exception {
         // Initialize filter first
         initializeFilter();
-        
+
         // Test request with existing authentication should proceed
         Properties props = new Properties();
         props.setProperty("jcifs.smb.client.domain", "TEST_DOMAIN");
         CIFSContext context = new BaseContext(new PropertyConfiguration(props));
         NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication(context, "TEST_DOMAIN", "user", "pass");
-        
+
         when(httpSession.getAttribute("NtlmHttpAuth")).thenReturn(auth);
 
         filter.doFilter(request, response, filterChain);
@@ -165,9 +160,8 @@ class NtlmHttpFilterTest {
         initParams.put("jcifs.http.basicRealm", "TestRealm");
 
         when(filterConfig.getInitParameterNames()).thenReturn(Collections.enumeration(initParams.keySet()));
-        when(filterConfig.getInitParameter(anyString())).thenAnswer(invocation -> 
-            initParams.get(invocation.getArgument(0)));
-        
+        when(filterConfig.getInitParameter(anyString())).thenAnswer(invocation -> initParams.get(invocation.getArgument(0)));
+
         filter.init(filterConfig);
 
         // Test request over insecure connection
@@ -187,7 +181,7 @@ class NtlmHttpFilterTest {
         // Test NTLM Type 1 message handling
         // This test verifies that when a Type 1 NTLM message is received,
         // the filter processes it correctly through NtlmSsp.authenticate
-        
+
         // Create a minimal filter config that won't try to connect to a real server
         Map<String, String> initParams = new HashMap<>();
         initParams.put("jcifs.smb.client.domain", "TEST_DOMAIN");
@@ -196,15 +190,14 @@ class NtlmHttpFilterTest {
         initParams.put("jcifs.http.enableBasic", "false");
 
         when(filterConfig.getInitParameterNames()).thenReturn(Collections.enumeration(initParams.keySet()));
-        when(filterConfig.getInitParameter(anyString())).thenAnswer(invocation -> 
-            initParams.get(invocation.getArgument(0)));
-        
+        when(filterConfig.getInitParameter(anyString())).thenAnswer(invocation -> initParams.get(invocation.getArgument(0)));
+
         filter.init(filterConfig);
-        
+
         // Test NTLM Type 1 message handling
         byte[] type1Message = new byte[] { 0x4E, 0x54, 0x4C, 0x4D, 0x53, 0x53, 0x50, 0x00, 0x01, 0x00, 0x00, 0x00 };
         String authHeader = "NTLM " + new String(org.bouncycastle.util.encoders.Base64.encode(type1Message));
-        
+
         when(request.getHeader("Authorization")).thenReturn(authHeader);
         when(httpSession.getAttribute("NtlmHttpAuth")).thenReturn(null);
         when(httpSession.getAttribute("NtlmHttpChal")).thenReturn(null);
@@ -213,9 +206,9 @@ class NtlmHttpFilterTest {
         // Since we can't mock the internal transport operations easily without real network,
         // we'll test the simpler case where no NTLM negotiation is needed
         when(request.getHeader("Authorization")).thenReturn(null);
-        
+
         filter.doFilter(request, response, filterChain);
-        
+
         // Should challenge the client
         verify(response).setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         verify(response).setHeader("WWW-Authenticate", "NTLM");
@@ -226,7 +219,7 @@ class NtlmHttpFilterTest {
     void testDoFilter_skipAuthentication() throws Exception {
         // Initialize filter first
         initializeFilter();
-        
+
         // Test skip authentication mode
         when(request.getHeader("Authorization")).thenReturn(null);
         when(httpSession.getAttribute("NtlmHttpAuth")).thenReturn(null);
@@ -234,18 +227,16 @@ class NtlmHttpFilterTest {
         // Create a custom filter that overrides negotiate to test skipAuthentication
         NtlmHttpFilter customFilter = new NtlmHttpFilter() {
             @Override
-            protected NtlmPasswordAuthentication negotiate(HttpServletRequest req, 
-                    HttpServletResponse resp, boolean skipAuthentication) 
+            protected NtlmPasswordAuthentication negotiate(HttpServletRequest req, HttpServletResponse resp, boolean skipAuthentication)
                     throws IOException, ServletException {
                 if (skipAuthentication) {
                     return null;
                 }
                 return super.negotiate(req, resp, skipAuthentication);
             }
-            
+
             @Override
-            public void doFilter(ServletRequest request, ServletResponse response, 
-                    FilterChain chain) throws IOException, ServletException {
+            public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
                 HttpServletRequest req = (HttpServletRequest) request;
                 HttpServletResponse resp = (HttpServletResponse) response;
                 NtlmPasswordAuthentication ntlm = negotiate(req, resp, true);
@@ -254,10 +245,10 @@ class NtlmHttpFilterTest {
                 }
             }
         };
-        
+
         customFilter.init(filterConfig);
         customFilter.doFilter(request, response, filterChain);
-        
+
         // Should proceed without authentication when skipAuthentication is true
         verify(filterChain).doFilter(request, response);
         verify(response, never()).setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -267,7 +258,7 @@ class NtlmHttpFilterTest {
     void testDoFilter_sessionWithoutAuth_shouldChallenge() throws Exception {
         // Initialize filter first
         initializeFilter();
-        
+
         // Test that having a session but no auth still challenges
         when(request.getHeader("Authorization")).thenReturn(null);
         when(httpSession.getAttribute("NtlmHttpAuth")).thenReturn(null);
@@ -288,9 +279,8 @@ class NtlmHttpFilterTest {
         initParams.put("jcifs.http.enableBasic", "false");
 
         when(filterConfig.getInitParameterNames()).thenReturn(Collections.enumeration(initParams.keySet()));
-        when(filterConfig.getInitParameter(anyString())).thenAnswer(invocation -> 
-            initParams.get(invocation.getArgument(0)));
-        
+        when(filterConfig.getInitParameter(anyString())).thenAnswer(invocation -> initParams.get(invocation.getArgument(0)));
+
         filter.init(filterConfig);
 
         // Test request without auth header
@@ -314,9 +304,8 @@ class NtlmHttpFilterTest {
         initParams.put("jcifs.http.basicRealm", "TestRealm");
 
         when(filterConfig.getInitParameterNames()).thenReturn(Collections.enumeration(initParams.keySet()));
-        when(filterConfig.getInitParameter(anyString())).thenAnswer(invocation -> 
-            initParams.get(invocation.getArgument(0)));
-        
+        when(filterConfig.getInitParameter(anyString())).thenAnswer(invocation -> initParams.get(invocation.getArgument(0)));
+
         filter.init(filterConfig);
     }
 }

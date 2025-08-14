@@ -1,6 +1,11 @@
 package jcifs.internal.smb2;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.security.SecureRandom;
 
@@ -38,7 +43,7 @@ class Smb2EncryptionContextTest {
     void testConstructor() {
         // When
         Smb2EncryptionContext context = new Smb2EncryptionContext(1, DialectVersion.SMB311, testEncryptionKey, testDecryptionKey);
-        
+
         // Then
         assertNotNull(context, "Encryption context should be created");
         assertEquals(1, context.getCipherId(), "Cipher ID should match");
@@ -50,7 +55,7 @@ class Smb2EncryptionContextTest {
     void testGetCipherId() {
         // When
         int cipherId = encryptionContext.getCipherId();
-        
+
         // Then
         assertEquals(1, cipherId, "Should return the cipher ID set in constructor");
     }
@@ -60,7 +65,7 @@ class Smb2EncryptionContextTest {
     void testGetDialect() {
         // When
         DialectVersion dialect = encryptionContext.getDialect();
-        
+
         // Then
         assertEquals(DialectVersion.SMB311, dialect, "Should return the dialect set in constructor");
     }
@@ -70,7 +75,7 @@ class Smb2EncryptionContextTest {
     void testSMB300Dialect() {
         // When
         Smb2EncryptionContext context = new Smb2EncryptionContext(1, DialectVersion.SMB300, testEncryptionKey, testDecryptionKey);
-        
+
         // Then
         assertEquals(DialectVersion.SMB300, context.getDialect(), "Should support SMB 3.0 dialect");
     }
@@ -80,7 +85,7 @@ class Smb2EncryptionContextTest {
     void testSMB302Dialect() {
         // When
         Smb2EncryptionContext context = new Smb2EncryptionContext(1, DialectVersion.SMB302, testEncryptionKey, testDecryptionKey);
-        
+
         // Then
         assertEquals(DialectVersion.SMB302, context.getDialect(), "Should support SMB 3.0.2 dialect");
     }
@@ -91,7 +96,7 @@ class Smb2EncryptionContextTest {
         // Test cipher ID 1 (AES-CCM)
         Smb2EncryptionContext context1 = new Smb2EncryptionContext(1, DialectVersion.SMB311, testEncryptionKey, testDecryptionKey);
         assertEquals(1, context1.getCipherId(), "Should handle cipher ID 1");
-        
+
         // Test cipher ID 2 (AES-GCM)
         Smb2EncryptionContext context2 = new Smb2EncryptionContext(2, DialectVersion.SMB311, testEncryptionKey, testDecryptionKey);
         assertEquals(2, context2.getCipherId(), "Should handle cipher ID 2");
@@ -130,7 +135,7 @@ class Smb2EncryptionContextTest {
     void testEmptyKeys() {
         // Given
         byte[] emptyKey = new byte[0];
-        
+
         // When/Then
         assertDoesNotThrow(() -> {
             Smb2EncryptionContext context = new Smb2EncryptionContext(1, DialectVersion.SMB311, emptyKey, emptyKey);
@@ -146,7 +151,7 @@ class Smb2EncryptionContextTest {
         byte[] key256 = new byte[32]; // 256-bit
         new SecureRandom().nextBytes(key128);
         new SecureRandom().nextBytes(key256);
-        
+
         // When/Then
         assertDoesNotThrow(() -> {
             Smb2EncryptionContext context = new Smb2EncryptionContext(1, DialectVersion.SMB311, key128, key256);
@@ -160,10 +165,10 @@ class Smb2EncryptionContextTest {
         // Given
         int originalCipherId = encryptionContext.getCipherId();
         DialectVersion originalDialect = encryptionContext.getDialect();
-        
+
         // When - Modify the original key array
         testEncryptionKey[0] = (byte) ~testEncryptionKey[0];
-        
+
         // Then - Context should not be affected by external modifications
         assertEquals(originalCipherId, encryptionContext.getCipherId(), "Cipher ID should remain unchanged");
         assertEquals(originalDialect, encryptionContext.getDialect(), "Dialect should remain unchanged");
@@ -175,7 +180,7 @@ class Smb2EncryptionContextTest {
         // When
         byte[] nonce1 = encryptionContext.generateNonce();
         byte[] nonce2 = encryptionContext.generateNonce();
-        
+
         // Then
         assertNotNull(nonce1, "First nonce should not be null");
         assertNotNull(nonce2, "Second nonce should not be null");
@@ -190,14 +195,14 @@ class Smb2EncryptionContextTest {
         // Given
         int count = 100;
         java.util.Set<String> nonceSet = new java.util.HashSet<>();
-        
+
         // When
         for (int i = 0; i < count; i++) {
             byte[] nonce = encryptionContext.generateNonce();
             String nonceHex = bytesToHex(nonce);
             nonceSet.add(nonceHex);
         }
-        
+
         // Then
         assertEquals(count, nonceSet.size(), "All generated nonces should be unique");
     }

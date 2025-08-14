@@ -1,6 +1,10 @@
 package jcifs.internal.smb1.net;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -45,7 +49,7 @@ class SmbShareInfoTest {
     void testParameterizedConstructor() {
         // Create instance with test values
         SmbShareInfo info = new SmbShareInfo(TEST_NET_NAME, TEST_TYPE, TEST_REMARK);
-        
+
         // Verify all values are set correctly
         assertEquals(TEST_NET_NAME, info.getName());
         assertEquals(SmbConstants.TYPE_SHARE, info.getType());
@@ -59,7 +63,7 @@ class SmbShareInfoTest {
     void testGetName() {
         // Default constructor
         assertNull(shareInfo.getName());
-        
+
         // With name set
         SmbShareInfo info = new SmbShareInfo(TEST_NET_NAME, TEST_TYPE, TEST_REMARK);
         assertEquals(TEST_NET_NAME, info.getName());
@@ -70,7 +74,7 @@ class SmbShareInfoTest {
     void testGetFileIndex() {
         // Default instance
         assertEquals(0, shareInfo.getFileIndex());
-        
+
         // Instance with values
         SmbShareInfo info = new SmbShareInfo(TEST_NET_NAME, TEST_TYPE, TEST_REMARK);
         assertEquals(0, info.getFileIndex());
@@ -78,13 +82,12 @@ class SmbShareInfoTest {
 
     @ParameterizedTest
     @DisplayName("Test getType with different share types")
-    @CsvSource({
-        "1, " + SmbConstants.TYPE_PRINTER,      // Printer share
-        "3, " + SmbConstants.TYPE_NAMED_PIPE,    // Named pipe
-        "0, " + SmbConstants.TYPE_SHARE,         // Standard share
-        "2, " + SmbConstants.TYPE_SHARE,         // Unknown type defaults to share
-        "4, " + SmbConstants.TYPE_SHARE,         // Unknown type defaults to share
-        "100, " + SmbConstants.TYPE_SHARE        // Unknown type defaults to share
+    @CsvSource({ "1, " + SmbConstants.TYPE_PRINTER, // Printer share
+            "3, " + SmbConstants.TYPE_NAMED_PIPE, // Named pipe
+            "0, " + SmbConstants.TYPE_SHARE, // Standard share
+            "2, " + SmbConstants.TYPE_SHARE, // Unknown type defaults to share
+            "4, " + SmbConstants.TYPE_SHARE, // Unknown type defaults to share
+            "100, " + SmbConstants.TYPE_SHARE // Unknown type defaults to share
     })
     void testGetTypeWithDifferentShareTypes(int inputType, int expectedType) {
         SmbShareInfo info = new SmbShareInfo(TEST_NET_NAME, inputType, TEST_REMARK);
@@ -98,7 +101,7 @@ class SmbShareInfoTest {
         int hiddenPrinterType = 0x80000001; // Hidden printer
         SmbShareInfo info = new SmbShareInfo(TEST_NET_NAME, hiddenPrinterType, TEST_REMARK);
         assertEquals(SmbConstants.TYPE_PRINTER, info.getType());
-        
+
         int hiddenShareType = 0x80000000; // Hidden standard share
         info = new SmbShareInfo(TEST_NET_NAME, hiddenShareType, TEST_REMARK);
         assertEquals(SmbConstants.TYPE_SHARE, info.getType());
@@ -109,7 +112,7 @@ class SmbShareInfoTest {
     void testGetAttributes() {
         // Default instance
         assertEquals(SmbConstants.ATTR_READONLY | SmbConstants.ATTR_DIRECTORY, shareInfo.getAttributes());
-        
+
         // Instance with values - attributes are still constant
         SmbShareInfo info = new SmbShareInfo(TEST_NET_NAME, TEST_TYPE, TEST_REMARK);
         assertEquals(SmbConstants.ATTR_READONLY | SmbConstants.ATTR_DIRECTORY, info.getAttributes());
@@ -122,7 +125,7 @@ class SmbShareInfoTest {
         assertEquals(0L, shareInfo.createTime());
         assertEquals(0L, shareInfo.lastModified());
         assertEquals(0L, shareInfo.lastAccess());
-        
+
         // Instance with values - times are still 0
         SmbShareInfo info = new SmbShareInfo(TEST_NET_NAME, TEST_TYPE, TEST_REMARK);
         assertEquals(0L, info.createTime());
@@ -135,7 +138,7 @@ class SmbShareInfoTest {
     void testLength() {
         // Default instance
         assertEquals(0L, shareInfo.length());
-        
+
         // Instance with values - length is still 0
         SmbShareInfo info = new SmbShareInfo(TEST_NET_NAME, TEST_TYPE, TEST_REMARK);
         assertEquals(0L, info.length());
@@ -146,7 +149,7 @@ class SmbShareInfoTest {
     void testEqualsWithSameNetName() {
         SmbShareInfo info1 = new SmbShareInfo("Share1", 0, "Remark1");
         SmbShareInfo info2 = new SmbShareInfo("Share1", 1, "Remark2");
-        
+
         // Same netName, different type and remark
         assertTrue(info1.equals(info2));
         assertTrue(info2.equals(info1));
@@ -157,7 +160,7 @@ class SmbShareInfoTest {
     void testEqualsWithDifferentNetName() {
         SmbShareInfo info1 = new SmbShareInfo("Share1", 0, "Remark");
         SmbShareInfo info2 = new SmbShareInfo("Share2", 0, "Remark");
-        
+
         // Different netName
         assertFalse(info1.equals(info2));
         assertFalse(info2.equals(info1));
@@ -168,10 +171,10 @@ class SmbShareInfoTest {
     void testEqualsWithNullNetName() {
         SmbShareInfo info1 = new SmbShareInfo();
         SmbShareInfo info2 = new SmbShareInfo();
-        
+
         // Both have null netName
         assertTrue(info1.equals(info2));
-        
+
         SmbShareInfo info3 = new SmbShareInfo(TEST_NET_NAME, 0, TEST_REMARK);
         // One null, one non-null
         assertFalse(info1.equals(info3));
@@ -199,10 +202,10 @@ class SmbShareInfoTest {
     void testHashCode() {
         SmbShareInfo info1 = new SmbShareInfo(TEST_NET_NAME, 0, TEST_REMARK);
         SmbShareInfo info2 = new SmbShareInfo(TEST_NET_NAME, 1, "Different");
-        
+
         // Same netName should have same hashCode
         assertEquals(info1.hashCode(), info2.hashCode());
-        
+
         // Null netName
         SmbShareInfo info3 = new SmbShareInfo();
         assertEquals(0, info3.hashCode()); // Objects.hashCode(null) returns 0
@@ -214,7 +217,7 @@ class SmbShareInfoTest {
         SmbShareInfo info = new SmbShareInfo(TEST_NET_NAME, TEST_TYPE, TEST_REMARK);
         int hashCode1 = info.hashCode();
         int hashCode2 = info.hashCode();
-        
+
         // Multiple calls should return same value
         assertEquals(hashCode1, hashCode2);
     }
@@ -224,7 +227,7 @@ class SmbShareInfoTest {
     void testToString() {
         SmbShareInfo info = new SmbShareInfo(TEST_NET_NAME, TEST_TYPE, TEST_REMARK);
         String str = info.toString();
-        
+
         // Verify string contains expected elements
         assertNotNull(str);
         assertTrue(str.startsWith("SmbShareInfo["));
@@ -239,7 +242,7 @@ class SmbShareInfoTest {
     void testToStringWithNullValues() {
         SmbShareInfo info = new SmbShareInfo();
         String str = info.toString();
-        
+
         // Should handle null values gracefully
         assertNotNull(str);
         assertTrue(str.startsWith("SmbShareInfo["));
@@ -251,11 +254,11 @@ class SmbShareInfoTest {
 
     @ParameterizedTest
     @DisplayName("Test toString with various type values")
-    @ValueSource(ints = {0x00000000, 0x00000001, 0x00000003, 0x80000000, 0x80000001, 0xFFFFFFFF})
+    @ValueSource(ints = { 0x00000000, 0x00000001, 0x00000003, 0x80000000, 0x80000001, 0xFFFFFFFF })
     void testToStringWithVariousTypes(int type) {
         SmbShareInfo info = new SmbShareInfo(TEST_NET_NAME, type, TEST_REMARK);
         String str = info.toString();
-        
+
         // Verify type is displayed as hex
         assertNotNull(str);
         assertTrue(str.contains("type=0x"));
@@ -268,14 +271,14 @@ class SmbShareInfoTest {
     @DisplayName("Test with empty strings")
     void testWithEmptyStrings() {
         SmbShareInfo info = new SmbShareInfo("", 0, "");
-        
+
         assertEquals("", info.getName());
         assertEquals(SmbConstants.TYPE_SHARE, info.getType());
-        
+
         // Test equals with empty string
         SmbShareInfo info2 = new SmbShareInfo("", 1, "Different");
         assertTrue(info.equals(info2));
-        
+
         // HashCode for empty string
         assertEquals(0, info.hashCode()); // Empty string has hashCode of 0
     }
@@ -285,9 +288,9 @@ class SmbShareInfoTest {
     void testWithSpecialCharacters() {
         String specialName = "Share$\\Special/Name:*?";
         String specialRemark = "Remark with\nnewline\tand\rtabs";
-        
+
         SmbShareInfo info = new SmbShareInfo(specialName, 0, specialRemark);
-        
+
         assertEquals(specialName, info.getName());
         String str = info.toString();
         assertTrue(str.contains(specialName));
@@ -301,7 +304,7 @@ class SmbShareInfoTest {
         int typeWithUpperBits = 0xFFFF0001; // Should be treated as type 1 (printer)
         SmbShareInfo info = new SmbShareInfo(TEST_NET_NAME, typeWithUpperBits, TEST_REMARK);
         assertEquals(SmbConstants.TYPE_PRINTER, info.getType());
-        
+
         typeWithUpperBits = 0x12340003; // Should be treated as type 3 (named pipe)
         info = new SmbShareInfo(TEST_NET_NAME, typeWithUpperBits, TEST_REMARK);
         assertEquals(SmbConstants.TYPE_NAMED_PIPE, info.getType());
@@ -312,10 +315,10 @@ class SmbShareInfoTest {
     void testFileEntryInterface() {
         // Verify that SmbShareInfo properly implements FileEntry interface
         SmbShareInfo info = new SmbShareInfo(TEST_NET_NAME, TEST_TYPE, TEST_REMARK);
-        
+
         // Cast to FileEntry to ensure interface is properly implemented
         jcifs.smb.FileEntry fileEntry = info;
-        
+
         // Verify all FileEntry methods work
         assertEquals(TEST_NET_NAME, fileEntry.getName());
         assertEquals(0, fileEntry.getFileIndex());

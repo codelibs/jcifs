@@ -1,9 +1,18 @@
 package jcifs.smb;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Field;
 import java.util.stream.Stream;
@@ -12,22 +21,17 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 import jcifs.CIFSContext;
 import jcifs.Configuration;
 import jcifs.ResourceNameFilter;
 import jcifs.SmbResource;
 import jcifs.SmbResourceLocator;
-import jcifs.smb.SmbException;
-import jcifs.smb.NtStatus;
-import jcifs.internal.CommonServerMessageBlockRequest;
-import jcifs.internal.CommonServerMessageBlockResponse;
 import jcifs.internal.Request;
 import jcifs.internal.smb2.create.Smb2CloseRequest;
 import jcifs.internal.smb2.create.Smb2CreateRequest;
@@ -58,7 +62,7 @@ class DirFileEntryEnumIterator2Test {
         // Tree handle lifecycle and config
         lenient().when(tree.acquire()).thenReturn(tree);
         lenient().when(tree.isConnected()).thenReturn(true);
-        
+
         // CIFS context returns same config to build responses during initResponse
         lenient().when(cifsContext.getConfig()).thenReturn(config);
     }
@@ -82,7 +86,7 @@ class DirFileEntryEnumIterator2Test {
         when(tree.getConfig()).thenReturn(config);
         when(config.getMaximumBufferSize()).thenReturn(65535);
         when(config.getListSize()).thenReturn(65535);
-        
+
         // Arrange: initial page with two entries, then one more entry, then no more files
         FileEntry fe1 = mock(FileEntry.class);
         lenient().when(fe1.getName()).thenReturn("file1");
@@ -97,8 +101,8 @@ class DirFileEntryEnumIterator2Test {
         when(fe3.getFileIndex()).thenReturn(3);
 
         // Track query count to handle multiple queries properly
-        final int[] queryCount = {0};
-        
+        final int[] queryCount = { 0 };
+
         // Mock send(create) to wire a query response with fe1, fe2
         doAnswer(inv -> {
             Object arg = inv.getArgument(0);
@@ -120,7 +124,8 @@ class DirFileEntryEnumIterator2Test {
                 queryCount[0]++;
                 if (queryCount[0] == 1) {
                     // This is the second page: one more file
-                    Smb2QueryDirectoryResponse qr = new Smb2QueryDirectoryResponse(config, Smb2QueryDirectoryRequest.FILE_BOTH_DIRECTORY_INFO);
+                    Smb2QueryDirectoryResponse qr =
+                            new Smb2QueryDirectoryResponse(config, Smb2QueryDirectoryRequest.FILE_BOTH_DIRECTORY_INFO);
                     setResults(qr, new FileEntry[] { fe3 });
                     return qr;
                 } else {
@@ -165,7 +170,7 @@ class DirFileEntryEnumIterator2Test {
         when(tree.getConfig()).thenReturn(config);
         when(config.getMaximumBufferSize()).thenReturn(65535);
         when(config.getListSize()).thenReturn(65535);
-        
+
         // Arrange: initial page with one entry; then query throws NO_MORE_FILES
         FileEntry fe1 = mock(FileEntry.class);
         lenient().when(fe1.getName()).thenReturn("file1");
@@ -210,7 +215,7 @@ class DirFileEntryEnumIterator2Test {
         when(tree.getConfig()).thenReturn(config);
         when(config.getMaximumBufferSize()).thenReturn(65535);
         when(config.getListSize()).thenReturn(65535);
-        
+
         // Arrange: create send throws, chained query response indicates NO_SUCH_FILE
         doAnswer(inv -> {
             Object arg = inv.getArgument(0);
@@ -249,7 +254,7 @@ class DirFileEntryEnumIterator2Test {
         when(tree.getConfig()).thenReturn(config);
         when(config.getMaximumBufferSize()).thenReturn(65535);
         when(config.getListSize()).thenReturn(65535);
-        
+
         // Arrange minimal successful open with one entry
         FileEntry fe1 = mock(FileEntry.class);
         lenient().when(fe1.getName()).thenReturn("x");

@@ -1,18 +1,21 @@
 package jcifs.internal.smb2;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static jcifs.internal.smb2.ServerMessageBlock2.SMB2_CANCEL;
+import static jcifs.internal.smb2.ServerMessageBlock2.SMB2_FLAGS_ASYNC_COMMAND;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import jcifs.Configuration;
 import jcifs.internal.CommonServerMessageBlockRequest;
-
-import static jcifs.internal.smb2.ServerMessageBlock2.*;
 
 /**
  * Test class for Smb2CancelRequest
@@ -41,8 +44,7 @@ class Smb2CancelRequestTest {
         assertEquals(SMB2_CANCEL, request.getCommand());
         assertEquals(mid, request.getMid());
         assertEquals(asyncId, request.getAsyncId());
-        assertTrue((request.getFlags() & SMB2_FLAGS_ASYNC_COMMAND) != 0,
-                "Async flag should be set when asyncId is non-zero");
+        assertTrue((request.getFlags() & SMB2_FLAGS_ASYNC_COMMAND) != 0, "Async flag should be set when asyncId is non-zero");
     }
 
     @Test
@@ -59,8 +61,7 @@ class Smb2CancelRequestTest {
         assertEquals(SMB2_CANCEL, request.getCommand());
         assertEquals(mid, request.getMid());
         assertEquals(asyncId, request.getAsyncId());
-        assertFalse((request.getFlags() & SMB2_FLAGS_ASYNC_COMMAND) != 0,
-                "Async flag should not be set when asyncId is zero");
+        assertFalse((request.getFlags() & SMB2_FLAGS_ASYNC_COMMAND) != 0, "Async flag should not be set when asyncId is zero");
     }
 
     @Test
@@ -264,8 +265,7 @@ class Smb2CancelRequestTest {
         assertEquals(asyncId, request.getAsyncId(), "AsyncId should be set correctly");
         assertEquals(credits, request.getCredit(), "Credits should be set correctly");
         assertEquals(treeId, request.getTreeId(), "Tree ID should be set correctly");
-        assertTrue((request.getFlags() & SMB2_FLAGS_ASYNC_COMMAND) != 0,
-                "Async flag should be set for non-zero asyncId");
+        assertTrue((request.getFlags() & SMB2_FLAGS_ASYNC_COMMAND) != 0, "Async flag should be set for non-zero asyncId");
     }
 
     @Test
@@ -302,7 +302,6 @@ class Smb2CancelRequestTest {
         // Then
         assertEquals(negativeMid, request.getMid(), "Should handle negative MID");
         assertEquals(negativeAsyncId, request.getAsyncId(), "Should handle negative AsyncId");
-        assertTrue((request.getFlags() & SMB2_FLAGS_ASYNC_COMMAND) != 0,
-                "Async flag should be set for non-zero (negative) asyncId");
+        assertTrue((request.getFlags() & SMB2_FLAGS_ASYNC_COMMAND) != 0, "Async flag should be set for non-zero (negative) asyncId");
     }
 }

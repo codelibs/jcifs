@@ -1,8 +1,8 @@
 package jcifs.smb1.smb1;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
@@ -11,11 +11,10 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Date;
 
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import jcifs.smb1.UniAddress;
-import jcifs.smb1.smb1.SmbConstants;
-import jcifs.smb1.smb1.SmbTransport;
-import jcifs.smb1.smb1.SmbComNegotiateResponse;
-import jcifs.smb1.smb1.ServerMessageBlock;
 
 /**
  * Unit tests for the SmbComNegotiateResponse class.
@@ -154,7 +153,7 @@ class SmbComNegotiateResponseTest {
         for (int i = 0; i < 16; i++) {
             guid[i] = (byte) i;
         }
-        
+
         // Call the method
         int bytesRead = response.readBytesWireFormat(guid, 0);
 
@@ -164,7 +163,7 @@ class SmbComNegotiateResponseTest {
         assertArrayEquals(guid, serverData.guid);
         assertEquals("", serverData.oemDomainName);
     }
-    
+
     @Test
     void testReadBytesWireFormat_NoDomainName() {
         // Scenario where byteCount is only the encryption key length
@@ -173,7 +172,7 @@ class SmbComNegotiateResponseTest {
         response.byteCount = 8;
 
         byte[] encryptionKey = "12345678".getBytes();
-        
+
         int bytesRead = response.readBytesWireFormat(encryptionKey, 0);
 
         assertEquals(8, bytesRead);

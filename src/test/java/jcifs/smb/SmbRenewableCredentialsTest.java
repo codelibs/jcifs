@@ -1,10 +1,18 @@
 package jcifs.smb;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
-import java.util.stream.Stream;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import javax.security.auth.Subject;
 
@@ -39,12 +47,8 @@ public class SmbRenewableCredentialsTest {
         }
 
         @Override
-        public SSPContext createContext(
-                CIFSContext tc,
-                String targetDomain,
-                String host,
-                byte[] initialToken,
-                boolean doSigning) throws SmbException {
+        public SSPContext createContext(CIFSContext tc, String targetDomain, String host, byte[] initialToken, boolean doSigning)
+                throws SmbException {
             // Not used within these tests
             throw new SmbException("not used in tests");
         }
@@ -109,20 +113,16 @@ public class SmbRenewableCredentialsTest {
 
     // Provide different implementation behaviors to a parameterized test
     static Stream<Arguments> implementations() {
-        return Stream.of(
-            Arguments.of("returns self", (Supplier<SmbRenewableCredentials>) SelfRenewingCreds::new, true, false),
-            Arguments.of("returns new", (Supplier<SmbRenewableCredentials>) NewRenewingCreds::new, false, true),
-            Arguments.of("returns null", (Supplier<SmbRenewableCredentials>) NullRenewingCreds::new, false, false)
-        );
+        return Stream.of(Arguments.of("returns self", (Supplier<SmbRenewableCredentials>) SelfRenewingCreds::new, true, false),
+                Arguments.of("returns new", (Supplier<SmbRenewableCredentials>) NewRenewingCreds::new, false, true),
+                Arguments.of("returns null", (Supplier<SmbRenewableCredentials>) NullRenewingCreds::new, false, false));
     }
 
     @ParameterizedTest(name = "renew() {0}")
     @MethodSource("implementations")
     @DisplayName("renew() behaviors across implementations")
-    void renewBehaviorsAcrossImplementations(String label,
-                                             Supplier<SmbRenewableCredentials> supplier,
-                                             boolean expectSame,
-                                             boolean expectNew) {
+    void renewBehaviorsAcrossImplementations(String label, Supplier<SmbRenewableCredentials> supplier, boolean expectSame,
+            boolean expectNew) {
         // Arrange: create an implementation instance
         SmbRenewableCredentials impl = supplier.get();
 
@@ -130,13 +130,12 @@ public class SmbRenewableCredentialsTest {
         CredentialsInternal renewed = impl.renew();
 
         // Assert: verify behavior based on scenario
-        if ( expectSame ) {
+        if (expectSame) {
             assertSame(impl, renewed, "renew() should return the same instance");
-        } else if ( expectNew ) {
+        } else if (expectNew) {
             assertNotNull(renewed, "renew() should return a new non-null instance");
             assertNotSame(impl, renewed, "renew() should return a different instance");
-            assertTrue(renewed instanceof SmbRenewableCredentials,
-                "renewed credentials should still be SmbRenewableCredentials");
+            assertTrue(renewed instanceof SmbRenewableCredentials, "renewed credentials should still be SmbRenewableCredentials");
         } else {
             assertNull(renewed, "renew() may return null for failed renewal");
         }
@@ -144,8 +143,7 @@ public class SmbRenewableCredentialsTest {
 
     @Test
     @DisplayName("Mockito: verify renew() interaction and return value")
-    void mockitoInteraction(@Mock CredentialsInternal returned,
-                            @Mock SmbRenewableCredentials renewable) {
+    void mockitoInteraction(@Mock CredentialsInternal returned, @Mock SmbRenewableCredentials renewable) {
         // Arrange: stub renew() to return a mocked CredentialsInternal
         when(renewable.renew()).thenReturn(returned);
 
@@ -188,4 +186,3 @@ public class SmbRenewableCredentialsTest {
         assertNotNull(cloned, "clone() should return a non-null CredentialsInternal");
     }
 }
-

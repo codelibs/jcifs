@@ -239,12 +239,12 @@ class HMACT64Test {
         byte[] key = { (byte) 0x0b, (byte) 0x0b, (byte) 0x0b, (byte) 0x0b, (byte) 0x0b, (byte) 0x0b, (byte) 0x0b, (byte) 0x0b, (byte) 0x0b,
                 (byte) 0x0b, (byte) 0x0b, (byte) 0x0b, (byte) 0x0b, (byte) 0x0b, (byte) 0x0b, (byte) 0x0b };
         byte[] data = "Hi There".getBytes();
-        
+
         // Calculate expected HMACT64 result manually
         MessageDigest md5 = MessageDigest.getInstance("MD5");
         byte[] ipad = new byte[64];
         byte[] opad = new byte[64];
-        
+
         // HMACT64 specific: truncate key to 64 bytes if needed
         int keyLen = Math.min(key.length, 64);
         for (int i = 0; i < keyLen; i++) {
@@ -255,13 +255,13 @@ class HMACT64Test {
             ipad[i] = 0x36;
             opad[i] = 0x5c;
         }
-        
+
         // Calculate inner hash
         md5.reset();
         md5.update(ipad);
         md5.update(data);
         byte[] innerHash = md5.digest();
-        
+
         // Calculate outer hash
         md5.reset();
         md5.update(opad);

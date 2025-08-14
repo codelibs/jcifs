@@ -1,16 +1,23 @@
 package jcifs.internal.smb1.com;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Properties;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -23,7 +30,7 @@ public class SmbComTreeDisconnectTest {
 
     private Configuration config;
     private SmbComTreeDisconnect smbComTreeDisconnect;
-    
+
     @Mock
     private Configuration mockConfig;
 
@@ -41,7 +48,7 @@ public class SmbComTreeDisconnectTest {
     public void testConstructorWithValidConfig() {
         // When
         smbComTreeDisconnect = new SmbComTreeDisconnect(config);
-        
+
         // Then
         assertNotNull(smbComTreeDisconnect);
         assertEquals(ServerMessageBlock.SMB_COM_TREE_DISCONNECT, smbComTreeDisconnect.getCommand());
@@ -57,7 +64,7 @@ public class SmbComTreeDisconnectTest {
         NullPointerException exception = assertThrows(NullPointerException.class, () -> {
             smbComTreeDisconnect = new SmbComTreeDisconnect(null);
         });
-        
+
         // Verify the exception message indicates the config is null
         assertTrue(exception.getMessage().contains("config"));
     }
@@ -70,10 +77,10 @@ public class SmbComTreeDisconnectTest {
     public void testConstructorWithMockConfig() {
         // Setup mock to return a valid PID
         when(mockConfig.getPid()).thenReturn(1234);
-        
+
         // When
         smbComTreeDisconnect = new SmbComTreeDisconnect(mockConfig);
-        
+
         // Then
         assertNotNull(smbComTreeDisconnect);
         assertEquals(ServerMessageBlock.SMB_COM_TREE_DISCONNECT, smbComTreeDisconnect.getCommand());
@@ -90,10 +97,10 @@ public class SmbComTreeDisconnectTest {
         smbComTreeDisconnect = new SmbComTreeDisconnect(config);
         byte[] dst = new byte[100];
         int dstIndex = 0;
-        
+
         // When
         int result = smbComTreeDisconnect.writeParameterWordsWireFormat(dst, dstIndex);
-        
+
         // Then
         assertEquals(0, result);
     }
@@ -106,14 +113,14 @@ public class SmbComTreeDisconnectTest {
     public void testWriteParameterWordsWireFormatWithDifferentBufferSizes() {
         // Given
         smbComTreeDisconnect = new SmbComTreeDisconnect(config);
-        int[] bufferSizes = {0, 10, 50, 100, 1024};
-        
+        int[] bufferSizes = { 0, 10, 50, 100, 1024 };
+
         for (int bufferSize : bufferSizes) {
             byte[] dst = new byte[bufferSize];
-            
+
             // When
             int result = smbComTreeDisconnect.writeParameterWordsWireFormat(dst, 0);
-            
+
             // Then
             assertEquals(0, result);
         }
@@ -128,12 +135,12 @@ public class SmbComTreeDisconnectTest {
         // Given
         smbComTreeDisconnect = new SmbComTreeDisconnect(config);
         byte[] dst = new byte[200];
-        int[] offsets = {0, 10, 50, 100};
-        
+        int[] offsets = { 0, 10, 50, 100 };
+
         for (int offset : offsets) {
             // When
             int result = smbComTreeDisconnect.writeParameterWordsWireFormat(dst, offset);
-            
+
             // Then
             assertEquals(0, result);
         }
@@ -149,10 +156,10 @@ public class SmbComTreeDisconnectTest {
         smbComTreeDisconnect = new SmbComTreeDisconnect(config);
         byte[] dst = new byte[100];
         int dstIndex = 0;
-        
+
         // When
         int result = smbComTreeDisconnect.writeBytesWireFormat(dst, dstIndex);
-        
+
         // Then
         assertEquals(0, result);
     }
@@ -165,14 +172,14 @@ public class SmbComTreeDisconnectTest {
     public void testWriteBytesWireFormatWithDifferentBufferSizes() {
         // Given
         smbComTreeDisconnect = new SmbComTreeDisconnect(config);
-        int[] bufferSizes = {0, 10, 50, 100, 1024};
-        
+        int[] bufferSizes = { 0, 10, 50, 100, 1024 };
+
         for (int bufferSize : bufferSizes) {
             byte[] dst = new byte[bufferSize];
-            
+
             // When
             int result = smbComTreeDisconnect.writeBytesWireFormat(dst, 0);
-            
+
             // Then
             assertEquals(0, result);
         }
@@ -187,12 +194,12 @@ public class SmbComTreeDisconnectTest {
         // Given
         smbComTreeDisconnect = new SmbComTreeDisconnect(config);
         byte[] dst = new byte[200];
-        int[] offsets = {0, 10, 50, 100};
-        
+        int[] offsets = { 0, 10, 50, 100 };
+
         for (int offset : offsets) {
             // When
             int result = smbComTreeDisconnect.writeBytesWireFormat(dst, offset);
-            
+
             // Then
             assertEquals(0, result);
         }
@@ -208,10 +215,10 @@ public class SmbComTreeDisconnectTest {
         smbComTreeDisconnect = new SmbComTreeDisconnect(config);
         byte[] buffer = new byte[100];
         int bufferIndex = 0;
-        
+
         // When
         int result = smbComTreeDisconnect.readParameterWordsWireFormat(buffer, bufferIndex);
-        
+
         // Then
         assertEquals(0, result);
     }
@@ -224,14 +231,14 @@ public class SmbComTreeDisconnectTest {
     public void testReadParameterWordsWireFormatWithDifferentBufferSizes() {
         // Given
         smbComTreeDisconnect = new SmbComTreeDisconnect(config);
-        int[] bufferSizes = {0, 10, 50, 100, 1024};
-        
+        int[] bufferSizes = { 0, 10, 50, 100, 1024 };
+
         for (int bufferSize : bufferSizes) {
             byte[] buffer = new byte[bufferSize];
-            
+
             // When
             int result = smbComTreeDisconnect.readParameterWordsWireFormat(buffer, 0);
-            
+
             // Then
             assertEquals(0, result);
         }
@@ -247,10 +254,10 @@ public class SmbComTreeDisconnectTest {
         smbComTreeDisconnect = new SmbComTreeDisconnect(config);
         byte[] buffer = new byte[100];
         int bufferIndex = 0;
-        
+
         // When
         int result = smbComTreeDisconnect.readBytesWireFormat(buffer, bufferIndex);
-        
+
         // Then
         assertEquals(0, result);
     }
@@ -263,14 +270,14 @@ public class SmbComTreeDisconnectTest {
     public void testReadBytesWireFormatWithDifferentBufferSizes() {
         // Given
         smbComTreeDisconnect = new SmbComTreeDisconnect(config);
-        int[] bufferSizes = {0, 10, 50, 100, 1024};
-        
+        int[] bufferSizes = { 0, 10, 50, 100, 1024 };
+
         for (int bufferSize : bufferSizes) {
             byte[] buffer = new byte[bufferSize];
-            
+
             // When
             int result = smbComTreeDisconnect.readBytesWireFormat(buffer, 0);
-            
+
             // Then
             assertEquals(0, result);
         }
@@ -284,10 +291,10 @@ public class SmbComTreeDisconnectTest {
     public void testToString() {
         // Given
         smbComTreeDisconnect = new SmbComTreeDisconnect(config);
-        
+
         // When
         String result = smbComTreeDisconnect.toString();
-        
+
         // Then
         assertNotNull(result);
         assertTrue(result.contains("SmbComTreeDisconnect"));
@@ -303,13 +310,13 @@ public class SmbComTreeDisconnectTest {
     public void testToStringRequiresValidConfig() {
         // Constructor with null config throws exception, so we can't test toString with null config
         // Instead, test that toString works with a valid config
-        
+
         // Given
         smbComTreeDisconnect = new SmbComTreeDisconnect(config);
-        
+
         // When
         String result = smbComTreeDisconnect.toString();
-        
+
         // Then
         assertNotNull(result);
         assertTrue(result.contains("SmbComTreeDisconnect"));
@@ -325,13 +332,13 @@ public class SmbComTreeDisconnectTest {
     public void testCommandValue() {
         // Given
         smbComTreeDisconnect = new SmbComTreeDisconnect(config);
-        
+
         // When
         int command = smbComTreeDisconnect.getCommand();
-        
+
         // Then
         assertEquals(0x71, command & 0xFF);
-        assertEquals(ServerMessageBlock.SMB_COM_TREE_DISCONNECT, (byte)command);
+        assertEquals(ServerMessageBlock.SMB_COM_TREE_DISCONNECT, (byte) command);
     }
 
     /**
@@ -340,48 +347,48 @@ public class SmbComTreeDisconnectTest {
     @Nested
     @DisplayName("Buffer Operations Tests")
     class BufferOperationsTests {
-        
+
         @Test
         @DisplayName("Test write operations with empty buffer")
         public void testWriteOperationsWithEmptyBuffer() {
             // Given
             smbComTreeDisconnect = new SmbComTreeDisconnect(config);
             byte[] emptyBuffer = new byte[0];
-            
+
             // When & Then
             assertDoesNotThrow(() -> {
                 smbComTreeDisconnect.writeParameterWordsWireFormat(emptyBuffer, 0);
                 smbComTreeDisconnect.writeBytesWireFormat(emptyBuffer, 0);
             });
         }
-        
+
         @Test
         @DisplayName("Test read operations with empty buffer")
         public void testReadOperationsWithEmptyBuffer() {
             // Given
             smbComTreeDisconnect = new SmbComTreeDisconnect(config);
             byte[] emptyBuffer = new byte[0];
-            
+
             // When & Then
             assertDoesNotThrow(() -> {
                 smbComTreeDisconnect.readParameterWordsWireFormat(emptyBuffer, 0);
                 smbComTreeDisconnect.readBytesWireFormat(emptyBuffer, 0);
             });
         }
-        
+
         @Test
         @DisplayName("Test operations with null buffer")
         public void testOperationsWithNullBuffer() {
             // Given
             smbComTreeDisconnect = new SmbComTreeDisconnect(config);
-            
+
             // When & Then - operations return 0 even with null buffer (no buffer access since methods return 0)
             assertEquals(0, smbComTreeDisconnect.writeParameterWordsWireFormat(null, 0));
             assertEquals(0, smbComTreeDisconnect.writeBytesWireFormat(null, 0));
             assertEquals(0, smbComTreeDisconnect.readParameterWordsWireFormat(null, 0));
             assertEquals(0, smbComTreeDisconnect.readBytesWireFormat(null, 0));
         }
-        
+
         @Test
         @DisplayName("Test buffer operations do not modify buffer contents")
         public void testBufferContentsNotModified() {
@@ -392,13 +399,13 @@ public class SmbComTreeDisconnectTest {
                 originalBuffer[i] = (byte) i;
             }
             byte[] bufferCopy = originalBuffer.clone();
-            
+
             // When
             smbComTreeDisconnect.writeParameterWordsWireFormat(originalBuffer, 50);
             smbComTreeDisconnect.writeBytesWireFormat(originalBuffer, 50);
             smbComTreeDisconnect.readParameterWordsWireFormat(originalBuffer, 50);
             smbComTreeDisconnect.readBytesWireFormat(originalBuffer, 50);
-            
+
             // Then - buffer should remain unchanged since all methods return 0
             assertArrayEquals(bufferCopy, originalBuffer);
         }
@@ -412,7 +419,7 @@ public class SmbComTreeDisconnectTest {
     public void testInheritance() {
         // Given
         smbComTreeDisconnect = new SmbComTreeDisconnect(config);
-        
+
         // Then
         assertTrue(smbComTreeDisconnect instanceof ServerMessageBlock);
     }
@@ -425,11 +432,11 @@ public class SmbComTreeDisconnectTest {
     public void testMultipleInstancesIndependence() {
         // Setup mock to return a valid PID
         when(mockConfig.getPid()).thenReturn(5678);
-        
+
         // Given
         SmbComTreeDisconnect instance1 = new SmbComTreeDisconnect(config);
         SmbComTreeDisconnect instance2 = new SmbComTreeDisconnect(mockConfig);
-        
+
         // Then
         assertNotSame(instance1, instance2);
         assertEquals(instance1.getCommand(), instance2.getCommand());
@@ -447,7 +454,7 @@ public class SmbComTreeDisconnectTest {
         byte[] buffer = new byte[1000];
         int numThreads = 10;
         Thread[] threads = new Thread[numThreads];
-        
+
         // When - multiple threads calling methods simultaneously
         for (int i = 0; i < numThreads; i++) {
             final int threadIndex = i;
@@ -463,12 +470,12 @@ public class SmbComTreeDisconnectTest {
             });
             threads[i].start();
         }
-        
+
         // Wait for all threads to complete
         for (Thread thread : threads) {
             thread.join();
         }
-        
+
         // Then - no exceptions should have been thrown
         assertTrue(true); // If we reach here, no exceptions occurred
     }
@@ -482,7 +489,7 @@ public class SmbComTreeDisconnectTest {
         // Given
         smbComTreeDisconnect = new SmbComTreeDisconnect(config);
         byte[] buffer = new byte[100];
-        
+
         // When & Then - multiple calls should return the same result
         for (int i = 0; i < 10; i++) {
             assertEquals(0, smbComTreeDisconnect.writeParameterWordsWireFormat(buffer, i));
@@ -501,13 +508,13 @@ public class SmbComTreeDisconnectTest {
         // Given
         smbComTreeDisconnect = new SmbComTreeDisconnect(config);
         byte[] buffer = new byte[100];
-        
+
         // When & Then - test with maximum valid index
         assertEquals(0, smbComTreeDisconnect.writeParameterWordsWireFormat(buffer, 99));
         assertEquals(0, smbComTreeDisconnect.writeBytesWireFormat(buffer, 99));
         assertEquals(0, smbComTreeDisconnect.readParameterWordsWireFormat(buffer, 99));
         assertEquals(0, smbComTreeDisconnect.readBytesWireFormat(buffer, 99));
-        
+
         // Test with index beyond buffer size
         assertEquals(0, smbComTreeDisconnect.writeParameterWordsWireFormat(buffer, 200));
         assertEquals(0, smbComTreeDisconnect.writeBytesWireFormat(buffer, 200));
@@ -523,20 +530,20 @@ public class SmbComTreeDisconnectTest {
     public void testMethodOverrides() throws NoSuchMethodException {
         // Given
         Class<?> clazz = SmbComTreeDisconnect.class;
-        
+
         // When & Then - verify methods are declared in this class (overridden)
         Method writeParameterWords = clazz.getDeclaredMethod("writeParameterWordsWireFormat", byte[].class, int.class);
         assertNotNull(writeParameterWords);
-        
+
         Method writeBytes = clazz.getDeclaredMethod("writeBytesWireFormat", byte[].class, int.class);
         assertNotNull(writeBytes);
-        
+
         Method readParameterWords = clazz.getDeclaredMethod("readParameterWordsWireFormat", byte[].class, int.class);
         assertNotNull(readParameterWords);
-        
+
         Method readBytes = clazz.getDeclaredMethod("readBytesWireFormat", byte[].class, int.class);
         assertNotNull(readBytes);
-        
+
         Method toString = clazz.getDeclaredMethod("toString");
         assertNotNull(toString);
     }

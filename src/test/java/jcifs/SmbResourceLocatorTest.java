@@ -1,7 +1,11 @@
 package jcifs;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -9,10 +13,9 @@ import java.net.URL;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.function.Executable;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
  * Unit tests for {@link SmbResourceLocator}. Since the interface has no
@@ -42,7 +45,7 @@ public class SmbResourceLocatorTest {
                 throw new MalformedURLException("Only SMB URLs are supported in the dummy implementation");
             }
             this.urlStr = urlStr;
-            
+
             // Parse SMB URL manually
             String remaining = urlStr.substring(6); // Remove "smb://"
             int slashIndex = remaining.indexOf('/');
@@ -53,12 +56,13 @@ public class SmbResourceLocatorTest {
                 this.host = remaining.substring(0, slashIndex);
                 this.path = remaining.substring(slashIndex);
             }
-            
+
             // canonical form: remove . and .. but nothing fancy
             this.canonical = urlStr.replace("..", "").replace(".", "");
         }
 
-        @Override public String getName() {
+        @Override
+        public String getName() {
             if (path == null || path.isEmpty() || path.equals("/")) {
                 return host + "/"; // mimic the JVM behaviour for root or server
             }
@@ -69,7 +73,8 @@ public class SmbResourceLocatorTest {
             return parts[parts.length - 1];
         }
 
-        @Override public String getParent() {
+        @Override
+        public String getParent() {
             if (path == null || path.isEmpty() || path.equals("/")) {
                 return "smb://";
             }
@@ -80,30 +85,62 @@ public class SmbResourceLocatorTest {
             return "smb://" + host + path.substring(0, lastSlash + 1);
         }
 
-        @Override public String getPath() {
+        @Override
+        public String getPath() {
             return urlStr;
         }
 
-        @Override public String getCanonicalURL() {
+        @Override
+        public String getCanonicalURL() {
             return canonical;
         }
-        
-        @Override public DfsReferralData getDfsReferral() {
+
+        @Override
+        public DfsReferralData getDfsReferral() {
             return dfsReferral;
         }
-        
+
         public void setDfsReferral(DfsReferralData dfsReferral) {
             this.dfsReferral = dfsReferral;
         }
 
-        @Override public String getUNCPath() { return null; }
-        @Override public String getURLPath() { return null; }
-        @Override public String getShare() { return null; }
-        @Override public String getServerWithDfs() { return null; }
-        @Override public String getServer() { return null; }
-        @Override public String getDfsPath() { return null; }
-        @Override public int getPort() { return 0; }
-        @Override public URL getURL() { 
+        @Override
+        public String getUNCPath() {
+            return null;
+        }
+
+        @Override
+        public String getURLPath() {
+            return null;
+        }
+
+        @Override
+        public String getShare() {
+            return null;
+        }
+
+        @Override
+        public String getServerWithDfs() {
+            return null;
+        }
+
+        @Override
+        public String getServer() {
+            return null;
+        }
+
+        @Override
+        public String getDfsPath() {
+            return null;
+        }
+
+        @Override
+        public int getPort() {
+            return 0;
+        }
+
+        @Override
+        public URL getURL() {
             try {
                 // Create URL with custom protocol handler for SMB
                 return new URL(null, urlStr, new jcifs.smb.Handler());
@@ -112,11 +149,31 @@ public class SmbResourceLocatorTest {
                 return null;
             }
         }
-        @Override public Address getAddress() { return null; }
-        @Override public boolean isIPC() { return false; }
-        @Override public int getType() { return 0; }
-        @Override public boolean isWorkgroup() { return false; }
-        @Override public boolean isRoot() { return "/".equals(path); }
+
+        @Override
+        public Address getAddress() {
+            return null;
+        }
+
+        @Override
+        public boolean isIPC() {
+            return false;
+        }
+
+        @Override
+        public int getType() {
+            return 0;
+        }
+
+        @Override
+        public boolean isWorkgroup() {
+            return false;
+        }
+
+        @Override
+        public boolean isRoot() {
+            return "/".equals(path);
+        }
     }
 
     @Nested
@@ -140,15 +197,13 @@ public class SmbResourceLocatorTest {
     class Invalid {
         @Test
         void nullUrlThrows() {
-            assertThrows(IllegalArgumentException.class,
-                         () -> new DummySmbResourceLocator(null));
+            assertThrows(IllegalArgumentException.class, () -> new DummySmbResourceLocator(null));
         }
 
         @Test
         void unsupportedProtocolThrows() {
             String url = "http://example.com";
-            assertThrows(MalformedURLException.class,
-                         () -> new DummySmbResourceLocator(url));
+            assertThrows(MalformedURLException.class, () -> new DummySmbResourceLocator(url));
         }
 
         @Test
@@ -167,41 +222,43 @@ public class SmbResourceLocatorTest {
         }
     }
 
-    @Mock DfsReferralData dfs;
-    @Mock Address addr;
+    @Mock
+    DfsReferralData dfs;
+    @Mock
+    Address addr;
 
     @Test
     @DisplayName("Mockito interaction – dependent objects are called appropriately")
     void testInteractionsWithStubbedDependencies() throws Exception {
         String url = "smb://server/share/";
         DummySmbResourceLocator loc = new DummySmbResourceLocator(url);
-        
+
         // Set the DFS referral mock
         loc.setDfsReferral(dfs);
-        
+
         // Verify we can retrieve it
         DfsReferralData received = loc.getDfsReferral();
         assertSame(dfs, received);
-        
+
         // Verify that the URL returned by getURL works with SMB handler
         URL returned = loc.getURL();
         if (returned != null) {
             assertEquals(url, returned.toString());
         }
-        
+
         // Test that getAddress returns null for our dummy implementation
         assertNull(loc.getAddress());
     }
-    
+
     @Test
     @DisplayName("Test DFS referral data")
     void testDfsReferralData() throws Exception {
         String url = "smb://server/share/path/";
         DummySmbResourceLocator loc = new DummySmbResourceLocator(url);
-        
+
         // Initially no DFS referral
         assertNull(loc.getDfsReferral());
-        
+
         // Set and retrieve DFS referral
         loc.setDfsReferral(dfs);
         assertSame(dfs, loc.getDfsReferral());

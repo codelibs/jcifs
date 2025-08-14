@@ -1,10 +1,13 @@
 package jcifs.internal.smb2.lock;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.stream.Stream;
 
@@ -64,35 +67,35 @@ class Smb2OplockBreakNotificationTest extends BaseTest {
             // Create a valid buffer with structure size 24
             byte[] buffer = new byte[64];
             int bufferIndex = 0;
-            
+
             // Write structure size (24)
             SMBUtil.writeInt2(24, buffer, bufferIndex);
-            
+
             // Write oplock level at offset 2
             byte expectedOplockLevel = (byte) 0x02; // SMB2_OPLOCK_LEVEL_II
             buffer[bufferIndex + 2] = expectedOplockLevel;
-            
+
             // Write reserved field (4 bytes at offset 4)
             bufferIndex += 4;
-            
+
             // Write Reserved2 (4 bytes)
             bufferIndex += 4;
-            
+
             // Write file ID (16 bytes)
             byte[] expectedFileId = createTestData(16);
             System.arraycopy(expectedFileId, 0, buffer, bufferIndex, 16);
-            
+
             // Read the buffer
             int bytesRead = notification.readBytesWireFormat(buffer, 0);
-            
+
             // Verify the bytes read
             assertEquals(24, bytesRead);
-            
+
             // Verify the fields were set correctly using reflection
             Field oplockLevelField = Smb2OplockBreakNotification.class.getDeclaredField("oplockLevel");
             oplockLevelField.setAccessible(true);
             assertEquals(expectedOplockLevel, oplockLevelField.get(notification));
-            
+
             Field fileIdField = Smb2OplockBreakNotification.class.getDeclaredField("fileId");
             fileIdField.setAccessible(true);
             assertArrayEquals(expectedFileId, (byte[]) fileIdField.get(notification));
@@ -104,24 +107,22 @@ class Smb2OplockBreakNotificationTest extends BaseTest {
             // Create buffer with invalid structure size
             byte[] buffer = new byte[64];
             SMBUtil.writeInt2(23, buffer, 0); // Invalid size (should be 24)
-            
-            SMBProtocolDecodingException exception = assertThrows(
-                SMBProtocolDecodingException.class,
-                () -> notification.readBytesWireFormat(buffer, 0)
-            );
-            
+
+            SMBProtocolDecodingException exception =
+                    assertThrows(SMBProtocolDecodingException.class, () -> notification.readBytesWireFormat(buffer, 0));
+
             assertEquals("Expected structureSize = 24", exception.getMessage());
         }
 
         @ParameterizedTest
         @DisplayName("Should read different oplock levels correctly")
-        @ValueSource(bytes = {0x00, 0x01, 0x02, 0x08, (byte) 0xFF})
+        @ValueSource(bytes = { 0x00, 0x01, 0x02, 0x08, (byte) 0xFF })
         void testReadDifferentOplockLevels(byte oplockLevel) throws Exception {
             byte[] buffer = createValidOplockBreakBuffer(oplockLevel, createTestData(16));
-            
+
             int bytesRead = notification.readBytesWireFormat(buffer, 0);
             assertEquals(24, bytesRead);
-            
+
             Field oplockLevelField = Smb2OplockBreakNotification.class.getDeclaredField("oplockLevel");
             oplockLevelField.setAccessible(true);
             assertEquals(oplockLevel, oplockLevelField.get(notification));
@@ -134,18 +135,18 @@ class Smb2OplockBreakNotificationTest extends BaseTest {
             byte[] buffer = new byte[64];
             byte[] fileId = createTestData(16);
             byte oplockLevel = 0x02;
-            
+
             // Fill some random data before offset
             Arrays.fill(buffer, 0, offset, (byte) 0xAB);
-            
+
             // Write valid data at offset
             SMBUtil.writeInt2(24, buffer, offset);
             buffer[offset + 2] = oplockLevel;
             System.arraycopy(fileId, 0, buffer, offset + 8, 16);
-            
+
             int bytesRead = notification.readBytesWireFormat(buffer, offset);
             assertEquals(24, bytesRead);
-            
+
             Field fileIdField = Smb2OplockBreakNotification.class.getDeclaredField("fileId");
             fileIdField.setAccessible(true);
             assertArrayEquals(fileId, (byte[]) fileIdField.get(notification));
@@ -157,12 +158,12 @@ class Smb2OplockBreakNotificationTest extends BaseTest {
             // Test with all zeros
             byte[] zeroFileId = new byte[16];
             testFileIdReading(zeroFileId);
-            
+
             // Test with all ones
             byte[] onesFileId = new byte[16];
             Arrays.fill(onesFileId, (byte) 0xFF);
             testFileIdReading(onesFileId);
-            
+
             // Test with pattern
             byte[] patternFileId = createTestData(16);
             testFileIdReading(patternFileId);
@@ -171,9 +172,9 @@ class Smb2OplockBreakNotificationTest extends BaseTest {
         private void testFileIdReading(byte[] expectedFileId) throws Exception {
             Smb2OplockBreakNotification testNotification = new Smb2OplockBreakNotification(mockConfig);
             byte[] buffer = createValidOplockBreakBuffer((byte) 0x01, expectedFileId);
-            
+
             testNotification.readBytesWireFormat(buffer, 0);
-            
+
             Field fileIdField = Smb2OplockBreakNotification.class.getDeclaredField("fileId");
             fileIdField.setAccessible(true);
             assertArrayEquals(expectedFileId, (byte[]) fileIdField.get(testNotification));
@@ -198,11 +199,11 @@ class Smb2OplockBreakNotificationTest extends BaseTest {
             byte[] buffer = new byte[64];
             int result = notification.writeBytesWireFormat(buffer, 0);
             assertEquals(0, result);
-            
+
             // Test with different offsets
             result = notification.writeBytesWireFormat(buffer, 10);
             assertEquals(0, result);
-            
+
             result = notification.writeBytesWireFormat(buffer, 50);
             assertEquals(0, result);
         }
@@ -213,9 +214,9 @@ class Smb2OplockBreakNotificationTest extends BaseTest {
             byte[] buffer = new byte[64];
             Arrays.fill(buffer, (byte) 0xAA);
             byte[] originalBuffer = buffer.clone();
-            
+
             notification.writeBytesWireFormat(buffer, 0);
-            
+
             assertArrayEquals(originalBuffer, buffer);
         }
     }
@@ -232,18 +233,18 @@ class Smb2OplockBreakNotificationTest extends BaseTest {
             byte[] fileId = new byte[16];
             Arrays.fill(fileId, 0, 8, (byte) 0xAB);
             Arrays.fill(fileId, 8, 16, (byte) 0xCD);
-            
+
             // Use reflection to set private fields
             Field oplockLevelField = Smb2OplockBreakNotification.class.getDeclaredField("oplockLevel");
             oplockLevelField.setAccessible(true);
             oplockLevelField.set(notification, oplockLevel);
-            
+
             Field fileIdField = Smb2OplockBreakNotification.class.getDeclaredField("fileId");
             fileIdField.setAccessible(true);
             fileIdField.set(notification, fileId);
-            
+
             String result = notification.toString();
-            
+
             // Note: There's a typo in the original code - "Opblock" instead of "Oplock"
             assertTrue(result.startsWith("Smb2OpblockBreakNotification["));
             assertTrue(result.contains("oplockLevel=" + oplockLevel));
@@ -258,7 +259,7 @@ class Smb2OplockBreakNotificationTest extends BaseTest {
             Field oplockLevelField = Smb2OplockBreakNotification.class.getDeclaredField("oplockLevel");
             oplockLevelField.setAccessible(true);
             oplockLevelField.set(notification, (byte) 0x01);
-            
+
             // The implementation calls Hexdump.toHexString which throws NPE on null
             // This test verifies the actual behavior
             assertThrows(NullPointerException.class, () -> notification.toString());
@@ -266,24 +267,19 @@ class Smb2OplockBreakNotificationTest extends BaseTest {
 
         @ParameterizedTest
         @DisplayName("Should format different oplock levels correctly")
-        @CsvSource({
-            "0, 0",
-            "1, 1",
-            "2, 2",
-            "8, 8",
-            "255, -1"  // byte 255 is -1 when printed as signed
+        @CsvSource({ "0, 0", "1, 1", "2, 2", "8, 8", "255, -1" // byte 255 is -1 when printed as signed
         })
         void testToStringWithDifferentOplockLevels(int inputValue, String expectedDisplay) throws Exception {
             byte oplockLevel = (byte) inputValue;
-            
+
             Field oplockLevelField = Smb2OplockBreakNotification.class.getDeclaredField("oplockLevel");
             oplockLevelField.setAccessible(true);
             oplockLevelField.set(notification, oplockLevel);
-            
+
             Field fileIdField = Smb2OplockBreakNotification.class.getDeclaredField("fileId");
             fileIdField.setAccessible(true);
             fileIdField.set(notification, new byte[16]);
-            
+
             String result = notification.toString();
             assertTrue(result.contains("oplockLevel=" + oplockLevel));
         }
@@ -299,7 +295,7 @@ class Smb2OplockBreakNotificationTest extends BaseTest {
             byte[] buffer = new byte[24]; // Exact size needed
             SMBUtil.writeInt2(24, buffer, 0);
             buffer[2] = 0x01;
-            
+
             int bytesRead = notification.readBytesWireFormat(buffer, 0);
             assertEquals(24, bytesRead);
         }
@@ -309,16 +305,16 @@ class Smb2OplockBreakNotificationTest extends BaseTest {
         void testBufferWithExtraData() throws Exception {
             byte[] buffer = new byte[100];
             Arrays.fill(buffer, (byte) 0xFF); // Fill with non-zero values
-            
+
             // Write valid notification data
             SMBUtil.writeInt2(24, buffer, 0);
             buffer[2] = 0x02;
             byte[] fileId = createTestData(16);
             System.arraycopy(fileId, 0, buffer, 8, 16);
-            
+
             int bytesRead = notification.readBytesWireFormat(buffer, 0);
             assertEquals(24, bytesRead);
-            
+
             // Verify only the necessary bytes were read
             Field fileIdField = Smb2OplockBreakNotification.class.getDeclaredField("fileId");
             fileIdField.setAccessible(true);
@@ -329,29 +325,29 @@ class Smb2OplockBreakNotificationTest extends BaseTest {
         @DisplayName("Should correctly parse reserved fields")
         void testReservedFieldsAreSkipped() throws Exception {
             byte[] buffer = new byte[64];
-            
+
             // Structure with specific values in reserved fields
             SMBUtil.writeInt2(24, buffer, 0);
             buffer[2] = 0x01; // Oplock level
             buffer[3] = (byte) 0xAA; // Reserved byte
-            
+
             // Reserved2 field (4 bytes at offset 4)
             buffer[4] = (byte) 0xBB;
             buffer[5] = (byte) 0xCC;
             buffer[6] = (byte) 0xDD;
             buffer[7] = (byte) 0xEE;
-            
+
             byte[] fileId = createTestData(16);
             System.arraycopy(fileId, 0, buffer, 8, 16);
-            
+
             int bytesRead = notification.readBytesWireFormat(buffer, 0);
             assertEquals(24, bytesRead);
-            
+
             // Verify that reserved fields were properly skipped
             Field oplockLevelField = Smb2OplockBreakNotification.class.getDeclaredField("oplockLevel");
             oplockLevelField.setAccessible(true);
             assertEquals((byte) 0x01, oplockLevelField.get(notification));
-            
+
             Field fileIdField = Smb2OplockBreakNotification.class.getDeclaredField("fileId");
             fileIdField.setAccessible(true);
             assertArrayEquals(fileId, (byte[]) fileIdField.get(notification));
@@ -368,18 +364,18 @@ class Smb2OplockBreakNotificationTest extends BaseTest {
             // First read
             byte[] buffer1 = createValidOplockBreakBuffer((byte) 0x01, createTestData(16));
             notification.readBytesWireFormat(buffer1, 0);
-            
+
             // Second read with different values
             byte[] fileId2 = new byte[16];
             Arrays.fill(fileId2, (byte) 0x99);
             byte[] buffer2 = createValidOplockBreakBuffer((byte) 0x08, fileId2);
             notification.readBytesWireFormat(buffer2, 0);
-            
+
             // Verify second read overwrote first read values
             Field oplockLevelField = Smb2OplockBreakNotification.class.getDeclaredField("oplockLevel");
             oplockLevelField.setAccessible(true);
             assertEquals((byte) 0x08, oplockLevelField.get(notification));
-            
+
             Field fileIdField = Smb2OplockBreakNotification.class.getDeclaredField("fileId");
             fileIdField.setAccessible(true);
             assertArrayEquals(fileId2, (byte[]) fileIdField.get(notification));
@@ -391,14 +387,14 @@ class Smb2OplockBreakNotificationTest extends BaseTest {
             byte oplockLevel = 0x02;
             byte[] fileId = createTestData(16);
             byte[] buffer = createValidOplockBreakBuffer(oplockLevel, fileId);
-            
+
             notification.readBytesWireFormat(buffer, 0);
-            
+
             // Verify state is maintained through multiple toString calls
             String firstToString = notification.toString();
             String secondToString = notification.toString();
             assertEquals(firstToString, secondToString);
-            
+
             // Verify state is maintained after write operation
             notification.writeBytesWireFormat(new byte[64], 0);
             String thirdToString = notification.toString();
@@ -427,26 +423,22 @@ class Smb2OplockBreakNotificationTest extends BaseTest {
             buffer[2] = oplockLevel;
             byte[] fileId = createTestData(16);
             System.arraycopy(fileId, 0, buffer, 8, 16);
-            
+
             int bytesRead = notification.readBytesWireFormat(buffer, 0);
             assertEquals(24, bytesRead);
-            
+
             Field oplockLevelField = Smb2OplockBreakNotification.class.getDeclaredField("oplockLevel");
             oplockLevelField.setAccessible(true);
             assertEquals(oplockLevel, oplockLevelField.get(notification));
-            
+
             // Log the test for clarity
             logger.debug("Tested oplock level: {} ({})", oplockLevel, description);
         }
 
         private static Stream<Arguments> provideOplockLevels() {
-            return Stream.of(
-                Arguments.of((byte) 0x00, "SMB2_OPLOCK_LEVEL_NONE"),
-                Arguments.of((byte) 0x01, "SMB2_OPLOCK_LEVEL_II"),
-                Arguments.of((byte) 0x08, "SMB2_OPLOCK_LEVEL_EXCLUSIVE"),
-                Arguments.of((byte) 0x09, "SMB2_OPLOCK_LEVEL_BATCH"),
-                Arguments.of((byte) 0xFF, "SMB2_OPLOCK_LEVEL_LEASE")
-            );
+            return Stream.of(Arguments.of((byte) 0x00, "SMB2_OPLOCK_LEVEL_NONE"), Arguments.of((byte) 0x01, "SMB2_OPLOCK_LEVEL_II"),
+                    Arguments.of((byte) 0x08, "SMB2_OPLOCK_LEVEL_EXCLUSIVE"), Arguments.of((byte) 0x09, "SMB2_OPLOCK_LEVEL_BATCH"),
+                    Arguments.of((byte) 0xFF, "SMB2_OPLOCK_LEVEL_LEASE"));
         }
     }
 }

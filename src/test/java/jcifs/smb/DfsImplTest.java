@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -47,7 +46,7 @@ class DfsImplTest {
 
         // Mock transport to throw IOException - simulating connection failure
         when(mockTransportPool.getSmbTransport(any(CIFSContext.class), anyString(), anyInt(), anyBoolean(), anyBoolean()))
-            .thenThrow(new IOException("Connection failed"));
+                .thenThrow(new IOException("Connection failed"));
 
         // Instantiate the class under test
         dfsImpl = new DfsImpl(mockContext);

@@ -1,12 +1,12 @@
 /* Test class for jcifs.smb1.dcerpc.ndr.NdrShort */
 package jcifs.smb1.dcerpc.ndr;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 
-import jcifs.smb1.util.Encdec;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -39,38 +39,36 @@ class NdrShortTest {
      * lowest 8 bits (NdrShort incorrectly masks to 8 bits even though it's a short).
      */
     @ParameterizedTest
-    @ValueSource(ints = {0, 1, 255, -1, 256, 65535})
+    @ValueSource(ints = { 0, 1, 255, -1, 256, 65535 })
     void constructorMasksValue(int input) {
         NdrShort ns = new NdrShort(input);
         // NdrShort masks to 0xFF (8 bits) in its constructor
         int expected = input & 0xFF;
-        assertEquals(expected, ns.value,
-                     "value should be masked to 0xFF before storing");
+        assertEquals(expected, ns.value, "value should be masked to 0xFF before storing");
     }
 
     /**
      * Round-trip encode/decode for a selection of representative values.
      */
     @ParameterizedTest
-    @ValueSource(ints = {0, 42, 255, -1, 128})
+    @ValueSource(ints = { 0, 42, 255, -1, 128 })
     void encodeDecodeRoundTrip(int original) throws Exception {
         // The constructor masks to 0xFF (8 bits)
         int expected = original & 0xFF;
         NdrShort ns = new NdrShort(original);
         buf.reset();
         ns.encode(buf); // should not throw
-        
+
         // After encoding, check how many bytes were used
         int bytesUsed = buf.getIndex();
         // Should be 2 bytes for the short value (alignment may add padding)
         assertTrue(bytesUsed >= 2, "Should use at least 2 bytes for short");
-        
+
         // Reset index to read back
         buf.reset();
         NdrShort decoded = new NdrShort(0); // placeholder value
         decoded.decode(buf);
-        assertEquals(expected, decoded.value,
-                     "decoded value should match original after masking");
+        assertEquals(expected, decoded.value, "decoded value should match original after masking");
     }
 
     /**
@@ -83,19 +81,17 @@ class NdrShortTest {
         buf.reset();
         int startIndex = buf.getIndex();
         ns.encode(buf);
-        
+
         // Find where the actual data starts (after alignment)
         int alignmentBytes = 0;
         if (startIndex % 2 != 0) {
             alignmentBytes = 1; // Need 1 byte of padding for 2-byte alignment
         }
-        
+
         // The value 0xCD should be encoded as a 16-bit value (0x00CD) in little-endian
         byte[] bufferData = buf.getBuffer();
-        assertEquals((byte) 0xCD, bufferData[startIndex + alignmentBytes],
-                     "Least significant byte should be first");
-        assertEquals((byte) 0x00, bufferData[startIndex + alignmentBytes + 1],
-                     "Most significant byte should be second");
+        assertEquals((byte) 0xCD, bufferData[startIndex + alignmentBytes], "Least significant byte should be first");
+        assertEquals((byte) 0x00, bufferData[startIndex + alignmentBytes + 1], "Most significant byte should be second");
     }
 
     /**
@@ -107,10 +103,10 @@ class NdrShortTest {
         NdrShort ns = new NdrShort(123); // masked value 123 (already fits in 8 bits)
         buf.reset();
         ns.encode(buf);
-        
+
         // Reset buffer to start for decoding
         buf.reset();
-        
+
         // Prepare a new object to decode into
         NdrShort decoded = new NdrShort(0);
         decoded.decode(buf);
@@ -140,10 +136,9 @@ class NdrShortTest {
         NdrBuffer prepare = new NdrBuffer(new byte[10], 0);
         prepare.enc_ndr_short(0x34); // Encode value 0x34
         prepare.reset(); // Reset to beginning for decoding
-        
+
         NdrBuffer spy = spy(prepare);
         ns.decode(spy);
         verify(spy).dec_ndr_short();
     }
 }
-

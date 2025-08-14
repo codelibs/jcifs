@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.security.GeneralSecurityException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -15,7 +14,6 @@ import javax.security.auth.kerberos.KerberosKey;
 import javax.security.auth.kerberos.KerberosPrincipal;
 
 import org.junit.jupiter.api.Test;
-import jcifs.pac.PACDecodingException;
 
 /**
  * Tests for the PacMac class.
@@ -84,8 +82,7 @@ class PacMacTest {
         assertEquals(16, derivedKey.length);
 
         // Test with a different key size
-        KerberosKey key256 = new KerberosKey(TEST_PRINCIPAL, new byte[32], PacSignature.ETYPE_AES256_CTS_HMAC_SHA1_96,
-                0);
+        KerberosKey key256 = new KerberosKey(TEST_PRINCIPAL, new byte[32], PacSignature.ETYPE_AES256_CTS_HMAC_SHA1_96, 0);
         byte[] derivedKey256 = PacMac.deriveKeyAES(key256, constant);
         assertNotNull(derivedKey256);
         assertEquals(32, derivedKey256.length);
@@ -105,37 +102,28 @@ class PacMacTest {
 
         // Test vectors from RFC 3961 Appendix A.1
         // 64-fold("012345")
-        verifyNfold("012345", 8, new byte[] { 
-            (byte) 0xbe, (byte) 0x07, (byte) 0x26, (byte) 0x31, 
-            (byte) 0x27, (byte) 0x6b, (byte) 0x19, (byte) 0x55 
-        });
-        
+        verifyNfold("012345", 8,
+                new byte[] { (byte) 0xbe, (byte) 0x07, (byte) 0x26, (byte) 0x31, (byte) 0x27, (byte) 0x6b, (byte) 0x19, (byte) 0x55 });
+
         // 56-fold("password")
-        verifyNfold("password", 7, new byte[] { 
-            (byte) 0x78, (byte) 0xa0, (byte) 0x7b, (byte) 0x6c, 
-            (byte) 0xaf, (byte) 0x85, (byte) 0xfa 
-        });
-        
+        verifyNfold("password", 7,
+                new byte[] { (byte) 0x78, (byte) 0xa0, (byte) 0x7b, (byte) 0x6c, (byte) 0xaf, (byte) 0x85, (byte) 0xfa });
+
         // 64-fold("Rough Consensus, and Running Code")
-        verifyNfold("Rough Consensus, and Running Code", 8, new byte[] { 
-            (byte) 0xbb, (byte) 0x6e, (byte) 0xd3, (byte) 0x08, 
-            (byte) 0x70, (byte) 0xb7, (byte) 0xf0, (byte) 0xe0 
-        });
-        
+        verifyNfold("Rough Consensus, and Running Code", 8,
+                new byte[] { (byte) 0xbb, (byte) 0x6e, (byte) 0xd3, (byte) 0x08, (byte) 0x70, (byte) 0xb7, (byte) 0xf0, (byte) 0xe0 });
+
         // 64-fold("kerberos")
-        verifyNfold("kerberos", 8, new byte[] { 
-            (byte) 0x6b, (byte) 0x65, (byte) 0x72, (byte) 0x62, 
-            (byte) 0x65, (byte) 0x72, (byte) 0x6f, (byte) 0x73 
-        });
+        verifyNfold("kerberos", 8,
+                new byte[] { (byte) 0x6b, (byte) 0x65, (byte) 0x72, (byte) 0x62, (byte) 0x65, (byte) 0x72, (byte) 0x6f, (byte) 0x73 });
     }
-    
+
     /**
      * Helper method to verify n-fold expansion.
      */
     private void verifyNfold(String input, int outlen, byte[] expected) {
         byte[] result = PacMac.expandNFold(input.getBytes(), outlen);
-        assertArrayEquals(expected, result, 
-            String.format("n-fold expansion failed for input '%s'", input));
+        assertArrayEquals(expected, result, String.format("n-fold expansion failed for input '%s'", input));
     }
 
     /**
@@ -148,10 +136,8 @@ class PacMacTest {
     void testCalculateMac() throws PACDecodingException {
         Map<Integer, KerberosKey> keys = new HashMap<>();
         KerberosKey hmacKey = new KerberosKey(TEST_PRINCIPAL, new byte[16], PacSignature.ETYPE_ARCFOUR_HMAC, 0);
-        KerberosKey aes128Key = new KerberosKey(TEST_PRINCIPAL, new byte[16],
-                PacSignature.ETYPE_AES128_CTS_HMAC_SHA1_96, 0);
-        KerberosKey aes256Key = new KerberosKey(TEST_PRINCIPAL, new byte[32],
-                PacSignature.ETYPE_AES256_CTS_HMAC_SHA1_96, 0);
+        KerberosKey aes128Key = new KerberosKey(TEST_PRINCIPAL, new byte[16], PacSignature.ETYPE_AES128_CTS_HMAC_SHA1_96, 0);
+        KerberosKey aes256Key = new KerberosKey(TEST_PRINCIPAL, new byte[32], PacSignature.ETYPE_AES256_CTS_HMAC_SHA1_96, 0);
 
         keys.put(PacSignature.ETYPE_ARCFOUR_HMAC, hmacKey);
         keys.put(PacSignature.ETYPE_AES128_CTS_HMAC_SHA1_96, aes128Key);
@@ -179,8 +165,8 @@ class PacMacTest {
     @Test
     void testCalculateMacMissingKey() {
         Map<Integer, KerberosKey> keys = new HashMap<>(); // Empty map
-        PACDecodingException e = assertThrows(PACDecodingException.class,
-                () -> PacMac.calculateMac(PacSignature.KERB_CHECKSUM_HMAC_MD5, keys, TEST_DATA));
+        PACDecodingException e =
+                assertThrows(PACDecodingException.class, () -> PacMac.calculateMac(PacSignature.KERB_CHECKSUM_HMAC_MD5, keys, TEST_DATA));
         assertEquals("Missing key", e.getMessage());
     }
 
@@ -193,8 +179,7 @@ class PacMacTest {
         KerberosKey hmacKey = new KerberosKey(TEST_PRINCIPAL, new byte[16], PacSignature.ETYPE_ARCFOUR_HMAC, 0);
         keys.put(PacSignature.ETYPE_ARCFOUR_HMAC, hmacKey);
 
-        PACDecodingException e = assertThrows(PACDecodingException.class,
-                () -> PacMac.calculateMac(-1, keys, TEST_DATA)); // Invalid type
+        PACDecodingException e = assertThrows(PACDecodingException.class, () -> PacMac.calculateMac(-1, keys, TEST_DATA)); // Invalid type
         assertEquals("Invalid MAC algorithm", e.getMessage());
     }
 }

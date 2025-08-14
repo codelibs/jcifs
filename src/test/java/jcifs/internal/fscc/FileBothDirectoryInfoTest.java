@@ -1,13 +1,13 @@
 package jcifs.internal.fscc;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
-import java.util.Date;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -24,7 +24,7 @@ class FileBothDirectoryInfoTest {
 
     @Mock
     private Configuration mockConfig;
-    
+
     private FileBothDirectoryInfo fileBothDirectoryInfo;
     private FileBothDirectoryInfo fileBothDirectoryInfoNonUnicode;
 
@@ -49,10 +49,10 @@ class FileBothDirectoryInfoTest {
     void testGetName() throws SMBProtocolDecodingException {
         // Prepare test data
         byte[] buffer = createValidBuffer("testfile.txt", "TEST~1.TXT", true);
-        
+
         // Decode
         fileBothDirectoryInfo.decode(buffer, 0, buffer.length);
-        
+
         // Verify
         assertEquals("testfile.txt", fileBothDirectoryInfo.getName());
     }
@@ -70,10 +70,10 @@ class FileBothDirectoryInfoTest {
         byte[] buffer = createValidBuffer("file.txt", "FILE~1.TXT", true);
         int expectedFileIndex = 0x12345678;
         SMBUtil.writeInt4(expectedFileIndex, buffer, 4);
-        
+
         // Decode
         fileBothDirectoryInfo.decode(buffer, 0, buffer.length);
-        
+
         // Verify
         assertEquals(expectedFileIndex, fileBothDirectoryInfo.getFileIndex());
     }
@@ -84,10 +84,10 @@ class FileBothDirectoryInfoTest {
         // Prepare test data
         String expectedFilename = "longfilename.docx";
         byte[] buffer = createValidBuffer(expectedFilename, "LONGFI~1.DOC", true);
-        
+
         // Decode
         fileBothDirectoryInfo.decode(buffer, 0, buffer.length);
-        
+
         // Verify
         assertEquals(expectedFilename, fileBothDirectoryInfo.getFilename());
     }
@@ -99,10 +99,10 @@ class FileBothDirectoryInfoTest {
         byte[] buffer = createValidBuffer("file.txt", "FILE~1.TXT", true);
         int expectedAttributes = 0x00000021; // FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_ARCHIVE
         SMBUtil.writeInt4(expectedAttributes, buffer, 56);
-        
+
         // Decode
         fileBothDirectoryInfo.decode(buffer, 0, buffer.length);
-        
+
         // Verify
         assertEquals(expectedAttributes, fileBothDirectoryInfo.getAttributes());
     }
@@ -114,10 +114,10 @@ class FileBothDirectoryInfoTest {
         byte[] buffer = createValidBuffer("file.txt", "FILE~1.TXT", true);
         long expectedCreationTime = System.currentTimeMillis();
         SMBUtil.writeTime(expectedCreationTime, buffer, 8);
-        
+
         // Decode
         fileBothDirectoryInfo.decode(buffer, 0, buffer.length);
-        
+
         // Verify
         assertEquals(expectedCreationTime, fileBothDirectoryInfo.createTime());
     }
@@ -129,10 +129,10 @@ class FileBothDirectoryInfoTest {
         byte[] buffer = createValidBuffer("file.txt", "FILE~1.TXT", true);
         long expectedLastWriteTime = System.currentTimeMillis();
         SMBUtil.writeTime(expectedLastWriteTime, buffer, 24);
-        
+
         // Decode
         fileBothDirectoryInfo.decode(buffer, 0, buffer.length);
-        
+
         // Verify
         assertEquals(expectedLastWriteTime, fileBothDirectoryInfo.lastModified());
     }
@@ -144,10 +144,10 @@ class FileBothDirectoryInfoTest {
         byte[] buffer = createValidBuffer("file.txt", "FILE~1.TXT", true);
         long expectedLastAccessTime = System.currentTimeMillis();
         SMBUtil.writeTime(expectedLastAccessTime, buffer, 16);
-        
+
         // Decode
         fileBothDirectoryInfo.decode(buffer, 0, buffer.length);
-        
+
         // Verify
         assertEquals(expectedLastAccessTime, fileBothDirectoryInfo.lastAccess());
     }
@@ -159,10 +159,10 @@ class FileBothDirectoryInfoTest {
         byte[] buffer = createValidBuffer("file.txt", "FILE~1.TXT", true);
         long expectedEndOfFile = 1024L * 1024L; // 1MB
         SMBUtil.writeInt8(expectedEndOfFile, buffer, 40);
-        
+
         // Decode
         fileBothDirectoryInfo.decode(buffer, 0, buffer.length);
-        
+
         // Verify
         assertEquals(expectedEndOfFile, fileBothDirectoryInfo.length());
     }
@@ -174,10 +174,10 @@ class FileBothDirectoryInfoTest {
         byte[] buffer = createValidBuffer("file.txt", "FILE~1.TXT", true);
         int expectedNextEntryOffset = 256;
         SMBUtil.writeInt4(expectedNextEntryOffset, buffer, 0);
-        
+
         // Decode
         fileBothDirectoryInfo.decode(buffer, 0, buffer.length);
-        
+
         // Verify
         assertEquals(expectedNextEntryOffset, fileBothDirectoryInfo.getNextEntryOffset());
     }
@@ -188,10 +188,10 @@ class FileBothDirectoryInfoTest {
         // Prepare test data with Unicode filename
         String expectedFilename = "日本語ファイル.txt";
         byte[] buffer = createValidBuffer(expectedFilename, "~1.TXT", true);
-        
+
         // Decode
         fileBothDirectoryInfo.decode(buffer, 0, buffer.length);
-        
+
         // Verify
         assertEquals(expectedFilename, fileBothDirectoryInfo.getFilename());
     }
@@ -202,10 +202,10 @@ class FileBothDirectoryInfoTest {
         // Prepare test data with non-Unicode filename
         String expectedFilename = "asciifile.txt";
         byte[] buffer = createValidBufferNonUnicode(expectedFilename, "ASCII~1.TXT");
-        
+
         // Decode
         fileBothDirectoryInfoNonUnicode.decode(buffer, 0, buffer.length);
-        
+
         // Verify
         assertEquals(expectedFilename, fileBothDirectoryInfoNonUnicode.getFilename());
     }
@@ -216,10 +216,10 @@ class FileBothDirectoryInfoTest {
         // Prepare test data with null-terminated filename
         String expectedFilename = "nullterm.txt";
         byte[] buffer = createValidBufferWithNullTermination(expectedFilename, "NULLTE~1.TXT", true);
-        
+
         // Decode
         fileBothDirectoryInfo.decode(buffer, 0, buffer.length);
-        
+
         // Verify - the decode method strips null termination, so filename should match
         assertEquals(expectedFilename, fileBothDirectoryInfo.getFilename());
     }
@@ -230,10 +230,10 @@ class FileBothDirectoryInfoTest {
         // Prepare test data with null-terminated filename
         String expectedFilename = "nullterm.txt";
         byte[] buffer = createValidBufferWithNullTerminationNonUnicode(expectedFilename, "NULLTE~1.TXT");
-        
+
         // Decode
         fileBothDirectoryInfoNonUnicode.decode(buffer, 0, buffer.length);
-        
+
         // Verify
         assertEquals(expectedFilename, fileBothDirectoryInfoNonUnicode.getFilename());
     }
@@ -247,10 +247,10 @@ class FileBothDirectoryInfoTest {
         byte[] buffer = new byte[200 + offset];
         byte[] dataBuffer = createValidBuffer(expectedFilename, "OFFSET~1.TXT", true);
         System.arraycopy(dataBuffer, 0, buffer, offset, dataBuffer.length);
-        
+
         // Decode from offset
         fileBothDirectoryInfo.decode(buffer, offset, dataBuffer.length);
-        
+
         // Verify
         assertEquals(expectedFilename, fileBothDirectoryInfo.getFilename());
     }
@@ -261,10 +261,10 @@ class FileBothDirectoryInfoTest {
         // Prepare test data
         String filename = "testfile.txt";
         byte[] buffer = createValidBuffer(filename, "TESTFI~1.TXT", true);
-        
+
         // Decode and check return value
         int bytesConsumed = fileBothDirectoryInfo.decode(buffer, 0, buffer.length);
-        
+
         // Verify bytes consumed matches the actual data size
         assertTrue(bytesConsumed < 0); // Return value is negative (start - bufferIndex)
         assertEquals(-94 - filename.length() * 2, bytesConsumed); // Base structure + filename length
@@ -275,7 +275,7 @@ class FileBothDirectoryInfoTest {
     void testDecodeWithMaximumValues() throws SMBProtocolDecodingException {
         // Prepare test data with maximum values
         byte[] buffer = createValidBuffer("maxfile.txt", "MAXFIL~1.TXT", true);
-        
+
         // Set maximum values
         SMBUtil.writeInt4(Integer.MAX_VALUE, buffer, 0); // nextEntryOffset
         SMBUtil.writeInt4(Integer.MAX_VALUE, buffer, 4); // fileIndex
@@ -289,10 +289,10 @@ class FileBothDirectoryInfoTest {
         SMBUtil.writeInt8(Long.MAX_VALUE, buffer, 48); // allocationSize
         SMBUtil.writeInt4(Integer.MAX_VALUE, buffer, 56); // extFileAttributes
         SMBUtil.writeInt4(Integer.MAX_VALUE, buffer, 64); // eaSize
-        
+
         // Decode
         fileBothDirectoryInfo.decode(buffer, 0, buffer.length);
-        
+
         // Verify
         assertEquals(Integer.MAX_VALUE, fileBothDirectoryInfo.getNextEntryOffset());
         assertEquals(Integer.MAX_VALUE, fileBothDirectoryInfo.getFileIndex());
@@ -308,7 +308,7 @@ class FileBothDirectoryInfoTest {
     void testDecodeWithZeroValues() throws SMBProtocolDecodingException {
         // Prepare test data with zero values
         byte[] buffer = createValidBuffer("zerofile.txt", "ZEROFI~1.TXT", true);
-        
+
         // Set zero values - for SMB times, 0 in wire format represents 0 in Java time
         SMBUtil.writeInt4(0, buffer, 0); // nextEntryOffset
         SMBUtil.writeInt4(0, buffer, 4); // fileIndex
@@ -320,10 +320,10 @@ class FileBothDirectoryInfoTest {
         SMBUtil.writeInt8(0, buffer, 48); // allocationSize
         SMBUtil.writeInt4(0, buffer, 56); // extFileAttributes
         SMBUtil.writeInt4(0, buffer, 64); // eaSize
-        
+
         // Decode
         fileBothDirectoryInfo.decode(buffer, 0, buffer.length);
-        
+
         // Verify - when wire format is 0, readTime returns a negative value due to the 1601-1970 conversion
         assertEquals(0, fileBothDirectoryInfo.getNextEntryOffset());
         assertEquals(0, fileBothDirectoryInfo.getFileIndex());
@@ -341,7 +341,7 @@ class FileBothDirectoryInfoTest {
         // Prepare test data
         byte[] buffer = createValidBuffer("tostring.txt", "TOSTRI~1.TXT", true);
         long testTime = System.currentTimeMillis();
-        
+
         // Set specific values
         SMBUtil.writeInt4(100, buffer, 0); // nextEntryOffset
         SMBUtil.writeInt4(200, buffer, 4); // fileIndex
@@ -353,13 +353,13 @@ class FileBothDirectoryInfoTest {
         SMBUtil.writeInt8(2048L, buffer, 48); // allocationSize
         SMBUtil.writeInt4(0x20, buffer, 56); // extFileAttributes
         SMBUtil.writeInt4(512, buffer, 64); // eaSize
-        
+
         // Decode
         fileBothDirectoryInfo.decode(buffer, 0, buffer.length);
-        
+
         // Get toString result
         String result = fileBothDirectoryInfo.toString();
-        
+
         // Verify string contains all important fields
         assertTrue(result.contains("SmbFindFileBothDirectoryInfo"));
         assertTrue(result.contains("nextEntryOffset=100"));
@@ -381,10 +381,10 @@ class FileBothDirectoryInfoTest {
     void testDecodeWithEmptyFilename() throws SMBProtocolDecodingException {
         // Prepare test data with empty filename
         byte[] buffer = createValidBuffer("", "", true);
-        
+
         // Decode
         fileBothDirectoryInfo.decode(buffer, 0, buffer.length);
-        
+
         // Verify
         assertEquals("", fileBothDirectoryInfo.getFilename());
     }
@@ -395,14 +395,14 @@ class FileBothDirectoryInfoTest {
         // Prepare test data with long filename (255 characters)
         StringBuilder longName = new StringBuilder();
         for (int i = 0; i < 255; i++) {
-            longName.append((char)('a' + (i % 26)));
+            longName.append((char) ('a' + (i % 26)));
         }
         String expectedFilename = longName.toString();
         byte[] buffer = createValidBuffer(expectedFilename, "LONGNA~1.TXT", true);
-        
+
         // Decode
         fileBothDirectoryInfo.decode(buffer, 0, buffer.length);
-        
+
         // Verify
         assertEquals(expectedFilename, fileBothDirectoryInfo.getFilename());
     }
@@ -413,10 +413,10 @@ class FileBothDirectoryInfoTest {
         // Prepare test data with special characters
         String expectedFilename = "file-name_2024#version@1.0.txt";
         byte[] buffer = createValidBuffer(expectedFilename, "FILE-N~1.TXT", true);
-        
+
         // Decode
         fileBothDirectoryInfo.decode(buffer, 0, buffer.length);
-        
+
         // Verify
         assertEquals(expectedFilename, fileBothDirectoryInfo.getFilename());
     }
@@ -425,7 +425,7 @@ class FileBothDirectoryInfoTest {
     private byte[] createValidBuffer(String filename, String shortName, boolean unicode) {
         int filenameLength = unicode ? filename.length() * 2 : filename.length();
         byte[] buffer = new byte[94 + filenameLength];
-        
+
         // Set default values
         SMBUtil.writeInt4(0, buffer, 0); // nextEntryOffset
         SMBUtil.writeInt4(1, buffer, 4); // fileIndex
@@ -438,12 +438,12 @@ class FileBothDirectoryInfoTest {
         SMBUtil.writeInt4(0x20, buffer, 56); // extFileAttributes
         SMBUtil.writeInt4(filenameLength, buffer, 60); // fileNameLength
         SMBUtil.writeInt4(0, buffer, 64); // eaSize
-        
+
         // Write short name length and short name
         byte[] shortNameBytes = Strings.getUNIBytes(shortName);
         buffer[68] = (byte) shortNameBytes.length; // shortNameLength
         System.arraycopy(shortNameBytes, 0, buffer, 70, Math.min(shortNameBytes.length, 24));
-        
+
         // Write filename
         if (unicode) {
             byte[] filenameBytes = Strings.getUNIBytes(filename);
@@ -452,7 +452,7 @@ class FileBothDirectoryInfoTest {
             byte[] filenameBytes = Strings.getOEMBytes(filename, mockConfig);
             System.arraycopy(filenameBytes, 0, buffer, 94, filenameBytes.length);
         }
-        
+
         return buffer;
     }
 
@@ -464,7 +464,7 @@ class FileBothDirectoryInfoTest {
         // Create buffer with extra space for null termination
         int filenameLength = unicode ? (filename.length() * 2) + 2 : filename.length() + 1;
         byte[] buffer = new byte[94 + filenameLength];
-        
+
         // Set default values
         SMBUtil.writeInt4(0, buffer, 0); // nextEntryOffset
         SMBUtil.writeInt4(1, buffer, 4); // fileIndex
@@ -477,12 +477,12 @@ class FileBothDirectoryInfoTest {
         SMBUtil.writeInt4(0x20, buffer, 56); // extFileAttributes
         SMBUtil.writeInt4(filenameLength, buffer, 60); // fileNameLength - includes null termination
         SMBUtil.writeInt4(0, buffer, 64); // eaSize
-        
+
         // Write short name length and short name
         byte[] shortNameBytes = Strings.getUNIBytes(shortName);
         buffer[68] = (byte) shortNameBytes.length; // shortNameLength
         System.arraycopy(shortNameBytes, 0, buffer, 70, Math.min(shortNameBytes.length, 24));
-        
+
         // Write filename with null termination
         if (unicode) {
             byte[] filenameBytes = Strings.getUNIBytes(filename);
@@ -496,7 +496,7 @@ class FileBothDirectoryInfoTest {
             // Add null termination
             buffer[94 + filenameBytes.length] = 0;
         }
-        
+
         return buffer;
     }
 

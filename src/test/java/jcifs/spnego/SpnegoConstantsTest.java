@@ -1,6 +1,9 @@
 package jcifs.spnego;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -41,12 +44,8 @@ class SpnegoConstantsTest {
     @Test
     @DisplayName("Fields are public static final Strings with expected values")
     void fieldModifiersAndTypes() throws Exception {
-        Map<String, String> expected = Map.of(
-            "SPNEGO_MECHANISM", "1.3.6.1.5.5.2",
-            "KERBEROS_MECHANISM", "1.2.840.113554.1.2.2",
-            "LEGACY_KERBEROS_MECHANISM", "1.2.840.48018.1.2.2",
-            "NTLMSSP_MECHANISM", "1.3.6.1.4.1.311.2.2.10"
-        );
+        Map<String, String> expected = Map.of("SPNEGO_MECHANISM", "1.3.6.1.5.5.2", "KERBEROS_MECHANISM", "1.2.840.113554.1.2.2",
+                "LEGACY_KERBEROS_MECHANISM", "1.2.840.48018.1.2.2", "NTLMSSP_MECHANISM", "1.3.6.1.4.1.311.2.2.10");
 
         for (Map.Entry<String, String> e : expected.entrySet()) {
             Field f = SpnegoConstants.class.getField(e.getKey());
@@ -63,12 +62,11 @@ class SpnegoConstantsTest {
     @Test
     @DisplayName("OID values have valid dotted numeric format")
     void oidFormat() {
-        assertAll(
-            () -> assertTrue(OID_PATTERN.matcher(SpnegoConstants.SPNEGO_MECHANISM).matches(), "Invalid OID: SPNEGO_MECHANISM"),
-            () -> assertTrue(OID_PATTERN.matcher(SpnegoConstants.KERBEROS_MECHANISM).matches(), "Invalid OID: KERBEROS_MECHANISM"),
-            () -> assertTrue(OID_PATTERN.matcher(SpnegoConstants.LEGACY_KERBEROS_MECHANISM).matches(), "Invalid OID: LEGACY_KERBEROS_MECHANISM"),
-            () -> assertTrue(OID_PATTERN.matcher(SpnegoConstants.NTLMSSP_MECHANISM).matches(), "Invalid OID: NTLMSSP_MECHANISM")
-        );
+        assertAll(() -> assertTrue(OID_PATTERN.matcher(SpnegoConstants.SPNEGO_MECHANISM).matches(), "Invalid OID: SPNEGO_MECHANISM"),
+                () -> assertTrue(OID_PATTERN.matcher(SpnegoConstants.KERBEROS_MECHANISM).matches(), "Invalid OID: KERBEROS_MECHANISM"),
+                () -> assertTrue(OID_PATTERN.matcher(SpnegoConstants.LEGACY_KERBEROS_MECHANISM).matches(),
+                        "Invalid OID: LEGACY_KERBEROS_MECHANISM"),
+                () -> assertTrue(OID_PATTERN.matcher(SpnegoConstants.NTLMSSP_MECHANISM).matches(), "Invalid OID: NTLMSSP_MECHANISM"));
     }
 
     @Test
@@ -78,4 +76,3 @@ class SpnegoConstantsTest {
         assertThrows(InstantiationException.class, () -> SpnegoConstants.class.newInstance(), "Interfaces cannot be instantiated");
     }
 }
-

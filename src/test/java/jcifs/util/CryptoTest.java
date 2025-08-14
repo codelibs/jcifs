@@ -86,7 +86,7 @@ class CryptoTest extends BaseTest {
         Cipher encryptCipher = Crypto.getArcfour(key);
         encryptCipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(key, "RC4"));
         byte[] encrypted = encryptCipher.doFinal(plaintext);
-        
+
         Cipher decryptCipher = Crypto.getArcfour(key);
         decryptCipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key, "RC4"));
         byte[] decrypted = decryptCipher.doFinal(encrypted);

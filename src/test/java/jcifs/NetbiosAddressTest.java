@@ -19,16 +19,17 @@ class NetbiosAddressTest {
     @Test
     void testConstantValues() {
         // Test that constants are properly defined
-        assertEquals("*\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000", NbtAddress.ANY_HOSTS_NAME);
+        assertEquals("*\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
+                NbtAddress.ANY_HOSTS_NAME);
         assertEquals("\u0001\u0002__MSBROWSE__\u0002", NbtAddress.MASTER_BROWSER_NAME);
         assertEquals("*SMBSERVER     ", NbtAddress.SMBSERVER_NAME);
-        
+
         // Test node type constants
         assertEquals(0, NbtAddress.B_NODE);
         assertEquals(1, NbtAddress.P_NODE);
         assertEquals(2, NbtAddress.M_NODE);
         assertEquals(3, NbtAddress.H_NODE);
-        
+
         // Test unknown MAC address constant
         assertNotNull(NbtAddress.UNKNOWN_MAC_ADDRESS);
         assertEquals(6, NbtAddress.UNKNOWN_MAC_ADDRESS.length);
@@ -41,11 +42,11 @@ class NetbiosAddressTest {
         String anyHosts = NbtAddress.ANY_HOSTS_NAME;
         String masterBrowser = NbtAddress.MASTER_BROWSER_NAME;
         String smbServer = NbtAddress.SMBSERVER_NAME;
-        
+
         assertNotNull(anyHosts);
         assertNotNull(masterBrowser);
         assertNotNull(smbServer);
-        
+
         // Test that they have expected lengths
         assertEquals(16, anyHosts.length());
         assertEquals(15, masterBrowser.length());

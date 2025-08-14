@@ -64,10 +64,7 @@ class SmbNegotiationRequestTest {
     @DisplayName("Test multiple calls to isSigningEnforced")
     void testMultipleCallsToIsSigningEnforced() {
         // Given
-        when(negotiationRequest.isSigningEnforced())
-            .thenReturn(true)
-            .thenReturn(false)
-            .thenReturn(true);
+        when(negotiationRequest.isSigningEnforced()).thenReturn(true).thenReturn(false).thenReturn(true);
 
         // When & Then
         assertTrue(negotiationRequest.isSigningEnforced(), "First call should return true");
@@ -134,8 +131,7 @@ class SmbNegotiationRequestTest {
 
         // When & Then - verify consistency across multiple calls
         for (int i = 0; i < 10; i++) {
-            assertTrue(consistentRequest.isSigningEnforced(), 
-                "Implementation should consistently return the same value");
+            assertTrue(consistentRequest.isSigningEnforced(), "Implementation should consistently return the same value");
         }
     }
 
@@ -147,10 +143,8 @@ class SmbNegotiationRequestTest {
         SmbNegotiationRequest notEnforcedRequest = new TestSmbNegotiationRequest(false);
 
         // When & Then
-        assertTrue(enforcedRequest.isSigningEnforced(), 
-            "Enforced request should return true");
-        assertFalse(notEnforcedRequest.isSigningEnforced(), 
-            "Not enforced request should return false");
+        assertTrue(enforcedRequest.isSigningEnforced(), "Enforced request should return true");
+        assertFalse(notEnforcedRequest.isSigningEnforced(), "Not enforced request should return false");
     }
 
     @Test

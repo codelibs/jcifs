@@ -1,8 +1,16 @@
 package jcifs.spnego;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -124,16 +132,14 @@ class SpnegoExceptionTest extends BaseTest {
 
         // When
         byte[] bytes;
-        try (ByteArrayOutputStream bout = new ByteArrayOutputStream();
-             ObjectOutputStream oout = new ObjectOutputStream(bout)) {
+        try (ByteArrayOutputStream bout = new ByteArrayOutputStream(); ObjectOutputStream oout = new ObjectOutputStream(bout)) {
             oout.writeObject(original);
             oout.flush();
             bytes = bout.toByteArray();
         }
 
         SpnegoException restored;
-        try (ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
-             ObjectInputStream oin = new ObjectInputStream(bin)) {
+        try (ByteArrayInputStream bin = new ByteArrayInputStream(bytes); ObjectInputStream oin = new ObjectInputStream(bin)) {
             restored = (SpnegoException) oin.readObject();
         }
 
@@ -145,4 +151,3 @@ class SpnegoExceptionTest extends BaseTest {
         assertEquals("iaex", restored.getCause().getMessage());
     }
 }
-

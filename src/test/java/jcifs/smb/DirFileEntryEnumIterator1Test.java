@@ -1,8 +1,17 @@
 package jcifs.smb;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.isA;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Field;
 import java.net.MalformedURLException;
@@ -37,13 +46,17 @@ import jcifs.internal.smb1.trans2.Trans2FindNext2;
 @ExtendWith(MockitoExtension.class)
 class DirFileEntryEnumIterator1Test {
 
-    @Mock SmbTreeHandleImpl tree;
-    @Mock SmbResource parent;
-    @Mock SmbResourceLocator locator;
-    @Mock Configuration config;
-    
+    @Mock
+    SmbTreeHandleImpl tree;
+    @Mock
+    SmbResource parent;
+    @Mock
+    SmbResourceLocator locator;
+    @Mock
+    Configuration config;
+
     private static boolean handlerRegistered = false;
-    
+
     // Register SMB URL handler once for all tests
     @BeforeAll
     static void registerSmbHandler() {
@@ -78,7 +91,7 @@ class DirFileEntryEnumIterator1Test {
 
         lenient().when(parent.getLocator()).thenReturn(locator);
         lenient().when(locator.getUNCPath()).thenReturn("\\\\SERVER\\Share\\dir\\"); // ends with \\
-        
+
         // Create URL with registered handler
         URL smbUrl = new URL("smb://server/share/dir/");
         lenient().when(locator.getURL()).thenReturn(smbUrl);
@@ -98,15 +111,50 @@ class DirFileEntryEnumIterator1Test {
     // Simple FileEntry stub for tests
     private static final class FE implements FileEntry {
         private final String name;
-        FE(String name) { this.name = name; }
-        @Override public String getName() { return name; }
-        @Override public int getType() { return 0; }
-        @Override public int getAttributes() { return 0; }
-        @Override public long createTime() { return 0; }
-        @Override public long lastModified() { return 0; }
-        @Override public long lastAccess() { return 0; }
-        @Override public long length() { return 0; }
-        @Override public int getFileIndex() { return 0; }
+
+        FE(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String getName() {
+            return name;
+        }
+
+        @Override
+        public int getType() {
+            return 0;
+        }
+
+        @Override
+        public int getAttributes() {
+            return 0;
+        }
+
+        @Override
+        public long createTime() {
+            return 0;
+        }
+
+        @Override
+        public long lastModified() {
+            return 0;
+        }
+
+        @Override
+        public long lastAccess() {
+            return 0;
+        }
+
+        @Override
+        public long length() {
+            return 0;
+        }
+
+        @Override
+        public int getFileIndex() {
+            return 0;
+        }
     }
 
     @Test
@@ -116,8 +164,8 @@ class DirFileEntryEnumIterator1Test {
         URL invalidUrl = new URL("smb://server/share/dir"); // no trailing '/'
         when(locator.getURL()).thenReturn(invalidUrl);
 
-        SmbException ex = assertThrows(SmbException.class,
-            () -> new DirFileEntryEnumIterator1(tree, parent, "*", (ResourceNameFilter) null, 0));
+        SmbException ex =
+                assertThrows(SmbException.class, () -> new DirFileEntryEnumIterator1(tree, parent, "*", (ResourceNameFilter) null, 0));
         assertTrue(ex.getMessage().contains("directory must end with '/'"));
         verify(tree, times(1)).acquire();
         verify(tree, times(1)).release(); // closed after failure
@@ -129,8 +177,8 @@ class DirFileEntryEnumIterator1Test {
         // Override the default setup for this specific test
         when(locator.getUNCPath()).thenReturn("\\\\SERVER\\Share\\dir"); // missing trailing \\
 
-        SmbException ex = assertThrows(SmbException.class,
-            () -> new DirFileEntryEnumIterator1(tree, parent, "*", (ResourceNameFilter) null, 0));
+        SmbException ex =
+                assertThrows(SmbException.class, () -> new DirFileEntryEnumIterator1(tree, parent, "*", (ResourceNameFilter) null, 0));
         assertTrue(ex.getMessage().contains("UNC must end with '\\'"), "Actual message: " + ex.getMessage());
         verify(tree, times(1)).acquire();
         verify(tree, times(1)).release();
@@ -146,42 +194,40 @@ class DirFileEntryEnumIterator1Test {
         batches.add(new String[] {}); // last -> NO_MORE_FILES
 
         // send() answer that mutates the provided response
-        when(tree.send(any(Trans2FindFirst2.class), any(Trans2FindFirst2Response.class)))
-            .thenAnswer((InvocationOnMock inv) -> {
-                Trans2FindFirst2Response resp = inv.getArgument(1);
-                // First response content
-                FE[] res = java.util.Arrays.stream(batches.get(0)).map(FE::new).toArray(FE[]::new);
-                setField(resp, jcifs.internal.smb1.trans.SmbComTransactionResponse.class, "results", res);
-                setField(resp, Trans2FindFirst2Response.class, "sid", 42);
-                setField(resp, Trans2FindFirst2Response.class, "resumeKey", 100);
-                setField(resp, Trans2FindFirst2Response.class, "lastName", "b");
-                setField(resp, jcifs.internal.smb1.trans.SmbComTransactionResponse.class, "status", 0);
-                resp.received();
-                return resp;
-            });
+        when(tree.send(any(Trans2FindFirst2.class), any(Trans2FindFirst2Response.class))).thenAnswer((InvocationOnMock inv) -> {
+            Trans2FindFirst2Response resp = inv.getArgument(1);
+            // First response content
+            FE[] res = java.util.Arrays.stream(batches.get(0)).map(FE::new).toArray(FE[]::new);
+            setField(resp, jcifs.internal.smb1.trans.SmbComTransactionResponse.class, "results", res);
+            setField(resp, Trans2FindFirst2Response.class, "sid", 42);
+            setField(resp, Trans2FindFirst2Response.class, "resumeKey", 100);
+            setField(resp, Trans2FindFirst2Response.class, "lastName", "b");
+            setField(resp, jcifs.internal.smb1.trans.SmbComTransactionResponse.class, "status", 0);
+            resp.received();
+            return resp;
+        });
 
         // For Trans2FindNext2 calls
         final int[] nextCall = { 0 };
-        when(tree.send(any(Trans2FindNext2.class), any(Trans2FindFirst2Response.class)))
-            .thenAnswer((InvocationOnMock inv) -> {
-                Trans2FindFirst2Response resp = inv.getArgument(1);
-                int call = nextCall[0]++;
-                String[] names = batches.get(call + 1);
-                FE[] res = java.util.Arrays.stream(names).map(FE::new).toArray(FE[]::new);
-                setField(resp, jcifs.internal.smb1.trans.SmbComTransactionResponse.class, "results", res);
-                if (call == 0) {
-                    // first next
-                    setField(resp, Trans2FindFirst2Response.class, "resumeKey", 200);
-                    setField(resp, Trans2FindFirst2Response.class, "lastName", "c");
-                    setField(resp, jcifs.internal.smb1.trans.SmbComTransactionResponse.class, "status", 0);
-                } else {
-                    // second next -> no more files
-                    setField(resp, jcifs.internal.smb1.trans.SmbComTransactionResponse.class, "status", NtStatus.NT_STATUS_NO_MORE_FILES);
-                    setField(resp, Trans2FindFirst2Response.class, "lastName", null);
-                }
-                resp.received();
-                return resp;
-            });
+        when(tree.send(any(Trans2FindNext2.class), any(Trans2FindFirst2Response.class))).thenAnswer((InvocationOnMock inv) -> {
+            Trans2FindFirst2Response resp = inv.getArgument(1);
+            int call = nextCall[0]++;
+            String[] names = batches.get(call + 1);
+            FE[] res = java.util.Arrays.stream(names).map(FE::new).toArray(FE[]::new);
+            setField(resp, jcifs.internal.smb1.trans.SmbComTransactionResponse.class, "results", res);
+            if (call == 0) {
+                // first next
+                setField(resp, Trans2FindFirst2Response.class, "resumeKey", 200);
+                setField(resp, Trans2FindFirst2Response.class, "lastName", "c");
+                setField(resp, jcifs.internal.smb1.trans.SmbComTransactionResponse.class, "status", 0);
+            } else {
+                // second next -> no more files
+                setField(resp, jcifs.internal.smb1.trans.SmbComTransactionResponse.class, "status", NtStatus.NT_STATUS_NO_MORE_FILES);
+                setField(resp, Trans2FindFirst2Response.class, "lastName", null);
+            }
+            resp.received();
+            return resp;
+        });
 
         DirFileEntryEnumIterator1 it = new DirFileEntryEnumIterator1(tree, parent, "*", null, 0);
 
@@ -208,16 +254,14 @@ class DirFileEntryEnumIterator1Test {
         verify(tree, atLeastOnce()).release();
     }
 
-
     @Test
     @DisplayName("open(): server returns NO_SUCH_FILE after receiving response -> iterator empty, closed")
     void openHandlesNoSuchFileGracefully() throws Exception {
-        when(tree.send(any(Trans2FindFirst2.class), any(Trans2FindFirst2Response.class)))
-            .thenAnswer((InvocationOnMock inv) -> {
-                Trans2FindFirst2Response resp = inv.getArgument(1);
-                resp.received(); // mark as received
-                throw new SmbException(NtStatus.NT_STATUS_NO_SUCH_FILE, (Throwable) null);
-            });
+        when(tree.send(any(Trans2FindFirst2.class), any(Trans2FindFirst2Response.class))).thenAnswer((InvocationOnMock inv) -> {
+            Trans2FindFirst2Response resp = inv.getArgument(1);
+            resp.received(); // mark as received
+            throw new SmbException(NtStatus.NT_STATUS_NO_SUCH_FILE, (Throwable) null);
+        });
 
         DirFileEntryEnumIterator1 it = new DirFileEntryEnumIterator1(tree, parent, "*", null, 0);
         assertFalse(it.hasNext(), "Iterator should be empty when server reports no such file");
@@ -232,15 +276,14 @@ class DirFileEntryEnumIterator1Test {
     @DisplayName("Supports various wildcard values without throwing (edge cases)")
     void wildcardEdgeCases(String wildcard) throws Exception {
         // minimal successful first response with a single entry
-        when(tree.send(any(Trans2FindFirst2.class), any(Trans2FindFirst2Response.class)))
-            .thenAnswer((InvocationOnMock inv) -> {
-                Trans2FindFirst2Response resp = inv.getArgument(1);
-                setField(resp, jcifs.internal.smb1.trans.SmbComTransactionResponse.class, "results", new FileEntry[] { new FE("x") });
-                setField(resp, Trans2FindFirst2Response.class, "sid", 7);
-                setField(resp, jcifs.internal.smb1.trans.SmbComTransactionResponse.class, "status", 0);
-                resp.received();
-                return resp;
-            });
+        when(tree.send(any(Trans2FindFirst2.class), any(Trans2FindFirst2Response.class))).thenAnswer((InvocationOnMock inv) -> {
+            Trans2FindFirst2Response resp = inv.getArgument(1);
+            setField(resp, jcifs.internal.smb1.trans.SmbComTransactionResponse.class, "results", new FileEntry[] { new FE("x") });
+            setField(resp, Trans2FindFirst2Response.class, "sid", 7);
+            setField(resp, jcifs.internal.smb1.trans.SmbComTransactionResponse.class, "status", 0);
+            resp.received();
+            return resp;
+        });
 
         DirFileEntryEnumIterator1 it = new DirFileEntryEnumIterator1(tree, parent, wildcard, null, 0);
         assertTrue(it.hasNext());
@@ -250,16 +293,15 @@ class DirFileEntryEnumIterator1Test {
     @Test
     @DisplayName("Empty initial results with end-of-search -> closes immediately")
     void emptyInitialResultsEndOfSearchCloses() throws Exception {
-        when(tree.send(any(Trans2FindFirst2.class), any(Trans2FindFirst2Response.class)))
-            .thenAnswer((InvocationOnMock inv) -> {
-                Trans2FindFirst2Response resp = inv.getArgument(1);
-                setField(resp, jcifs.internal.smb1.trans.SmbComTransactionResponse.class, "results", new FileEntry[0]);
-                setField(resp, Trans2FindFirst2Response.class, "isEndOfSearch", true);
-                setField(resp, Trans2FindFirst2Response.class, "sid", 9);
-                setField(resp, jcifs.internal.smb1.trans.SmbComTransactionResponse.class, "status", 0);
-                resp.received();
-                return resp;
-            });
+        when(tree.send(any(Trans2FindFirst2.class), any(Trans2FindFirst2Response.class))).thenAnswer((InvocationOnMock inv) -> {
+            Trans2FindFirst2Response resp = inv.getArgument(1);
+            setField(resp, jcifs.internal.smb1.trans.SmbComTransactionResponse.class, "results", new FileEntry[0]);
+            setField(resp, Trans2FindFirst2Response.class, "isEndOfSearch", true);
+            setField(resp, Trans2FindFirst2Response.class, "sid", 9);
+            setField(resp, jcifs.internal.smb1.trans.SmbComTransactionResponse.class, "status", 0);
+            resp.received();
+            return resp;
+        });
 
         DirFileEntryEnumIterator1 it = new DirFileEntryEnumIterator1(tree, parent, "*", null, 0);
         assertFalse(it.hasNext(), "Iterator should be closed when no results and end-of-search");

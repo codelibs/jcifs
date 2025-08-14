@@ -1,7 +1,17 @@
 package jcifs.smb;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
+
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -13,8 +23,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.stream.Stream;
 
 @ExtendWith(MockitoExtension.class)
 class FileEntryTest {
@@ -33,8 +41,8 @@ class FileEntryTest {
         private final long length;
         private final int fileIndex;
 
-        TestFileEntry(String name, int type, int attributes, long createTime, long lastModified,
-                       long lastAccess, long length, int fileIndex) {
+        TestFileEntry(String name, int type, int attributes, long createTime, long lastModified, long lastAccess, long length,
+                int fileIndex) {
             this.name = name;
             this.type = type;
             this.attributes = attributes;
@@ -46,33 +54,54 @@ class FileEntryTest {
         }
 
         @Override
-        public String getName() { return name; }
+        public String getName() {
+            return name;
+        }
 
         @Override
-        public int getType() { return type; }
+        public int getType() {
+            return type;
+        }
 
         @Override
-        public int getAttributes() { return attributes; }
+        public int getAttributes() {
+            return attributes;
+        }
 
         @Override
-        public long createTime() { return createTime; }
+        public long createTime() {
+            return createTime;
+        }
 
         @Override
-        public long lastModified() { return lastModified; }
+        public long lastModified() {
+            return lastModified;
+        }
 
         @Override
-        public long lastAccess() { return lastAccess; }
+        public long lastAccess() {
+            return lastAccess;
+        }
 
         @Override
-        public long length() { return length; }
+        public long length() {
+            return length;
+        }
 
         @Override
-        public int getFileIndex() { return fileIndex; }
+        public int getFileIndex() {
+            return fileIndex;
+        }
     }
 
     // Functional helpers for concise parameterized tests
-    private interface IntGetter { int apply(FileEntry e); }
-    private interface LongGetter { long apply(FileEntry e); }
+    private interface IntGetter {
+        int apply(FileEntry e);
+    }
+
+    private interface LongGetter {
+        long apply(FileEntry e);
+    }
 
     // --- Mockito-based interaction tests ---
 
@@ -141,26 +170,16 @@ class FileEntryTest {
         FileEntry e = new TestFileEntry("doc.pdf", 2, 0x10, 10L, 20L, 30L, 4096L, 3);
 
         // Act & Assert: getters return exactly what was provided
-        assertAll(
-            () -> assertEquals("doc.pdf", e.getName()),
-            () -> assertEquals(2, e.getType()),
-            () -> assertEquals(0x10, e.getAttributes()),
-            () -> assertEquals(10L, e.createTime()),
-            () -> assertEquals(20L, e.lastModified()),
-            () -> assertEquals(30L, e.lastAccess()),
-            () -> assertEquals(4096L, e.length()),
-            () -> assertEquals(3, e.getFileIndex())
-        );
+        assertAll(() -> assertEquals("doc.pdf", e.getName()), () -> assertEquals(2, e.getType()),
+                () -> assertEquals(0x10, e.getAttributes()), () -> assertEquals(10L, e.createTime()),
+                () -> assertEquals(20L, e.lastModified()), () -> assertEquals(30L, e.lastAccess()), () -> assertEquals(4096L, e.length()),
+                () -> assertEquals(3, e.getFileIndex()));
     }
 
     // Parameterized tests for String edge cases on getName
     static Stream<Arguments> nameProvider() {
-        return Stream.of(
-            Arguments.of("", "empty string is allowed"),
-            Arguments.of(" ", "single space is preserved"),
-            Arguments.of("复杂名.txt", "unicode name is preserved"),
-            Arguments.of(null, "null name is passed through")
-        );
+        return Stream.of(Arguments.of("", "empty string is allowed"), Arguments.of(" ", "single space is preserved"),
+                Arguments.of("复杂名.txt", "unicode name is preserved"), Arguments.of(null, "null name is passed through"));
     }
 
     @ParameterizedTest(name = "getName returns as-set: [{0}] - {1}")
@@ -176,17 +195,15 @@ class FileEntryTest {
 
     // Parameterized tests for numeric getters with edge values
     static Stream<Arguments> intGetterProvider() {
-        return Stream.of(
-            Arguments.of((IntGetter) FileEntry::getType, -1, "negative type"),
-            Arguments.of((IntGetter) FileEntry::getType, 0, "zero type"),
-            Arguments.of((IntGetter) FileEntry::getType, Integer.MAX_VALUE, "max type"),
+        return Stream.of(Arguments.of((IntGetter) FileEntry::getType, -1, "negative type"),
+                Arguments.of((IntGetter) FileEntry::getType, 0, "zero type"),
+                Arguments.of((IntGetter) FileEntry::getType, Integer.MAX_VALUE, "max type"),
 
-            Arguments.of((IntGetter) FileEntry::getAttributes, 0, "no attributes"),
-            Arguments.of((IntGetter) FileEntry::getAttributes, 0xFFFF, "many attributes"),
+                Arguments.of((IntGetter) FileEntry::getAttributes, 0, "no attributes"),
+                Arguments.of((IntGetter) FileEntry::getAttributes, 0xFFFF, "many attributes"),
 
-            Arguments.of((IntGetter) FileEntry::getFileIndex, -5, "negative index"),
-            Arguments.of((IntGetter) FileEntry::getFileIndex, 0, "zero index")
-        );
+                Arguments.of((IntGetter) FileEntry::getFileIndex, -5, "negative index"),
+                Arguments.of((IntGetter) FileEntry::getFileIndex, 0, "zero index"));
     }
 
     @ParameterizedTest(name = "Int getter {2} returns {1}")
@@ -201,21 +218,19 @@ class FileEntryTest {
     }
 
     static Stream<Arguments> longGetterProvider() {
-        return Stream.of(
-            Arguments.of((LongGetter) FileEntry::createTime, -1L, "negative createTime"),
-            Arguments.of((LongGetter) FileEntry::createTime, 0L, "zero createTime"),
-            Arguments.of((LongGetter) FileEntry::createTime, Long.MAX_VALUE, "max createTime"),
+        return Stream.of(Arguments.of((LongGetter) FileEntry::createTime, -1L, "negative createTime"),
+                Arguments.of((LongGetter) FileEntry::createTime, 0L, "zero createTime"),
+                Arguments.of((LongGetter) FileEntry::createTime, Long.MAX_VALUE, "max createTime"),
 
-            Arguments.of((LongGetter) FileEntry::lastModified, -2L, "negative lastModified"),
-            Arguments.of((LongGetter) FileEntry::lastModified, 42L, "positive lastModified"),
+                Arguments.of((LongGetter) FileEntry::lastModified, -2L, "negative lastModified"),
+                Arguments.of((LongGetter) FileEntry::lastModified, 42L, "positive lastModified"),
 
-            Arguments.of((LongGetter) FileEntry::lastAccess, 0L, "zero lastAccess"),
-            Arguments.of((LongGetter) FileEntry::lastAccess, Long.MIN_VALUE, "min lastAccess"),
+                Arguments.of((LongGetter) FileEntry::lastAccess, 0L, "zero lastAccess"),
+                Arguments.of((LongGetter) FileEntry::lastAccess, Long.MIN_VALUE, "min lastAccess"),
 
-            Arguments.of((LongGetter) FileEntry::length, -100L, "negative length"),
-            Arguments.of((LongGetter) FileEntry::length, 0L, "zero length"),
-            Arguments.of((LongGetter) FileEntry::length, 1L, "small length")
-        );
+                Arguments.of((LongGetter) FileEntry::length, -100L, "negative length"),
+                Arguments.of((LongGetter) FileEntry::length, 0L, "zero length"),
+                Arguments.of((LongGetter) FileEntry::length, 1L, "small length"));
     }
 
     @ParameterizedTest(name = "Long getter {2} returns {1}")

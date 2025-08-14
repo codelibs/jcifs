@@ -1,12 +1,10 @@
 package jcifs.smb1.smb1;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import jcifs.smb1.smb1.Trans2SetFileInformationResponse;
-import jcifs.smb1.smb1.Trans2SetFileInformation;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests for the {@link Trans2SetFileInformationResponse} class.
@@ -28,7 +26,8 @@ class Trans2SetFileInformationResponseTest {
     @Test
     void testConstructor() {
         // Verify that the subCommand is set to TRANS2_SET_FILE_INFORMATION
-        assertEquals(SmbComTransaction.TRANS2_SET_FILE_INFORMATION, response.subCommand, "The subCommand should be initialized to TRANS2_SET_FILE_INFORMATION.");
+        assertEquals(SmbComTransaction.TRANS2_SET_FILE_INFORMATION, response.subCommand,
+                "The subCommand should be initialized to TRANS2_SET_FILE_INFORMATION.");
     }
 
     /**
@@ -106,7 +105,8 @@ class Trans2SetFileInformationResponseTest {
         // The actual toString() method uses super.toString(), so we mimic that for the check.
         // A direct string comparison might be brittle, so we check for the class name and brackets.
         String actualString = response.toString();
-        assertTrue(actualString.startsWith("Trans2SetFileInformationResponse["), "The string representation should start with the class name.");
+        assertTrue(actualString.startsWith("Trans2SetFileInformationResponse["),
+                "The string representation should start with the class name.");
         assertTrue(actualString.endsWith("]"), "The string representation should end with a bracket.");
     }
 }

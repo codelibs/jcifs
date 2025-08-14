@@ -108,7 +108,7 @@ class AvSingleHostTest {
         byte[] customData = new byte[8];
         customData[0] = 0x01;
         customData[1] = 0x02;
-        
+
         byte[] machineId = new byte[32];
         machineId[0] = 0x10;
         machineId[1] = 0x11;

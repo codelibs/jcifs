@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -109,8 +108,7 @@ class SmbFileHandleTest {
     @Test
     void testClose_throwsCIFSException() throws CIFSException {
         doThrow(new CIFSException("Failed to close")).when(smbFileHandle).close();
-        assertThrows(CIFSException.class, () -> smbFileHandle.close(),
-                "close() should throw CIFSException when closing fails.");
+        assertThrows(CIFSException.class, () -> smbFileHandle.close(), "close() should throw CIFSException when closing fails.");
         verify(smbFileHandle, times(1)).close();
     }
 
@@ -133,8 +131,7 @@ class SmbFileHandleTest {
     @Test
     void testRelease_throwsCIFSException() throws CIFSException {
         doThrow(new CIFSException("Failed to release")).when(smbFileHandle).release();
-        assertThrows(CIFSException.class, () -> smbFileHandle.release(),
-                "release() should throw CIFSException when releasing fails.");
+        assertThrows(CIFSException.class, () -> smbFileHandle.release(), "release() should throw CIFSException when releasing fails.");
         verify(smbFileHandle, times(1)).release();
     }
 

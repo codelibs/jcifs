@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Test;
 import jcifs.dcerpc.DcerpcConstants;
 import jcifs.dcerpc.DcerpcMessage;
 import jcifs.dcerpc.msrpc.lsarpc.LsarSidArray;
-import jcifs.dcerpc.msrpc.SamrAliasHandle;
 
 /**
  * Tests for the MsrpcGetMembersInAlias class.

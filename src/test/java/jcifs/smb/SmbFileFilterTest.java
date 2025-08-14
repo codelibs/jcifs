@@ -1,7 +1,17 @@
 package jcifs.smb;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -12,8 +22,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.stream.Stream;
-
 @ExtendWith(MockitoExtension.class)
 class SmbFileFilterTest {
 
@@ -22,12 +30,8 @@ class SmbFileFilterTest {
 
     // Provides file names and whether a simple name-based filter should accept them
     private static Stream<Arguments> nameCases() {
-        return Stream.of(
-            Arguments.of("readme.txt", true),
-            Arguments.of("notes.log", false),
-            Arguments.of("", false),
-            Arguments.of(null, false)
-        );
+        return Stream.of(Arguments.of("readme.txt", true), Arguments.of("notes.log", false), Arguments.of("", false),
+                Arguments.of(null, false));
     }
 
     @Test
@@ -128,7 +132,7 @@ class SmbFileFilterTest {
     void accept_rejectsNullInput() {
         // Arrange: defensive filter that validates input
         SmbFileFilter filter = f -> {
-            if ( f == null ) {
+            if (f == null) {
                 throw new NullPointerException("file must not be null");
             }
             return true; // not reached in this test
@@ -139,4 +143,3 @@ class SmbFileFilterTest {
         assertEquals("file must not be null", npe.getMessage());
     }
 }
-

@@ -1,7 +1,12 @@
 package jcifs;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -49,10 +54,8 @@ public class FileNotifyInformationTest {
         void testFileNotifyChangeName() {
             assertEquals(0x00000003, FileNotifyInformation.FILE_NOTIFY_CHANGE_NAME);
             // Verify it's a combination of FILE_NAME and DIR_NAME
-            assertEquals(
-                FileNotifyInformation.FILE_NOTIFY_CHANGE_FILE_NAME | FileNotifyInformation.FILE_NOTIFY_CHANGE_DIR_NAME,
-                FileNotifyInformation.FILE_NOTIFY_CHANGE_NAME
-            );
+            assertEquals(FileNotifyInformation.FILE_NOTIFY_CHANGE_FILE_NAME | FileNotifyInformation.FILE_NOTIFY_CHANGE_DIR_NAME,
+                    FileNotifyInformation.FILE_NOTIFY_CHANGE_NAME);
         }
 
         @Test
@@ -136,26 +139,17 @@ public class FileNotifyInformationTest {
         @Test
         @DisplayName("Verify no filter flag overlap except for combined flags")
         void testNoFilterFlagOverlap() {
-            int[] flags = {
-                FileNotifyInformation.FILE_NOTIFY_CHANGE_FILE_NAME,
-                FileNotifyInformation.FILE_NOTIFY_CHANGE_DIR_NAME,
-                FileNotifyInformation.FILE_NOTIFY_CHANGE_ATTRIBUTES,
-                FileNotifyInformation.FILE_NOTIFY_CHANGE_SIZE,
-                FileNotifyInformation.FILE_NOTIFY_CHANGE_LAST_WRITE,
-                FileNotifyInformation.FILE_NOTIFY_CHANGE_LAST_ACCESS,
-                FileNotifyInformation.FILE_NOTIFY_CHANGE_CREATION,
-                FileNotifyInformation.FILE_NOTIFY_CHANGE_EA,
-                FileNotifyInformation.FILE_NOTIFY_CHANGE_SECURITY,
-                FileNotifyInformation.FILE_NOTIFY_CHANGE_STREAM_NAME,
-                FileNotifyInformation.FILE_NOTIFY_CHANGE_STREAM_SIZE,
-                FileNotifyInformation.FILE_NOTIFY_CHANGE_STREAM_WRITE
-            };
+            int[] flags = { FileNotifyInformation.FILE_NOTIFY_CHANGE_FILE_NAME, FileNotifyInformation.FILE_NOTIFY_CHANGE_DIR_NAME,
+                    FileNotifyInformation.FILE_NOTIFY_CHANGE_ATTRIBUTES, FileNotifyInformation.FILE_NOTIFY_CHANGE_SIZE,
+                    FileNotifyInformation.FILE_NOTIFY_CHANGE_LAST_WRITE, FileNotifyInformation.FILE_NOTIFY_CHANGE_LAST_ACCESS,
+                    FileNotifyInformation.FILE_NOTIFY_CHANGE_CREATION, FileNotifyInformation.FILE_NOTIFY_CHANGE_EA,
+                    FileNotifyInformation.FILE_NOTIFY_CHANGE_SECURITY, FileNotifyInformation.FILE_NOTIFY_CHANGE_STREAM_NAME,
+                    FileNotifyInformation.FILE_NOTIFY_CHANGE_STREAM_SIZE, FileNotifyInformation.FILE_NOTIFY_CHANGE_STREAM_WRITE };
 
             // Check that no two flags overlap (except combined flags)
             for (int i = 0; i < flags.length; i++) {
                 for (int j = i + 1; j < flags.length; j++) {
-                    assertEquals(0, flags[i] & flags[j], 
-                        String.format("Flags at index %d and %d should not overlap", i, j));
+                    assertEquals(0, flags[i] & flags[j], String.format("Flags at index %d and %d should not overlap", i, j));
                 }
             }
         }
@@ -222,22 +216,15 @@ public class FileNotifyInformationTest {
         @Test
         @DisplayName("Verify action constants are sequential and unique")
         void testActionConstantsAreUnique() {
-            int[] actions = {
-                FileNotifyInformation.FILE_ACTION_ADDED,
-                FileNotifyInformation.FILE_ACTION_REMOVED,
-                FileNotifyInformation.FILE_ACTION_MODIFIED,
-                FileNotifyInformation.FILE_ACTION_RENAMED_OLD_NAME,
-                FileNotifyInformation.FILE_ACTION_RENAMED_NEW_NAME,
-                FileNotifyInformation.FILE_ACTION_ADDED_STREAM,
-                FileNotifyInformation.FILE_ACTION_REMOVED_STREAM,
-                FileNotifyInformation.FILE_ACTION_MODIFIED_STREAM,
-                FileNotifyInformation.FILE_ACTION_REMOVED_BY_DELETE
-            };
+            int[] actions = { FileNotifyInformation.FILE_ACTION_ADDED, FileNotifyInformation.FILE_ACTION_REMOVED,
+                    FileNotifyInformation.FILE_ACTION_MODIFIED, FileNotifyInformation.FILE_ACTION_RENAMED_OLD_NAME,
+                    FileNotifyInformation.FILE_ACTION_RENAMED_NEW_NAME, FileNotifyInformation.FILE_ACTION_ADDED_STREAM,
+                    FileNotifyInformation.FILE_ACTION_REMOVED_STREAM, FileNotifyInformation.FILE_ACTION_MODIFIED_STREAM,
+                    FileNotifyInformation.FILE_ACTION_REMOVED_BY_DELETE };
 
             // Verify sequential values from 1 to 9
             for (int i = 0; i < actions.length; i++) {
-                assertEquals(i + 1, actions[i], 
-                    String.format("Action at index %d should have value %d", i, i + 1));
+                assertEquals(i + 1, actions[i], String.format("Action at index %d should have value %d", i, i + 1));
             }
         }
     }
@@ -251,10 +238,10 @@ public class FileNotifyInformationTest {
         void testGetAction() {
             // Setup mock behavior
             when(mockFileNotifyInfo.getAction()).thenReturn(FileNotifyInformation.FILE_ACTION_ADDED);
-            
+
             // Test
             int action = mockFileNotifyInfo.getAction();
-            
+
             // Verify
             assertEquals(FileNotifyInformation.FILE_ACTION_ADDED, action);
             verify(mockFileNotifyInfo, times(1)).getAction();
@@ -266,20 +253,17 @@ public class FileNotifyInformationTest {
             // Setup mock behavior
             String expectedFileName = "test-file.txt";
             when(mockFileNotifyInfo.getFileName()).thenReturn(expectedFileName);
-            
+
             // Test
             String fileName = mockFileNotifyInfo.getFileName();
-            
+
             // Verify
             assertEquals(expectedFileName, fileName);
             verify(mockFileNotifyInfo, times(1)).getFileName();
         }
 
         @ParameterizedTest
-        @ValueSource(ints = {
-            0x00000001, 0x00000002, 0x00000003, 0x00000004, 
-            0x00000005, 0x00000006, 0x00000007, 0x00000008, 0x00000009
-        })
+        @ValueSource(ints = { 0x00000001, 0x00000002, 0x00000003, 0x00000004, 0x00000005, 0x00000006, 0x00000007, 0x00000008, 0x00000009 })
         @DisplayName("Test getAction with various action values")
         void testGetActionWithVariousValues(int actionValue) {
             when(mockFileNotifyInfo.getAction()).thenReturn(actionValue);
@@ -287,15 +271,8 @@ public class FileNotifyInformationTest {
         }
 
         @ParameterizedTest
-        @CsvSource({
-            "file.txt",
-            "document.doc",
-            "image.png",
-            "folder/subfolder/file.txt",
-            "C:\\Windows\\System32\\config.sys",
-            "/usr/local/bin/app",
-            "file with spaces.txt",
-            "''"  // empty string
+        @CsvSource({ "file.txt", "document.doc", "image.png", "folder/subfolder/file.txt", "C:\\Windows\\System32\\config.sys",
+                "/usr/local/bin/app", "file with spaces.txt", "''" // empty string
         })
         @DisplayName("Test getFileName with various file names")
         void testGetFileNameWithVariousValues(String fileName) {
@@ -343,15 +320,9 @@ public class FileNotifyInformationTest {
         @DisplayName("Test multiple implementations with different values")
         void testMultipleImplementations() {
             // Create multiple implementations
-            FileNotifyInformation addedImpl = createImplementation(
-                FileNotifyInformation.FILE_ACTION_ADDED, "added.txt"
-            );
-            FileNotifyInformation removedImpl = createImplementation(
-                FileNotifyInformation.FILE_ACTION_REMOVED, "removed.txt"
-            );
-            FileNotifyInformation modifiedImpl = createImplementation(
-                FileNotifyInformation.FILE_ACTION_MODIFIED, "modified.txt"
-            );
+            FileNotifyInformation addedImpl = createImplementation(FileNotifyInformation.FILE_ACTION_ADDED, "added.txt");
+            FileNotifyInformation removedImpl = createImplementation(FileNotifyInformation.FILE_ACTION_REMOVED, "removed.txt");
+            FileNotifyInformation modifiedImpl = createImplementation(FileNotifyInformation.FILE_ACTION_MODIFIED, "modified.txt");
 
             // Verify each implementation
             assertEquals(FileNotifyInformation.FILE_ACTION_ADDED, addedImpl.getAction());
@@ -372,9 +343,8 @@ public class FileNotifyInformationTest {
         @Test
         @DisplayName("Test combining multiple filter flags")
         void testCombiningFilterFlags() {
-            int combinedFlags = FileNotifyInformation.FILE_NOTIFY_CHANGE_FILE_NAME
-                | FileNotifyInformation.FILE_NOTIFY_CHANGE_SIZE
-                | FileNotifyInformation.FILE_NOTIFY_CHANGE_LAST_WRITE;
+            int combinedFlags = FileNotifyInformation.FILE_NOTIFY_CHANGE_FILE_NAME | FileNotifyInformation.FILE_NOTIFY_CHANGE_SIZE
+                    | FileNotifyInformation.FILE_NOTIFY_CHANGE_LAST_WRITE;
 
             // Verify individual flags are set
             assertTrue((combinedFlags & FileNotifyInformation.FILE_NOTIFY_CHANGE_FILE_NAME) != 0);
@@ -389,18 +359,12 @@ public class FileNotifyInformationTest {
         @Test
         @DisplayName("Test all filter flags combined")
         void testAllFilterFlagsCombined() {
-            int allFlags = FileNotifyInformation.FILE_NOTIFY_CHANGE_FILE_NAME
-                | FileNotifyInformation.FILE_NOTIFY_CHANGE_DIR_NAME
-                | FileNotifyInformation.FILE_NOTIFY_CHANGE_ATTRIBUTES
-                | FileNotifyInformation.FILE_NOTIFY_CHANGE_SIZE
-                | FileNotifyInformation.FILE_NOTIFY_CHANGE_LAST_WRITE
-                | FileNotifyInformation.FILE_NOTIFY_CHANGE_LAST_ACCESS
-                | FileNotifyInformation.FILE_NOTIFY_CHANGE_CREATION
-                | FileNotifyInformation.FILE_NOTIFY_CHANGE_EA
-                | FileNotifyInformation.FILE_NOTIFY_CHANGE_SECURITY
-                | FileNotifyInformation.FILE_NOTIFY_CHANGE_STREAM_NAME
-                | FileNotifyInformation.FILE_NOTIFY_CHANGE_STREAM_SIZE
-                | FileNotifyInformation.FILE_NOTIFY_CHANGE_STREAM_WRITE;
+            int allFlags = FileNotifyInformation.FILE_NOTIFY_CHANGE_FILE_NAME | FileNotifyInformation.FILE_NOTIFY_CHANGE_DIR_NAME
+                    | FileNotifyInformation.FILE_NOTIFY_CHANGE_ATTRIBUTES | FileNotifyInformation.FILE_NOTIFY_CHANGE_SIZE
+                    | FileNotifyInformation.FILE_NOTIFY_CHANGE_LAST_WRITE | FileNotifyInformation.FILE_NOTIFY_CHANGE_LAST_ACCESS
+                    | FileNotifyInformation.FILE_NOTIFY_CHANGE_CREATION | FileNotifyInformation.FILE_NOTIFY_CHANGE_EA
+                    | FileNotifyInformation.FILE_NOTIFY_CHANGE_SECURITY | FileNotifyInformation.FILE_NOTIFY_CHANGE_STREAM_NAME
+                    | FileNotifyInformation.FILE_NOTIFY_CHANGE_STREAM_SIZE | FileNotifyInformation.FILE_NOTIFY_CHANGE_STREAM_WRITE;
 
             // Expected value when all flags are combined
             assertEquals(0x00000FFF, allFlags);
@@ -409,16 +373,15 @@ public class FileNotifyInformationTest {
         @Test
         @DisplayName("Test removing specific filter flag")
         void testRemovingFilterFlag() {
-            int flags = FileNotifyInformation.FILE_NOTIFY_CHANGE_FILE_NAME
-                | FileNotifyInformation.FILE_NOTIFY_CHANGE_SIZE
-                | FileNotifyInformation.FILE_NOTIFY_CHANGE_LAST_WRITE;
+            int flags = FileNotifyInformation.FILE_NOTIFY_CHANGE_FILE_NAME | FileNotifyInformation.FILE_NOTIFY_CHANGE_SIZE
+                    | FileNotifyInformation.FILE_NOTIFY_CHANGE_LAST_WRITE;
 
             // Remove FILE_NOTIFY_CHANGE_SIZE flag
             flags &= ~FileNotifyInformation.FILE_NOTIFY_CHANGE_SIZE;
 
             // Verify FILE_NOTIFY_CHANGE_SIZE is removed
             assertFalse((flags & FileNotifyInformation.FILE_NOTIFY_CHANGE_SIZE) != 0);
-            
+
             // Verify other flags are still present
             assertTrue((flags & FileNotifyInformation.FILE_NOTIFY_CHANGE_FILE_NAME) != 0);
             assertTrue((flags & FileNotifyInformation.FILE_NOTIFY_CHANGE_LAST_WRITE) != 0);

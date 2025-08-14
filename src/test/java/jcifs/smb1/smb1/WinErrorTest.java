@@ -1,6 +1,9 @@
 package jcifs.smb1.smb1;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -43,7 +46,7 @@ public class WinErrorTest {
         @Test
         void arraysHaveSameLength() {
             assertEquals(WinError.WINERR_CODES.length, WinError.WINERR_MESSAGES.length,
-                         "WINERR_CODES and WINERR_MESSAGES should have the same length");
+                    "WINERR_CODES and WINERR_MESSAGES should have the same length");
         }
 
         @Test
@@ -61,8 +64,9 @@ public class WinErrorTest {
     class Boundary {
         @Test
         void accessingInvalidIndexThrows() {
-            assertThrows(ArrayIndexOutOfBoundsException.class,
-                          () -> { int dummy = WinError.WINERR_CODES[WinError.WINERR_CODES.length]; });
+            assertThrows(ArrayIndexOutOfBoundsException.class, () -> {
+                int dummy = WinError.WINERR_CODES[WinError.WINERR_CODES.length];
+            });
         }
     }
 
@@ -75,4 +79,3 @@ public class WinErrorTest {
         Mockito.verifyNoInteractions(mock);
     }
 }
-

@@ -1,8 +1,18 @@
 package jcifs.smb1.dcerpc.msrpc;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -26,19 +36,19 @@ class samrTest {
 
     @Mock
     private NdrBuffer mockNdrBuffer;
-    
+
     @Mock
     private NdrBuffer mockDeferredBuffer;
-    
+
     @Mock
     private rpc.policy_handle mockPolicyHandle;
-    
+
     @Mock
     private rpc.sid_t mockSidT;
-    
+
     @Mock
     private rpc.unicode_string mockUnicodeString;
-    
+
     @Mock
     private lsarpc.LsarSidArray mockLsarSidArray;
 
@@ -46,7 +56,7 @@ class samrTest {
     void setUp() {
         // Directly set the deferred field on the mock
         mockNdrBuffer.deferred = mockDeferredBuffer;
-        
+
         // Configure mocks for NdrBuffer interactions
         lenient().when(mockDeferredBuffer.derive(anyInt())).thenReturn(mockDeferredBuffer);
         lenient().doNothing().when(mockDeferredBuffer).advance(anyInt());
@@ -57,7 +67,7 @@ class samrTest {
     @Nested
     @DisplayName("Protocol Information Tests")
     class ProtocolInfoTests {
-        
+
         @Test
         @DisplayName("Should return correct syntax string")
         void testGetSyntax() {
@@ -69,7 +79,7 @@ class samrTest {
     @Nested
     @DisplayName("Constants Tests")
     class ConstantsTests {
-        
+
         @Test
         @DisplayName("Should define correct ACB (Account Control Block) constants")
         void testACBConstants() {
@@ -110,13 +120,13 @@ class samrTest {
     @Nested
     @DisplayName("SamrCloseHandle Tests")
     class SamrCloseHandleTests {
-        
+
         @Test
         @DisplayName("Should construct with correct opnum")
         void testConstructorAndOpnum() {
             // When: Creating close handle message
             samr.SamrCloseHandle message = new samr.SamrCloseHandle(mockPolicyHandle);
-            
+
             // Then: Should have correct opnum and handle
             assertEquals(0x01, message.getOpnum());
             assertEquals(mockPolicyHandle, message.handle);
@@ -127,10 +137,10 @@ class samrTest {
         void testEncodeIn() throws NdrException {
             // Given: Close handle message
             samr.SamrCloseHandle message = new samr.SamrCloseHandle(mockPolicyHandle);
-            
+
             // When: Encoding input
             message.encode_in(mockNdrBuffer);
-            
+
             // Then: Should encode handle
             verify(mockPolicyHandle).encode(mockNdrBuffer);
         }
@@ -141,10 +151,10 @@ class samrTest {
             // Given: Close handle message with mocked return value
             samr.SamrCloseHandle message = new samr.SamrCloseHandle(mockPolicyHandle);
             when(mockNdrBuffer.dec_ndr_long()).thenReturn(0);
-            
+
             // When: Decoding output
             message.decode_out(mockNdrBuffer);
-            
+
             // Then: Should decode return value
             verify(mockNdrBuffer).dec_ndr_long();
             assertEquals(0, message.retval);
@@ -154,13 +164,13 @@ class samrTest {
     @Nested
     @DisplayName("SamrConnect2 Tests")
     class SamrConnect2Tests {
-        
+
         @Test
         @DisplayName("Should construct with correct parameters and opnum")
         void testConstructorAndOpnum() {
             // When: Creating connect2 message
             samr.SamrConnect2 message = new samr.SamrConnect2("system", 123, mockPolicyHandle);
-            
+
             // Then: Should have correct values
             assertEquals(0x39, message.getOpnum());
             assertEquals("system", message.system_name);
@@ -173,10 +183,10 @@ class samrTest {
         void testEncodeIn() throws NdrException {
             // Given: Connect2 message with system name
             samr.SamrConnect2 message = new samr.SamrConnect2("system", 123, mockPolicyHandle);
-            
+
             // When: Encoding input
             message.encode_in(mockNdrBuffer);
-            
+
             // Then: Should encode all parameters
             verify(mockNdrBuffer).enc_ndr_referent("system", 1);
             verify(mockNdrBuffer).enc_ndr_string("system");
@@ -188,10 +198,10 @@ class samrTest {
         void testEncodeInNullSystemName() throws NdrException {
             // Given: Connect2 message with null system name
             samr.SamrConnect2 message = new samr.SamrConnect2(null, 123, mockPolicyHandle);
-            
+
             // When: Encoding input
             message.encode_in(mockNdrBuffer);
-            
+
             // Then: Should encode null referent and access mask
             verify(mockNdrBuffer).enc_ndr_referent(null, 1);
             verify(mockNdrBuffer, never()).enc_ndr_string(anyString());
@@ -204,10 +214,10 @@ class samrTest {
             // Given: Connect2 message with mocked return value
             samr.SamrConnect2 message = new samr.SamrConnect2("system", 123, mockPolicyHandle);
             when(mockNdrBuffer.dec_ndr_long()).thenReturn(0);
-            
+
             // When: Decoding output
             message.decode_out(mockNdrBuffer);
-            
+
             // Then: Should decode handle and return value
             verify(mockPolicyHandle).decode(mockNdrBuffer);
             verify(mockNdrBuffer).dec_ndr_long();
@@ -218,13 +228,13 @@ class samrTest {
     @Nested
     @DisplayName("SamrConnect4 Tests")
     class SamrConnect4Tests {
-        
+
         @Test
         @DisplayName("Should construct with correct parameters and opnum")
         void testConstructorAndOpnum() {
             // When: Creating connect4 message
             samr.SamrConnect4 message = new samr.SamrConnect4("system", 456, 123, mockPolicyHandle);
-            
+
             // Then: Should have correct values
             assertEquals(0x3e, message.getOpnum());
             assertEquals("system", message.system_name);
@@ -238,10 +248,10 @@ class samrTest {
         void testEncodeIn() throws NdrException {
             // Given: Connect4 message
             samr.SamrConnect4 message = new samr.SamrConnect4("system", 456, 123, mockPolicyHandle);
-            
+
             // When: Encoding input
             message.encode_in(mockNdrBuffer);
-            
+
             // Then: Should encode all parameters
             verify(mockNdrBuffer).enc_ndr_referent("system", 1);
             verify(mockNdrBuffer).enc_ndr_string("system");
@@ -254,10 +264,10 @@ class samrTest {
         void testEncodeInNullSystemName() throws NdrException {
             // Given: Connect4 message with null system name
             samr.SamrConnect4 message = new samr.SamrConnect4(null, 456, 123, mockPolicyHandle);
-            
+
             // When: Encoding input
             message.encode_in(mockNdrBuffer);
-            
+
             // Then: Should encode null referent and other parameters
             verify(mockNdrBuffer).enc_ndr_referent(null, 1);
             verify(mockNdrBuffer, never()).enc_ndr_string(anyString());
@@ -271,10 +281,10 @@ class samrTest {
             // Given: Connect4 message with mocked return value
             samr.SamrConnect4 message = new samr.SamrConnect4("system", 456, 123, mockPolicyHandle);
             when(mockNdrBuffer.dec_ndr_long()).thenReturn(0);
-            
+
             // When: Decoding output
             message.decode_out(mockNdrBuffer);
-            
+
             // Then: Should decode handle and return value
             verify(mockPolicyHandle).decode(mockNdrBuffer);
             verify(mockNdrBuffer).dec_ndr_long();
@@ -285,13 +295,13 @@ class samrTest {
     @Nested
     @DisplayName("SamrOpenDomain Tests")
     class SamrOpenDomainTests {
-        
+
         @Test
         @DisplayName("Should construct with correct parameters and opnum")
         void testConstructorAndOpnum() {
             // When: Creating open domain message
             samr.SamrOpenDomain message = new samr.SamrOpenDomain(mockPolicyHandle, 123, mockSidT, mockPolicyHandle);
-            
+
             // Then: Should have correct values
             assertEquals(0x07, message.getOpnum());
             assertEquals(mockPolicyHandle, message.handle);
@@ -305,10 +315,10 @@ class samrTest {
         void testEncodeIn() throws NdrException {
             // Given: Open domain message
             samr.SamrOpenDomain message = new samr.SamrOpenDomain(mockPolicyHandle, 123, mockSidT, mockPolicyHandle);
-            
+
             // When: Encoding input
             message.encode_in(mockNdrBuffer);
-            
+
             // Then: Should encode all parameters
             verify(mockPolicyHandle).encode(mockNdrBuffer);
             verify(mockNdrBuffer).enc_ndr_long(123);
@@ -321,10 +331,10 @@ class samrTest {
             // Given: Open domain message with mocked return value
             samr.SamrOpenDomain message = new samr.SamrOpenDomain(mockPolicyHandle, 123, mockSidT, mockPolicyHandle);
             when(mockNdrBuffer.dec_ndr_long()).thenReturn(0);
-            
+
             // When: Decoding output
             message.decode_out(mockNdrBuffer);
-            
+
             // Then: Should decode domain handle and return value
             verify(mockPolicyHandle).decode(mockNdrBuffer);
             verify(mockNdrBuffer).dec_ndr_long();
@@ -335,7 +345,7 @@ class samrTest {
     @Nested
     @DisplayName("SamrSamEntry Tests")
     class SamrSamEntryTests {
-        
+
         @Test
         @DisplayName("Should encode entry with non-null buffer")
         void testEncode() throws NdrException {
@@ -387,7 +397,7 @@ class samrTest {
             when(mockNdrBuffer.dec_ndr_long()).thenReturn(1, 100); // idx, _name_bufferp
             when(mockNdrBuffer.dec_ndr_short()).thenReturn(4, 6); // length, maximum_length
             when(mockDeferredBuffer.dec_ndr_long()).thenReturn(3, 0, 2); // _name_buffers, 0, _name_bufferl
-            when(mockDeferredBuffer.dec_ndr_short()).thenReturn((int)(short) 't', (int)(short) 'e');
+            when(mockDeferredBuffer.dec_ndr_short()).thenReturn((int) (short) 't', (int) (short) 'e');
 
             // When: Decoding entry
             entry.decode(mockNdrBuffer);
@@ -434,7 +444,7 @@ class samrTest {
     @Nested
     @DisplayName("SamrSamArray Tests")
     class SamrSamArrayTests {
-        
+
         @Test
         @DisplayName("Should encode array with entries")
         void testEncode() throws NdrException {
@@ -478,7 +488,7 @@ class samrTest {
             samr.SamrSamArray array = new samr.SamrSamArray();
             array.entries = new samr.SamrSamEntry[1]; // Pre-populate to avoid decoding
             array.entries[0] = new samr.SamrSamEntry();
-            
+
             when(mockNdrBuffer.dec_ndr_long()).thenReturn(1, 100); // count, _entriesp
             when(mockDeferredBuffer.dec_ndr_long()).thenReturn(1); // _entriess
             // Setup deferred buffer chain for entry decoding
@@ -526,14 +536,14 @@ class samrTest {
     @Nested
     @DisplayName("SamrEnumerateAliasesInDomain Tests")
     class SamrEnumerateAliasesInDomainTests {
-        
+
         @Test
         @DisplayName("Should construct with correct parameters and opnum")
         void testConstructorAndOpnum() {
             // When: Creating enumerate aliases message
-            samr.SamrEnumerateAliasesInDomain message = 
-                new samr.SamrEnumerateAliasesInDomain(mockPolicyHandle, 1, 2, new samr.SamrSamArray(), 3);
-            
+            samr.SamrEnumerateAliasesInDomain message =
+                    new samr.SamrEnumerateAliasesInDomain(mockPolicyHandle, 1, 2, new samr.SamrSamArray(), 3);
+
             // Then: Should have correct values
             assertEquals(0x0f, message.getOpnum());
             assertEquals(mockPolicyHandle, message.domain_handle);
@@ -547,12 +557,12 @@ class samrTest {
         @DisplayName("Should encode input correctly")
         void testEncodeIn() throws NdrException {
             // Given: Enumerate aliases message
-            samr.SamrEnumerateAliasesInDomain message = 
-                new samr.SamrEnumerateAliasesInDomain(mockPolicyHandle, 1, 2, new samr.SamrSamArray(), 3);
-            
+            samr.SamrEnumerateAliasesInDomain message =
+                    new samr.SamrEnumerateAliasesInDomain(mockPolicyHandle, 1, 2, new samr.SamrSamArray(), 3);
+
             // When: Encoding input
             message.encode_in(mockNdrBuffer);
-            
+
             // Then: Should encode parameters
             verify(mockPolicyHandle).encode(mockNdrBuffer);
             verify(mockNdrBuffer).enc_ndr_long(1);
@@ -567,9 +577,8 @@ class samrTest {
             // Pre-populate entries to avoid complex decode chain
             samArray.entries = new samr.SamrSamEntry[1];
             samArray.entries[0] = new samr.SamrSamEntry();
-            
-            samr.SamrEnumerateAliasesInDomain message = 
-                new samr.SamrEnumerateAliasesInDomain(mockPolicyHandle, 1, 2, samArray, 3);
+
+            samr.SamrEnumerateAliasesInDomain message = new samr.SamrEnumerateAliasesInDomain(mockPolicyHandle, 1, 2, samArray, 3);
             when(mockNdrBuffer.dec_ndr_long()).thenReturn(10, 100, 1, 100, 5, 0); // resume_handle, _samp, SamrSamArray.count, _entriesp, num_entries, retval
             when(mockDeferredBuffer.dec_ndr_long()).thenReturn(1); // SamrSamArray._entriess
             // Setup for SamrSamEntry decode chain
@@ -590,8 +599,7 @@ class samrTest {
         @DisplayName("Should handle null sam in decode")
         void testDecodeOutNullSam() throws NdrException {
             // Given: Message with null sam
-            samr.SamrEnumerateAliasesInDomain message = 
-                new samr.SamrEnumerateAliasesInDomain(mockPolicyHandle, 1, 2, null, 3);
+            samr.SamrEnumerateAliasesInDomain message = new samr.SamrEnumerateAliasesInDomain(mockPolicyHandle, 1, 2, null, 3);
             when(mockNdrBuffer.dec_ndr_long()).thenReturn(10, 100, 1, 100, 5, 0); // resume_handle, _samp, sam.count, sam._entriesp, num_entries, retval
             when(mockDeferredBuffer.dec_ndr_long()).thenReturn(1); // SamrSamArray._entriess
             // Setup for SamrSamEntry decode chain
@@ -613,8 +621,7 @@ class samrTest {
         void testDecodeOutZeroSamPointer() throws NdrException {
             // Given: Message with non-null sam and zero pointer in response
             samr.SamrSamArray samArray = spy(new samr.SamrSamArray());
-            samr.SamrEnumerateAliasesInDomain message = 
-                new samr.SamrEnumerateAliasesInDomain(mockPolicyHandle, 1, 2, samArray, 3);
+            samr.SamrEnumerateAliasesInDomain message = new samr.SamrEnumerateAliasesInDomain(mockPolicyHandle, 1, 2, samArray, 3);
             when(mockNdrBuffer.dec_ndr_long()).thenReturn(10, 0, 5, 0); // _samp = 0
 
             // When: Decoding output
@@ -631,13 +638,13 @@ class samrTest {
     @Nested
     @DisplayName("SamrOpenAlias Tests")
     class SamrOpenAliasTests {
-        
+
         @Test
         @DisplayName("Should construct with correct parameters and opnum")
         void testConstructorAndOpnum() {
             // When: Creating open alias message
             samr.SamrOpenAlias message = new samr.SamrOpenAlias(mockPolicyHandle, 123, 456, mockPolicyHandle);
-            
+
             // Then: Should have correct values
             assertEquals(0x1b, message.getOpnum());
             assertEquals(mockPolicyHandle, message.domain_handle);
@@ -651,10 +658,10 @@ class samrTest {
         void testEncodeIn() throws NdrException {
             // Given: Open alias message
             samr.SamrOpenAlias message = new samr.SamrOpenAlias(mockPolicyHandle, 123, 456, mockPolicyHandle);
-            
+
             // When: Encoding input
             message.encode_in(mockNdrBuffer);
-            
+
             // Then: Should encode all parameters
             verify(mockPolicyHandle).encode(mockNdrBuffer);
             verify(mockNdrBuffer).enc_ndr_long(123);
@@ -667,10 +674,10 @@ class samrTest {
             // Given: Open alias message with mocked return value
             samr.SamrOpenAlias message = new samr.SamrOpenAlias(mockPolicyHandle, 123, 456, mockPolicyHandle);
             when(mockNdrBuffer.dec_ndr_long()).thenReturn(0);
-            
+
             // When: Decoding output
             message.decode_out(mockNdrBuffer);
-            
+
             // Then: Should decode alias handle and return value
             verify(mockPolicyHandle).decode(mockNdrBuffer);
             verify(mockNdrBuffer).dec_ndr_long();
@@ -681,13 +688,13 @@ class samrTest {
     @Nested
     @DisplayName("SamrGetMembersInAlias Tests")
     class SamrGetMembersInAliasTests {
-        
+
         @Test
         @DisplayName("Should construct with correct parameters and opnum")
         void testConstructorAndOpnum() {
             // When: Creating get members message
             samr.SamrGetMembersInAlias message = new samr.SamrGetMembersInAlias(mockPolicyHandle, mockLsarSidArray);
-            
+
             // Then: Should have correct values
             assertEquals(0x21, message.getOpnum());
             assertEquals(mockPolicyHandle, message.alias_handle);
@@ -699,10 +706,10 @@ class samrTest {
         void testEncodeIn() throws NdrException {
             // Given: Get members message
             samr.SamrGetMembersInAlias message = new samr.SamrGetMembersInAlias(mockPolicyHandle, mockLsarSidArray);
-            
+
             // When: Encoding input
             message.encode_in(mockNdrBuffer);
-            
+
             // Then: Should encode alias handle
             verify(mockPolicyHandle).encode(mockNdrBuffer);
         }
@@ -713,10 +720,10 @@ class samrTest {
             // Given: Get members message with mocked return value
             samr.SamrGetMembersInAlias message = new samr.SamrGetMembersInAlias(mockPolicyHandle, mockLsarSidArray);
             when(mockNdrBuffer.dec_ndr_long()).thenReturn(0);
-            
+
             // When: Decoding output
             message.decode_out(mockNdrBuffer);
-            
+
             // Then: Should decode sids array and return value
             verify(mockLsarSidArray).decode(mockNdrBuffer);
             verify(mockNdrBuffer).dec_ndr_long();
@@ -727,7 +734,7 @@ class samrTest {
     @Nested
     @DisplayName("SamrRidWithAttribute Tests")
     class SamrRidWithAttributeTests {
-        
+
         @Test
         @DisplayName("Should encode RID with attribute correctly")
         void testEncode() throws NdrException {
@@ -766,7 +773,7 @@ class samrTest {
     @Nested
     @DisplayName("SamrRidWithAttributeArray Tests")
     class SamrRidWithAttributeArrayTests {
-        
+
         @Test
         @DisplayName("Should encode array with RIDs")
         void testEncode() throws NdrException {

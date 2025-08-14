@@ -1,16 +1,18 @@
 package jcifs.smb1.util;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.ValueSource;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.io.IOException;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class MimeMapTest {
 
@@ -59,16 +61,8 @@ class MimeMapTest {
 
         @ParameterizedTest
         @DisplayName("Should return correct mime type for multiple extensions")
-        @CsvSource({
-            "txt, text/plain",
-            "css, text/css",
-            "js, application/x-javascript",
-            "zip, application/zip",
-            "tar, application/x-tar",
-            "gz, application/x-gzip",
-            "tiff, image/tiff",
-            "tif, image/tiff"
-        })
+        @CsvSource({ "txt, text/plain", "css, text/css", "js, application/x-javascript", "zip, application/zip", "tar, application/x-tar",
+                "gz, application/x-gzip", "tiff, image/tiff", "tif, image/tiff" })
         void testVariousExtensions(String extension, String expectedMimeType) throws IOException {
             assertEquals(expectedMimeType, mimeMap.getMimeType(extension));
         }
@@ -107,12 +101,7 @@ class MimeMapTest {
 
         @ParameterizedTest
         @DisplayName("Should handle various default values")
-        @ValueSource(strings = {
-            "text/unknown",
-            "application/x-unknown",
-            "custom/type",
-            ""
-        })
+        @ValueSource(strings = { "text/unknown", "application/x-unknown", "custom/type", "" })
         void testVariousDefaultValues(String defaultValue) throws IOException {
             assertEquals(defaultValue, mimeMap.getMimeType("notinmap", defaultValue));
         }
@@ -161,7 +150,7 @@ class MimeMapTest {
             assertEquals("audio/x-wav", mimeMap.getMimeType("wav"));
             // mp3 has multiple mappings, first one wins
             assertEquals("audio/x-mpegurl", mimeMap.getMimeType("mp3"));
-            
+
             // Common video formats
             assertEquals("video/x-msvideo", mimeMap.getMimeType("avi"));
             assertEquals("video/mpeg", mimeMap.getMimeType("mpeg"));
@@ -218,7 +207,7 @@ class MimeMapTest {
         @Test
         @DisplayName("Should handle rapid succession of different extensions")
         void testRapidDifferentExtensions() throws IOException {
-            String[] extensions = {"pdf", "doc", "xls", "html", "jpg", "gif", "png", "txt", "xml", "css"};
+            String[] extensions = { "pdf", "doc", "xls", "html", "jpg", "gif", "png", "txt", "xml", "css" };
             for (String ext : extensions) {
                 assertNotNull(mimeMap.getMimeType(ext));
             }

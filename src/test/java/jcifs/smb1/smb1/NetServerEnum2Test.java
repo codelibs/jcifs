@@ -1,15 +1,14 @@
 package jcifs.smb1.smb1;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 
-import jcifs.smb1.smb1.NetServerEnum2;
-import jcifs.smb1.smb1.SmbComTransaction;
-import jcifs.smb1.smb1.ServerMessageBlock;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for the NetServerEnum2 class.
@@ -89,27 +88,27 @@ class NetServerEnum2Test {
         currentIndex += 2;
 
         // Verify serverTypes
-        assertEquals(testServerTypes, (dst[currentIndex] & 0xFF) | ((dst[currentIndex + 1] & 0xFF) << 8) |
-                ((dst[currentIndex + 2] & 0xFF) << 16) | ((dst[currentIndex + 3] & 0xFF) << 24));
+        assertEquals(testServerTypes, (dst[currentIndex] & 0xFF) | ((dst[currentIndex + 1] & 0xFF) << 8)
+                | ((dst[currentIndex + 2] & 0xFF) << 16) | ((dst[currentIndex + 3] & 0xFF) << 24));
         currentIndex += 4;
 
         // Verify domain
         String writtenDomain = new String(dst, currentIndex, testDomain.length(), StandardCharsets.US_ASCII);
         assertEquals(testDomain.toUpperCase(), writtenDomain);
-        
+
         // Verify total bytes written
         assertEquals(currentIndex + testDomain.length() + 1, bytesWritten);
     }
-    
+
     /**
      * Test the writeParametersWireFormat method for NET_SERVER_ENUM3.
      */
     @Test
     void testWriteParametersWireFormat_Enum3() throws UnsupportedEncodingException {
-        netServerEnum2.subCommand = (byte)SmbComTransaction.NET_SERVER_ENUM3;
+        netServerEnum2.subCommand = (byte) SmbComTransaction.NET_SERVER_ENUM3;
         String lastName = "LAST_SERVER";
         netServerEnum2.reset(0, lastName);
-        
+
         byte[] dst = new byte[150];
         int bytesWritten = netServerEnum2.writeParametersWireFormat(dst, 0);
 
@@ -132,8 +131,8 @@ class NetServerEnum2Test {
         currentIndex += 2;
 
         // Verify serverTypes
-        assertEquals(testServerTypes, (dst[currentIndex] & 0xFF) | ((dst[currentIndex + 1] & 0xFF) << 8) |
-                ((dst[currentIndex + 2] & 0xFF) << 16) | ((dst[currentIndex + 3] & 0xFF) << 24));
+        assertEquals(testServerTypes, (dst[currentIndex] & 0xFF) | ((dst[currentIndex + 1] & 0xFF) << 8)
+                | ((dst[currentIndex + 2] & 0xFF) << 16) | ((dst[currentIndex + 3] & 0xFF) << 24));
         currentIndex += 4;
 
         // Verify domain
@@ -144,7 +143,7 @@ class NetServerEnum2Test {
         // Verify lastName
         String writtenLastName = new String(dst, currentIndex, lastName.length(), StandardCharsets.US_ASCII);
         assertEquals(lastName.toUpperCase(), writtenLastName);
-        
+
         // Verify total bytes written
         assertEquals(currentIndex + lastName.length() + 1, bytesWritten);
     }

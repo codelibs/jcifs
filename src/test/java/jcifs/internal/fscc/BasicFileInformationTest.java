@@ -1,7 +1,10 @@
 package jcifs.internal.fscc;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -23,7 +26,7 @@ class BasicFileInformationTest {
     private BasicFileInformation mockBasicFileInfo;
 
     private FileBasicInfo fileBasicInfo;
-    
+
     // Use Unix timestamps (milliseconds since 1970) for test values
     private static final long TEST_CREATE_TIME = System.currentTimeMillis() - 10000;
     private static final long TEST_LAST_ACCESS_TIME = System.currentTimeMillis() - 8000;
@@ -83,13 +86,8 @@ class BasicFileInformationTest {
     @DisplayName("Test FileBasicInfo parameterized constructor")
     void testFileBasicInfoParameterizedConstructor() {
         // Given & When
-        FileBasicInfo info = new FileBasicInfo(
-            TEST_CREATE_TIME,
-            TEST_LAST_ACCESS_TIME,
-            TEST_LAST_WRITE_TIME,
-            TEST_CHANGE_TIME,
-            TEST_ATTRIBUTES
-        );
+        FileBasicInfo info =
+                new FileBasicInfo(TEST_CREATE_TIME, TEST_LAST_ACCESS_TIME, TEST_LAST_WRITE_TIME, TEST_CHANGE_TIME, TEST_ATTRIBUTES);
 
         // Then
         assertEquals(TEST_ATTRIBUTES, info.getAttributes());
@@ -106,7 +104,7 @@ class BasicFileInformationTest {
         // Given
         byte[] buffer = new byte[64];
         int bufferIndex = 8;
-        
+
         // Prepare test data in buffer (40 bytes of data)
         // Use SMBUtil to properly encode times in Windows FILETIME format
         SMBUtil.writeTime(TEST_CREATE_TIME, buffer, bufferIndex);
@@ -130,13 +128,8 @@ class BasicFileInformationTest {
     @DisplayName("Test FileBasicInfo encode method")
     void testFileBasicInfoEncode() {
         // Given
-        FileBasicInfo info = new FileBasicInfo(
-            TEST_CREATE_TIME,
-            TEST_LAST_ACCESS_TIME,
-            TEST_LAST_WRITE_TIME,
-            TEST_CHANGE_TIME,
-            TEST_ATTRIBUTES
-        );
+        FileBasicInfo info =
+                new FileBasicInfo(TEST_CREATE_TIME, TEST_LAST_ACCESS_TIME, TEST_LAST_WRITE_TIME, TEST_CHANGE_TIME, TEST_ATTRIBUTES);
         byte[] buffer = new byte[64];
         int dstIndex = 8;
 
@@ -167,13 +160,8 @@ class BasicFileInformationTest {
     @DisplayName("Test FileBasicInfo toString method")
     void testFileBasicInfoToString() {
         // Given
-        FileBasicInfo info = new FileBasicInfo(
-            TEST_CREATE_TIME,
-            TEST_LAST_ACCESS_TIME,
-            TEST_LAST_WRITE_TIME,
-            TEST_CHANGE_TIME,
-            TEST_ATTRIBUTES
-        );
+        FileBasicInfo info =
+                new FileBasicInfo(TEST_CREATE_TIME, TEST_LAST_ACCESS_TIME, TEST_LAST_WRITE_TIME, TEST_CHANGE_TIME, TEST_ATTRIBUTES);
 
         // When
         String result = info.toString();
@@ -194,7 +182,7 @@ class BasicFileInformationTest {
         // Given
         byte[] buffer = new byte[36]; // Minimum required size
         int bufferIndex = 0;
-        
+
         // Fill with test data using SMBUtil
         SMBUtil.writeTime(TEST_CREATE_TIME, buffer, bufferIndex);
         SMBUtil.writeTime(TEST_LAST_ACCESS_TIME, buffer, bufferIndex + 8);
@@ -217,18 +205,13 @@ class BasicFileInformationTest {
     @DisplayName("Test encode and decode roundtrip")
     void testEncodeDecodeRoundtrip() throws SMBProtocolDecodingException {
         // Given
-        FileBasicInfo originalInfo = new FileBasicInfo(
-            TEST_CREATE_TIME,
-            TEST_LAST_ACCESS_TIME,
-            TEST_LAST_WRITE_TIME,
-            TEST_CHANGE_TIME,
-            TEST_ATTRIBUTES
-        );
+        FileBasicInfo originalInfo =
+                new FileBasicInfo(TEST_CREATE_TIME, TEST_LAST_ACCESS_TIME, TEST_LAST_WRITE_TIME, TEST_CHANGE_TIME, TEST_ATTRIBUTES);
         byte[] buffer = new byte[64];
-        
+
         // When - Encode
         int bytesEncoded = originalInfo.encode(buffer, 0);
-        
+
         // When - Decode
         FileBasicInfo decodedInfo = new FileBasicInfo();
         int bytesDecoded = decodedInfo.decode(buffer, 0, bytesEncoded);
@@ -246,27 +229,21 @@ class BasicFileInformationTest {
     @DisplayName("Test with various attribute flags")
     void testWithVariousAttributeFlags() {
         // Test common file attribute combinations
-        int[] attributeFlags = {
-            0x01, // FILE_ATTRIBUTE_READONLY
-            0x02, // FILE_ATTRIBUTE_HIDDEN
-            0x04, // FILE_ATTRIBUTE_SYSTEM
-            0x10, // FILE_ATTRIBUTE_DIRECTORY
-            0x20, // FILE_ATTRIBUTE_ARCHIVE
-            0x80, // FILE_ATTRIBUTE_NORMAL
-            0x100, // FILE_ATTRIBUTE_TEMPORARY
-            0x21, // Combination: ARCHIVE | READONLY
-            0x06  // Combination: HIDDEN | SYSTEM
+        int[] attributeFlags = { 0x01, // FILE_ATTRIBUTE_READONLY
+                0x02, // FILE_ATTRIBUTE_HIDDEN
+                0x04, // FILE_ATTRIBUTE_SYSTEM
+                0x10, // FILE_ATTRIBUTE_DIRECTORY
+                0x20, // FILE_ATTRIBUTE_ARCHIVE
+                0x80, // FILE_ATTRIBUTE_NORMAL
+                0x100, // FILE_ATTRIBUTE_TEMPORARY
+                0x21, // Combination: ARCHIVE | READONLY
+                0x06 // Combination: HIDDEN | SYSTEM
         };
 
         for (int attributes : attributeFlags) {
             // Given
-            FileBasicInfo info = new FileBasicInfo(
-                TEST_CREATE_TIME,
-                TEST_LAST_ACCESS_TIME,
-                TEST_LAST_WRITE_TIME,
-                TEST_CHANGE_TIME,
-                attributes
-            );
+            FileBasicInfo info =
+                    new FileBasicInfo(TEST_CREATE_TIME, TEST_LAST_ACCESS_TIME, TEST_LAST_WRITE_TIME, TEST_CHANGE_TIME, attributes);
 
             // When & Then
             assertEquals(attributes, info.getAttributes());
@@ -277,22 +254,19 @@ class BasicFileInformationTest {
     @DisplayName("Test with edge case time values")
     void testWithEdgeCaseTimeValues() {
         // Test with various time values including edge cases
-        long[][] timeValues = {
-            {0L, 0L, 0L, 0L}, // All zeros
-            {Long.MAX_VALUE, Long.MAX_VALUE, Long.MAX_VALUE, Long.MAX_VALUE}, // Max values
-            {1L, 2L, 3L, 4L}, // Small values
-            {-1L, -2L, -3L, -4L} // Negative values (though unusual for file times)
+        long[][] timeValues = { { 0L, 0L, 0L, 0L }, // All zeros
+                { Long.MAX_VALUE, Long.MAX_VALUE, Long.MAX_VALUE, Long.MAX_VALUE }, // Max values
+                { 1L, 2L, 3L, 4L }, // Small values
+                { -1L, -2L, -3L, -4L } // Negative values (though unusual for file times)
         };
 
         for (long[] times : timeValues) {
             // Given
-            FileBasicInfo info = new FileBasicInfo(
-                times[0], // create time
-                times[1], // last access time
-                times[2], // last write time
-                times[3], // change time
-                TEST_ATTRIBUTES
-            );
+            FileBasicInfo info = new FileBasicInfo(times[0], // create time
+                    times[1], // last access time
+                    times[2], // last write time
+                    times[3], // change time
+                    TEST_ATTRIBUTES);
 
             // When & Then
             assertEquals(times[0], info.getCreateTime());

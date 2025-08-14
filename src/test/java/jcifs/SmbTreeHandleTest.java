@@ -99,7 +99,8 @@ class SmbTreeHandleTest {
     @Test
     void testGetServerTimeZoneOffset_throwsCIFSException() throws CIFSException {
         when(smbTreeHandle.getServerTimeZoneOffset()).thenThrow(new CIFSException("Test Exception"));
-        assertThrows(CIFSException.class, () -> smbTreeHandle.getServerTimeZoneOffset(), "getServerTimeZoneOffset() should throw CIFSException");
+        assertThrows(CIFSException.class, () -> smbTreeHandle.getServerTimeZoneOffset(),
+                "getServerTimeZoneOffset() should throw CIFSException");
     }
 
     /**

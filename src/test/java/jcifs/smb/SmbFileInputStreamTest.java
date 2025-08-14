@@ -1,8 +1,18 @@
 package jcifs.smb;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.io.InterruptedIOException;
@@ -77,8 +87,7 @@ class SmbFileInputStreamTest {
             // Arrange SMB2 response to return 3 bytes
             Smb2ReadResponse smb2Resp = mock(Smb2ReadResponse.class);
             when(smb2Resp.getDataLength()).thenReturn(3);
-            when(mockTree.send(any(Request.class), any(RequestParam.class)))
-                .thenAnswer(inv -> (CommonServerMessageBlockResponse) smb2Resp);
+            when(mockTree.send(any(Request.class), any(RequestParam.class))).thenAnswer(inv -> (CommonServerMessageBlockResponse) smb2Resp);
 
             byte[] buf = new byte[16];
 
@@ -110,8 +119,7 @@ class SmbFileInputStreamTest {
 
             Smb2ReadResponse smb2Resp = mock(Smb2ReadResponse.class);
             when(smb2Resp.getDataLength()).thenReturn(3);
-            when(mockTree.send(any(Request.class), any(RequestParam.class)))
-                .thenAnswer(inv -> (CommonServerMessageBlockResponse) smb2Resp);
+            when(mockTree.send(any(Request.class), any(RequestParam.class))).thenAnswer(inv -> (CommonServerMessageBlockResponse) smb2Resp);
 
             byte[] buf = new byte[8];
             int n = in.read(buf);
@@ -122,8 +130,7 @@ class SmbFileInputStreamTest {
         @DisplayName("read() returns -1 when underlying readDirect hits EOF")
         void readSingleByteEOF() throws Exception {
             // Arrange SMB2 EOF via NT status code mapping in SmbFileInputStream
-            when(mockTree.send(any(Request.class), any(RequestParam.class)))
-                .thenThrow(new SmbException(0xC0000011, false)); // STATUS_END_OF_FILE
+            when(mockTree.send(any(Request.class), any(RequestParam.class))).thenThrow(new SmbException(0xC0000011, false)); // STATUS_END_OF_FILE
 
             SmbFileInputStream in = newStream();
             int v = in.read();
@@ -189,10 +196,9 @@ class SmbFileInputStreamTest {
             when(mockFile.getType()).thenReturn(SmbConstants.TYPE_NAMED_PIPE);
 
             // th.send(request, response, ...) throws SmbException with NT_STATUS_PIPE_BROKEN
-            doThrow(new SmbException(NtStatus.NT_STATUS_PIPE_BROKEN, false))
-                .when(mockTree).send(any(jcifs.internal.CommonServerMessageBlockRequest.class),
-                                     any(jcifs.internal.CommonServerMessageBlockResponse.class),
-                                     any(RequestParam.class));
+            doThrow(new SmbException(NtStatus.NT_STATUS_PIPE_BROKEN, false)).when(mockTree).send(
+                    any(jcifs.internal.CommonServerMessageBlockRequest.class), any(jcifs.internal.CommonServerMessageBlockResponse.class),
+                    any(RequestParam.class));
 
             SmbFileInputStream in = new SmbFileInputStream(mockFile, mockTree, mockHandle);
             int res = in.readDirect(new byte[1024], 0, 256);
@@ -216,13 +222,12 @@ class SmbFileInputStreamTest {
             doAnswer(inv -> {
                 throw new SmbException("short-circuit");
             }).when(mockTree).send(any(jcifs.internal.CommonServerMessageBlockRequest.class),
-                                    any(jcifs.internal.CommonServerMessageBlockResponse.class),
-                                    any(RequestParam.class));
+                    any(jcifs.internal.CommonServerMessageBlockResponse.class), any(RequestParam.class));
 
             SmbFileInputStream in = new SmbFileInputStream(mockFile, mockTree, mockHandle);
 
             ArgumentCaptor<jcifs.internal.smb1.com.SmbComReadAndX> cap =
-                ArgumentCaptor.forClass(jcifs.internal.smb1.com.SmbComReadAndX.class);
+                    ArgumentCaptor.forClass(jcifs.internal.smb1.com.SmbComReadAndX.class);
 
             // Act: choose len so upper/lower 16-bit parts are exercised
             byte[] buf = new byte[0x30000];
@@ -247,14 +252,14 @@ class SmbFileInputStreamTest {
             when(mockFile.getType()).thenReturn(SmbConstants.TYPE_NAMED_PIPE);
 
             // Cause send to throw to stop execution so we can verify arguments
-            doAnswer(inv -> { throw new SmbException("stop"); })
-                .when(mockTree).send(any(jcifs.internal.CommonServerMessageBlockRequest.class),
-                                     any(jcifs.internal.CommonServerMessageBlockResponse.class),
-                                     any(RequestParam.class));
+            doAnswer(inv -> {
+                throw new SmbException("stop");
+            }).when(mockTree).send(any(jcifs.internal.CommonServerMessageBlockRequest.class),
+                    any(jcifs.internal.CommonServerMessageBlockResponse.class), any(RequestParam.class));
 
             SmbFileInputStream in = new SmbFileInputStream(mockFile, mockTree, mockHandle);
             ArgumentCaptor<jcifs.internal.smb1.com.SmbComReadAndX> cap =
-                ArgumentCaptor.forClass(jcifs.internal.smb1.com.SmbComReadAndX.class);
+                    ArgumentCaptor.forClass(jcifs.internal.smb1.com.SmbComReadAndX.class);
 
             try {
                 in.readDirect(new byte[4096], 0, 2048);
@@ -304,4 +309,3 @@ class SmbFileInputStreamTest {
         }
     }
 }
-

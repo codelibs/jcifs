@@ -5,17 +5,15 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyByte;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyShort;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.lenient;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,7 +41,7 @@ class lsarpcTest {
         mockDeferredNdrBuffer.deferred = mockDeferredNdrBuffer; // Self-reference to avoid NPE
         lenient().when(mockNdrBuffer.derive(anyInt())).thenReturn(mockDeferredNdrBuffer);
         lenient().when(mockDeferredNdrBuffer.derive(anyInt())).thenReturn(mockDeferredNdrBuffer);
-        
+
         // Set up lenient stubs for common operations to avoid unnecessary stubbing exceptions
         lenient().when(mockNdrBuffer.getIndex()).thenReturn(0);
         lenient().when(mockDeferredNdrBuffer.getIndex()).thenReturn(0);
@@ -343,7 +341,8 @@ class lsarpcTest {
         when(mockNdrBuffer.dec_ndr_long()).thenReturn(1, 2);
         // The implementation uses maximum_length/2 for _name_buffers, not length
         when(mockDeferredNdrBuffer.dec_ndr_long()).thenReturn(10, 0, 5); // _name_buffers (max_length/2 = 20/2 = 10), 0, _name_bufferl (5)
-        when(mockDeferredNdrBuffer.dec_ndr_short()).thenReturn((int)(short) 'a', (int)(short) 'b', (int)(short) 'c', (int)(short) 'd', (int)(short) 'e');
+        when(mockDeferredNdrBuffer.dec_ndr_short()).thenReturn((int) (short) 'a', (int) (short) 'b', (int) (short) 'c', (int) (short) 'd',
+                (int) (short) 'e');
 
         domainInfo.decode(mockNdrBuffer);
 
@@ -360,7 +359,7 @@ class lsarpcTest {
         lsarpc.LsarDomainInfo domainInfo = new lsarpc.LsarDomainInfo();
         domainInfo.name = new rpc.unicode_string();
 
-        when(mockNdrBuffer.dec_ndr_short()).thenReturn((int)(short) 0, (int)(short) 0);
+        when(mockNdrBuffer.dec_ndr_short()).thenReturn((int) (short) 0, (int) (short) 0);
         when(mockNdrBuffer.dec_ndr_long()).thenReturn(0, 0); // _name_bufferp (null), _sidp (null)
 
         domainInfo.decode(mockNdrBuffer);
@@ -380,7 +379,7 @@ class lsarpcTest {
         lsarpc.LsarDomainInfo domainInfo = new lsarpc.LsarDomainInfo();
         domainInfo.name = new rpc.unicode_string();
 
-        when(mockNdrBuffer.dec_ndr_short()).thenReturn((int)(int)(short) 10, (int)(int)(short) 20);
+        when(mockNdrBuffer.dec_ndr_short()).thenReturn((int) (int) (short) 10, (int) (int) (short) 20);
         when(mockNdrBuffer.dec_ndr_long()).thenReturn(1, 2);
         when(mockDeferredNdrBuffer.dec_ndr_long()).thenReturn(-1, 0, 5); // Invalid _name_buffers
 
@@ -468,13 +467,13 @@ class lsarpcTest {
         // enc_ndr_short(0) is called 8 times total in the specific order
         verify(mockNdrBuffer, times(8)).enc_ndr_short(0); // 2 for name, 2 for dns_domain, 2 for dns_forest, 2 for guid
         verify(mockNdrBuffer, times(4)).enc_ndr_referent(null, 1); // name.buffer, dns_domain.buffer, dns_forest.buffer, sid
-        
+
         verify(mockNdrBuffer).enc_ndr_long(dnsDomainInfo.domain_guid.time_low);
         // Note: enc_ndr_short(0) for guid fields is already verified above with times(8)
         verify(mockNdrBuffer, times(2)).enc_ndr_small(0); // clock_seq_hi_and_reserved and clock_seq_low are both 0
         verify(mockNdrBuffer).advance(1 * 6); // domain_guid.node
         verify(mockDeferredNdrBuffer, times(6)).enc_ndr_small(0); // node bytes all 0
-        
+
         // Note: enc_ndr_referent(null, 1) is already verified above with times(4)
     }
 
@@ -499,9 +498,10 @@ class lsarpcTest {
                 6, 0, 6, // dns_domain buffer: buffers, 0, bufferl
                 7, 0, 7 // dns_forest buffer: buffers, 0, bufferl
         );
-        when(mockDeferredNdrBuffer.dec_ndr_short()).thenReturn((int)(short) 'a', (int)(int)(short) 'b', (int)(int)(short) 'c', (int)(int)(short) 'd', (int)(int)(short) 'e', (int)(short) 'f',
-                (int)(short) 'g', (int)(short) 'h', (int)(short) 'i', (int)(short) 'j', (int)(short) 'k', (int)(short) 'l', (int)(short) 'm', (int)(short) 'n', (int)(short) 'o',
-                (int)(short) 'p', (int)(short) 'q', (int)(short) 'r');
+        when(mockDeferredNdrBuffer.dec_ndr_short()).thenReturn((int) (short) 'a', (int) (int) (short) 'b', (int) (int) (short) 'c',
+                (int) (int) (short) 'd', (int) (int) (short) 'e', (int) (short) 'f', (int) (short) 'g', (int) (short) 'h',
+                (int) (short) 'i', (int) (short) 'j', (int) (short) 'k', (int) (short) 'l', (int) (short) 'm', (int) (short) 'n',
+                (int) (short) 'o', (int) (short) 'p', (int) (short) 'q', (int) (short) 'r');
         when(mockDeferredNdrBuffer.dec_ndr_small()).thenReturn(1, 2, 3, 4, 5, 6);
 
         dnsDomainInfo.decode(mockNdrBuffer);
@@ -536,9 +536,9 @@ class lsarpcTest {
         dnsDomainInfo.dns_forest = new rpc.unicode_string();
         dnsDomainInfo.domain_guid = new rpc.uuid_t();
 
-        when(mockNdrBuffer.dec_ndr_short()).thenReturn((int)(int)(short) 0, (int)(int)(short) 0, // name
-                (int)(int)(short) 0, (int)(int)(short) 0, // dns_domain
-                (int)(int)(short) 0, (int)(int)(short) 0 // dns_forest
+        when(mockNdrBuffer.dec_ndr_short()).thenReturn((int) (int) (short) 0, (int) (int) (short) 0, // name
+                (int) (int) (short) 0, (int) (int) (short) 0, // dns_domain
+                (int) (int) (short) 0, (int) (int) (short) 0 // dns_forest
         );
         when(mockNdrBuffer.dec_ndr_long()).thenReturn(0, // _name_bufferp
                 0, // _dns_domain_bufferp
@@ -563,7 +563,8 @@ class lsarpcTest {
         lsarpc.LsarDnsDomainInfo dnsDomainInfo = new lsarpc.LsarDnsDomainInfo();
         dnsDomainInfo.name = new rpc.unicode_string();
 
-        when(mockNdrBuffer.dec_ndr_short()).thenReturn((int)(short) 10, (int)(short) 20, (int)(short) 0, (int)(short) 0, (int)(short) 0, (int)(short) 0);
+        when(mockNdrBuffer.dec_ndr_short()).thenReturn((int) (short) 10, (int) (short) 20, (int) (short) 0, (int) (short) 0,
+                (int) (short) 0, (int) (short) 0);
         when(mockNdrBuffer.dec_ndr_long()).thenReturn(1, 0, 0, 0, 0);
         when(mockDeferredNdrBuffer.dec_ndr_long()).thenReturn(-1, 0, 5); // Invalid _name_buffers
 
@@ -870,7 +871,8 @@ class lsarpcTest {
         when(mockNdrBuffer.dec_ndr_short()).thenReturn(10, 20);
         when(mockNdrBuffer.dec_ndr_long()).thenReturn(1, 1); // _name_bufferp, _sidp
         when(mockDeferredNdrBuffer.dec_ndr_long()).thenReturn(10, 0, 5); // name buffer: buffers, 0, bufferl
-        when(mockDeferredNdrBuffer.dec_ndr_short()).thenReturn((int)(short) 'a', (int)(short) 'b', (int)(short) 'c', (int)(short) 'd', (int)(short) 'e');
+        when(mockDeferredNdrBuffer.dec_ndr_short()).thenReturn((int) (short) 'a', (int) (short) 'b', (int) (short) 'c', (int) (short) 'd',
+                (int) (short) 'e');
 
         trustInfo.decode(mockNdrBuffer);
 
@@ -886,7 +888,7 @@ class lsarpcTest {
         lsarpc.LsarTrustInformation trustInfo = new lsarpc.LsarTrustInformation();
         trustInfo.name = new rpc.unicode_string();
 
-        when(mockNdrBuffer.dec_ndr_short()).thenReturn((int)(short) 0, (int)(short) 0);
+        when(mockNdrBuffer.dec_ndr_short()).thenReturn((int) (short) 0, (int) (short) 0);
         when(mockNdrBuffer.dec_ndr_long()).thenReturn(0, 0);
 
         trustInfo.decode(mockNdrBuffer);
@@ -904,7 +906,7 @@ class lsarpcTest {
         lsarpc.LsarTrustInformation trustInfo = new lsarpc.LsarTrustInformation();
         trustInfo.name = new rpc.unicode_string();
 
-        when(mockNdrBuffer.dec_ndr_short()).thenReturn((int)(short) 10, (int)(short) 20);
+        when(mockNdrBuffer.dec_ndr_short()).thenReturn((int) (short) 10, (int) (short) 20);
         when(mockNdrBuffer.dec_ndr_long()).thenReturn(1, 2);
         when(mockDeferredNdrBuffer.dec_ndr_long()).thenReturn(-1, 0, 5);
 
@@ -1048,7 +1050,8 @@ class lsarpcTest {
         when(mockNdrBuffer.dec_ndr_short()).thenReturn(1, 10, 20);
         when(mockNdrBuffer.dec_ndr_long()).thenReturn(1, 3); // _name_bufferp, sid_index
         when(mockDeferredNdrBuffer.dec_ndr_long()).thenReturn(10, 0, 5); // name buffer: buffers, 0, bufferl
-        when(mockDeferredNdrBuffer.dec_ndr_short()).thenReturn((int)(short) 'a', (int)(short) 'b', (int)(short) 'c', (int)(short) 'd', (int)(short) 'e');
+        when(mockDeferredNdrBuffer.dec_ndr_short()).thenReturn((int) (short) 'a', (int) (short) 'b', (int) (short) 'c', (int) (short) 'd',
+                (int) (short) 'e');
 
         translatedName.decode(mockNdrBuffer);
 
@@ -1238,7 +1241,7 @@ class lsarpcTest {
         lsarpc.LsarQueryInformationPolicy queryInfoPolicy = new lsarpc.LsarQueryInformationPolicy(mockHandle, (short) 1, mockInfo);
 
         when(mockNdrBuffer.dec_ndr_long()).thenReturn(1, 123); // _infop, retval
-        when(mockNdrBuffer.dec_ndr_short()).thenReturn((int)(short) 0); // union discriminant
+        when(mockNdrBuffer.dec_ndr_short()).thenReturn((int) (short) 0); // union discriminant
 
         queryInfoPolicy.decode_out(mockNdrBuffer);
 
@@ -1424,7 +1427,7 @@ class lsarpcTest {
         lsarpc.LsarQueryInformationPolicy2 queryInfoPolicy2 = new lsarpc.LsarQueryInformationPolicy2(mockHandle, (short) 1, mockInfo);
 
         when(mockNdrBuffer.dec_ndr_long()).thenReturn(1, 123); // _infop, retval
-        when(mockNdrBuffer.dec_ndr_short()).thenReturn((int)(short) 0); // union discriminant
+        when(mockNdrBuffer.dec_ndr_short()).thenReturn((int) (short) 0); // union discriminant
 
         queryInfoPolicy2.decode_out(mockNdrBuffer);
 

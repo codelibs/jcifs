@@ -1,18 +1,29 @@
 package jcifs.smb;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -150,7 +161,7 @@ class SmbWatchHandleImplTest {
         when(tree.getConfig()).thenReturn(mock(Configuration.class));
         when(handle.getFileId()).thenReturn(new byte[16]);
         when(tree.send(any(CommonServerMessageBlockRequest.class), any(), any(), any()))
-            .thenThrow(new SmbException(0xC0000120, (Throwable) null));
+                .thenThrow(new SmbException(0xC0000120, (Throwable) null));
         SmbWatchHandleImpl sut = new SmbWatchHandleImpl(handle, 0, false);
 
         List<FileNotifyInformation> result = sut.watch();
@@ -181,10 +192,7 @@ class SmbWatchHandleImplTest {
 
     // Parameterized test to exercise SMB2 with different recursive and filter values
     @ParameterizedTest(name = "SMB2 param: recursive={0}, filter={1}")
-    @CsvSource({
-        "true, 0",
-        "false, -1"
-    })
+    @CsvSource({ "true, 0", "false, -1" })
     @DisplayName("watch() SMB2 parameterized branches execute without error")
     void watch_smb2_parameterized(boolean recursive, int filter) throws Exception {
         NotifyResponse resp = mock(NotifyResponse.class);
@@ -255,4 +263,3 @@ class SmbWatchHandleImplTest {
         });
     }
 }
-

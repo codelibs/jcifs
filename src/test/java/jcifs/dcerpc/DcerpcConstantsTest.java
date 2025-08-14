@@ -14,16 +14,16 @@ class DcerpcConstantsTest {
     @Nested
     @DisplayName("UUID Constants Tests")
     class UuidConstantsTests {
-        
+
         @Test
         @DisplayName("DCERPC_UUID_SYNTAX_NDR should have correct UUID value")
         void testDcerpcUuidSyntaxNdr() {
             // Arrange
             String expectedUuid = "8a885d04-1ceb-11c9-9fe8-08002b104860";
-            
+
             // Act
             String actualUuid = DcerpcConstants.DCERPC_UUID_SYNTAX_NDR.toString().toLowerCase();
-            
+
             // Assert
             assertNotNull(DcerpcConstants.DCERPC_UUID_SYNTAX_NDR, "DCERPC_UUID_SYNTAX_NDR should not be null");
             assertEquals(expectedUuid, actualUuid, "DCERPC_UUID_SYNTAX_NDR should have the correct UUID value");
@@ -33,7 +33,7 @@ class DcerpcConstantsTest {
     @Nested
     @DisplayName("Fragment Flag Constants Tests")
     class FragmentFlagTests {
-        
+
         @Test
         @DisplayName("DCERPC_FIRST_FRAG should have correct value")
         void testDcerpcFirstFrag() {
@@ -86,7 +86,7 @@ class DcerpcConstantsTest {
     @Nested
     @DisplayName("RPC Packet Type Constants Tests")
     class RpcPacketTypeTests {
-        
+
         @Test
         @DisplayName("RPC_PT_REQUEST should have correct value")
         void testRpcPtRequest() {
@@ -181,7 +181,7 @@ class DcerpcConstantsTest {
     @Nested
     @DisplayName("RPC Packet Flag Constants Tests")
     class RpcPacketFlagTests {
-        
+
         @Test
         @DisplayName("RPC_C_PF_BROADCAST should have correct value")
         void testRpcCPfBroadcast() {
@@ -234,7 +234,7 @@ class DcerpcConstantsTest {
     @Nested
     @DisplayName("Constants Validation Tests")
     class ConstantsValidationTests {
-        
+
         @Test
         @DisplayName("All fragment flags should have unique values")
         void testFragmentFlagsUniqueness() {
@@ -267,23 +267,11 @@ class DcerpcConstantsTest {
         @DisplayName("RPC packet types should have valid range")
         void testRpcPacketTypeRange() {
             // Verify that packet types are within valid range (0x00-0x16)
-            int[] packetTypes = {
-                DcerpcConstants.RPC_PT_REQUEST,
-                DcerpcConstants.RPC_PT_PING,
-                DcerpcConstants.RPC_PT_RESPONSE,
-                DcerpcConstants.RPC_PT_FAULT,
-                DcerpcConstants.RPC_PT_BIND,
-                DcerpcConstants.RPC_PT_BIND_ACK,
-                DcerpcConstants.RPC_PT_BIND_NAK,
-                DcerpcConstants.RPC_PT_ALTER_CONTEXT,
-                DcerpcConstants.RPC_PT_ALTER_CONTEXT_RESPONSE,
-                DcerpcConstants.RPC_PT_SHUTDOWN,
-                DcerpcConstants.RPC_PT_CANCEL,
-                DcerpcConstants.RPC_PT_ACK,
-                DcerpcConstants.RPC_PT_REJECT,
-                DcerpcConstants.RPC_PT_CO_CANCEL,
-                DcerpcConstants.RPC_PT_ORPHANED
-            };
+            int[] packetTypes = { DcerpcConstants.RPC_PT_REQUEST, DcerpcConstants.RPC_PT_PING, DcerpcConstants.RPC_PT_RESPONSE,
+                    DcerpcConstants.RPC_PT_FAULT, DcerpcConstants.RPC_PT_BIND, DcerpcConstants.RPC_PT_BIND_ACK,
+                    DcerpcConstants.RPC_PT_BIND_NAK, DcerpcConstants.RPC_PT_ALTER_CONTEXT, DcerpcConstants.RPC_PT_ALTER_CONTEXT_RESPONSE,
+                    DcerpcConstants.RPC_PT_SHUTDOWN, DcerpcConstants.RPC_PT_CANCEL, DcerpcConstants.RPC_PT_ACK,
+                    DcerpcConstants.RPC_PT_REJECT, DcerpcConstants.RPC_PT_CO_CANCEL, DcerpcConstants.RPC_PT_ORPHANED };
 
             for (int packetType : packetTypes) {
                 assertTrue(packetType >= 0x00 && packetType <= 0x16,
@@ -295,16 +283,9 @@ class DcerpcConstantsTest {
         @DisplayName("Fragment flags should be within byte range")
         void testFragmentFlagsRange() {
             // Verify that fragment flags are within byte range (0x00-0xFF)
-            int[] fragmentFlags = {
-                DcerpcConstants.DCERPC_FIRST_FRAG,
-                DcerpcConstants.DCERPC_LAST_FRAG,
-                DcerpcConstants.DCERPC_PENDING_CANCEL,
-                DcerpcConstants.DCERPC_RESERVED_1,
-                DcerpcConstants.DCERPC_CONC_MPX,
-                DcerpcConstants.DCERPC_DID_NOT_EXECUTE,
-                DcerpcConstants.DCERPC_MAYBE,
-                DcerpcConstants.DCERPC_OBJECT_UUID
-            };
+            int[] fragmentFlags = { DcerpcConstants.DCERPC_FIRST_FRAG, DcerpcConstants.DCERPC_LAST_FRAG,
+                    DcerpcConstants.DCERPC_PENDING_CANCEL, DcerpcConstants.DCERPC_RESERVED_1, DcerpcConstants.DCERPC_CONC_MPX,
+                    DcerpcConstants.DCERPC_DID_NOT_EXECUTE, DcerpcConstants.DCERPC_MAYBE, DcerpcConstants.DCERPC_OBJECT_UUID };
 
             for (int flag : fragmentFlags) {
                 assertTrue(flag >= 0x00 && flag <= 0xFF,
@@ -316,16 +297,9 @@ class DcerpcConstantsTest {
         @DisplayName("RPC packet flags should be within byte range")
         void testRpcPacketFlagsRange() {
             // Verify that RPC packet flags are within byte range (0x00-0xFF)
-            int[] rpcFlags = {
-                DcerpcConstants.RPC_C_PF_BROADCAST,
-                DcerpcConstants.RPC_C_PF_NO_FRAGMENT,
-                DcerpcConstants.RPC_C_PF_MAYBE,
-                DcerpcConstants.RPC_C_PF_IDEMPOTENT,
-                DcerpcConstants.RPC_C_PF_BROADCAST_MAYBE,
-                DcerpcConstants.RPC_C_PF_NOT_IDEMPOTENT,
-                DcerpcConstants.RPC_C_PF_NO_AUTO_LISTEN,
-                DcerpcConstants.RPC_C_PF_NO_AUTO_RETRY
-            };
+            int[] rpcFlags = { DcerpcConstants.RPC_C_PF_BROADCAST, DcerpcConstants.RPC_C_PF_NO_FRAGMENT, DcerpcConstants.RPC_C_PF_MAYBE,
+                    DcerpcConstants.RPC_C_PF_IDEMPOTENT, DcerpcConstants.RPC_C_PF_BROADCAST_MAYBE, DcerpcConstants.RPC_C_PF_NOT_IDEMPOTENT,
+                    DcerpcConstants.RPC_C_PF_NO_AUTO_LISTEN, DcerpcConstants.RPC_C_PF_NO_AUTO_RETRY };
 
             for (int flag : rpcFlags) {
                 assertTrue(flag >= 0x00 && flag <= 0xFF,

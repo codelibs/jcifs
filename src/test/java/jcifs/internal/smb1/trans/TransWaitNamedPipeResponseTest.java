@@ -1,16 +1,18 @@
 package jcifs.internal.smb1.trans;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import jcifs.Configuration;
-import jcifs.internal.SMBProtocolDecodingException;
 
 /**
  * Test class for TransWaitNamedPipeResponse
@@ -140,12 +142,11 @@ class TransWaitNamedPipeResponseTest {
     @DisplayName("readSetupWireFormat with various parameters should return 0")
     void testReadSetupWireFormatVariousParams() {
         // Test with different buffer sizes and offsets
-        int[][] testCases = {
-            {0, 50},    // No offset, 50 bytes
-            {10, 90},   // 10 byte offset, 90 bytes
-            {50, 50},   // 50 byte offset, 50 bytes
-            {0, 0},     // Empty buffer
-            {100, 100}  // Large values
+        int[][] testCases = { { 0, 50 }, // No offset, 50 bytes
+                { 10, 90 }, // 10 byte offset, 90 bytes
+                { 50, 50 }, // 50 byte offset, 50 bytes
+                { 0, 0 }, // Empty buffer
+                { 100, 100 } // Large values
         };
 
         for (int[] testCase : testCases) {
@@ -181,12 +182,7 @@ class TransWaitNamedPipeResponseTest {
     @DisplayName("readParametersWireFormat with various parameters should return 0")
     void testReadParametersWireFormatVariousParams() {
         // Test with different parameters
-        int[][] testCases = {
-            {0, 10},
-            {5, 20},
-            {50, 50},
-            {0, 0}
-        };
+        int[][] testCases = { { 0, 10 }, { 5, 20 }, { 50, 50 }, { 0, 0 } };
 
         for (int[] testCase : testCases) {
             // Arrange
@@ -221,12 +217,7 @@ class TransWaitNamedPipeResponseTest {
     @DisplayName("readDataWireFormat with various parameters should return 0")
     void testReadDataWireFormatVariousParams() {
         // Test with different parameters
-        int[][] testCases = {
-            {0, 256},
-            {128, 128},
-            {255, 1},
-            {0, 0}
-        };
+        int[][] testCases = { { 0, 256 }, { 128, 128 }, { 255, 1 }, { 0, 0 } };
 
         for (int[] testCase : testCases) {
             // Arrange
@@ -310,12 +301,12 @@ class TransWaitNamedPipeResponseTest {
     void testMethodsWithNullBuffer() {
         // The implementation doesn't validate null buffers
         // These methods simply return 0 without accessing the buffer
-        
+
         // Write methods return 0 without accessing null buffer
         assertEquals(0, response.writeSetupWireFormat(null, 0));
         assertEquals(0, response.writeParametersWireFormat(null, 0));
         assertEquals(0, response.writeDataWireFormat(null, 0));
-        
+
         // Read methods return 0 without accessing null buffer
         assertEquals(0, response.readSetupWireFormat(null, 0, 0));
         assertEquals(0, response.readParametersWireFormat(null, 0, 0));
@@ -377,7 +368,7 @@ class TransWaitNamedPipeResponseTest {
         // Test that response inherits from SmbComTransactionResponse
         assertTrue(response.hasMoreElements());
         assertNotNull(response.nextElement());
-        
+
         // Test reset behavior
         response.reset();
         assertTrue(response.hasMoreElements());
@@ -388,10 +379,10 @@ class TransWaitNamedPipeResponseTest {
     void testConfigurationPassedToParent() {
         // Arrange
         Configuration testConfig = mock(Configuration.class);
-        
+
         // Act
         TransWaitNamedPipeResponse testResponse = new TransWaitNamedPipeResponse(testConfig);
-        
+
         // Assert
         assertNotNull(testResponse);
     }
@@ -402,7 +393,7 @@ class TransWaitNamedPipeResponseTest {
         // Act
         String result1 = response.toString();
         String result2 = response.toString();
-        
+
         // Assert
         assertEquals(result1, result2);
     }
@@ -412,7 +403,7 @@ class TransWaitNamedPipeResponseTest {
     void testLargeBufferHandling() {
         // Arrange
         byte[] largeBuffer = new byte[65536]; // 64KB buffer
-        
+
         // Act & Assert
         assertEquals(0, response.writeSetupWireFormat(largeBuffer, 0));
         assertEquals(0, response.writeParametersWireFormat(largeBuffer, 32768));
@@ -427,7 +418,7 @@ class TransWaitNamedPipeResponseTest {
     void testReadMethodsWithZeroLength() {
         // Arrange
         byte[] buffer = new byte[100];
-        
+
         // Act & Assert
         assertEquals(0, response.readSetupWireFormat(buffer, 0, 0));
         assertEquals(0, response.readParametersWireFormat(buffer, 50, 0));
@@ -439,7 +430,7 @@ class TransWaitNamedPipeResponseTest {
     void testReadMethodsWithMaxLength() {
         // Arrange
         byte[] buffer = new byte[100];
-        
+
         // Act & Assert
         assertEquals(0, response.readSetupWireFormat(buffer, 0, Integer.MAX_VALUE));
         assertEquals(0, response.readParametersWireFormat(buffer, 0, Integer.MAX_VALUE));

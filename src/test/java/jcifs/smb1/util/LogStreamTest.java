@@ -27,11 +27,11 @@ class LogStreamTest {
         // Save original state
         originalErr = System.err;
         originalLevel = LogStream.level;
-        
+
         // Create test stream
         testOutput = new ByteArrayOutputStream();
         testStream = new PrintStream(testOutput);
-        
+
         // Reset LogStream instance using reflection
         resetLogStreamInstance();
     }
@@ -65,16 +65,16 @@ class LogStreamTest {
         // Test setting log level
         LogStream.setLevel(0);
         assertEquals(0, LogStream.level);
-        
+
         LogStream.setLevel(1);
         assertEquals(1, LogStream.level);
-        
+
         LogStream.setLevel(3);
         assertEquals(3, LogStream.level);
-        
+
         LogStream.setLevel(10);
         assertEquals(10, LogStream.level);
-        
+
         // Test negative level
         LogStream.setLevel(-1);
         assertEquals(-1, LogStream.level);
@@ -86,7 +86,7 @@ class LogStreamTest {
         // Should default to System.err
         LogStream instance = LogStream.getInstance();
         assertNotNull(instance);
-        
+
         // Getting instance again should return the same instance
         LogStream instance2 = LogStream.getInstance();
         assertSame(instance, instance2);
@@ -98,7 +98,7 @@ class LogStreamTest {
         LogStream.setInstance(testStream);
         LogStream instance = LogStream.getInstance();
         assertNotNull(instance);
-        
+
         // Write something to verify it uses our test stream
         instance.println("test message");
         instance.flush();
@@ -111,13 +111,13 @@ class LogStreamTest {
         // Test setting instance multiple times
         PrintStream stream1 = new PrintStream(new ByteArrayOutputStream());
         PrintStream stream2 = new PrintStream(new ByteArrayOutputStream());
-        
+
         LogStream.setInstance(stream1);
         LogStream instance1 = LogStream.getInstance();
-        
+
         LogStream.setInstance(stream2);
         LogStream instance2 = LogStream.getInstance();
-        
+
         // Each setInstance should create a new LogStream
         assertNotNull(instance1);
         assertNotNull(instance2);
@@ -132,7 +132,7 @@ class LogStreamTest {
         // Test that LogStream properly inherits PrintStream functionality
         LogStream.setInstance(testStream);
         LogStream logStream = LogStream.getInstance();
-        
+
         // Test various PrintStream methods
         logStream.print("test");
         logStream.print(123);
@@ -141,7 +141,7 @@ class LogStreamTest {
         logStream.println("line");
         logStream.printf("formatted %d%n", 42);
         logStream.flush();
-        
+
         String output = testOutput.toString();
         assertTrue(output.contains("test"));
         assertTrue(output.contains("123"));
@@ -162,19 +162,19 @@ class LogStreamTest {
         // 0 - nothing
         LogStream.setLevel(0);
         assertEquals(0, LogStream.level);
-        
+
         // 1 - critical [default]
         LogStream.setLevel(1);
         assertEquals(1, LogStream.level);
-        
+
         // 2 - basic info can be logged under load
         LogStream.setLevel(2);
         assertEquals(2, LogStream.level);
-        
+
         // 3 - almost everything
         LogStream.setLevel(3);
         assertEquals(3, LogStream.level);
-        
+
         // N - debugging (higher values)
         LogStream.setLevel(10);
         assertEquals(10, LogStream.level);
@@ -186,12 +186,12 @@ class LogStreamTest {
         // getInstance first (creates default instance with System.err)
         LogStream instance1 = LogStream.getInstance();
         assertNotNull(instance1);
-        
+
         // Now set a new instance
         LogStream.setInstance(testStream);
         LogStream instance2 = LogStream.getInstance();
         assertNotNull(instance2);
-        
+
         // Should be different instances since setInstance replaces the previous one
         assertNotSame(instance1, instance2);
         // Getting instance again should return the same as instance2
@@ -214,19 +214,19 @@ class LogStreamTest {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         PrintStream realStream = new PrintStream(baos);
         LogStream logStream = new LogStream(realStream);
-        
+
         // Test delegation of various methods
         logStream.println("test");
         logStream.print(42);
         logStream.print(" ");
         logStream.print(true);
         logStream.flush();
-        
+
         String output = baos.toString();
         assertTrue(output.contains("test"));
         assertTrue(output.contains("42"));
         assertTrue(output.contains("true"));
-        
+
         // Test close
         logStream.close();
         // After close, the stream should not accept more writes
@@ -237,10 +237,10 @@ class LogStreamTest {
     void testConcurrentAccess() throws InterruptedException {
         // Test thread safety of getInstance
         LogStream.setInstance(testStream);
-        
+
         final LogStream[] instances = new LogStream[10];
         Thread[] threads = new Thread[10];
-        
+
         for (int i = 0; i < threads.length; i++) {
             final int index = i;
             threads[i] = new Thread(() -> {
@@ -248,11 +248,11 @@ class LogStreamTest {
             });
             threads[i].start();
         }
-        
+
         for (Thread thread : threads) {
             thread.join();
         }
-        
+
         // All threads should get the same instance
         LogStream expected = instances[0];
         for (LogStream instance : instances) {

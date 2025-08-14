@@ -3,12 +3,11 @@ package jcifs.pac;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import jcifs.pac.PACDecodingException;
 import java.math.BigInteger;
 import java.util.Date;
 
@@ -16,7 +15,6 @@ import org.junit.jupiter.api.Test;
 
 import jcifs.SmbConstants;
 import jcifs.smb.SID;
-
 
 public class PacDataInputStreamTest {
 
@@ -40,7 +38,7 @@ public class PacDataInputStreamTest {
         pdis.readInt(); // position is 4
         pdis.align(4);
         assertEquals(0, pdis.available());
-        
+
         // Test alignment with mask 0
         pdis = createInputStream(new byte[] { 0x01, 0x02, 0x03, 0x04 });
         pdis.readByte(); // position is 1
@@ -78,7 +76,7 @@ public class PacDataInputStreamTest {
     @Test
     public void testReadChar() throws IOException {
         // 0x0041 is 'A'
-        byte[] data = new byte[] { 0x00, 0x41, 0x00, 0x00 }; 
+        byte[] data = new byte[] { 0x00, 0x41, 0x00, 0x00 };
         PacDataInputStream pdis = createInputStream(data);
         assertEquals('A', pdis.readChar());
     }
@@ -141,14 +139,13 @@ public class PacDataInputStreamTest {
     public void testReadFiletime() throws IOException {
         // A non-null date
         long time = System.currentTimeMillis();
-        BigInteger filetime = BigInteger.valueOf(time)
-                .add(BigInteger.valueOf(SmbConstants.MILLISECONDS_BETWEEN_1970_AND_1601))
+        BigInteger filetime = BigInteger.valueOf(time).add(BigInteger.valueOf(SmbConstants.MILLISECONDS_BETWEEN_1970_AND_1601))
                 .multiply(BigInteger.valueOf(10000L));
 
         byte[] data = new byte[8];
         long low = filetime.longValue();
         long high = filetime.shiftRight(32).longValue();
-        
+
         // write little-endian
         data[0] = (byte) (low);
         data[1] = (byte) (low >> 8);
@@ -193,13 +190,12 @@ public class PacDataInputStreamTest {
     @Test
     public void testReadString() throws IOException, PACDecodingException {
         // total=4, unused=1, used=2, string="AB"
-        byte[] data = new byte[] { 
-            0x04, 0x00, 0x00, 0x00, // total
-            0x01, 0x00, 0x00, 0x00, // unused
-            0x02, 0x00, 0x00, 0x00, // used
-            0x00, 0x00,             // unused char
-            0x41, 0x00,             // 'A'
-            0x42, 0x00              // 'B'
+        byte[] data = new byte[] { 0x04, 0x00, 0x00, 0x00, // total
+                0x01, 0x00, 0x00, 0x00, // unused
+                0x02, 0x00, 0x00, 0x00, // used
+                0x00, 0x00, // unused char
+                0x41, 0x00, // 'A'
+                0x42, 0x00 // 'B'
         };
         PacDataInputStream pdis = createInputStream(data);
         String str = pdis.readString();
@@ -230,12 +226,11 @@ public class PacDataInputStreamTest {
     @Test
     public void testReadSid() throws IOException, PACDecodingException {
         // A simple SID: S-1-1-0
-        byte[] data = new byte[] {
-            0x01, 0x00, 0x00, 0x00, // sidSize = 1
-            0x01,                   // revision
-            0x01,                   // sub-authority count
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x01, // authority
-            0x00, 0x00, 0x00, 0x00  // sub-authority 1
+        byte[] data = new byte[] { 0x01, 0x00, 0x00, 0x00, // sidSize = 1
+                0x01, // revision
+                0x01, // sub-authority count
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x01, // authority
+                0x00, 0x00, 0x00, 0x00 // sub-authority 1
         };
         PacDataInputStream pdis = createInputStream(data);
         SID sid = pdis.readSid();

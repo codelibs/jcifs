@@ -1,17 +1,11 @@
 package jcifs.internal.smb2.notify;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.any;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -21,24 +15,18 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import jcifs.BaseTest;
 import jcifs.Configuration;
 import jcifs.FileNotifyInformation;
 import jcifs.internal.NotifyResponse;
 import jcifs.internal.SMBProtocolDecodingException;
-import jcifs.internal.smb1.trans.nt.FileNotifyInformationImpl;
 import jcifs.internal.smb2.ServerMessageBlock2;
 import jcifs.internal.smb2.ServerMessageBlock2Response;
 import jcifs.internal.util.SMBUtil;
 import jcifs.smb.NtStatus;
-import jcifs.util.Strings;
-
-import java.util.stream.Stream;
 
 /**
  * Test class for Smb2ChangeNotifyResponse functionality
@@ -90,15 +78,15 @@ class Smb2ChangeNotifyResponseTest extends BaseTest {
         // Given
         byte[] buffer = new byte[512];
         int offset = 0;
-        
+
         // Set header start position for the response
         setHeaderStart(response, 64);
-        
+
         // Write structure header (9 bytes)
         SMBUtil.writeInt2(9, buffer, offset); // Structure size
         SMBUtil.writeInt2(80 - 64, buffer, offset + 2); // Buffer offset (relative to header)
         SMBUtil.writeInt4(50, buffer, offset + 4); // Total length of notification data
-        
+
         // Write notification data at buffer offset 80
         int notifyOffset = 80;
         SMBUtil.writeInt4(0, buffer, notifyOffset); // NextEntryOffset (0 = last entry)
@@ -116,7 +104,7 @@ class Smb2ChangeNotifyResponseTest extends BaseTest {
         assertTrue(bytesRead > 0);
         List<FileNotifyInformation> notifications = response.getNotifyInformation();
         assertEquals(1, notifications.size());
-        
+
         FileNotifyInformation info = notifications.get(0);
         assertEquals(1, info.getAction());
         assertEquals("test.txt", info.getFileName());
@@ -128,29 +116,29 @@ class Smb2ChangeNotifyResponseTest extends BaseTest {
         // Given
         byte[] buffer = new byte[1024];
         int offset = 0;
-        
+
         // Set header start position
         setHeaderStart(response, 64);
-        
+
         // Write structure header
         SMBUtil.writeInt2(9, buffer, offset);
         SMBUtil.writeInt2(80 - 64, buffer, offset + 2);
         SMBUtil.writeInt4(200, buffer, offset + 4); // Total length
-        
+
         // First notification at offset 80
         int notifyOffset = 80;
         SMBUtil.writeInt4(40, buffer, notifyOffset); // NextEntryOffset
         SMBUtil.writeInt4(1, buffer, notifyOffset + 4); // Action (ADDED)
         SMBUtil.writeInt4(10, buffer, notifyOffset + 8); // FileNameLength
         System.arraycopy("file1".getBytes("UnicodeLittleUnmarked"), 0, buffer, notifyOffset + 12, 10);
-        
+
         // Second notification at offset 120 (80 + 40)
         notifyOffset = 120;
         SMBUtil.writeInt4(44, buffer, notifyOffset); // NextEntryOffset
         SMBUtil.writeInt4(2, buffer, notifyOffset + 4); // Action (REMOVED)
         SMBUtil.writeInt4(10, buffer, notifyOffset + 8);
         System.arraycopy("file2".getBytes("UnicodeLittleUnmarked"), 0, buffer, notifyOffset + 12, 10);
-        
+
         // Third notification at offset 164 (120 + 44)
         notifyOffset = 164;
         SMBUtil.writeInt4(0, buffer, notifyOffset); // NextEntryOffset (last)
@@ -165,30 +153,28 @@ class Smb2ChangeNotifyResponseTest extends BaseTest {
         assertTrue(bytesRead > 0);
         List<FileNotifyInformation> notifications = response.getNotifyInformation();
         assertEquals(3, notifications.size());
-        
+
         assertEquals(1, notifications.get(0).getAction());
         assertEquals("file1", notifications.get(0).getFileName());
-        
+
         assertEquals(2, notifications.get(1).getAction());
         assertEquals("file2", notifications.get(1).getFileName());
-        
+
         assertEquals(3, notifications.get(2).getAction());
         assertEquals("file3", notifications.get(2).getFileName());
     }
 
     @DisplayName("Should throw exception for invalid structure size")
     @ParameterizedTest
-    @ValueSource(ints = {0, 1, 2, 4, 8, 10, 16, 32, 255})
+    @ValueSource(ints = { 0, 1, 2, 4, 8, 10, 16, 32, 255 })
     void testInvalidStructureSize(int structureSize) {
         // Given
         byte[] buffer = new byte[256];
         SMBUtil.writeInt2(structureSize, buffer, 0);
 
         // When & Then
-        SMBProtocolDecodingException exception = assertThrows(
-            SMBProtocolDecodingException.class,
-            () -> response.readBytesWireFormat(buffer, 0)
-        );
+        SMBProtocolDecodingException exception =
+                assertThrows(SMBProtocolDecodingException.class, () -> response.readBytesWireFormat(buffer, 0));
         assertEquals("Expected structureSize = 9", exception.getMessage());
     }
 
@@ -198,9 +184,9 @@ class Smb2ChangeNotifyResponseTest extends BaseTest {
         // Given
         byte[] buffer = new byte[256];
         int offset = 0;
-        
+
         setHeaderStart(response, 64);
-        
+
         // Write structure with zero length
         SMBUtil.writeInt2(9, buffer, offset);
         SMBUtil.writeInt2(80 - 64, buffer, offset + 2);
@@ -221,9 +207,9 @@ class Smb2ChangeNotifyResponseTest extends BaseTest {
         // Given
         byte[] buffer = new byte[2048];
         int offset = 0;
-        
+
         setHeaderStart(response, 64);
-        
+
         // Create a long filename
         StringBuilder longName = new StringBuilder();
         for (int i = 0; i < 100; i++) {
@@ -231,12 +217,12 @@ class Smb2ChangeNotifyResponseTest extends BaseTest {
         }
         String fileName = longName.toString();
         byte[] fileNameBytes = fileName.getBytes("UnicodeLittleUnmarked");
-        
+
         // Write structure header
         SMBUtil.writeInt2(9, buffer, offset);
         SMBUtil.writeInt2(80 - 64, buffer, offset + 2);
         SMBUtil.writeInt4(12 + fileNameBytes.length, buffer, offset + 4);
-        
+
         // Write notification
         int notifyOffset = 80;
         SMBUtil.writeInt4(0, buffer, notifyOffset);
@@ -260,15 +246,15 @@ class Smb2ChangeNotifyResponseTest extends BaseTest {
         // Test with NT_STATUS_NOTIFY_ENUM_DIR - should not be error
         setStatus(response, NtStatus.NT_STATUS_NOTIFY_ENUM_DIR);
         assertFalse(response.isErrorResponseStatus());
-        
+
         // Test with success status
         setStatus(response, NtStatus.NT_STATUS_OK);
         assertFalse(response.isErrorResponseStatus());
-        
+
         // Test with error status
         setStatus(response, NtStatus.NT_STATUS_ACCESS_DENIED);
         assertTrue(response.isErrorResponseStatus());
-        
+
         // Test with another error status
         setStatus(response, NtStatus.NT_STATUS_INVALID_PARAMETER);
         assertTrue(response.isErrorResponseStatus());
@@ -276,28 +262,21 @@ class Smb2ChangeNotifyResponseTest extends BaseTest {
 
     @DisplayName("Should handle various file actions")
     @ParameterizedTest
-    @CsvSource({
-        "1, FILE_ACTION_ADDED",
-        "2, FILE_ACTION_REMOVED",
-        "3, FILE_ACTION_MODIFIED",
-        "4, FILE_ACTION_RENAMED_OLD_NAME",
-        "5, FILE_ACTION_RENAMED_NEW_NAME",
-        "6, FILE_ACTION_ADDED_STREAM",
-        "7, FILE_ACTION_REMOVED_STREAM",
-        "8, FILE_ACTION_MODIFIED_STREAM"
-    })
+    @CsvSource({ "1, FILE_ACTION_ADDED", "2, FILE_ACTION_REMOVED", "3, FILE_ACTION_MODIFIED", "4, FILE_ACTION_RENAMED_OLD_NAME",
+            "5, FILE_ACTION_RENAMED_NEW_NAME", "6, FILE_ACTION_ADDED_STREAM", "7, FILE_ACTION_REMOVED_STREAM",
+            "8, FILE_ACTION_MODIFIED_STREAM" })
     void testDifferentFileActions(int action, String description) throws Exception {
         // Given
         byte[] buffer = new byte[512];
         int offset = 0;
-        
+
         setHeaderStart(response, 64);
-        
+
         // Write structure
         SMBUtil.writeInt2(9, buffer, offset);
         SMBUtil.writeInt2(80 - 64, buffer, offset + 2);
         SMBUtil.writeInt4(50, buffer, offset + 4);
-        
+
         // Write notification with specific action
         int notifyOffset = 80;
         SMBUtil.writeInt4(0, buffer, notifyOffset);
@@ -320,21 +299,21 @@ class Smb2ChangeNotifyResponseTest extends BaseTest {
         // Given - notifications must be 4-byte aligned
         byte[] buffer = new byte[1024];
         int offset = 0;
-        
+
         setHeaderStart(response, 64);
-        
+
         // Write structure header
         SMBUtil.writeInt2(9, buffer, offset);
         SMBUtil.writeInt2(80 - 64, buffer, offset + 2);
         SMBUtil.writeInt4(300, buffer, offset + 4);
-        
+
         // First notification with unaligned filename length
         int notifyOffset = 80;
         SMBUtil.writeInt4(28, buffer, notifyOffset); // NextEntryOffset (aligned)
         SMBUtil.writeInt4(1, buffer, notifyOffset + 4);
         SMBUtil.writeInt4(6, buffer, notifyOffset + 8); // 6 bytes filename
         System.arraycopy("abc".getBytes("UnicodeLittleUnmarked"), 0, buffer, notifyOffset + 12, 6);
-        
+
         // Second notification starts at aligned offset
         notifyOffset = 108; // 80 + 28
         SMBUtil.writeInt4(0, buffer, notifyOffset);
@@ -358,14 +337,14 @@ class Smb2ChangeNotifyResponseTest extends BaseTest {
         // Given - notification exactly at buffer end
         byte[] buffer = new byte[104]; // Exact size needed
         int offset = 0;
-        
+
         setHeaderStart(response, 64);
-        
+
         // Write structure
         SMBUtil.writeInt2(9, buffer, offset);
         SMBUtil.writeInt2(80 - 64, buffer, offset + 2);
         SMBUtil.writeInt4(24, buffer, offset + 4); // Exact notification size
-        
+
         // Write notification
         int notifyOffset = 80;
         SMBUtil.writeInt4(0, buffer, notifyOffset);
@@ -387,17 +366,17 @@ class Smb2ChangeNotifyResponseTest extends BaseTest {
         // Given
         byte[] buffer = new byte[512];
         int offset = 0;
-        
+
         setHeaderStart(response, 64);
-        
+
         String unicodeName = "文件名.txt"; // Chinese characters
         byte[] fileNameBytes = unicodeName.getBytes("UnicodeLittleUnmarked");
-        
+
         // Write structure
         SMBUtil.writeInt2(9, buffer, offset);
         SMBUtil.writeInt2(80 - 64, buffer, offset + 2);
         SMBUtil.writeInt4(12 + fileNameBytes.length, buffer, offset + 4);
-        
+
         // Write notification
         int notifyOffset = 80;
         SMBUtil.writeInt4(0, buffer, notifyOffset);
@@ -420,14 +399,14 @@ class Smb2ChangeNotifyResponseTest extends BaseTest {
         // Given - notification with invalid next entry offset
         byte[] buffer = new byte[512];
         int offset = 0;
-        
+
         setHeaderStart(response, 64);
-        
+
         // Write structure
         SMBUtil.writeInt2(9, buffer, offset);
         SMBUtil.writeInt2(80 - 64, buffer, offset + 2);
         SMBUtil.writeInt4(100, buffer, offset + 4);
-        
+
         // Write notification with next offset beyond buffer
         int notifyOffset = 80;
         SMBUtil.writeInt4(500, buffer, notifyOffset); // Invalid - too large
@@ -456,19 +435,19 @@ class Smb2ChangeNotifyResponseTest extends BaseTest {
         // Given - large buffer with many notifications
         byte[] buffer = new byte[65536];
         int offset = 0;
-        
+
         setHeaderStart(response, 64);
-        
+
         // Calculate space for notifications
         int notificationSize = 32; // Each notification
         int notificationCount = 100;
         int totalSize = notificationSize * notificationCount;
-        
+
         // Write structure
         SMBUtil.writeInt2(9, buffer, offset);
         SMBUtil.writeInt2(80 - 64, buffer, offset + 2);
         SMBUtil.writeInt4(totalSize, buffer, offset + 4);
-        
+
         // Write many notifications
         int notifyOffset = 80;
         for (int i = 0; i < notificationCount; i++) {
@@ -493,7 +472,7 @@ class Smb2ChangeNotifyResponseTest extends BaseTest {
     void testNullConfiguration() {
         // When
         Smb2ChangeNotifyResponse responseWithNull = new Smb2ChangeNotifyResponse(null);
-        
+
         // Then
         assertNotNull(responseWithNull);
         assertNotNull(responseWithNull.getNotifyInformation());
@@ -505,7 +484,7 @@ class Smb2ChangeNotifyResponseTest extends BaseTest {
     private void setHeaderStart(Smb2ChangeNotifyResponse response, int headerStart) throws Exception {
         Method method = ServerMessageBlock2.class.getDeclaredMethod("getHeaderStart");
         method.setAccessible(true);
-        
+
         Field field = ServerMessageBlock2.class.getDeclaredField("headerStart");
         field.setAccessible(true);
         field.setInt(response, headerStart);

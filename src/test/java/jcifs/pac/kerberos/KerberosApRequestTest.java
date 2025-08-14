@@ -1,6 +1,9 @@
 package jcifs.pac.kerberos;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 
@@ -45,8 +48,7 @@ class KerberosApRequestTest {
         byte[] empty = new byte[0];
 
         // Act + Assert
-        PACDecodingException ex = assertThrows(PACDecodingException.class,
-                () -> new KerberosApRequest(empty, new KerberosKey[0]));
+        PACDecodingException ex = assertThrows(PACDecodingException.class, () -> new KerberosApRequest(empty, new KerberosKey[0]));
         assertTrue(ex.getMessage().contains("Empty kerberos ApReq"));
     }
 
@@ -57,8 +59,7 @@ class KerberosApRequestTest {
         byte[] malformed = new byte[] { 0x30, 0x02, 0x01 };
 
         // Act + Assert
-        PACDecodingException ex = assertThrows(PACDecodingException.class,
-                () -> new KerberosApRequest(malformed, null));
+        PACDecodingException ex = assertThrows(PACDecodingException.class, () -> new KerberosApRequest(malformed, null));
         assertTrue(ex.getMessage().contains("Malformed Kerberos Ticket"));
     }
 
@@ -169,9 +170,8 @@ class KerberosApRequestTest {
 
         // Act + Assert
         // The KerberosTicket constructor will throw because the empty sequence is not a valid ticket
-        assertThrows(PACDecodingException.class, 
-            () -> new KerberosApRequest(seq, new KerberosKey[0]));
-        
+        assertThrows(PACDecodingException.class, () -> new KerberosApRequest(seq, new KerberosKey[0]));
+
         // Verify apOptions is set correctly in a minimal sequence without ticket
         KerberosApRequest req = new KerberosApRequest(buildMinimalApReqSeq(ap), null);
         assertEquals(ap, req.getApOptions());
@@ -202,7 +202,7 @@ class KerberosApRequestTest {
                 };
             }
         };
-        
+
         DERTaggedObject appTag = new DERTaggedObject(false, BERTags.APPLICATION, 3, badBase);
         v.add(appTag);
         ASN1Sequence seq = new BERSequence(v);
@@ -212,4 +212,3 @@ class KerberosApRequestTest {
         assertThrows(PACDecodingException.class, () -> new KerberosApRequest(seq, null));
     }
 }
-

@@ -144,7 +144,7 @@ class PacSignatureTest {
             new PacSignature(data);
         });
     }
-    
+
     /**
      * Test constructor with checksum too short for KERB_CHECKSUM_HMAC_MD5.
      */

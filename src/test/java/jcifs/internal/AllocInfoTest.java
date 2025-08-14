@@ -1,8 +1,15 @@
 package jcifs.internal;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -218,11 +225,10 @@ class AllocInfoTest {
             // Given
             byte[] buffer = new byte[100];
             when(mockAllocInfo.decode(any(byte[].class), anyInt(), anyInt()))
-                .thenThrow(new jcifs.internal.SMBProtocolDecodingException("Test error"));
+                    .thenThrow(new jcifs.internal.SMBProtocolDecodingException("Test error"));
 
             // When & Then
-            assertThrows(jcifs.internal.SMBProtocolDecodingException.class, 
-                () -> mockAllocInfo.decode(buffer, 0, buffer.length));
+            assertThrows(jcifs.internal.SMBProtocolDecodingException.class, () -> mockAllocInfo.decode(buffer, 0, buffer.length));
             verify(mockAllocInfo, times(1)).decode(buffer, 0, buffer.length);
         }
     }
@@ -261,14 +267,9 @@ class AllocInfoTest {
 
         @ParameterizedTest
         @DisplayName("Should handle various capacity and free space values")
-        @CsvSource({
-            "0, 0",
-            "1024, 512",
-            "1048576, 524288",
-            "1073741824, 536870912",
-            "9223372036854775807, 4611686018427387903", // Long.MAX_VALUE and half
-            "-1, -1", // Negative values (edge case)
-            "100, 200" // Free space greater than capacity (edge case)
+        @CsvSource({ "0, 0", "1024, 512", "1048576, 524288", "1073741824, 536870912", "9223372036854775807, 4611686018427387903", // Long.MAX_VALUE and half
+                "-1, -1", // Negative values (edge case)
+                "100, 200" // Free space greater than capacity (edge case)
         })
         void shouldHandleVariousValues(long capacity, long free) {
             // Given
@@ -370,10 +371,10 @@ class AllocInfoTest {
             // Given
             TestAllocInfo allocInfo = new TestAllocInfo(1000L, 500L);
             byte[] buffer = new byte[100];
-            
+
             // When
             int result = allocInfo.decode(buffer, 0, buffer.length);
-            
+
             // Then
             assertEquals(0, result); // Test implementation returns 0
         }
@@ -382,15 +383,8 @@ class AllocInfoTest {
         @DisplayName("Should support different file system information classes")
         void shouldSupportDifferentFileSystemInformationClasses() {
             // Test all known constants
-            byte[] classes = {
-                FileSystemInformation.SMB_INFO_ALLOCATION,
-                FileSystemInformation.FS_SIZE_INFO,
-                FileSystemInformation.FS_FULL_SIZE_INFO,
-                (byte) 0,
-                (byte) 1,
-                (byte) 127,
-                (byte) -128
-            };
+            byte[] classes = { FileSystemInformation.SMB_INFO_ALLOCATION, FileSystemInformation.FS_SIZE_INFO,
+                    FileSystemInformation.FS_FULL_SIZE_INFO, (byte) 0, (byte) 1, (byte) 127, (byte) -128 };
 
             for (byte fsClass : classes) {
                 TestAllocInfo allocInfo = new TestAllocInfo(1024L, 512L, fsClass);
@@ -405,18 +399,8 @@ class AllocInfoTest {
 
         @ParameterizedTest
         @DisplayName("Should handle boundary values for capacity")
-        @ValueSource(longs = {
-            0L,
-            1L,
-            -1L,
-            1024L,
-            1048576L,
-            1073741824L,
-            Long.MAX_VALUE,
-            Long.MIN_VALUE,
-            Long.MAX_VALUE - 1,
-            Long.MIN_VALUE + 1
-        })
+        @ValueSource(longs = { 0L, 1L, -1L, 1024L, 1048576L, 1073741824L, Long.MAX_VALUE, Long.MIN_VALUE, Long.MAX_VALUE - 1,
+                Long.MIN_VALUE + 1 })
         void shouldHandleBoundaryValuesForCapacity(long capacity) {
             // Given
             TestAllocInfo allocInfo = new TestAllocInfo(capacity, 0);
@@ -427,18 +411,8 @@ class AllocInfoTest {
 
         @ParameterizedTest
         @DisplayName("Should handle boundary values for free space")
-        @ValueSource(longs = {
-            0L,
-            1L,
-            -1L,
-            1024L,
-            1048576L,
-            1073741824L,
-            Long.MAX_VALUE,
-            Long.MIN_VALUE,
-            Long.MAX_VALUE - 1,
-            Long.MIN_VALUE + 1
-        })
+        @ValueSource(longs = { 0L, 1L, -1L, 1024L, 1048576L, 1073741824L, Long.MAX_VALUE, Long.MIN_VALUE, Long.MAX_VALUE - 1,
+                Long.MIN_VALUE + 1 })
         void shouldHandleBoundaryValuesForFreeSpace(long free) {
             // Given
             TestAllocInfo allocInfo = new TestAllocInfo(0, free);
@@ -460,7 +434,7 @@ class AllocInfoTest {
             // Then - values should be preserved even at boundaries
             assertEquals(Long.MAX_VALUE, capacity);
             assertEquals(Long.MAX_VALUE, free);
-            
+
             // Note: In real implementation, free > capacity might be invalid,
             // but interface doesn't enforce this constraint
         }
@@ -469,12 +443,11 @@ class AllocInfoTest {
         @DisplayName("Should handle typical file system sizes")
         void shouldHandleTypicalFileSystemSizes() {
             // Test common file system sizes
-            long[] typicalSizes = {
-                1024L * 1024L * 1024L,           // 1 GB
-                1024L * 1024L * 1024L * 10L,     // 10 GB
-                1024L * 1024L * 1024L * 100L,    // 100 GB
-                1024L * 1024L * 1024L * 1024L,   // 1 TB
-                1024L * 1024L * 1024L * 1024L * 10L  // 10 TB
+            long[] typicalSizes = { 1024L * 1024L * 1024L, // 1 GB
+                    1024L * 1024L * 1024L * 10L, // 10 GB
+                    1024L * 1024L * 1024L * 100L, // 100 GB
+                    1024L * 1024L * 1024L * 1024L, // 1 TB
+                    1024L * 1024L * 1024L * 1024L * 10L // 10 TB
             };
 
             for (long size : typicalSizes) {

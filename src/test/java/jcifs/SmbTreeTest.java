@@ -5,12 +5,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -56,7 +54,7 @@ class SmbTreeTest {
         when(smbTree.unwrap(CustomSmbTree.class)).thenReturn(customTree);
 
         CustomSmbTree result = smbTree.unwrap(CustomSmbTree.class);
-        
+
         assertNotNull(result, "Unwrapped tree should not be null");
         assertSame(customTree, result, "Should return the same custom tree instance");
         verify(smbTree).unwrap(CustomSmbTree.class);
@@ -71,7 +69,7 @@ class SmbTreeTest {
         when(smbTree.unwrap(SmbTree.class)).thenReturn(smbTree);
 
         SmbTree result = smbTree.unwrap(SmbTree.class);
-        
+
         assertNotNull(result, "Unwrapped tree should not be null");
         assertSame(smbTree, result, "Should return itself when unwrapping to SmbTree");
     }
@@ -85,7 +83,7 @@ class SmbTreeTest {
         when(smbTree.unwrap(CustomSmbTree.class)).thenReturn(null);
 
         CustomSmbTree result = smbTree.unwrap(CustomSmbTree.class);
-        
+
         assertEquals(null, result, "Should return null when type cannot be unwrapped");
         verify(smbTree).unwrap(CustomSmbTree.class);
     }
@@ -98,9 +96,8 @@ class SmbTreeTest {
     void testUnwrap_throwsException() {
         when(smbTree.unwrap(any())).thenThrow(new ClassCastException("Cannot unwrap to specified type"));
 
-        assertThrows(ClassCastException.class, 
-            () -> smbTree.unwrap(CustomSmbTree.class),
-            "Should throw ClassCastException when type is incompatible");
+        assertThrows(ClassCastException.class, () -> smbTree.unwrap(CustomSmbTree.class),
+                "Should throw ClassCastException when type is incompatible");
     }
 
     /**
@@ -112,7 +109,7 @@ class SmbTreeTest {
         doNothing().when(smbTree).close();
 
         smbTree.close();
-        
+
         verify(smbTree).close();
     }
 
@@ -127,7 +124,7 @@ class SmbTreeTest {
         smbTree.close();
         smbTree.close();
         smbTree.close();
-        
+
         verify(smbTree, times(3)).close();
     }
 
@@ -139,9 +136,7 @@ class SmbTreeTest {
     void testClose_throwsException() {
         doThrow(new RuntimeException("Failed to close")).when(smbTree).close();
 
-        assertThrows(RuntimeException.class, 
-            () -> smbTree.close(),
-            "Should propagate exception when close fails");
+        assertThrows(RuntimeException.class, () -> smbTree.close(), "Should propagate exception when close fails");
     }
 
     /**
@@ -169,13 +164,13 @@ class SmbTreeTest {
         // Create a chain of wrapped trees
         CustomSmbTree innerTree = mock(CustomSmbTree.class);
         ExtendedSmbTree middleTree = mock(ExtendedSmbTree.class);
-        
+
         when(smbTree.unwrap(ExtendedSmbTree.class)).thenReturn(middleTree);
         when(middleTree.unwrap(CustomSmbTree.class)).thenReturn(innerTree);
 
         ExtendedSmbTree middle = smbTree.unwrap(ExtendedSmbTree.class);
         CustomSmbTree inner = middle.unwrap(CustomSmbTree.class);
-        
+
         assertNotNull(middle, "Middle tree should not be null");
         assertNotNull(inner, "Inner tree should not be null");
         assertSame(middleTree, middle, "Should return correct middle tree");
@@ -191,7 +186,7 @@ class SmbTreeTest {
         when(smbTree.unwrap(IncompatibleTree.class)).thenReturn(null);
 
         IncompatibleTree result = smbTree.unwrap(IncompatibleTree.class);
-        
+
         assertEquals(null, result, "Should return null for incompatible type");
     }
 
@@ -208,7 +203,7 @@ class SmbTreeTest {
         }).when(smbTree).close();
 
         smbTree.close();
-        
+
         verify(smbTree).close();
     }
 
@@ -223,7 +218,7 @@ class SmbTreeTest {
 
         // This should compile without warnings
         CustomSmbTree typedResult = smbTree.unwrap(CustomSmbTree.class);
-        
+
         assertNotNull(typedResult, "Typed result should not be null");
         assertEquals(customTree, typedResult, "Should maintain type safety");
     }
@@ -241,7 +236,7 @@ class SmbTreeTest {
         // Close multiple times
         idempotentTree.close();
         idempotentTree.close();
-        
+
         // Verify close was called, but implementation should handle idempotency
         verify(idempotentTree, times(2)).close();
     }
@@ -254,9 +249,7 @@ class SmbTreeTest {
     void testUnwrap_withNullParameter() {
         when(smbTree.unwrap(null)).thenThrow(new NullPointerException("Type cannot be null"));
 
-        assertThrows(NullPointerException.class,
-            () -> smbTree.unwrap(null),
-            "Should throw NullPointerException when type is null");
+        assertThrows(NullPointerException.class, () -> smbTree.unwrap(null), "Should throw NullPointerException when type is null");
     }
 
     /**
@@ -274,7 +267,7 @@ class SmbTreeTest {
         CustomSmbTree unwrapped = smbTree.unwrap(CustomSmbTree.class);
         smbTree.close();
         unwrapped.close();
-        
+
         verify(smbTree).unwrap(CustomSmbTree.class);
         verify(smbTree).close();
         verify(customTree).close();

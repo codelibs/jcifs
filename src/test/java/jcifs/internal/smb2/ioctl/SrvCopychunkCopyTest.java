@@ -1,21 +1,28 @@
 package jcifs.internal.smb2.ioctl;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.util.Arrays;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import jcifs.internal.util.SMBUtil;
-import java.util.Arrays;
 
 @ExtendWith(MockitoExtension.class)
 class SrvCopychunkCopyTest {
@@ -133,7 +140,7 @@ class SrvCopychunkCopyTest {
 
         @ParameterizedTest
         @DisplayName("Should return correct size with multiple chunks")
-        @ValueSource(ints = {1, 2, 3, 5, 10, 100})
+        @ValueSource(ints = { 1, 2, 3, 5, 10, 100 })
         void testSizeWithMultipleChunks(int chunkCount) {
             // Given
             byte[] sourceKey = new byte[SOURCE_KEY_SIZE];
@@ -180,11 +187,10 @@ class SrvCopychunkCopyTest {
 
             // Then
             assertEquals(HEADER_SIZE, bytesWritten);
-            
+
             // Verify source key is copied correctly
             for (int i = 0; i < SOURCE_KEY_SIZE; i++) {
-                assertEquals(sourceKey[i], buffer[startIndex + i], 
-                    "Source key byte at position " + i + " doesn't match");
+                assertEquals(sourceKey[i], buffer[startIndex + i], "Source key byte at position " + i + " doesn't match");
             }
         }
 
@@ -220,7 +226,7 @@ class SrvCopychunkCopyTest {
             // The reserved bytes remain as they were in the buffer
             for (int i = 0; i < 4; i++) {
                 assertEquals((byte) 0xFF, buffer[startIndex + SOURCE_KEY_SIZE + 4 + i],
-                    "Reserved byte at position " + i + " should remain unchanged");
+                        "Reserved byte at position " + i + " should remain unchanged");
             }
         }
 
@@ -236,7 +242,7 @@ class SrvCopychunkCopyTest {
 
             // Then
             assertEquals(HEADER_SIZE + CHUNK_SIZE, bytesWritten);
-            
+
             // Verify chunk data
             int chunkStart = startIndex + HEADER_SIZE;
             assertEquals(1024L, SMBUtil.readInt8(buffer, chunkStart));
@@ -258,22 +264,22 @@ class SrvCopychunkCopyTest {
 
             // Then
             assertEquals(HEADER_SIZE + (3 * CHUNK_SIZE), bytesWritten);
-            
+
             // Verify chunk count
             assertEquals(3, SMBUtil.readInt4(buffer, startIndex + SOURCE_KEY_SIZE));
-            
+
             // Verify first chunk
             int chunkStart = startIndex + HEADER_SIZE;
             assertEquals(100L, SMBUtil.readInt8(buffer, chunkStart));
             assertEquals(200L, SMBUtil.readInt8(buffer, chunkStart + 8));
             assertEquals(300, SMBUtil.readInt4(buffer, chunkStart + 16));
-            
+
             // Verify second chunk
             chunkStart += CHUNK_SIZE;
             assertEquals(400L, SMBUtil.readInt8(buffer, chunkStart));
             assertEquals(500L, SMBUtil.readInt8(buffer, chunkStart + 8));
             assertEquals(600, SMBUtil.readInt4(buffer, chunkStart + 16));
-            
+
             // Verify third chunk
             chunkStart += CHUNK_SIZE;
             assertEquals(700L, SMBUtil.readInt8(buffer, chunkStart));
@@ -299,7 +305,7 @@ class SrvCopychunkCopyTest {
             for (int i = 0; i < startIndex; i++) {
                 assertEquals(testByte, buffer[i], "Byte at position " + i + " was modified");
             }
-            
+
             // Check bytes after encoded area
             for (int i = startIndex + expectedSize; i < buffer.length; i++) {
                 assertEquals(testByte, buffer[i], "Byte at position " + i + " was modified");
@@ -319,19 +325,19 @@ class SrvCopychunkCopyTest {
 
             // Then
             assertEquals(HEADER_SIZE + CHUNK_SIZE, bytesWritten);
-            
+
             // Verify source key
             for (int i = 0; i < SOURCE_KEY_SIZE; i++) {
                 assertEquals(sourceKey[i], exactBuffer[i]);
             }
-            
+
             // Verify chunk count
             assertEquals(1, SMBUtil.readInt4(exactBuffer, SOURCE_KEY_SIZE));
         }
 
         @ParameterizedTest
         @DisplayName("Should encode at various buffer positions")
-        @ValueSource(ints = {0, 1, 10, 50, 100, 200})
+        @ValueSource(ints = { 0, 1, 10, 50, 100, 200 })
         void testEncodeAtDifferentPositions(int position) {
             // Given
             byte[] largeBuffer = new byte[500];
@@ -343,12 +349,12 @@ class SrvCopychunkCopyTest {
 
             // Then
             assertEquals(HEADER_SIZE + CHUNK_SIZE, bytesWritten);
-            
+
             // Verify source key at correct position
             for (int i = 0; i < SOURCE_KEY_SIZE; i++) {
                 assertEquals(sourceKey[i], largeBuffer[position + i]);
             }
-            
+
             // Verify chunk count at correct position
             assertEquals(1, SMBUtil.readInt4(largeBuffer, position + SOURCE_KEY_SIZE));
         }
@@ -364,7 +370,7 @@ class SrvCopychunkCopyTest {
 
             // Then
             assertEquals(HEADER_SIZE, bytesWritten);
-            
+
             // Verify chunk count is zero
             assertEquals(0, SMBUtil.readInt4(buffer, startIndex + SOURCE_KEY_SIZE));
         }
@@ -382,13 +388,10 @@ class SrvCopychunkCopyTest {
             for (int i = 0; i < SOURCE_KEY_SIZE; i++) {
                 sourceKey[i] = (byte) (0xA0 + i);
             }
-            
-            SrvCopychunk[] chunks = {
-                new SrvCopychunk(0, 1024, 4096),
-                new SrvCopychunk(4096, 5120, 8192),
-                new SrvCopychunk(12288, 13312, 16384)
-            };
-            
+
+            SrvCopychunk[] chunks =
+                    { new SrvCopychunk(0, 1024, 4096), new SrvCopychunk(4096, 5120, 8192), new SrvCopychunk(12288, 13312, 16384) };
+
             SrvCopychunkCopy copy = new SrvCopychunkCopy(sourceKey, chunks);
             byte[] buffer = new byte[200];
 
@@ -398,24 +401,24 @@ class SrvCopychunkCopyTest {
             // Then
             assertEquals(copy.size(), bytesWritten);
             assertEquals(HEADER_SIZE + (3 * CHUNK_SIZE), bytesWritten);
-            
+
             // Verify complete structure
             for (int i = 0; i < SOURCE_KEY_SIZE; i++) {
                 assertEquals(sourceKey[i], buffer[i]);
             }
             assertEquals(3, SMBUtil.readInt4(buffer, SOURCE_KEY_SIZE));
-            
+
             // Verify all chunks
             int offset = HEADER_SIZE;
             assertEquals(0L, SMBUtil.readInt8(buffer, offset));
             assertEquals(1024L, SMBUtil.readInt8(buffer, offset + 8));
             assertEquals(4096, SMBUtil.readInt4(buffer, offset + 16));
-            
+
             offset += CHUNK_SIZE;
             assertEquals(4096L, SMBUtil.readInt8(buffer, offset));
             assertEquals(5120L, SMBUtil.readInt8(buffer, offset + 8));
             assertEquals(8192, SMBUtil.readInt4(buffer, offset + 16));
-            
+
             offset += CHUNK_SIZE;
             assertEquals(12288L, SMBUtil.readInt8(buffer, offset));
             assertEquals(13312L, SMBUtil.readInt8(buffer, offset + 8));
@@ -428,28 +431,22 @@ class SrvCopychunkCopyTest {
             // Given
             byte[] sourceKey = new byte[SOURCE_KEY_SIZE];
             Arrays.fill(sourceKey, (byte) 0x55);
-            
-            SrvCopychunk[] testCases = {
-                new SrvCopychunk(1, 2, 3),
-                new SrvCopychunk(4, 5, 6),
-                new SrvCopychunk(7, 8, 9),
-                new SrvCopychunk(10, 11, 12),
-                new SrvCopychunk(13, 14, 15)
-            };
-            
+
+            SrvCopychunk[] testCases = { new SrvCopychunk(1, 2, 3), new SrvCopychunk(4, 5, 6), new SrvCopychunk(7, 8, 9),
+                    new SrvCopychunk(10, 11, 12), new SrvCopychunk(13, 14, 15) };
+
             for (int numChunks = 0; numChunks <= testCases.length; numChunks++) {
                 // Create copy with varying number of chunks
                 SrvCopychunk[] chunks = Arrays.copyOf(testCases, numChunks);
                 SrvCopychunkCopy copy = new SrvCopychunkCopy(sourceKey, chunks);
                 byte[] buffer = new byte[500];
-                
+
                 // When
                 int expectedSize = copy.size();
                 int actualEncoded = copy.encode(buffer, 0);
-                
+
                 // Then
-                assertEquals(expectedSize, actualEncoded, 
-                    "Size and encode methods return different values for " + numChunks + " chunks");
+                assertEquals(expectedSize, actualEncoded, "Size and encode methods return different values for " + numChunks + " chunks");
             }
         }
 
@@ -460,11 +457,11 @@ class SrvCopychunkCopyTest {
             byte[] sourceKey = new byte[SOURCE_KEY_SIZE];
             int chunkCount = 50;
             SrvCopychunk[] chunks = new SrvCopychunk[chunkCount];
-            
+
             for (int i = 0; i < chunkCount; i++) {
                 chunks[i] = new SrvCopychunk(i * 1000L, i * 2000L, i * 100);
             }
-            
+
             SrvCopychunkCopy copy = new SrvCopychunkCopy(sourceKey, chunks);
             byte[] buffer = new byte[HEADER_SIZE + (chunkCount * CHUNK_SIZE)];
 
@@ -474,13 +471,13 @@ class SrvCopychunkCopyTest {
             // Then
             assertEquals(HEADER_SIZE + (chunkCount * CHUNK_SIZE), bytesWritten);
             assertEquals(chunkCount, SMBUtil.readInt4(buffer, SOURCE_KEY_SIZE));
-            
+
             // Verify some chunks
             int offset = HEADER_SIZE;
             assertEquals(0L, SMBUtil.readInt8(buffer, offset));
             assertEquals(0L, SMBUtil.readInt8(buffer, offset + 8));
             assertEquals(0, SMBUtil.readInt4(buffer, offset + 16));
-            
+
             offset = HEADER_SIZE + ((chunkCount - 1) * CHUNK_SIZE);
             assertEquals((chunkCount - 1) * 1000L, SMBUtil.readInt8(buffer, offset));
             assertEquals((chunkCount - 1) * 2000L, SMBUtil.readInt8(buffer, offset + 8));
@@ -529,7 +526,7 @@ class SrvCopychunkCopyTest {
             for (int i = 0; i < SOURCE_KEY_SIZE; i++) {
                 assertEquals((byte) 0xFF, buffer[i]);
             }
-            
+
             // Verify chunk with max values
             int chunkStart = HEADER_SIZE;
             assertEquals(Long.MAX_VALUE, SMBUtil.readInt8(buffer, chunkStart));
@@ -572,7 +569,7 @@ class SrvCopychunkCopyTest {
 
             // Then
             assertEquals(HEADER_SIZE + CHUNK_SIZE, bytesWritten);
-            
+
             // Negative values should be encoded as their unsigned representation
             int chunkStart = HEADER_SIZE;
             assertEquals(-1L, SMBUtil.readInt8(buffer, chunkStart));
@@ -594,7 +591,7 @@ class SrvCopychunkCopyTest {
             SrvCopychunk mockChunk2 = mock(SrvCopychunk.class);
             when(mockChunk1.encode(any(byte[].class), anyInt())).thenReturn(CHUNK_SIZE);
             when(mockChunk2.encode(any(byte[].class), anyInt())).thenReturn(CHUNK_SIZE);
-            
+
             SrvCopychunkCopy copy = new SrvCopychunkCopy(sourceKey, mockChunk1, mockChunk2);
             byte[] buffer = new byte[200];
 
@@ -614,12 +611,12 @@ class SrvCopychunkCopyTest {
             SrvCopychunk mockChunk1 = mock(SrvCopychunk.class);
             SrvCopychunk mockChunk2 = mock(SrvCopychunk.class);
             SrvCopychunk mockChunk3 = mock(SrvCopychunk.class);
-            
+
             // Simulate different encode return values
             when(mockChunk1.encode(any(byte[].class), anyInt())).thenReturn(20);
             when(mockChunk2.encode(any(byte[].class), anyInt())).thenReturn(24);
             when(mockChunk3.encode(any(byte[].class), anyInt())).thenReturn(22);
-            
+
             SrvCopychunkCopy copy = new SrvCopychunkCopy(sourceKey, mockChunk1, mockChunk2, mockChunk3);
             byte[] buffer = new byte[200];
 

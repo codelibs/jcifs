@@ -1,6 +1,8 @@
 package jcifs.internal.smb1.net;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.UnsupportedEncodingException;
 
@@ -59,12 +61,12 @@ public class TestSmbComTransactionResponseReader {
         String msg = "\u00A1\u00A2"; // two Unicode characters
         byte[] encoded = encodeUnicode(msg);
         assertEquals(4, encoded.length, "Encoded Unicode string should be 4 bytes");
-        
+
         // Verify little-endian encoding
-        assertEquals((byte)0xA1, encoded[0], "First byte of first character");
-        assertEquals((byte)0x00, encoded[1], "Second byte of first character");
-        assertEquals((byte)0xA2, encoded[2], "First byte of second character");
-        assertEquals((byte)0x00, encoded[3], "Second byte of second character");
+        assertEquals((byte) 0xA1, encoded[0], "First byte of first character");
+        assertEquals((byte) 0x00, encoded[1], "Second byte of first character");
+        assertEquals((byte) 0xA2, encoded[2], "First byte of second character");
+        assertEquals((byte) 0x00, encoded[3], "Second byte of second character");
     }
 
     @Test
@@ -76,10 +78,10 @@ public class TestSmbComTransactionResponseReader {
 
     @Test
     public void testBufferCreation() throws UnsupportedEncodingException {
-        byte[] dataBytes = {1, 2, 3, 4};
+        byte[] dataBytes = { 1, 2, 3, 4 };
         String params = "test";
         byte[] buffer = createBuffer(10, dataBytes, params);
-        
+
         // Verify buffer structure
         assertTrue(buffer.length >= 14, "Buffer should contain header, params and data");
     }
@@ -87,10 +89,10 @@ public class TestSmbComTransactionResponseReader {
     @Test
     public void testByteOperations() {
         // Test byte operations that were used in the original test
-        byte b = (byte)0xFF;
+        byte b = (byte) 0xFF;
         int value = b & 0xFF;
         assertEquals(255, value, "Byte to unsigned conversion should work");
-        
+
         // Test comparison operation
         assertTrue(value == 255, "Comparison should work correctly");
     }

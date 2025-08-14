@@ -1,7 +1,10 @@
 package jcifs.smb1.smb1;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
 
 import java.util.Date;
 
@@ -27,7 +30,8 @@ class InfoTest {
     @Test
     void testSmbComQueryInformationResponseGetters() throws Exception {
         // The constructor is package‑private; use an anonymous subclass
-        SmbComQueryInformationResponse resp = new SmbComQueryInformationResponse(1000L) {};
+        SmbComQueryInformationResponse resp = new SmbComQueryInformationResponse(1000L) {
+        };
         java.lang.reflect.Field fileAttr = SmbComQueryInformationResponse.class.getDeclaredField("fileAttributes");
         fileAttr.setAccessible(true);
         fileAttr.setInt(resp, 0xABCD);
@@ -76,7 +80,8 @@ class InfoTest {
         writeShort(buffer, 32, attributes);
 
         Trans2QueryPathInformationResponse trans =
-                new Trans2QueryPathInformationResponse(Trans2QueryPathInformationResponse.SMB_QUERY_FILE_BASIC_INFO) {};
+                new Trans2QueryPathInformationResponse(Trans2QueryPathInformationResponse.SMB_QUERY_FILE_BASIC_INFO) {
+                };
         int bytesRead = trans.readDataWireFormat(buffer, 0, buffer.length);
         assertEquals(buffer.length, bytesRead);
         // Access private field 'info'
@@ -92,11 +97,11 @@ class InfoTest {
 
     @Test
     void testTrans2QueryPathUnsupportedLevel() throws Exception {
-        Trans2QueryPathInformationResponse trans = new Trans2QueryPathInformationResponse(9999) {};
+        Trans2QueryPathInformationResponse trans = new Trans2QueryPathInformationResponse(9999) {
+        };
         assertEquals(0, trans.readDataWireFormat(new byte[10], 0, 10));
         java.lang.reflect.Field infoField = Trans2QueryPathInformationResponse.class.getDeclaredField("info");
         infoField.setAccessible(true);
         assertNull(infoField.get(trans));
     }
 }
-

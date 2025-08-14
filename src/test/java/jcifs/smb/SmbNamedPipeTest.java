@@ -1,7 +1,13 @@
 package jcifs.smb;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import java.net.MalformedURLException;
 
@@ -35,10 +41,7 @@ class SmbNamedPipeTest {
 
         @ParameterizedTest
         @DisplayName("Accepts IPC$ URLs (happy path)")
-        @ValueSource(strings = {
-                "smb://server/IPC$/foo",
-                "smb://server/IPC$/PIPE/foo"
-        })
+        @ValueSource(strings = { "smb://server/IPC$/foo", "smb://server/IPC$/PIPE/foo" })
         void constructsWithIpcShare(String url) throws Exception {
             // Arrange & Act
             SmbNamedPipe pipe = new SmbNamedPipe(url, SmbPipeResource.PIPE_TYPE_RDWR, ctx());
@@ -50,15 +53,11 @@ class SmbNamedPipeTest {
 
         @ParameterizedTest
         @DisplayName("Rejects non-IPC$ URLs")
-        @ValueSource(strings = {
-                "smb://server/C$/foo",
-                "smb://server/public/foo",
-                "smb://server/share/path"
-        })
+        @ValueSource(strings = { "smb://server/C$/foo", "smb://server/public/foo", "smb://server/share/path" })
         void rejectsNonIpcShare(String url) {
             // Arrange & Act & Assert
-            MalformedURLException ex = assertThrows(MalformedURLException.class,
-                    () -> new SmbNamedPipe(url, SmbPipeResource.PIPE_TYPE_RDWR, ctx()));
+            MalformedURLException ex =
+                    assertThrows(MalformedURLException.class, () -> new SmbNamedPipe(url, SmbPipeResource.PIPE_TYPE_RDWR, ctx()));
             assertEquals("Named pipes are only valid on IPC$", ex.getMessage());
         }
 
@@ -126,4 +125,3 @@ class SmbNamedPipeTest {
         assertEquals(pipeType, pipe.getPipeType());
     }
 }
-

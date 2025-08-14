@@ -1,13 +1,14 @@
 package jcifs.smb1.smb1;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
-import java.util.TimeZone;
-import jcifs.SmbConstants;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import jcifs.SmbConstants;
 
 /**
  * Basic unit tests for {@link SmbConstants}.  The interface only
@@ -111,4 +112,3 @@ public class SmbConstantsTest {
         verify(mock).getRemoteHostName();
     }
 }
-

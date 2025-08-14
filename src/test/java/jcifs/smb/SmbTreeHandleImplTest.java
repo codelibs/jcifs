@@ -1,30 +1,36 @@
 package jcifs.smb;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
-import jcifs.CIFSException;
 import jcifs.Configuration;
 import jcifs.RuntimeCIFSException;
 import jcifs.SmbTreeHandle;
-import jcifs.smb.SmbException;
 import jcifs.internal.CommonServerMessageBlockRequest;
 import jcifs.internal.CommonServerMessageBlockResponse;
 import jcifs.internal.Request;
@@ -136,8 +142,8 @@ class SmbTreeHandleImplTest {
         CommonServerMessageBlockResponse out = handle.send(req, RequestParam.NO_RETRY);
         assertSame(resp, out);
 
-        verify(treeConnection, times(1))
-                .send(eq(resourceLoc), eq((CommonServerMessageBlockRequest) req), isNull(), any(RequestParam[].class));
+        verify(treeConnection, times(1)).send(eq(resourceLoc), eq((CommonServerMessageBlockRequest) req), isNull(),
+                any(RequestParam[].class));
     }
 
     @Test
@@ -318,7 +324,7 @@ class SmbTreeHandleImplTest {
         // Null treeConnection throws NPE when acquire() is called
         assertThrows(NullPointerException.class, () -> new SmbTreeHandleImpl(resourceLoc, null));
     }
-    
+
     @Test
     @DisplayName("Null resourceLoc is accepted but may cause issues later")
     void constructorNullResourceLoc() {
@@ -326,11 +332,11 @@ class SmbTreeHandleImplTest {
         // This test documents the current behavior
         SmbTreeConnection freshConnection = mock(SmbTreeConnection.class);
         when(freshConnection.acquire()).thenReturn(freshConnection);
-        
+
         // Should not throw NPE during construction
         SmbTreeHandleImpl handleWithNullLoc = new SmbTreeHandleImpl(null, freshConnection);
         assertNotNull(handleWithNullLoc);
-        
+
         // But operations that use resourceLoc might fail
         // For example, send methods would likely throw NPE when trying to use the null resourceLoc
     }

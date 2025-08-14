@@ -56,7 +56,6 @@ class AvChannelBindingsTest {
         originalHash[0] = 0x00;
 
         // The value in AvChannelBindings should reflect the change since it stores a reference
-        assertEquals(0x00, avChannelBindings.getRaw()[0],
-                "Value should reflect changes to original array as it stores a reference");
+        assertEquals(0x00, avChannelBindings.getRaw()[0], "Value should reflect changes to original array as it stores a reference");
     }
 }

@@ -1,22 +1,26 @@
 package jcifs.smb1;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.stream.Stream;
 
-import jcifs.smb1.netbios.NbtAddress;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.ArgumentsSource;
-import org.mockito.*;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.junit.jupiter.MockitoExtension;
-import java.util.stream.Stream;
+
+import jcifs.smb1.netbios.NbtAddress;
 
 /**
  * Unit tests for {@link UniAddress}.  The focus of these tests is on
@@ -34,11 +38,8 @@ class UniAddressTest {
      * 0. Helper methods for parameterised tests
      * --------------------------------------------------------------------- */
     private static Stream<Arguments> hostnamesProvider() {
-        return Stream.of(
-                Arguments.of("localhost", "127.0.0.1", "LOCALHOST"),
-                Arguments.of("mycomputer.local", "mycomputer", "MYCOMPUTER"),
-                Arguments.of("mycomputer.example.com", "mycomputer", "MYCOMPUTER")
-        );
+        return Stream.of(Arguments.of("localhost", "127.0.0.1", "LOCALHOST"), Arguments.of("mycomputer.local", "mycomputer", "MYCOMPUTER"),
+                Arguments.of("mycomputer.example.com", "mycomputer", "MYCOMPUTER"));
     }
 
     /* ---------------------------------------------------------------------
@@ -137,7 +138,7 @@ class UniAddressTest {
      * 3. Static predicate checks
      * --------------------------------------------------------------------- */
     @ParameterizedTest
-    @ValueSource(strings = {"192.168.0.1", "123.45.67.89", "1.2.3.4"})
+    @ValueSource(strings = { "192.168.0.1", "123.45.67.89", "1.2.3.4" })
     void isDotQuadIPRecognizesDotQuadIP(String ip) {
         // Arrange & Act
         boolean result = UniAddress.isDotQuadIP(ip);
@@ -146,11 +147,11 @@ class UniAddressTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"192.168.0", "abcd", "192.168"})
+    @ValueSource(strings = { "192.168.0", "abcd", "192.168" })
     void isDotQuadIPRejectsNonDotQuad(String value) {
         assertFalse(UniAddress.isDotQuadIP(value), "isDotQuadIP should return false for non IP-like values");
     }
-    
+
     @Test
     void isDotQuadIPHandlesEmptyString() {
         // Empty string should return false, not throw exception
@@ -158,17 +159,17 @@ class UniAddressTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"123456", "007", "999"})
+    @ValueSource(strings = { "123456", "007", "999" })
     void isAllDigitsTrueForPureNumeric(String numeric) {
         assertTrue(UniAddress.isAllDigits(numeric));
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"12a", "abc", "123 "})
+    @ValueSource(strings = { "12a", "abc", "123 " })
     void isAllDigitsFalseForNonNumeric(String nonNumeric) {
         assertFalse(UniAddress.isAllDigits(nonNumeric));
     }
-    
+
     @Test
     void isAllDigitsHandlesEmptyString() {
         // Empty string technically has no non-digit characters, so it returns true
@@ -186,4 +187,3 @@ class UniAddressTest {
                 "getAllByName should throw UnknownHostException for null name");
     }
 }
-

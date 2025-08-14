@@ -1,11 +1,22 @@
 package jcifs.dcerpc;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -34,13 +45,13 @@ class DcerpcHandleTest {
 
     @Mock
     private CIFSContext mockContext;
-    
+
     @Mock
     private DcerpcBinding mockBinding;
-    
+
     @Mock
     private BufferCache mockBufferCache;
-    
+
     @Mock
     private DcerpcSecurityProvider mockSecurityProvider;
 
@@ -134,17 +145,15 @@ class DcerpcHandleTest {
 
         @ParameterizedTest
         @DisplayName("Should parse valid binding URLs correctly")
-        @CsvSource({
-            "'ncacn_np:\\\\server[endpoint=\\pipe\\srvsvc]', ncacn_np, server, '\\pipe\\srvsvc'",
-            "'ncacn_np:server[\\pipe\\srvsvc]', ncacn_np, server, '\\pipe\\srvsvc'",
-            "'ncacn_np:[\\pipe\\srvsvc]', ncacn_np, 127.0.0.1, '\\pipe\\srvsvc'",
-            "'ncacn_np:server[endpoint=\\pipe\\srvsvc]', ncacn_np, server, '\\pipe\\srvsvc'"
-        })
+        @CsvSource({ "'ncacn_np:\\\\server[endpoint=\\pipe\\srvsvc]', ncacn_np, server, '\\pipe\\srvsvc'",
+                "'ncacn_np:server[\\pipe\\srvsvc]', ncacn_np, server, '\\pipe\\srvsvc'",
+                "'ncacn_np:[\\pipe\\srvsvc]', ncacn_np, 127.0.0.1, '\\pipe\\srvsvc'",
+                "'ncacn_np:server[endpoint=\\pipe\\srvsvc]', ncacn_np, server, '\\pipe\\srvsvc'" })
         void testParseValidBindingUrls(String url, String expectedProto, String expectedServer, String expectedEndpoint)
                 throws DcerpcException {
             // When: Parsing the binding URL
             DcerpcBinding binding = DcerpcHandle.parseBinding(url);
-            
+
             // Then: Should parse correctly
             assertNotNull(binding);
             assertEquals(expectedProto, binding.getProto());
@@ -154,14 +163,12 @@ class DcerpcHandleTest {
 
         @ParameterizedTest
         @DisplayName("Should handle IPv6 addresses correctly")
-        @CsvSource({
-            "'ncacn_np:[::1][endpoint=\\pipe\\srvsvc]', ncacn_np, '[::1]', '\\pipe\\srvsvc'"
-        })
+        @CsvSource({ "'ncacn_np:[::1][endpoint=\\pipe\\srvsvc]', ncacn_np, '[::1]', '\\pipe\\srvsvc'" })
         void testParseIPv6BindingUrls(String url, String expectedProto, String expectedServer, String expectedEndpoint)
                 throws DcerpcException {
             // When: Parsing IPv6 binding URL
             DcerpcBinding binding = DcerpcHandle.parseBinding(url);
-            
+
             // Then: Should parse IPv6 address correctly
             assertNotNull(binding);
             assertEquals(expectedProto, binding.getProto());
@@ -171,15 +178,8 @@ class DcerpcHandleTest {
 
         @ParameterizedTest
         @DisplayName("Should reject invalid binding URLs")
-        @ValueSource(strings = {
-            "invalid_url",
-            "proto:",
-            "proto:server[]",
-            "proto:[key=]",
-            "proto:[=value]",
-            "proto:server[endpoint=]",
-            "proto:[endpoint=]"
-        })
+        @ValueSource(strings = { "invalid_url", "proto:", "proto:server[]", "proto:[key=]", "proto:[=value]", "proto:server[endpoint=]",
+                "proto:[endpoint=]" })
         void testParseInvalidBindingUrls(String url) {
             // When/Then: Should throw DcerpcException for invalid URLs
             assertThrows(DcerpcException.class, () -> DcerpcHandle.parseBinding(url));
@@ -202,7 +202,7 @@ class DcerpcHandleTest {
         void testConstructorWithContextOnly() {
             // When: Creating handle with context only
             TestDcerpcHandle h = new TestDcerpcHandle(mockContext);
-            
+
             // Then: Should initialize correctly
             assertNotNull(h);
             assertEquals(mockContext, h.getTransportContext());
@@ -214,7 +214,7 @@ class DcerpcHandleTest {
         void testConstructorWithContextAndBinding() {
             // When: Creating handle with context and binding
             TestDcerpcHandle h = new TestDcerpcHandle(mockContext, mockBinding);
-            
+
             // Then: Should initialize correctly
             assertNotNull(h);
             assertEquals(mockContext, h.getTransportContext());
@@ -231,16 +231,14 @@ class DcerpcHandleTest {
         void testGetHandleNcacnNpProtocol() {
             // When/Then: Should attempt to create DcerpcPipeHandle (may fail due to SMB URL creation)
             // This tests the protocol recognition logic, actual creation may fail due to missing SMB support
-            assertThrows(Exception.class, () -> 
-                DcerpcHandle.getHandle("ncacn_np:\\\\server[endpoint=\\pipe\\srvsvc]", mockContext));
+            assertThrows(Exception.class, () -> DcerpcHandle.getHandle("ncacn_np:\\\\server[endpoint=\\pipe\\srvsvc]", mockContext));
         }
 
         @Test
         @DisplayName("Should reject unsupported protocols")
         void testGetHandleUnsupportedProtocol() {
             // When/Then: Should throw exception for unsupported protocols
-            assertThrows(DcerpcException.class, 
-                () -> DcerpcHandle.getHandle("unsupported:\\\\server", mockContext));
+            assertThrows(DcerpcException.class, () -> DcerpcHandle.getHandle("unsupported:\\\\server", mockContext));
         }
     }
 
@@ -344,7 +342,7 @@ class DcerpcHandleTest {
         void testSetDcerpcSecurityProvider() {
             // When: Setting security provider
             handle.setDcerpcSecurityProvider(mockSecurityProvider);
-            
+
             // Then: Should not throw exception (private field, no direct verification)
             assertDoesNotThrow(() -> handle.setDcerpcSecurityProvider(mockSecurityProvider));
         }
@@ -354,7 +352,7 @@ class DcerpcHandleTest {
         void testClose() throws IOException {
             // When: Closing handle
             handle.close();
-            
+
             // Then: Should complete without errors
             assertDoesNotThrow(() -> handle.close());
         }

@@ -1,16 +1,17 @@
 package jcifs.smb1.smb1;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.UnsupportedEncodingException;
-import java.util.Date;
 import java.util.TimeZone;
 
-import jcifs.smb1.smb1.SmbConstants;
-import jcifs.smb1.smb1.ServerMessageBlock;
-import jcifs.smb1.util.Hexdump;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 class ServerMessageBlockTest {
 
@@ -98,7 +99,7 @@ class ServerMessageBlockTest {
         // Precision may be lost, so check within a second
         assertTrue(Math.abs(time - readTime) < 1000);
     }
-    
+
     @Test
     void testTimeReadWriteZero() {
         byte[] buffer = new byte[8];
@@ -115,7 +116,7 @@ class ServerMessageBlockTest {
         long time = System.currentTimeMillis();
         // UTime is seconds since epoch, so divide by 1000
         long unixTime = time / 1000L;
-        
+
         // Mocking date for timezone consistency
         TimeZone original = TimeZone.getDefault();
         try {
@@ -149,7 +150,7 @@ class ServerMessageBlockTest {
         String readString = smb.readString(buffer, 0);
         assertEquals(testString, readString);
     }
-    
+
     @Test
     void testStringReadWriteUnicodeWithOddAlignment() throws UnsupportedEncodingException {
         smb.useUnicode = true;
@@ -224,7 +225,7 @@ class ServerMessageBlockTest {
     void testWriteHeaderReadHeader() {
         byte[] buffer = new byte[32];
         smb.command = ServerMessageBlock.SMB_COM_NEGOTIATE;
-        smb.flags = (byte)0x18;
+        smb.flags = (byte) 0x18;
         smb.flags2 = 0x0001;
         smb.tid = 1;
         smb.pid = 2;
@@ -281,10 +282,10 @@ class ServerMessageBlockTest {
         assertTrue(str.contains("errorCode=0"));
         assertTrue(str.contains("mid=1"));
     }
-    
+
     @Test
     void testToStringUnknownCommand() {
-        smb.command = (byte)0xFF; // Unknown command
+        smb.command = (byte) 0xFF; // Unknown command
         smb.errorCode = 0;
         smb.mid = 1;
         String str = smb.toString();

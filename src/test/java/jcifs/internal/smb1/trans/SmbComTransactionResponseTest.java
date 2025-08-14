@@ -1,11 +1,20 @@
 package jcifs.internal.smb1.trans;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -44,7 +53,7 @@ class SmbComTransactionResponseTest {
         public TestSmbComTransactionResponse(Configuration config, byte command, byte subcommand) {
             super(config, command, subcommand);
         }
-        
+
         // Expose errorCode setter for testing - access protected field directly
         public void setTestErrorCode(int code) {
             this.errorCode = code;
@@ -149,14 +158,14 @@ class SmbComTransactionResponseTest {
         byte[] buffer = new byte[1024];
         buffer[0] = 0x42;
         buffer[1] = 0x43;
-        
+
         response.setBuffer(buffer);
-        
+
         byte[] released = response.releaseBuffer();
         assertSame(buffer, released);
         assertEquals(0x42, released[0]);
         assertEquals(0x43, released[1]);
-        
+
         // After release, getting buffer again should return null
         assertNull(response.releaseBuffer());
     }
@@ -190,7 +199,7 @@ class SmbComTransactionResponseTest {
     void testResultsArrayManagement() {
         FileEntry[] entries = { mockFileEntry1, mockFileEntry2 };
         response.setResults(entries);
-        
+
         FileEntry[] retrievedEntries = response.getResults();
         assertSame(entries, retrievedEntries);
         assertEquals(2, retrievedEntries.length);
@@ -211,11 +220,11 @@ class SmbComTransactionResponseTest {
     void testHasMoreElements() {
         // Test initial state
         assertTrue(response.hasMoreElements());
-        
+
         // Test after setting error code (not status)
         response.setTestErrorCode(1); // Non-zero errorCode indicates error
         assertFalse(response.hasMoreElements());
-        
+
         // Reset error and test hasMore flag
         response.setTestErrorCode(0);
         response.hasMore = false;
@@ -242,11 +251,11 @@ class SmbComTransactionResponseTest {
     void testDecode() {
         byte[] buffer = new byte[1024];
         // Fill with basic SMB header structure
-        System.arraycopy(new byte[]{ (byte)0xFF, 'S', 'M', 'B' }, 0, buffer, 0, 4);
+        System.arraycopy(new byte[] { (byte) 0xFF, 'S', 'M', 'B' }, 0, buffer, 0, 4);
         buffer[4] = 1; // wordCount
         buffer[7] = 0; // byteCount low
         buffer[8] = 0; // byteCount high
-        
+
         assertDoesNotThrow(() -> response.decode(buffer, 0));
     }
 
@@ -289,7 +298,7 @@ class SmbComTransactionResponseTest {
     void testReadParametersWireFormatWithException() {
         response.setThrowExceptionOnReadParameters(true);
         byte[] buffer = new byte[256];
-        
+
         assertThrows(SMBProtocolDecodingException.class, () -> {
             response.readParametersWireFormat(buffer, 0, buffer.length);
         });
@@ -300,7 +309,7 @@ class SmbComTransactionResponseTest {
     void testReadDataWireFormatWithException() {
         response.setThrowExceptionOnReadData(true);
         byte[] buffer = new byte[256];
-        
+
         assertThrows(SMBProtocolDecodingException.class, () -> {
             response.readDataWireFormat(buffer, 0, buffer.length);
         });
@@ -328,13 +337,13 @@ class SmbComTransactionResponseTest {
     @DisplayName("Test transaction response with different commands")
     void testTransactionResponseWithDifferentCommands() {
         // Test with TRANSACTION command
-        TestSmbComTransactionResponse resp1 = new TestSmbComTransactionResponse(
-            mockConfig, SmbComTransaction.SMB_COM_TRANSACTION, (byte) 0x01);
+        TestSmbComTransactionResponse resp1 =
+                new TestSmbComTransactionResponse(mockConfig, SmbComTransaction.SMB_COM_TRANSACTION, (byte) 0x01);
         assertEquals(SmbComTransaction.SMB_COM_TRANSACTION, resp1.getCommand());
-        
+
         // Test with NT_TRANSACT command
-        TestSmbComTransactionResponse resp2 = new TestSmbComTransactionResponse(
-            mockConfig, SmbComTransaction.SMB_COM_NT_TRANSACT, (byte) 0x02);
+        TestSmbComTransactionResponse resp2 =
+                new TestSmbComTransactionResponse(mockConfig, SmbComTransaction.SMB_COM_NT_TRANSACT, (byte) 0x02);
         assertEquals(SmbComTransaction.SMB_COM_NT_TRANSACT, resp2.getCommand());
     }
 
@@ -343,15 +352,15 @@ class SmbComTransactionResponseTest {
     void testResponseStateTransitions() {
         // Test initial state
         assertTrue(response.hasMoreElements());
-        
+
         // Test state after nextElement call
         response.nextElement();
         // Response behavior may change after nextElement
-        
+
         // Test state after error (using errorCode, not status)
         response.setTestErrorCode(1);
         assertFalse(response.hasMoreElements());
-        
+
         // Test state after reset
         response.reset();
         // After reset, hasMore should be true again
@@ -364,11 +373,11 @@ class SmbComTransactionResponseTest {
         // Test with small data count
         response.setDataCount(10);
         assertEquals(10, response.getDataCount());
-        
+
         // Test with large data count
         response.setDataCount(65535);
         assertEquals(65535, response.getDataCount());
-        
+
         // Test with zero data count
         response.setDataCount(0);
         assertEquals(0, response.getDataCount());
@@ -380,13 +389,13 @@ class SmbComTransactionResponseTest {
         // Test with null entries
         response.setResults(null);
         assertNull(response.getResults());
-        
+
         // Test with empty entries
         FileEntry[] emptyEntries = new FileEntry[0];
         response.setResults(emptyEntries);
         assertSame(emptyEntries, response.getResults());
         assertEquals(0, response.getResults().length);
-        
+
         // Test with multiple entries
         FileEntry[] entries = { mockFileEntry1, mockFileEntry2 };
         response.setResults(entries);

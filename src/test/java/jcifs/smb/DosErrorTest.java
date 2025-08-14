@@ -1,7 +1,14 @@
 package jcifs.smb;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertIterableEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import java.util.Arrays;
 import java.util.List;
@@ -35,14 +42,8 @@ class DosErrorTest {
 
     // Provide a handful of representative mappings present in the table.
     static Stream<Arguments> knownMappings() {
-        return Stream.of(
-                Arguments.of(0x00000000, 0x00000000),
-                Arguments.of(0x00020001, 0xc000000f),
-                Arguments.of(0x00050001, 0xc0000022),
-                Arguments.of(0x00500001, 0xc0000035),
-                Arguments.of(0x007b0001, 0xc0000033),
-                Arguments.of(0x00320001, 0xC00000BB)
-        );
+        return Stream.of(Arguments.of(0x00000000, 0x00000000), Arguments.of(0x00020001, 0xc000000f), Arguments.of(0x00050001, 0xc0000022),
+                Arguments.of(0x00500001, 0xc0000035), Arguments.of(0x007b0001, 0xc0000033), Arguments.of(0x00320001, 0xC00000BB));
     }
 
     @ParameterizedTest
@@ -115,12 +116,14 @@ class DosErrorTest {
 
         // Act & Assert: negative index
         assertThrows(ArrayIndexOutOfBoundsException.class, () -> {
-            @SuppressWarnings("unused") String s = msgs[-1];
+            @SuppressWarnings("unused")
+            String s = msgs[-1];
         });
 
         // Act & Assert: index equal to length
         assertThrows(ArrayIndexOutOfBoundsException.class, () -> {
-            @SuppressWarnings("unused") String s = msgs[msgs.length];
+            @SuppressWarnings("unused")
+            String s = msgs[msgs.length];
         });
     }
 
@@ -151,4 +154,3 @@ class DosErrorTest {
         verifyNoMoreInteractions(consumer);
     }
 }
-

@@ -1,28 +1,20 @@
 package jcifs.pac.kerberos;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import javax.security.auth.kerberos.KerberosKey;
-import jcifs.pac.PACDecodingException;
+
 import org.bouncycastle.asn1.ASN1Encodable;
-import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.ASN1Integer;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.ASN1Sequence;
-import org.bouncycastle.asn1.ASN1TaggedObject;
 import org.bouncycastle.asn1.BERTags;
-import org.bouncycastle.asn1.DERBitString;
-import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.DERTaggedObject;
 import org.junit.jupiter.api.Test;
+
+import jcifs.pac.PACDecodingException;
 
 /**
  * Test class for {@link KerberosToken}.
@@ -82,21 +74,19 @@ class KerberosTokenTest {
         innerContent.write(kerberosOid.getEncoded());
         innerContent.write(0x01); // magic byte 1
         innerContent.write(0x00); // magic byte 2
-        
+
         // Add a sequence instead of APPLICATION tagged object
-        DERSequence wrongTag = new DERSequence(new ASN1Encodable[] {
-            new ASN1Integer(5)
-        });
+        DERSequence wrongTag = new DERSequence(new ASN1Encodable[] { new ASN1Integer(5) });
         innerContent.write(wrongTag.getEncoded());
-        
+
         byte[] content = innerContent.toByteArray();
-        
+
         // Create GSS-API wrapper
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         baos.write(0x60); // APPLICATION 0
         baos.write(content.length);
         baos.write(content);
-        
+
         byte[] token = baos.toByteArray();
         assertThrows(PACDecodingException.class, () -> new KerberosToken(token));
     }
@@ -109,14 +99,13 @@ class KerberosTokenTest {
     @Test
     void testConstructorWithWrongTagClass() throws IOException {
         // Create AP-REQ structure
-        ASN1Sequence apReqSequence = new DERSequence(new ASN1Encodable[] {
-            new DERTaggedObject(true, 0, new ASN1Integer(5)), // pvno
-            new DERTaggedObject(true, 1, new ASN1Integer(14)), // msg-type
+        ASN1Sequence apReqSequence = new DERSequence(new ASN1Encodable[] { new DERTaggedObject(true, 0, new ASN1Integer(5)), // pvno
+                new DERTaggedObject(true, 1, new ASN1Integer(14)), // msg-type
         });
 
         // Create CONTEXT tagged object instead of APPLICATION
         DERTaggedObject contextTag = new DERTaggedObject(false, 14, apReqSequence);
-        
+
         // Build inner content with OID and magic bytes
         ByteArrayOutputStream innerContent = new ByteArrayOutputStream();
         ASN1ObjectIdentifier kerberosOid = new ASN1ObjectIdentifier(KerberosConstants.KERBEROS_OID);
@@ -124,15 +113,15 @@ class KerberosTokenTest {
         innerContent.write(0x01); // magic byte 1
         innerContent.write(0x00); // magic byte 2
         innerContent.write(contextTag.getEncoded());
-        
+
         byte[] content = innerContent.toByteArray();
-        
+
         // Create GSS-API wrapper
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         baos.write(0x60); // APPLICATION 0
         baos.write(content.length);
         baos.write(content);
-        
+
         byte[] token = baos.toByteArray();
         assertThrows(PACDecodingException.class, () -> new KerberosToken(token));
     }
@@ -146,7 +135,7 @@ class KerberosTokenTest {
     void testConstructorWithNonSequenceContent() throws IOException {
         // Create APPLICATION tagged object with non-sequence content
         DERTaggedObject appTag = new DERTaggedObject(false, BERTags.APPLICATION | 14, new ASN1Integer(5));
-        
+
         // Build inner content with OID and magic bytes
         ByteArrayOutputStream innerContent = new ByteArrayOutputStream();
         ASN1ObjectIdentifier kerberosOid = new ASN1ObjectIdentifier(KerberosConstants.KERBEROS_OID);
@@ -154,15 +143,15 @@ class KerberosTokenTest {
         innerContent.write(0x01); // magic byte 1
         innerContent.write(0x00); // magic byte 2
         innerContent.write(appTag.getEncoded());
-        
+
         byte[] content = innerContent.toByteArray();
-        
+
         // Create GSS-API wrapper
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         baos.write(0x60); // APPLICATION 0
         baos.write(content.length);
         baos.write(content);
-        
+
         byte[] token = baos.toByteArray();
         assertThrows(PACDecodingException.class, () -> new KerberosToken(token));
     }
@@ -171,17 +160,17 @@ class KerberosTokenTest {
 
     private byte[] createGssApiWrapper(ASN1ObjectIdentifier oid, byte[] data) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        
+
         // Build the inner content
         ByteArrayOutputStream innerContent = new ByteArrayOutputStream();
         innerContent.write(oid.getEncoded());
         innerContent.write(data);
-        
+
         byte[] content = innerContent.toByteArray();
-        
+
         // Create GSS-API APPLICATION 0 tag
         baos.write(0x60); // APPLICATION 0
-        
+
         // Write length
         if (content.length < 128) {
             baos.write(content.length);
@@ -193,7 +182,7 @@ class KerberosTokenTest {
             baos.write((content.length >> 8) & 0xFF);
             baos.write(content.length & 0xFF);
         }
-        
+
         baos.write(content);
         return baos.toByteArray();
     }

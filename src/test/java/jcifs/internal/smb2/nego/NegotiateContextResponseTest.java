@@ -1,7 +1,10 @@
 package jcifs.internal.smb2.nego;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
 import java.util.stream.Stream;
@@ -40,8 +43,8 @@ class NegotiateContextResponseTest {
 
         @BeforeEach
         void setUp() {
-            testSalt = new byte[]{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
-            testHashAlgos = new int[]{PreauthIntegrityNegotiateContext.HASH_ALGO_SHA512};
+            testSalt = new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 };
+            testHashAlgos = new int[] { PreauthIntegrityNegotiateContext.HASH_ALGO_SHA512 };
         }
 
         @Test
@@ -112,12 +115,11 @@ class NegotiateContextResponseTest {
         void testDecode() throws SMBProtocolDecodingException {
             // Arrange
             context = new PreauthIntegrityNegotiateContext();
-            byte[] buffer = new byte[]{
-                0x02, 0x00, // 2 hash algos
-                0x04, 0x00, // 4 bytes salt
-                0x01, 0x00, // SHA512
-                0x02, 0x00, // Another hash algo
-                0x0A, 0x0B, 0x0C, 0x0D // Salt
+            byte[] buffer = new byte[] { 0x02, 0x00, // 2 hash algos
+                    0x04, 0x00, // 4 bytes salt
+                    0x01, 0x00, // SHA512
+                    0x02, 0x00, // Another hash algo
+                    0x0A, 0x0B, 0x0C, 0x0D // Salt
             };
 
             // Act
@@ -125,8 +127,8 @@ class NegotiateContextResponseTest {
 
             // Assert
             assertEquals(12, decodedSize);
-            assertArrayEquals(new int[]{1, 2}, context.getHashAlgos());
-            assertArrayEquals(new byte[]{0x0A, 0x0B, 0x0C, 0x0D}, context.getSalt());
+            assertArrayEquals(new int[] { 1, 2 }, context.getHashAlgos());
+            assertArrayEquals(new byte[] { 0x0A, 0x0B, 0x0C, 0x0D }, context.getSalt());
         }
 
         @Test
@@ -134,9 +136,8 @@ class NegotiateContextResponseTest {
         void testDecodeEmptyArrays() throws SMBProtocolDecodingException {
             // Arrange
             context = new PreauthIntegrityNegotiateContext();
-            byte[] buffer = new byte[]{
-                0x00, 0x00, // 0 hash algos
-                0x00, 0x00  // 0 bytes salt
+            byte[] buffer = new byte[] { 0x00, 0x00, // 0 hash algos
+                    0x00, 0x00 // 0 bytes salt
             };
 
             // Act
@@ -149,7 +150,7 @@ class NegotiateContextResponseTest {
         }
 
         @ParameterizedTest
-        @ValueSource(ints = {0, 1, 3, 5, 10})
+        @ValueSource(ints = { 0, 1, 3, 5, 10 })
         @DisplayName("Should calculate size correctly for different hash algo counts")
         void testSizeCalculation(int hashAlgoCount) {
             // Arrange
@@ -169,12 +170,11 @@ class NegotiateContextResponseTest {
         void testDecodeWithOffset() throws SMBProtocolDecodingException {
             // Arrange
             context = new PreauthIntegrityNegotiateContext();
-            byte[] buffer = new byte[]{
-                (byte)0xFF, (byte)0xFF, (byte)0xFF, // Padding
-                0x01, 0x00, // 1 hash algo
-                0x02, 0x00, // 2 bytes salt
-                0x01, 0x00, // SHA512
-                (byte)0xAA, (byte)0xBB  // Salt
+            byte[] buffer = new byte[] { (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, // Padding
+                    0x01, 0x00, // 1 hash algo
+                    0x02, 0x00, // 2 bytes salt
+                    0x01, 0x00, // SHA512
+                    (byte) 0xAA, (byte) 0xBB // Salt
             };
 
             // Act
@@ -182,8 +182,8 @@ class NegotiateContextResponseTest {
 
             // Assert
             assertEquals(8, decodedSize);
-            assertArrayEquals(new int[]{1}, context.getHashAlgos());
-            assertArrayEquals(new byte[]{(byte)0xAA, (byte)0xBB}, context.getSalt());
+            assertArrayEquals(new int[] { 1 }, context.getHashAlgos());
+            assertArrayEquals(new byte[] { (byte) 0xAA, (byte) 0xBB }, context.getSalt());
         }
     }
 
@@ -196,10 +196,7 @@ class NegotiateContextResponseTest {
 
         @BeforeEach
         void setUp() {
-            testCiphers = new int[]{
-                EncryptionNegotiateContext.CIPHER_AES128_CCM,
-                EncryptionNegotiateContext.CIPHER_AES128_GCM
-            };
+            testCiphers = new int[] { EncryptionNegotiateContext.CIPHER_AES128_CCM, EncryptionNegotiateContext.CIPHER_AES128_GCM };
         }
 
         @Test
@@ -267,11 +264,10 @@ class NegotiateContextResponseTest {
         void testDecode() throws SMBProtocolDecodingException {
             // Arrange
             context = new EncryptionNegotiateContext();
-            byte[] buffer = new byte[]{
-                0x03, 0x00, // 3 ciphers
-                0x01, 0x00, // AES128_CCM
-                0x02, 0x00, // AES128_GCM
-                0x03, 0x00  // Custom cipher
+            byte[] buffer = new byte[] { 0x03, 0x00, // 3 ciphers
+                    0x01, 0x00, // AES128_CCM
+                    0x02, 0x00, // AES128_GCM
+                    0x03, 0x00 // Custom cipher
             };
 
             // Act
@@ -279,7 +275,7 @@ class NegotiateContextResponseTest {
 
             // Assert
             assertEquals(8, decodedSize);
-            assertArrayEquals(new int[]{1, 2, 3}, context.getCiphers());
+            assertArrayEquals(new int[] { 1, 2, 3 }, context.getCiphers());
         }
 
         @Test
@@ -287,8 +283,7 @@ class NegotiateContextResponseTest {
         void testDecodeEmptyCipherArray() throws SMBProtocolDecodingException {
             // Arrange
             context = new EncryptionNegotiateContext();
-            byte[] buffer = new byte[]{
-                0x00, 0x00 // 0 ciphers
+            byte[] buffer = new byte[] { 0x00, 0x00 // 0 ciphers
             };
 
             // Act
@@ -314,12 +309,11 @@ class NegotiateContextResponseTest {
         }
 
         static Stream<Arguments> provideCipherArrays() {
-            return Stream.of(
-                Arguments.of(null, 4),  // size() returns 4 even with null
-                Arguments.of(new int[0], 4),  // size() returns 4 for empty array
-                Arguments.of(new int[]{1}, 4 + 2),  // size() returns 4 + 2*1
-                Arguments.of(new int[]{1, 2}, 4 + 4),  // size() returns 4 + 2*2 
-                Arguments.of(new int[]{1, 2, 3, 4, 5}, 4 + 10)  // size() returns 4 + 2*5
+            return Stream.of(Arguments.of(null, 4), // size() returns 4 even with null
+                    Arguments.of(new int[0], 4), // size() returns 4 for empty array
+                    Arguments.of(new int[] { 1 }, 4 + 2), // size() returns 4 + 2*1
+                    Arguments.of(new int[] { 1, 2 }, 4 + 4), // size() returns 4 + 2*2 
+                    Arguments.of(new int[] { 1, 2, 3, 4, 5 }, 4 + 10) // size() returns 4 + 2*5
             );
         }
 
@@ -327,9 +321,9 @@ class NegotiateContextResponseTest {
         @DisplayName("Should handle offset in encode")
         void testEncodeWithOffset() {
             // Arrange
-            context = new EncryptionNegotiateContext(mockConfig, new int[]{1});
+            context = new EncryptionNegotiateContext(mockConfig, new int[] { 1 });
             byte[] buffer = new byte[100];
-            Arrays.fill(buffer, (byte)0xFF);
+            Arrays.fill(buffer, (byte) 0xFF);
 
             // Act
             int encodedSize = context.encode(buffer, 10);
@@ -340,8 +334,8 @@ class NegotiateContextResponseTest {
             assertEquals(0, buffer[11]);
             assertEquals(1, buffer[12]); // cipher value
             assertEquals(0, buffer[13]);
-            assertEquals((byte)0xFF, buffer[9]); // Should not modify before offset
-            assertEquals((byte)0xFF, buffer[14]); // Should not modify after encoded data
+            assertEquals((byte) 0xFF, buffer[9]); // Should not modify before offset
+            assertEquals((byte) 0xFF, buffer[14]); // Should not modify after encoded data
         }
 
         @Test
@@ -349,11 +343,10 @@ class NegotiateContextResponseTest {
         void testDecodeWithOffset() throws SMBProtocolDecodingException {
             // Arrange
             context = new EncryptionNegotiateContext();
-            byte[] buffer = new byte[]{
-                (byte)0xFF, (byte)0xFF, (byte)0xFF, (byte)0xFF, (byte)0xFF, // Padding
-                0x02, 0x00, // 2 ciphers
-                0x01, 0x00, // AES128_CCM
-                0x02, 0x00  // AES128_GCM
+            byte[] buffer = new byte[] { (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, // Padding
+                    0x02, 0x00, // 2 ciphers
+                    0x01, 0x00, // AES128_CCM
+                    0x02, 0x00 // AES128_GCM
             };
 
             // Act
@@ -361,7 +354,7 @@ class NegotiateContextResponseTest {
 
             // Assert
             assertEquals(6, decodedSize);
-            assertArrayEquals(new int[]{1, 2}, context.getCiphers());
+            assertArrayEquals(new int[] { 1, 2 }, context.getCiphers());
         }
     }
 
@@ -387,10 +380,8 @@ class NegotiateContextResponseTest {
         @DisplayName("Should be able to use polymorphically")
         void testPolymorphicUsage() {
             // Arrange
-            NegotiateContextResponse[] contexts = new NegotiateContextResponse[]{
-                new PreauthIntegrityNegotiateContext(),
-                new EncryptionNegotiateContext()
-            };
+            NegotiateContextResponse[] contexts =
+                    new NegotiateContextResponse[] { new PreauthIntegrityNegotiateContext(), new EncryptionNegotiateContext() };
 
             // Act & Assert
             for (NegotiateContextResponse context : contexts) {
@@ -411,16 +402,14 @@ class NegotiateContextResponseTest {
             int[] largeHashAlgos = new int[100];
             Arrays.fill(largeHashAlgos, PreauthIntegrityNegotiateContext.HASH_ALGO_SHA512);
             byte[] largeSalt = new byte[1024];
-            Arrays.fill(largeSalt, (byte)0xAB);
-            
-            PreauthIntegrityNegotiateContext context = new PreauthIntegrityNegotiateContext(
-                mockConfig, largeHashAlgos, largeSalt
-            );
+            Arrays.fill(largeSalt, (byte) 0xAB);
+
+            PreauthIntegrityNegotiateContext context = new PreauthIntegrityNegotiateContext(mockConfig, largeHashAlgos, largeSalt);
 
             // Act
             byte[] buffer = new byte[context.size()];
             int encodedSize = context.encode(buffer, 0);
-            
+
             PreauthIntegrityNegotiateContext decodedContext = new PreauthIntegrityNegotiateContext();
             int decodedSize = decodedContext.decode(buffer, 0, buffer.length);
 
@@ -434,13 +423,13 @@ class NegotiateContextResponseTest {
         @DisplayName("Should handle single element arrays")
         void testSingleElementArrays() throws SMBProtocolDecodingException {
             // Arrange
-            int[] singleCipher = new int[]{EncryptionNegotiateContext.CIPHER_AES128_GCM};
+            int[] singleCipher = new int[] { EncryptionNegotiateContext.CIPHER_AES128_GCM };
             EncryptionNegotiateContext context = new EncryptionNegotiateContext(mockConfig, singleCipher);
 
             // Act
             byte[] buffer = new byte[context.size()];
             int encodedSize = context.encode(buffer, 0);
-            
+
             EncryptionNegotiateContext decodedContext = new EncryptionNegotiateContext();
             int decodedSize = decodedContext.decode(buffer, 0, buffer.length);
 
@@ -453,15 +442,14 @@ class NegotiateContextResponseTest {
         @DisplayName("Should maintain data integrity through encode/decode cycle")
         void testEncodeDecodeCycle() throws SMBProtocolDecodingException {
             // Arrange
-            int[] hashAlgos = new int[]{1, 2, 3, 4, 5};
+            int[] hashAlgos = new int[] { 1, 2, 3, 4, 5 };
             byte[] salt = "TestSaltValue123".getBytes();
-            PreauthIntegrityNegotiateContext originalContext = 
-                new PreauthIntegrityNegotiateContext(mockConfig, hashAlgos, salt);
+            PreauthIntegrityNegotiateContext originalContext = new PreauthIntegrityNegotiateContext(mockConfig, hashAlgos, salt);
 
             // Act
             byte[] buffer = new byte[originalContext.size()];
             int encodedSize = originalContext.encode(buffer, 0);
-            
+
             PreauthIntegrityNegotiateContext decodedContext = new PreauthIntegrityNegotiateContext();
             int decodedSize = decodedContext.decode(buffer, 0, encodedSize);
 
@@ -477,10 +465,8 @@ class NegotiateContextResponseTest {
         @DisplayName("Should handle buffer boundaries correctly")
         void testBufferBoundaries() {
             // Arrange
-            EncryptionNegotiateContext context = new EncryptionNegotiateContext(
-                mockConfig, new int[]{1, 2}
-            );
-            byte[] smallBuffer = new byte[100];  // Make buffer large enough
+            EncryptionNegotiateContext context = new EncryptionNegotiateContext(mockConfig, new int[] { 1, 2 });
+            byte[] smallBuffer = new byte[100]; // Make buffer large enough
             byte[] largeBuffer = new byte[1000];
 
             // Act
@@ -491,12 +477,10 @@ class NegotiateContextResponseTest {
             // encode() returns actual bytes written (6), not size() value (8)
             assertEquals(6, smallEncodedSize); // actual: 2 bytes count + 2*2 bytes for ciphers
             assertEquals(6, largeEncodedSize);
-            
+
             // Verify data at different positions
-            assertArrayEquals(
-                Arrays.copyOfRange(smallBuffer, 0, smallEncodedSize),
-                Arrays.copyOfRange(largeBuffer, 500, 500 + largeEncodedSize)
-            );
+            assertArrayEquals(Arrays.copyOfRange(smallBuffer, 0, smallEncodedSize),
+                    Arrays.copyOfRange(largeBuffer, 500, 500 + largeEncodedSize));
         }
     }
 

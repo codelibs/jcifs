@@ -1,7 +1,25 @@
 package jcifs.smb;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Field;
 
@@ -32,16 +50,16 @@ class Kerb5ContextTest {
 
     @Mock
     private GSSManager gssManager;
-    
+
     @Mock
     private GSSContext gssContext;
-    
+
     @Mock
     private GSSName serviceName;
-    
+
     @Mock
     private GSSName clientName;
-    
+
     @Mock
     private GSSCredential clientCreds;
 
@@ -53,15 +71,12 @@ class Kerb5ContextTest {
         // Mock the static GSSManager.getInstance() method
         mockedStatic = mockStatic(GSSManager.class);
         mockedStatic.when(GSSManager::getInstance).thenReturn(gssManager);
-        
+
         // Setup mock behavior for GSSManager with lenient matchers
-        lenient().when(gssManager.createName(anyString(), any(), any()))
-            .thenReturn(serviceName);
-        lenient().when(gssManager.createName(anyString(), any()))
-            .thenReturn(serviceName);
-        lenient().when(gssManager.createContext(any(), any(), any(), anyInt()))
-            .thenReturn(gssContext);
-        
+        lenient().when(gssManager.createName(anyString(), any(), any())).thenReturn(serviceName);
+        lenient().when(gssManager.createName(anyString(), any())).thenReturn(serviceName);
+        lenient().when(gssManager.createContext(any(), any(), any(), anyInt())).thenReturn(gssContext);
+
         // Create Kerb5Context with mocked dependencies
         ctx = new Kerb5Context("host.example", "cifs", null, 0, 0, null);
     }
@@ -203,8 +218,8 @@ class Kerb5ContextTest {
     void verifyMIC_failure_wraps() throws Exception {
         byte[] data = new byte[] { 7 };
         byte[] mic = new byte[] { 8 };
-        doThrow(new GSSException(GSSException.BAD_MIC)).when(gssContext)
-                .verifyMIC(any(), anyInt(), anyInt(), any(), anyInt(), anyInt(), any());
+        doThrow(new GSSException(GSSException.BAD_MIC)).when(gssContext).verifyMIC(any(), anyInt(), anyInt(), any(), anyInt(), anyInt(),
+                any());
 
         CIFSException ex = assertThrows(CIFSException.class, () -> ctx.verifyMIC(data, mic));
         assertTrue(ex.getMessage().contains("Failed to verify MIC"));

@@ -1,10 +1,20 @@
 package jcifs.smb;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 import java.security.Principal;
-import java.util.Set;
 
 import javax.security.auth.Subject;
 import javax.security.auth.kerberos.KerberosPrincipal;
@@ -20,8 +30,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import jcifs.CIFSContext;
-import jcifs.Configuration;
 import jcifs.CIFSException;
+import jcifs.Configuration;
 import jcifs.spnego.NegTokenInit;
 
 @ExtendWith(MockitoExtension.class)
@@ -45,9 +55,8 @@ class Kerb5AuthenticatorTest {
         Kerb5Authenticator auth = new Kerb5Authenticator((Subject) null);
 
         // Using an uppercase short name (no dot) must throw an unsupported operation
-        SmbUnsupportedOperationException ex = assertThrows(
-                SmbUnsupportedOperationException.class,
-                () -> auth.createContext(tc, null, "SERVER", new byte[0], false));
+        SmbUnsupportedOperationException ex =
+                assertThrows(SmbUnsupportedOperationException.class, () -> auth.createContext(tc, null, "SERVER", new byte[0], false));
         assertTrue(ex.getMessage().contains("Cannot use netbios/short names"));
     }
 
@@ -61,9 +70,8 @@ class Kerb5AuthenticatorTest {
         byte[] init = spnegoInitWithMechs(unsupported);
 
         // Host is a FQDN to pass the short-name check
-        SmbUnsupportedOperationException ex = assertThrows(
-                SmbUnsupportedOperationException.class,
-                () -> auth.createContext(tc, null, "server.example.com", init, false));
+        SmbUnsupportedOperationException ex =
+                assertThrows(SmbUnsupportedOperationException.class, () -> auth.createContext(tc, null, "server.example.com", init, false));
         assertTrue(ex.getMessage().contains("Server does not support kerberos authentication"));
         // No fallback attempted; config should not be queried in this path
         verify(tc, never()).getConfig();
@@ -85,9 +93,8 @@ class Kerb5AuthenticatorTest {
         byte[] init = spnegoInitWithMechs(Kerb5Context.SUPPORTED_MECHS);
 
         // NtlmPasswordAuthenticator#createContext will inspect mechs and throw because NTLM is not advertised
-        SmbUnsupportedOperationException ex = assertThrows(
-                SmbUnsupportedOperationException.class,
-                () -> auth.createContext(tc, null, "server.example.com", init, false));
+        SmbUnsupportedOperationException ex =
+                assertThrows(SmbUnsupportedOperationException.class, () -> auth.createContext(tc, null, "server.example.com", init, false));
         assertTrue(ex.getMessage().contains("Server does not support NTLM authentication"));
 
         // Verify the decision consulted the configuration
@@ -101,9 +108,7 @@ class Kerb5AuthenticatorTest {
     @DisplayName("refresh: throws unsupported operation")
     void refresh_throwsUnsupported() {
         Kerb5Authenticator auth = new Kerb5Authenticator((Subject) null);
-        SmbUnsupportedOperationException ex = assertThrows(
-                SmbUnsupportedOperationException.class,
-                auth::refresh);
+        SmbUnsupportedOperationException ex = assertThrows(SmbUnsupportedOperationException.class, auth::refresh);
         assertTrue(ex.getMessage().contains("Refreshing credentials is not supported"));
     }
 
@@ -168,11 +173,8 @@ class Kerb5AuthenticatorTest {
     }
 
     static Object[][] preferredMechData_nonAnonymous() {
-        return new Object[][] {
-                { Kerb5Context.SUPPORTED_MECHS[0], true },
-                { Kerb5Context.SUPPORTED_MECHS[1], true },
-                { new ASN1ObjectIdentifier("1.2.3.4.5"), false }
-        };
+        return new Object[][] { { Kerb5Context.SUPPORTED_MECHS[0], true }, { Kerb5Context.SUPPORTED_MECHS[1], true },
+                { new ASN1ObjectIdentifier("1.2.3.4.5"), false } };
     }
 
     @ParameterizedTest(name = "non-anon preferred mech {0} -> {1}")
@@ -183,10 +185,7 @@ class Kerb5AuthenticatorTest {
     }
 
     static Object[][] preferredMechData_anonymous() {
-        return new Object[][] {
-                { NtlmContext.NTLMSSP_OID, true },
-                { Kerb5Context.SUPPORTED_MECHS[0], false }
-        };
+        return new Object[][] { { NtlmContext.NTLMSSP_OID, true }, { Kerb5Context.SUPPORTED_MECHS[0], false } };
     }
 
     @ParameterizedTest(name = "anonymous preferred mech {0} -> {1}")
@@ -270,4 +269,3 @@ class Kerb5AuthenticatorTest {
         assertSame(subject, auth.getSubject());
     }
 }
-

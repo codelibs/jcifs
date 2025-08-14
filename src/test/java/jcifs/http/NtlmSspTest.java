@@ -7,7 +7,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -44,10 +43,10 @@ public class NtlmSspTest {
 
     @Mock
     private Configuration mockConfig;
-    
+
     @Mock
     private NameServiceClient mockNameServiceClient;
-    
+
     @Mock
     private NetbiosAddress mockAddress;
 
@@ -70,20 +69,20 @@ public class NtlmSspTest {
     // User: "user", Domain: "DOMAIN", Workstation: "WORKSTATION"
     // This is a valid Type 3 message with proper structure
     private final String type3MessageBase64 = createValidType3Message();
-    
+
     /**
      * Creates a valid Type 3 NTLM message for testing
      */
     private static String createValidType3Message() {
         // Build a properly formatted Type 3 message
         byte[] message = new byte[200];
-        
+
         // NTLMSSP signature
         System.arraycopy("NTLMSSP\0".getBytes(), 0, message, 0, 8);
-        
+
         // Type 3 indicator
         message[8] = 0x03;
-        
+
         // LM Response (24 bytes at offset 64)
         message[12] = 24; // Length
         message[13] = 0;
@@ -93,7 +92,7 @@ public class NtlmSspTest {
         message[17] = 0;
         message[18] = 0;
         message[19] = 0;
-        
+
         // NT Response (24 bytes at offset 88)
         message[20] = 24; // Length
         message[21] = 0;
@@ -103,7 +102,7 @@ public class NtlmSspTest {
         message[25] = 0;
         message[26] = 0;
         message[27] = 0;
-        
+
         // Domain (12 bytes "DOMAIN" in Unicode at offset 112)
         message[28] = 12; // Length
         message[29] = 0;
@@ -113,7 +112,7 @@ public class NtlmSspTest {
         message[33] = 0;
         message[34] = 0;
         message[35] = 0;
-        
+
         // User (8 bytes "user" in Unicode at offset 124)
         message[36] = 8; // Length
         message[37] = 0;
@@ -123,7 +122,7 @@ public class NtlmSspTest {
         message[41] = 0;
         message[42] = 0;
         message[43] = 0;
-        
+
         // Workstation (22 bytes "WORKSTATION" in Unicode at offset 132)
         message[44] = 22; // Length
         message[45] = 0;
@@ -133,7 +132,7 @@ public class NtlmSspTest {
         message[49] = 0;
         message[50] = 0;
         message[51] = 0;
-        
+
         // Session Key (empty, offset 154)
         message[52] = 0; // Length
         message[53] = 0;
@@ -143,23 +142,23 @@ public class NtlmSspTest {
         message[57] = 0;
         message[58] = 0;
         message[59] = 0;
-        
+
         // Flags (NTLMSSP_NEGOTIATE_UNICODE)
         message[60] = 0x01; // NTLMSSP_NEGOTIATE_UNICODE
         message[61] = 0x00;
         message[62] = 0x00;
         message[63] = 0x00;
-        
+
         // Add dummy LM response (24 zeros at offset 64)
         for (int i = 0; i < 24; i++) {
             message[64 + i] = 0;
         }
-        
+
         // Add dummy NT response (24 zeros at offset 88)
         for (int i = 0; i < 24; i++) {
             message[88 + i] = 0;
         }
-        
+
         // Add Domain "DOMAIN" in Unicode at offset 112
         String domain = "DOMAIN";
         byte[] domainBytes = domain.getBytes();
@@ -167,7 +166,7 @@ public class NtlmSspTest {
             message[112 + i * 2] = domainBytes[i];
             message[112 + i * 2 + 1] = 0;
         }
-        
+
         // Add User "user" in Unicode at offset 124
         String user = "user";
         byte[] userBytes = user.getBytes();
@@ -175,7 +174,7 @@ public class NtlmSspTest {
             message[124 + i * 2] = userBytes[i];
             message[124 + i * 2 + 1] = 0;
         }
-        
+
         // Add Workstation "WORKSTATION" in Unicode at offset 132
         String workstation = "WORKSTATION";
         byte[] workstationBytes = workstation.getBytes();
@@ -183,24 +182,23 @@ public class NtlmSspTest {
             message[132 + i * 2] = workstationBytes[i];
             message[132 + i * 2 + 1] = 0;
         }
-        
+
         // Total message length is 154 bytes
         byte[] finalMessage = new byte[154];
         System.arraycopy(message, 0, finalMessage, 0, 154);
-        
+
         return Base64.getEncoder().encodeToString(finalMessage);
     }
-
 
     @BeforeEach
     public void setUp() throws UnknownHostException {
         ntlmSsp = new NtlmSsp();
-        
+
         // Use lenient stubbing to avoid UnnecessaryStubbing errors for tests that don't need all mocks
         lenient().when(mockCifsContext.getConfig()).thenReturn(mockConfig);
         lenient().when(mockConfig.getDefaultDomain()).thenReturn("DOMAIN");
         lenient().when(mockConfig.isUseUnicode()).thenReturn(true);
-        
+
         // Mock NameServiceClient for Type1Message test
         lenient().when(mockCifsContext.getNameServiceClient()).thenReturn(mockNameServiceClient);
         lenient().when(mockNameServiceClient.getLocalHost()).thenReturn(mockAddress);
@@ -292,7 +290,7 @@ public class NtlmSspTest {
         verify(mockResponse, never()).setHeader(anyString(), anyString());
         verify(mockResponse, never()).setStatus(any(int.class));
     }
-    
+
     /**
      * Test case for the instance method doAuthentication.
      * It should just delegate to the static authenticate method.

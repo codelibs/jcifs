@@ -1,6 +1,10 @@
 package jcifs.smb1.https;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -123,7 +127,7 @@ class HandlerTest {
         void testNtlmSupport() {
             // When
             Handler testHandler = new Handler();
-            
+
             // Then
             assertTrue(testHandler instanceof jcifs.smb1.http.Handler);
             assertEquals(443, testHandler.getDefaultPort());
@@ -136,7 +140,7 @@ class HandlerTest {
             Handler handler1 = new Handler();
             Handler handler2 = new Handler();
             Handler handler3 = new Handler();
-            
+
             // Then
             assertEquals(443, handler1.getDefaultPort());
             assertEquals(443, handler2.getDefaultPort());
@@ -153,11 +157,11 @@ class HandlerTest {
         void testDifferentPorts() {
             // Given
             Handler httpsHandler = new Handler();
-            
+
             // When
             int httpsPort = httpsHandler.getDefaultPort();
             int httpPort = jcifs.smb1.http.Handler.DEFAULT_HTTP_PORT;
-            
+
             // Then
             assertEquals(443, httpsPort);
             assertEquals(80, httpPort);
@@ -174,10 +178,10 @@ class HandlerTest {
         void testProtectedMethodAccess() throws Exception {
             // Given
             Handler testHandler = new Handler();
-            
+
             // When
             Method method = Handler.class.getDeclaredMethod("getDefaultPort");
-            
+
             // Then
             assertTrue(Modifier.isProtected(method.getModifiers()));
             method.setAccessible(true);
@@ -189,7 +193,7 @@ class HandlerTest {
         void testInheritanceHierarchy() {
             // When
             Class<?> superclass = Handler.class.getSuperclass();
-            
+
             // Then
             assertEquals(jcifs.smb1.http.Handler.class, superclass);
             assertEquals(URLStreamHandler.class, superclass.getSuperclass());
@@ -200,7 +204,7 @@ class HandlerTest {
         void testClassModifiers() {
             // When
             int modifiers = Handler.class.getModifiers();
-            
+
             // Then
             assertTrue(Modifier.isPublic(modifiers));
             assertFalse(Modifier.isAbstract(modifiers));

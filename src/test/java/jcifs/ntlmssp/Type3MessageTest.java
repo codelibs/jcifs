@@ -8,7 +8,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.security.SecureRandom;
@@ -57,11 +56,11 @@ class Type3MessageTest {
         NameServiceClient mockNameServiceClient = mock(NameServiceClient.class);
         NetbiosAddress mockHost = mock(NetbiosAddress.class);
         SecureRandom mockRandom = mock(SecureRandom.class);
-        
+
         // Create a machine ID (32 bytes)
         byte[] machineId = new byte[32];
         mockRandom.nextBytes(machineId);
-        
+
         lenient().when(mockConfig.getDefaultDomain()).thenReturn("TESTDOMAIN");
         lenient().when(mockConfig.isUseUnicode()).thenReturn(true);
         lenient().when(mockConfig.getOemEncoding()).thenReturn("UTF-8");
@@ -72,7 +71,7 @@ class Type3MessageTest {
         lenient().when(mockCtx.getNameServiceClient()).thenReturn(mockNameServiceClient);
         lenient().when(mockNameServiceClient.getLocalHost()).thenReturn(mockHost);
         lenient().when(mockHost.getHostName()).thenReturn("TEST_HOSTNAME");
-        
+
         return mockCtx;
     }
 
@@ -166,7 +165,8 @@ class Type3MessageTest {
         String password = "testpassword";
 
         // When
-        Type3Message type3 = new Type3Message(createMockContext(), type2, null, password, "DOMAIN", "user", "WORKSTATION", NtlmFlags.NTLMSSP_NEGOTIATE_NTLM);
+        Type3Message type3 = new Type3Message(createMockContext(), type2, null, password, "DOMAIN", "user", "WORKSTATION",
+                NtlmFlags.NTLMSSP_NEGOTIATE_NTLM);
 
         // Then
         assertNotNull(type3.getLMResponse());
@@ -185,8 +185,8 @@ class Type3MessageTest {
         String unicodeWorkstation = "tëstws";
 
         // When
-        Type3Message type3 =
-                new Type3Message(createMockContext(), type2, null, "password", unicodeDomain, unicodeUser, unicodeWorkstation, NtlmFlags.NTLMSSP_NEGOTIATE_UNICODE);
+        Type3Message type3 = new Type3Message(createMockContext(), type2, null, "password", unicodeDomain, unicodeUser, unicodeWorkstation,
+                NtlmFlags.NTLMSSP_NEGOTIATE_UNICODE);
 
         // Then
         assertEquals(unicodeDomain, type3.getDomain());
@@ -216,7 +216,7 @@ class Type3MessageTest {
         Type2Message type2 = createMockType2Message();
 
         // When
-        Type3Message type3 = new Type3Message(createMockContext(), type2, null, (String)null, null, null, null, 0);
+        Type3Message type3 = new Type3Message(createMockContext(), type2, null, (String) null, null, null, null, 0);
 
         // Then
         assertNull(type3.getDomain());
@@ -229,7 +229,8 @@ class Type3MessageTest {
     void testSessionKeyGeneration() throws Exception {
         // Given
         Type2Message type2 = createMockType2Message();
-        int flags = NtlmFlags.NTLMSSP_NEGOTIATE_NTLM | NtlmFlags.NTLMSSP_NEGOTIATE_KEY_EXCH | NtlmFlags.NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY;
+        int flags = NtlmFlags.NTLMSSP_NEGOTIATE_NTLM | NtlmFlags.NTLMSSP_NEGOTIATE_KEY_EXCH
+                | NtlmFlags.NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY;
 
         // When
         // Create a mock context with LanManCompatibility level 0 or 1 to test extended session security
@@ -301,7 +302,8 @@ class Type3MessageTest {
         String mixedCaseUser = "TestUser";
 
         // When
-        Type3Message type3 = new Type3Message(createMockContext(), type2, null, "password", mixedCaseDomain, mixedCaseUser, "WORKSTATION", 0);
+        Type3Message type3 =
+                new Type3Message(createMockContext(), type2, null, "password", mixedCaseDomain, mixedCaseUser, "WORKSTATION", 0);
 
         // Then
         assertEquals(mixedCaseDomain, type3.getDomain());
@@ -332,8 +334,8 @@ class Type3MessageTest {
         String specialPassword = "P@ssw0rd!#$%";
 
         // When
-        Type3Message type3 =
-                new Type3Message(createMockContext(), type2, null, specialPassword, specialDomain, specialUser, "WORKSTATION", NtlmFlags.NTLMSSP_NEGOTIATE_UNICODE);
+        Type3Message type3 = new Type3Message(createMockContext(), type2, null, specialPassword, specialDomain, specialUser, "WORKSTATION",
+                NtlmFlags.NTLMSSP_NEGOTIATE_UNICODE);
 
         // Then
         assertEquals(specialDomain, type3.getDomain());
@@ -412,20 +414,20 @@ class Type3MessageTest {
         byte[] challenge = new byte[8];
         new SecureRandom().nextBytes(challenge);
 
-        int flags = NtlmFlags.NTLMSSP_NEGOTIATE_UNICODE | NtlmFlags.NTLMSSP_NEGOTIATE_NTLM | 
-                    NtlmFlags.NTLMSSP_NEGOTIATE_TARGET_INFO | NtlmFlags.NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY;
+        int flags = NtlmFlags.NTLMSSP_NEGOTIATE_UNICODE | NtlmFlags.NTLMSSP_NEGOTIATE_NTLM | NtlmFlags.NTLMSSP_NEGOTIATE_TARGET_INFO
+                | NtlmFlags.NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY;
 
         Type2Message type2 = new Type2Message(createMockContext(), flags, challenge, "TARGET");
-        
+
         // Create target information with timestamp for NTLMv2
         List<AvPair> pairs = new LinkedList<>();
         pairs.add(new AvTargetName("TARGET"));
         pairs.add(new AvTimestamp(System.currentTimeMillis()));
         pairs.add(new AvFlags(0));
         pairs.add(new AvSingleHost(new byte[48])); // Dummy single host data
-        
+
         type2.setTargetInformation(AvPairs.encode(pairs));
-        
+
         return type2;
     }
 
@@ -438,11 +440,11 @@ class Type3MessageTest {
         NameServiceClient mockNameServiceClient = mock(NameServiceClient.class);
         NetbiosAddress mockHost = mock(NetbiosAddress.class);
         SecureRandom mockRandom = mock(SecureRandom.class);
-        
+
         // Create a machine ID (32 bytes)
         byte[] machineId = new byte[32];
         mockRandom.nextBytes(machineId);
-        
+
         lenient().when(mockConfig.getDefaultDomain()).thenReturn("TESTDOMAIN");
         lenient().when(mockConfig.isUseUnicode()).thenReturn(true);
         lenient().when(mockConfig.getOemEncoding()).thenReturn("UTF-8");
@@ -453,7 +455,7 @@ class Type3MessageTest {
         lenient().when(mockCtx.getNameServiceClient()).thenReturn(mockNameServiceClient);
         lenient().when(mockNameServiceClient.getLocalHost()).thenReturn(mockHost);
         lenient().when(mockHost.getHostName()).thenReturn("TEST_HOSTNAME");
-        
+
         return mockCtx;
     }
 }
