@@ -31,6 +31,8 @@ import jcifs.SmbSession;
 import jcifs.SmbTransport;
 import jcifs.SmbTransportPool;
 import jcifs.smb.SmbSessionInternal;
+import jcifs.SmbTree;
+import jcifs.smb.SmbTreeImpl;
 import jcifs.smb.SmbTransportInternal;
 import jcifs.dcerpc.DcerpcHandle;
 import jcifs.dcerpc.UnicodeString;
@@ -340,6 +342,12 @@ class SIDCacheImplTest {
         lenient().when(transport.unwrap(SmbTransportInternal.class)).thenReturn(transportInternal);
         lenient().when(transportInternal.getSmbSession(any(CIFSContext.class), anyString(), anyString())).thenReturn(session);
         lenient().when(session.unwrap(SmbSessionInternal.class)).thenReturn(sessionInternal);
+        
+        // Mock SmbTree to prevent NPE when getSmbTree returns null
+        SmbTree smbTree = mock(SmbTree.class);
+        SmbTreeImpl smbTreeImpl = mock(SmbTreeImpl.class);
+        lenient().when(sessionInternal.getSmbTree(anyString(), any())).thenReturn(smbTree);
+        lenient().when(smbTree.unwrap(SmbTreeImpl.class)).thenReturn(smbTreeImpl);
         SIDCacheImpl cache = Mockito.spy(new SIDCacheImpl(ctx));
 
         // Domain SID to be returned by stub
