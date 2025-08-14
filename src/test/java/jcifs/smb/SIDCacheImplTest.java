@@ -29,6 +29,7 @@ import jcifs.Credentials;
 import jcifs.DfsResolver;
 import jcifs.SmbTransport;
 import jcifs.SmbTransportPool;
+import jcifs.smb.SmbTransportInternal;
 import jcifs.dcerpc.DcerpcHandle;
 import jcifs.dcerpc.UnicodeString;
 import jcifs.dcerpc.msrpc.LsaPolicyHandle;
@@ -322,6 +323,7 @@ class SIDCacheImplTest {
         DfsResolver dfsResolver = mock(DfsResolver.class);
         SmbTransportPool transportPool = mock(SmbTransportPool.class);
         SmbTransport transport = mock(SmbTransport.class);
+        SmbTransportInternal transportInternal = mock(SmbTransportInternal.class);
         lenient().when(ctx.getConfig()).thenReturn(config);
         lenient().when(config.isTraceResourceUsage()).thenReturn(false);
         lenient().when(ctx.getBufferCache()).thenReturn(bufferCache);
@@ -331,6 +333,7 @@ class SIDCacheImplTest {
         lenient().when(ctx.getDfs()).thenReturn(dfsResolver);
         lenient().when(ctx.getTransportPool()).thenReturn(transportPool);
         lenient().when(transportPool.getSmbTransport(any(CIFSContext.class), anyString(), anyInt(), anyBoolean(), anyBoolean())).thenReturn(transport);
+        lenient().when(transport.unwrap(SmbTransportInternal.class)).thenReturn(transportInternal);
         SIDCacheImpl cache = Mockito.spy(new SIDCacheImpl(ctx));
 
         // Domain SID to be returned by stub
