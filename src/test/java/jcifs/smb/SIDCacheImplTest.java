@@ -2,6 +2,9 @@ package jcifs.smb;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 import java.io.IOException;
@@ -24,6 +27,7 @@ import jcifs.CIFSException;
 import jcifs.Configuration;
 import jcifs.Credentials;
 import jcifs.DfsResolver;
+import jcifs.SmbTransport;
 import jcifs.SmbTransportPool;
 import jcifs.dcerpc.DcerpcHandle;
 import jcifs.dcerpc.UnicodeString;
@@ -317,6 +321,7 @@ class SIDCacheImplTest {
         Credentials credentials = mock(Credentials.class);
         DfsResolver dfsResolver = mock(DfsResolver.class);
         SmbTransportPool transportPool = mock(SmbTransportPool.class);
+        SmbTransport transport = mock(SmbTransport.class);
         lenient().when(ctx.getConfig()).thenReturn(config);
         lenient().when(config.isTraceResourceUsage()).thenReturn(false);
         lenient().when(ctx.getBufferCache()).thenReturn(bufferCache);
@@ -325,6 +330,7 @@ class SIDCacheImplTest {
         lenient().when(credentials.getUserDomain()).thenReturn("TESTDOMAIN");
         lenient().when(ctx.getDfs()).thenReturn(dfsResolver);
         lenient().when(ctx.getTransportPool()).thenReturn(transportPool);
+        lenient().when(transportPool.getSmbTransport(any(CIFSContext.class), anyString(), anyInt(), anyBoolean(), anyBoolean())).thenReturn(transport);
         SIDCacheImpl cache = Mockito.spy(new SIDCacheImpl(ctx));
 
         // Domain SID to be returned by stub
