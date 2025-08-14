@@ -27,8 +27,12 @@ import jcifs.internal.smb2.Smb2Constants;
 import jcifs.internal.util.SMBUtil;
 
 /**
- * @author mbechler
+ * SMB2 Tree Connect request message.
  *
+ * This command is used to connect to a shared resource
+ * on the server, such as a file share or printer.
+ *
+ * @author mbechler
  */
 public class Smb2TreeConnectRequest extends ServerMessageBlock2Request<Smb2TreeConnectResponse> {
 

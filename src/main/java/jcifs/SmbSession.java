@@ -21,7 +21,6 @@ package jcifs;
  * Opaque reference to a SMB session
  *
  * @author mbechler
- * @internal
  */
 public interface SmbSession extends AutoCloseable {
 

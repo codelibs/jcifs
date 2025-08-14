@@ -24,7 +24,11 @@ import jcifs.internal.smb1.trans.SmbComTransaction;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * Base class for SMB1 NT Transaction request messages.
  *
+ * NT Transactions are an extended form of the basic transaction protocol
+ * that provides additional functionality for Windows NT-specific operations
+ * such as security descriptor queries and file change notifications.
  */
 public abstract class SmbComNtTransaction extends SmbComTransaction {
 

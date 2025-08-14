@@ -33,9 +33,9 @@ public interface SmbResourceLocator {
      * <code>SmbFile</code> or in the case of URLs that only specify a server
      * or workgroup, the server or workgroup will be returned. The name of
      * the root URL <code>smb://</code> is also <code>smb://</code>. If this
-     * <tt>SmbFile</tt> refers to a workgroup, server, share, or directory,
+     * <code>SmbFile</code> refers to a workgroup, server, share, or directory,
      * the name will include a trailing slash '/' so that composing new
-     * <tt>SmbFile</tt>s will maintain the trailing slash requirement.
+     * <code>SmbFile</code>s will maintain the trailing slash requirement.
      *
      * @return The last component of the URL associated with this SMB
      *         resource or <code>smb://</code> if the resource is <code>smb://</code>
@@ -151,11 +151,11 @@ public interface SmbResourceLocator {
     boolean isIPC();
 
     /**
-     * Returns type of of object this <tt>SmbFile</tt> represents.
+     * Returns type of of object this <code>SmbFile</code> represents.
      *
-     * @return <tt>TYPE_FILESYSTEM, TYPE_WORKGROUP, TYPE_SERVER,
-     * TYPE_NAMED_PIPE</tt>, or <tt>TYPE_SHARE</tt> in which case it may be either <tt>TYPE_SHARE</tt>,
-     *         <tt>TYPE_PRINTER</tt> or <tt>TYPE_COMM</tt>.
+     * @return <code>TYPE_FILESYSTEM, TYPE_WORKGROUP, TYPE_SERVER,
+     * TYPE_NAMED_PIPE</code>, or <code>TYPE_SHARE</code> in which case it may be either <code>TYPE_SHARE</code>,
+     *         <code>TYPE_PRINTER</code> or <code>TYPE_COMM</code>.
      * @throws CIFSException
      */
     int getType() throws CIFSException;

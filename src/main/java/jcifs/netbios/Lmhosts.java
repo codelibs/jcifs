@@ -34,8 +34,8 @@ import jcifs.CIFSContext;
 import jcifs.smb.SmbFileInputStream;
 
 /**
- *
- *
+ * LMHOSTS file parser and NetBIOS name resolver.
+ * This class provides functionality for resolving NetBIOS names using LMHOSTS files.
  */
 public class Lmhosts {
 

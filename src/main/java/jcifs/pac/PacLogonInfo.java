@@ -23,7 +23,6 @@ import java.util.Date;
 
 import jcifs.smb.SID;
 
-@SuppressWarnings("javadoc")
 public class PacLogonInfo {
 
     private Date logonTime;

@@ -26,12 +26,12 @@ import jcifs.CIFSException;
 public class SMBProtocolDowngradeException extends CIFSException {
 
     /**
-     *
+     * Serial version UID for serialization compatibility.
      */
     private static final long serialVersionUID = 1913365058349456689L;
 
     /**
-     *
+     * Creates a new SMBProtocolDowngradeException with no message.
      */
     public SMBProtocolDowngradeException() {
     }

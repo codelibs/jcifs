@@ -28,7 +28,10 @@ import jcifs.internal.util.SMBUtil;
 import jcifs.util.Hexdump;
 
 /**
+ * SMB1 Open AndX request message.
  *
+ * This command is used to open or create a file for access over
+ * the network with enhanced capabilities compared to the basic Open command.
  */
 public class SmbComOpenAndX extends AndXServerMessageBlock {
 

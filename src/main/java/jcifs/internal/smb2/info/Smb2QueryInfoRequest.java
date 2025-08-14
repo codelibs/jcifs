@@ -26,6 +26,9 @@ import jcifs.internal.smb2.Smb2Constants;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * SMB2 Query Info request message. This command is used to query file system,
+ * file, or security information from the server.
+ *
  * @author mbechler
  *
  */

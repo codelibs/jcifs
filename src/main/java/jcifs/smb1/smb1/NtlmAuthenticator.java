@@ -35,7 +35,7 @@ public abstract class NtlmAuthenticator {
     }
 
     /**
-    Set the default <tt>NtlmAuthenticator</tt>. Once the default authenticator is set it cannot be changed. Calling this metho again will have no effect.
+    Set the default <code>NtlmAuthenticator</code>. Once the default authenticator is set it cannot be changed. Calling this metho again will have no effect.
      */
 
     public synchronized static void setDefault(final NtlmAuthenticator a) {
@@ -54,7 +54,7 @@ public abstract class NtlmAuthenticator {
     }
 
     /**
-    Used internally by jCIFS when an <tt>SmbAuthException</tt> is trapped to retrieve new user credentials.
+    Used internally by jCIFS when an <code>SmbAuthException</code> is trapped to retrieve new user credentials.
      */
 
     public static NtlmPasswordAuthentication requestNtlmPasswordAuthentication(final String url, final SmbAuthException sae) {
@@ -69,8 +69,8 @@ public abstract class NtlmAuthenticator {
     }
 
     /**
-    An application extending this class must provide an implementation for this method that returns new user credentials try try when accessing SMB resources described by the <tt>getRequestingURL</tt> and <tt>getRequestingException</tt> methods.
-    If this method returns <tt>null</tt> the <tt>SmbAuthException</tt> that triggered the authenticator check will simply be rethrown. The default implementation returns <tt>null</tt>.
+    An application extending this class must provide an implementation for this method that returns new user credentials try try when accessing SMB resources described by the <code>getRequestingURL</code> and <code>getRequestingException</code> methods.
+    If this method returns <code>null</code> the <code>SmbAuthException</code> that triggered the authenticator check will simply be rethrown. The default implementation returns <code>null</code>.
     */
     protected NtlmPasswordAuthentication getNtlmPasswordAuthentication() {
         return null;

@@ -21,8 +21,10 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
 /**
- * @author mbechler
+ * NTLMSSP AV pair representing target name information in NTLM authentication.
+ * Contains the name of the target server or service being authenticated against.
  *
+ * @author mbechler
  */
 public class AvTargetName extends AvPair {
 

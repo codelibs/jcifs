@@ -20,8 +20,11 @@ package jcifs.internal;
 import jcifs.CIFSException;
 
 /**
- * @author mbechler
+ * Exception thrown when errors occur during SMB protocol message decoding.
+ * Indicates that an SMB message could not be properly parsed or decoded due to
+ * malformed data, protocol violations, or unsupported message formats.
  *
+ * @author mbechler
  */
 public class SMBProtocolDecodingException extends CIFSException {
 

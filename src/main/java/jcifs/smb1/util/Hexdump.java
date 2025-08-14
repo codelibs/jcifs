@@ -22,6 +22,10 @@ package jcifs.smb1.util;
 import java.io.PrintStream;
 
 /**
+ * Utility class for hexadecimal dump operations.
+ *
+ * This class provides methods to convert binary data to
+ * hexadecimal string representation for debugging purposes.
  */
 
 public class Hexdump {
@@ -38,13 +42,14 @@ public class Hexdump {
     /**
      * Generate "hexdump" output of the buffer at src like the following:
      *
-     * <p><blockquote><pre>
+     * <p>
+     * <pre>
      * 00000: 04 d2 29 00 00 01 00 00 00 00 00 01 20 45 47 46  |..)......... EGF|
      * 00010: 43 45 46 45 45 43 41 43 41 43 41 43 41 43 41 43  |CEFEECACACACACAC|
      * 00020: 41 43 41 43 41 43 41 43 41 43 41 41 44 00 00 20  |ACACACACACAAD.. |
      * 00030: 00 01 c0 0c 00 20 00 01 00 00 00 00 00 06 20 00  |..... ........ .|
      * 00040: ac 22 22 e1                                      |."".            |
-     * </blockquote></pre>
+     * </pre>
      */
 
     public static void hexdump(final PrintStream ps, final byte[] src, final int srcIndex, final int length) {
@@ -97,7 +102,7 @@ public class Hexdump {
     }
 
     /**
-     * This is an alternative to the <code>java.lang.Integer.toHexString</cod>
+     * This is an alternative to the <code>java.lang.Integer.toHexString</code>
      * method. It is an efficient relative that also will pad the left side so
      * that the result is <code>size</code> digits.
      */

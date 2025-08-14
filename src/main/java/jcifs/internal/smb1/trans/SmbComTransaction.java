@@ -26,7 +26,9 @@ import jcifs.internal.util.SMBUtil;
 import jcifs.util.Hexdump;
 
 /**
- *
+ * Base class for SMB1 transaction request messages.
+ * This abstract class provides the foundation for all SMB1 transaction commands, handling
+ * parameter and data buffer encoding, multi-part transactions, and setup word management.
  */
 public abstract class SmbComTransaction extends ServerMessageBlock implements Enumeration<SmbComTransaction> {
 

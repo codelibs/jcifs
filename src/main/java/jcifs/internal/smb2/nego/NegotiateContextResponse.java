@@ -20,8 +20,12 @@ package jcifs.internal.smb2.nego;
 import jcifs.Decodable;
 
 /**
- * @author mbechler
+ * SMB2 Negotiate Context response data structure.
  *
+ * This class represents negotiate contexts returned by the server
+ * in response to negotiate context requests.
+ *
+ * @author mbechler
  */
 public interface NegotiateContextResponse extends Decodable {
 

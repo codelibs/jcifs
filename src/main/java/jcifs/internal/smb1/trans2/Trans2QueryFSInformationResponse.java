@@ -30,7 +30,9 @@ import jcifs.internal.smb1.trans.SmbComTransaction;
 import jcifs.internal.smb1.trans.SmbComTransactionResponse;
 
 /**
- *
+ * Trans2 QueryFSInformation response message for file system information queries.
+ * This class handles the response from a TRANS2_QUERY_FS_INFORMATION request,
+ * returning various file system information levels such as volume size and attributes.
  */
 public class Trans2QueryFSInformationResponse extends SmbComTransactionResponse {
 

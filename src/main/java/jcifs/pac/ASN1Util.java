@@ -28,8 +28,10 @@ import org.bouncycastle.asn1.ASN1TaggedObject;
 import org.bouncycastle.asn1.DLSequence;
 
 /**
+ * Utility class for ASN.1 parsing and manipulation operations.
  *
- *
+ * This class provides helper methods for working with ASN.1
+ * encoded data structures used in Kerberos PAC processing.
  */
 public final class ASN1Util {
 

@@ -24,8 +24,12 @@ import jcifs.internal.smb2.Smb2Constants;
 import jcifs.internal.util.SMBUtil;
 
 /**
- * @author mbechler
+ * SMB2 Change Notify request message.
  *
+ * This command is used to monitor a directory for changes
+ * and receive notifications when modifications occur.
+ *
+ * @author mbechler
  */
 public class Smb2ChangeNotifyRequest extends ServerMessageBlock2Request<Smb2ChangeNotifyResponse> {
 

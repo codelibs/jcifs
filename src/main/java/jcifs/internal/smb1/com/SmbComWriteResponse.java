@@ -23,7 +23,10 @@ import jcifs.internal.smb1.ServerMessageBlock;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * SMB1 Write Response message.
  *
+ * This response contains information about the write operation,
+ * including the number of bytes that were written to the file.
  */
 public class SmbComWriteResponse extends ServerMessageBlock {
 

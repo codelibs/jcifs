@@ -36,7 +36,6 @@ import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.DERTaggedObject;
 
-@SuppressWarnings("javadoc")
 public class NegTokenTarg extends SpnegoToken {
 
     public static final int UNSPECIFIED_RESULT = -1;

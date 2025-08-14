@@ -22,7 +22,10 @@ import jcifs.Configuration;
 import jcifs.internal.SMBProtocolDecodingException;
 
 /**
+ * Response for SMB1 TRANS_TRANSACT_NAMED_PIPE transaction.
  *
+ * This response contains the data returned from the named pipe
+ * after a transact operation (write then read) has been completed.
  */
 public class TransTransactNamedPipeResponse extends SmbComTransactionResponse {
 

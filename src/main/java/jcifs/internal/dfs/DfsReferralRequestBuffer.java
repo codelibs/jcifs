@@ -23,8 +23,11 @@ import jcifs.Encodable;
 import jcifs.internal.util.SMBUtil;
 
 /**
- * @author mbechler
+ * DFS (Distributed File System) referral request buffer encoder.
+ * Creates encoded request buffers for DFS referral requests, specifying the maximum
+ * referral level and target path for which DFS resolution is requested.
  *
+ * @author mbechler
  */
 public class DfsReferralRequestBuffer implements Encodable {
 

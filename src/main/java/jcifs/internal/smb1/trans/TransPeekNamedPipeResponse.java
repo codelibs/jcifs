@@ -22,7 +22,10 @@ import jcifs.Configuration;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * Response for SMB1 TRANS_PEEK_NAMED_PIPE transaction.
  *
+ * This response contains information about the data available in the
+ * named pipe without actually removing the data from the pipe.
  */
 public class TransPeekNamedPipeResponse extends SmbComTransactionResponse {
 

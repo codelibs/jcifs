@@ -30,6 +30,9 @@ import jcifs.smb.FileEntry;
 import jcifs.util.Hexdump;
 
 /**
+ * SMB1 NetServerEnum2 transaction response implementation.
+ * Handles responses from network server enumeration operations, parsing server
+ * information returned by the NetServerEnum2 transaction in SMB1 protocol.
  *
  * @author mbechler
  *

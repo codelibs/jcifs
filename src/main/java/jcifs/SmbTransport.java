@@ -21,7 +21,8 @@ package jcifs;
  * Opaque reference to a SMB transport
  *
  * @author mbechler
- * @internal
+ *
+ * <p>This interface is intended for internal use.</p>
  */
 public interface SmbTransport extends AutoCloseable {
 

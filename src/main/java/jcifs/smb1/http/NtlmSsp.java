@@ -34,8 +34,8 @@ import jcifs.smb1.smb1.NtlmPasswordAuthentication;
 import jcifs.smb1.util.Base64;
 
 /**
- * This class is used internally by <tt>NtlmHttpFilter</tt>,
- * <tt>NtlmServlet</tt>, and <tt>NetworkExplorer</tt> to negiotiate password
+ * This class is used internally by {@code NtlmHttpFilter},
+ * {@code NtlmServlet}, and {@code NetworkExplorer} to negiotiate password
  * hashes via NTLM SSP with MSIE. It might also be used directly by servlet
  * containers to incorporate similar functionality.
  * <p>

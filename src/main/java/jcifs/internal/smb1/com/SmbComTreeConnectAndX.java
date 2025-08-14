@@ -32,7 +32,10 @@ import jcifs.smb.NtlmPasswordAuthenticator;
 import jcifs.util.Hexdump;
 
 /**
+ * SMB1 Tree Connect AndX request message.
  *
+ * This command is used to connect to a shared resource
+ * on the server, such as a file share or printer.
  */
 public class SmbComTreeConnectAndX extends AndXServerMessageBlock {
 

@@ -23,8 +23,12 @@ import jcifs.internal.smb2.ServerMessageBlock2Response;
 import jcifs.internal.util.SMBUtil;
 
 /**
- * @author mbechler
+ * SMB2 Write response message.
  *
+ * This response contains information about the write operation,
+ * including the number of bytes actually written.
+ *
+ * @author mbechler
  */
 public class Smb2WriteResponse extends ServerMessageBlock2Response {
 

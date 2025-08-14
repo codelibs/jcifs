@@ -28,7 +28,10 @@ import jcifs.internal.smb1.ServerMessageBlock;
 import jcifs.util.Strings;
 
 /**
+ * SMB1 Negotiate Protocol request message.
  *
+ * This command is used to negotiate the SMB protocol dialect
+ * and security parameters between client and server.
  */
 public class SmbComNegotiate extends ServerMessageBlock implements SmbNegotiationRequest {
 

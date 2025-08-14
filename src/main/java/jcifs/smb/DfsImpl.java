@@ -38,7 +38,8 @@ import jcifs.internal.dfs.DfsReferralDataInternal;
 /**
  * Caching DFS resolver implementation
  *
- * @internal
+ *
+ * <p>This class is intended for internal use.</p>
  */
 public class DfsImpl implements DfsResolver {
 

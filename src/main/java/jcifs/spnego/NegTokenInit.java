@@ -45,7 +45,6 @@ import jcifs.util.Hexdump;
 /**
  * SPNEGO initial token
  */
-@SuppressWarnings("javadoc")
 public class NegTokenInit extends SpnegoToken {
 
     public static final int DELEGATION = 0x80;

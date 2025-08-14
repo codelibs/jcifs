@@ -49,25 +49,26 @@ import java.net.UnknownHostException;
  * flags is necessary to distinguish which type of Named Pipe behavior
  * is desired.
  *
- * <p><table border="1" cellpadding="3" cellspacing="0" width="100%">
- * <tr bgcolor="#ccccff">
+ * <table border="1">
+ * <caption>SmbNamedPipe Constructor Examples</caption>
+ * <tr>
  * <td colspan="2"><b><code>SmbNamedPipe</code> Constructor Examples</b></td>
- * <tr><td width="20%"><b>Code Sample</b></td><td><b>Description</b></td></tr>
- * <tr><td width="20%"><pre>
+ * <tr><td ><b>Code Sample</b></td><td><b>Description</b></td></tr>
+ * <tr><td ><pre>
  * new SmbNamedPipe( "smb1://server/IPC$/PIPE/foo",
  *         SmbNamedPipe.PIPE_TYPE_RDWR |
  *         SmbNamedPipe.PIPE_TYPE_CALL );
  * </pre></td><td>
  * Open the Named Pipe foo for reading and writing. The pipe will behave like the <code>CallNamedPipe</code> interface.
  * </td></tr>
- * <tr><td width="20%"><pre>
+ * <tr><td ><pre>
  * new SmbNamedPipe( "smb1://server/IPC$/foo",
  *         SmbNamedPipe.PIPE_TYPE_RDWR |
  *         SmbNamedPipe.PIPE_TYPE_TRANSACT );
  * </pre></td><td>
  * Open the Named Pipe foo for reading and writing. The pipe will behave like the <code>TransactNamedPipe</code> interface.
  * </td></tr>
- * <tr><td width="20%"><pre>
+ * <tr><td ><pre>
  * new SmbNamedPipe( "smb1://server/IPC$/foo",
  *         SmbNamedPipe.PIPE_TYPE_RDWR );
  * </pre></td><td>

@@ -22,8 +22,11 @@ import java.util.Map;
 import jcifs.DfsReferralData;
 
 /**
- * @author mbechler
+ * Internal interface for DFS referral data with extended functionality.
+ * Extends the public DFS referral data interface with internal operations like
+ * hostname resolution and referral data manipulation for internal DFS management.
  *
+ * @author mbechler
  */
 public interface DfsReferralDataInternal extends DfsReferralData {
 

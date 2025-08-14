@@ -25,8 +25,8 @@ import jcifs.util.Hexdump;
 import jcifs.util.Strings;
 
 /**
- *
- *
+ * NetBIOS name implementation.
+ * This class represents NetBIOS names used in SMB networking.
  */
 public class Name implements NetbiosName {
 

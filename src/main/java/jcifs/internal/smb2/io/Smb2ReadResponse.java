@@ -25,8 +25,12 @@ import jcifs.internal.util.SMBUtil;
 import jcifs.smb.NtStatus;
 
 /**
- * @author mbechler
+ * SMB2 Read response message.
  *
+ * This response contains the data that was read from the file
+ * along with information about the read operation.
+ *
+ * @author mbechler
  */
 public class Smb2ReadResponse extends ServerMessageBlock2Response {
 

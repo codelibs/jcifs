@@ -24,7 +24,8 @@ import java.util.Map;
  * This is an internal API for resolving SIDs to names and/or retrieving member SIDs
  *
  * @author mbechler
- * @internal
+ *
+ * <p>This interface is intended for internal use.</p>
  */
 public interface SidResolver {
 
@@ -45,7 +46,7 @@ public interface SidResolver {
      *            authority.
      * @param sids
      *            The SIDs that should be resolved. After this function is called, the names associated with the SIDs
-     *            may be queried with the <tt>toDisplayString</tt>, <tt>getDomainName</tt>, and <tt>getAccountName</tt>
+     *            may be queried with the <code>toDisplayString</code>, <code>getDomainName</code>, and <code>getAccountName</code>
      *            methods.
      * @throws CIFSException
      */
@@ -87,12 +88,12 @@ public interface SidResolver {
      * target server where keys are SIDs representing an account and each value
      * is an ArrayList of SIDs represents the local groups that the account is
      * a member of.
-     * <p/>
+     *
      * This method is designed to assist with computing access control for a
      * given user when the target object's ACL has local groups. Local groups
      * are not listed in a user's group membership (e.g. as represented by the
      * tokenGroups constructed attribute retrieved via LDAP).
-     * <p/>
+     *
      * Domain groups nested inside a local group are currently not expanded. In
      * this case the key (SID) type will be SID_TYPE_DOM_GRP rather than
      * SID_TYPE_USER.

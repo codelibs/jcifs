@@ -16,7 +16,6 @@
  */
 package jcifs.pac.kerberos;
 
-@SuppressWarnings("javadoc")
 public interface KerberosConstants {
 
     String KERBEROS_OID = "1.2.840.113554.1.2.2";

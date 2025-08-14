@@ -18,7 +18,6 @@ package jcifs.pac;
 
 import jcifs.CIFSException;
 
-@SuppressWarnings("javadoc")
 public class PACDecodingException extends CIFSException {
 
     private static final long serialVersionUID = 1L;

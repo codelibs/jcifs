@@ -52,7 +52,6 @@ import jcifs.pac.ASN1Util;
 import jcifs.pac.PACDecodingException;
 import jcifs.util.Encdec;
 
-@SuppressWarnings("javadoc")
 public class KerberosEncData {
 
     private String userRealm;

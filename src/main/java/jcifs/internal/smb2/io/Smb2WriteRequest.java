@@ -25,8 +25,12 @@ import jcifs.internal.smb2.Smb2Constants;
 import jcifs.internal.util.SMBUtil;
 
 /**
- * @author mbechler
+ * SMB2 Write request message.
  *
+ * This command is used to write data to a file that has been
+ * previously opened with a Create request.
+ *
+ * @author mbechler
  */
 public class Smb2WriteRequest extends ServerMessageBlock2Request<Smb2WriteResponse> implements RequestWithFileId {
 

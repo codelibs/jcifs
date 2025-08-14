@@ -25,7 +25,8 @@ import jcifs.internal.Request;
 
 /**
  * @author mbechler
- * @internal
+ *
+ * <p>This interface is intended for internal use.</p>
  */
 public interface SmbTreeInternal extends SmbTree {
 

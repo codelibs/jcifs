@@ -21,6 +21,9 @@ import jcifs.Encodable;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * SMB2 SRV_COPYCHUNK data structure. This structure represents a single chunk specification
+ * for server-side copy operations.
+ *
  * @author mbechler
  *
  */

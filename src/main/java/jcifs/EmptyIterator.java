@@ -18,8 +18,10 @@
 package jcifs;
 
 /**
- * @author mbechler
+ * An empty iterator implementation for SMB resources.
+ * This iterator contains no elements and immediately returns false for hasNext().
  *
+ * @author mbechler
  */
 public class EmptyIterator implements CloseableIterator<SmbResource> {
 

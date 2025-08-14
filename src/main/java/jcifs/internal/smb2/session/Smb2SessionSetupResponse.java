@@ -25,6 +25,9 @@ import jcifs.internal.util.SMBUtil;
 import jcifs.smb.NtStatus;
 
 /**
+ * SMB2 Session Setup response message. This response contains the server's authentication
+ * challenge or confirms successful session establishment.
+ *
  * @author mbechler
  *
  */

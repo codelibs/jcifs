@@ -22,8 +22,12 @@ import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import jcifs.CIFSException;
 
 /**
- * @author mbechler
+ * Security Support Provider (SSP) context.
  *
+ * This interface provides context for security support provider
+ * operations during SMB authentication.
+ *
+ * @author mbechler
  */
 public interface SSPContext {
 

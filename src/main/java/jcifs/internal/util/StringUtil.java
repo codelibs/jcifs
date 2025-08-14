@@ -19,7 +19,9 @@
 package jcifs.internal.util;
 
 /**
- *
+ * Utility class providing string manipulation methods for the jCIFS library.
+ * Contains helper methods for string operations, including backported JDK functionality
+ * for compatibility with older Java versions.
  */
 public final class StringUtil {
 

@@ -26,7 +26,9 @@ import jcifs.internal.util.SMBUtil;
 import jcifs.util.Strings;
 
 /**
- *
+ * Represents a DFS (Distributed File System) referral entry containing server redirection information.
+ * This class handles DFS referral responses that redirect clients to alternate servers for accessing
+ * distributed file system resources, supporting multiple DFS versions and referral types.
  */
 public class Referral implements Decodable {
 

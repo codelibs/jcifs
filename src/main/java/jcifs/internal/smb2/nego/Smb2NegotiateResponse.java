@@ -38,8 +38,12 @@ import jcifs.util.Hexdump;
 import jcifs.util.transport.Response;
 
 /**
- * @author mbechler
+ * SMB2 Negotiate Protocol response message.
  *
+ * This response contains the server's protocol capabilities,
+ * security mode, and negotiated dialect version.
+ *
+ * @author mbechler
  */
 public class Smb2NegotiateResponse extends ServerMessageBlock2Response implements SmbNegotiationResponse {
 

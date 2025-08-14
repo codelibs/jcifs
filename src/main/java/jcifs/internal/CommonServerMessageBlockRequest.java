@@ -20,8 +20,11 @@ package jcifs.internal;
 import jcifs.util.transport.Request;
 
 /**
- * @author mbechler
+ * Interface for SMB request messages sent from client to server.
+ * Extends the common SMB message block with request-specific functionality including
+ * asynchronous handling, message chaining, cancellation, and timeout management.
  *
+ * @author mbechler
  */
 public interface CommonServerMessageBlockRequest extends CommonServerMessageBlock, Request {
 

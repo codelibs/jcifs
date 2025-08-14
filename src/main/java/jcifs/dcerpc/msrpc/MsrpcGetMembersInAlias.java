@@ -18,7 +18,6 @@
 
 package jcifs.dcerpc.msrpc;
 
-@SuppressWarnings("javadoc")
 public class MsrpcGetMembersInAlias extends samr.SamrGetMembersInAlias {
 
     public MsrpcGetMembersInAlias(final SamrAliasHandle aliasHandle, final lsarpc.LsarSidArray sids) {

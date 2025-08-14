@@ -18,7 +18,6 @@
 
 package jcifs.smb;
 
-@SuppressWarnings("javadoc")
 public interface NtStatus {
 
     /*

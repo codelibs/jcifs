@@ -23,7 +23,6 @@ import javax.security.auth.kerberos.KerberosKey;
 import jcifs.pac.PACDecodingException;
 import jcifs.pac.Pac;
 
-@SuppressWarnings("javadoc")
 public class KerberosPacAuthData extends KerberosAuthData {
 
     private Pac pac;

@@ -27,8 +27,10 @@ import jcifs.Configuration;
 import jcifs.RuntimeCIFSException;
 
 /**
- * @author mbechler
+ * Utility class for string manipulation and conversion operations in the jCIFS library.
+ * Provides methods for encoding, decoding, and manipulating strings in SMB operations.
  *
+ * @author mbechler
  */
 public final class Strings {
 

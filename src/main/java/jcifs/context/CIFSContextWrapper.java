@@ -36,8 +36,10 @@ import jcifs.smb.SmbFile;
 import jcifs.smb.SmbNamedPipe;
 
 /**
- * @author mbechler
+ * A wrapper implementation of CIFSContext that delegates to another context.
+ * This class allows for context decoration and customization through delegation.
  *
+ * @author mbechler
  */
 public class CIFSContextWrapper implements CIFSContext {
 

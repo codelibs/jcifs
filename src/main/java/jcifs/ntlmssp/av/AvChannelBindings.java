@@ -18,8 +18,10 @@
 package jcifs.ntlmssp.av;
 
 /**
- * @author mbechler
+ * NTLMSSP AV pair representing channel binding information for enhanced security.
+ * Used to bind NTLM authentication to specific communication channels.
  *
+ * @author mbechler
  */
 public class AvChannelBindings extends AvPair {
 

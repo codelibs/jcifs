@@ -18,8 +18,10 @@
 package jcifs.util.transport;
 
 /**
- * @author mbechler
+ * Exception thrown when a request times out during SMB communication.
+ * Indicates that a request could not be completed within the specified timeout period.
  *
+ * @author mbechler
  */
 public class RequestTimeoutException extends TransportException {
 

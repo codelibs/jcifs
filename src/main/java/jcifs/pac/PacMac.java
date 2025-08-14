@@ -30,7 +30,6 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.security.auth.kerberos.KerberosKey;
 
-@SuppressWarnings("javadoc")
 public class PacMac {
 
     /**

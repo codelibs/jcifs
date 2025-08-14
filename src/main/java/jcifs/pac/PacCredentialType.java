@@ -21,7 +21,6 @@ package jcifs.pac;
  *
  * @author jbbugeau
  */
-@SuppressWarnings("javadoc")
 public class PacCredentialType {
 
     private static final int MINIMAL_BUFFER_SIZE = 32;

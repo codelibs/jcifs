@@ -23,8 +23,11 @@ import jcifs.Decodable;
 import jcifs.internal.util.SMBUtil;
 
 /**
- * @author mbechler
+ * DFS (Distributed File System) referral response buffer parser.
+ * Decodes server responses to DFS referral requests, extracting information about
+ * available DFS targets, path consumption details, and referral flags.
  *
+ * @author mbechler
  */
 public class DfsReferralResponseBuffer implements Decodable {
 

@@ -22,8 +22,12 @@ import jcifs.DfsReferralData;
 import jcifs.SmbResourceLocator;
 
 /**
- * @author mbechler
+ * Internal interface for SMB resource locators.
  *
+ * This interface provides internal methods for locating
+ * and resolving SMB resources.
+ *
+ * @author mbechler
  */
 public interface SmbResourceLocatorInternal extends SmbResourceLocator {
 

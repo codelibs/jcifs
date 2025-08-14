@@ -25,8 +25,9 @@ import jcifs.internal.smb1.trans.SmbComTransaction;
 import jcifs.internal.util.SMBUtil;
 
 /**
- *
- *
+ * SMB1 NetShareEnum request message for enumerating network shares on a server.
+ * This class implements the SMB1 transaction to retrieve a list of available shares
+ * from the target server, including share names, types, and descriptions.
  */
 public class NetShareEnum extends SmbComTransaction {
 

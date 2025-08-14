@@ -21,9 +21,11 @@ package jcifs.internal.smb1.trans;
 import jcifs.Configuration;
 
 /**
+ * SMB1 Transaction Wait Named Pipe request implementation.
+ * Implements the TRANS_WAIT_NAMED_PIPE transaction to wait for a named pipe
+ * to become available when the pipe server is busy or temporarily unavailable.
  *
  * @author mbechler
- *
  */
 public class TransWaitNamedPipe extends SmbComTransaction {
 

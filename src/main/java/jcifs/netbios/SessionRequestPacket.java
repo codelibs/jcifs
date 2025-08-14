@@ -25,7 +25,8 @@ import jcifs.Configuration;
 import jcifs.NetbiosName;
 
 /**
- *
+ * NetBIOS session request packet implementation.
+ * This packet is used to initiate NetBIOS session connections.
  */
 public class SessionRequestPacket extends SessionServicePacket {
 

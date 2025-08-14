@@ -24,7 +24,10 @@ import jcifs.internal.smb1.ServerMessageBlock;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * SMB1 Session Setup AndX Response message.
  *
+ * This response contains information about the established session,
+ * including native OS, LAN manager, and primary domain information.
  */
 public class SmbComSessionSetupAndXResponse extends AndXServerMessageBlock {
 

@@ -21,6 +21,9 @@ import jcifs.Encodable;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * SMB2 Validate Negotiate Info request data structure. This structure is used to validate
+ * that the negotiated SMB2 dialect matches what was originally negotiated.
+ *
  * @author mbechler
  *
  */

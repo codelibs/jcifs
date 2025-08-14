@@ -23,9 +23,11 @@ import jcifs.internal.smb1.trans.SmbComTransaction;
 import jcifs.internal.smb1.trans.SmbComTransactionResponse;
 
 /**
+ * SMB1 Trans2 Set File Information response implementation.
+ * Handles server responses to Trans2 set file information requests, used for
+ * modifying file attributes, timestamps, and other file metadata in SMB1 protocol.
  *
  * @author mbechler
- *
  */
 public class Trans2SetFileInformationResponse extends SmbComTransactionResponse {
 

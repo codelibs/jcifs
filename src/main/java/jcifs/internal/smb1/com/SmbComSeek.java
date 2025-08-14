@@ -23,8 +23,12 @@ import jcifs.internal.smb1.ServerMessageBlock;
 import jcifs.internal.util.SMBUtil;
 
 /**
- * @author mbechler
+ * SMB1 COM_SEEK command implementation.
  *
+ * This command changes the current file position pointer for a file.
+ * It allows seeking to different positions within an open file.
+ *
+ * @author mbechler
  */
 public class SmbComSeek extends ServerMessageBlock {
 

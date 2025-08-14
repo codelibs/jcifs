@@ -23,7 +23,10 @@ import jcifs.internal.smb1.AndXServerMessageBlock;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * SMB1 Read AndX Response message.
  *
+ * This response contains the data that was read from the file
+ * along with information about the read operation.
  */
 public class SmbComReadAndXResponse extends AndXServerMessageBlock {
 

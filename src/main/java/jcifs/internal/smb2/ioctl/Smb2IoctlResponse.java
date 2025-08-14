@@ -27,6 +27,9 @@ import jcifs.smb.NtStatus;
 import jcifs.smb.SmbException;
 
 /**
+ * SMB2 IOCTL response message. This response contains the result of a device control
+ * operation on the server.
+ *
  * @author mbechler
  *
  */

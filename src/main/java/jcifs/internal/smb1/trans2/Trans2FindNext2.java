@@ -24,7 +24,9 @@ import jcifs.internal.util.SMBUtil;
 import jcifs.util.Hexdump;
 
 /**
- *
+ * Trans2 FindNext2 request message for SMB1 directory enumeration continuation.
+ * This class implements the TRANS2_FIND_NEXT2 transaction to retrieve subsequent
+ * directory entries after a Trans2FindFirst2 request, supporting large directory listings.
  */
 public class Trans2FindNext2 extends SmbComTransaction {
 

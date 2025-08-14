@@ -24,8 +24,12 @@ import jcifs.CIFSException;
 import jcifs.Credentials;
 
 /**
- * @author mbechler
+ * Internal interface for SMB credentials.
  *
+ * This interface provides internal methods for managing
+ * and accessing SMB authentication credentials.
+ *
+ * @author mbechler
  */
 public interface CredentialsInternal extends Cloneable, Credentials {
 

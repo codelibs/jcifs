@@ -24,7 +24,8 @@ import jcifs.dcerpc.ndr.NdrException;
 import jcifs.dcerpc.ndr.NdrObject;
 
 /**
- *
+ * Abstract base class for DCE/RPC protocol messages.
+ * This class provides common functionality for all DCE/RPC message types.
  */
 public abstract class DcerpcMessage extends NdrObject implements DcerpcConstants {
 

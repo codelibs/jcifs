@@ -24,6 +24,8 @@ import jcifs.internal.smb2.Smb2Constants;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * SMB2 Logoff request message. This command is used to terminate an SMB2 session.
+ *
  * @author mbechler
  *
  */

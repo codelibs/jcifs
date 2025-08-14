@@ -24,6 +24,9 @@ import jcifs.internal.smb2.Smb2Constants;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * SMB2 Session Setup request message. This command is used to establish a security session
+ * and authenticate a user to the server.
+ *
  * @author mbechler
  *
  */

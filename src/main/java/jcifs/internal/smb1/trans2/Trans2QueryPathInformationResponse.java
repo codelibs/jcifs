@@ -29,7 +29,9 @@ import jcifs.internal.smb1.trans.SmbComTransaction;
 import jcifs.internal.smb1.trans.SmbComTransactionResponse;
 
 /**
- *
+ * Trans2 QueryPathInformation response message for file metadata queries.
+ * This class handles the response from a TRANS2_QUERY_PATH_INFORMATION request,
+ * returning various file information levels based on the requested information level.
  */
 public class Trans2QueryPathInformationResponse extends SmbComTransactionResponse {
 

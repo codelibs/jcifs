@@ -37,7 +37,6 @@ import org.bouncycastle.asn1.DEROctetString;
 import jcifs.pac.ASN1Util;
 import jcifs.pac.PACDecodingException;
 
-@SuppressWarnings("javadoc")
 public class KerberosTicket {
 
     private String serverPrincipalName;

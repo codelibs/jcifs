@@ -25,6 +25,9 @@ import jcifs.internal.smb2.Smb2Constants;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * SMB2 Lock request message. This command is used to request byte-range locks
+ * on portions of a file.
+ *
  * @author mbechler
  *
  */

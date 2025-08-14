@@ -24,8 +24,14 @@ import jcifs.SmbFileHandle;
 import jcifs.SmbPipeHandle;
 
 /**
+ * Internal interface for SMB pipe handle operations.
+ *
+ * This interface extends SmbPipeHandle with additional methods needed
+ * for internal pipe management and provides access to low-level pipe details.
+ *
  * @author mbechler
- * @internal
+ *
+ * <p>This interface is intended for internal use.</p>
  */
 public interface SmbPipeHandleInternal extends SmbPipeHandle {
 
@@ -51,8 +57,7 @@ public interface SmbPipeHandleInternal extends SmbPipeHandle {
     /**
      *
      * @return this pipe's output stream
-     * @throws SmbException
-     * @throws
+     * @throws CIFSException if an error occurs
      */
     @Override
     SmbPipeOutputStream getOutput() throws CIFSException;

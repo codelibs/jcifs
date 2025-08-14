@@ -20,8 +20,12 @@ package jcifs.spnego;
 import jcifs.CIFSException;
 
 /**
- * @author mbechler
+ * Exception thrown during SPNEGO authentication processing.
  *
+ * This exception indicates an error in SPNEGO token processing,
+ * negotiation, or authentication flow.
+ *
+ * @author mbechler
  */
 public class SpnegoException extends CIFSException {
 

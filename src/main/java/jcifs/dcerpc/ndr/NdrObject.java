@@ -19,7 +19,6 @@
 
 package jcifs.dcerpc.ndr;
 
-@SuppressWarnings("javadoc")
 public abstract class NdrObject {
 
     public abstract void encode(NdrBuffer dst) throws NdrException;

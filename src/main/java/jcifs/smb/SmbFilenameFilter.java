@@ -19,8 +19,10 @@
 package jcifs.smb;
 
 /**
+ * Filter interface for SMB filename filtering.
  *
- *
+ * This interface allows selective filtering of filenames
+ * when listing directory contents in SMB shares.
  */
 public interface SmbFilenameFilter {
 

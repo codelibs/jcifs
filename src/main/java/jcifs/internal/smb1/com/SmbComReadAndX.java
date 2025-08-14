@@ -24,7 +24,10 @@ import jcifs.internal.smb1.ServerMessageBlock;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * SMB1 Read AndX request message.
  *
+ * This command is used to read data from a file that has been
+ * previously opened with an Open command.
  */
 public class SmbComReadAndX extends AndXServerMessageBlock {
 

@@ -21,7 +21,8 @@ package jcifs.dcerpc;
 import jcifs.dcerpc.ndr.NdrBuffer;
 
 /**
- *
+ * Interface for providing security services for DCE/RPC communications.
+ * This interface abstracts authentication and encryption mechanisms.
  */
 public interface DcerpcSecurityProvider {
 

@@ -24,7 +24,10 @@ import org.slf4j.LoggerFactory;
 import jcifs.Configuration;
 
 /**
+ * SMB1 transaction subcommand for calling a named pipe.
  *
+ * This class implements the TRANS_CALL_NAMED_PIPE transaction which allows
+ * writing data to and reading data from a named pipe in a single operation.
  */
 public class TransCallNamedPipe extends SmbComTransaction {
 

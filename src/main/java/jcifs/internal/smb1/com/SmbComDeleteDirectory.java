@@ -22,7 +22,10 @@ import jcifs.Configuration;
 import jcifs.internal.smb1.ServerMessageBlock;
 
 /**
+ * SMB1 Delete Directory request message.
  *
+ * This command is used to delete a directory on the server.
+ * The directory must be empty before it can be deleted.
  */
 public class SmbComDeleteDirectory extends ServerMessageBlock {
 

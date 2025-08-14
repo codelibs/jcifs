@@ -27,7 +27,10 @@ import jcifs.internal.util.SMBUtil;
 import jcifs.util.Hexdump;
 
 /**
+ * Response for SMB1 COM_QUERY_INFORMATION command.
  *
+ * This response contains file attributes, size, and timestamps
+ * for the requested file or directory.
  */
 public class SmbComQueryInformationResponse extends ServerMessageBlock implements SmbBasicFileInfo {
 

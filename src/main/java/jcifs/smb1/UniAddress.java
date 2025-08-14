@@ -41,7 +41,7 @@ import jcifs.smb1.util.LogStream;
  * jCIFS name resolution properties can greatly affect the behavior of
  * the client and may be necessary for proper operation.
  * <p>
- * This class should be used in favor of <tt>InetAddress</tt> to resolve
+ * This class should be used in favor of {@code InetAddress} to resolve
  * hostnames on LANs and WANs that support a mixture of NetBIOS/WINS and
  * DNS resolvable hosts.
  */
@@ -237,8 +237,8 @@ public class UniAddress {
     }
 
     /**
-     * Lookup <tt>hostname</tt> and return it's <tt>UniAddress</tt>. If the
-     * <tt>possibleNTDomainOrWorkgroup</tt> parameter is <tt>true</tt> an
+     * Lookup <code>hostname</code> and return it's <code>UniAddress</code>. If the
+     * <code>possibleNTDomainOrWorkgroup</code> parameter is <code>true</code> an
      * addtional name query will be performed to locate a master browser.
      */
 
@@ -354,8 +354,8 @@ public class UniAddress {
     String calledName;
 
     /**
-     * Create a <tt>UniAddress</tt> by wrapping an <tt>InetAddress</tt> or
-     * <tt>NbtAddress</tt>.
+     * Create a <code>UniAddress</code> by wrapping an {@code InetAddress} or
+     * <code>NbtAddress</code>.
      */
 
     public UniAddress(final Object addr) {
@@ -375,8 +375,8 @@ public class UniAddress {
     }
 
     /**
-     * Compare two addresses for equality. Two <tt>UniAddress</tt>s are equal
-     * if they are both <tt>UniAddress</tt>' and refer to the same IP address.
+     * Compare two addresses for equality. Two <code>UniAddress</code>s are equal
+     * if they are both <code>UniAddress</code>' and refer to the same IP address.
      */
     @Override
     public boolean equals(final Object obj) {
@@ -390,7 +390,7 @@ public class UniAddress {
 
     /**
      * Guess first called name to try for session establishment. This
-     * method is used exclusively by the <tt>jcifs.smb1.smb1</tt> package.
+     * method is used exclusively by the <code>jcifs.smb1.smb1</code> package.
      */
 
     public String firstCalledName() {
@@ -416,7 +416,7 @@ public class UniAddress {
 
     /**
      * Guess next called name to try for session establishment. This
-     * method is used exclusively by the <tt>jcifs.smb1.smb1</tt> package.
+     * method is used exclusively by the <code>jcifs.smb1.smb1</code> package.
      */
 
     public String nextCalledName() {
@@ -431,7 +431,7 @@ public class UniAddress {
     }
 
     /**
-     * Return the underlying <tt>NbtAddress</tt> or <tt>InetAddress</tt>.
+     * Return the underlying <code>NbtAddress</code> or {@code InetAddress}.
      */
 
     public Object getAddress() {
@@ -462,7 +462,7 @@ public class UniAddress {
 
     /**
      * Return the a text representation of this address such as
-     * <tt>MYCOMPUTER/192.168.1.15</tt>.
+     * <code>MYCOMPUTER/192.168.1.15</code>.
      */
     @Override
     public String toString() {

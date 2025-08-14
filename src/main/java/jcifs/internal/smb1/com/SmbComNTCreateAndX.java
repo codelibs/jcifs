@@ -28,8 +28,10 @@ import jcifs.internal.util.SMBUtil;
 import jcifs.util.Hexdump;
 
 /**
+ * SMB1 NT Create AndX request message.
  *
- *
+ * This command is used to create or open a file with extended
+ * capabilities including security descriptors and oplock support.
  */
 public class SmbComNTCreateAndX extends AndXServerMessageBlock implements Request<SmbComNTCreateAndXResponse> {
 

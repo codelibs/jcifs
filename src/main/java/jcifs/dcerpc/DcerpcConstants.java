@@ -19,7 +19,6 @@
 
 package jcifs.dcerpc;
 
-@SuppressWarnings("javadoc")
 public interface DcerpcConstants {
 
     UUID DCERPC_UUID_SYNTAX_NDR = new UUID("8a885d04-1ceb-11c9-9fe8-08002b104860");

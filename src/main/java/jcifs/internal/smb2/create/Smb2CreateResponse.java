@@ -33,6 +33,9 @@ import jcifs.internal.util.SMBUtil;
 import jcifs.util.Hexdump;
 
 /**
+ * SMB2 Create response message. This response contains the file ID and attributes
+ * of the created or opened file or directory.
+ *
  * @author mbechler
  *
  */

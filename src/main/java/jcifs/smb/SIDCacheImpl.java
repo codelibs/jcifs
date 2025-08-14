@@ -46,7 +46,8 @@ import jcifs.dcerpc.msrpc.samr;
  * Internal use only: SID resolver cache
  *
  * @author mbechler
- * @internal
+ *
+ * <p>This class is intended for internal use.</p>
  */
 public class SIDCacheImpl implements SidResolver {
 
@@ -156,7 +157,7 @@ public class SIDCacheImpl implements SidResolver {
      *            The context that should be used to communicate with the named server.
      * @param sids
      *            The SIDs that should be resolved. After this function is called, the names associated with the SIDs
-     *            may be queried with the <tt>toDisplayString</tt>, <tt>getDomainName</tt>, and <tt>getAccountName</tt>
+     *            may be queried with the <code>toDisplayString</code>, <code>getDomainName</code>, and <code>getAccountName</code>
      *            methods.
      */
     @Override

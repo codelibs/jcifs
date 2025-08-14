@@ -28,8 +28,11 @@ import jcifs.DfsReferralData;
 import jcifs.internal.smb1.trans2.Trans2GetDfsReferralResponse;
 
 /**
- * @author mbechler
+ * Implementation of DFS referral data for internal use.
+ * Provides concrete implementation of DFS referral information including server details,
+ * share paths, expiration handling, and referral management for DFS path resolution.
  *
+ * @author mbechler
  */
 public class DfsReferralDataImpl implements DfsReferralDataInternal {
 

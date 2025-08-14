@@ -25,7 +25,6 @@ import java.util.Date;
 import jcifs.SmbConstants;
 import jcifs.smb.SID;
 
-@SuppressWarnings("javadoc")
 public class PacDataInputStream {
 
     private final DataInputStream dis;

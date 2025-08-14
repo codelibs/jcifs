@@ -21,7 +21,10 @@ package jcifs.internal.smb1.trans;
 import jcifs.Configuration;
 
 /**
+ * Response for SMB1 TRANS_WAIT_NAMED_PIPE transaction.
  *
+ * This response is received after waiting for a named pipe to become available
+ * for connection when the pipe server was busy.
  */
 public class TransWaitNamedPipeResponse extends SmbComTransactionResponse {
 

@@ -36,8 +36,8 @@ import jcifs.smb1.util.MD4;
 
 /**
  * This class stores and encrypts NTLM user credentials. The default
- * credentials are retrieved from the <tt>jcifs.smb1.smb1.client.domain</tt>,
- * <tt>jcifs.smb1.smb1.client.username</tt>, and <tt>jcifs.smb1.smb1.client.password</tt>
+ * credentials are retrieved from the {@code jcifs.smb1.smb1.client.domain},
+ * {@code jcifs.smb1.smb1.client.username}, and {@code jcifs.smb1.smb1.client.password}
  * properties.
  * <p>
  * Read <a href="../../../authhandler.html">jCIFS Exceptions and
@@ -273,8 +273,8 @@ public final class NtlmPasswordAuthentication implements Principal, Serializable
     byte[] challenge = null;
 
     /**
-     * Create an <tt>NtlmPasswordAuthentication</tt> object from the userinfo
-     * component of an SMB URL like "<tt>domain;user:pass</tt>". This constructor
+     * Create an {@code NtlmPasswordAuthentication} object from the userinfo
+     * component of an SMB URL like "{@code domain;user:pass}". This constructor
      * is used internally be jCIFS when parsing SMB URLs.
      */
 
@@ -316,10 +316,10 @@ public final class NtlmPasswordAuthentication implements Principal, Serializable
     }
 
     /**
-     * Create an <tt>NtlmPasswordAuthentication</tt> object from a
-     * domain, username, and password. Parameters that are <tt>null</tt>
-     * will be substituted with <tt>jcifs.smb1.smb1.client.domain</tt>,
-     * <tt>jcifs.smb1.smb1.client.username</tt>, <tt>jcifs.smb1.smb1.client.password</tt>
+     * Create an {@code NtlmPasswordAuthentication} object from a
+     * domain, username, and password. Parameters that are {@code null}
+     * will be substituted with {@code jcifs.smb1.smb1.client.domain},
+     * {@code jcifs.smb1.smb1.client.username}, {@code jcifs.smb1.smb1.client.password}
      * property values.
      */
     public NtlmPasswordAuthentication(String domain, String username, final String password) {
@@ -357,8 +357,8 @@ public final class NtlmPasswordAuthentication implements Principal, Serializable
     }
 
     /**
-     * Create an <tt>NtlmPasswordAuthentication</tt> object with raw password
-     * hashes. This is used exclusively by the <tt>jcifs.smb1.http.NtlmSsp</tt>
+     * Create an {@code NtlmPasswordAuthentication} object with raw password
+     * hashes. This is used exclusively by the {@code jcifs.smb1.http.NtlmSsp}
      * class which is in turn used by NTLM HTTP authentication functionality.
      */
     public NtlmPasswordAuthentication(final String domain, final String username, final byte[] challenge, final byte[] ansiHash,
@@ -390,8 +390,8 @@ public final class NtlmPasswordAuthentication implements Principal, Serializable
     }
 
     /**
-     * Returns the password in plain text or <tt>null</tt> if the raw password
-     * hashes were used to construct this <tt>NtlmPasswordAuthentication</tt>
+     * Returns the password in plain text or {@code null} if the raw password
+     * hashes were used to construct this {@code NtlmPasswordAuthentication}
      * object which will be the case when NTLM HTTP Authentication is
      * used. There is no way to retrieve a users password in plain text unless
      * it is supplied by the user at runtime.
@@ -402,7 +402,7 @@ public final class NtlmPasswordAuthentication implements Principal, Serializable
 
     /**
      * Return the domain and username in the format:
-     * <tt>domain\\username</tt>. This is equivalent to <tt>toString()</tt>.
+     * {@code domain\\username}. This is equivalent to {@code toString()}.
      */
     @Override
     public String getName() {
@@ -553,9 +553,9 @@ public final class NtlmPasswordAuthentication implements Principal, Serializable
     }
 
     /**
-     * Compares two <tt>NtlmPasswordAuthentication</tt> objects for
-     * equality. Two <tt>NtlmPasswordAuthentication</tt> objects are equal if
-     * their caseless domain and username fields are equal and either both hashes are external and they are equal or both internally supplied passwords are equal. If one <tt>NtlmPasswordAuthentication</tt> object has external hashes (meaning negotiated via NTLM HTTP Authentication) and the other does not they will not be equal. This is technically not correct however the server 8 byte challage would be required to compute and compare the password hashes but that it not available with this method.
+     * Compares two {@code NtlmPasswordAuthentication} objects for
+     * equality. Two {@code NtlmPasswordAuthentication} objects are equal if
+     * their caseless domain and username fields are equal and either both hashes are external and they are equal or both internally supplied passwords are equal. If one {@code NtlmPasswordAuthentication} object has external hashes (meaning negotiated via NTLM HTTP Authentication) and the other does not they will not be equal. This is technically not correct however the server 8 byte challage would be required to compute and compare the password hashes but that it not available with this method.
      */
     @Override
     public boolean equals(final Object obj) {
@@ -586,7 +586,7 @@ public final class NtlmPasswordAuthentication implements Principal, Serializable
 
     /**
      * Return the domain and username in the format:
-     * <tt>domain\\username</tt>. This is equivalent to <tt>getName()</tt>.
+     * {@code domain\\username}. This is equivalent to {@code getName()}.
      */
     @Override
     public String toString() {

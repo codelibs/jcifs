@@ -24,7 +24,10 @@ import jcifs.internal.smb1.AndXServerMessageBlock;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * SMB1 Open AndX Response message.
  *
+ * This response contains information about the opened file,
+ * including file ID, attributes, size, and access permissions.
  */
 public class SmbComOpenAndXResponse extends AndXServerMessageBlock implements SmbBasicFileInfo {
 

@@ -19,7 +19,6 @@
 
 package jcifs.dcerpc.ndr;
 
-@SuppressWarnings("javadoc")
 public class NdrSmall extends NdrObject {
 
     public int value;

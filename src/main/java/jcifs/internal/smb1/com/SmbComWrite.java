@@ -23,7 +23,10 @@ import jcifs.internal.smb1.ServerMessageBlock;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * SMB1 COM_WRITE command implementation.
  *
+ * This command writes data to an open file on the server.
+ * It's the basic write operation in the SMB1 protocol.
  */
 public class SmbComWrite extends ServerMessageBlock {
 

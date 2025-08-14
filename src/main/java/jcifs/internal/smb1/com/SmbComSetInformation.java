@@ -23,9 +23,11 @@ import jcifs.internal.smb1.ServerMessageBlock;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * SMB1 COM_SET_INFORMATION command implementation.
+ *
+ * This command sets file attributes and last write time for a file or directory.
  *
  * @author mbechler
- *
  */
 public class SmbComSetInformation extends ServerMessageBlock {
 

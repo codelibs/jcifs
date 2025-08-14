@@ -40,14 +40,13 @@ import jcifs.context.SingletonContext;
  * witch is initialized using system properties.
  *
  */
-@SuppressWarnings("javadoc")
 public class Config {
 
     private static final Logger log = LoggerFactory.getLogger(Config.class);
 
     /**
      * This static method registers the SMB URL protocol handler which is
-     * required to use SMB URLs with the <tt>java.net.URL</tt> class. If this
+     * required to use SMB URLs with the <code>java.net.URL</code> class. If this
      * method is not called before attempting to create an SMB URL with the
      * URL class the following exception will occur:
      * <blockquote>
@@ -60,8 +59,7 @@ public class Config {
      *     at jcifs.smb.SmbFile.&lt;init&gt;(SmbFile.java:355)
      *     ...
      * </pre>
-     *
-     * <blockquote>
+     * </blockquote>
      */
     public static void registerSmbURLHandler() {
         SingletonContext.registerSmbURLHandler();
@@ -160,8 +158,8 @@ public class Config {
     }
 
     /**
-     * Retrieve an array of <tt>InetAddress</tt> created from a property
-     * value containing a <tt>delim</tt> separated list of host names and/or
+     * Retrieve an array of <code>InetAddress</code> created from a property
+     * value containing a <code>delim</code> separated list of host names and/or
      * ip addresses.
      */
     public static InetAddress[] getInetAddressArray(final Properties props, final String key, final String delim, final InetAddress[] def) {

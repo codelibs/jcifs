@@ -22,7 +22,10 @@ import jcifs.Configuration;
 import jcifs.internal.smb1.ServerMessageBlock;
 
 /**
+ * SMB1 blank response message.
  *
+ * This is a generic response message for SMB commands that don't
+ * return specific data in their response.
  */
 public class SmbComBlankResponse extends ServerMessageBlock {
 

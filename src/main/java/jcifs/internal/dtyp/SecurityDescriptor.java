@@ -27,7 +27,8 @@ import jcifs.smb.SID;
 /**
  * Internal use only
  *
- * @internal
+ *
+ * <p>This class is intended for internal use.</p>
  */
 public class SecurityDescriptor implements SecurityInfo {
 

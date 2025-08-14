@@ -64,16 +64,16 @@ import jcifs.util.Strings;
  * to referencing files and directories, jCIFS can also address servers,
  * and workgroups.
  * <p>
- * <font color="#800000"><i>Important: all SMB URLs that represent
+ * <strong><i>Important: all SMB URLs that represent
  * workgroups, servers, shares, or directories require a trailing slash '/'.
- * </i></font>
+ * </i></strong>
  * <p>
- * When using the <tt>java.net.URL</tt> class with
+ * When using the {@code java.net.URL} class with
  * 'smb1://' URLs it is necessary to first call the static
- * <tt>jcifs.smb1.Config.registerSmbURLHandler();</tt> method. This is required
+ * {@code jcifs.smb1.Config.registerSmbURLHandler();} method. This is required
  * to register the SMB protocol handler.
  * <p>
- * The userinfo component of the SMB URL (<tt>domain;user:pass</tt>) must
+ * The userinfo component of the SMB URL ({@code domain;user:pass}) must
  * be URL encoded if it contains reserved characters. According to RFC 2396
  * these characters are non US-ASCII characters and most meta characters
  * however jCIFS will work correctly with anything but '@' which is used
@@ -94,31 +94,32 @@ import jcifs.util.Strings;
  * <p>[1] This URL scheme is based largely on the <i>SMB
  * Filesharing URL Scheme</i> IETF draft.
  *
- * <p><table border="1" cellpadding="3" cellspacing="0" width="100%">
- * <tr bgcolor="#ccccff">
+ * <table border="1">
+ * <caption>SMB URL Examples</caption>
+ * <tr>
  * <td colspan="2"><b>SMB URL Examples</b></td>
- * <tr><td width="20%"><b>URL</b></td><td><b>Description</b></td></tr>
+ * <tr><td ><b>URL</b></td><td><b>Description</b></td></tr>
  *
- * <tr><td width="20%"><code>smb1://users-nyc;miallen:mypass@angus/tmp/</code></td><td>
+ * <tr><td ><code>smb1://users-nyc;miallen:mypass@angus/tmp/</code></td><td>
  * This URL references a share called <code>tmp</code> on the server
  * <code>angus</code> as user <code>miallen</code> who's password is
  * <code>mypass</code>.
  * </td></tr>
  *
- * <tr><td width="20%">
+ * <tr><td >
  * <code>smb1://Administrator:P%40ss@msmith1/c/WINDOWS/Desktop/foo.txt</code></td><td>
  * A relativly sophisticated example that references a file
  * <code>msmith1</code>'s desktop as user <code>Administrator</code>. Notice the '@' is URL encoded with the '%40' hexcode escape.
  * </td></tr>
  *
- * <tr><td width="20%"><code>smb1://angus/</code></td><td>
+ * <tr><td ><code>smb1://angus/</code></td><td>
  * This references only a server. The behavior of some methods is different
  * in this context(e.g. you cannot <code>delete</code> a server) however
  * as you might expect the <code>list</code> method will list the available
  * shares on this server.
  * </td></tr>
  *
- * <tr><td width="20%"><code>smb1://myworkgroup/</code></td><td>
+ * <tr><td ><code>smb1://myworkgroup/</code></td><td>
  * This syntactically is identical to the above example. However if
  * <code>myworkgroup</code> happends to be a workgroup(which is indeed
  * suggested by the name) the <code>list</code> method will return
@@ -126,7 +127,7 @@ import jcifs.util.Strings;
  * <code>myworkgroup</code>.
  * </td></tr>
  *
- * <tr><td width="20%"><code>smb1://</code></td><td>
+ * <tr><td ><code>smb1://</code></td><td>
  * Just as <code>smb1://server/</code> lists shares and
  * <code>smb1://workgroup/</code> lists servers, the <code>smb1://</code>
  * URL lists all available workgroups on a netbios LAN. Again,
@@ -134,34 +135,34 @@ import jcifs.util.Strings;
  * values(e.g. <code>isHidden</code> will always return false).
  * </td></tr>
  *
- * <tr><td width="20%"><code>smb1://angus.foo.net/d/jcifs/smb1/pipes.doc</code></td><td>
+ * <tr><td ><code>smb1://angus.foo.net/d/jcifs/smb1/pipes.doc</code></td><td>
  * The server name may also be a DNS name as it is in this example. See
  * <a href="../../../resolver.html">Setting Name Resolution Properties</a>
  * for details.
  * </td></tr>
  *
- * <tr><td width="20%"><code>smb1://192.168.1.15/ADMIN$/</code></td><td>
+ * <tr><td ><code>smb1://192.168.1.15/ADMIN$/</code></td><td>
  * The server name may also be an IP address. See <a
  * href="../../../resolver.html">Setting Name Resolution Properties</a>
  * for details.
  * </td></tr>
  *
- * <tr><td width="20%">
+ * <tr><td >
  * <code>smb1://domain;username:password@server/share/path/to/file.txt</code></td><td>
  * A prototypical example that uses all the fields.
  * </td></tr>
  *
- * <tr><td width="20%"><code>smb1://myworkgroup/angus/ &lt;-- ILLEGAL </code></td><td>
+ * <tr><td ><code>smb1://myworkgroup/angus/ &lt;-- ILLEGAL </code></td><td>
  * Despite the hierarchial relationship between workgroups, servers, and
  * filesystems this example is not valid.
  * </td></tr>
  *
- * <tr><td width="20%">
+ * <tr><td >
  * <code>smb1://server/share/path/to/dir &lt;-- ILLEGAL </code></td><td>
  * URLs that represent workgroups, servers, shares, or directories require a trailing slash '/'.
  * </td></tr>
  *
- * <tr><td width="20%">
+ * <tr><td >
  * <code>smb1://MYGROUP/?SERVER=192.168.10.15</code></td><td>
  * SMB URLs support some query string parameters. In this example
  * the <code>SERVER</code> parameter is used to override the
@@ -180,83 +181,84 @@ import jcifs.util.Strings;
  * examples below illustrate the resulting URLs when this second contructor
  * argument is used.
  *
- * <p><table border="1" cellpadding="3" cellspacing="0" width="100%">
- * <tr bgcolor="#ccccff">
+ * <table border="1">
+ * <caption>Examples Of SMB URLs When Augmented With A Second Constructor Parameter</caption>
+ * <tr>
  * <td colspan="3">
  * <b>Examples Of SMB URLs When Augmented With A Second Constructor Parameter</b></td>
- * <tr><td width="20%">
+ * <tr><td >
  * <b>First Parameter</b></td><td><b>Second Parameter</b></td><td><b>Result</b></td></tr>
  *
- * <tr><td width="20%"><code>
+ * <tr><td ><code>
  *  smb1://host/share/a/b/
- * </code></td><td width="20%"><code>
+ * </code></td><td ><code>
  *  c/d/
  * </code></td><td><code>
  *  smb1://host/share/a/b/c/d/
  * </code></td></tr>
  *
- * <tr><td width="20%"><code>
+ * <tr><td ><code>
  *  smb1://host/share/foo/bar/
- * </code></td><td width="20%"><code>
+ * </code></td><td ><code>
  *  /share2/zig/zag
  * </code></td><td><code>
  *  smb1://host/share2/zig/zag
  * </code></td></tr>
  *
- * <tr><td width="20%"><code>
+ * <tr><td ><code>
  *  smb1://host/share/foo/bar/
- * </code></td><td width="20%"><code>
+ * </code></td><td ><code>
  *  ../zip/
  * </code></td><td><code>
  *  smb1://host/share/foo/zip/
  * </code></td></tr>
  *
- * <tr><td width="20%"><code>
+ * <tr><td ><code>
  *  smb1://host/share/zig/zag
- * </code></td><td width="20%"><code>
+ * </code></td><td ><code>
  *  smb1://foo/bar/
  * </code></td><td><code>
  *  smb1://foo/bar/
  * </code></td></tr>
  *
- * <tr><td width="20%"><code>
+ * <tr><td ><code>
  *  smb1://host/share/foo/
- * </code></td><td width="20%"><code>
+ * </code></td><td ><code>
  *  ../.././.././../foo/
  * </code></td><td><code>
  *  smb1://host/foo/
  * </code></td></tr>
  *
- * <tr><td width="20%"><code>
+ * <tr><td ><code>
  *  smb1://host/share/zig/zag
- * </code></td><td width="20%"><code>
+ * </code></td><td ><code>
  *  /
  * </code></td><td><code>
  *  smb1://host/
  * </code></td></tr>
  *
- * <tr><td width="20%"><code>
+ * <tr><td ><code>
  *  smb1://server/
- * </code></td><td width="20%"><code>
+ * </code></td><td ><code>
  *  ../
  * </code></td><td><code>
  *  smb1://server/
  * </code></td></tr>
  *
- * <tr><td width="20%"><code>
+ * <tr><td ><code>
  *  smb1://
- * </code></td><td width="20%"><code>
+ * </code></td><td ><code>
  *  myworkgroup/
  * </code></td><td><code>
  *  smb1://myworkgroup/
  * </code></td></tr>
  *
- * <tr><td width="20%"><code>
+ * <tr><td ><code>
  *  smb1://myworkgroup/
- * </code></td><td width="20%"><code>
+ * </code></td><td ><code>
  *  angus/
  * </code></td><td><code>
- *  smb1://myworkgroup/angus/ &lt;-- ILLEGAL<br>(But if you first create an <tt>SmbFile</tt> with 'smb1://workgroup/' and use and use it as the first parameter to a constructor that accepts it with a second <tt>String</tt> parameter jCIFS will factor out the 'workgroup'.)
+ *  smb1://myworkgroup/angus/ &lt;-- ILLEGAL<br>(But if you first create an SmbFile with 'smb1://workgroup/' and use it as the first parameter to a constructor that accepts it with a second String parameter jCIFS will factor out the 'workgroup'.)
  * </code></td></tr>
  *
  * </table>
@@ -285,28 +287,28 @@ public class SmbFile extends URLConnection implements SmbConstants {
 
     // share access
     /**
-     * When specified as the <tt>shareAccess</tt> constructor parameter,
+     * When specified as the {@code shareAccess} constructor parameter,
      * other SMB clients (including other threads making calls into jCIFS)
      * will not be permitted to access the target file and will receive "The
      * file is being accessed by another process" message.
      */
     public static final int FILE_NO_SHARE = 0x00;
     /**
-     * When specified as the <tt>shareAccess</tt> constructor parameter,
+     * When specified as the {@code shareAccess} constructor parameter,
      * other SMB clients will be permitted to read from the target file while
      * this file is open. This constant may be logically OR'd with other share
      * access flags.
      */
     public static final int FILE_SHARE_READ = 0x01;
     /**
-     * When specified as the <tt>shareAccess</tt> constructor parameter,
+     * When specified as the {@code shareAccess} constructor parameter,
      * other SMB clients will be permitted to write to the target file while
      * this file is open. This constant may be logically OR'd with other share
      * access flags.
      */
     public static final int FILE_SHARE_WRITE = 0x02;
     /**
-     * When specified as the <tt>shareAccess</tt> constructor parameter,
+     * When specified as the {@code shareAccess} constructor parameter,
      * other SMB clients will be permitted to delete the target file while
      * this file is open. This constant may be logically OR'd with other share
      * access flags.
@@ -315,33 +317,33 @@ public class SmbFile extends URLConnection implements SmbConstants {
 
     // file attribute encoding
     /**
-     * A file with this bit on as returned by <tt>getAttributes()</tt> or set
-     * with <tt>setAttributes()</tt> will be read-only
+     * A file with this bit on as returned by {@code getAttributes()} or set
+     * with {@code setAttributes()} will be read-only
      */
     public static final int ATTR_READONLY = 0x01;
     /**
-     * A file with this bit on as returned by <tt>getAttributes()</tt> or set
-     * with <tt>setAttributes()</tt> will be hidden
+     * A file with this bit on as returned by {@code getAttributes()} or set
+     * with {@code setAttributes()} will be hidden
      */
     public static final int ATTR_HIDDEN = 0x02;
     /**
-     * A file with this bit on as returned by <tt>getAttributes()</tt> or set
-     * with <tt>setAttributes()</tt> will be a system file
+     * A file with this bit on as returned by {@code getAttributes()} or set
+     * with {@code setAttributes()} will be a system file
      */
     public static final int ATTR_SYSTEM = 0x04;
     /**
-     * A file with this bit on as returned by <tt>getAttributes()</tt> is
+     * A file with this bit on as returned by {@code getAttributes()} is
      * a volume
      */
     public static final int ATTR_VOLUME = 0x08;
     /**
-     * A file with this bit on as returned by <tt>getAttributes()</tt> is
+     * A file with this bit on as returned by {@code getAttributes()} is
      * a directory
      */
     public static final int ATTR_DIRECTORY = 0x10;
     /**
-     * A file with this bit on as returned by <tt>getAttributes()</tt> or set
-     * with <tt>setAttributes()</tt> is an archived file
+     * A file with this bit on as returned by {@code getAttributes()} or set
+     * with {@code setAttributes()} is an archived file
      */
     public static final int ATTR_ARCHIVE = 0x20;
 
@@ -375,37 +377,37 @@ public class SmbFile extends URLConnection implements SmbConstants {
     }
 
     /**
-     * Returned by {@link #getType()} if the resource this <tt>SmbFile</tt>
+     * Returned by {@link #getType()} if the resource this {@code SmbFile}
      * represents is a regular file or directory.
      */
     public static final int TYPE_FILESYSTEM = 0x01;
     /**
-     * Returned by {@link #getType()} if the resource this <tt>SmbFile</tt>
+     * Returned by {@link #getType()} if the resource this {@code SmbFile}
      * represents is a workgroup.
      */
     public static final int TYPE_WORKGROUP = 0x02;
     /**
-     * Returned by {@link #getType()} if the resource this <tt>SmbFile</tt>
+     * Returned by {@link #getType()} if the resource this {@code SmbFile}
      * represents is a server.
      */
     public static final int TYPE_SERVER = 0x04;
     /**
-     * Returned by {@link #getType()} if the resource this <tt>SmbFile</tt>
+     * Returned by {@link #getType()} if the resource this {@code SmbFile}
      * represents is a share.
      */
     public static final int TYPE_SHARE = 0x08;
     /**
-     * Returned by {@link #getType()} if the resource this <tt>SmbFile</tt>
+     * Returned by {@link #getType()} if the resource this {@code SmbFile}
      * represents is a named pipe.
      */
     public static final int TYPE_NAMED_PIPE = 0x10;
     /**
-     * Returned by {@link #getType()} if the resource this <tt>SmbFile</tt>
+     * Returned by {@link #getType()} if the resource this {@code SmbFile}
      * represents is a printer.
      */
     public static final int TYPE_PRINTER = 0x20;
     /**
-     * Returned by {@link #getType()} if the resource this <tt>SmbFile</tt>
+     * Returned by {@link #getType()} if the resource this {@code SmbFile}
      * represents is a communications device.
      */
     public static final int TYPE_COMM = 0x40;
@@ -459,7 +461,7 @@ public class SmbFile extends URLConnection implements SmbConstants {
      *          If the <code>parent</code> and <code>child</code> parameters
      *          do not follow the prescribed syntax
      * @throws  UnknownHostException
-     *          If the server or workgroup of the <tt>context</tt> file cannot be determined
+     *          If the server or workgroup of the {@code context} file cannot be determined
      */
 
     public SmbFile(final SmbFile context, final String name) throws MalformedURLException, UnknownHostException {
@@ -499,11 +501,11 @@ public class SmbFile extends URLConnection implements SmbConstants {
 
     /**
      * Constructs an SmbFile representing a file on an SMB network. The
-     * <tt>shareAccess</tt> parameter controls what permissions other
+     * {@code shareAccess} parameter controls what permissions other
      * clients have when trying to access the same file while this instance
-     * is still open. This value is either <tt>FILE_NO_SHARE</tt> or any
-     * combination of <tt>FILE_SHARE_READ</tt>, <tt>FILE_SHARE_WRITE</tt>,
-     * and <tt>FILE_SHARE_DELETE</tt> logically OR'd together.
+     * is still open. This value is either {@code FILE_NO_SHARE} or any
+     * combination of {@code FILE_SHARE_READ}, {@code FILE_SHARE_WRITE},
+     * and {@code FILE_SHARE_DELETE} logically OR'd together.
      *
      * @param   url A URL string
      * @param   auth The credentials the client should use for authentication
@@ -540,12 +542,12 @@ public class SmbFile extends URLConnection implements SmbConstants {
      * Constructs an SmbFile representing a resource on an SMB network such
      * as a file or directory. The second parameter is a relative path from
      * the <code>context</code>. See the description above for examples of
-     * using the second <code>name</code> parameter. The <tt>shareAccess</tt>
+     * using the second <code>name</code> parameter. The {@code shareAccess}
      * parameter controls what permissions other clients have when trying
      * to access the same file while this instance is still open. This
-     * value is either <tt>FILE_NO_SHARE</tt> or any combination
-     * of <tt>FILE_SHARE_READ</tt>, <tt>FILE_SHARE_WRITE</tt>, and
-     * <tt>FILE_SHARE_DELETE</tt> logically OR'd together.
+     * value is either {@code FILE_NO_SHARE} or any combination
+     * of {@code FILE_SHARE_READ}, {@code FILE_SHARE_WRITE}, and
+     * {@code FILE_SHARE_DELETE} logically OR'd together.
      *
      * @param   context A URL string
      * @param   name A path string relative to the <code>context</code> paremeter
@@ -568,12 +570,12 @@ public class SmbFile extends URLConnection implements SmbConstants {
      * Constructs an SmbFile representing a resource on an SMB network such
      * as a file or directory. The second parameter is a relative path from
      * the <code>context</code>. See the description above for examples of
-     * using the second <code>name</code> parameter. The <tt>shareAccess</tt>
+     * using the second <code>name</code> parameter. The {@code shareAccess}
      * parameter controls what permissions other clients have when trying
      * to access the same file while this instance is still open. This
-     * value is either <tt>FILE_NO_SHARE</tt> or any combination
-     * of <tt>FILE_SHARE_READ</tt>, <tt>FILE_SHARE_WRITE</tt>, and
-     * <tt>FILE_SHARE_DELETE</tt> logically OR'd together.
+     * value is either {@code FILE_NO_SHARE} or any combination
+     * of {@code FILE_SHARE_READ}, {@code FILE_SHARE_WRITE}, and
+     * {@code FILE_SHARE_DELETE} logically OR'd together.
      *
      * @param   context A base <code>SmbFile</code>
      * @param   name A path string relative to the <code>context</code> file path
@@ -593,7 +595,7 @@ public class SmbFile extends URLConnection implements SmbConstants {
 
     /**
      * Constructs an SmbFile representing a resource on an SMB network such
-     * as a file or directory from a <tt>URL</tt> object.
+     * as a file or directory from a {@code URL} object.
      *
      * @param   url The URL of the target resource
      */
@@ -603,8 +605,8 @@ public class SmbFile extends URLConnection implements SmbConstants {
 
     /**
      * Constructs an SmbFile representing a resource on an SMB network such
-     * as a file or directory from a <tt>URL</tt> object and an
-     * <tt>NtlmPasswordAuthentication</tt> object.
+     * as a file or directory from a {@code URL} object and an
+     * {@code NtlmPasswordAuthentication} object.
      *
      * @param   url The URL of the target resource
      * @param   auth The credentials the client should use for authentication
@@ -933,7 +935,7 @@ public class SmbFile extends URLConnection implements SmbConstants {
 
     /**
      * It is not necessary to call this method directly. This is the
-     * <tt>URLConnection</tt> implementation of <tt>connect()</tt>.
+     * {@code URLConnection} implementation of {@code connect()}.
      */
     @Override
     public void connect() throws IOException {
@@ -1045,14 +1047,14 @@ public class SmbFile extends URLConnection implements SmbConstants {
     }
 
     /**
-     * Returns the <tt>NtlmPasswordAuthentication</tt> object used as
+     * Returns the {@code NtlmPasswordAuthentication} object used as
      * credentials with this file or pipe. This can be used to retrieve the
      * username for example:
-     * <tt>
+     * {@code
      * String username = f.getPrincipal().getName();
-     * </tt>
-     * The <tt>Principal</tt> object returned will never be <tt>null</tt>
-     * however the username can be <tt>null</tt> indication anonymous
+     * }
+     * The {@code Principal} object returned will never be {@code null}
+     * however the username can be {@code null} indication anonymous
      * credentials were used (e.g. some IPC$ services).
      */
 
@@ -1066,9 +1068,9 @@ public class SmbFile extends URLConnection implements SmbConstants {
      * <code>SmbFile</code> or in the case of URLs that only specify a server
      * or workgroup, the server or workgroup will be returned. The name of
      * the root URL <code>smb1://</code> is also <code>smb1://</code>. If this
-     * <tt>SmbFile</tt> refers to a workgroup, server, share, or directory,
+     * {@code SmbFile} refers to a workgroup, server, share, or directory,
      * the name will include a trailing slash '/' so that composing new
-     * <tt>SmbFile</tt>s will maintain the trailing slash requirement.
+     * {@code SmbFile}s will maintain the trailing slash requirement.
      *
      * @return  The last component of the URL associated with this SMB
      *          resource or <code>smb1://</code> if the resource is <code>smb1://</code>
@@ -1286,9 +1288,9 @@ public class SmbFile extends URLConnection implements SmbConstants {
     }
 
     /**
-     * Returns type of of object this <tt>SmbFile</tt> represents.
-     * @return <tt>TYPE_FILESYSTEM, TYPE_WORKGROUP, TYPE_SERVER, TYPE_SHARE,
-     * TYPE_PRINTER, TYPE_NAMED_PIPE</tt>, or <tt>TYPE_COMM</tt>.
+     * Returns type of of object this {@code SmbFile} represents.
+     * @return {@code TYPE_FILESYSTEM, TYPE_WORKGROUP, TYPE_SERVER, TYPE_SHARE,
+     * TYPE_PRINTER, TYPE_NAMED_PIPE}, or {@code TYPE_COMM}.
      */
     public int getType() throws SmbException {
         if (type == 0) {
@@ -1698,7 +1700,7 @@ public class SmbFile extends URLConnection implements SmbConstants {
      * method minus files filtered by the specified filename filter.
      *
      * @param filter a filter to exclude files from the results
-     * @return An array of <tt>SmbFile</tt> objects
+     * @return An array of {@code SmbFile} objects
      * @throws SmbException
      */
     public SmbFile[] listFiles(final SmbFilenameFilter filter) throws SmbException {
@@ -1711,7 +1713,7 @@ public class SmbFile extends URLConnection implements SmbConstants {
      * method minus filenames filtered by the specified filter.
      *
      * @param filter a file filter to exclude files from the results
-     * @return An array of <tt>SmbFile</tt> objects
+     * @return An array of {@code SmbFile} objects
      */
     public SmbFile[] listFiles(final SmbFileFilter filter) throws SmbException {
         return listFiles("*", ATTR_DIRECTORY | ATTR_HIDDEN | ATTR_SYSTEM, null, filter);
@@ -2049,11 +2051,11 @@ public class SmbFile extends URLConnection implements SmbConstants {
     /**
      * Changes the name of the file this <code>SmbFile</code> represents to the name
      * designated by the <code>SmbFile</code> argument.
-     * <p/>
+     *
      * <i>Remember: <code>SmbFile</code>s are immutible and therefore
      * the path associated with this <code>SmbFile</code> object will not
      * change). To access the renamed file it is necessary to construct a
-     * new <tt>SmbFile</tt></i>.
+     * new {@code SmbFile}</i>.
      *
      * @param  dest  An <code>SmbFile</code> that represents the new pathname
      * @throws NullPointerException
@@ -2267,14 +2269,14 @@ public class SmbFile extends URLConnection implements SmbConstants {
 
     /**
      * This method will copy the file or directory represented by this
-     * <tt>SmbFile</tt> and it's sub-contents to the location specified by the
-     * <tt>dest</tt> parameter. This file and the destination file do not
+     * {@code SmbFile} and it's sub-contents to the location specified by the
+     * {@code dest} parameter. This file and the destination file do not
      * need to be on the same host. This operation does not copy extended
      * file attibutes such as ACLs but it does copy regular attributes as
      * well as create and last write times. This method is almost twice as
      * efficient as manually copying as it employs an additional write
      * thread to read and write data concurrently.
-     * <p/>
+     *
      * It is not possible (nor meaningful) to copy entire workgroups or
      * servers.
      *
@@ -2424,10 +2426,10 @@ public class SmbFile extends URLConnection implements SmbConstants {
     }
 
     /**
-     * Returns the length of this <tt>SmbFile</tt> in bytes. If this object
-     * is a <tt>TYPE_SHARE</tt> the total capacity of the disk shared in
+     * Returns the length of this {@code SmbFile} in bytes. If this object
+     * is a {@code TYPE_SHARE} the total capacity of the disk shared in
      * bytes is returned. If this object is a directory or a type other than
-     * <tt>TYPE_SHARE</tt>, 0L is returned.
+     * {@code TYPE_SHARE}, 0L is returned.
      *
      * @return The length of the file in bytes or 0 if this
      * <code>SmbFile</code> is not a file.
@@ -2460,7 +2462,7 @@ public class SmbFile extends URLConnection implements SmbConstants {
     /**
      * This method returns the free disk space in bytes of the drive this share
      * represents or the drive on which the directory or file resides. Objects
-     * other than <tt>TYPE_SHARE</tt> or <tt>TYPE_FILESYSTEM</tt> will result
+     * other than {@code TYPE_SHARE} or {@code TYPE_FILESYSTEM} will result
      * in 0L being returned.
      *
      * @return the free disk space in bytes of the drive on which this file or
@@ -2529,7 +2531,7 @@ public class SmbFile extends URLConnection implements SmbConstants {
     }
 
     /**
-     * Creates a directory with the path specified by this <tt>SmbFile</tt>
+     * Creates a directory with the path specified by this {@code SmbFile}
      * and any parent directories that do not exist. This method will fail
      * when used with <code>smb1://</code>, <code>smb1://workgroup/</code>,
      * <code>smb1://server/</code>, or <code>smb1://server/share/</code> URLs
@@ -2580,8 +2582,8 @@ public class SmbFile extends URLConnection implements SmbConstants {
     /**
      * Set the create time of the file. The time is specified as milliseconds
      * from Jan 1, 1970 which is the same as that which is returned by the
-     * <tt>createTime()</tt> method.
-     * <p/>
+     * {@code createTime()} method.
+     *
      * This method does not apply to workgroups, servers, or shares.
      *
      * @param time the create time as milliseconds since Jan 1, 1970
@@ -2597,8 +2599,8 @@ public class SmbFile extends URLConnection implements SmbConstants {
     /**
      * Set the last modified time of the file. The time is specified as milliseconds
      * from Jan 1, 1970 which is the same as that which is returned by the
-     * <tt>lastModified()</tt>, <tt>getLastModified()</tt>, and <tt>getDate()</tt> methods.
-     * <p/>
+     * {@code lastModified()}, {@code getLastModified()}, and {@code getDate()} methods.
+     *
      * This method does not apply to workgroups, servers, or shares.
      *
      * @param time the last modified time as milliseconds since Jan 1, 1970
@@ -2613,11 +2615,11 @@ public class SmbFile extends URLConnection implements SmbConstants {
 
     /**
      * Return the attributes of this file. Attributes are represented as a
-     * bitset that must be masked with <tt>ATTR_*</tt> constants to determine
+     * bitset that must be masked with {@code ATTR_*} constants to determine
      * if they are set or unset. The value returned is suitable for use with
-     * the <tt>setAttributes()</tt> method.
+     * the {@code setAttributes()} method.
      *
-     * @return the <tt>ATTR_*</tt> attributes associated with this file
+     * @return the {@code ATTR_*} attributes associated with this file
      * @throws SmbException
      */
     public int getAttributes() throws SmbException {
@@ -2630,8 +2632,8 @@ public class SmbFile extends URLConnection implements SmbConstants {
 
     /**
      * Set the attributes of this file. Attributes are composed into a
-     * bitset by bitwise ORing the <tt>ATTR_*</tt> constants. Setting the
-     * value returned by <tt>getAttributes</tt> will result in both files
+     * bitset by bitwise ORing the {@code ATTR_*} constants. Setting the
+     * value returned by {@code getAttributes} will result in both files
      * having the same attributes.
      * @throws SmbException
      */
@@ -2643,8 +2645,8 @@ public class SmbFile extends URLConnection implements SmbConstants {
     }
 
     /**
-     * Make this file read-only. This is shorthand for <tt>setAttributes(
-     * getAttributes() | ATTR_READ_ONLY )</tt>.
+     * Make this file read-only. This is shorthand for {@code setAttributes(
+     * getAttributes() | ATTR_READ_ONLY )}.
      *
      * @throws SmbException
      */
@@ -2654,7 +2656,7 @@ public class SmbFile extends URLConnection implements SmbConstants {
 
     /**
      * Turn off the read-only attribute of this file. This is shorthand for
-     * <tt>setAttributes( getAttributes() &amp; ~ATTR_READONLY )</tt>.
+     * {@code setAttributes( getAttributes() &amp; ~ATTR_READONLY )}.
      *
      * @throws SmbException
      */
@@ -2666,7 +2668,7 @@ public class SmbFile extends URLConnection implements SmbConstants {
      * Returns a {@link java.net.URL} for this <code>SmbFile</code>. The
      * <code>URL</code> may be used as any other <code>URL</code> might to
      * access an SMB resource. Currently only retrieving data and information
-     * is supported (i.e. no <tt>doOutput</tt>).
+     * is supported (i.e. no {@code doOutput}).
      *
      * @deprecated Use getURL() instead
      * @return A new <code>{@link java.net.URL}</code> for this <code>SmbFile</code>
@@ -2687,7 +2689,6 @@ public class SmbFile extends URLConnection implements SmbConstants {
      * to make such a determination.
      *
      * @return  A hashcode for this abstract file
-     * @throws SmbException
      */
 
     @Override
@@ -2727,7 +2728,7 @@ public class SmbFile extends URLConnection implements SmbConstants {
      * equals if their server IP addresses are equal and the canonicalized
      * representation of their URLs, minus authentication parameters, are
      * case insensitivly and lexographically equal.
-     * <p/>
+     *
      * For example, assuming the server <code>angus</code> resolves to the
      * <code>192.168.1.15</code> IP address, the below URLs would result in
      * <code>SmbFile</code>s that are equal.
@@ -2740,7 +2741,6 @@ public class SmbFile extends URLConnection implements SmbConstants {
      * @param   obj Another <code>SmbFile</code> object to compare for equality
      * @return  <code>true</code> if the two objects refer to the same SMB resource
      *          and <code>false</code> otherwise
-     * @throws SmbException
      */
 
     @Override
@@ -2786,7 +2786,6 @@ public class SmbFile extends URLConnection implements SmbConstants {
      * as <code>getPath</code>.
      *
      * @return  The original URL representation of this SMB resource
-     * @throws SmbException
      */
 
     @Override
@@ -2796,7 +2795,7 @@ public class SmbFile extends URLConnection implements SmbConstants {
 
     /* URLConnection implementation */
     /**
-     * This URLConnection method just returns the result of <tt>length()</tt>.
+     * This URLConnection method just returns the result of {@code length()}.
      *
      * @return the length of this file or 0 if it refers to a directory
      */
@@ -2810,7 +2809,7 @@ public class SmbFile extends URLConnection implements SmbConstants {
     }
 
     /**
-     * This URLConnection method just returns the result of <tt>lastModified</tt>.
+     * This URLConnection method just returns the result of {@code lastModified}.
      *
      * @return the last modified data as milliseconds since Jan 1, 1970
      */
@@ -2823,7 +2822,7 @@ public class SmbFile extends URLConnection implements SmbConstants {
     }
 
     /**
-     * This URLConnection method just returns the result of <tt>lastModified</tt>.
+     * This URLConnection method just returns the result of {@code lastModified}.
      *
      * @return the last modified data as milliseconds since Jan 1, 1970
      */
@@ -2836,9 +2835,9 @@ public class SmbFile extends URLConnection implements SmbConstants {
     }
 
     /**
-     * This URLConnection method just returns a new <tt>SmbFileInputStream</tt> created with this file.
+     * This URLConnection method just returns a new {@code SmbFileInputStream} created with this file.
      *
-     * @throws IOException thrown by <tt>SmbFileInputStream</tt> constructor
+     * @throws IOException thrown by {@code SmbFileInputStream} constructor
      */
     @Override
     public InputStream getInputStream() throws IOException {
@@ -2846,9 +2845,9 @@ public class SmbFile extends URLConnection implements SmbConstants {
     }
 
     /**
-     * This URLConnection method just returns a new <tt>SmbFileOutputStream</tt> created with this file.
+     * This URLConnection method just returns a new {@code SmbFileOutputStream} created with this file.
      *
-     * @throws IOException thrown by <tt>SmbFileOutputStream</tt> constructor
+     * @throws IOException thrown by {@code SmbFileOutputStream} constructor
      */
     @Override
     public OutputStream getOutputStream() throws IOException {
@@ -2926,14 +2925,14 @@ public class SmbFile extends URLConnection implements SmbConstants {
      * the share permissions on the share exporting this file or directory.
      * If no DACL is present, null is returned. If the DACL is empty, an array with 0 elements is returned.
      * <p>
-     * Note that this is different from calling <tt>getSecurity</tt> on a
+     * Note that this is different from calling {@code getSecurity} on a
      * share. There are actually two different ACLs for shares - the ACL on
      * the share and the ACL on the folder being shared.
      * Go to <i>Computer Management</i>
      * &gt; <i>System Tools</i> &gt; <i>Shared Folders</i> &gt; <i>Shares</i> and
      * look at the <i>Properties</i> for a share. You will see two tabs - one
      * for "Share Permissions" and another for "Security". These correspond to
-     * the ACLs returned by <tt>getShareSecurity</tt> and <tt>getSecurity</tt>
+     * the ACLs returned by {@code getShareSecurity} and {@code getSecurity}
      * respectively.
      * @param resolveSids Attempt to resolve the SIDs within each ACE form
      * their numeric representation to their corresponding account names.
@@ -2977,13 +2976,13 @@ public class SmbFile extends URLConnection implements SmbConstants {
      * the security descriptor associated with this file or directory.
      * <p>
      * Initially, the SIDs within each ACE will not be resolved however when
-     * <tt>getType()</tt>, <tt>getDomainName()</tt>, <tt>getAccountName()</tt>,
-     * or <tt>toString()</tt> is called, the names will attempt to be
+     * {@code getType()}, {@code getDomainName()}, {@code getAccountName()},
+     * or {@code toString()} is called, the names will attempt to be
      * resolved. If the names cannot be resolved (e.g. due to temporary
      * network failure), the said methods will return default values (usually
-     * <tt>S-X-Y-Z</tt> strings of fragments of).
+     * {@code S-X-Y-Z} strings of fragments of).
      * <p>
-     * Alternatively <tt>getSecurity(true)</tt> may be used to resolve all
+     * Alternatively {@code getSecurity(true)} may be used to resolve all
      * SIDs together and detect network failures.
      */
     public ACE[] getSecurity() throws IOException {

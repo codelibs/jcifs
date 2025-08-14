@@ -24,7 +24,8 @@ import jcifs.smb.WinError;
 import jcifs.util.Hexdump;
 
 /**
- *
+ * Exception class for DCE/RPC related errors.
+ * This exception is thrown when DCE/RPC protocol errors occur.
  */
 public class DcerpcException extends CIFSException implements DcerpcError, WinError {
 

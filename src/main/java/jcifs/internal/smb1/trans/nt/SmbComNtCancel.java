@@ -21,8 +21,11 @@ import jcifs.Configuration;
 import jcifs.internal.smb1.ServerMessageBlock;
 
 /**
- * @author mbechler
+ * SMB1 NT Cancel command implementation.
+ * Provides functionality to cancel previously issued SMB1 NT transaction commands
+ * that are in progress, allowing clients to abort long-running operations.
  *
+ * @author mbechler
  */
 public class SmbComNtCancel extends ServerMessageBlock {
 

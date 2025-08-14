@@ -22,7 +22,8 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
- *
+ * Abstract base class for NetBIOS session service packets.
+ * This class provides common functionality for session layer communication.
  */
 public abstract class SessionServicePacket {
 

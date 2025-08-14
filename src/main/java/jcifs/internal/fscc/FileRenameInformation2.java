@@ -23,8 +23,11 @@ import jcifs.internal.SMBProtocolDecodingException;
 import jcifs.internal.util.SMBUtil;
 
 /**
- * @author mbechler
+ * File System Control Code (FSCC) structure for File Rename Information.
+ * Used in SMB2/SMB3 set file information operations to rename files or directories,
+ * with support for specifying whether to replace existing files with the same name.
  *
+ * @author mbechler
  */
 public class FileRenameInformation2 implements FileInformation {
 

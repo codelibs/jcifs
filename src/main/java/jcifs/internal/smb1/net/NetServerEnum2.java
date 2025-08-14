@@ -26,8 +26,9 @@ import jcifs.internal.smb1.trans.SmbComTransaction;
 import jcifs.internal.util.SMBUtil;
 
 /**
- *
- *
+ * SMB1 NetServerEnum2 request message for enumerating network servers in a domain or workgroup.
+ * This class implements the SMB1 transaction to query for available servers, supporting various
+ * server types and filtering options for network browsing functionality.
  */
 public class NetServerEnum2 extends SmbComTransaction {
 

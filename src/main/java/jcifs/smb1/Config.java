@@ -107,17 +107,17 @@ public class Config {
 
     /**
      * This static method registers the SMB URL protocol handler which is
-     * required to use SMB URLs with the <tt>java.net.URL</tt> class. If this
+     * required to use SMB URLs with the <code>java.net.URL</code> class. If this
      * method is not called before attempting to create an SMB URL with the
      * URL class the following exception will occur:
      * <blockquote><pre>
      * Exception MalformedURLException: unknown protocol: smb
-     *     at java.net.URL.<init>(URL.java:480)
-     *     at java.net.URL.<init>(URL.java:376)
-     *     at java.net.URL.<init>(URL.java:330)
-     *     at jcifs.smb1.smb1.SmbFile.<init>(SmbFile.java:355)
+     *     at java.net.URL.&lt;init&gt;(URL.java:480)
+     *     at java.net.URL.&lt;init&gt;(URL.java:376)
+     *     at java.net.URL.&lt;init&gt;(URL.java:330)
+     *     at jcifs.smb1.smb1.SmbFile.&lt;init&gt;(SmbFile.java:355)
      *     ...
-     * </pre><blockquote>
+     * </pre></blockquote>
      */
 
     public static void registerSmbURLHandler() {
@@ -141,12 +141,12 @@ public class Config {
     }
 
     /**
-     * Set the default properties of the static Properties used by <tt>Config</tt>. This permits
+     * Set the default properties of the static Properties used by <code>Config</code>. This permits
      * a different Properties object/file to be used as the source of properties for
      * use by the jCIFS library. The Properties must be set <i>before jCIFS
      * classes are accessed</i> as most jCIFS classes load properties statically once.
      * Using this method will also override properties loaded
-     * using the <tt>-Djcifs.properties=</tt> commandline parameter.
+     * using the <code>-Djcifs.properties=</code> commandline parameter.
      */
 
     public static void setProperties(final Properties prp) {
@@ -333,8 +333,8 @@ public class Config {
     }
 
     /**
-     * Retrieve an array of <tt>InetAddress</tt> created from a property
-     * value containting a <tt>delim</tt> separated list of hostnames and/or
+     * Retrieve an array of <code>InetAddress</code> created from a property
+     * value containting a <code>delim</code> separated list of hostnames and/or
      * ipaddresses.
      */
 

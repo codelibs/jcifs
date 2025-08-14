@@ -27,8 +27,10 @@ import jcifs.smb.NtlmPasswordAuthenticator;
 import jcifs.smb.NtlmPasswordAuthenticator.AuthenticationType;
 
 /**
- * @author mbechler
+ * Abstract base implementation of CIFSContext providing common functionality.
+ * This class serves as a foundation for concrete CIFS context implementations.
  *
+ * @author mbechler
  */
 public abstract class AbstractCIFSContext extends Thread implements CIFSContext {
 

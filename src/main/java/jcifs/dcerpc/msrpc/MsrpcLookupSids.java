@@ -19,7 +19,6 @@
 
 package jcifs.dcerpc.msrpc;
 
-@SuppressWarnings("javadoc")
 public class MsrpcLookupSids extends jcifs.dcerpc.msrpc.lsarpc.LsarLookupSids {
 
     public MsrpcLookupSids(final LsaPolicyHandle policyHandle, final jcifs.SID[] sids) {

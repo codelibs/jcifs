@@ -24,7 +24,9 @@ import jcifs.internal.smb1.trans.SmbComTransaction;
 import jcifs.internal.smb1.trans.SmbComTransactionResponse;
 
 /**
- *
+ * Trans2 GetDfsReferral response message for DFS referral queries.
+ * This class handles the response from a TRANS2_GET_DFS_REFERRAL request, which returns
+ * DFS referral information for redirecting clients to distributed file system targets.
  */
 public class Trans2GetDfsReferralResponse extends SmbComTransactionResponse {
 

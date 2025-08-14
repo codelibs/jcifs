@@ -21,7 +21,8 @@ package jcifs;
  * Internal API for managing reusable buffers
  *
  * @author mbechler
- * @internal
+ *
+ * <p>This interface is intended for internal use.</p>
  */
 public interface BufferCache {
 

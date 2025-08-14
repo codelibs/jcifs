@@ -43,11 +43,11 @@ import jcifs.smb1.util.Hexdump;
 /**
  * A Windows SID is a numeric identifier used to represent Windows
  * accounts. SIDs are commonly represented using a textual format such as
- * <tt>S-1-5-21-1496946806-2192648263-3843101252-1029</tt> but they may
+ * {@code S-1-5-21-1496946806-2192648263-3843101252-1029} but they may
  * also be resolved to yield the name of the associated Windows account
- * such as <tt>Administrators</tt> or <tt>MYDOM\alice</tt>.
+ * such as {@code Administrators} or {@code MYDOM\alice}.
  * <p>
- * Consider the following output of <tt>examples/SidLookup.java</tt>:
+ * Consider the following output of {@code examples/SidLookup.java}:
  * <pre>
  *        toString: S-1-5-21-4133388617-793952518-2001621813-512
  * toDisplayString: WNET\Domain Admins
@@ -184,8 +184,8 @@ public class SID extends rpc.sid_t {
      * expired because under normal circumstances SID information never changes.
      *
      * @param authorityServerName The hostname of the server that should be queried. For maximum efficiency this should be the hostname of a domain controller however a member server will work as well and a domain controller may not return names for SIDs corresponding to local accounts for which the domain controller is not an authority.
-     * @param auth The credentials that should be used to communicate with the named server. As usual, <tt>null</tt> indicates that default credentials should be used.
-     * @param sids The SIDs that should be resolved. After this function is called, the names associated with the SIDs may be queried with the <tt>toDisplayString</tt>, <tt>getDomainName</tt>, and <tt>getAccountName</tt> methods.
+     * @param auth The credentials that should be used to communicate with the named server. As usual, {@code null} indicates that default credentials should be used.
+     * @param sids The SIDs that should be resolved. After this function is called, the names associated with the SIDs may be queried with the {@code toDisplayString}, {@code getDomainName}, and {@code getAccountName} methods.
      */
     static public void resolveSids(final String authorityServerName, final NtlmPasswordAuthentication auth, SID[] sids) throws IOException {
         final ArrayList list = new ArrayList(sids.length);
@@ -285,7 +285,7 @@ public class SID extends rpc.sid_t {
 
     /**
      * Construct a SID from it's textual representation such as
-     * <tt>S-1-5-21-1496946806-2192648263-3843101252-1029</tt>.
+     * {@code S-1-5-21-1496946806-2192648263-3843101252-1029}.
      */
     public SID(final String textual) throws SmbException {
         final StringTokenizer st = new StringTokenizer(textual, "-");
@@ -321,8 +321,8 @@ public class SID extends rpc.sid_t {
     /**
      * Construct a SID from a domain SID and an RID
      * (relative identifier). For example, a domain SID
-     * <tt>S-1-5-21-1496946806-2192648263-3843101252</tt> and RID <tt>1029</tt> would
-     * yield the SID <tt>S-1-5-21-1496946806-2192648263-3843101252-1029</tt>.
+     * {@code S-1-5-21-1496946806-2192648263-3843101252} and RID {@code 1029} would
+     * yield the SID {@code S-1-5-21-1496946806-2192648263-3843101252-1029}.
      */
     public SID(final SID domsid, final int rid) {
         this.revision = domsid.revision;
@@ -369,7 +369,7 @@ public class SID extends rpc.sid_t {
      * Returns the type of this SID indicating the state or type of account.
      * <p>
      * SID types are described in the following table.
-     * <tt>
+     * {@code
      * <table>
      * <tr><th>Type</th><th>Name</th></tr>
      * <tr><td>SID_TYPE_USE_NONE</td><td>0</td></tr>
@@ -382,7 +382,7 @@ public class SID extends rpc.sid_t {
      * <tr><td>SID_TYPE_INVALID</td><td>Invalid</td></tr>
      * <tr><td>SID_TYPE_UNKNOWN</td><td>Unknown</td></tr>
      * </table>
-     * </tt>
+     * }
      */
     public int getType() {
         if (origin_server != null) {
@@ -471,7 +471,7 @@ public class SID extends rpc.sid_t {
 
     /**
      * Return the numeric representation of this sid such as
-     * <tt>S-1-5-21-1496946806-2192648263-3843101252-1029</tt>.
+     * {@code S-1-5-21-1496946806-2192648263-3843101252-1029}.
      */
     @Override
     public String toString() {
@@ -634,12 +634,12 @@ public class SID extends rpc.sid_t {
      * target server where keys are SIDs representing an account and each value
      * is an ArrayList of SIDs represents the local groups that the account is
      * a member of.
-     * <p/>
+     *
      * This method is designed to assist with computing access control for a
      * given user when the target object's ACL has local groups. Local groups
      * are not listed in a user's group membership (e.g. as represented by the
      * tokenGroups constructed attribute retrived via LDAP).
-     * <p/>
+     *
      * Domain groups nested inside a local group are currently not expanded. In
      * this case the key (SID) type will be SID_TYPE_DOM_GRP rather than
      * SID_TYPE_USER.

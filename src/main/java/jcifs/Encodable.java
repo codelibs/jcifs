@@ -18,8 +18,10 @@
 package jcifs;
 
 /**
- * @author mbechler
+ * Interface for objects that can be encoded to a byte buffer.
+ * This interface provides methods for serializing data to SMB protocol messages.
  *
+ * @author mbechler
  */
 public interface Encodable {
 

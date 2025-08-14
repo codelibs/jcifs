@@ -28,6 +28,9 @@ import jcifs.internal.util.SMBUtil;
 import jcifs.util.Hexdump;
 
 /**
+ * SMB2 Close response message. This response acknowledges the closing of a file
+ * and provides final file attributes.
+ *
  * @author mbechler
  *
  */

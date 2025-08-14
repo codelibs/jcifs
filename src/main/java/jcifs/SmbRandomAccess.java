@@ -64,7 +64,7 @@ public interface SmbRandomAccess extends DataOutput, DataInput, AutoCloseable {
      * @param off
      *            offset into buffer
      * @param len
-     *            read up to <tt>len</tt> bytes
+     *            read up to <code>len</code> bytes
      * @return number of bytes read
      * @throws SmbException
      */

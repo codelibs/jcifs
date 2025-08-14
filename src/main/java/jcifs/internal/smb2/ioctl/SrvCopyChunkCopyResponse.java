@@ -22,6 +22,9 @@ import jcifs.internal.SMBProtocolDecodingException;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * SMB2 SRV_COPYCHUNK_COPY response data structure. This structure contains the result
+ * of a server-side copy operation.
+ *
  * @author mbechler
  *
  */

@@ -22,8 +22,12 @@ import jcifs.internal.SMBProtocolDecodingException;
 import jcifs.internal.util.SMBUtil;
 
 /**
- * @author mbechler
+ * SMB2 Pre-authentication Integrity Negotiate Context.
  *
+ * This negotiate context is used in SMB 3.1.1 to establish
+ * pre-authentication integrity protection against downgrade attacks.
+ *
+ * @author mbechler
  */
 public class PreauthIntegrityNegotiateContext implements NegotiateContextRequest, NegotiateContextResponse {
 

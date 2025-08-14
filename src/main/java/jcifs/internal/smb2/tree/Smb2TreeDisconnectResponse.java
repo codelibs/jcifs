@@ -23,8 +23,12 @@ import jcifs.internal.smb2.ServerMessageBlock2Response;
 import jcifs.internal.util.SMBUtil;
 
 /**
- * @author mbechler
+ * SMB2 Tree Disconnect response message.
  *
+ * This response confirms that the tree connection
+ * has been successfully disconnected.
+ *
+ * @author mbechler
  */
 public class Smb2TreeDisconnectResponse extends ServerMessageBlock2Response {
 

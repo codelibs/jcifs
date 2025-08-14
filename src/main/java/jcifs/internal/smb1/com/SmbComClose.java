@@ -29,8 +29,10 @@ import jcifs.internal.smb1.ServerMessageBlock;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * SMB1 Close file request message.
  *
- *
+ * This command is used to close a file that was previously opened
+ * with an Open command.
  */
 public class SmbComClose extends ServerMessageBlock implements Request<SmbComBlankResponse> {
 

@@ -29,7 +29,9 @@ import jcifs.internal.util.SMBUtil;
 import jcifs.util.Hexdump;
 
 /**
- *
+ * Base class for SMB1 AndX (chained) command messages.
+ * This class extends ServerMessageBlock to support SMB1 command chaining, where multiple
+ * related commands can be batched together in a single message for improved efficiency.
  */
 public abstract class AndXServerMessageBlock extends ServerMessageBlock {
 

@@ -22,7 +22,8 @@ import jcifs.dcerpc.rpc.policy_handle;
 import jcifs.dcerpc.msrpc.lsarpc.LsarClose;
 
 /**
- *
+ * Microsoft RPC LSA close handle request.
+ * This class implements the LSARPC close handle operation.
  */
 public class MsrpcLsarClose extends LsarClose {
 

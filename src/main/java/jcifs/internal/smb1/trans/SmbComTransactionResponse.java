@@ -27,7 +27,9 @@ import jcifs.internal.util.SMBUtil;
 import jcifs.smb.FileEntry;
 
 /**
- *
+ * Base class for SMB1 transaction response messages.
+ * This abstract class handles the common functionality for all SMB1 transaction responses,
+ * including parameter and data buffer management, multi-part responses, and enumeration support.
  */
 public abstract class SmbComTransactionResponse extends ServerMessageBlock implements Enumeration<SmbComTransactionResponse> {
 

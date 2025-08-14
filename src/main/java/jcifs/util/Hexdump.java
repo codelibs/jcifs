@@ -20,6 +20,8 @@
 package jcifs.util;
 
 /**
+ * Utility class for hexadecimal dumping of binary data.
+ * This class provides methods for converting binary data to readable hex format.
  */
 
 public class Hexdump {

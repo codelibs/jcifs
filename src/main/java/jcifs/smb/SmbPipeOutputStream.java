@@ -20,8 +20,12 @@ package jcifs.smb;
 import jcifs.CIFSException;
 
 /**
- * @author mbechler
+ * Output stream for writing to SMB named pipes.
  *
+ * This class provides a stream-based interface for writing
+ * data to SMB named pipes over the network.
+ *
+ * @author mbechler
  */
 public class SmbPipeOutputStream extends SmbFileOutputStream {
 

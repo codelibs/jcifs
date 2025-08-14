@@ -26,6 +26,9 @@ import jcifs.internal.smb2.Smb2Constants;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * SMB2 IOCTL request message. This command is used to perform device control operations
+ * on files, pipes, or the server itself.
+ *
  * @author mbechler
  *
  */

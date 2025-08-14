@@ -53,9 +53,9 @@ public interface SmbResource extends AutoCloseable {
      * <code>SmbResource</code> or in the case of URLs that only specify a server
      * or workgroup, the server or workgroup will be returned. The name of
      * the root URL <code>smb://</code> is also <code>smb://</code>. If this
-     * <tt>SmbResource</tt> refers to a workgroup, server, share, or directory,
+     * <code>SmbResource</code> refers to a workgroup, server, share, or directory,
      * the name will include a trailing slash '/' so that composing new
-     * <tt>SmbResource</tt>s will maintain the trailing slash requirement.
+     * <code>SmbResource</code>s will maintain the trailing slash requirement.
      *
      * @return The last component of the URL associated with this SMB
      *         resource or <code>smb://</code> if the resource is <code>smb://</code>
@@ -64,10 +64,10 @@ public interface SmbResource extends AutoCloseable {
     String getName();
 
     /**
-     * Returns type of of object this <tt>SmbResource</tt> represents.
+     * Returns type of of object this <code>SmbResource</code> represents.
      *
-     * @return <tt>TYPE_FILESYSTEM, TYPE_WORKGROUP, TYPE_SERVER, TYPE_SHARE,
-     * TYPE_PRINTER, TYPE_NAMED_PIPE</tt>, or <tt>TYPE_COMM</tt>.
+     * @return <code>TYPE_FILESYSTEM, TYPE_WORKGROUP, TYPE_SERVER, TYPE_SHARE,
+     * TYPE_PRINTER, TYPE_NAMED_PIPE</code>, or <code>TYPE_COMM</code>.
      * @throws CIFSException
      */
     int getType() throws CIFSException;
@@ -107,11 +107,11 @@ public interface SmbResource extends AutoCloseable {
 
     /**
      * Return the attributes of this file. Attributes are represented as a
-     * bitset that must be masked with <tt>ATTR_*</tt> constants to determine
+     * bitset that must be masked with <code>ATTR_*</code> constants to determine
      * if they are set or unset. The value returned is suitable for use with
-     * the <tt>setAttributes()</tt> method.
+     * the <code>setAttributes()</code> method.
      *
-     * @return the <tt>ATTR_*</tt> attributes associated with this file
+     * @return the <code>ATTR_*</code> attributes associated with this file
      * @throws CIFSException
      */
     int getAttributes() throws CIFSException;
@@ -167,15 +167,15 @@ public interface SmbResource extends AutoCloseable {
 
     /**
      * Turn off the read-only attribute of this file. This is shorthand for
-     * <tt>setAttributes( getAttributes() &amp; ~ATTR_READONLY )</tt>.
+     * <code>setAttributes( getAttributes() &amp; ~ATTR_READONLY )</code>.
      *
      * @throws CIFSException
      */
     void setReadWrite() throws CIFSException;
 
     /**
-     * Make this file read-only. This is shorthand for <tt>setAttributes(
-     * getAttributes() | ATTR_READ_ONLY )</tt>.
+     * Make this file read-only. This is shorthand for <code>setAttributes(
+     * getAttributes() | ATTR_READ_ONLY )</code>.
      *
      * @throws CIFSException
      */
@@ -183,8 +183,8 @@ public interface SmbResource extends AutoCloseable {
 
     /**
      * Set the attributes of this file. Attributes are composed into a
-     * bitset by bitwise ORing the <tt>ATTR_*</tt> constants. Setting the
-     * value returned by <tt>getAttributes</tt> will result in both files
+     * bitset by bitwise ORing the <code>ATTR_*</code> constants. Setting the
+     * value returned by <code>getAttributes</code> will result in both files
      * having the same attributes.
      *
      * @param attrs
@@ -197,7 +197,7 @@ public interface SmbResource extends AutoCloseable {
     /**
      * Set the create, last modified and last access time of the file. The time is specified
      * as milliseconds from Jan 1, 1970 which is the same as that which is returned by the
-     * <tt>createTime()</tt>, <tt>lastModified()</tt>, <tt>lastAccess()</tt> methods.
+     * <code>createTime()</code>, <code>lastModified()</code>, <code>lastAccess()</code> methods.
      * <br>
      * This method does not apply to workgroups, servers, or shares.
      *
@@ -220,7 +220,7 @@ public interface SmbResource extends AutoCloseable {
     /**
      * Set the last access time of the file. The time is specified as milliseconds
      * from Jan 1, 1970 which is the same as that which is returned by the
-     * <tt>lastAccess()</tt> method.
+     * <code>lastAccess()</code> method.
      * <br>
      * This method does not apply to workgroups, servers, or shares.
      *
@@ -235,7 +235,7 @@ public interface SmbResource extends AutoCloseable {
     /**
      * Set the last modified time of the file. The time is specified as milliseconds
      * from Jan 1, 1970 which is the same as that which is returned by the
-     * <tt>lastModified()</tt> method.
+     * <code>lastModified()</code> method.
      * <br>
      * This method does not apply to workgroups, servers, or shares.
      *
@@ -248,7 +248,7 @@ public interface SmbResource extends AutoCloseable {
     /**
      * Set the create time of the file. The time is specified as milliseconds
      * from Jan 1, 1970 which is the same as that which is returned by the
-     * <tt>createTime()</tt> method.
+     * <code>createTime()</code> method.
      * <br>
      * This method does not apply to workgroups, servers, or shares.
      *
@@ -307,7 +307,7 @@ public interface SmbResource extends AutoCloseable {
     void createNewFile() throws CIFSException;
 
     /**
-     * Creates a directory with the path specified by this <tt>SmbResource</tt>
+     * Creates a directory with the path specified by this <code>SmbResource</code>
      * and any parent directories that do not exist. This method will fail
      * when used with <code>smb://</code>, <code>smb://workgroup/</code>,
      * <code>smb://server/</code>, or <code>smb://server/share/</code> URLs
@@ -334,7 +334,7 @@ public interface SmbResource extends AutoCloseable {
     /**
      * This method returns the free disk space in bytes of the drive this share
      * represents or the drive on which the directory or file resides. Objects
-     * other than <tt>TYPE_SHARE</tt> or <tt>TYPE_FILESYSTEM</tt> will result
+     * other than <code>TYPE_SHARE</code> or <code>TYPE_FILESYSTEM</code> will result
      * in 0L being returned.
      *
      * @return the free disk space in bytes of the drive on which this file or
@@ -344,10 +344,10 @@ public interface SmbResource extends AutoCloseable {
     long getDiskFreeSpace() throws CIFSException;
 
     /**
-     * Returns the length of this <tt>SmbResource</tt> in bytes. If this object
-     * is a <tt>TYPE_SHARE</tt> the total capacity of the disk shared in
+     * Returns the length of this <code>SmbResource</code> in bytes. If this object
+     * is a <code>TYPE_SHARE</code> the total capacity of the disk shared in
      * bytes is returned. If this object is a directory or a type other than
-     * <tt>TYPE_SHARE</tt>, 0L is returned.
+     * <code>TYPE_SHARE</code>, 0L is returned.
      *
      * @return The length of the file in bytes or 0 if this
      *         <code>SmbResource</code> is not a file.
@@ -370,8 +370,8 @@ public interface SmbResource extends AutoCloseable {
 
     /**
      * This method will copy the file or directory represented by this
-     * <tt>SmbResource</tt> and it's sub-contents to the location specified by the
-     * <tt>dest</tt> parameter. This file and the destination file do not
+     * <code>SmbResource</code> and it's sub-contents to the location specified by the
+     * <code>dest</code> parameter. This file and the destination file do not
      * need to be on the same host. This operation does not copy extended
      * file attributes such as ACLs but it does copy regular attributes as
      * well as create and last write times. This method is almost twice as
@@ -394,7 +394,7 @@ public interface SmbResource extends AutoCloseable {
      * <i>Remember: <code>SmbResource</code>s are immutable and therefore
      * the path associated with this <code>SmbResource</code> object will not
      * change). To access the renamed file it is necessary to construct a
-     * new <tt>SmbResource</tt></i>.
+     * new <code>SmbResource</code></i>.
      *
      * @param dest
      *            An <code>SmbResource</code> that represents the new pathname
@@ -411,7 +411,7 @@ public interface SmbResource extends AutoCloseable {
      * <i>Remember: <code>SmbResource</code>s are immutable and therefore
      * the path associated with this <code>SmbResource</code> object will not
      * change). To access the renamed file it is necessary to construct a
-     * new <tt>SmbResource</tt></i>.
+     * new <code>SmbResource</code></i>.
      *
      * @param dest
      *            An <code>SmbResource</code> that represents the new pathname
@@ -478,13 +478,13 @@ public interface SmbResource extends AutoCloseable {
      * the security descriptor associated with this file or directory.
      * <p>
      * Initially, the SIDs within each ACE will not be resolved however when
-     * <tt>getType()</tt>, <tt>getDomainName()</tt>, <tt>getAccountName()</tt>,
-     * or <tt>toString()</tt> is called, the names will attempt to be
+     * <code>getType()</code>, <code>getDomainName()</code>, <code>getAccountName()</code>,
+     * or <code>toString()</code> is called, the names will attempt to be
      * resolved. If the names cannot be resolved (e.g. due to temporary
      * network failure), the said methods will return default values (usually
-     * <tt>S-X-Y-Z</tt> strings of fragments of).
+     * <code>S-X-Y-Z</code> strings of fragments of).
      * <p>
-     * Alternatively <tt>getSecurity(true)</tt> may be used to resolve all
+     * Alternatively <code>getSecurity(true)</code> may be used to resolve all
      * SIDs together and detect network failures.
      *
      * @return array of ACEs
@@ -510,14 +510,14 @@ public interface SmbResource extends AutoCloseable {
      * the share permissions on the share exporting this file or directory.
      * If no DACL is present, null is returned. If the DACL is empty, an array with 0 elements is returned.
      * <p>
-     * Note that this is different from calling <tt>getSecurity</tt> on a
+     * Note that this is different from calling <code>getSecurity</code> on a
      * share. There are actually two different ACLs for shares - the ACL on
      * the share and the ACL on the folder being shared.
      * Go to <i>Computer Management</i>
      * &gt; <i>System Tools</i> &gt; <i>Shared Folders</i> &gt; <i>Shares</i> and
      * look at the <i>Properties</i> for a share. You will see two tabs - one
      * for "Share Permissions" and another for "Security". These correspond to
-     * the ACLs returned by <tt>getShareSecurity</tt> and <tt>getSecurity</tt>
+     * the ACLs returned by <code>getShareSecurity</code> and <code>getSecurity</code>
      * respectively.
      *
      * @param resolveSids

@@ -18,7 +18,6 @@ package jcifs.pac;
 
 import jcifs.smb.SID;
 
-@SuppressWarnings("javadoc")
 public class PacGroup {
 
     private final SID id;

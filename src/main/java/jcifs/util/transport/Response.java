@@ -18,7 +18,8 @@
 package jcifs.util.transport;
 
 /**
- *
+ * Interface for transport response messages.
+ * This interface represents responses received from network transports.
  */
 public interface Response extends Message {
 

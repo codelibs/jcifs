@@ -30,7 +30,8 @@ import jcifs.smb.SmbPipeHandleInternal;
 import jcifs.util.Encdec;
 
 /**
- *
+ * DCE/RPC handle implementation for named pipe communications.
+ * This class provides DCE/RPC communication over SMB named pipes.
  */
 public class DcerpcPipeHandle extends DcerpcHandle {
 

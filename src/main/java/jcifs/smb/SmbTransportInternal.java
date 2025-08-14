@@ -26,8 +26,12 @@ import jcifs.SmbSession;
 import jcifs.SmbTransport;
 
 /**
- * @author mbechler
+ * Internal interface for SMB transport operations.
  *
+ * This interface provides internal methods for managing
+ * SMB network transport and communication.
+ *
+ * @author mbechler
  */
 public interface SmbTransportInternal extends SmbTransport {
 

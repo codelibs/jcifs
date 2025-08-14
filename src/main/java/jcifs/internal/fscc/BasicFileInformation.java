@@ -20,8 +20,11 @@ package jcifs.internal.fscc;
 import jcifs.internal.SmbBasicFileInfo;
 
 /**
- * @author mbechler
+ * File System Control Code (FSCC) interface for Basic File Information.
+ * Combines SMB basic file info with FSCC file information capabilities,
+ * providing access to fundamental file metadata used in SMB file system operations.
  *
+ * @author mbechler
  */
 public interface BasicFileInformation extends SmbBasicFileInfo, FileInformation {
 

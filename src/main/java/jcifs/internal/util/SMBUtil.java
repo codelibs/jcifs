@@ -20,10 +20,12 @@ package jcifs.internal.util;
 import jcifs.SmbConstants;
 
 /**
- * @author mbechler
+ * SMB protocol utility class providing low-level data encoding and decoding operations.
+ * Contains methods for reading and writing various data types (integers, strings, timestamps)
+ * in SMB protocol format, handling endianness and data type conversions.
  *
+ * @author mbechler
  */
-@SuppressWarnings("javadoc")
 public class SMBUtil {
 
     public static void writeInt2(final long val, final byte[] dst, int dstIndex) {

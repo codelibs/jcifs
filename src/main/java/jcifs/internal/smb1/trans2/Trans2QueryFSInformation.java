@@ -25,7 +25,9 @@ import jcifs.internal.util.SMBUtil;
 import jcifs.util.Hexdump;
 
 /**
- *
+ * Trans2 QueryFSInformation request message for querying file system information.
+ * This class implements the TRANS2_QUERY_FS_INFORMATION transaction to retrieve
+ * various file system attributes such as volume information, size, and capabilities.
  */
 public class Trans2QueryFSInformation extends SmbComTransaction {
 

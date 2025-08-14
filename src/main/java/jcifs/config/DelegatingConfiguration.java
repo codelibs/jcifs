@@ -27,8 +27,10 @@ import jcifs.DialectVersion;
 import jcifs.ResolverType;
 
 /**
- * @author mbechler
+ * Configuration implementation that delegates to another configuration instance.
+ * Provides a wrapper mechanism for configuration objects with delegation pattern.
  *
+ * @author mbechler
  */
 public class DelegatingConfiguration implements Configuration {
 

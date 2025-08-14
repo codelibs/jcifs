@@ -25,8 +25,12 @@ import jcifs.internal.smb2.Smb2Constants;
 import jcifs.internal.util.SMBUtil;
 
 /**
- * @author mbechler
+ * SMB2 Read request message.
  *
+ * This command is used to read data from a file that has been
+ * previously opened with a Create request.
+ *
+ * @author mbechler
  */
 public class Smb2ReadRequest extends ServerMessageBlock2Request<Smb2ReadResponse> implements RequestWithFileId {
 

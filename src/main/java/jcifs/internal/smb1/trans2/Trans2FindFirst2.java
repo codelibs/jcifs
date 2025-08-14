@@ -24,9 +24,11 @@ import jcifs.internal.util.SMBUtil;
 import jcifs.util.Hexdump;
 
 /**
+ * SMB1 Trans2 Find First 2 transaction request implementation.
+ * Initiates directory enumeration operations in SMB1 protocol, allowing clients
+ * to search for files and directories matching specified patterns and criteria.
  *
  * @author mbechler
- *
  */
 public class Trans2FindFirst2 extends SmbComTransaction {
 

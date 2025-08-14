@@ -21,8 +21,12 @@ import jcifs.Encodable;
 import jcifs.internal.util.SMBUtil;
 
 /**
- * @author mbechler
+ * SMB2 Lock data structure.
  *
+ * This class represents a single lock element used in
+ * SMB2 Lock requests for byte-range locking.
+ *
+ * @author mbechler
  */
 public class Smb2Lock implements Encodable {
 

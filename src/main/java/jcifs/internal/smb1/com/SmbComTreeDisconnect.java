@@ -22,7 +22,10 @@ import jcifs.Configuration;
 import jcifs.internal.smb1.ServerMessageBlock;
 
 /**
+ * SMB1 COM_TREE_DISCONNECT command implementation.
  *
+ * This command disconnects from a tree connection (share) on the server.
+ * It releases the tree ID and terminates access to the share.
  */
 public class SmbComTreeDisconnect extends ServerMessageBlock {
 

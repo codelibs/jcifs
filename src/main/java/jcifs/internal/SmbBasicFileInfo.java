@@ -19,9 +19,11 @@
 package jcifs.internal;
 
 /**
+ * Interface for basic SMB file information.
+ * Provides access to fundamental file metadata including attributes, timestamps,
+ * and file size information retrieved from SMB file system operations.
  *
  * @author mbechler
- *
  */
 public interface SmbBasicFileInfo {
 

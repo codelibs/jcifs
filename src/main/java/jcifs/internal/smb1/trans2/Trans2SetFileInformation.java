@@ -25,7 +25,9 @@ import jcifs.internal.smb1.trans.SmbComTransaction;
 import jcifs.internal.util.SMBUtil;
 
 /**
- *
+ * Trans2 SetFileInformation request message for modifying file metadata.
+ * This class implements the TRANS2_SET_FILE_INFORMATION transaction to update
+ * file attributes, timestamps, and other metadata properties.
  */
 public class Trans2SetFileInformation extends SmbComTransaction {
 

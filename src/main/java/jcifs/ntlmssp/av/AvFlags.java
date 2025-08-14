@@ -20,8 +20,10 @@ package jcifs.ntlmssp.av;
 import jcifs.internal.util.SMBUtil;
 
 /**
- * @author mbechler
+ * NTLMSSP AV (Attribute-Value) pair representing flags information.
+ * Contains flag values used in NTLM authentication attribute-value pairs.
  *
+ * @author mbechler
  */
 public class AvFlags extends AvPair {
 

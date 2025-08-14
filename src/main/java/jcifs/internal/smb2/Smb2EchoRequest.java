@@ -22,8 +22,12 @@ import jcifs.Configuration;
 import jcifs.internal.util.SMBUtil;
 
 /**
- * @author mbechler
+ * SMB2 Echo request message.
  *
+ * This command is used to test connectivity and ensure the
+ * SMB2 connection is still active.
+ *
+ * @author mbechler
  */
 public class Smb2EchoRequest extends ServerMessageBlock2Request<Smb2EchoResponse> {
 

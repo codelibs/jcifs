@@ -33,7 +33,6 @@ import org.bouncycastle.asn1.DERBitString;
 import jcifs.pac.ASN1Util;
 import jcifs.pac.PACDecodingException;
 
-@SuppressWarnings("javadoc")
 public class KerberosApRequest {
 
     private byte apOptions;

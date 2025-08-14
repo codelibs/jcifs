@@ -23,7 +23,10 @@ import jcifs.internal.smb1.ServerMessageBlock;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * SMB1 Find Close2 request message.
  *
+ * This command is used to close a search handle that was
+ * opened by a Trans2 Find First2 request.
  */
 public class SmbComFindClose2 extends ServerMessageBlock {
 

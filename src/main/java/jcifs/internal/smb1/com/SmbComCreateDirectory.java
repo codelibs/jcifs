@@ -22,7 +22,9 @@ import jcifs.Configuration;
 import jcifs.internal.smb1.ServerMessageBlock;
 
 /**
+ * SMB1 COM_CREATE_DIRECTORY command implementation.
  *
+ * This command creates a new directory on the server.
  */
 public class SmbComCreateDirectory extends ServerMessageBlock {
 

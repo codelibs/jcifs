@@ -20,8 +20,11 @@ package jcifs.internal.dtyp;
 import jcifs.Decodable;
 
 /**
- * @author mbechler
+ * Interface for Windows Data Type (DTYP) security information structures.
+ * Defines constants and functionality for security information types used in
+ * SMB security descriptor operations and access control management.
  *
+ * @author mbechler
  */
 public interface SecurityInfo extends Decodable {
 

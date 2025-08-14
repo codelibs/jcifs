@@ -20,8 +20,11 @@ package jcifs.internal.fscc;
 import jcifs.Decodable;
 
 /**
- * @author mbechler
+ * Base interface for File System Control Code (FSCC) file system information structures.
+ * Provides common functionality for various SMB2/SMB3 file system information classes
+ * used in query file system information operations, with constants for information levels.
  *
+ * @author mbechler
  */
 public interface FileSystemInformation extends Decodable {
 

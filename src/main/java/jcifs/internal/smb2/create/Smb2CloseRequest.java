@@ -29,6 +29,9 @@ import jcifs.internal.util.SMBUtil;
 import jcifs.util.Hexdump;
 
 /**
+ * SMB2 Close request message. This command is used to close a file or directory
+ * that was previously opened.
+ *
  * @author mbechler
  *
  */

@@ -18,8 +18,11 @@
 package jcifs.internal;
 
 /**
- * @author mbechler
+ * Interface for SMB Tree Connect response messages.
+ * Handles the server's response to a tree connect request, providing tree ID,
+ * service type, and DFS information for the connected share.
  *
+ * @author mbechler
  */
 public interface TreeConnectResponse extends CommonServerMessageBlockResponse {
 

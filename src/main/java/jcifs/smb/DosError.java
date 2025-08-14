@@ -18,7 +18,6 @@
 
 package jcifs.smb;
 
-@SuppressWarnings("javadoc")
 public interface DosError {
 
     int[][] DOS_ERROR_CODES = { { 0x00000000, 0x00000000 }, { 0x00010001, 0xc0000002 }, { 0x00010002, 0xc0000002 },

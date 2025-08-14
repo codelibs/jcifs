@@ -26,9 +26,11 @@ import jcifs.internal.smb1.AndXServerMessageBlock;
 import jcifs.internal.smb1.ServerMessageBlock;
 
 /**
+ * SMB1 Tree Connect AndX response implementation.
+ * Handles server responses to tree connect requests in SMB1 protocol, providing
+ * information about the connected share including service type and DFS capabilities.
  *
  * @author mbechler
- *
  */
 public class SmbComTreeConnectAndXResponse extends AndXServerMessageBlock implements TreeConnectResponse {
 

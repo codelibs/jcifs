@@ -23,7 +23,10 @@ import jcifs.internal.smb1.AndXServerMessageBlock;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * SMB1 Write AndX Response message.
  *
+ * This response contains information about the write operation,
+ * including the number of bytes actually written.
  */
 public class SmbComWriteAndXResponse extends AndXServerMessageBlock {
 

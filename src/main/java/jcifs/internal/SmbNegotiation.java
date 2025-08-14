@@ -18,8 +18,11 @@
 package jcifs.internal;
 
 /**
- * @author mbechler
+ * Container class for SMB protocol negotiation state.
+ * Holds the negotiation request, response, and raw buffer data exchanged
+ * between client and server during SMB protocol version negotiation.
  *
+ * @author mbechler
  */
 public final class SmbNegotiation {
 

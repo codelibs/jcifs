@@ -46,9 +46,10 @@ import jcifs.SmbConstants;
 import jcifs.util.Hexdump;
 
 /**
+ * Implementation of NetBIOS name service client for resolving NetBIOS names to IP addresses.
+ * Provides functionality for NetBIOS name resolution and network discovery operations.
  *
  * @author mbechler
- *
  */
 public class NameServiceClientImpl implements Runnable, NameServiceClient {
 

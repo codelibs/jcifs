@@ -22,8 +22,11 @@ import java.util.List;
 import jcifs.FileNotifyInformation;
 
 /**
- * @author mbechler
+ * Interface for SMB change notification response messages.
+ * Handles responses from directory change notification requests, providing information
+ * about file system changes such as file creation, deletion, or modification events.
  *
+ * @author mbechler
  */
 public interface NotifyResponse extends CommonServerMessageBlockResponse {
 

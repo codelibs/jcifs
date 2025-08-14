@@ -22,8 +22,12 @@ import jcifs.internal.SMBProtocolDecodingException;
 import jcifs.internal.util.SMBUtil;
 
 /**
- * @author mbechler
+ * SMB2 Encryption Negotiate Context.
  *
+ * This negotiate context is used in SMB 3.x to negotiate
+ * encryption capabilities and cipher suites.
+ *
+ * @author mbechler
  */
 public class EncryptionNegotiateContext implements NegotiateContextRequest, NegotiateContextResponse {
 

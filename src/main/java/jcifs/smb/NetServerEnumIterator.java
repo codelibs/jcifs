@@ -31,7 +31,10 @@ import jcifs.internal.smb1.net.NetServerEnum2Response;
 import jcifs.internal.smb1.trans.SmbComTransaction;
 
 /**
+ * Iterator for enumerating network servers.
  *
+ * This class provides iteration over network servers discovered
+ * through NetBIOS server enumeration requests.
  */
 public class NetServerEnumIterator implements CloseableIterator<FileEntry> {
 

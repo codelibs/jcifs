@@ -27,6 +27,9 @@ import jcifs.internal.smb2.Smb2Constants;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * SMB2 Query Directory request message. This command is used to enumerate the contents
+ * of a directory on the server.
+ *
  * @author mbechler
  *
  */

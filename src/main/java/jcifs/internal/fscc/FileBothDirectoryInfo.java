@@ -28,7 +28,9 @@ import jcifs.smb.FileEntry;
 import jcifs.util.Strings;
 
 /**
- *
+ * Represents the FILE_BOTH_DIR_INFORMATION structure used in SMB directory enumeration operations.
+ * This structure contains comprehensive file information including timestamps, attributes, sizes,
+ * short name (8.3 format), and full filename for directory entries.
  */
 public class FileBothDirectoryInfo implements FileEntry, Decodable {
 

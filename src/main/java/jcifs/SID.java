@@ -20,11 +20,11 @@ package jcifs;
 /**
  * A Windows SID is a numeric identifier used to represent Windows
  * accounts. SIDs are commonly represented using a textual format such as
- * <tt>S-1-5-21-1496946806-2192648263-3843101252-1029</tt> but they may
+ * <code>S-1-5-21-1496946806-2192648263-3843101252-1029</code> but they may
  * also be resolved to yield the name of the associated Windows account
- * such as <tt>Administrators</tt> or <tt>MYDOM\alice</tt>.
+ * such as <code>Administrators</code> or <code>MYDOM\alice</code>.
  * <p>
- * Consider the following output of <tt>examples/SidLookup.java</tt>:
+ * Consider the following output of <code>examples/SidLookup.java</code>:
  *
  * <pre>
  *        toString: S-1-5-21-4133388617-793952518-2001621813-512
@@ -146,7 +146,8 @@ public interface SID {
      * Returns the type of this SID indicating the state or type of account.
      * <p>
      * SID types are described in the following table.
-     * <table summary="Type codes">
+     * <table>
+     * <caption>Type codes</caption>
      * <tr>
      * <th>Type</th>
      * <th>Name</th>

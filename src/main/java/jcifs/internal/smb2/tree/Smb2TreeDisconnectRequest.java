@@ -24,8 +24,12 @@ import jcifs.internal.smb2.Smb2Constants;
 import jcifs.internal.util.SMBUtil;
 
 /**
- * @author mbechler
+ * SMB2 Tree Disconnect request message.
  *
+ * This command is used to disconnect from a previously
+ * connected tree (shared resource).
+ *
+ * @author mbechler
  */
 public class Smb2TreeDisconnectRequest extends ServerMessageBlock2Request<Smb2TreeDisconnectResponse> {
 

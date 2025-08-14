@@ -20,7 +20,6 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 
-@SuppressWarnings("javadoc")
 public class PacSignature {
 
     public static final int KERB_CHECKSUM_HMAC_MD5 = 0xFFFFFF76;

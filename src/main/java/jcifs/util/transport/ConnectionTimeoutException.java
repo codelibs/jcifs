@@ -17,8 +17,10 @@
 package jcifs.util.transport;
 
 /**
- * @author mbechler
+ * Exception thrown when a network connection times out during SMB communication.
+ * Indicates that the connection could not be established within the specified timeout period.
  *
+ * @author mbechler
  */
 public class ConnectionTimeoutException extends TransportException {
 

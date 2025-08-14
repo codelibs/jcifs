@@ -18,8 +18,11 @@
 package jcifs.internal;
 
 /**
- * @author mbechler
+ * Interface for SMB requests that include file system path information.
+ * Provides path handling capabilities including UNC path resolution and DFS support
+ * for SMB operations that target specific files or directories on remote shares.
  *
+ * @author mbechler
  */
 public interface RequestWithPath extends CommonServerMessageBlock {
 

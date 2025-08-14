@@ -16,7 +16,6 @@
  */
 package jcifs.internal.smb1.com;
 
-@SuppressWarnings("javadoc")
 public class ServerData {
 
     public byte sflags;

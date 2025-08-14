@@ -23,6 +23,9 @@ import jcifs.internal.smb2.ServerMessageBlock2Response;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * SMB2 Set Info response message. This response acknowledges the successful
+ * modification of file or security information.
+ *
  * @author mbechler
  *
  */

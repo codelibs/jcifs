@@ -49,7 +49,7 @@ public final class SmbCopyUtil {
     private static final Logger log = LoggerFactory.getLogger(SmbCopyUtil.class);
 
     /**
-     *
+     * Private constructor to prevent instantiation of utility class.
      */
     private SmbCopyUtil() {
     }

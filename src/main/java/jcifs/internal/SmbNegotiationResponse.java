@@ -22,8 +22,11 @@ import jcifs.DialectVersion;
 import jcifs.util.transport.Response;
 
 /**
- * @author mbechler
+ * Interface for SMB protocol negotiation response handling.
+ * Represents the server's response to a protocol negotiation request, containing negotiated
+ * dialect version, security settings, capabilities, and buffer sizes for the SMB connection.
  *
+ * @author mbechler
  */
 public interface SmbNegotiationResponse extends CommonServerMessageBlock, Response {
 

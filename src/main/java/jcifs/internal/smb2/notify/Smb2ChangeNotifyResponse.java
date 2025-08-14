@@ -30,8 +30,12 @@ import jcifs.internal.util.SMBUtil;
 import jcifs.smb.NtStatus;
 
 /**
- * @author mbechler
+ * SMB2 Change Notify response message.
  *
+ * This response contains information about file system changes
+ * that occurred in the monitored directory.
+ *
+ * @author mbechler
  */
 public class Smb2ChangeNotifyResponse extends ServerMessageBlock2Response implements NotifyResponse {
 

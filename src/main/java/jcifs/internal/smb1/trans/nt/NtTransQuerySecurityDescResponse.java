@@ -26,7 +26,10 @@ import jcifs.internal.dtyp.SecurityDescriptor;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * Response for SMB1 NT Transaction security descriptor query.
  *
+ * This response contains the Windows security descriptor retrieved
+ * from the server, including access control information.
  */
 public class NtTransQuerySecurityDescResponse extends SmbComNtTransactionResponse {
 

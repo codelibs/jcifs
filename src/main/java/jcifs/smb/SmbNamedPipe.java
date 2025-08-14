@@ -52,16 +52,16 @@ import jcifs.internal.smb1.com.SmbComNTCreateAndXResponse;
  * flags is necessary to distinguish which type of Named Pipe behavior
  * is desired.
  *
- * <p>
- * <table border="1" cellpadding="3" cellspacing="0" width="100%" summary="Usage examples">
- * <tr bgcolor="#ccccff">
+ * <table border="1">
+ * <caption>SmbNamedPipe Constructor Examples</caption>
+ * <tr >
  * <td colspan="2"><b><code>SmbNamedPipe</code> Constructor Examples</b></td>
  * <tr>
- * <td width="20%"><b>Code Sample</b></td>
+ * <td ><b>Code Sample</b></td>
  * <td><b>Description</b></td>
  * </tr>
  * <tr>
- * <td width="20%">
+ * <td >
  *
  * <pre>
  * new SmbNamedPipe("smb://server/IPC$/PIPE/foo", SmbNamedPipe.PIPE_TYPE_RDWR | SmbNamedPipe.PIPE_TYPE_CALL, context);
@@ -73,7 +73,7 @@ import jcifs.internal.smb1.com.SmbComNTCreateAndXResponse;
  * </td>
  * </tr>
  * <tr>
- * <td width="20%">
+ * <td >
  *
  * <pre>
  * new SmbNamedPipe("smb://server/IPC$/foo", SmbNamedPipe.PIPE_TYPE_RDWR | SmbNamedPipe.PIPE_TYPE_TRANSACT, context);
@@ -86,7 +86,7 @@ import jcifs.internal.smb1.com.SmbComNTCreateAndXResponse;
  * </td>
  * </tr>
  * <tr>
- * <td width="20%">
+ * <td >
  *
  * <pre>
  * new SmbNamedPipe("smb://server/IPC$/foo", SmbNamedPipe.PIPE_TYPE_RDWR, context);

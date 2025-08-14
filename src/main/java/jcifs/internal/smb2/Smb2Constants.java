@@ -18,8 +18,12 @@
 package jcifs.internal.smb2;
 
 /**
- * @author mbechler
+ * Constants for SMB2/SMB3 protocol.
  *
+ * This class contains protocol-specific constants, command codes,
+ * flags, and other values used in SMB2/SMB3 communication.
+ *
+ * @author mbechler
  */
 public final class Smb2Constants {
 

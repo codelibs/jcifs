@@ -19,7 +19,6 @@
 
 package jcifs.dcerpc.ndr;
 
-@SuppressWarnings("javadoc")
 public class NdrHyper extends NdrObject {
 
     public long value;

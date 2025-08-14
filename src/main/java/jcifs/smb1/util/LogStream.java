@@ -43,7 +43,7 @@ public class LogStream extends PrintStream {
     }
 
     /**
-     * This must be called before <tt>getInstance</tt> is called or
+     * This must be called before <code>getInstance</code> is called or
      * it will have no effect.
      */
     public static void setInstance(final PrintStream stream) {

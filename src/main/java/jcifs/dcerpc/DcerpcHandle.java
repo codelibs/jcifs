@@ -29,8 +29,8 @@ import jcifs.dcerpc.ndr.NdrBuffer;
 import jcifs.dcerpc.ndr.NdrException;
 
 /**
- *
- *
+ * Abstract base class for DCE/RPC communication handles.
+ * This class provides the foundation for DCE/RPC client communication.
  */
 public abstract class DcerpcHandle implements DcerpcConstants, AutoCloseable {
 

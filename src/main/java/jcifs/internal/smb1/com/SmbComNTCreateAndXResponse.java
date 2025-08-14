@@ -27,8 +27,10 @@ import jcifs.internal.util.SMBUtil;
 import jcifs.util.Hexdump;
 
 /**
+ * SMB1 NT Create AndX Response message.
  *
- *
+ * This response contains information about the created or opened file,
+ * including file handle, attributes, and creation disposition.
  */
 public class SmbComNTCreateAndXResponse extends AndXServerMessageBlock implements SmbBasicFileInfo {
 

@@ -30,7 +30,8 @@ import jcifs.dcerpc.msrpc.samr;
 import jcifs.dcerpc.msrpc.srvsvc;
 
 /**
- *
+ * DCE/RPC binding information for connecting to remote endpoints.
+ * This class encapsulates the details needed to establish a DCE/RPC connection.
  */
 public class DcerpcBinding {
 

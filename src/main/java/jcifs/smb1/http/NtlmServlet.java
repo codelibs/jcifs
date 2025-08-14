@@ -41,9 +41,10 @@ import jcifs.smb1.util.Base64;
  * to protect content with NTLM HTTP Authentication. Servlets that
  * extend this abstract base class may be authenticatied against an SMB
  * server or domain controller depending on how the
- * <tt>jcifs.smb1.smb1.client.domain</tt> or <tt>jcifs.smb1.http.domainController</tt>
+ * {@code jcifs.smb1.smb1.client.domain} or {@code jcifs.smb1.http.domainController}
  * properties are be specified. <b>With later containers the
- * <tt>NtlmHttpFilter</tt> should be used/b>. For custom NTLM HTTP Authentication schemes the <tt>NtlmSsp</tt> may be used.
+ * {@code NtlmHttpFilter} should be used</b>. For custom NTLM HTTP Authentication schemes the {@code NtlmSsp} may be used.
+ *
  * <p>
  * Read <a href="../../../ntlmhttpauth.html">jCIFS NTLM HTTP Authentication and the Network Explorer Servlet</a> related information.
  */

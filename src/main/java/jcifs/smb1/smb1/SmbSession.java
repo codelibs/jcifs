@@ -122,14 +122,14 @@ public final class SmbSession {
 
     /**
      * Authenticate arbitrary credentials represented by the
-     * <tt>NtlmPasswordAuthentication</tt> object against the domain controller
-     * specified by the <tt>UniAddress</tt> parameter. If the credentials are
-     * not accepted, an <tt>SmbAuthException</tt> will be thrown. If an error
-     * occurs an <tt>SmbException</tt> will be thrown. If the credentials are
+     * <code>NtlmPasswordAuthentication</code> object against the domain controller
+     * specified by the <code>UniAddress</code> parameter. If the credentials are
+     * not accepted, an <code>SmbAuthException</code> will be thrown. If an error
+     * occurs an <code>SmbException</code> will be thrown. If the credentials are
      * valid, the method will return without throwing an exception. See the
      * last <a href="../../../faq.html">FAQ</a> question.
      * <p>
-     * See also the <tt>jcifs.smb1.smb1.client.logonShare</tt> property.
+     * See also the <code>jcifs.smb1.smb1.client.logonShare</code> property.
      */
     public static void logon(final UniAddress dc, final NtlmPasswordAuthentication auth) throws SmbException {
         logon(dc, 0, auth);

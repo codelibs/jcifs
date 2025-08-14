@@ -25,7 +25,10 @@ import jcifs.internal.util.SMBUtil;
 import jcifs.util.Hexdump;
 
 /**
+ * SMB1 Delete file request message.
  *
+ * This command is used to delete a file on the server.
+ * The file must not be in use before it can be deleted.
  */
 public class SmbComDelete extends ServerMessageBlock {
 

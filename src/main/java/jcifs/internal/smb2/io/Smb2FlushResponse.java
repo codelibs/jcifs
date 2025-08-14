@@ -23,8 +23,12 @@ import jcifs.internal.smb2.ServerMessageBlock2Response;
 import jcifs.internal.util.SMBUtil;
 
 /**
- * @author mbechler
+ * SMB2 Flush response message.
  *
+ * This response confirms that buffered data has been
+ * successfully flushed to the storage device.
+ *
+ * @author mbechler
  */
 public class Smb2FlushResponse extends ServerMessageBlock2Response {
 

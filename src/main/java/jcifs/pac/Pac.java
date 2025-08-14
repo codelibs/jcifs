@@ -29,7 +29,6 @@ import org.slf4j.LoggerFactory;
 
 import jcifs.util.Hexdump;
 
-@SuppressWarnings("javadoc")
 public class Pac {
 
     private static final Logger log = LoggerFactory.getLogger(Pac.class);

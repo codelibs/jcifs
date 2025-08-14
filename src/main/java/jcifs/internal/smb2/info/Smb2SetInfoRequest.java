@@ -27,6 +27,9 @@ import jcifs.internal.smb2.Smb2Constants;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * SMB2 Set Info request message. This command is used to modify file attributes,
+ * security information, or other metadata on the server.
+ *
  * @author mbechler
  *
  */

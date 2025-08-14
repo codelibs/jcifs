@@ -16,7 +16,6 @@
  */
 package jcifs.pac;
 
-@SuppressWarnings("javadoc")
 public interface PacConstants {
 
     int PAC_VERSION = 0;

@@ -22,7 +22,9 @@ import jcifs.internal.SMBProtocolDecodingException;
 import jcifs.internal.util.SMBUtil;
 
 /**
- *
+ * Represents the FILE_FS_SIZE_INFORMATION structure used to query file system size information.
+ * This structure provides details about the total allocation units, free allocation units,
+ * sectors per allocation unit, and bytes per sector for a file system volume.
  */
 public class FileFsSizeInformation implements AllocInfo {
 

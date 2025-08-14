@@ -26,8 +26,12 @@ import jcifs.ResourceNameFilter;
 import jcifs.SmbResource;
 
 /**
- * @author mbechler
+ * Base class for directory enumeration iterators.
  *
+ * This abstract class provides common functionality for iterating
+ * over directory entries in SMB file shares.
+ *
+ * @author mbechler
  */
 public abstract class DirFileEntryEnumIteratorBase implements CloseableIterator<FileEntry> {
 

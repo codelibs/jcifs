@@ -63,7 +63,7 @@ public class JAASAuthenticator extends Kerb5Authenticator implements CallbackHan
     private Configuration configuration;
 
     /**
-     * Create an authenticator using the JAAS service <tt>jcifs</tt>
+     * Create an authenticator using the JAAS service <code>jcifs</code>
      *
      * This will require that a keytab is configured in this service.
      *

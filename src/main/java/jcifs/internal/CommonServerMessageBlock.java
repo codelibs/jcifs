@@ -20,8 +20,11 @@ package jcifs.internal;
 import jcifs.util.transport.Message;
 
 /**
- * @author mbechler
+ * Common interface for all SMB message blocks in the jCIFS protocol implementation.
+ * Provides core functionality for encoding/decoding SMB messages, handling message signing,
+ * and managing message metadata such as IDs, commands, and authentication information.
  *
+ * @author mbechler
  */
 public interface CommonServerMessageBlock extends Message {
 

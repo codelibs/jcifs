@@ -22,8 +22,12 @@ import jcifs.internal.CommonServerMessageBlockRequest;
 import jcifs.internal.util.SMBUtil;
 
 /**
- * @author mbechler
+ * SMB2 Cancel request message.
  *
+ * This command is used to cancel a previously sent command
+ * that is still being processed by the server.
+ *
+ * @author mbechler
  */
 public class Smb2CancelRequest extends ServerMessageBlock2 implements CommonServerMessageBlockRequest {
 

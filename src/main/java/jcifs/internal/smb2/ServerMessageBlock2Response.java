@@ -24,8 +24,12 @@ import jcifs.internal.SMBProtocolDecodingException;
 import jcifs.smb.NtStatus;
 
 /**
- * @author mbechler
+ * Base class for SMB2/SMB3 response messages.
  *
+ * This abstract class provides common functionality for handling
+ * response messages in the SMB2/SMB3 protocol.
+ *
+ * @author mbechler
  */
 public abstract class ServerMessageBlock2Response extends ServerMessageBlock2 implements CommonServerMessageBlockResponse {
 

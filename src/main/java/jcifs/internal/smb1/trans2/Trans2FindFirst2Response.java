@@ -26,7 +26,9 @@ import jcifs.internal.smb1.trans.SmbComTransactionResponse;
 import jcifs.internal.util.SMBUtil;
 
 /**
- *
+ * Trans2 FindFirst2 response message for SMB1 directory enumeration.
+ * This class handles the response from a TRANS2_FIND_FIRST2 request, which returns
+ * the first set of directory entries matching the specified search criteria.
  */
 public class Trans2FindFirst2Response extends SmbComTransactionResponse {
 

@@ -37,7 +37,8 @@ import jcifs.util.Hexdump;
 
 /**
  *
- * @internal
+ *
+ * <p>This class is intended for internal use.</p>
  */
 public class SMB1SigningDigest implements SMBSigningDigest {
 

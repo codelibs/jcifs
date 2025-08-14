@@ -18,8 +18,12 @@
 package jcifs.smb;
 
 /**
- * @author mbechler
+ * Exception thrown when reaching the end of an SMB file.
  *
+ * This exception is thrown during read operations when
+ * attempting to read beyond the end of a file.
+ *
+ * @author mbechler
  */
 public class SmbEndOfFileException extends SmbException {
 

@@ -26,7 +26,6 @@ import javax.security.auth.kerberos.KerberosKey;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
-@SuppressWarnings("javadoc")
 public class KerberosCredentials {
 
     private Subject subject;

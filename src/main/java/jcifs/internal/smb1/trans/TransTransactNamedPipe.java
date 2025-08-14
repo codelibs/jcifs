@@ -25,7 +25,11 @@ import jcifs.Configuration;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * SMB1 transaction subcommand for transacting with a named pipe.
  *
+ * This class implements the TRANS_TRANSACT_NAMED_PIPE transaction which
+ * combines writing data to a pipe and reading the response in a single operation.
+ * This is more efficient than separate write and read operations.
  */
 public class TransTransactNamedPipe extends SmbComTransaction {
 

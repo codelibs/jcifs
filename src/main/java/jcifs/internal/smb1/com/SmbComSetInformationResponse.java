@@ -22,9 +22,12 @@ import jcifs.Configuration;
 import jcifs.internal.smb1.ServerMessageBlock;
 
 /**
+ * Response for SMB1 COM_SET_INFORMATION command.
+ *
+ * This response indicates the success or failure of setting file
+ * attributes and last write time.
  *
  * @author mbechler
- *
  */
 public class SmbComSetInformationResponse extends ServerMessageBlock {
 

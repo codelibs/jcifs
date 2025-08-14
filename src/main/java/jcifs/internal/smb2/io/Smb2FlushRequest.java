@@ -25,8 +25,12 @@ import jcifs.internal.smb2.Smb2Constants;
 import jcifs.internal.util.SMBUtil;
 
 /**
- * @author mbechler
+ * SMB2 Flush request message.
  *
+ * This command is used to flush buffered data to the
+ * underlying storage device for a given file handle.
+ *
+ * @author mbechler
  */
 public class Smb2FlushRequest extends ServerMessageBlock2Request<Smb2FlushResponse> implements RequestWithFileId {
 

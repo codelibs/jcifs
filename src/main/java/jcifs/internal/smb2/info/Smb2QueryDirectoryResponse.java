@@ -29,6 +29,9 @@ import jcifs.internal.util.SMBUtil;
 import jcifs.smb.FileEntry;
 
 /**
+ * SMB2 Query Directory response message. This response contains directory listing
+ * information with file entries and their attributes.
+ *
  * @author mbechler
  *
  */

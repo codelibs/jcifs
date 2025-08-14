@@ -27,9 +27,9 @@ import jcifs.smb1.util.Hexdump;
  * are "allowed". If all of the desired access bits are not "allowed"
  * the then same process is repeated for inherited ACEs.
  * <p>
- * For example, if user <tt>WNET\alice</tt> tries to open a file
- * with desired access bits <tt>0x00000003</tt> (<tt>FILE_READ_DATA |
- * FILE_WRITE_DATA</tt>) and the target file has the following security
+ * For example, if user <code>WNET\alice</code> tries to open a file
+ * with desired access bits <code>0x00000003</code> (<code>FILE_READ_DATA |
+ * FILE_WRITE_DATA</code>) and the target file has the following security
  * descriptor ACEs:
  * <pre>
  * Allow WNET\alice     0x001200A9  Direct
@@ -37,11 +37,11 @@ import jcifs.smb1.util.Hexdump;
  * Allow SYSTEM         0x001F01FF  Inherited
  * </pre>
  * the access check would fail because the direct ACE has an access mask
- * of <tt>0x001200A9</tt> which doesn't have the
- * <tt>FILE_WRITE_DATA</tt> bit on (bit <tt>0x00000002</tt>). Actually, this isn't quite correct. If
- * <tt>WNET\alice</tt> is in the local <tt>Administrators</tt> group the access check
- * will succeed because the inherited ACE allows local <tt>Administrators</tt>
- * both <tt>FILE_READ_DATA</tt> and <tt>FILE_WRITE_DATA</tt> access.
+ * of <code>0x001200A9</code> which doesn't have the
+ * <code>FILE_WRITE_DATA</code> bit on (bit <code>0x00000002</code>). Actually, this isn't quite correct. If
+ * <code>WNET\alice</code> is in the local <code>Administrators</code> group the access check
+ * will succeed because the inherited ACE allows local <code>Administrators</code>
+ * both <code>FILE_READ_DATA</code> and <code>FILE_WRITE_DATA</code> access.
  */
 
 public class ACE {
@@ -86,7 +86,7 @@ public class ACE {
     /**
      * Returns true if this ACE is an inherited ACE and false if it is a direct ACE.
      * <p>
-     * Note: For reasons not fully understood, <tt>FLAGS_INHERITED</tt> may
+     * Note: For reasons not fully understood, <code>FLAGS_INHERITED</code> may
      * not be set within all security descriptors even though the ACE was in
      * face inherited. If an inherited ACE is added to a parent the Windows
      * ACL editor will rebuild all children ACEs and set this flag accordingly.
@@ -96,8 +96,8 @@ public class ACE {
     }
 
     /**
-     * Returns the flags for this ACE. The </tt>isInherited()</tt>
-     * method checks the <tt>FLAGS_INHERITED</tt> bit in these flags.
+     * Returns the flags for this ACE. The <code>isInherited()</code>
+     * method checks the <code>FLAGS_INHERITED</code> bit in these flags.
      */
     public int getFlags() {
         return flags;
@@ -130,8 +130,8 @@ public class ACE {
 
     /**
      * Returns the access mask accociated with this ACE. Use the
-     * constants for <tt>FILE_READ_DATA</tt>, <tt>FILE_WRITE_DATA</tt>,
-     * <tt>READ_CONTROL</tt>, <tt>GENERIC_ALL</tt>, etc with bitwise
+     * constants for <code>FILE_READ_DATA</code>, <code>FILE_WRITE_DATA</code>,
+     * <code>READ_CONTROL</code>, <code>GENERIC_ALL</code>, etc with bitwise
      * operators to determine which bits of the mask are on or off.
      */
     public int getAccessMask() {

@@ -23,8 +23,10 @@ import java.util.Set;
 import jcifs.internal.smb2.Smb2Constants;
 
 /**
- * @author mbechler
+ * Enumeration of SMB protocol dialect versions supported by JCIFS.
+ * This includes legacy SMB1/CIFS as well as modern SMB2/SMB3 dialects.
  *
+ * @author mbechler
  */
 public enum DialectVersion {
 

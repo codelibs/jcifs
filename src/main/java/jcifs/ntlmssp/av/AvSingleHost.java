@@ -21,8 +21,10 @@ import jcifs.Configuration;
 import jcifs.internal.util.SMBUtil;
 
 /**
- * @author mbechler
+ * NTLMSSP AV pair representing single host information in NTLM authentication.
+ * Contains host-specific data used during the NTLM challenge-response process.
  *
+ * @author mbechler
  */
 public class AvSingleHost extends AvPair {
 

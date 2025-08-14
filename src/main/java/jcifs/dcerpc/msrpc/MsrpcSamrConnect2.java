@@ -18,7 +18,6 @@
 
 package jcifs.dcerpc.msrpc;
 
-@SuppressWarnings("javadoc")
 public class MsrpcSamrConnect2 extends samr.SamrConnect2 {
 
     public MsrpcSamrConnect2(final String server, final int access, final SamrPolicyHandle policyHandle) {

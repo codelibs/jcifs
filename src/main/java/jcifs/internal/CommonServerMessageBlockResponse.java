@@ -20,8 +20,11 @@ package jcifs.internal;
 import jcifs.util.transport.Response;
 
 /**
- * @author mbechler
+ * Interface for SMB response messages received from server.
+ * Extends the common SMB message block with response-specific functionality including
+ * asynchronous response handling and response chaining capabilities.
  *
+ * @author mbechler
  */
 public interface CommonServerMessageBlockResponse extends CommonServerMessageBlock, Response {
 

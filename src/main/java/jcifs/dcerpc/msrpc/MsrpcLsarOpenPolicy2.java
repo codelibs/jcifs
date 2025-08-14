@@ -19,7 +19,6 @@
 
 package jcifs.dcerpc.msrpc;
 
-@SuppressWarnings("javadoc")
 public class MsrpcLsarOpenPolicy2 extends lsarpc.LsarOpenPolicy2 {
 
     public MsrpcLsarOpenPolicy2(final String server, final int access, final LsaPolicyHandle policyHandle) {

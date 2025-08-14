@@ -21,7 +21,8 @@ package jcifs;
  * This is an internal API.
  *
  * @author mbechler
- * @internal
+ *
+ * <p>This interface is intended for internal use.</p>
  */
 public interface DfsResolver {
 

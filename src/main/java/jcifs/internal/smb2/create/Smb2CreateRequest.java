@@ -31,6 +31,9 @@ import jcifs.internal.util.SMBUtil;
 import jcifs.util.Hexdump;
 
 /**
+ * SMB2 Create request message. This command is used to create or open a file or directory
+ * on the server with specified access rights and sharing options.
+ *
  * @author mbechler
  *
  */

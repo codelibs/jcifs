@@ -16,7 +16,6 @@
  */
 package jcifs.pac;
 
-@SuppressWarnings("javadoc")
 public class PacUnicodeString {
 
     private final short length;

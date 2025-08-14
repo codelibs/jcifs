@@ -21,7 +21,6 @@ package jcifs.dcerpc.ndr;
 
 import jcifs.CIFSException;
 
-@SuppressWarnings("javadoc")
 public class NdrException extends CIFSException {
 
     /**

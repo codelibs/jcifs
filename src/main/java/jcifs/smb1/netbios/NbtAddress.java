@@ -44,7 +44,7 @@ import jcifs.smb1.util.Hexdump;
  * and hosts usually registers several names on the network. From a
  * Windows command prompt you can see
  * what names a host registers with the nbtstat command.
- * <p><blockquote><pre>
+ * <pre>
  * C:\>nbtstat -a 192.168.1.15
  *
  *        NetBIOS Remote Machine Name Table
@@ -59,7 +59,7 @@ import jcifs.smb1.util.Hexdump;
  * JMORRIS         &lt;03&gt;  UNIQUE      Registered
  *
  * MAC Address = 00-B0-34-21-FA-3B
- * </blockquote></pre>
+ * </pre>
  * <p> The hostname of this machine is <code>JMORRIS2</code>. It is
  * a member of the group(a.k.a workgroup and domain) <code>BILLING-NY</code>. To
  * obtain an {@link java.net.InetAddress} for a host one might do:

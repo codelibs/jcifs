@@ -37,7 +37,10 @@ import jcifs.util.Strings;
 import jcifs.util.transport.Response;
 
 /**
+ * SMB1 Negotiate Protocol Response message.
  *
+ * This response contains information about the server's capabilities,
+ * security mode, and supported protocol version.
  */
 public class SmbComNegotiateResponse extends ServerMessageBlock implements SmbNegotiationResponse {
 

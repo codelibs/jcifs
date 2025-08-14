@@ -23,8 +23,11 @@ import jcifs.Encodable;
 import jcifs.internal.util.SMBUtil;
 
 /**
- * @author mbechler
+ * File System Control Code (FSCC) request for pipe wait operations.
+ * Implements the FSCTL_PIPE_WAIT control code used to wait for a named pipe
+ * to become available when attempting to connect to a busy pipe.
  *
+ * @author mbechler
  */
 public class FsctlPipeWaitRequest implements Encodable {
 

@@ -26,8 +26,12 @@ import jcifs.internal.smb2.ServerMessageBlock2Response;
 import jcifs.internal.util.SMBUtil;
 
 /**
- * @author mbechler
+ * SMB2 Tree Connect response message.
  *
+ * This response contains information about the connected
+ * tree, including share type and capabilities.
+ *
+ * @author mbechler
  */
 public class Smb2TreeConnectResponse extends ServerMessageBlock2Response implements TreeConnectResponse {
 

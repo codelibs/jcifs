@@ -25,7 +25,10 @@ import jcifs.internal.util.SMBUtil;
 import jcifs.util.Hexdump;
 
 /**
+ * SMB1 COM_RENAME command implementation.
  *
+ * This command renames a file or directory on the SMB server.
+ * It takes an old filename and new filename and performs the rename operation.
  */
 public class SmbComRename extends ServerMessageBlock {
 

@@ -19,7 +19,8 @@ package jcifs.util.transport;
 import jcifs.CIFSException;
 
 /**
- *
+ * Exception class for transport layer errors.
+ * This exception is thrown when transport-related communication errors occur.
  */
 public class TransportException extends CIFSException {
 

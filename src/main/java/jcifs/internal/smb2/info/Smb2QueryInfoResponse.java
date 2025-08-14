@@ -32,6 +32,9 @@ import jcifs.internal.smb2.Smb2Constants;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * SMB2 Query Info response message. This response contains the requested file system,
+ * file, or security information from the server.
+ *
  * @author mbechler
  *
  */

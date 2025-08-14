@@ -25,8 +25,10 @@ import jcifs.CIFSException;
 import jcifs.internal.util.SMBUtil;
 
 /**
- * @author mbechler
+ * Collection and utility class for managing NTLMSSP AV (Attribute-Value) pairs.
+ * Provides methods for encoding, decoding, and manipulating sets of AV pairs.
  *
+ * @author mbechler
  */
 public final class AvPairs {
 

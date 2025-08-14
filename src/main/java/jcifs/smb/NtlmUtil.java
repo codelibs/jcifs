@@ -32,7 +32,8 @@ import jcifs.util.Strings;
  * Internal use only
  *
  * @author mbechler
- * @internal
+ *
+ * <p>This class is intended for internal use.</p>
  */
 public final class NtlmUtil {
 

@@ -41,8 +41,10 @@ import jcifs.ResolverType;
 import jcifs.SmbConstants;
 
 /**
- * @author mbechler
+ * Base implementation of CIFS configuration providing default settings and behavior.
+ * Serves as the foundation for configuration implementations in the jCIFS library.
  *
+ * @author mbechler
  */
 public class BaseConfiguration implements Configuration {
 

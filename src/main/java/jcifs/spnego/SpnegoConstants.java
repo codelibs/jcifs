@@ -19,7 +19,6 @@
 
 package jcifs.spnego;
 
-@SuppressWarnings("javadoc")
 public interface SpnegoConstants {
 
     String SPNEGO_MECHANISM = "1.3.6.1.5.5.2";

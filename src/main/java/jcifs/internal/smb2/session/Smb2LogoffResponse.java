@@ -23,6 +23,8 @@ import jcifs.internal.smb2.ServerMessageBlock2Response;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * SMB2 Logoff response message. This response acknowledges the termination of an SMB2 session.
+ *
  * @author mbechler
  *
  */

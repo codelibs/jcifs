@@ -24,7 +24,6 @@ import java.io.IOException;
 import jcifs.internal.dtyp.ACE;
 import jcifs.internal.dtyp.SecurityDescriptor;
 
-@SuppressWarnings("javadoc")
 public class MsrpcShareGetInfo extends srvsvc.ShareGetInfo {
 
     public MsrpcShareGetInfo(final String server, final String sharename) {

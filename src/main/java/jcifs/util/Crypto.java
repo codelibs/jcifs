@@ -31,8 +31,10 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import jcifs.CIFSUnsupportedCryptoException;
 
 /**
- * @author mbechler
+ * Cryptographic utility class providing encryption and decryption functionality for jCIFS.
+ * Handles security provider initialization and cryptographic operations for SMB authentication.
  *
+ * @author mbechler
  */
 public final class Crypto {
 
@@ -160,7 +162,7 @@ public final class Crypto {
     /**
      * Initialize Provider Instance with customProvider
      * @param customProvider
-     * @throws Exception if Provider has already been initialized.
+     * @throws CIFSUnsupportedCryptoException if Provider has already been initialized.
      */
     public static void initProvider(final Provider customProvider) throws CIFSUnsupportedCryptoException {
         if (provider != null) {

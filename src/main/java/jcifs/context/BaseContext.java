@@ -42,8 +42,10 @@ import jcifs.smb.SmbNamedPipe;
 import jcifs.smb.SmbTransportPoolImpl;
 
 /**
- * @author mbechler
+ * Base implementation of CIFS context providing core functionality for SMB operations.
+ * This class serves as the foundation for context implementations in the jCIFS library.
  *
+ * @author mbechler
  */
 public class BaseContext extends AbstractCIFSContext {
 

@@ -18,8 +18,10 @@
 package jcifs.util.transport;
 
 /**
- * @author mbechler
+ * Base class for transport-layer messages in the jCIFS network communication.
+ * Provides common functionality for message handling and processing.
  *
+ * @author mbechler
  */
 public interface Message {
 

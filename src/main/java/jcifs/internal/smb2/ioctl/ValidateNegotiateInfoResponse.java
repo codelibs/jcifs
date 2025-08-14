@@ -22,6 +22,9 @@ import jcifs.internal.SMBProtocolDecodingException;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * SMB2 Validate Negotiate Info response data structure. This structure contains the server's
+ * validation of the originally negotiated SMB2 dialect.
+ *
  * @author mbechler
  *
  */

@@ -23,8 +23,12 @@ import jcifs.internal.SMBProtocolDecodingException;
 import jcifs.internal.util.SMBUtil;
 
 /**
- * @author mbechler
+ * Represents a byte range for SMB1 locking and unlocking operations.
  *
+ * This class encapsulates the information about a byte range that needs
+ * to be locked or unlocked, including the process ID, offset, and length.
+ *
+ * @author mbechler
  */
 public class LockingAndXRange implements Encodable, Decodable {
 

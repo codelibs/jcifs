@@ -24,7 +24,6 @@ import javax.security.auth.kerberos.KerberosKey;
 
 import jcifs.pac.PACDecodingException;
 
-@SuppressWarnings("javadoc")
 public abstract class KerberosAuthData {
 
     public static List<KerberosAuthData> parse(int authType, byte[] token, Map<Integer, KerberosKey> keys) throws PACDecodingException {

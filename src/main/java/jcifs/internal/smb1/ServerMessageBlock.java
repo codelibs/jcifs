@@ -36,8 +36,9 @@ import jcifs.util.Hexdump;
 import jcifs.util.Strings;
 
 /**
- *
- *
+ * Base class for all SMB1/CIFS protocol message blocks.
+ * This abstract class provides the fundamental structure and common functionality for SMB1 request
+ * and response messages, including header fields, message encoding/decoding, and wire format handling.
  */
 public abstract class ServerMessageBlock implements CommonServerMessageBlockRequest, CommonServerMessageBlockResponse, RequestWithPath {
 

@@ -22,8 +22,12 @@ import jcifs.SmbSession;
 import jcifs.SmbTreeHandle;
 
 /**
- * @author mbechler
+ * Internal interface for SMB tree handle operations.
  *
+ * This interface provides internal methods for managing
+ * SMB tree connections and their lifecycle.
+ *
+ * @author mbechler
  */
 public interface SmbTreeHandleInternal extends SmbTreeHandle {
 

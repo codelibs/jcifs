@@ -20,6 +20,9 @@ package jcifs.internal.smb2.create;
 import jcifs.Encodable;
 
 /**
+ * SMB2 Create Context request interface. This interface defines the contract for
+ * context data included in SMB2 Create requests.
+ *
  * @author mbechler
  *
  */

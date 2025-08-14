@@ -75,7 +75,7 @@ public class SingletonContext extends BaseContext implements CIFSContext {
      * Get singleton context
      *
      * The singleton context will use system properties for configuration as well as values specified in a file
-     * specified through this <tt>jcifs.properties</tt> system property.
+     * specified through this <code>jcifs.properties</code> system property.
      *
      * @return a global context, initialized on first call
      */
@@ -93,7 +93,7 @@ public class SingletonContext extends BaseContext implements CIFSContext {
 
     /**
      * This static method registers the SMB URL protocol handler which is
-     * required to use SMB URLs with the <tt>java.net.URL</tt> class. If this
+     * required to use SMB URLs with the <code>java.net.URL</code> class. If this
      * method is not called before attempting to create an SMB URL with the
      * URL class the following exception will occur:
      * <blockquote>
@@ -107,7 +107,7 @@ public class SingletonContext extends BaseContext implements CIFSContext {
      *     ...
      * </pre>
      *
-     * <blockquote>
+     * </blockquote>
      *
      */
     public static void registerSmbURLHandler() {

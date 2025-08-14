@@ -26,7 +26,6 @@ import jcifs.dcerpc.DcerpcHandle;
 import jcifs.dcerpc.rpc;
 import jcifs.smb.SmbException;
 
-@SuppressWarnings("javadoc")
 public class SamrPolicyHandle extends rpc.policy_handle implements AutoCloseable {
 
     private final DcerpcHandle handle;

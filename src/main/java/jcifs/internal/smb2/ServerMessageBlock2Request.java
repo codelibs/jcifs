@@ -24,10 +24,14 @@ import jcifs.internal.CommonServerMessageBlockResponse;
 import jcifs.internal.Request;
 
 /**
+ * Base class for SMB2/SMB3 request messages.
+ *
+ * This abstract class provides common functionality for handling
+ * request messages in the SMB2/SMB3 protocol.
+ *
  * @author mbechler
  * @param <T>
- *            request type
- *
+ *            response type
  */
 public abstract class ServerMessageBlock2Request<T extends ServerMessageBlock2Response> extends ServerMessageBlock2
         implements CommonServerMessageBlockRequest, Request<T> {

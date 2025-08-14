@@ -24,9 +24,9 @@ import jcifs.DfsReferralData;
  *
  * @author mbechler
  *
- * @internal
+ *
+ * <p>This class is intended for internal use.</p>
  */
-@SuppressWarnings("javadoc")
 public class DfsReferral extends SmbException {
 
     /**

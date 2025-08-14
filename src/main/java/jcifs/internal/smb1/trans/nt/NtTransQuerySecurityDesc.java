@@ -23,7 +23,10 @@ import jcifs.internal.util.SMBUtil;
 import jcifs.util.Hexdump;
 
 /**
+ * SMB1 NT Transaction subcommand for querying security descriptors.
  *
+ * This transaction allows retrieval of Windows security descriptors
+ * which contain access control information for files and directories.
  */
 public class NtTransQuerySecurityDesc extends SmbComNtTransaction {
 

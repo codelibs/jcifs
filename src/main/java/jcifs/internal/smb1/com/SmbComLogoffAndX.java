@@ -23,7 +23,10 @@ import jcifs.internal.smb1.AndXServerMessageBlock;
 import jcifs.internal.smb1.ServerMessageBlock;
 
 /**
+ * SMB1 Logoff AndX request message.
  *
+ * This command is used to terminate a user session that was
+ * previously established with a Session Setup AndX command.
  */
 public class SmbComLogoffAndX extends AndXServerMessageBlock {
 

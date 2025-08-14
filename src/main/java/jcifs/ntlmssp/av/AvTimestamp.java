@@ -20,8 +20,10 @@ package jcifs.ntlmssp.av;
 import jcifs.internal.util.SMBUtil;
 
 /**
- * @author mbechler
+ * NTLMSSP AV pair representing timestamp information in NTLM authentication.
+ * Contains time-based data used to prevent replay attacks and ensure message freshness.
  *
+ * @author mbechler
  */
 public class AvTimestamp extends AvPair {
 

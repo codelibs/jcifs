@@ -30,8 +30,12 @@ import jcifs.internal.smb2.Smb2Constants;
 import jcifs.internal.util.SMBUtil;
 
 /**
- * @author mbechler
+ * SMB2 Negotiate Protocol request message.
  *
+ * This command is used to negotiate the SMB protocol dialect
+ * and security parameters between client and server.
+ *
+ * @author mbechler
  */
 public class Smb2NegotiateRequest extends ServerMessageBlock2Request<Smb2NegotiateResponse> implements SmbNegotiationRequest {
 

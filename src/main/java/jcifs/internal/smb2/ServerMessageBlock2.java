@@ -27,9 +27,12 @@ import jcifs.smb.SmbException;
 import jcifs.util.Hexdump;
 
 /**
+ * Base class for SMB2/SMB3 protocol messages.
+ *
+ * This abstract class provides common functionality for all SMB2/SMB3
+ * message types including encoding, decoding, and message handling.
  *
  * @author mbechler
- *
  */
 public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
 

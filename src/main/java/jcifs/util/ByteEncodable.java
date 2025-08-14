@@ -20,8 +20,10 @@ package jcifs.util;
 import jcifs.Encodable;
 
 /**
- * @author mbechler
+ * Interface for objects that can be encoded to byte arrays.
+ * Provides standardized method for converting objects to their binary representation.
  *
+ * @author mbechler
  */
 public class ByteEncodable implements Encodable {
 

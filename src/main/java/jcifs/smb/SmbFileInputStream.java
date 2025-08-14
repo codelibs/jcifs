@@ -372,7 +372,7 @@ public class SmbFileInputStream extends InputStream {
 
     /**
      * Skip n bytes of data on this stream. This operation will not result
-     * in any IO with the server. Unlink <tt>InputStream</tt> value less than
+     * in any IO with the server. Unlink <code>InputStream</code> value less than
      * the one provided will not be returned if it exceeds the end of the file
      * (if this is a problem let us know).
      */
