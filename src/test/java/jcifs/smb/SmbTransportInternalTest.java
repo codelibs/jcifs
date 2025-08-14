@@ -170,8 +170,8 @@ public class SmbTransportInternalTest {
     @DisplayName("getDfsReferrals handles empty name via CIFSException")
     void getDfsReferrals_emptyName() throws Exception {
         String emptyName = "";
-        doThrow(new jcifs.CIFSException("invalid dfs name")).when(transport).getDfsReferrals(eq(ctx), eq(emptyName), any(), any(),
-                anyInt());
+        doThrow(new jcifs.CIFSException("invalid dfs name")).when(transport)
+                .getDfsReferrals(eq(ctx), eq(emptyName), any(), any(), anyInt());
 
         assertThrows(jcifs.CIFSException.class, () -> transport.getDfsReferrals(ctx, emptyName, "h", "d", 1));
         verify(transport).getDfsReferrals(eq(ctx), eq(emptyName), eq("h"), eq("d"), eq(1));

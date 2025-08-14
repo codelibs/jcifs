@@ -125,7 +125,7 @@ class KerberosPacAuthDataTest {
         assertTrue(e.getMessage().contains("PAC"));
     }
 
-    // Test getPac() returns the Pac object  
+    // Test getPac() returns the Pac object
     @Test
     void testGetPac() throws PACDecodingException {
         byte[] keyBytes = new byte[32];

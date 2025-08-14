@@ -275,7 +275,8 @@ class SmbTreeConnectionTest {
 
         // Configure the tree to throw transport error on first call, succeed on second
         when(tree.send(eq(req), eq(resp), anySet()))
-                .thenThrow(new SmbException("transport error", new jcifs.util.transport.TransportException())).thenReturn(resp);
+                .thenThrow(new SmbException("transport error", new jcifs.util.transport.TransportException()))
+                .thenReturn(resp);
 
         setTree(c, tree);
 

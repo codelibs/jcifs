@@ -312,7 +312,7 @@ class NegotiateContextResponseTest {
             return Stream.of(Arguments.of(null, 4), // size() returns 4 even with null
                     Arguments.of(new int[0], 4), // size() returns 4 for empty array
                     Arguments.of(new int[] { 1 }, 4 + 2), // size() returns 4 + 2*1
-                    Arguments.of(new int[] { 1, 2 }, 4 + 4), // size() returns 4 + 2*2 
+                    Arguments.of(new int[] { 1, 2 }, 4 + 4), // size() returns 4 + 2*2
                     Arguments.of(new int[] { 1, 2, 3, 4, 5 }, 4 + 10) // size() returns 4 + 2*5
             );
         }

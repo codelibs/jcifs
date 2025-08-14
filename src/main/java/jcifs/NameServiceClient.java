@@ -1,31 +1,29 @@
 /*
  * © 2016 AgNO3 Gmbh & Co. KG
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 package jcifs;
 
-
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-
 /**
- * 
+ *
  * This is an internal API for resolving names
- * 
+ *
  * @author mbechler
  * @internal
  */
@@ -34,20 +32,17 @@ public interface NameServiceClient {
     /**
      * @return local host address
      */
-    NetbiosAddress getLocalHost ();
-
+    NetbiosAddress getLocalHost();
 
     /**
      * @return the local host name
      */
-    NetbiosName getLocalName ();
-
+    NetbiosName getLocalName();
 
     /**
      * @return the unknown name
      */
-    NetbiosName getUnknownName ();
-
+    NetbiosName getUnknownName();
 
     /**
      * Retrieve all addresses of a host by it's address. NetBIOS hosts can
@@ -61,8 +56,7 @@ public interface NameServiceClient {
      * @throws UnknownHostException
      *             if address cannot be resolved
      */
-    NetbiosAddress[] getNbtAllByAddress ( NetbiosAddress addr ) throws UnknownHostException;
-
+    NetbiosAddress[] getNbtAllByAddress(NetbiosAddress addr) throws UnknownHostException;
 
     /**
      * Retrieve all addresses of a host by it's address. NetBIOS hosts can
@@ -82,8 +76,7 @@ public interface NameServiceClient {
      * @throws java.net.UnknownHostException
      *             if there is an error resolving the name
      */
-    NetbiosAddress[] getNbtAllByAddress ( String host, int type, String scope ) throws UnknownHostException;
-
+    NetbiosAddress[] getNbtAllByAddress(String host, int type, String scope) throws UnknownHostException;
 
     /**
      * Retrieve all addresses of a host by it's address. NetBIOS hosts can
@@ -97,12 +90,11 @@ public interface NameServiceClient {
      * @throws java.net.UnknownHostException
      *             if there is an error resolving the name
      */
-    NetbiosAddress[] getNbtAllByAddress ( String host ) throws UnknownHostException;
-
+    NetbiosAddress[] getNbtAllByAddress(String host) throws UnknownHostException;
 
     /**
      * Retrieve all addresses of a host by it's name.
-     * 
+     *
      * @param host
      *            hostname to lookup all addresses for
      * @param type
@@ -111,12 +103,11 @@ public interface NameServiceClient {
      *            the scope of the name
      * @param svr
      *            server to query
-     * 
+     *
      * @return the resolved addresses
      * @throws UnknownHostException
      */
-    NetbiosAddress[] getNbtAllByName ( String host, int type, String scope, InetAddress svr ) throws UnknownHostException;
-
+    NetbiosAddress[] getNbtAllByName(String host, int type, String scope, InetAddress svr) throws UnknownHostException;
 
     /**
      * Determines the address of a host given it's host name. NetBIOS
@@ -127,7 +118,7 @@ public interface NameServiceClient {
      * still functional in other NetBIOS products and so for completeness it has been
      * implemented. A <code>scope</code> of <code>null</code> or <code>""</code>
      * signifies no scope.
-     * 
+     *
      * The additional <code>svr</code> parameter specifies the address to
      * query. This might be the address of a specific host, a name server,
      * or a broadcast address.
@@ -144,8 +135,7 @@ public interface NameServiceClient {
      * @throws java.net.UnknownHostException
      *             if there is an error resolving the name
      */
-    NetbiosAddress getNbtByName ( String host, int type, String scope, InetAddress svr ) throws UnknownHostException;
-
+    NetbiosAddress getNbtByName(String host, int type, String scope, InetAddress svr) throws UnknownHostException;
 
     /**
      * Determines the address of a host given it's host name. NetBIOS
@@ -167,8 +157,7 @@ public interface NameServiceClient {
      * @throws java.net.UnknownHostException
      *             if there is an error resolving the name
      */
-    NetbiosAddress getNbtByName ( String host, int type, String scope ) throws UnknownHostException;
-
+    NetbiosAddress getNbtByName(String host, int type, String scope) throws UnknownHostException;
 
     /**
      * Determines the address of a host given it's host name. The name can be a NetBIOS name like
@@ -182,41 +171,37 @@ public interface NameServiceClient {
      * @throws java.net.UnknownHostException
      *             if there is an error resolving the name
      */
-    NetbiosAddress getNbtByName ( String host ) throws UnknownHostException;
-
+    NetbiosAddress getNbtByName(String host) throws UnknownHostException;
 
     /**
      * @param nbtAddress
      * @return the node status responses
      * @throws UnknownHostException
      */
-    NetbiosAddress[] getNodeStatus ( NetbiosAddress nbtAddress ) throws UnknownHostException;
-
+    NetbiosAddress[] getNodeStatus(NetbiosAddress nbtAddress) throws UnknownHostException;
 
     /**
      * Lookup addresses for the given <tt>hostname</tt>.
-     * 
+     *
      * @param hostname
      * @param possibleNTDomainOrWorkgroup
      * @return found addresses
      * @throws UnknownHostException
      */
-    Address[] getAllByName ( String hostname, boolean possibleNTDomainOrWorkgroup ) throws UnknownHostException;
-
+    Address[] getAllByName(String hostname, boolean possibleNTDomainOrWorkgroup) throws UnknownHostException;
 
     /**
      * Lookup <tt>hostname</tt> and return it's <tt>UniAddress</tt>. If the
      * <tt>possibleNTDomainOrWorkgroup</tt> parameter is <tt>true</tt> an
      * additional name query will be performed to locate a master browser.
-     * 
+     *
      * @param hostname
      * @param possibleNTDomainOrWorkgroup
-     * 
+     *
      * @return the first resolved address
      * @throws UnknownHostException
      */
-    Address getByName ( String hostname, boolean possibleNTDomainOrWorkgroup ) throws UnknownHostException;
-
+    Address getByName(String hostname, boolean possibleNTDomainOrWorkgroup) throws UnknownHostException;
 
     /**
      * Determines the address of a host given it's host name. The name can be a
@@ -228,6 +213,6 @@ public interface NameServiceClient {
      * @throws java.net.UnknownHostException
      *             if there is an error resolving the name
      */
-    Address getByName ( String hostname ) throws UnknownHostException;
+    Address getByName(String hostname) throws UnknownHostException;
 
 }

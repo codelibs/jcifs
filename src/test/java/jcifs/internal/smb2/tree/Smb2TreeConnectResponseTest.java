@@ -160,7 +160,7 @@ class Smb2TreeConnectResponseTest extends BaseTest {
     @DisplayName("Should parse different share types correctly")
     @ParameterizedTest
     @CsvSource({ "1, 1", // DISK
-            "2, 2", // PIPE  
+            "2, 2", // PIPE
             "3, 3", // PRINT
             "0, 0", // Unknown
             "255, -1" // Byte overflow to signed
@@ -400,7 +400,7 @@ class Smb2TreeConnectResponseTest extends BaseTest {
                 0x01, // ShareType (DISK)
                 0x00, // Reserved
                 0x01, 0x00, 0x00, 0x00, // ShareFlags
-                0x08, 0x00, 0x00, 0x00, // Capabilities  
+                0x08, 0x00, 0x00, 0x00, // Capabilities
                 (byte) 0xFF, 0x01, 0x1F, 0x00 // MaximalAccess
         };
 

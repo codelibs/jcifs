@@ -1,16 +1,16 @@
 /* jcifs smb client library in Java
  * Copyright (C) 2000  "Michael B. Allen" <jcifs at samba dot org>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -18,57 +18,55 @@
 
 package jcifs.smb1.smb1;
 
-import java.io.InputStream;
-
 import jcifs.smb1.util.Hexdump;
-
-import java.io.IOException;
 
 abstract class AndXServerMessageBlock extends ServerMessageBlock {
 
-    private static final int ANDX_COMMAND_OFFSET  = 1;
+    private static final int ANDX_COMMAND_OFFSET = 1;
     private static final int ANDX_RESERVED_OFFSET = 2;
-    private static final int ANDX_OFFSET_OFFSET   = 3;
+    private static final int ANDX_OFFSET_OFFSET = 3;
 
-    private byte andxCommand        = (byte)0xFF;
-    private int andxOffset          = 0;
+    private byte andxCommand = (byte) 0xFF;
+    private int andxOffset = 0;
 
     ServerMessageBlock andx = null;
 
     AndXServerMessageBlock() {
     }
-    AndXServerMessageBlock( ServerMessageBlock andx ) {
+
+    AndXServerMessageBlock(final ServerMessageBlock andx) {
         if (andx != null) {
             this.andx = andx;
             andxCommand = andx.command;
         }
     }
 
-    int getBatchLimit( byte command ) {
+    int getBatchLimit(final byte command) {
         /* the default limit is 0 batched messages before this
          * one, meaning this message cannot be batched.
          */
         return 0;
     }
 
-    /* 
+    /*
      * We overload this method from ServerMessageBlock because
      * we want writeAndXWireFormat to write the parameterWords
      * and bytes. This is so we can write batched smbs because
      * all but the first smb of the chaain do not have a header
      * and therefore we do not want to writeHeaderWireFormat. We
      * just recursivly call writeAndXWireFormat.
-     */ 
+     */
 
-    int encode( byte[] dst, int dstIndex ) {
-        int start = headerStart = dstIndex;
+    @Override
+    int encode(final byte[] dst, int dstIndex) {
+        final int start = headerStart = dstIndex;
 
-        dstIndex += writeHeaderWireFormat( dst, dstIndex );
-        dstIndex += writeAndXWireFormat( dst, dstIndex );
+        dstIndex += writeHeaderWireFormat(dst, dstIndex);
+        dstIndex += writeAndXWireFormat(dst, dstIndex);
         length = dstIndex - start;
 
-        if( digest != null ) {
-            digest.sign( dst, headerStart, length, this, response );
+        if (digest != null) {
+            digest.sign(dst, headerStart, length, this, response);
         }
 
         return length;
@@ -81,28 +79,30 @@ abstract class AndXServerMessageBlock extends ServerMessageBlock {
      * readAndXWireFormat without reading the non-existent header.
      */
 
-    int decode( byte[] buffer, int bufferIndex ) {
-        int start = headerStart = bufferIndex;
+    @Override
+    int decode(final byte[] buffer, int bufferIndex) {
+        final int start = headerStart = bufferIndex;
 
-        bufferIndex += readHeaderWireFormat( buffer, bufferIndex );
-        bufferIndex += readAndXWireFormat( buffer, bufferIndex );
+        bufferIndex += readHeaderWireFormat(buffer, bufferIndex);
+        bufferIndex += readAndXWireFormat(buffer, bufferIndex);
 
         length = bufferIndex - start;
         return length;
     }
-    int writeAndXWireFormat( byte[] dst, int dstIndex ) {
-        int start = dstIndex;
 
-        wordCount = writeParameterWordsWireFormat( dst,
-                    start + ANDX_OFFSET_OFFSET + 2 );
+    int writeAndXWireFormat(final byte[] dst, int dstIndex) {
+        final int start = dstIndex;
+
+        wordCount = writeParameterWordsWireFormat(dst, start + ANDX_OFFSET_OFFSET + 2);
         wordCount += 4; // for command, reserved, and offset
         dstIndex += wordCount + 1;
         wordCount /= 2;
-        dst[start] = (byte)( wordCount & 0xFF );
+        dst[start] = (byte) (wordCount & 0xFF);
 
-        byteCount = writeBytesWireFormat( dst, dstIndex + 2 );
-        dst[dstIndex++] = (byte)( byteCount & 0xFF );
-        dst[dstIndex++] = (byte)(( byteCount >> 8 ) & 0xFF );
+        byteCount = writeBytesWireFormat(dst, dstIndex + 2);
+        dst[dstIndex] = (byte) (byteCount & 0xFF);
+        dstIndex++;
+        dst[dstIndex++] = (byte) (byteCount >> 8 & 0xFF);
         dstIndex += byteCount;
 
         /* Normally, without intervention everything would batch
@@ -115,17 +115,16 @@ abstract class AndXServerMessageBlock extends ServerMessageBlock {
          * very indirect and simple batching control mechanism.
          */
 
-        if( andx == null || USE_BATCHING == false ||
-                                batchLevel >= getBatchLimit( andx.command )) {
-            andxCommand = (byte)0xFF;
+        if (andx == null || !USE_BATCHING || batchLevel >= getBatchLimit(andx.command)) {
+            andxCommand = (byte) 0xFF;
             andx = null;
 
-            dst[start + ANDX_COMMAND_OFFSET] = (byte)0xFF;
-            dst[start + ANDX_RESERVED_OFFSET] = (byte)0x00;
-//            dst[start + ANDX_OFFSET_OFFSET] = (byte)0x00;
-//            dst[start + ANDX_OFFSET_OFFSET + 1] = (byte)0x00;
-            dst[start + ANDX_OFFSET_OFFSET] = (byte)0xde;
-            dst[start + ANDX_OFFSET_OFFSET + 1] = (byte)0xde;
+            dst[start + ANDX_COMMAND_OFFSET] = (byte) 0xFF;
+            dst[start + ANDX_RESERVED_OFFSET] = (byte) 0x00;
+            //            dst[start + ANDX_OFFSET_OFFSET] = (byte)0x00;
+            //            dst[start + ANDX_OFFSET_OFFSET + 1] = (byte)0x00;
+            dst[start + ANDX_OFFSET_OFFSET] = (byte) 0xde;
+            dst[start + ANDX_OFFSET_OFFSET + 1] = (byte) 0xde;
 
             // andx not used; return
             return dstIndex - start;
@@ -140,14 +139,13 @@ abstract class AndXServerMessageBlock extends ServerMessageBlock {
 
         andx.batchLevel = batchLevel + 1;
 
-
         dst[start + ANDX_COMMAND_OFFSET] = andxCommand;
-        dst[start + ANDX_RESERVED_OFFSET] = (byte)0x00;
+        dst[start + ANDX_RESERVED_OFFSET] = (byte) 0x00;
         andxOffset = dstIndex - headerStart;
-        writeInt2( andxOffset, dst, start + ANDX_OFFSET_OFFSET );
+        writeInt2(andxOffset, dst, start + ANDX_OFFSET_OFFSET);
 
         andx.useUnicode = useUnicode;
-        if( andx instanceof AndXServerMessageBlock ) {
+        if (andx instanceof AndXServerMessageBlock) {
 
             /*
              * A word about communicating header info to andx smbs
@@ -165,49 +163,51 @@ abstract class AndXServerMessageBlock extends ServerMessageBlock {
              */
 
             andx.uid = uid;
-            dstIndex += ((AndXServerMessageBlock)andx).writeAndXWireFormat( dst, dstIndex );
+            dstIndex += ((AndXServerMessageBlock) andx).writeAndXWireFormat(dst, dstIndex);
         } else {
             // the andx smb is not of type andx so lets just write it here and
             // were done.
-            int andxStart = dstIndex;
-            andx.wordCount = andx.writeParameterWordsWireFormat( dst, dstIndex );
+            final int andxStart = dstIndex;
+            andx.wordCount = andx.writeParameterWordsWireFormat(dst, dstIndex);
             dstIndex += andx.wordCount + 1;
             andx.wordCount /= 2;
-            dst[andxStart] = (byte)( andx.wordCount & 0xFF );
-    
-            andx.byteCount = andx.writeBytesWireFormat( dst, dstIndex + 2 );
-            dst[dstIndex++] = (byte)( andx.byteCount & 0xFF );
-            dst[dstIndex++] = (byte)(( andx.byteCount >> 8 ) & 0xFF );
+            dst[andxStart] = (byte) (andx.wordCount & 0xFF);
+
+            andx.byteCount = andx.writeBytesWireFormat(dst, dstIndex + 2);
+            dst[dstIndex++] = (byte) (andx.byteCount & 0xFF);
+            dst[dstIndex++] = (byte) (andx.byteCount >> 8 & 0xFF);
             dstIndex += andx.byteCount;
         }
 
         return dstIndex - start;
     }
-    int readAndXWireFormat( byte[] buffer, int bufferIndex ) {
-        int start = bufferIndex;
 
-        wordCount = buffer[bufferIndex++];
+    int readAndXWireFormat(final byte[] buffer, int bufferIndex) {
+        final int start = bufferIndex;
 
-        if( wordCount != 0 ) {
+        wordCount = buffer[bufferIndex];
+        bufferIndex++;
+
+        if (wordCount != 0) {
             /*
              * these fields are common to all andx commands
              * so let's populate them here
              */
 
             andxCommand = buffer[bufferIndex];
-            andxOffset = readInt2( buffer, bufferIndex + 2 );
+            andxOffset = readInt2(buffer, bufferIndex + 2);
 
-            if( andxOffset == 0 ) { /* Snap server workaround */
-                andxCommand = (byte)0xFF;
+            if (andxOffset == 0) { /* Snap server workaround */
+                andxCommand = (byte) 0xFF;
             }
 
             /*
              * no point in calling readParameterWordsWireFormat if there are no more
              * parameter words. besides, win98 doesn't return "OptionalSupport" field
              */
- 
-            if( wordCount > 2 ) {
-                readParameterWordsWireFormat( buffer, bufferIndex + 4 );
+
+            if (wordCount > 2) {
+                readParameterWordsWireFormat(buffer, bufferIndex + 4);
 
                 /* The SMB_COM_NT_CREATE_ANDX response wordCount is wrong. There's an
                  * extra 16 bytes for some "Offline Files (CSC or Client Side Caching)"
@@ -215,18 +215,20 @@ abstract class AndXServerMessageBlock extends ServerMessageBlock {
                  * the correct number of bytes for signing purposes. Otherwise we get a
                  * signing verification failure.
                  */
-                if (command == SMB_COM_NT_CREATE_ANDX && ((SmbComNTCreateAndXResponse)this).isExtended)
+                if (command == SMB_COM_NT_CREATE_ANDX && ((SmbComNTCreateAndXResponse) this).isExtended) {
                     wordCount += 8;
+                }
             }
 
-            bufferIndex = start + 1 + (wordCount * 2);
+            bufferIndex = start + 1 + wordCount * 2;
         }
 
-        byteCount = readInt2( buffer, bufferIndex ); bufferIndex += 2;
+        byteCount = readInt2(buffer, bufferIndex);
+        bufferIndex += 2;
 
         if (byteCount != 0) {
             int n;
-            n = readBytesWireFormat( buffer, bufferIndex );
+            n = readBytesWireFormat(buffer, bufferIndex);
             bufferIndex += byteCount;
         }
 
@@ -237,12 +239,12 @@ abstract class AndXServerMessageBlock extends ServerMessageBlock {
          * because there's no header.
          */
 
-        if( errorCode != 0 || andxCommand == (byte)0xFF ) {
-            andxCommand = (byte)0xFF;
+        if (errorCode != 0 || andxCommand == (byte) 0xFF) {
+            andxCommand = (byte) 0xFF;
             andx = null;
-        } else if( andx == null ) {
-            andxCommand = (byte)0xFF;
-            throw new RuntimeException( "no andx command supplied with response" );
+        } else if (andx == null) {
+            andxCommand = (byte) 0xFF;
+            throw new RuntimeException("no andx command supplied with response");
         } else {
 
             /*
@@ -262,33 +264,25 @@ abstract class AndXServerMessageBlock extends ServerMessageBlock {
             andx.mid = mid;
             andx.useUnicode = useUnicode;
 
-            if( andx instanceof AndXServerMessageBlock ) {
-                bufferIndex += ((AndXServerMessageBlock)andx).readAndXWireFormat(
-                                                buffer, bufferIndex );
+            if (andx instanceof AndXServerMessageBlock) {
+                bufferIndex += ((AndXServerMessageBlock) andx).readAndXWireFormat(buffer, bufferIndex);
             } else {
 
                 /*
                  * Just a plain smb. Read it as normal.
                  */
 
-                buffer[bufferIndex++] = (byte)( andx.wordCount & 0xFF );
+                buffer[bufferIndex++] = (byte) (andx.wordCount & 0xFF);
 
-                if( andx.wordCount != 0 ) {
-                    /*
-                     * no point in calling readParameterWordsWireFormat if there are no more
-                     * parameter words. besides, win98 doesn't return "OptionalSupport" field
-                     */
-
-                    if( andx.wordCount > 2 ) {
-                        bufferIndex += andx.readParameterWordsWireFormat( buffer, bufferIndex );
-                    }
+                if (andx.wordCount != 0 && andx.wordCount > 2) {
+                    bufferIndex += andx.readParameterWordsWireFormat(buffer, bufferIndex);
                 }
 
-                andx.byteCount = readInt2( buffer, bufferIndex );
+                andx.byteCount = readInt2(buffer, bufferIndex);
                 bufferIndex += 2;
 
-                if( andx.byteCount != 0 ) {
-                    andx.readBytesWireFormat( buffer, bufferIndex );
+                if (andx.byteCount != 0) {
+                    andx.readBytesWireFormat(buffer, bufferIndex);
                     bufferIndex += andx.byteCount;
                 }
             }
@@ -297,9 +291,9 @@ abstract class AndXServerMessageBlock extends ServerMessageBlock {
 
         return bufferIndex - start;
     }
+
+    @Override
     public String toString() {
-        return new String( super.toString() +
-            ",andxCommand=0x" + Hexdump.toHexString( andxCommand, 2 ) +
-            ",andxOffset=" + andxOffset );
+        return super.toString() + ",andxCommand=0x" + Hexdump.toHexString(andxCommand, 2) + ",andxOffset=" + andxOffset;
     }
 }

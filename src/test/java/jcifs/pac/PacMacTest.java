@@ -26,7 +26,7 @@ class PacMacTest {
     /**
      * Test method for
      * {@link jcifs.pac.PacMac#calculateMacArcfourHMACMD5(int, java.security.Key, byte[])}.
-     * 
+     *
      * @throws GeneralSecurityException
      */
     @Test
@@ -56,7 +56,7 @@ class PacMacTest {
     /**
      * Test method for
      * {@link jcifs.pac.PacMac#calculateMacHMACAES(int, javax.security.auth.kerberos.KerberosKey, byte[])}.
-     * 
+     *
      * @throws GeneralSecurityException
      */
     @Test
@@ -70,7 +70,7 @@ class PacMacTest {
     /**
      * Test method for
      * {@link jcifs.pac.PacMac#deriveKeyAES(javax.security.auth.kerberos.KerberosKey, byte[])}.
-     * 
+     *
      * @throws GeneralSecurityException
      */
     @Test
@@ -129,7 +129,7 @@ class PacMacTest {
     /**
      * Test method for
      * {@link jcifs.pac.PacMac#calculateMac(int, java.util.Map, byte[])}.
-     * 
+     *
      * @throws PACDecodingException
      */
     @Test

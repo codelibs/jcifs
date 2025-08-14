@@ -384,7 +384,7 @@ public class ReferralTest {
         bb.putShort((short) 3);
         bb.putShort((short) 200); // increased size
         bb.putShort((short) 1);
-        bb.putShort((short) 0); // rflags without name list flag  
+        bb.putShort((short) 0); // rflags without name list flag
         bb.putShort((short) 10);
         bb.putShort((short) 600);
         bb.putShort((short) 22); // pathOffset

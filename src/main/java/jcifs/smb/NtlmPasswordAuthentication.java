@@ -19,12 +19,10 @@
 
 package jcifs.smb;
 
-
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
 
 import jcifs.CIFSContext;
-
 
 /**
  * This class stores and encrypts NTLM user credentials. The default
@@ -34,14 +32,14 @@ import jcifs.CIFSContext;
  * <p>
  * Read <a href="../../../authhandler.html">jCIFS Exceptions and
  * NtlmAuthenticator</a> for related information.
- * 
+ *
  * @deprecated use {@link NtlmPasswordAuthenticator} instead
  */
 @Deprecated
 public class NtlmPasswordAuthentication extends NtlmPasswordAuthenticator {
 
     /**
-     * 
+     *
      */
     private static final long serialVersionUID = -2832037191318016836L;
 
@@ -50,40 +48,35 @@ public class NtlmPasswordAuthentication extends NtlmPasswordAuthenticator {
     private boolean hashesExternal = false;
     private CIFSContext context;
 
-
     /**
-     * 
+     *
      */
-    private NtlmPasswordAuthentication () {}
-
+    private NtlmPasswordAuthentication() {
+    }
 
     /**
      * Construct anonymous credentials
-     * 
+     *
      * @param tc
      */
-    public NtlmPasswordAuthentication ( CIFSContext tc ) {
+    public NtlmPasswordAuthentication(final CIFSContext tc) {
         this(tc, "", "", "");
     }
-
 
     /**
      * Create an <tt>NtlmPasswordAuthentication</tt> object from the userinfo
      * component of an SMB URL like "<tt>domain;user:pass</tt>". This constructor
      * is used internally be jCIFS when parsing SMB URLs.
-     * 
+     *
      * @param tc
      * @param userInfo
      */
-    public NtlmPasswordAuthentication ( CIFSContext tc, String userInfo ) {
-        super(
-            userInfo,
-            tc.getConfig().getDefaultDomain(),
-            tc.getConfig().getDefaultUsername() != null ? tc.getConfig().getDefaultUsername() : "GUEST",
-            tc.getConfig().getDefaultPassword() != null ? tc.getConfig().getDefaultPassword() : "");
+    public NtlmPasswordAuthentication(final CIFSContext tc, final String userInfo) {
+        super(userInfo, tc.getConfig().getDefaultDomain(),
+                tc.getConfig().getDefaultUsername() != null ? tc.getConfig().getDefaultUsername() : "GUEST",
+                tc.getConfig().getDefaultPassword() != null ? tc.getConfig().getDefaultPassword() : "");
         this.context = tc;
     }
-
 
     /**
      * Create an <tt>NtlmPasswordAuthentication</tt> object from a
@@ -91,37 +84,36 @@ public class NtlmPasswordAuthentication extends NtlmPasswordAuthenticator {
      * will be substituted with <tt>jcifs.smb.client.domain</tt>,
      * <tt>jcifs.smb.client.username</tt>, <tt>jcifs.smb.client.password</tt>
      * property values.
-     * 
+     *
      * @param tc
      *            context to use
      * @param domain
      * @param username
      * @param password
      */
-    public NtlmPasswordAuthentication ( CIFSContext tc, String domain, String username, String password ) {
-        super(
-            domain != null ? domain : tc.getConfig().getDefaultDomain(),
-            username != null ? username : ( tc.getConfig().getDefaultUsername() != null ? tc.getConfig().getDefaultUsername() : "GUEST" ),
-            password != null ? password : ( tc.getConfig().getDefaultPassword() != null ? tc.getConfig().getDefaultPassword() : "" ),
-            (AuthenticationType) null);
+    public NtlmPasswordAuthentication(final CIFSContext tc, final String domain, final String username, final String password) {
+        super(domain != null ? domain : tc.getConfig().getDefaultDomain(),
+                username != null ? username : tc.getConfig().getDefaultUsername() != null ? tc.getConfig().getDefaultUsername() : "GUEST",
+                password != null ? password : tc.getConfig().getDefaultPassword() != null ? tc.getConfig().getDefaultPassword() : "",
+                (AuthenticationType) null);
         this.context = tc;
     }
-
 
     /**
      * Create an <tt>NtlmPasswordAuthentication</tt> object with raw password
      * hashes. This is used exclusively by the <tt>jcifs.http.NtlmSsp</tt>
      * class which is in turn used by NTLM HTTP authentication functionality.
-     * 
+     *
      * @param domain
      * @param username
      * @param challenge
      * @param ansiHash
      * @param unicodeHash
      */
-    public NtlmPasswordAuthentication ( String domain, String username, byte[] challenge, byte[] ansiHash, byte[] unicodeHash ) {
+    public NtlmPasswordAuthentication(final String domain, final String username, final byte[] challenge, final byte[] ansiHash,
+            final byte[] unicodeHash) {
         super(domain, username, null);
-        if ( domain == null || username == null || ansiHash == null || unicodeHash == null ) {
+        if (domain == null || username == null || ansiHash == null || unicodeHash == null) {
             throw new IllegalArgumentException("External credentials cannot be null");
         }
         this.ansiHash = ansiHash;
@@ -129,36 +121,31 @@ public class NtlmPasswordAuthentication extends NtlmPasswordAuthenticator {
         this.hashesExternal = true;
     }
 
-
-    protected CIFSContext getContext () {
+    protected CIFSContext getContext() {
         return this.context;
     }
 
-
     @Override
-    public NtlmPasswordAuthentication clone () {
-        NtlmPasswordAuthentication cloned = new NtlmPasswordAuthentication();
+    public NtlmPasswordAuthentication clone() {
+        final NtlmPasswordAuthentication cloned = new NtlmPasswordAuthentication();
         cloneInternal(cloned, this);
         return cloned;
     }
-
 
     /**
      * @param to
      * @param from
      */
-    protected static void cloneInternal ( NtlmPasswordAuthentication to, NtlmPasswordAuthentication from ) {
+    protected static void cloneInternal(final NtlmPasswordAuthentication to, final NtlmPasswordAuthentication from) {
         to.context = from.context;
-        if ( from.hashesExternal ) {
+        if (from.hashesExternal) {
             to.hashesExternal = true;
             to.ansiHash = from.ansiHash != null ? Arrays.copyOf(from.ansiHash, from.ansiHash.length) : null;
             to.unicodeHash = from.unicodeHash != null ? Arrays.copyOf(from.unicodeHash, from.unicodeHash.length) : null;
-        }
-        else {
+        } else {
             NtlmPasswordAuthenticator.cloneInternal(to, from);
         }
     }
-
 
     /**
      * Compares two <tt>NtlmPasswordAuthentication</tt> objects for
@@ -170,13 +157,12 @@ public class NtlmPasswordAuthentication extends NtlmPasswordAuthenticator {
      * hashes but that it not available with this method.
      */
     @Override
-    public boolean equals ( Object obj ) {
-        if ( super.equals(obj) ) {
-            if ( ! ( obj instanceof NtlmPasswordAuthentication ) ) {
+    public boolean equals(final Object obj) {
+        if (super.equals(obj)) {
+            if (!(obj instanceof final NtlmPasswordAuthentication ntlm)) {
                 return !this.areHashesExternal();
             }
-            NtlmPasswordAuthentication ntlm = (NtlmPasswordAuthentication) obj;
-            if ( this.areHashesExternal() && ntlm.areHashesExternal() ) {
+            if (this.areHashesExternal() && ntlm.areHashesExternal()) {
                 return Arrays.equals(this.ansiHash, ntlm.ansiHash) && Arrays.equals(this.unicodeHash, ntlm.unicodeHash);
                 /*
                  * This still isn't quite right. If one npa object does not have external
@@ -189,14 +175,12 @@ public class NtlmPasswordAuthentication extends NtlmPasswordAuthenticator {
         return false;
     }
 
-
     /**
      * @return whether the hashes are externally supplied
      */
-    public boolean areHashesExternal () {
+    public boolean areHashesExternal() {
         return this.hashesExternal;
     }
-
 
     /**
      * {@inheritDoc}
@@ -204,13 +188,12 @@ public class NtlmPasswordAuthentication extends NtlmPasswordAuthenticator {
      * @see jcifs.smb.NtlmPasswordAuthenticator#getAnsiHash(jcifs.CIFSContext, byte[])
      */
     @Override
-    public byte[] getAnsiHash ( CIFSContext tc, byte[] chlng ) throws GeneralSecurityException {
-        if ( this.hashesExternal ) {
+    public byte[] getAnsiHash(final CIFSContext tc, final byte[] chlng) throws GeneralSecurityException {
+        if (this.hashesExternal) {
             return this.ansiHash;
         }
         return super.getAnsiHash(tc, chlng);
     }
-
 
     /**
      * {@inheritDoc}
@@ -218,13 +201,12 @@ public class NtlmPasswordAuthentication extends NtlmPasswordAuthenticator {
      * @see jcifs.smb.NtlmPasswordAuthenticator#getUnicodeHash(jcifs.CIFSContext, byte[])
      */
     @Override
-    public byte[] getUnicodeHash ( CIFSContext tc, byte[] chlng ) throws GeneralSecurityException {
-        if ( this.hashesExternal ) {
+    public byte[] getUnicodeHash(final CIFSContext tc, final byte[] chlng) throws GeneralSecurityException {
+        if (this.hashesExternal) {
             return this.unicodeHash;
         }
         return super.getUnicodeHash(tc, chlng);
     }
-
 
     /**
      * {@inheritDoc}
@@ -232,13 +214,12 @@ public class NtlmPasswordAuthentication extends NtlmPasswordAuthenticator {
      * @see jcifs.smb.NtlmPasswordAuthenticator#getUserSessionKey(jcifs.CIFSContext, byte[])
      */
     @Override
-    public byte[] getUserSessionKey ( CIFSContext tc, byte[] chlng ) {
-        if ( this.hashesExternal ) {
+    public byte[] getUserSessionKey(final CIFSContext tc, final byte[] chlng) {
+        if (this.hashesExternal) {
             return null;
         }
         return super.getUserSessionKey(tc, chlng);
     }
-
 
     /**
      * {@inheritDoc}
@@ -246,8 +227,8 @@ public class NtlmPasswordAuthentication extends NtlmPasswordAuthenticator {
      * @see jcifs.smb.NtlmPasswordAuthenticator#getUserSessionKey(jcifs.CIFSContext, byte[], byte[], int)
      */
     @Override
-    public void getUserSessionKey ( CIFSContext tc, byte[] chlng, byte[] dest, int offset ) throws SmbException {
-        if ( this.hashesExternal ) {
+    public void getUserSessionKey(final CIFSContext tc, final byte[] chlng, final byte[] dest, final int offset) throws SmbException {
+        if (this.hashesExternal) {
             return;
         }
         super.getUserSessionKey(tc, chlng, dest, offset);

@@ -19,11 +19,10 @@
 package jcifs.smb1.smb1;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.StringWriter;
 
 import jcifs.smb1.util.Hexdump;
-
-import java.io.PrintWriter;
 
 /**
  * There are hundreds of error codes that may be returned by a CIFS
@@ -41,7 +40,7 @@ import java.io.PrintWriter;
 
 public class SmbException extends IOException implements NtStatus, DosError, WinError {
 
-    static String getMessageByCode( int errcode ) {
+    static String getMessageByCode(final int errcode) {
         /* Note there's a signedness error here because 0xC0000000 based values are
          * negative so it with NT_STATUS_SUCCESS (0) the binary search will not be
          * performed properly. The effect is that the code at index 1 is never found
@@ -51,16 +50,16 @@ public class SmbException extends IOException implements NtStatus, DosError, Win
         if (errcode == 0) {
             return "NT_STATUS_SUCCESS";
         }
-        if(( errcode & 0xC0000000 ) == 0xC0000000 ) {
+        if ((errcode & 0xC0000000) == 0xC0000000) {
             int min = 1; /* Don't include NT_STATUS_SUCCESS */
             int max = NT_STATUS_CODES.length - 1;
 
-            while( max >= min ) {
-                int mid = (min + max) / 2;
+            while (max >= min) {
+                final int mid = (min + max) / 2;
 
-                if( errcode > NT_STATUS_CODES[mid] ) {
+                if (errcode > NT_STATUS_CODES[mid]) {
                     min = mid + 1;
-                } else if( errcode < NT_STATUS_CODES[mid] ) {
+                } else if (errcode < NT_STATUS_CODES[mid]) {
                     max = mid - 1;
                 } else {
                     return NT_STATUS_MESSAGES[mid];
@@ -70,12 +69,12 @@ public class SmbException extends IOException implements NtStatus, DosError, Win
             int min = 0;
             int max = DOS_ERROR_CODES.length - 1;
 
-            while( max >= min ) {
-                int mid = (min + max) / 2;
+            while (max >= min) {
+                final int mid = (min + max) / 2;
 
-                if( errcode > DOS_ERROR_CODES[mid][0] ) {
+                if (errcode > DOS_ERROR_CODES[mid][0]) {
                     min = mid + 1;
-                } else if( errcode < DOS_ERROR_CODES[mid][0] ) {
+                } else if (errcode < DOS_ERROR_CODES[mid][0]) {
                     max = mid - 1;
                 } else {
                     return DOS_ERROR_MESSAGES[mid];
@@ -83,40 +82,41 @@ public class SmbException extends IOException implements NtStatus, DosError, Win
             }
         }
 
-        return "0x" + Hexdump.toHexString( errcode, 8 );
+        return "0x" + Hexdump.toHexString(errcode, 8);
     }
-    static int getStatusByCode( int errcode ) {
-        if(( errcode & 0xC0000000 ) != 0 ) {
+
+    static int getStatusByCode(final int errcode) {
+        if ((errcode & 0xC0000000) != 0) {
             return errcode;
-        } else {
-            int min = 0;
-            int max = DOS_ERROR_CODES.length - 1;
+        }
+        int min = 0;
+        int max = DOS_ERROR_CODES.length - 1;
 
-            while( max >= min ) {
-                int mid = (min + max) / 2;
+        while (max >= min) {
+            final int mid = (min + max) / 2;
 
-                if( errcode > DOS_ERROR_CODES[mid][0] ) {
-                    min = mid + 1;
-                } else if( errcode < DOS_ERROR_CODES[mid][0] ) {
-                    max = mid - 1;
-                } else {
-                    return DOS_ERROR_CODES[mid][1];
-                }
+            if (errcode > DOS_ERROR_CODES[mid][0]) {
+                min = mid + 1;
+            } else if (errcode < DOS_ERROR_CODES[mid][0]) {
+                max = mid - 1;
+            } else {
+                return DOS_ERROR_CODES[mid][1];
             }
         }
 
         return NT_STATUS_UNSUCCESSFUL;
     }
-    static String getMessageByWinerrCode( int errcode ) {
+
+    static String getMessageByWinerrCode(final int errcode) {
         int min = 0;
         int max = WINERR_CODES.length - 1;
 
-        while( max >= min ) {
-            int mid = (min + max) / 2;
+        while (max >= min) {
+            final int mid = (min + max) / 2;
 
-            if( errcode > WINERR_CODES[mid] ) {
+            if (errcode > WINERR_CODES[mid]) {
                 min = mid + 1;
-            } else if( errcode < WINERR_CODES[mid] ) {
+            } else if (errcode < WINERR_CODES[mid]) {
                 max = mid - 1;
             } else {
                 return WINERR_MESSAGES[mid];
@@ -126,46 +126,50 @@ public class SmbException extends IOException implements NtStatus, DosError, Win
         return errcode + "";
     }
 
-
     private int status;
     private Throwable rootCause;
 
     SmbException() {
     }
-    SmbException( int errcode, Throwable rootCause ) {
-        super( getMessageByCode( errcode ));
-        status = getStatusByCode( errcode );
+
+    SmbException(final int errcode, final Throwable rootCause) {
+        super(getMessageByCode(errcode));
+        status = getStatusByCode(errcode);
         this.rootCause = rootCause;
     }
-    SmbException( String msg ) {
-        super( msg );
+
+    SmbException(final String msg) {
+        super(msg);
         status = NT_STATUS_UNSUCCESSFUL;
     }
-    SmbException( String msg, Throwable rootCause ) {
-        super( msg );
+
+    SmbException(final String msg, final Throwable rootCause) {
+        super(msg);
         this.rootCause = rootCause;
         status = NT_STATUS_UNSUCCESSFUL;
     }
-    public SmbException( int errcode, boolean winerr ) {
-        super( winerr ? getMessageByWinerrCode( errcode ) : getMessageByCode( errcode ));
-        status = winerr ? errcode : getStatusByCode( errcode );
+
+    public SmbException(final int errcode, final boolean winerr) {
+        super(winerr ? getMessageByWinerrCode(errcode) : getMessageByCode(errcode));
+        status = winerr ? errcode : getStatusByCode(errcode);
     }
 
     public int getNtStatus() {
         return status;
     }
+
     public Throwable getRootCause() {
         return rootCause;
     }
+
+    @Override
     public String toString() {
-        if( rootCause != null ) {
-            StringWriter sw = new StringWriter();
-            PrintWriter pw = new PrintWriter( sw );
-            rootCause.printStackTrace( pw );
+        if (rootCause != null) {
+            final StringWriter sw = new StringWriter();
+            final PrintWriter pw = new PrintWriter(sw);
+            rootCause.printStackTrace(pw);
             return super.toString() + "\n" + sw;
-        } else {
-            return super.toString();
         }
+        return super.toString();
     }
 }
-

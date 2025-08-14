@@ -1,30 +1,28 @@
 /*
  * © 2016 AgNO3 Gmbh & Co. KG
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 package jcifs;
 
-
 import java.util.List;
 import java.util.Map;
 
-
 /**
  * This is an internal API for resolving SIDs to names and/or retrieving member SIDs
- * 
+ *
  * @author mbechler
  * @internal
  */
@@ -37,7 +35,7 @@ public interface SidResolver {
      * to resolve SIDs using a cache and cache the results of any SIDs that
      * required resolving with the authority. SID cache entries are currently not
      * expired because under normal circumstances SID information never changes.
-     * 
+     *
      * @param tc
      *            context to use
      * @param authorityServerName
@@ -51,8 +49,7 @@ public interface SidResolver {
      *            methods.
      * @throws CIFSException
      */
-    void resolveSids ( CIFSContext tc, String authorityServerName, SID[] sids ) throws CIFSException;
-
+    void resolveSids(CIFSContext tc, String authorityServerName, SID[] sids) throws CIFSException;
 
     /**
      * Resolve part of an array of SIDs using a cache and at most one MSRPC request.
@@ -64,8 +61,7 @@ public interface SidResolver {
      * @param len
      * @throws CIFSException
      */
-    void resolveSids ( CIFSContext tc, String authorityServerName, SID[] sids, int off, int len ) throws CIFSException;
-
+    void resolveSids(CIFSContext tc, String authorityServerName, SID[] sids, int off, int len) throws CIFSException;
 
     /**
      * @param tc
@@ -76,8 +72,7 @@ public interface SidResolver {
      * @return the SIDs of the group members
      * @throws CIFSException
      */
-    SID[] getGroupMemberSids ( CIFSContext tc, String authorityServerName, SID domsid, int rid, int flags ) throws CIFSException;
-
+    SID[] getGroupMemberSids(CIFSContext tc, String authorityServerName, SID domsid, int rid, int flags) throws CIFSException;
 
     /**
      * @param authorityServerName
@@ -85,8 +80,7 @@ public interface SidResolver {
      * @return the server's SID
      * @throws CIFSException
      */
-    SID getServerSid ( CIFSContext tc, String authorityServerName ) throws CIFSException;
-
+    SID getServerSid(CIFSContext tc, String authorityServerName) throws CIFSException;
 
     /**
      * This specialized method returns a Map of users and local groups for the
@@ -102,7 +96,7 @@ public interface SidResolver {
      * Domain groups nested inside a local group are currently not expanded. In
      * this case the key (SID) type will be SID_TYPE_DOM_GRP rather than
      * SID_TYPE_USER.
-     * 
+     *
      * @param tc
      *            The context to use
      * @param authorityServerName
@@ -115,6 +109,6 @@ public interface SidResolver {
      * @return a map of group SID to member SIDs
      * @throws CIFSException
      */
-    Map<SID, List<SID>> getLocalGroupsMap ( CIFSContext tc, String authorityServerName, int flags ) throws CIFSException;
+    Map<SID, List<SID>> getLocalGroupsMap(CIFSContext tc, String authorityServerName, int flags) throws CIFSException;
 
 }

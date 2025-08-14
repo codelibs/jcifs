@@ -4,7 +4,7 @@ import jcifs.smb1.smb1.SID;
 
 class LsarSidArrayX extends lsarpc.LsarSidArray {
 
-    LsarSidArrayX(SID[] sids) {
+    LsarSidArrayX(final SID[] sids) {
         this.num_sids = sids.length;
         this.sids = new lsarpc.LsarSidPtr[sids.length];
         for (int si = 0; si < sids.length; si++) {

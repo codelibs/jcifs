@@ -1,23 +1,22 @@
 /* jcifs smb client library in Java
  * Copyright (C) 2000  "Michael B. Allen" <jcifs at samba dot org>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 package jcifs.internal.smb1.trans2;
-
 
 import jcifs.Configuration;
 import jcifs.internal.SMBProtocolDecodingException;
@@ -26,9 +25,8 @@ import jcifs.internal.smb1.trans.SmbComTransaction;
 import jcifs.internal.smb1.trans.SmbComTransactionResponse;
 import jcifs.internal.util.SMBUtil;
 
-
 /**
- * 
+ *
  */
 public class Trans2FindFirst2Response extends SmbComTransactionResponse {
 
@@ -45,87 +43,77 @@ public class Trans2FindFirst2Response extends SmbComTransactionResponse {
     private int sid;
     private boolean isEndOfSearch;
     private int eaErrorOffset;
-    private int lastNameOffset, lastNameBufferIndex;
+    private int lastNameOffset;
     private String lastName;
     private int resumeKey;
 
-
     /**
-     * 
+     *
      * @param config
      */
-    public Trans2FindFirst2Response ( Configuration config ) {
+    public Trans2FindFirst2Response(final Configuration config) {
         super(config, SMB_COM_TRANSACTION2, SmbComTransaction.TRANS2_FIND_FIRST2);
     }
-
 
     /**
      * @return the sid
      */
-    public final int getSid () {
+    public final int getSid() {
         return this.sid;
     }
-
 
     /**
      * @return the isEndOfSearch
      */
-    public final boolean isEndOfSearch () {
+    public final boolean isEndOfSearch() {
         return this.isEndOfSearch;
     }
-
 
     /**
      * @return the lastName
      */
-    public final String getLastName () {
+    public final String getLastName() {
         return this.lastName;
     }
-
 
     /**
      * @return the resumeKey
      */
-    public final int getResumeKey () {
+    public final int getResumeKey() {
         return this.resumeKey;
     }
 
-
     @Override
-    protected int writeSetupWireFormat ( byte[] dst, int dstIndex ) {
+    protected int writeSetupWireFormat(final byte[] dst, final int dstIndex) {
         return 0;
     }
 
-
     @Override
-    protected int writeParametersWireFormat ( byte[] dst, int dstIndex ) {
+    protected int writeParametersWireFormat(final byte[] dst, final int dstIndex) {
         return 0;
     }
 
-
     @Override
-    protected int writeDataWireFormat ( byte[] dst, int dstIndex ) {
+    protected int writeDataWireFormat(final byte[] dst, final int dstIndex) {
         return 0;
     }
 
-
     @Override
-    protected int readSetupWireFormat ( byte[] buffer, int bufferIndex, int len ) {
+    protected int readSetupWireFormat(final byte[] buffer, final int bufferIndex, final int len) {
         return 0;
     }
 
-
     @Override
-    protected int readParametersWireFormat ( byte[] buffer, int bufferIndex, int len ) {
-        int start = bufferIndex;
+    protected int readParametersWireFormat(final byte[] buffer, int bufferIndex, final int len) {
+        final int start = bufferIndex;
 
-        if ( this.getSubCommand() == SmbComTransaction.TRANS2_FIND_FIRST2 ) {
+        if (this.getSubCommand() == SmbComTransaction.TRANS2_FIND_FIRST2) {
             this.sid = SMBUtil.readInt2(buffer, bufferIndex);
             bufferIndex += 2;
         }
         this.setNumEntries(SMBUtil.readInt2(buffer, bufferIndex));
         bufferIndex += 2;
-        this.isEndOfSearch = ( buffer[ bufferIndex ] & 0x01 ) == 0x01 ? true : false;
+        this.isEndOfSearch = ((buffer[bufferIndex] & 0x01) == 0x01) == true;
         bufferIndex += 2;
         this.eaErrorOffset = SMBUtil.readInt2(buffer, bufferIndex);
         bufferIndex += 2;
@@ -135,16 +123,15 @@ public class Trans2FindFirst2Response extends SmbComTransactionResponse {
         return bufferIndex - start;
     }
 
-
     @Override
-    protected int readDataWireFormat ( byte[] buffer, int bufferIndex, int len ) throws SMBProtocolDecodingException {
+    protected int readDataWireFormat(final byte[] buffer, int bufferIndex, final int len) throws SMBProtocolDecodingException {
         FileBothDirectoryInfo e;
 
-        this.lastNameBufferIndex = bufferIndex + this.lastNameOffset;
+        int lastNameBufferIndex = bufferIndex + this.lastNameOffset;
 
-        FileBothDirectoryInfo[] results = new FileBothDirectoryInfo[getNumEntries()];
-        for ( int i = 0; i < getNumEntries(); i++ ) {
-            results[ i ] = e = new FileBothDirectoryInfo(getConfig(), isUseUnicode());
+        final FileBothDirectoryInfo[] results = new FileBothDirectoryInfo[getNumEntries()];
+        for (int i = 0; i < getNumEntries(); i++) {
+            results[i] = e = new FileBothDirectoryInfo(getConfig(), isUseUnicode());
 
             e.decode(buffer, bufferIndex, len);
 
@@ -157,8 +144,8 @@ public class Trans2FindFirst2Response extends SmbComTransactionResponse {
              * entry and the next entry.
              */
 
-            if ( this.lastNameBufferIndex >= bufferIndex
-                    && ( e.getNextEntryOffset() == 0 || this.lastNameBufferIndex < ( bufferIndex + e.getNextEntryOffset() ) ) ) {
+            if (lastNameBufferIndex >= bufferIndex
+                    && (e.getNextEntryOffset() == 0 || lastNameBufferIndex < bufferIndex + e.getNextEntryOffset())) {
                 this.lastName = e.getFilename();
                 this.resumeKey = e.getFileIndex();
             }
@@ -175,18 +162,15 @@ public class Trans2FindFirst2Response extends SmbComTransactionResponse {
         return getDataCount();
     }
 
-
     @Override
-    public String toString () {
+    public String toString() {
         String c;
-        if ( this.getSubCommand() == SmbComTransaction.TRANS2_FIND_FIRST2 ) {
+        if (this.getSubCommand() == SmbComTransaction.TRANS2_FIND_FIRST2) {
             c = "Trans2FindFirst2Response[";
-        }
-        else {
+        } else {
             c = "Trans2FindNext2Response[";
         }
-        return new String(
-            c + super.toString() + ",sid=" + this.sid + ",searchCount=" + getNumEntries() + ",isEndOfSearch=" + this.isEndOfSearch + ",eaErrorOffset="
-                    + this.eaErrorOffset + ",lastNameOffset=" + this.lastNameOffset + ",lastName=" + this.lastName + "]");
+        return (c + super.toString() + ",sid=" + this.sid + ",searchCount=" + getNumEntries() + ",isEndOfSearch=" + this.isEndOfSearch
+                + ",eaErrorOffset=" + this.eaErrorOffset + ",lastNameOffset=" + this.lastNameOffset + ",lastName=" + this.lastName + "]");
     }
 }

@@ -37,6 +37,7 @@ public class Handler extends jcifs.smb1.http.Handler {
      *
      * @return An <code>int</code> containing the default HTTPS port.
      */
+    @Override
     protected int getDefaultPort() {
         return DEFAULT_HTTPS_PORT;
     }

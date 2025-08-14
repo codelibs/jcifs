@@ -24,10 +24,8 @@ package jcifs.smb1.http;
 import java.io.IOException;
 
 import jakarta.servlet.ServletException;
-
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
 import jcifs.smb1.ntlmssp.NtlmFlags;
 import jcifs.smb1.ntlmssp.Type1Message;
 import jcifs.smb1.ntlmssp.Type2Message;
@@ -61,9 +59,8 @@ public class NtlmSsp implements NtlmFlags {
      * @throws IOException If an IO error occurs.
      * @throws ServletException If an error occurs.
      */
-    public NtlmPasswordAuthentication doAuthentication(
-            HttpServletRequest req, HttpServletResponse resp, byte[] challenge)
-                    throws IOException, ServletException {
+    public NtlmPasswordAuthentication doAuthentication(final HttpServletRequest req, final HttpServletResponse resp, final byte[] challenge)
+            throws IOException, ServletException {
         return authenticate(req, resp, challenge);
     }
 
@@ -76,25 +73,27 @@ public class NtlmSsp implements NtlmFlags {
      * @throws IOException If an IO error occurs.
      * @throws ServletException If an error occurs.
      */
-    public static NtlmPasswordAuthentication authenticate(
-            HttpServletRequest req, HttpServletResponse resp, byte[] challenge)
-                    throws IOException, ServletException {
+    public static NtlmPasswordAuthentication authenticate(final HttpServletRequest req, final HttpServletResponse resp,
+            final byte[] challenge) throws IOException, ServletException {
         String msg = req.getHeader("Authorization");
         if (msg != null && msg.startsWith("NTLM ")) {
-            byte[] src = Base64.decode(msg.substring(5));
+            final byte[] src = Base64.decode(msg.substring(5));
             if (src[8] == 1) {
-                Type1Message type1 = new Type1Message(src);
-                Type2Message type2 = new Type2Message(type1, challenge, null);
+                final Type1Message type1 = new Type1Message(src);
+                final Type2Message type2 = new Type2Message(type1, challenge, null);
                 msg = Base64.encode(type2.toByteArray());
-                resp.setHeader( "WWW-Authenticate", "NTLM " + msg );
+                resp.setHeader("WWW-Authenticate", "NTLM " + msg);
             } else if (src[8] == 3) {
-                Type3Message type3 = new Type3Message(src);
+                final Type3Message type3 = new Type3Message(src);
                 byte[] lmResponse = type3.getLMResponse();
-                if (lmResponse == null) lmResponse = new byte[0];
+                if (lmResponse == null) {
+                    lmResponse = new byte[0];
+                }
                 byte[] ntResponse = type3.getNTResponse();
-                if (ntResponse == null) ntResponse = new byte[0];
-                return new NtlmPasswordAuthentication(type3.getDomain(),
-                        type3.getUser(), challenge, lmResponse, ntResponse);
+                if (ntResponse == null) {
+                    ntResponse = new byte[0];
+                }
+                return new NtlmPasswordAuthentication(type3.getDomain(), type3.getUser(), challenge, lmResponse, ntResponse);
             }
         } else {
             resp.setHeader("WWW-Authenticate", "NTLM");
@@ -106,4 +105,3 @@ public class NtlmSsp implements NtlmFlags {
     }
 
 }
-

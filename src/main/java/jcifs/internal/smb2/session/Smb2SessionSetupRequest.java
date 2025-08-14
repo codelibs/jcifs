@@ -1,22 +1,21 @@
 /*
  * © 2017 AgNO3 Gmbh & Co. KG
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 package jcifs.internal.smb2.session;
-
 
 import jcifs.CIFSContext;
 import jcifs.internal.smb2.ServerMessageBlock2;
@@ -24,19 +23,17 @@ import jcifs.internal.smb2.ServerMessageBlock2Request;
 import jcifs.internal.smb2.Smb2Constants;
 import jcifs.internal.util.SMBUtil;
 
-
 /**
  * @author mbechler
  *
  */
 public class Smb2SessionSetupRequest extends ServerMessageBlock2Request<Smb2SessionSetupResponse> {
 
-    private byte[] token;
-    private int capabilities;
+    private final byte[] token;
+    private final int capabilities;
     private boolean sessionBinding;
-    private long previousSessionId;
-    private int securityMode;
-
+    private final long previousSessionId;
+    private final int securityMode;
 
     /**
      * @param context
@@ -45,7 +42,8 @@ public class Smb2SessionSetupRequest extends ServerMessageBlock2Request<Smb2Sess
      * @param previousSessionid
      * @param token
      */
-    public Smb2SessionSetupRequest ( CIFSContext context, int securityMode, int capabilities, long previousSessionid, byte[] token ) {
+    public Smb2SessionSetupRequest(final CIFSContext context, final int securityMode, final int capabilities, final long previousSessionid,
+            final byte[] token) {
         super(context.getConfig(), SMB2_SESSION_SETUP);
         this.securityMode = securityMode;
         this.capabilities = capabilities;
@@ -53,21 +51,19 @@ public class Smb2SessionSetupRequest extends ServerMessageBlock2Request<Smb2Sess
         this.token = token;
     }
 
-
     @Override
-    protected Smb2SessionSetupResponse createResponse ( CIFSContext tc, ServerMessageBlock2Request<Smb2SessionSetupResponse> req ) {
+    protected Smb2SessionSetupResponse createResponse(final CIFSContext tc,
+            final ServerMessageBlock2Request<Smb2SessionSetupResponse> req) {
         return new Smb2SessionSetupResponse(tc.getConfig());
     }
-
 
     /**
      * @param sessionBinding
      *            the sessionBinding to set
      */
-    public void setSessionBinding ( boolean sessionBinding ) {
+    public void setSessionBinding(final boolean sessionBinding) {
         this.sessionBinding = sessionBinding;
     }
-
 
     /**
      * {@inheritDoc}
@@ -75,11 +71,10 @@ public class Smb2SessionSetupRequest extends ServerMessageBlock2Request<Smb2Sess
      * @see jcifs.internal.smb2.ServerMessageBlock2#chain(jcifs.internal.smb2.ServerMessageBlock2)
      */
     @Override
-    public boolean chain ( ServerMessageBlock2 n ) {
+    public boolean chain(final ServerMessageBlock2 n) {
         n.setSessionId(Smb2Constants.UNSPECIFIED_SESSIONID);
         return super.chain(n);
     }
-
 
     /**
      * {@inheritDoc}
@@ -87,10 +82,9 @@ public class Smb2SessionSetupRequest extends ServerMessageBlock2Request<Smb2Sess
      * @see jcifs.internal.CommonServerMessageBlockRequest#size()
      */
     @Override
-    public int size () {
-        return size8(Smb2Constants.SMB2_HEADER_LENGTH + 24 + ( this.token != null ? this.token.length : 0 ));
+    public int size() {
+        return size8(Smb2Constants.SMB2_HEADER_LENGTH + 24 + (this.token != null ? this.token.length : 0));
     }
-
 
     /**
      * {@inheritDoc}
@@ -98,13 +92,13 @@ public class Smb2SessionSetupRequest extends ServerMessageBlock2Request<Smb2Sess
      * @see jcifs.internal.smb2.ServerMessageBlock2#writeBytesWireFormat(byte[], int)
      */
     @Override
-    protected int writeBytesWireFormat ( byte[] dst, int dstIndex ) {
-        int start = dstIndex;
+    protected int writeBytesWireFormat(final byte[] dst, int dstIndex) {
+        final int start = dstIndex;
 
         SMBUtil.writeInt2(25, dst, dstIndex);
 
-        dst[ dstIndex + 2 ] = (byte) ( this.sessionBinding ? 0x1 : 0 );
-        dst[ dstIndex + 3 ] = (byte) ( this.securityMode );
+        dst[dstIndex + 2] = (byte) (this.sessionBinding ? 0x1 : 0);
+        dst[dstIndex + 3] = (byte) this.securityMode;
         dstIndex += 4;
 
         SMBUtil.writeInt4(this.capabilities, dst, dstIndex);
@@ -112,7 +106,7 @@ public class Smb2SessionSetupRequest extends ServerMessageBlock2Request<Smb2Sess
         SMBUtil.writeInt4(0, dst, dstIndex); // Channel
         dstIndex += 4;
 
-        int offsetOffset = dstIndex;
+        final int offsetOffset = dstIndex;
         dstIndex += 2;
         SMBUtil.writeInt2(this.token != null ? this.token.length : 0, dst, dstIndex);
         dstIndex += 2;
@@ -122,7 +116,7 @@ public class Smb2SessionSetupRequest extends ServerMessageBlock2Request<Smb2Sess
 
         dstIndex += pad8(dstIndex);
 
-        if ( this.token != null ) {
+        if (this.token != null) {
             System.arraycopy(this.token, 0, dst, dstIndex, this.token.length);
             dstIndex += this.token.length;
         }
@@ -130,14 +124,13 @@ public class Smb2SessionSetupRequest extends ServerMessageBlock2Request<Smb2Sess
         return dstIndex - start;
     }
 
-
     /**
      * {@inheritDoc}
      *
      * @see jcifs.internal.smb2.ServerMessageBlock2#readBytesWireFormat(byte[], int)
      */
     @Override
-    protected int readBytesWireFormat ( byte[] buffer, int bufferIndex ) {
+    protected int readBytesWireFormat(final byte[] buffer, final int bufferIndex) {
         return 0;
     }
 

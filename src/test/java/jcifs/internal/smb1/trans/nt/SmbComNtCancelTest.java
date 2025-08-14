@@ -25,7 +25,7 @@ import jcifs.internal.smb1.ServerMessageBlock;
 
 /**
  * Test class for SmbComNtCancel
- * 
+ *
  * Tests the SMB1 NT Cancel command implementation
  */
 @DisplayName("SmbComNtCancel Tests")

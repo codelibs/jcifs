@@ -1,29 +1,27 @@
 /*
  * © 2017 AgNO3 Gmbh & Co. KG
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 package jcifs;
 
-
 import java.net.URL;
-
 
 /**
  * Location information for a SMB resource
- * 
+ *
  * @author mbechler
  *
  */
@@ -44,15 +42,13 @@ public interface SmbResourceLocator {
      *         itself.
      */
 
-    String getName ();
-
+    String getName();
 
     /**
-     * 
+     *
      * @return dfs referral data
      */
-    DfsReferralData getDfsReferral ();
-
+    DfsReferralData getDfsReferral();
 
     /**
      * Everything but the last component of the URL representing this SMB
@@ -63,8 +59,7 @@ public interface SmbResourceLocator {
      *         <code>smb://</code> if the resource refers to the root of the URL
      *         hierarchy which incidentally is also <code>smb://</code>.
      */
-    String getParent ();
-
+    String getParent();
 
     /**
      * Returns the full uncanonicalized URL of this SMB resource. An
@@ -74,8 +69,7 @@ public interface SmbResourceLocator {
      * @return The uncanonicalized full URL of this SMB resource.
      */
 
-    String getPath ();
-
+    String getPath();
 
     /**
      * Returns the full URL of this SMB resource with '.' and '..' components
@@ -85,20 +79,17 @@ public interface SmbResourceLocator {
      *
      * @return The canonicalized URL of this SMB resource.
      */
-    String getCanonicalURL ();
-
+    String getCanonicalURL();
 
     /**
      * @return The canonicalized UNC path of this SMB resource (relative to it's share)
      */
-    String getUNCPath ();
-
+    String getUNCPath();
 
     /**
      * @return The canonicalized URL path (relative to the server/domain)
      */
-    String getURLPath ();
-
+    String getURLPath();
 
     /**
      * Retrieves the share associated with this SMB resource. In
@@ -108,87 +99,77 @@ public interface SmbResourceLocator {
      *
      * @return The share component or <code>null</code> if there is no share
      */
-    String getShare ();
-
+    String getShare();
 
     /**
      * Retrieve the hostname of the server for this SMB resource. If the resources has been resolved by DFS this will
      * return the target name.
-     * 
+     *
      * @return The server name
      */
-    String getServerWithDfs ();
-
+    String getServerWithDfs();
 
     /**
      * Retrieve the hostname of the server for this SMB resource. If this
      * <code>SmbFile</code> references a workgroup, the name of the workgroup
      * is returned. If this <code>SmbFile</code> refers to the root of this
      * SMB network hierarchy, <code>null</code> is returned.
-     * 
+     *
      * @return The server or workgroup name or <code>null</code> if this
      *         <code>SmbFile</code> refers to the root <code>smb://</code> resource.
      */
-    String getServer ();
-
+    String getServer();
 
     /**
      * If the path of this <code>SmbFile</code> falls within a DFS volume,
      * this method will return the referral path to which it maps. Otherwise
      * <code>null</code> is returned.
-     * 
+     *
      * @return URL to the DFS volume
      */
-    String getDfsPath ();
-
+    String getDfsPath();
 
     /**
      * @return the transport port, if specified
      */
-    int getPort ();
-
+    int getPort();
 
     /**
      * @return the original URL
      */
-    URL getURL ();
-
+    URL getURL();
 
     /**
      * @return resolved server address
      * @throws CIFSException
      */
-    Address getAddress () throws CIFSException;
-
+    Address getAddress() throws CIFSException;
 
     /**
      * @return whether this is a IPC connection
      */
-    boolean isIPC ();
-
+    boolean isIPC();
 
     /**
      * Returns type of of object this <tt>SmbFile</tt> represents.
-     * 
+     *
      * @return <tt>TYPE_FILESYSTEM, TYPE_WORKGROUP, TYPE_SERVER,
      * TYPE_NAMED_PIPE</tt>, or <tt>TYPE_SHARE</tt> in which case it may be either <tt>TYPE_SHARE</tt>,
      *         <tt>TYPE_PRINTER</tt> or <tt>TYPE_COMM</tt>.
      * @throws CIFSException
      */
-    int getType () throws CIFSException;
-
+    int getType() throws CIFSException;
 
     /**
      * @return whether this is a workgroup reference
      * @throws CIFSException
      */
-    boolean isWorkgroup () throws CIFSException;
-
+    boolean isWorkgroup() throws CIFSException;
 
     /**
-     * 
+     *
      * @return whether this is a root resource
      */
-    boolean isRoot ();
+    boolean isRoot();
 
 }

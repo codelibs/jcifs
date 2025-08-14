@@ -1,10 +1,9 @@
 package jcifs.smb1.smb1;
 
-import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
-public class TestLocking implements Runnable
-{
+public class TestLocking implements Runnable {
 
     int numThreads = 1;
     int numIter = 1;
@@ -13,12 +12,12 @@ public class TestLocking implements Runnable
     int numComplete = 0;
     long ltime = 0L;
 
-    public void run()
-    {
+    @Override
+    public void run() {
         try {
-            SmbFile f = new SmbFile(url);
-            SmbFile d = new SmbFile(f.getParent());
-            byte[] buf = new byte[1024];
+            final SmbFile f = new SmbFile(url);
+            final SmbFile d = new SmbFile(f.getParent());
+            final byte[] buf = new byte[1024];
 
             for (int ii = 0; ii < numIter; ii++) {
 
@@ -28,41 +27,40 @@ public class TestLocking implements Runnable
                 }
 
                 try {
-                    double r = Math.random();
+                    final double r = Math.random();
                     if (r < 0.333) {
                         f.exists();
-//                      System.out.print('e');
+                        //                      System.out.print('e');
                     } else if (r < 0.667) {
                         d.listFiles();
-//                      System.out.print('l');
+                        //                      System.out.print('l');
                     } else if (r < 1.0) {
-                        InputStream in = f.getInputStream();
+                        final InputStream in = f.getInputStream();
                         while (in.read(buf) > 0) {
-//                          System.out.print('r');
+                            //                          System.out.print('r');
                         }
                         in.close();
                     }
-                } catch (IOException ioe) {
+                } catch (final IOException ioe) {
                     System.err.println(ioe.getMessage());
-//ioe.printStackTrace(System.err);
+                    //ioe.printStackTrace(System.err);
                 }
 
             }
-        } catch (Exception e) {
+        } catch (final Exception e) {
             e.printStackTrace();
         } finally {
             numComplete++;
         }
     }
 
-    public static void main(String[] args) throws Exception
-    {
+    public static void main(final String[] args) throws Exception {
         if (args.length < 1) {
             System.err.println("usage: TestLocking [-t <numThreads>] [-i <numIter>] [-d <delay>] url");
             System.exit(1);
         }
 
-        TestLocking t = new TestLocking();
+        final TestLocking t = new TestLocking();
         t.ltime = System.currentTimeMillis();
 
         for (int ai = 0; ai < args.length; ai++) {
@@ -80,7 +78,7 @@ public class TestLocking implements Runnable
             }
         }
 
-        Thread[] threads = new Thread[t.numThreads];
+        final Thread[] threads = new Thread[t.numThreads];
         int ti;
 
         for (ti = 0; ti < t.numThreads; ti++) {
@@ -96,22 +94,24 @@ public class TestLocking implements Runnable
                 delay = 2L;
 
                 synchronized (t) {
-                    long expire = t.ltime + t.delay;
-                    long ctime = System.currentTimeMillis();
+                    final long expire = t.ltime + t.delay;
+                    final long ctime = System.currentTimeMillis();
 
-                    if (expire > ctime)
+                    if (expire > ctime) {
                         delay = expire - ctime;
+                    }
                 }
 
-if (delay > 2)
-System.out.println("delay=" + delay);
+                if (delay > 2) {
+                    System.out.println("delay=" + delay);
+                }
                 Thread.sleep(delay);
             } while (delay > 2);
 
             synchronized (t) {
                 t.notifyAll();
             }
-//System.out.println("numComplete=" + t.numComplete + ",numThreads=" + t.numThreads);
+            //System.out.println("numComplete=" + t.numComplete + ",numThreads=" + t.numThreads);
         }
 
         for (ti = 0; ti < t.numThreads; ti++) {

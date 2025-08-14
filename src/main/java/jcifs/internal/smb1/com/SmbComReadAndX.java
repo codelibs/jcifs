@@ -1,16 +1,16 @@
 /* jcifs smb client library in Java
  * Copyright (C) 2000  "Michael B. Allen" <jcifs at samba dot org>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -18,15 +18,13 @@
 
 package jcifs.internal.smb1.com;
 
-
 import jcifs.Configuration;
 import jcifs.internal.smb1.AndXServerMessageBlock;
 import jcifs.internal.smb1.ServerMessageBlock;
 import jcifs.internal.util.SMBUtil;
 
-
 /**
- * 
+ *
  */
 public class SmbComReadAndX extends AndXServerMessageBlock {
 
@@ -35,26 +33,24 @@ public class SmbComReadAndX extends AndXServerMessageBlock {
     int openTimeout;
     int maxCount, minCount, remaining;
 
-
     /**
-     * 
+     *
      * @param config
      */
-    public SmbComReadAndX ( Configuration config ) {
+    public SmbComReadAndX(final Configuration config) {
         super(config, SMB_COM_READ_ANDX);
         this.openTimeout = 0xFFFFFFFF;
     }
 
-
     /**
-     * 
+     *
      * @param config
      * @param fid
      * @param offset
      * @param maxCount
      * @param andx
      */
-    public SmbComReadAndX ( Configuration config, int fid, long offset, int maxCount, ServerMessageBlock andx ) {
+    public SmbComReadAndX(final Configuration config, final int fid, final long offset, final int maxCount, final ServerMessageBlock andx) {
         super(config, SMB_COM_READ_ANDX, andx);
         this.fid = fid;
         this.offset = offset;
@@ -62,83 +58,73 @@ public class SmbComReadAndX extends AndXServerMessageBlock {
         this.openTimeout = 0xFFFFFFFF;
     }
 
-
     /**
      * @return the maxCount
      */
-    public final int getMaxCount () {
+    public final int getMaxCount() {
         return this.maxCount;
     }
-
 
     /**
      * @param maxCount
      *            the maxCount to set
      */
-    public final void setMaxCount ( int maxCount ) {
+    public final void setMaxCount(final int maxCount) {
         this.maxCount = maxCount;
     }
-
 
     /**
      * @return the minCount
      */
-    public final int getMinCount () {
+    public final int getMinCount() {
         return this.minCount;
     }
-
 
     /**
      * @param minCount
      *            the minCount to set
      */
-    public final void setMinCount ( int minCount ) {
+    public final void setMinCount(final int minCount) {
         this.minCount = minCount;
     }
-
 
     /**
      * @return the remaining
      */
-    public final int getRemaining () {
+    public final int getRemaining() {
         return this.remaining;
     }
-
 
     /**
      * @param openTimeout
      *            the openTimeout to set
      */
-    public final void setOpenTimeout ( int openTimeout ) {
+    public final void setOpenTimeout(final int openTimeout) {
         this.openTimeout = openTimeout;
     }
-
 
     /**
      * @param remaining
      *            the remaining to set
      */
-    public final void setRemaining ( int remaining ) {
+    public final void setRemaining(final int remaining) {
         this.remaining = remaining;
     }
 
-
-    void setParam ( int fid, long offset, int maxCount ) {
+    void setParam(final int fid, final long offset, final int maxCount) {
         this.fid = fid;
         this.offset = offset;
         this.maxCount = this.minCount = maxCount;
     }
 
-
     @Override
-    protected int getBatchLimit ( Configuration cfg, byte cmd ) {
+    protected int getBatchLimit(final Configuration cfg, final byte cmd) {
         return cmd == SMB_COM_CLOSE ? cfg.getBatchLimit("ReadAndX.Close") : 0;
     }
 
-
     @Override
-    protected int writeParameterWordsWireFormat ( byte[] dst, int dstIndex ) {
-        int start = dstIndex;
+    protected int writeParameterWordsWireFormat(final byte[] dst, int dstIndex) {
+        final int start = dstIndex;
 
         SMBUtil.writeInt2(this.fid, dst, dstIndex);
         dstIndex += 2;
@@ -158,29 +144,25 @@ public class SmbComReadAndX extends AndXServerMessageBlock {
         return dstIndex - start;
     }
 
-
     @Override
-    protected int writeBytesWireFormat ( byte[] dst, int dstIndex ) {
+    protected int writeBytesWireFormat(final byte[] dst, final int dstIndex) {
         return 0;
     }
 
-
     @Override
-    protected int readParameterWordsWireFormat ( byte[] buffer, int bufferIndex ) {
+    protected int readParameterWordsWireFormat(final byte[] buffer, final int bufferIndex) {
         return 0;
     }
 
-
     @Override
-    protected int readBytesWireFormat ( byte[] buffer, int bufferIndex ) {
+    protected int readBytesWireFormat(final byte[] buffer, final int bufferIndex) {
         return 0;
     }
 
-
     @Override
-    public String toString () {
-        return new String(
-            "SmbComReadAndX[" + super.toString() + ",fid=" + this.fid + ",offset=" + this.offset + ",maxCount=" + this.maxCount + ",minCount="
-                    + this.minCount + ",openTimeout=" + this.openTimeout + ",remaining=" + this.remaining + ",offset=" + this.offset + "]");
+    public String toString() {
+        return ("SmbComReadAndX[" + super.toString() + ",fid=" + this.fid + ",offset=" + this.offset + ",maxCount=" + this.maxCount
+                + ",minCount=" + this.minCount + ",openTimeout=" + this.openTimeout + ",remaining=" + this.remaining + ",offset="
+                + this.offset + "]");
     }
 }

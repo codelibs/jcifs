@@ -1,16 +1,16 @@
 /* jcifs smb client library in Java
  * Copyright (C) 2000  "Michael B. Allen" <jcifs at samba dot org>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -18,10 +18,15 @@
 
 package jcifs.smb1;
 
-import java.util.Properties;
-import java.io.*;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Properties;
 import java.util.StringTokenizer;
 
 import jcifs.smb1.util.LogStream;
@@ -46,7 +51,7 @@ import jcifs.smb1.util.LogStream;
 
 public class Config {
 
-public static int socketCount = 0;
+    public static int socketCount = 0;
 
     /**
      * The static <code>Properties</code>.
@@ -64,37 +69,39 @@ public static int socketCount = 0;
         log = LogStream.getInstance();
 
         try {
-            filename = System.getProperty( "jcifs_smb1.properties" );
-            if( filename != null && filename.length() > 1 ) {
-                in = new FileInputStream( filename );
+            filename = System.getProperty("jcifs_smb1.properties");
+            if (filename != null && filename.length() > 1) {
+                in = new FileInputStream(filename);
             }
-            Config.load( in );
-            if (in != null)
+            Config.load(in);
+            if (in != null) {
                 in.close();
-        } catch( IOException ioe ) {
-            if( log.level > 0 )
-                ioe.printStackTrace( log );
+            }
+        } catch (final IOException ioe) {
+            if (LogStream.level > 0) {
+                ioe.printStackTrace(log);
+            }
         }
 
-        if(( level = Config.getInt( "jcifs.smb1.util.loglevel", -1 )) != -1 ) {
-            LogStream.setLevel( level );
+        level = Config.getInt("jcifs.smb1.util.loglevel", -1);
+        if (level != -1) {
+            LogStream.setLevel(level);
         }
 
         try {
             "".getBytes(DEFAULT_OEM_ENCODING);
-        } catch (UnsupportedEncodingException uee) {
-            if (log.level >= 2) {
-                log.println("WARNING: The default OEM encoding " + DEFAULT_OEM_ENCODING +
-                " does not appear to be supported by this JRE. The default encoding will be US-ASCII.");
+        } catch (final UnsupportedEncodingException uee) {
+            if (LogStream.level >= 2) {
+                log.println("WARNING: The default OEM encoding " + DEFAULT_OEM_ENCODING
+                        + " does not appear to be supported by this JRE. The default encoding will be US-ASCII.");
             }
             DEFAULT_OEM_ENCODING = "US-ASCII";
         }
 
-        if (log.level >= 4) {
+        if (LogStream.level >= 4) {
             try {
-                prp.store( log, "JCIFS PROPERTIES" );
-            } catch( IOException ioe ) {
-            }
+                prp.store(log, "JCIFS PROPERTIES");
+            } catch (final IOException ioe) {}
         }
     }
 
@@ -116,21 +123,22 @@ public static int socketCount = 0;
     public static void registerSmbURLHandler() {
         String ver, pkgs;
 
-        ver = System.getProperty( "java.version" );
-        if( ver.startsWith( "1.1." ) || ver.startsWith( "1.2." )) {
-             throw new RuntimeException( "jcifs.smb1-0.7.0b4+ requires Java 1.3 or above. You are running " + ver );
+        ver = System.getProperty("java.version");
+        if (ver.startsWith("1.1.") || ver.startsWith("1.2.")) {
+            throw new RuntimeException("jcifs.smb1-0.7.0b4+ requires Java 1.3 or above. You are running " + ver);
         }
-        pkgs = System.getProperty( "java.protocol.handler.pkgs" );
-        if( pkgs == null ) {
-            System.setProperty( "java.protocol.handler.pkgs", "jcifs.smb1" );
-        } else if( pkgs.indexOf( "jcifs.smb1" ) == -1 ) {
+        pkgs = System.getProperty("java.protocol.handler.pkgs");
+        if (pkgs == null) {
+            System.setProperty("java.protocol.handler.pkgs", "jcifs.smb1");
+        } else if (pkgs.indexOf("jcifs.smb1") == -1) {
             pkgs += "|jcifs.smb1";
-            System.setProperty( "java.protocol.handler.pkgs", pkgs );
+            System.setProperty("java.protocol.handler.pkgs", pkgs);
         }
     }
 
     // supress javadoc constructor summary by removing 'protected'
-    Config() {}
+    Config() {
+    }
 
     /**
      * Set the default properties of the static Properties used by <tt>Config</tt>. This permits
@@ -141,13 +149,14 @@ public static int socketCount = 0;
      * using the <tt>-Djcifs.properties=</tt> commandline parameter.
      */
 
-    public static void setProperties( Properties prp ) {
-        Config.prp = new Properties( prp );
+    public static void setProperties(final Properties prp) {
+        Config.prp = new Properties(prp);
         try {
-            Config.prp.putAll( System.getProperties() );
-        } catch( SecurityException se ) {
-            if( log.level > 1 )
-                log.println( "SecurityException: jcifs.smb1 will ignore System properties" );
+            Config.prp.putAll(System.getProperties());
+        } catch (final SecurityException se) {
+            if (LogStream.level > 1) {
+                log.println("SecurityException: jcifs.smb1 will ignore System properties");
+            }
         }
     }
 
@@ -156,44 +165,45 @@ public static int socketCount = 0;
      * <code>in</code> from a <code>Properties</code> file.
      */
 
-    public static void load( InputStream in ) throws IOException {
-        if( in != null ) {
-            prp.load( in );
+    public static void load(final InputStream in) throws IOException {
+        if (in != null) {
+            prp.load(in);
         }
         try {
-            prp.putAll( (java.util.Map)System.getProperties().clone() );
-        } catch( SecurityException se ) {
-            if( log.level > 1 )
-                log.println( "SecurityException: jcifs.smb1 will ignore System properties" );
+            prp.putAll((java.util.Map) System.getProperties().clone());
+        } catch (final SecurityException se) {
+            if (LogStream.level > 1) {
+                log.println("SecurityException: jcifs.smb1 will ignore System properties");
+            }
         }
     }
 
-    public static void store( OutputStream out, String header ) throws IOException {
-        prp.store( out, header );
+    public static void store(final OutputStream out, final String header) throws IOException {
+        prp.store(out, header);
     }
 
     /**
      * List the properties in the <code>Code</code>.
      */
 
-    public static void list( PrintStream out ) throws IOException {
-        prp.list( out );
+    public static void list(final PrintStream out) throws IOException {
+        prp.list(out);
     }
 
     /**
      * Add a property.
      */
 
-    public static Object setProperty( String key, String value ) {
-        return prp.setProperty( key, value );
+    public static Object setProperty(final String key, final String value) {
+        return prp.setProperty(key, value);
     }
 
     /**
      * Retrieve a property as an <code>Object</code>.
      */
 
-    public static Object get( String key ) {
-        return prp.get( key );
+    public static Object get(final String key) {
+        return prp.get(key);
     }
 
     /**
@@ -201,16 +211,16 @@ public static int socketCount = 0;
      * the provided <code>def</code> default parameter will be returned.
      */
 
-    public static String getProperty( String key, String def ) {
-        return prp.getProperty( key, def );
+    public static String getProperty(final String key, final String def) {
+        return prp.getProperty(key, def);
     }
 
     /**
      * Retrieve a <code>String</code>. If the property is not found, <code>null</code> is returned.
      */
 
-    public static String getProperty( String key ) {
-        return prp.getProperty( key );
+    public static String getProperty(final String key) {
+        return prp.getProperty(key);
     }
 
     /**
@@ -219,14 +229,15 @@ public static int socketCount = 0;
      * argument will be returned.
      */
 
-    public static int getInt( String key, int def ) {
-        String s = prp.getProperty( key );
-        if( s != null ) {
+    public static int getInt(final String key, int def) {
+        final String s = prp.getProperty(key);
+        if (s != null) {
             try {
-                def = Integer.parseInt( s );
-            } catch( NumberFormatException nfe ) {
-                if( log.level > 0 )
-                    nfe.printStackTrace( log );
+                def = Integer.parseInt(s);
+            } catch (final NumberFormatException nfe) {
+                if (LogStream.level > 0) {
+                    nfe.printStackTrace(log);
+                }
             }
         }
         return def;
@@ -236,15 +247,16 @@ public static int socketCount = 0;
      * Retrieve an <code>int</code>. If the property is not found, <code>-1</code> is returned.
      */
 
-    public static int getInt( String key ) {
-        String s = prp.getProperty( key );
+    public static int getInt(final String key) {
+        final String s = prp.getProperty(key);
         int result = -1;
-        if( s != null ) {
+        if (s != null) {
             try {
-                result = Integer.parseInt( s );
-            } catch( NumberFormatException nfe ) {
-                if( log.level > 0 )
-                    nfe.printStackTrace( log );
+                result = Integer.parseInt(s);
+            } catch (final NumberFormatException nfe) {
+                if (LogStream.level > 0) {
+                    nfe.printStackTrace(log);
+                }
             }
         }
         return result;
@@ -256,49 +268,51 @@ public static int socketCount = 0;
      * argument will be returned.
      */
 
-    public static long getLong( String key, long def ) {
-        String s = prp.getProperty( key );
-        if( s != null ) {
+    public static long getLong(final String key, long def) {
+        final String s = prp.getProperty(key);
+        if (s != null) {
             try {
-                def = Long.parseLong( s );
-            } catch( NumberFormatException nfe ) {
-                if( log.level > 0 )
-                    nfe.printStackTrace( log );
-            }
-        }
-        return def;
-    }
-
-    /** 
-     * Retrieve an <code>InetAddress</code>. If the address is not
-     * an IP address and cannot be resolved <code>null</code> will
-     * be returned.
-     */
-
-    public static InetAddress getInetAddress( String key, InetAddress def ) {
-        String addr = prp.getProperty( key );
-        if( addr != null ) {
-            try {
-                def = InetAddress.getByName( addr );
-            } catch( UnknownHostException uhe ) {
-                if( log.level > 0 ) {
-                    log.println( addr );
-                    uhe.printStackTrace( log );
+                def = Long.parseLong(s);
+            } catch (final NumberFormatException nfe) {
+                if (LogStream.level > 0) {
+                    nfe.printStackTrace(log);
                 }
             }
         }
         return def;
     }
+
+    /**
+     * Retrieve an <code>InetAddress</code>. If the address is not
+     * an IP address and cannot be resolved <code>null</code> will
+     * be returned.
+     */
+
+    public static InetAddress getInetAddress(final String key, InetAddress def) {
+        final String addr = prp.getProperty(key);
+        if (addr != null) {
+            try {
+                def = InetAddress.getByName(addr);
+            } catch (final UnknownHostException uhe) {
+                if (LogStream.level > 0) {
+                    log.println(addr);
+                    uhe.printStackTrace(log);
+                }
+            }
+        }
+        return def;
+    }
+
     public static InetAddress getLocalHost() {
-        String addr = prp.getProperty( "jcifs.smb1.smb.client.laddr" );
+        final String addr = prp.getProperty("jcifs.smb1.smb.client.laddr");
 
         if (addr != null) {
             try {
-                return InetAddress.getByName( addr );
-            } catch( UnknownHostException uhe ) {
-                if( log.level > 0 ) {
-                    log.println( "Ignoring jcifs.smb1.smb.client.laddr address: " + addr );
-                    uhe.printStackTrace( log );
+                return InetAddress.getByName(addr);
+            } catch (final UnknownHostException uhe) {
+                if (LogStream.level > 0) {
+                    log.println("Ignoring jcifs.smb1.smb.client.laddr address: " + addr);
+                    uhe.printStackTrace(log);
                 }
             }
         }
@@ -310,10 +324,10 @@ public static int socketCount = 0;
      * Retrieve a boolean value. If the property is not found, the value of <code>def</code> is returned.
      */
 
-    public static boolean getBoolean( String key, boolean def ) {
-        String b = getProperty( key );
-        if( b != null ) {
-            def = b.toLowerCase().equals( "true" );
+    public static boolean getBoolean(final String key, boolean def) {
+        final String b = getProperty(key);
+        if (b != null) {
+            def = b.toLowerCase().equals("true");
         }
         return def;
     }
@@ -324,20 +338,20 @@ public static int socketCount = 0;
      * ipaddresses.
      */
 
-    public static InetAddress[] getInetAddressArray( String key, String delim, InetAddress[] def ) {
-        String p = getProperty( key );
-        if( p != null ) {
-            StringTokenizer tok = new StringTokenizer( p, delim );
-            int len = tok.countTokens();
-            InetAddress[] arr = new InetAddress[len];
-            for( int i = 0; i < len; i++ ) {
-                String addr = tok.nextToken();
+    public static InetAddress[] getInetAddressArray(final String key, final String delim, final InetAddress[] def) {
+        final String p = getProperty(key);
+        if (p != null) {
+            final StringTokenizer tok = new StringTokenizer(p, delim);
+            final int len = tok.countTokens();
+            final InetAddress[] arr = new InetAddress[len];
+            for (int i = 0; i < len; i++) {
+                final String addr = tok.nextToken();
                 try {
-                    arr[i] = InetAddress.getByName( addr );
-                } catch( UnknownHostException uhe ) {
-                    if( log.level > 0 ) {
-                        log.println( addr );
-                        uhe.printStackTrace( log );
+                    arr[i] = InetAddress.getByName(addr);
+                } catch (final UnknownHostException uhe) {
+                    if (LogStream.level > 0) {
+                        log.println(addr);
+                        uhe.printStackTrace(log);
                     }
                     return def;
                 }
@@ -347,4 +361,3 @@ public static int socketCount = 0;
         return def;
     }
 }
-

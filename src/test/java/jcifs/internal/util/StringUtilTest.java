@@ -78,7 +78,7 @@ class StringUtilTest {
     void testJoinWithEmptyStringElements() {
         String result = StringUtil.join(",", "", "middle", "");
         // First element is empty string (sb becomes "")
-        // Second: sb.length() is 0, no delimiter, append "middle" (sb becomes "middle")  
+        // Second: sb.length() is 0, no delimiter, append "middle" (sb becomes "middle")
         // Third: sb.length() > 0, add delimiter + "" (sb becomes "middle,")
         assertEquals("middle,", result);
     }

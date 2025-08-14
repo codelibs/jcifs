@@ -1,22 +1,21 @@
 /*
  * © 2017 AgNO3 Gmbh & Co. KG
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 package jcifs.internal.smb2.create;
-
 
 import java.util.LinkedList;
 import java.util.List;
@@ -32,7 +31,6 @@ import jcifs.internal.smb2.RequestWithFileId;
 import jcifs.internal.smb2.ServerMessageBlock2Response;
 import jcifs.internal.util.SMBUtil;
 import jcifs.util.Hexdump;
-
 
 /**
  * @author mbechler
@@ -52,20 +50,18 @@ public class Smb2CreateResponse extends ServerMessageBlock2Response implements S
     private long allocationSize;
     private long endOfFile;
     private int fileAttributes;
-    private byte[] fileId = new byte[16];
+    private final byte[] fileId = new byte[16];
     private CreateContextResponse[] createContexts;
     private final String fileName;
-
 
     /**
      * @param config
      * @param name
      */
-    public Smb2CreateResponse ( Configuration config, String name ) {
+    public Smb2CreateResponse(final Configuration config, final String name) {
         super(config);
         this.fileName = name;
     }
-
 
     /**
      * {@inheritDoc}
@@ -73,45 +69,40 @@ public class Smb2CreateResponse extends ServerMessageBlock2Response implements S
      * @see jcifs.internal.smb2.ServerMessageBlock2Response#prepare(jcifs.internal.CommonServerMessageBlockRequest)
      */
     @Override
-    public void prepare ( CommonServerMessageBlockRequest next ) {
-        if ( isReceived() && ( next instanceof RequestWithFileId ) ) {
-            ( (RequestWithFileId) next ).setFileId(this.fileId);
+    public void prepare(final CommonServerMessageBlockRequest next) {
+        if (isReceived() && next instanceof RequestWithFileId) {
+            ((RequestWithFileId) next).setFileId(this.fileId);
         }
         super.prepare(next);
     }
 
-
     /**
      * @return the oplockLevel
      */
-    public final byte getOplockLevel () {
+    public final byte getOplockLevel() {
         return this.oplockLevel;
     }
-
 
     /**
      * @return the flags
      */
-    public final byte getOpenFlags () {
+    public final byte getOpenFlags() {
         return this.openFlags;
     }
-
 
     /**
      * @return the createAction
      */
-    public final int getCreateAction () {
+    public final int getCreateAction() {
         return this.createAction;
     }
-
 
     /**
      * @return the creationTime
      */
-    public final long getCreationTime () {
+    public final long getCreationTime() {
         return this.creationTime;
     }
-
 
     /**
      * {@inheritDoc}
@@ -119,52 +110,46 @@ public class Smb2CreateResponse extends ServerMessageBlock2Response implements S
      * @see jcifs.internal.SmbBasicFileInfo#getCreateTime()
      */
     @Override
-    public final long getCreateTime () {
+    public final long getCreateTime() {
         return getCreationTime();
     }
-
 
     /**
      * @return the lastAccessTime
      */
     @Override
-    public final long getLastAccessTime () {
+    public final long getLastAccessTime() {
         return this.lastAccessTime;
     }
-
 
     /**
      * @return the lastWriteTime
      */
     @Override
-    public final long getLastWriteTime () {
+    public final long getLastWriteTime() {
         return this.lastWriteTime;
     }
-
 
     /**
      * @return the changeTime
      */
-    public final long getChangeTime () {
+    public final long getChangeTime() {
         return this.changeTime;
     }
-
 
     /**
      * @return the allocationSize
      */
-    public final long getAllocationSize () {
+    public final long getAllocationSize() {
         return this.allocationSize;
     }
-
 
     /**
      * @return the endOfFile
      */
-    public final long getEndOfFile () {
+    public final long getEndOfFile() {
         return this.endOfFile;
     }
-
 
     /**
      * {@inheritDoc}
@@ -172,18 +157,16 @@ public class Smb2CreateResponse extends ServerMessageBlock2Response implements S
      * @see jcifs.internal.SmbBasicFileInfo#getSize()
      */
     @Override
-    public final long getSize () {
+    public final long getSize() {
         return getEndOfFile();
     }
-
 
     /**
      * @return the fileAttributes
      */
-    public final int getFileAttributes () {
+    public final int getFileAttributes() {
         return this.fileAttributes;
     }
-
 
     /**
      * {@inheritDoc}
@@ -191,34 +174,30 @@ public class Smb2CreateResponse extends ServerMessageBlock2Response implements S
      * @see jcifs.internal.SmbBasicFileInfo#getAttributes()
      */
     @Override
-    public final int getAttributes () {
+    public final int getAttributes() {
         return getFileAttributes();
     }
-
 
     /**
      * @return the fileId
      */
-    public final byte[] getFileId () {
+    public final byte[] getFileId() {
         return this.fileId;
     }
-
 
     /**
      * @return the fileName
      */
-    public final String getFileName () {
+    public final String getFileName() {
         return this.fileName;
     }
-
 
     /**
      * @return the createContexts
      */
-    public CreateContextResponse[] getCreateContexts () {
+    public CreateContextResponse[] getCreateContexts() {
         return this.createContexts;
     }
-
 
     /**
      * {@inheritDoc}
@@ -226,29 +205,28 @@ public class Smb2CreateResponse extends ServerMessageBlock2Response implements S
      * @see jcifs.internal.smb2.ServerMessageBlock2#writeBytesWireFormat(byte[], int)
      */
     @Override
-    protected int writeBytesWireFormat ( byte[] dst, int dstIndex ) {
+    protected int writeBytesWireFormat(final byte[] dst, final int dstIndex) {
         return 0;
     }
 
-
     /**
      * {@inheritDoc}
-     * 
+     *
      * @throws SMBProtocolDecodingException
      *
      * @see jcifs.internal.smb2.ServerMessageBlock2#readBytesWireFormat(byte[], int)
      */
     @Override
-    protected int readBytesWireFormat ( byte[] buffer, int bufferIndex ) throws SMBProtocolDecodingException {
-        int start = bufferIndex;
-        int structureSize = SMBUtil.readInt2(buffer, bufferIndex);
+    protected int readBytesWireFormat(final byte[] buffer, int bufferIndex) throws SMBProtocolDecodingException {
+        final int start = bufferIndex;
+        final int structureSize = SMBUtil.readInt2(buffer, bufferIndex);
 
-        if ( structureSize != 89 ) {
+        if (structureSize != 89) {
             throw new SMBProtocolDecodingException("Structure size is not 89");
         }
 
-        this.oplockLevel = buffer[ bufferIndex + 2 ];
-        this.openFlags = buffer[ bufferIndex + 3 ];
+        this.oplockLevel = buffer[bufferIndex + 2];
+        this.openFlags = buffer[bufferIndex + 3];
         bufferIndex += 4;
 
         this.createAction = SMBUtil.readInt4(buffer, bufferIndex);
@@ -275,13 +253,13 @@ public class Smb2CreateResponse extends ServerMessageBlock2Response implements S
         System.arraycopy(buffer, bufferIndex, this.fileId, 0, 16);
         bufferIndex += 16;
 
-        int createContextOffset = SMBUtil.readInt4(buffer, bufferIndex);
+        final int createContextOffset = SMBUtil.readInt4(buffer, bufferIndex);
         bufferIndex += 4;
-        int createContextLength = SMBUtil.readInt4(buffer, bufferIndex);
+        final int createContextLength = SMBUtil.readInt4(buffer, bufferIndex);
         bufferIndex += 4;
 
-        if ( createContextOffset > 0 && createContextLength > 0 ) {
-            List<CreateContextResponse> contexts = new LinkedList<>();
+        if (createContextOffset > 0 && createContextLength > 0) {
+            final List<CreateContextResponse> contexts = new LinkedList<>();
             int createContextStart = getHeaderStart() + createContextOffset;
             int next = 0;
             do {
@@ -289,49 +267,47 @@ public class Smb2CreateResponse extends ServerMessageBlock2Response implements S
                 next = SMBUtil.readInt4(buffer, cci);
                 cci += 4;
 
-                int nameOffset = SMBUtil.readInt2(buffer, cci);
-                int nameLength = SMBUtil.readInt2(buffer, cci + 2);
+                final int nameOffset = SMBUtil.readInt2(buffer, cci);
+                final int nameLength = SMBUtil.readInt2(buffer, cci + 2);
                 cci += 4;
 
-                int dataOffset = SMBUtil.readInt2(buffer, cci + 2);
+                final int dataOffset = SMBUtil.readInt2(buffer, cci + 2);
                 cci += 4;
-                int dataLength = SMBUtil.readInt4(buffer, cci);
+                final int dataLength = SMBUtil.readInt4(buffer, cci);
                 cci += 4;
 
-                byte[] nameBytes = new byte[nameLength];
+                final byte[] nameBytes = new byte[nameLength];
                 System.arraycopy(buffer, createContextStart + nameOffset, nameBytes, 0, nameBytes.length);
                 cci = Math.max(cci, createContextStart + nameOffset + nameLength);
 
-                CreateContextResponse cc = createContext(nameBytes);
-                if ( cc != null ) {
+                final CreateContextResponse cc = createContext(nameBytes);
+                if (cc != null) {
                     cc.decode(buffer, createContextStart + dataOffset, dataLength);
                     contexts.add(cc);
                 }
 
                 cci = Math.max(cci, createContextStart + dataOffset + dataLength);
 
-                if ( next > 0 ) {
+                if (next > 0) {
                     createContextStart += next;
                 }
                 bufferIndex = Math.max(bufferIndex, cci);
-            }
-            while ( next > 0 );
+            } while (next > 0);
             this.createContexts = contexts.toArray(new CreateContextResponse[0]);
         }
 
-        if ( log.isDebugEnabled() ) {
+        if (log.isDebugEnabled()) {
             log.debug("Opened " + this.fileName + ": " + Hexdump.toHexString(this.fileId));
         }
 
         return bufferIndex - start;
     }
 
-
     /**
      * @param nameBytes
      * @return
      */
-    private static CreateContextResponse createContext ( byte[] nameBytes ) {
+    private static CreateContextResponse createContext(final byte[] nameBytes) {
         return null;
     }
 

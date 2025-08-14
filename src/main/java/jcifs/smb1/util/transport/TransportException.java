@@ -10,29 +10,32 @@ public class TransportException extends IOException {
 
     public TransportException() {
     }
-    public TransportException( String msg ) {
-        super( msg );
+
+    public TransportException(final String msg) {
+        super(msg);
     }
-    public TransportException( Throwable rootCause ) {
+
+    public TransportException(final Throwable rootCause) {
         this.rootCause = rootCause;
     }
-    public TransportException( String msg, Throwable rootCause ) {
-        super( msg );
+
+    public TransportException(final String msg, final Throwable rootCause) {
+        super(msg);
         this.rootCause = rootCause;
     }
 
     public Throwable getRootCause() {
         return rootCause;
     }
+
+    @Override
     public String toString() {
-        if( rootCause != null ) {
-            StringWriter sw = new StringWriter();
-            PrintWriter pw = new PrintWriter( sw );
-            rootCause.printStackTrace( pw );
+        if (rootCause != null) {
+            final StringWriter sw = new StringWriter();
+            final PrintWriter pw = new PrintWriter(sw);
+            rootCause.printStackTrace(pw);
             return super.toString() + "\n" + sw;
-        } else {
-            return super.toString();
         }
+        return super.toString();
     }
 }
-

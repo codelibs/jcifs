@@ -1,7 +1,10 @@
 package jcifs.smb1.dcerpc.msrpc;
 
-import jcifs.smb1.dcerpc.*;
-import jcifs.smb1.dcerpc.ndr.*;
+import jcifs.smb1.dcerpc.DcerpcMessage;
+import jcifs.smb1.dcerpc.rpc;
+import jcifs.smb1.dcerpc.ndr.NdrBuffer;
+import jcifs.smb1.dcerpc.ndr.NdrException;
+import jcifs.smb1.dcerpc.ndr.NdrObject;
 
 public class samr {
 
@@ -29,38 +32,49 @@ public class samr {
 
     public static class SamrCloseHandle extends DcerpcMessage {
 
-        public int getOpnum() { return 0x01; }
+        @Override
+        public int getOpnum() {
+            return 0x01;
+        }
 
         public int retval;
         public rpc.policy_handle handle;
 
-        public SamrCloseHandle(rpc.policy_handle handle) {
+        public SamrCloseHandle(final rpc.policy_handle handle) {
             this.handle = handle;
         }
 
-        public void encode_in(NdrBuffer _dst) throws NdrException {
+        @Override
+        public void encode_in(final NdrBuffer _dst) throws NdrException {
             handle.encode(_dst);
         }
-        public void decode_out(NdrBuffer _src) throws NdrException {
-            retval = (int)_src.dec_ndr_long();
+
+        @Override
+        public void decode_out(final NdrBuffer _src) throws NdrException {
+            retval = _src.dec_ndr_long();
         }
     }
+
     public static class SamrConnect2 extends DcerpcMessage {
 
-        public int getOpnum() { return 0x39; }
+        @Override
+        public int getOpnum() {
+            return 0x39;
+        }
 
         public int retval;
         public String system_name;
         public int access_mask;
         public rpc.policy_handle handle;
 
-        public SamrConnect2(String system_name, int access_mask, rpc.policy_handle handle) {
+        public SamrConnect2(final String system_name, final int access_mask, final rpc.policy_handle handle) {
             this.system_name = system_name;
             this.access_mask = access_mask;
             this.handle = handle;
         }
 
-        public void encode_in(NdrBuffer _dst) throws NdrException {
+        @Override
+        public void encode_in(final NdrBuffer _dst) throws NdrException {
             _dst.enc_ndr_referent(system_name, 1);
             if (system_name != null) {
                 _dst.enc_ndr_string(system_name);
@@ -68,14 +82,20 @@ public class samr {
             }
             _dst.enc_ndr_long(access_mask);
         }
-        public void decode_out(NdrBuffer _src) throws NdrException {
+
+        @Override
+        public void decode_out(final NdrBuffer _src) throws NdrException {
             handle.decode(_src);
-            retval = (int)_src.dec_ndr_long();
+            retval = _src.dec_ndr_long();
         }
     }
+
     public static class SamrConnect4 extends DcerpcMessage {
 
-        public int getOpnum() { return 0x3e; }
+        @Override
+        public int getOpnum() {
+            return 0x3e;
+        }
 
         public int retval;
         public String system_name;
@@ -83,17 +103,15 @@ public class samr {
         public int access_mask;
         public rpc.policy_handle handle;
 
-        public SamrConnect4(String system_name,
-                    int unknown,
-                    int access_mask,
-                    rpc.policy_handle handle) {
+        public SamrConnect4(final String system_name, final int unknown, final int access_mask, final rpc.policy_handle handle) {
             this.system_name = system_name;
             this.unknown = unknown;
             this.access_mask = access_mask;
             this.handle = handle;
         }
 
-        public void encode_in(NdrBuffer _dst) throws NdrException {
+        @Override
+        public void encode_in(final NdrBuffer _dst) throws NdrException {
             _dst.enc_ndr_referent(system_name, 1);
             if (system_name != null) {
                 _dst.enc_ndr_string(system_name);
@@ -102,14 +120,20 @@ public class samr {
             _dst.enc_ndr_long(unknown);
             _dst.enc_ndr_long(access_mask);
         }
-        public void decode_out(NdrBuffer _src) throws NdrException {
+
+        @Override
+        public void decode_out(final NdrBuffer _src) throws NdrException {
             handle.decode(_src);
-            retval = (int)_src.dec_ndr_long();
+            retval = _src.dec_ndr_long();
         }
     }
+
     public static class SamrOpenDomain extends DcerpcMessage {
 
-        public int getOpnum() { return 0x07; }
+        @Override
+        public int getOpnum() {
+            return 0x07;
+        }
 
         public int retval;
         public rpc.policy_handle handle;
@@ -117,31 +141,34 @@ public class samr {
         public rpc.sid_t sid;
         public rpc.policy_handle domain_handle;
 
-        public SamrOpenDomain(rpc.policy_handle handle,
-                    int access_mask,
-                    rpc.sid_t sid,
-                    rpc.policy_handle domain_handle) {
+        public SamrOpenDomain(final rpc.policy_handle handle, final int access_mask, final rpc.sid_t sid,
+                final rpc.policy_handle domain_handle) {
             this.handle = handle;
             this.access_mask = access_mask;
             this.sid = sid;
             this.domain_handle = domain_handle;
         }
 
-        public void encode_in(NdrBuffer _dst) throws NdrException {
+        @Override
+        public void encode_in(final NdrBuffer _dst) throws NdrException {
             handle.encode(_dst);
             _dst.enc_ndr_long(access_mask);
             sid.encode(_dst);
         }
-        public void decode_out(NdrBuffer _src) throws NdrException {
+
+        @Override
+        public void decode_out(final NdrBuffer _src) throws NdrException {
             domain_handle.decode(_src);
-            retval = (int)_src.dec_ndr_long();
+            retval = _src.dec_ndr_long();
         }
     }
+
     public static class SamrSamEntry extends NdrObject {
 
         public int idx;
         public rpc.unicode_string name;
 
+        @Override
         public void encode(NdrBuffer _dst) throws NdrException {
             _dst.align(4);
             _dst.enc_ndr_long(idx);
@@ -151,12 +178,12 @@ public class samr {
 
             if (name.buffer != null) {
                 _dst = _dst.deferred;
-                int _name_bufferl = name.length / 2;
-                int _name_buffers = name.maximum_length / 2;
+                final int _name_bufferl = name.length / 2;
+                final int _name_buffers = name.maximum_length / 2;
                 _dst.enc_ndr_long(_name_buffers);
                 _dst.enc_ndr_long(0);
                 _dst.enc_ndr_long(_name_bufferl);
-                int _name_bufferi = _dst.index;
+                final int _name_bufferi = _dst.index;
                 _dst.advance(2 * _name_bufferl);
 
                 _dst = _dst.derive(_name_bufferi);
@@ -165,41 +192,47 @@ public class samr {
                 }
             }
         }
+
+        @Override
         public void decode(NdrBuffer _src) throws NdrException {
             _src.align(4);
-            idx = (int)_src.dec_ndr_long();
+            idx = _src.dec_ndr_long();
             _src.align(4);
             if (name == null) {
                 name = new rpc.unicode_string();
             }
-            name.length = (short)_src.dec_ndr_short();
-            name.maximum_length = (short)_src.dec_ndr_short();
-            int _name_bufferp = _src.dec_ndr_long();
+            name.length = (short) _src.dec_ndr_short();
+            name.maximum_length = (short) _src.dec_ndr_short();
+            final int _name_bufferp = _src.dec_ndr_long();
 
             if (_name_bufferp != 0) {
                 _src = _src.deferred;
-                int _name_buffers = _src.dec_ndr_long();
+                final int _name_buffers = _src.dec_ndr_long();
                 _src.dec_ndr_long();
-                int _name_bufferl = _src.dec_ndr_long();
-                int _name_bufferi = _src.index;
+                final int _name_bufferl = _src.dec_ndr_long();
+                final int _name_bufferi = _src.index;
                 _src.advance(2 * _name_bufferl);
 
                 if (name.buffer == null) {
-                    if (_name_buffers < 0 || _name_buffers > 0xFFFF) throw new NdrException( NdrException.INVALID_CONFORMANCE );
+                    if (_name_buffers < 0 || _name_buffers > 0xFFFF) {
+                        throw new NdrException(NdrException.INVALID_CONFORMANCE);
+                    }
                     name.buffer = new short[_name_buffers];
                 }
                 _src = _src.derive(_name_bufferi);
                 for (int _i = 0; _i < _name_bufferl; _i++) {
-                    name.buffer[_i] = (short)_src.dec_ndr_short();
+                    name.buffer[_i] = (short) _src.dec_ndr_short();
                 }
             }
         }
     }
+
     public static class SamrSamArray extends NdrObject {
 
         public int count;
         public SamrSamEntry[] entries;
 
+        @Override
         public void encode(NdrBuffer _dst) throws NdrException {
             _dst.align(4);
             _dst.enc_ndr_long(count);
@@ -207,9 +240,9 @@ public class samr {
 
             if (entries != null) {
                 _dst = _dst.deferred;
-                int _entriess = count;
+                final int _entriess = count;
                 _dst.enc_ndr_long(_entriess);
-                int _entriesi = _dst.index;
+                final int _entriesi = _dst.index;
                 _dst.advance(12 * _entriess);
 
                 _dst = _dst.derive(_entriesi);
@@ -218,19 +251,23 @@ public class samr {
                 }
             }
         }
+
+        @Override
         public void decode(NdrBuffer _src) throws NdrException {
             _src.align(4);
-            count = (int)_src.dec_ndr_long();
-            int _entriesp = _src.dec_ndr_long();
+            count = _src.dec_ndr_long();
+            final int _entriesp = _src.dec_ndr_long();
 
             if (_entriesp != 0) {
                 _src = _src.deferred;
-                int _entriess = _src.dec_ndr_long();
-                int _entriesi = _src.index;
+                final int _entriess = _src.dec_ndr_long();
+                final int _entriesi = _src.index;
                 _src.advance(12 * _entriess);
 
                 if (entries == null) {
-                    if (_entriess < 0 || _entriess > 0xFFFF) throw new NdrException( NdrException.INVALID_CONFORMANCE );
+                    if (_entriess < 0 || _entriess > 0xFFFF) {
+                        throw new NdrException(NdrException.INVALID_CONFORMANCE);
+                    }
                     entries = new SamrSamEntry[_entriess];
                 }
                 _src = _src.derive(_entriesi);
@@ -243,9 +280,13 @@ public class samr {
             }
         }
     }
+
     public static class SamrEnumerateAliasesInDomain extends DcerpcMessage {
 
-        public int getOpnum() { return 0x0f; }
+        @Override
+        public int getOpnum() {
+            return 0x0f;
+        }
 
         public int retval;
         public rpc.policy_handle domain_handle;
@@ -254,11 +295,8 @@ public class samr {
         public SamrSamArray sam;
         public int num_entries;
 
-        public SamrEnumerateAliasesInDomain(rpc.policy_handle domain_handle,
-                    int resume_handle,
-                    int acct_flags,
-                    SamrSamArray sam,
-                    int num_entries) {
+        public SamrEnumerateAliasesInDomain(final rpc.policy_handle domain_handle, final int resume_handle, final int acct_flags,
+                final SamrSamArray sam, final int num_entries) {
             this.domain_handle = domain_handle;
             this.resume_handle = resume_handle;
             this.acct_flags = acct_flags;
@@ -266,14 +304,17 @@ public class samr {
             this.num_entries = num_entries;
         }
 
-        public void encode_in(NdrBuffer _dst) throws NdrException {
+        @Override
+        public void encode_in(final NdrBuffer _dst) throws NdrException {
             domain_handle.encode(_dst);
             _dst.enc_ndr_long(resume_handle);
             _dst.enc_ndr_long(acct_flags);
         }
-        public void decode_out(NdrBuffer _src) throws NdrException {
-            resume_handle = (int)_src.dec_ndr_long();
-            int _samp = _src.dec_ndr_long();
+
+        @Override
+        public void decode_out(final NdrBuffer _src) throws NdrException {
+            resume_handle = _src.dec_ndr_long();
+            final int _samp = _src.dec_ndr_long();
             if (_samp != 0) {
                 if (sam == null) { /* YOYOYO */
                     sam = new SamrSamArray();
@@ -281,13 +322,17 @@ public class samr {
                 sam.decode(_src);
 
             }
-            num_entries = (int)_src.dec_ndr_long();
-            retval = (int)_src.dec_ndr_long();
+            num_entries = _src.dec_ndr_long();
+            retval = _src.dec_ndr_long();
         }
     }
+
     public static class SamrOpenAlias extends DcerpcMessage {
 
-        public int getOpnum() { return 0x1b; }
+        @Override
+        public int getOpnum() {
+            return 0x1b;
+        }
 
         public int retval;
         public rpc.policy_handle domain_handle;
@@ -295,47 +340,56 @@ public class samr {
         public int rid;
         public rpc.policy_handle alias_handle;
 
-        public SamrOpenAlias(rpc.policy_handle domain_handle,
-                    int access_mask,
-                    int rid,
-                    rpc.policy_handle alias_handle) {
+        public SamrOpenAlias(final rpc.policy_handle domain_handle, final int access_mask, final int rid,
+                final rpc.policy_handle alias_handle) {
             this.domain_handle = domain_handle;
             this.access_mask = access_mask;
             this.rid = rid;
             this.alias_handle = alias_handle;
         }
 
-        public void encode_in(NdrBuffer _dst) throws NdrException {
+        @Override
+        public void encode_in(final NdrBuffer _dst) throws NdrException {
             domain_handle.encode(_dst);
             _dst.enc_ndr_long(access_mask);
             _dst.enc_ndr_long(rid);
         }
-        public void decode_out(NdrBuffer _src) throws NdrException {
+
+        @Override
+        public void decode_out(final NdrBuffer _src) throws NdrException {
             alias_handle.decode(_src);
-            retval = (int)_src.dec_ndr_long();
+            retval = _src.dec_ndr_long();
         }
     }
+
     public static class SamrGetMembersInAlias extends DcerpcMessage {
 
-        public int getOpnum() { return 0x21; }
+        @Override
+        public int getOpnum() {
+            return 0x21;
+        }
 
         public int retval;
         public rpc.policy_handle alias_handle;
         public lsarpc.LsarSidArray sids;
 
-        public SamrGetMembersInAlias(rpc.policy_handle alias_handle, lsarpc.LsarSidArray sids) {
+        public SamrGetMembersInAlias(final rpc.policy_handle alias_handle, final lsarpc.LsarSidArray sids) {
             this.alias_handle = alias_handle;
             this.sids = sids;
         }
 
-        public void encode_in(NdrBuffer _dst) throws NdrException {
+        @Override
+        public void encode_in(final NdrBuffer _dst) throws NdrException {
             alias_handle.encode(_dst);
         }
-        public void decode_out(NdrBuffer _src) throws NdrException {
+
+        @Override
+        public void decode_out(final NdrBuffer _src) throws NdrException {
             sids.decode(_src);
-            retval = (int)_src.dec_ndr_long();
+            retval = _src.dec_ndr_long();
         }
     }
+
     public static final int SE_GROUP_MANDATORY = 1;
     public static final int SE_GROUP_ENABLED_BY_DEFAULT = 2;
     public static final int SE_GROUP_ENABLED = 4;
@@ -349,24 +403,29 @@ public class samr {
         public int rid;
         public int attributes;
 
-        public void encode(NdrBuffer _dst) throws NdrException {
+        @Override
+        public void encode(final NdrBuffer _dst) throws NdrException {
             _dst.align(4);
             _dst.enc_ndr_long(rid);
             _dst.enc_ndr_long(attributes);
 
         }
-        public void decode(NdrBuffer _src) throws NdrException {
+
+        @Override
+        public void decode(final NdrBuffer _src) throws NdrException {
             _src.align(4);
-            rid = (int)_src.dec_ndr_long();
-            attributes = (int)_src.dec_ndr_long();
+            rid = _src.dec_ndr_long();
+            attributes = _src.dec_ndr_long();
 
         }
     }
+
     public static class SamrRidWithAttributeArray extends NdrObject {
 
         public int count;
         public SamrRidWithAttribute[] rids;
 
+        @Override
         public void encode(NdrBuffer _dst) throws NdrException {
             _dst.align(4);
             _dst.enc_ndr_long(count);
@@ -374,9 +433,9 @@ public class samr {
 
             if (rids != null) {
                 _dst = _dst.deferred;
-                int _ridss = count;
+                final int _ridss = count;
                 _dst.enc_ndr_long(_ridss);
-                int _ridsi = _dst.index;
+                final int _ridsi = _dst.index;
                 _dst.advance(8 * _ridss);
 
                 _dst = _dst.derive(_ridsi);
@@ -385,19 +444,23 @@ public class samr {
                 }
             }
         }
+
+        @Override
         public void decode(NdrBuffer _src) throws NdrException {
             _src.align(4);
-            count = (int)_src.dec_ndr_long();
-            int _ridsp = _src.dec_ndr_long();
+            count = _src.dec_ndr_long();
+            final int _ridsp = _src.dec_ndr_long();
 
             if (_ridsp != 0) {
                 _src = _src.deferred;
-                int _ridss = _src.dec_ndr_long();
-                int _ridsi = _src.index;
+                final int _ridss = _src.dec_ndr_long();
+                final int _ridsi = _src.index;
                 _src.advance(8 * _ridss);
 
                 if (rids == null) {
-                    if (_ridss < 0 || _ridss > 0xFFFF) throw new NdrException( NdrException.INVALID_CONFORMANCE );
+                    if (_ridss < 0 || _ridss > 0xFFFF) {
+                        throw new NdrException(NdrException.INVALID_CONFORMANCE);
+                    }
                     rids = new SamrRidWithAttribute[_ridss];
                 }
                 _src = _src.derive(_ridsi);

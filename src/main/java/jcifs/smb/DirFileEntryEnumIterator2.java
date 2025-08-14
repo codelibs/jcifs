@@ -1,22 +1,21 @@
 /*
  * © 2017 AgNO3 Gmbh & Co. KG
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 package jcifs.smb;
-
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +30,6 @@ import jcifs.internal.smb2.create.Smb2CreateResponse;
 import jcifs.internal.smb2.info.Smb2QueryDirectoryRequest;
 import jcifs.internal.smb2.info.Smb2QueryDirectoryResponse;
 
-
 /**
  * @author mbechler
  *
@@ -43,7 +41,6 @@ public class DirFileEntryEnumIterator2 extends DirFileEntryEnumIteratorBase {
     private byte[] fileId;
     private Smb2QueryDirectoryResponse response;
 
-
     /**
      * @param th
      * @param parent
@@ -52,11 +49,10 @@ public class DirFileEntryEnumIterator2 extends DirFileEntryEnumIteratorBase {
      * @param searchAttributes
      * @throws CIFSException
      */
-    public DirFileEntryEnumIterator2 ( SmbTreeHandleImpl th, SmbResource parent, String wildcard, ResourceNameFilter filter, int searchAttributes )
-            throws CIFSException {
+    public DirFileEntryEnumIterator2(final SmbTreeHandleImpl th, final SmbResource parent, final String wildcard,
+            final ResourceNameFilter filter, final int searchAttributes) throws CIFSException {
         super(th, parent, wildcard, filter, searchAttributes);
     }
-
 
     /**
      * {@inheritDoc}
@@ -64,50 +60,47 @@ public class DirFileEntryEnumIterator2 extends DirFileEntryEnumIteratorBase {
      * @see jcifs.smb.DirFileEntryEnumIteratorBase#getResults()
      */
     @Override
-    protected FileEntry[] getResults () {
-        FileEntry[] results = this.response.getResults();
-        if ( results == null ) {
+    protected FileEntry[] getResults() {
+        final FileEntry[] results = this.response.getResults();
+        if (results == null) {
             return new FileEntry[0];
         }
         return results;
     }
 
-
     /**
      * Opens a directory for enumeration
-     * 
+     *
      * @return the opened directory file entry
      * @throws CIFSException if an error occurs opening the directory
      */
-    @SuppressWarnings ( "resource" )
+    @SuppressWarnings("resource")
     @Override
-    protected FileEntry open () throws CIFSException {
-        SmbTreeHandleImpl th = getTreeHandle();
-        String uncPath = getParent().getLocator().getUNCPath();
-        Smb2CreateRequest create = new Smb2CreateRequest(th.getConfig(), uncPath);
+    protected FileEntry open() throws CIFSException {
+        final SmbTreeHandleImpl th = getTreeHandle();
+        final String uncPath = getParent().getLocator().getUNCPath();
+        final Smb2CreateRequest create = new Smb2CreateRequest(th.getConfig(), uncPath);
         create.setCreateOptions(Smb2CreateRequest.FILE_DIRECTORY_FILE);
         create.setDesiredAccess(SmbConstants.FILE_READ_DATA | SmbConstants.FILE_READ_ATTRIBUTES);
-        Smb2QueryDirectoryRequest query = new Smb2QueryDirectoryRequest(th.getConfig());
+        final Smb2QueryDirectoryRequest query = new Smb2QueryDirectoryRequest(th.getConfig());
         query.setFileName(getWildcard());
         create.chain(query);
         Smb2CreateResponse createResp;
         try {
             createResp = th.send(create);
-        }
-        catch ( SmbException e ) {
-            Smb2CreateResponse cr = create.getResponse();
-            if ( cr != null && cr.isReceived() && cr.getStatus() == NtStatus.NT_STATUS_SUCCESS ) {
+        } catch (final SmbException e) {
+            final Smb2CreateResponse cr = create.getResponse();
+            if (cr != null && cr.isReceived() && cr.getStatus() == NtStatus.NT_STATUS_SUCCESS) {
                 try {
                     th.send(new Smb2CloseRequest(th.getConfig(), cr.getFileId()));
-                }
-                catch ( SmbException e2 ) {
+                } catch (final SmbException e2) {
                     e.addSuppressed(e2);
                 }
             }
 
-            Smb2QueryDirectoryResponse qr = query.getResponse();
+            final Smb2QueryDirectoryResponse qr = query.getResponse();
 
-            if ( qr != null && qr.isReceived() && qr.getStatus() == NtStatus.NT_STATUS_NO_SUCH_FILE ) {
+            if (qr != null && qr.isReceived() && qr.getStatus() == NtStatus.NT_STATUS_NO_SUCH_FILE) {
                 // this simply indicates an empty listing
                 doClose();
                 return null;
@@ -117,37 +110,35 @@ public class DirFileEntryEnumIterator2 extends DirFileEntryEnumIteratorBase {
         }
         this.fileId = createResp.getFileId();
         this.response = query.getResponse();
-        FileEntry n = advance(false);
-        if ( n == null ) {
+        final FileEntry n = advance(false);
+        if (n == null) {
             doClose();
         }
         return n;
     }
-
 
     /**
      * {@inheritDoc}
      *
      * @see jcifs.smb.DirFileEntryEnumIteratorBase#fetchMore()
      */
-    @SuppressWarnings ( "resource" )
+    @SuppressWarnings("resource")
     @Override
-    protected boolean fetchMore () throws CIFSException {
-        FileEntry[] results = this.response.getResults();
-        SmbTreeHandleImpl th = getTreeHandle();
-        Smb2QueryDirectoryRequest query = new Smb2QueryDirectoryRequest(th.getConfig(), this.fileId);
+    protected boolean fetchMore() throws CIFSException {
+        final FileEntry[] results = this.response.getResults();
+        final SmbTreeHandleImpl th = getTreeHandle();
+        final Smb2QueryDirectoryRequest query = new Smb2QueryDirectoryRequest(th.getConfig(), this.fileId);
         query.setFileName(this.getWildcard());
-        query.setFileIndex(results[ results.length - 1 ].getFileIndex());
+        query.setFileIndex(results[results.length - 1].getFileIndex());
         query.setQueryFlags(Smb2QueryDirectoryRequest.SMB2_INDEX_SPECIFIED);
         try {
-            Smb2QueryDirectoryResponse r = th.send(query);
-            if ( r.getStatus() == NtStatus.NT_STATUS_NO_MORE_FILES ) {
+            final Smb2QueryDirectoryResponse r = th.send(query);
+            if (r.getStatus() == NtStatus.NT_STATUS_NO_MORE_FILES) {
                 return false;
             }
             this.response = r;
-        }
-        catch ( SmbException e ) {
-            if ( e.getNtStatus() == NtStatus.NT_STATUS_NO_MORE_FILES ) {
+        } catch (final SmbException e) {
+            if (e.getNtStatus() == NtStatus.NT_STATUS_NO_MORE_FILES) {
                 log.debug("End of listing", e);
                 return false;
             }
@@ -156,31 +147,28 @@ public class DirFileEntryEnumIterator2 extends DirFileEntryEnumIteratorBase {
         return true;
     }
 
-
     /**
      * {@inheritDoc}
      *
      * @see jcifs.smb.DirFileEntryEnumIteratorBase#isDone()
      */
     @Override
-    protected boolean isDone () {
+    protected boolean isDone() {
         return false;
     }
-
 
     /**
      * @throws CIFSException
      */
     @Override
-    protected void doCloseInternal () throws CIFSException {
+    protected void doCloseInternal() throws CIFSException {
         try {
-            @SuppressWarnings ( "resource" )
-            SmbTreeHandleImpl th = getTreeHandle();
-            if ( this.fileId != null && th.isConnected() ) {
+            @SuppressWarnings("resource")
+            final SmbTreeHandleImpl th = getTreeHandle();
+            if (this.fileId != null && th.isConnected()) {
                 th.send(new Smb2CloseRequest(th.getConfig(), this.fileId));
             }
-        }
-        finally {
+        } finally {
             this.fileId = null;
         }
     }

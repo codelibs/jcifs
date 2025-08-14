@@ -1,16 +1,16 @@
 /* jcifs smb client library in Java
  * Copyright (C) 2000  "Michael B. Allen" <jcifs at samba dot org>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -18,21 +18,18 @@
 
 package jcifs.netbios;
 
-
 import jcifs.Configuration;
 import jcifs.util.Strings;
 
-
 class NodeStatusResponse extends NameServicePacket {
 
-    private NbtAddress queryAddress;
+    private final NbtAddress queryAddress;
 
     private int numberOfNames;
-    private byte[] macAddress;
+    private final byte[] macAddress;
     private byte[] stats;
 
     NbtAddress[] addressArray;
-
 
     /*
      * It is a little awkward but prudent to pass the quering address
@@ -43,39 +40,36 @@ class NodeStatusResponse extends NameServicePacket {
      * returned by the node status.
      */
 
-    NodeStatusResponse ( Configuration cfg, NbtAddress queryAddress ) {
+    NodeStatusResponse(final Configuration cfg, final NbtAddress queryAddress) {
         super(cfg);
         this.queryAddress = queryAddress;
         this.recordName = new Name(cfg);
         this.macAddress = new byte[6];
     }
 
-
     @Override
-    int writeBodyWireFormat ( byte[] dst, int dstIndex ) {
+    int writeBodyWireFormat(final byte[] dst, final int dstIndex) {
         return 0;
     }
 
-
     @Override
-    int readBodyWireFormat ( byte[] src, int srcIndex ) {
+    int readBodyWireFormat(final byte[] src, final int srcIndex) {
         return readResourceRecordWireFormat(src, srcIndex);
     }
 
-
     @Override
-    int writeRDataWireFormat ( byte[] dst, int dstIndex ) {
+    int writeRDataWireFormat(final byte[] dst, final int dstIndex) {
         return 0;
     }
 
-
     @Override
-    int readRDataWireFormat ( byte[] src, int srcIndex ) {
-        int start = srcIndex;
-        this.numberOfNames = src[ srcIndex ] & 0xFF;
-        int namesLength = this.numberOfNames * 18;
-        int statsLength = this.rDataLength - namesLength - 1;
-        this.numberOfNames = src[ srcIndex++ ] & 0xFF;
+    int readRDataWireFormat(final byte[] src, int srcIndex) {
+        final int start = srcIndex;
+        this.numberOfNames = src[srcIndex] & 0xFF;
+        final int namesLength = this.numberOfNames * 18;
+        final int statsLength = this.rDataLength - namesLength - 1;
+        this.numberOfNames = src[srcIndex] & 0xFF;
+        srcIndex++;
         // gotta read the mac first so we can populate addressArray with it
         System.arraycopy(src, srcIndex + namesLength, this.macAddress, 0, 6);
         srcIndex += readNodeNameArray(src, srcIndex);
@@ -85,15 +79,14 @@ class NodeStatusResponse extends NameServicePacket {
         return srcIndex - start;
     }
 
-
-    private int readNodeNameArray ( byte[] src, int srcIndex ) {
-        int start = srcIndex;
+    private int readNodeNameArray(final byte[] src, int srcIndex) {
+        final int start = srcIndex;
 
         this.addressArray = new NbtAddress[this.numberOfNames];
 
         String n;
         int hexCode;
-        String scope = this.queryAddress.hostName.scope;
+        final String scope = this.queryAddress.hostName.scope;
         boolean groupName;
         int ownerNodeType;
         boolean isBeingDeleted;
@@ -103,16 +96,18 @@ class NodeStatusResponse extends NameServicePacket {
         int j;
         boolean addrFound = false;
 
-        for ( int i = 0; i < this.numberOfNames; srcIndex += 18, i++ ) {
-            for ( j = srcIndex + 14; src[ j ] == 0x20; j-- );
+        for (int i = 0; i < this.numberOfNames; srcIndex += 18, i++) {
+            for (j = srcIndex + 14; src[j] == 0x20; j--) {
+                ;
+            }
             n = Strings.fromOEMBytes(src, srcIndex, j - srcIndex + 1, this.config);
-            hexCode = src[ srcIndex + 15 ] & 0xFF;
-            groupName = ( ( src[ srcIndex + 16 ] & 0x80 ) == 0x80 ) ? true : false;
-            ownerNodeType = ( src[ srcIndex + 16 ] & 0x60 ) >> 5;
-            isBeingDeleted = ( ( src[ srcIndex + 16 ] & 0x10 ) == 0x10 ) ? true : false;
-            isInConflict = ( ( src[ srcIndex + 16 ] & 0x08 ) == 0x08 ) ? true : false;
-            isActive = ( ( src[ srcIndex + 16 ] & 0x04 ) == 0x04 ) ? true : false;
-            isPermanent = ( ( src[ srcIndex + 16 ] & 0x02 ) == 0x02 ) ? true : false;
+            hexCode = src[srcIndex + 15] & 0xFF;
+            groupName = ((src[srcIndex + 16] & 0x80) == 0x80) == true;
+            ownerNodeType = (src[srcIndex + 16] & 0x60) >> 5;
+            isBeingDeleted = ((src[srcIndex + 16] & 0x10) == 0x10) == true;
+            isInConflict = ((src[srcIndex + 16] & 0x08) == 0x08) == true;
+            isActive = ((src[srcIndex + 16] & 0x04) == 0x04) == true;
+            isPermanent = ((src[srcIndex + 16] & 0x02) == 0x02) == true;
 
             /*
              * The NbtAddress object used to query this node will be in the list
@@ -121,10 +116,10 @@ class NodeStatusResponse extends NameServicePacket {
              * referenced by other objects. We must populate the existing object's
              * data explicitly (and carefully).
              */
-            if ( !addrFound && this.queryAddress.hostName.hexCode == hexCode
-                    && ( this.queryAddress.hostName.isUnknown() || this.queryAddress.hostName.name.equals(n) ) ) {
+            if (!addrFound && this.queryAddress.hostName.hexCode == hexCode
+                    && (this.queryAddress.hostName.isUnknown() || this.queryAddress.hostName.name.equals(n))) {
 
-                if ( this.queryAddress.hostName.isUnknown() ) {
+                if (this.queryAddress.hostName.isUnknown()) {
                     this.queryAddress.hostName = new Name(this.config, n, hexCode, scope);
                 }
                 this.queryAddress.groupName = groupName;
@@ -136,27 +131,17 @@ class NodeStatusResponse extends NameServicePacket {
                 this.queryAddress.macAddress = this.macAddress;
                 this.queryAddress.isDataFromNodeStatus = true;
                 addrFound = true;
-                this.addressArray[ i ] = this.queryAddress;
-            }
-            else {
-                this.addressArray[ i ] = new NbtAddress(
-                    new Name(this.config, n, hexCode, scope),
-                    this.queryAddress.address,
-                    groupName,
-                    ownerNodeType,
-                    isBeingDeleted,
-                    isInConflict,
-                    isActive,
-                    isPermanent,
-                    this.macAddress);
+                this.addressArray[i] = this.queryAddress;
+            } else {
+                this.addressArray[i] = new NbtAddress(new Name(this.config, n, hexCode, scope), this.queryAddress.address, groupName,
+                        ownerNodeType, isBeingDeleted, isInConflict, isActive, isPermanent, this.macAddress);
             }
         }
         return srcIndex - start;
     }
 
-
     @Override
-    public String toString () {
-        return new String("NodeStatusResponse[" + super.toString() + "]");
+    public String toString() {
+        return ("NodeStatusResponse[" + super.toString() + "]");
     }
 }

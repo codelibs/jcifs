@@ -1,23 +1,22 @@
 /* jcifs smb client library in Java
  * Copyright (C) 2000  "Michael B. Allen" <jcifs at samba dot org>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 package jcifs.netbios;
-
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -27,12 +26,11 @@ import jcifs.CIFSContext;
 import jcifs.NetbiosAddress;
 import jcifs.NetbiosName;
 
-
 /**
  * This class represents a NetBIOS over TCP/IP address. Under normal
  * conditions, users of jCIFS need not be concerned with this class as
  * name resolution and session services are handled internally by the smb package.
- * 
+ *
  * <p>
  * Applications can use the methods <code>getLocalHost</code>,
  * <code>getByName</code>, and
@@ -51,12 +49,12 @@ import jcifs.NetbiosName;
  * what names a host registers with the nbtstat command.
  * <p>
  * <blockquote>
- * 
+ *
  * <pre>
  * C:\&gt;nbtstat -a 192.168.1.15
- * 
+ *
  *        NetBIOS Remote Machine Name Table
- * 
+ *
  *    Name               Type         Status
  * ---------------------------------------------
  * JMORRIS2        &lt;00&gt;  UNIQUE      Registered
@@ -65,10 +63,10 @@ import jcifs.NetbiosName;
  * JMORRIS2        &lt;20&gt;  UNIQUE      Registered
  * BILLING-NY      &lt;1E&gt;  GROUP       Registered
  * JMORRIS         &lt;03&gt;  UNIQUE      Registered
- * 
+ *
  * MAC Address = 00-B0-34-21-FA-3B
  * </pre>
- * 
+ *
  * </blockquote>
  * <p>
  * The hostname of this machine is <code>JMORRIS2</code>. It is
@@ -76,7 +74,7 @@ import jcifs.NetbiosName;
  * obtain an {@link java.net.InetAddress} for a host one might do:
  *
  * <pre>
- * 
+ *
  * InetAddress addr = NbtAddress.getByName("jmorris2").getInetAddress();
  * </pre>
  * <p>
@@ -94,7 +92,8 @@ public final class NbtAddress implements NetbiosAddress {
      * This is a special name that means all hosts. If you wish to find all hosts
      * on a network querying a workgroup group name is the preferred method.
      */
-    public static final String ANY_HOSTS_NAME = "*\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000";
+    public static final String ANY_HOSTS_NAME =
+            "*\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000";
 
     /**
      * This is a special name for querying the master browser that serves the
@@ -143,9 +142,7 @@ public final class NbtAddress implements NetbiosAddress {
     /**
      * Unknown MAC Address
      */
-    public static final byte[] UNKNOWN_MAC_ADDRESS = new byte[] {
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00
-    };
+    public static final byte[] UNKNOWN_MAC_ADDRESS = { (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00 };
 
     Name hostName;
     int address, nodeType;
@@ -153,17 +150,15 @@ public final class NbtAddress implements NetbiosAddress {
     byte[] macAddress;
     String calledName;
 
-
-    NbtAddress ( Name hostName, int address, boolean groupName, int nodeType ) {
+    NbtAddress(final Name hostName, final int address, final boolean groupName, final int nodeType) {
         this.hostName = hostName;
         this.address = address;
         this.groupName = groupName;
         this.nodeType = nodeType;
     }
 
-
-    NbtAddress ( Name hostName, int address, boolean groupName, int nodeType, boolean isBeingDeleted, boolean isInConflict, boolean isActive,
-            boolean isPermanent, byte[] macAddress ) {
+    NbtAddress(final Name hostName, final int address, final boolean groupName, final int nodeType, final boolean isBeingDeleted,
+            final boolean isInConflict, final boolean isActive, final boolean isPermanent, final byte[] macAddress) {
 
         /*
          * The NodeStatusResponse.readNodeNameArray method may also set this
@@ -182,54 +177,51 @@ public final class NbtAddress implements NetbiosAddress {
         this.isDataFromNodeStatus = true;
     }
 
-
     /**
      * {@inheritDoc}
      *
      * @see jcifs.Address#unwrap(java.lang.Class)
      */
-    @SuppressWarnings ( "unchecked" )
+    @SuppressWarnings("unchecked")
     @Override
-    public <T extends Address> T unwrap ( Class<T> type ) {
-        if ( type.isAssignableFrom(this.getClass()) ) {
+    public <T extends Address> T unwrap(final Class<T> type) {
+        if (type.isAssignableFrom(this.getClass())) {
             return (T) this;
         }
         return null;
     }
 
-
     /**
      * Guess next called name to try for session establishment. These
      * methods are used by the smb package.
-     * 
+     *
      * @return guessed name
      */
     @Override
-    public String firstCalledName () {
+    public String firstCalledName() {
 
         this.calledName = this.hostName.name;
 
-        if ( Character.isDigit(this.calledName.charAt(0)) ) {
+        if (Character.isDigit(this.calledName.charAt(0))) {
             int i, len, dots;
             char[] data;
 
             i = dots = 0; /* quick IP address validation */
             len = this.calledName.length();
             data = this.calledName.toCharArray();
-            while ( i < len && Character.isDigit(data[ i++ ]) ) {
-                if ( i == len && dots == 3 ) {
+            while (i < len && Character.isDigit(data[i++])) {
+                if (i == len && dots == 3) {
                     // probably an IP address
                     this.calledName = SMBSERVER_NAME;
                     break;
                 }
-                if ( i < len && data[ i ] == '.' ) {
+                if (i < len && data[i] == '.') {
                     dots++;
                     i++;
                 }
             }
-        }
-        else {
-            switch ( this.hostName.hexCode ) {
+        } else {
+            switch (this.hostName.hexCode) {
             case 0x1B:
             case 0x1C:
             case 0x1D:
@@ -240,33 +232,31 @@ public final class NbtAddress implements NetbiosAddress {
         return this.calledName;
     }
 
-
     /**
-     * 
+     *
      * @param tc
      *            context to use
      * @return net name to try
      */
     @Override
-    public String nextCalledName ( CIFSContext tc ) {
+    public String nextCalledName(final CIFSContext tc) {
 
-        if ( this.calledName == this.hostName.name ) {
+        if (this.calledName == this.hostName.name) {
             this.calledName = SMBSERVER_NAME;
-        }
-        else if ( SMBSERVER_NAME.equals(this.calledName) ) {
+        } else if (SMBSERVER_NAME.equals(this.calledName)) {
             NetbiosAddress[] addrs;
 
             try {
                 addrs = tc.getNameServiceClient().getNodeStatus(this);
-                if ( this.getNameType() == 0x1D ) {
-                    for ( int i = 0; i < addrs.length; i++ ) {
-                        if ( addrs[ i ].getNameType() == 0x20 ) {
-                            return addrs[ i ].getHostName();
+                if (this.getNameType() == 0x1D) {
+                    for (final NetbiosAddress addr : addrs) {
+                        if (addr.getNameType() == 0x20) {
+                            return addr.getHostName();
                         }
                     }
                     return null;
                 }
-                else if ( this.isDataFromNodeStatus ) {
+                if (this.isDataFromNodeStatus) {
                     /*
                      * 'this' has been updated and should now
                      * have a real NetBIOS name
@@ -274,37 +264,34 @@ public final class NbtAddress implements NetbiosAddress {
                     this.calledName = null;
                     return getHostName();
                 }
-            }
-            catch ( UnknownHostException uhe ) {
+            } catch (final UnknownHostException uhe) {
                 this.calledName = null;
             }
-        }
-        else {
+        } else {
             this.calledName = null;
         }
 
         return this.calledName;
     }
 
-
     /*
      * There are three degrees of state that any NbtAddress can have.
-     * 
+     *
      * 1) IP Address - If a dot-quad IP string is used with getByName (or used
      * to create an NbtAddress internal to this netbios package), no query is
      * sent on the wire and the only state this object has is it's IP address
      * (but that's enough to connect to a host using *SMBSERVER for CallingName).
-     * 
+     *
      * 2) IP Address, NetBIOS name, nodeType, groupName - If however a
      * legal NetBIOS name string is used a name query request will retreive
      * the IP, node type, and whether or not this NbtAddress represents a
      * group name. This degree of state can be obtained with a Name Query
      * Request or Node Status Request.
-     * 
+     *
      * 3) All - The NbtAddress will be populated with all state such as mac
      * address, isPermanent, isBeingDeleted, ...etc. This information can only
      * be retrieved with the Node Status request.
-     * 
+     *
      * The degree of state that an NbtAddress has is dependant on how it was
      * created and what is required of it. The second degree of state is the
      * most common. This is the state information that would be retrieved from
@@ -314,68 +301,59 @@ public final class NbtAddress implements NetbiosAddress {
      * in a lazy fashon.
      */
 
-    void checkData ( CIFSContext tc ) throws UnknownHostException {
-        if ( this.hostName.isUnknown() ) {
+    void checkData(final CIFSContext tc) throws UnknownHostException {
+        if (this.hostName.isUnknown()) {
             tc.getNameServiceClient().getNbtAllByAddress(this);
         }
     }
 
-
-    void checkNodeStatusData ( CIFSContext tc ) throws UnknownHostException {
-        if ( this.isDataFromNodeStatus == false ) {
+    void checkNodeStatusData(final CIFSContext tc) throws UnknownHostException {
+        if (!this.isDataFromNodeStatus) {
             tc.getNameServiceClient().getNbtAllByAddress(this);
         }
     }
-
 
     @Override
-    public boolean isGroupAddress ( CIFSContext tc ) throws UnknownHostException {
+    public boolean isGroupAddress(final CIFSContext tc) throws UnknownHostException {
         checkData(tc);
         return this.groupName;
     }
 
-
     @Override
-    public int getNodeType ( CIFSContext tc ) throws UnknownHostException {
+    public int getNodeType(final CIFSContext tc) throws UnknownHostException {
         checkData(tc);
         return this.nodeType;
     }
 
-
     @Override
-    public boolean isBeingDeleted ( CIFSContext tc ) throws UnknownHostException {
+    public boolean isBeingDeleted(final CIFSContext tc) throws UnknownHostException {
         checkNodeStatusData(tc);
         return this.isBeingDeleted;
     }
 
-
     @Override
-    public boolean isInConflict ( CIFSContext tc ) throws UnknownHostException {
+    public boolean isInConflict(final CIFSContext tc) throws UnknownHostException {
         checkNodeStatusData(tc);
         return this.isInConflict;
     }
 
-
     @Override
-    public boolean isActive ( CIFSContext tc ) throws UnknownHostException {
+    public boolean isActive(final CIFSContext tc) throws UnknownHostException {
         checkNodeStatusData(tc);
         return this.isActive;
     }
 
-
     @Override
-    public boolean isPermanent ( CIFSContext tc ) throws UnknownHostException {
+    public boolean isPermanent(final CIFSContext tc) throws UnknownHostException {
         checkNodeStatusData(tc);
         return this.isPermanent;
     }
 
-
     @Override
-    public byte[] getMacAddress ( CIFSContext tc ) throws UnknownHostException {
+    public byte[] getMacAddress(final CIFSContext tc) throws UnknownHostException {
         checkNodeStatusData(tc);
         return this.macAddress;
     }
-
 
     /**
      * The hostname of this address. If the hostname is null the local machines
@@ -384,7 +362,7 @@ public final class NbtAddress implements NetbiosAddress {
      * @return the text representation of the hostname associated with this address
      */
     @Override
-    public String getHostName () {
+    public String getHostName() {
         /*
          * 2010 - We no longer try a Node Status to get the
          * hostname because apparently some servers do not respond
@@ -392,18 +370,16 @@ public final class NbtAddress implements NetbiosAddress {
          * an IP address as the tconHostName which is the principal
          * use of this method.
          */
-        if ( this.hostName.isUnknown() ) {
+        if (this.hostName.isUnknown()) {
             return getHostAddress();
         }
         return this.hostName.name;
     }
 
-
     @Override
-    public NetbiosName getName () {
+    public NetbiosName getName() {
         return this.hostName;
     }
-
 
     /**
      * Returns the raw IP address of this NbtAddress. The result is in network
@@ -411,15 +387,14 @@ public final class NbtAddress implements NetbiosAddress {
      *
      * @return a four byte array
      */
-    public byte[] getAddress () {
-        byte[] addr = new byte[4];
-        addr[ 0 ] = (byte) ( ( this.address >>> 24 ) & 0xFF );
-        addr[ 1 ] = (byte) ( ( this.address >>> 16 ) & 0xFF );
-        addr[ 2 ] = (byte) ( ( this.address >>> 8 ) & 0xFF );
-        addr[ 3 ] = (byte) ( this.address & 0xFF );
+    public byte[] getAddress() {
+        final byte[] addr = new byte[4];
+        addr[0] = (byte) (this.address >>> 24 & 0xFF);
+        addr[1] = (byte) (this.address >>> 16 & 0xFF);
+        addr[2] = (byte) (this.address >>> 8 & 0xFF);
+        addr[3] = (byte) (this.address & 0xFF);
         return addr;
     }
-
 
     /**
      * To convert this address to an <code>InetAddress</code>.
@@ -428,35 +403,31 @@ public final class NbtAddress implements NetbiosAddress {
      * @throws UnknownHostException
      */
 
-    public InetAddress getInetAddress () throws UnknownHostException {
+    public InetAddress getInetAddress() throws UnknownHostException {
         return InetAddress.getByName(getHostAddress());
     }
 
-
     @Override
-    public InetAddress toInetAddress () throws UnknownHostException {
+    public InetAddress toInetAddress() throws UnknownHostException {
         return getInetAddress();
     }
 
-
     /**
      * Returns this IP adress as a {@link java.lang.String} in the form "%d.%d.%d.%d".
-     * 
+     *
      * @return string representation of the IP address
      */
 
     @Override
-    public String getHostAddress () {
-        return ( ( this.address >>> 24 ) & 0xFF ) + "." + ( ( this.address >>> 16 ) & 0xFF ) + "." + ( ( this.address >>> 8 ) & 0xFF ) + "."
-                + ( ( this.address >>> 0 ) & 0xFF );
+    public String getHostAddress() {
+        return (this.address >>> 24 & 0xFF) + "." + (this.address >>> 16 & 0xFF) + "." + (this.address >>> 8 & 0xFF) + "."
+                + (this.address >>> 0 & 0xFF);
     }
-
 
     @Override
-    public int getNameType () {
+    public int getNameType() {
         return this.hostName.hexCode;
     }
-
 
     /**
      * Returns a hashcode for this IP address. The hashcode comes from the IP address
@@ -466,10 +437,9 @@ public final class NbtAddress implements NetbiosAddress {
      */
 
     @Override
-    public int hashCode () {
+    public int hashCode() {
         return this.address;
     }
-
 
     /**
      * Determines if this address is equal two another. Only the IP Addresses
@@ -478,17 +448,16 @@ public final class NbtAddress implements NetbiosAddress {
      */
 
     @Override
-    public boolean equals ( Object obj ) {
-        return ( obj != null ) && ( obj instanceof NbtAddress ) && ( ( (NbtAddress) obj ).address == this.address );
+    public boolean equals(final Object obj) {
+        return obj instanceof NbtAddress && ((NbtAddress) obj).address == this.address;
     }
-
 
     /**
      * Returns the {@link java.lang.String} representaion of this address.
      */
 
     @Override
-    public String toString () {
+    public String toString() {
         return this.hostName.toString() + "/" + getHostAddress();
     }
 }

@@ -1,22 +1,21 @@
 /*
  * © 2016 AgNO3 Gmbh & Co. KG
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 package jcifs.config;
-
 
 import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
@@ -40,7 +39,6 @@ import jcifs.Configuration;
 import jcifs.DialectVersion;
 import jcifs.ResolverType;
 import jcifs.SmbConstants;
-
 
 /**
  * @author mbechler
@@ -118,7 +116,7 @@ public class BaseConfiguration implements Configuration {
     protected int netbiosLocalPort = 0;
     protected InetAddress netbiosLocalAddress;
     protected String lmhostsFilename;
-    protected InetAddress[] winsServer = new InetAddress[0];
+    protected InetAddress[] winsServer = {};
     protected InetAddress broadcastAddress;
     protected List<ResolverType> resolverOrder;
     protected int maximumBufferSize = 0x10000;
@@ -141,491 +139,411 @@ public class BaseConfiguration implements Configuration {
     protected String guestPassword = "";
     protected boolean allowGuestFallback = false;
 
-
     /**
      * @throws CIFSException
-     * 
+     *
      */
-    protected BaseConfiguration () throws CIFSException {
+    protected BaseConfiguration() throws CIFSException {
         this(false);
     }
 
-
     /**
-     * 
+     *
      * @param initDefaults
      *            whether to initialize defaults based on other settings
      * @throws CIFSException
      */
-    public BaseConfiguration ( boolean initDefaults ) throws CIFSException {
-        if ( initDefaults ) {
+    public BaseConfiguration(final boolean initDefaults) throws CIFSException {
+        if (initDefaults) {
             this.initDefaults();
         }
     }
 
-
     @Override
-    public SecureRandom getRandom () {
+    public SecureRandom getRandom() {
         return this.random;
     }
 
-
     @Override
-    public String getNetbiosHostname () {
+    public String getNetbiosHostname() {
         return this.netbiosHostname;
     }
 
-
     @Override
-    public InetAddress getLocalAddr () {
+    public InetAddress getLocalAddr() {
         return this.smbLocalAddress;
     }
 
-
     @Override
-    public int getLocalPort () {
+    public int getLocalPort() {
         return this.smbLocalPort;
     }
 
-
     @Override
-    public int getConnTimeout () {
+    public int getConnTimeout() {
         return this.smbConnectionTimeout;
     }
 
-
     @Override
-    public int getResponseTimeout () {
+    public int getResponseTimeout() {
         return this.smbResponseTimeout;
     }
 
-
     @Override
-    public int getSoTimeout () {
+    public int getSoTimeout() {
         return this.smbSocketTimeout;
     }
 
-
     @Override
-    public int getSessionTimeout () {
+    public int getSessionTimeout() {
         return this.smbSessionTimeout;
     }
 
-
     @Override
-    public int getSendBufferSize () {
+    public int getSendBufferSize() {
         return this.smbSendBufferSize;
     }
 
-
     @Deprecated
     @Override
-    public int getRecieveBufferSize () {
+    public int getRecieveBufferSize() {
         return this.smbRecvBufferSize;
     }
 
-
     @Override
-    public int getReceiveBufferSize () {
+    public int getReceiveBufferSize() {
         return this.smbRecvBufferSize;
     }
 
-
     @Override
-    public int getNotifyBufferSize () {
+    public int getNotifyBufferSize() {
         return this.smbNotifyBufferSize;
     }
 
-
     @Override
-    public int getMaxMpxCount () {
+    public int getMaxMpxCount() {
         return this.maxMpxCount;
     }
 
-
     @Override
-    public String getNativeLanman () {
+    public String getNativeLanman() {
         return this.nativeLanMan;
     }
 
-
     @Override
-    public String getNativeOs () {
+    public String getNativeOs() {
         return this.nativeOs;
     }
 
-
     @Override
-    public int getVcNumber () {
+    public int getVcNumber() {
         return this.vcNumber;
     }
 
-
     @Override
-    public int getCapabilities () {
+    public int getCapabilities() {
         return this.capabilities;
     }
 
-
     @Override
-    public DialectVersion getMinimumVersion () {
+    public DialectVersion getMinimumVersion() {
         return this.minVersion;
     }
 
-
     @Override
-    public DialectVersion getMaximumVersion () {
+    public DialectVersion getMaximumVersion() {
         return this.maxVersion;
     }
 
-
     @Override
-    public boolean isUseSMB2OnlyNegotiation () {
+    public boolean isUseSMB2OnlyNegotiation() {
         return this.smb2OnlyNegotiation;
     }
 
-
     @Override
-    public boolean isRequireSecureNegotiate () {
+    public boolean isRequireSecureNegotiate() {
         return this.requireSecureNegotiate;
     }
 
-
     @Override
-    public boolean isPort139FailoverEnabled () {
+    public boolean isPort139FailoverEnabled() {
         return this.port139FailoverEnabled;
     }
 
-
     @Override
-    public boolean isUseBatching () {
+    public boolean isUseBatching() {
         return this.useBatching;
     }
 
-
     @Override
-    public boolean isUseUnicode () {
+    public boolean isUseUnicode() {
         return this.useUnicode;
     }
 
-
     @Override
-    public boolean isForceUnicode () {
+    public boolean isForceUnicode() {
         return this.forceUnicode;
     }
 
-
     @Override
-    public boolean isDfsDisabled () {
+    public boolean isDfsDisabled() {
         return this.dfsDisabled;
     }
 
-
     @Override
-    public boolean isDfsStrictView () {
+    public boolean isDfsStrictView() {
         return this.dfsStrictView;
     }
 
-
     @Override
-    public long getDfsTtl () {
+    public long getDfsTtl() {
         return this.dfsTTL;
     }
 
-
     @Override
-    public boolean isDfsConvertToFQDN () {
+    public boolean isDfsConvertToFQDN() {
         return this.dfsConvertToFqdn;
     }
 
-
     @Override
-    public String getLogonShare () {
+    public String getLogonShare() {
         return this.logonShare;
     }
 
-
     @Override
-    public String getDefaultDomain () {
+    public String getDefaultDomain() {
         return this.defaultDomain;
     }
 
-
     @Override
-    public String getDefaultUsername () {
+    public String getDefaultUsername() {
         return this.defaultUserName;
     }
 
-
     @Override
-    public String getDefaultPassword () {
+    public String getDefaultPassword() {
         return this.defaultPassword;
     }
 
-
     @Override
-    public boolean isDisablePlainTextPasswords () {
+    public boolean isDisablePlainTextPasswords() {
         return this.disablePlainTextPasswords;
     }
 
-
     @Override
-    public int getLanManCompatibility () {
+    public int getLanManCompatibility() {
         return this.lanmanCompatibility;
     }
 
-
     @Override
-    public boolean isAllowNTLMFallback () {
+    public boolean isAllowNTLMFallback() {
         return this.allowNTLMFallback;
     }
 
-
     @Override
-    public boolean isUseRawNTLM () {
+    public boolean isUseRawNTLM() {
         return this.useRawNTLM;
     }
 
-
     @Override
-    public boolean isDisableSpnegoIntegrity () {
+    public boolean isDisableSpnegoIntegrity() {
         return this.disableSpnegoIntegrity;
     }
 
-
     @Override
-    public boolean isEnforceSpnegoIntegrity () {
+    public boolean isEnforceSpnegoIntegrity() {
         return this.enforceSpnegoIntegrity;
     }
 
-
     @Override
-    public InetAddress getBroadcastAddress () {
+    public InetAddress getBroadcastAddress() {
         return this.broadcastAddress;
     }
 
-
     @Override
-    public List<ResolverType> getResolveOrder () {
+    public List<ResolverType> getResolveOrder() {
         return this.resolverOrder;
     }
 
-
     @Override
-    public InetAddress[] getWinsServers () {
+    public InetAddress[] getWinsServers() {
         return this.winsServer;
     }
 
-
     @Override
-    public int getNetbiosLocalPort () {
+    public int getNetbiosLocalPort() {
         return this.netbiosLocalPort;
     }
 
-
     @Override
-    public InetAddress getNetbiosLocalAddress () {
+    public InetAddress getNetbiosLocalAddress() {
         return this.netbiosLocalAddress;
     }
 
-
     @Override
-    public int getNetbiosSoTimeout () {
+    public int getNetbiosSoTimeout() {
         return this.netbiosSocketTimeout;
     }
 
-
     @Override
-    public String getNetbiosScope () {
+    public String getNetbiosScope() {
         return this.netbiosScope;
     }
 
-
     @Override
-    public int getNetbiosCachePolicy () {
+    public int getNetbiosCachePolicy() {
         return this.netbiosCachePolicy;
     }
 
-
     @Override
-    public int getNetbiosRcvBufSize () {
+    public int getNetbiosRcvBufSize() {
         return this.netbiosRevcBufferSize;
     }
 
-
     @Override
-    public int getNetbiosRetryCount () {
+    public int getNetbiosRetryCount() {
         return this.netbiosRetryCount;
     }
 
-
     @Override
-    public int getNetbiosRetryTimeout () {
+    public int getNetbiosRetryTimeout() {
         return this.netbiosRetryTimeout;
     }
 
-
     @Override
-    public int getNetbiosSndBufSize () {
+    public int getNetbiosSndBufSize() {
         return this.netbiosSendBufferSize;
     }
 
-
     @Override
-    public String getLmHostsFileName () {
+    public String getLmHostsFileName() {
         return this.lmhostsFilename;
     }
 
-
     @Override
-    public int getFlags2 () {
+    public int getFlags2() {
         return this.flags2;
     }
 
-
     @Override
-    public int getSessionLimit () {
+    public int getSessionLimit() {
         return this.sessionLimit;
     }
 
-
     @Override
-    public String getOemEncoding () {
+    public String getOemEncoding() {
         return this.oemEncoding;
     }
 
-
     @Override
-    public TimeZone getLocalTimezone () {
+    public TimeZone getLocalTimezone() {
         return this.localTimeZone;
     }
 
-
     @Override
-    public int getPid () {
+    public int getPid() {
         return this.localPid;
     }
 
-
     @Override
-    public boolean isSigningEnabled () {
+    public boolean isSigningEnabled() {
         return this.signingPreferred;
     }
 
-
     @Override
-    public boolean isSigningEnforced () {
+    public boolean isSigningEnforced() {
         return this.signingEnforced;
     }
 
-
     @Override
-    public boolean isIpcSigningEnforced () {
+    public boolean isIpcSigningEnforced() {
         return this.ipcSigningEnforced;
     }
 
-
     @Override
-    public boolean isEncryptionEnabled () {
+    public boolean isEncryptionEnabled() {
         return this.encryptionEnabled;
     }
 
-
     @Override
-    public boolean isForceExtendedSecurity () {
+    public boolean isForceExtendedSecurity() {
         return this.forceExtendedSecurity;
     }
 
-
     @Override
-    public int getTransactionBufferSize () {
+    public int getTransactionBufferSize() {
         return this.transactionBufferSize;
     }
 
-
     @Override
-    public int getMaximumBufferSize () {
+    public int getMaximumBufferSize() {
         return this.maximumBufferSize;
     }
 
-
     @Override
-    public int getBufferCacheSize () {
+    public int getBufferCacheSize() {
         return this.bufferCacheSize;
     }
 
-
     @Override
-    public int getListCount () {
+    public int getListCount() {
         return this.smbListCount;
     }
 
-
     @Override
-    public int getListSize () {
+    public int getListSize() {
         return this.smbListSize;
     }
 
-
     @Override
-    public long getAttributeCacheTimeout () {
+    public long getAttributeCacheTimeout() {
         return this.smbAttributeExpiration;
     }
 
-
     @Override
-    public boolean isIgnoreCopyToException () {
+    public boolean isIgnoreCopyToException() {
         return this.ignoreCopyToException;
     }
 
-
     @Override
-    public int getMaxRequestRetries () {
+    public int getMaxRequestRetries() {
         return this.maxRequestRetries;
     }
 
-
     @Override
-    public boolean isTraceResourceUsage () {
+    public boolean isTraceResourceUsage() {
         return this.traceResourceUsage;
     }
 
-
     @Override
-    public boolean isStrictResourceLifecycle () {
+    public boolean isStrictResourceLifecycle() {
         return this.strictResourceLifecycle;
     }
 
-
     @Override
-    public boolean isSendNTLMTargetName () {
+    public boolean isSendNTLMTargetName() {
         return this.sendNTLMTargetName;
     }
 
-
     @Override
-    public String getGuestUsername () {
+    public String getGuestUsername() {
         return this.guestUsername;
     }
 
-
     @Override
-    public String getGuestPassword () {
+    public String getGuestPassword() {
         return this.guestPassword;
     }
 
-
     @Override
-    public boolean isAllowGuestFallback () {
+    public boolean isAllowGuestFallback() {
         return this.allowGuestFallback;
     }
 
-
     @Override
-    public byte[] getMachineId () {
+    public byte[] getMachineId() {
         return this.machineId;
     }
-
 
     /**
      * {@inheritDoc}
@@ -633,25 +551,24 @@ public class BaseConfiguration implements Configuration {
      * @see jcifs.Configuration#getBatchLimit(java.lang.String)
      */
     @Override
-    public int getBatchLimit ( String cmd ) {
+    public int getBatchLimit(final String cmd) {
         Integer set = this.batchLimits.get(cmd);
-        if ( set != null ) {
+        if (set != null) {
             return set;
         }
 
         set = doGetBatchLimit(cmd);
-        if ( set != null ) {
+        if (set != null) {
             this.batchLimits.put(cmd, set);
             return set;
         }
 
         set = DEFAULT_BATCH_LIMITS.get(cmd);
-        if ( set != null ) {
+        if (set != null) {
             return set;
         }
         return 1;
     }
-
 
     /**
      * {@inheritDoc}
@@ -659,159 +576,144 @@ public class BaseConfiguration implements Configuration {
      * @see jcifs.Configuration#isAllowCompound(java.lang.String)
      */
     @Override
-    public boolean isAllowCompound ( String command ) {
-        if ( this.disallowCompound == null ) {
+    public boolean isAllowCompound(final String command) {
+        if (this.disallowCompound == null) {
             return true;
         }
         return !this.disallowCompound.contains(command);
     }
 
-
     /**
      * @param cmd
      * @return
      */
-    protected Integer doGetBatchLimit ( String cmd ) {
+    protected Integer doGetBatchLimit(final String cmd) {
         return null;
     }
 
-
-    protected void initResolverOrder ( String ro ) {
+    protected void initResolverOrder(final String ro) {
         this.resolverOrder = new ArrayList<>();
-        if ( ro == null || ro.length() == 0 ) {
+        if (ro == null || ro.length() == 0) {
             /*
              * No resolveOrder has been specified, use the
              * default which is LMHOSTS,DNS,WINS,BCAST or just
              * LMHOSTS,DNS,BCAST if jcifs.netbios.wins has not
              * been specified.
              */
-            if ( this.winsServer.length == 0 ) {
+            if (this.winsServer.length == 0) {
                 this.resolverOrder.add(ResolverType.RESOLVER_LMHOSTS);
                 this.resolverOrder.add(ResolverType.RESOLVER_DNS);
-                this.resolverOrder.add(ResolverType.RESOLVER_BCAST);
-            }
-            else {
+            } else {
                 this.resolverOrder.add(ResolverType.RESOLVER_LMHOSTS);
                 this.resolverOrder.add(ResolverType.RESOLVER_DNS);
                 this.resolverOrder.add(ResolverType.RESOLVER_WINS);
-                this.resolverOrder.add(ResolverType.RESOLVER_BCAST);
             }
-        }
-        else {
-            StringTokenizer st = new StringTokenizer(ro, ",");
-            while ( st.hasMoreTokens() ) {
-                String s = st.nextToken().trim();
-                if ( s.equalsIgnoreCase("LMHOSTS") ) {
+            this.resolverOrder.add(ResolverType.RESOLVER_BCAST);
+        } else {
+            final StringTokenizer st = new StringTokenizer(ro, ",");
+            while (st.hasMoreTokens()) {
+                final String s = st.nextToken().trim();
+                if (s.equalsIgnoreCase("LMHOSTS")) {
                     this.resolverOrder.add(ResolverType.RESOLVER_LMHOSTS);
-                }
-                else if ( s.equalsIgnoreCase("WINS") ) {
-                    if ( this.winsServer.length == 0 ) {
+                } else if (s.equalsIgnoreCase("WINS")) {
+                    if (this.winsServer.length == 0) {
                         log.error("UniAddress resolveOrder specifies WINS however " + " WINS server has not been configured");
                         continue;
                     }
                     this.resolverOrder.add(ResolverType.RESOLVER_WINS);
-                }
-                else if ( s.equalsIgnoreCase("BCAST") ) {
+                } else if (s.equalsIgnoreCase("BCAST")) {
                     this.resolverOrder.add(ResolverType.RESOLVER_BCAST);
-                }
-                else if ( s.equalsIgnoreCase("DNS") ) {
+                } else if (s.equalsIgnoreCase("DNS")) {
                     this.resolverOrder.add(ResolverType.RESOLVER_DNS);
-                }
-                else {
+                } else {
                     log.error("unknown resolver method: " + s);
                 }
             }
         }
     }
 
-
-    protected void initProtocolVersions ( String minStr, String maxStr ) {
-        DialectVersion min = ( minStr != null && !minStr.isEmpty() ) ? DialectVersion.valueOf(minStr) : null;
-        DialectVersion max = ( maxStr != null && !maxStr.isEmpty() ) ? DialectVersion.valueOf(maxStr) : null;
+    protected void initProtocolVersions(final String minStr, final String maxStr) {
+        final DialectVersion min = minStr != null && !minStr.isEmpty() ? DialectVersion.valueOf(minStr) : null;
+        final DialectVersion max = maxStr != null && !maxStr.isEmpty() ? DialectVersion.valueOf(maxStr) : null;
         initProtocolVersions(min, max);
     }
 
-
-    protected void initProtocolVersions ( DialectVersion min, DialectVersion max ) {
+    protected void initProtocolVersions(final DialectVersion min, final DialectVersion max) {
         this.minVersion = min != null ? min : DialectVersion.SMB1;
         this.maxVersion = max != null ? max : DialectVersion.SMB311;
 
-        if ( this.minVersion.atLeast(this.maxVersion) ) {
+        if (this.minVersion.atLeast(this.maxVersion)) {
             this.maxVersion = this.minVersion;
         }
     }
 
-
-    protected void initDisallowCompound ( String prop ) {
-        if ( prop == null ) {
+    protected void initDisallowCompound(final String prop) {
+        if (prop == null) {
             return;
         }
-        Set<String> disallow = new HashSet<>();
-        StringTokenizer st = new StringTokenizer(prop, ",");
-        while ( st.hasMoreTokens() ) {
+        final Set<String> disallow = new HashSet<>();
+        final StringTokenizer st = new StringTokenizer(prop, ",");
+        while (st.hasMoreTokens()) {
             disallow.add(st.nextToken().trim());
         }
         this.disallowCompound = disallow;
     }
 
-
-    protected void initDefaults () throws CIFSException {
+    protected void initDefaults() throws CIFSException {
 
         try {
             "".getBytes(SmbConstants.DEFAULT_OEM_ENCODING);
-        }
-        catch ( UnsupportedEncodingException uee ) {
+        } catch (final UnsupportedEncodingException uee) {
             throw new CIFSException(
-                "The default OEM encoding " + SmbConstants.DEFAULT_OEM_ENCODING + " does not appear to be supported by this JRE.");
+                    "The default OEM encoding " + SmbConstants.DEFAULT_OEM_ENCODING + " does not appear to be supported by this JRE.");
         }
 
-        this.localPid = (int) ( Math.random() * 65536d );
+        this.localPid = (int) (Math.random() * 65536d);
         this.localTimeZone = TimeZone.getDefault();
         this.random = new SecureRandom();
 
-        if ( this.machineId == null ) {
-            byte[] mid = new byte[32];
+        if (this.machineId == null) {
+            final byte[] mid = new byte[32];
             this.random.nextBytes(mid);
             this.machineId = mid;
         }
 
-        if ( this.nativeOs == null ) {
+        if (this.nativeOs == null) {
             this.nativeOs = System.getProperty("os.name");
         }
 
-        if ( this.flags2 == 0 ) {
+        if (this.flags2 == 0) {
             this.flags2 = SmbConstants.FLAGS2_LONG_FILENAMES | SmbConstants.FLAGS2_EXTENDED_ATTRIBUTES
-                    | ( this.useExtendedSecurity ? SmbConstants.FLAGS2_EXTENDED_SECURITY_NEGOTIATION : 0 )
-                    | ( this.signingPreferred ? SmbConstants.FLAGS2_SECURITY_SIGNATURES : 0 )
-                    | ( this.useNtStatus ? SmbConstants.FLAGS2_STATUS32 : 0 )
-                    | ( this.useUnicode || this.forceUnicode ? SmbConstants.FLAGS2_UNICODE : 0 );
+                    | (this.useExtendedSecurity ? SmbConstants.FLAGS2_EXTENDED_SECURITY_NEGOTIATION : 0)
+                    | (this.signingPreferred ? SmbConstants.FLAGS2_SECURITY_SIGNATURES : 0)
+                    | (this.useNtStatus ? SmbConstants.FLAGS2_STATUS32 : 0)
+                    | (this.useUnicode || this.forceUnicode ? SmbConstants.FLAGS2_UNICODE : 0);
         }
 
-        if ( this.capabilities == 0 ) {
-            this.capabilities = ( this.useNTSmbs ? SmbConstants.CAP_NT_SMBS : 0 ) | ( this.useNtStatus ? SmbConstants.CAP_STATUS32 : 0 )
-                    | ( this.useExtendedSecurity ? SmbConstants.CAP_EXTENDED_SECURITY : 0 )
-                    | ( this.useLargeReadWrite ? SmbConstants.CAP_LARGE_READX : 0 ) | ( this.useLargeReadWrite ? SmbConstants.CAP_LARGE_WRITEX : 0 )
-                    | ( this.useUnicode ? SmbConstants.CAP_UNICODE : 0 );
+        if (this.capabilities == 0) {
+            this.capabilities = (this.useNTSmbs ? SmbConstants.CAP_NT_SMBS : 0) | (this.useNtStatus ? SmbConstants.CAP_STATUS32 : 0)
+                    | (this.useExtendedSecurity ? SmbConstants.CAP_EXTENDED_SECURITY : 0)
+                    | (this.useLargeReadWrite ? SmbConstants.CAP_LARGE_READX : 0)
+                    | (this.useLargeReadWrite ? SmbConstants.CAP_LARGE_WRITEX : 0) | (this.useUnicode ? SmbConstants.CAP_UNICODE : 0);
         }
 
-        if ( this.broadcastAddress == null ) {
+        if (this.broadcastAddress == null) {
             try {
                 this.broadcastAddress = InetAddress.getByName("255.255.255.255");
-            }
-            catch ( UnknownHostException uhe ) {
+            } catch (final UnknownHostException uhe) {
                 log.debug("Failed to get broadcast address", uhe);
             }
         }
 
-        if ( this.resolverOrder == null ) {
+        if (this.resolverOrder == null) {
             initResolverOrder(null);
         }
 
-        if ( this.minVersion == null || this.maxVersion == null ) {
+        if (this.minVersion == null || this.maxVersion == null) {
             initProtocolVersions((DialectVersion) null, null);
         }
 
-        if ( this.disallowCompound == null ) {
+        if (this.disallowCompound == null) {
             // Samba woes on these
             // Smb2SessionSetupRequest + X -> INTERNAL_ERROR
             // Smb2TreeConnectRequest + IoCtl -> NETWORK_NAME_DELETED

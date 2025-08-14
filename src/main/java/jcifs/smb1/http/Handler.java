@@ -20,13 +20,11 @@
 package jcifs.smb1.http;
 
 import java.io.IOException;
-
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
 import java.net.URLStreamHandlerFactory;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.StringTokenizer;
@@ -46,8 +44,7 @@ public class Handler extends URLStreamHandler {
 
     private static final Map PROTOCOL_HANDLERS = new HashMap();
 
-    private static final String HANDLER_PKGS_PROPERTY =
-            "java.protocol.handler.pkgs";
+    private static final String HANDLER_PKGS_PROPERTY = "java.protocol.handler.pkgs";
 
     /**
      * Vendor-specific default packages.  If no packages are specified in
@@ -57,9 +54,7 @@ public class Handler extends URLStreamHandler {
      * package isn't listed, it can be specified in
      * "java.protocol.handler.pkgs".
      */
-    private static final String[] JVM_VENDOR_DEFAULT_PKGS = new String[] {
-        "sun.net.www.protocol"
-    };
+    private static final String[] JVM_VENDOR_DEFAULT_PKGS = { "sun.net.www.protocol" };
 
     private static URLStreamHandlerFactory factory;
 
@@ -70,12 +65,10 @@ public class Handler extends URLStreamHandler {
      *
      * @param factory The URL stream handler factory.
      */
-    public static void setURLStreamHandlerFactory(
-            URLStreamHandlerFactory factory) {
+    public static void setURLStreamHandlerFactory(final URLStreamHandlerFactory factory) {
         synchronized (PROTOCOL_HANDLERS) {
             if (Handler.factory != null) {
-                throw new IllegalStateException(
-                        "URLStreamHandlerFactory already set.");
+                throw new IllegalStateException("URLStreamHandlerFactory already set.");
             }
             PROTOCOL_HANDLERS.clear();
             Handler.factory = factory;
@@ -87,69 +80,68 @@ public class Handler extends URLStreamHandler {
      *
      * @return An <code>int</code> containing the default HTTP port.
      */
+    @Override
     protected int getDefaultPort() {
         return DEFAULT_HTTP_PORT;
     }
 
+    @Override
     protected URLConnection openConnection(URL url) throws IOException {
-        url = new URL(url, url.toExternalForm(),
-                getDefaultStreamHandler(url.getProtocol()));
-        return new NtlmHttpURLConnection((HttpURLConnection)
-                url.openConnection());
+        url = new URL(url, url.toExternalForm(), getDefaultStreamHandler(url.getProtocol()));
+        return new NtlmHttpURLConnection((HttpURLConnection) url.openConnection());
     }
 
-    private static URLStreamHandler getDefaultStreamHandler(String protocol)
-            throws IOException {
+    private static URLStreamHandler getDefaultStreamHandler(final String protocol) throws IOException {
         synchronized (PROTOCOL_HANDLERS) {
-            URLStreamHandler handler = (URLStreamHandler)
-                    PROTOCOL_HANDLERS.get(protocol);
-            if (handler != null) return handler;
+            URLStreamHandler handler = (URLStreamHandler) PROTOCOL_HANDLERS.get(protocol);
+            if (handler != null) {
+                return handler;
+            }
             if (factory != null) {
                 handler = factory.createURLStreamHandler(protocol);
             }
             if (handler == null) {
-                String path = System.getProperty(HANDLER_PKGS_PROPERTY);
-                StringTokenizer tokenizer = new StringTokenizer(path, "|");
+                final String path = System.getProperty(HANDLER_PKGS_PROPERTY);
+                final StringTokenizer tokenizer = new StringTokenizer(path, "|");
                 while (tokenizer.hasMoreTokens()) {
-                    String provider = tokenizer.nextToken().trim();
-                    if (provider.equals("jcifs.smb1")) continue;
-                    String className = provider + "." + protocol + ".Handler";
+                    final String provider = tokenizer.nextToken().trim();
+                    if (provider.equals("jcifs.smb1")) {
+                        continue;
+                    }
+                    final String className = provider + "." + protocol + ".Handler";
                     try {
                         Class handlerClass = null;
                         try {
                             handlerClass = Class.forName(className);
-                        } catch (Exception ex) { }
+                        } catch (final Exception ex) {}
                         if (handlerClass == null) {
-                            handlerClass = ClassLoader.getSystemClassLoader(
-                                    ).loadClass(className);
+                            handlerClass = ClassLoader.getSystemClassLoader().loadClass(className);
                         }
                         handler = (URLStreamHandler) handlerClass.newInstance();
                         break;
-                    } catch (Exception ex) { }
+                    } catch (final Exception ex) {}
                 }
             }
             if (handler == null) {
-                for (int i = 0; i < JVM_VENDOR_DEFAULT_PKGS.length; i++) {
-                    String className = JVM_VENDOR_DEFAULT_PKGS[i] + "." +
-                            protocol + ".Handler";
+                for (final String element : JVM_VENDOR_DEFAULT_PKGS) {
+                    final String className = element + "." + protocol + ".Handler";
                     try {
                         Class handlerClass = null;
                         try {
                             handlerClass = Class.forName(className);
-                        } catch (Exception ex) { }
+                        } catch (final Exception ex) {}
                         if (handlerClass == null) {
-                            handlerClass = ClassLoader.getSystemClassLoader(
-                                    ).loadClass(className);
+                            handlerClass = ClassLoader.getSystemClassLoader().loadClass(className);
                         }
                         handler = (URLStreamHandler) handlerClass.newInstance();
-                    } catch (Exception ex) { }
-                    if (handler != null) break;
+                    } catch (final Exception ex) {}
+                    if (handler != null) {
+                        break;
+                    }
                 }
             }
             if (handler == null) {
-                throw new IOException(
-                        "Unable to find default handler for protocol: " +
-                                protocol);
+                throw new IOException("Unable to find default handler for protocol: " + protocol);
             }
             PROTOCOL_HANDLERS.put(protocol, handler);
             return handler;

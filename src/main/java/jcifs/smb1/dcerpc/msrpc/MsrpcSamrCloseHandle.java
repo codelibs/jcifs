@@ -23,7 +23,7 @@ import jcifs.smb1.dcerpc.rpc;
 
 public class MsrpcSamrCloseHandle extends samr.SamrCloseHandle {
 
-    public MsrpcSamrCloseHandle(rpc.policy_handle policyHandle) {
+    public MsrpcSamrCloseHandle(final rpc.policy_handle policyHandle) {
         super(policyHandle);
         ptype = 0;
         flags = DCERPC_FIRST_FRAG | DCERPC_LAST_FRAG;

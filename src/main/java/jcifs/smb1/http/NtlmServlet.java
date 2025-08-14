@@ -20,17 +20,14 @@
 package jcifs.smb1.http;
 
 import java.io.IOException;
-
-import java.net.UnknownHostException;
-
 import java.util.Enumeration;
 
 import jakarta.servlet.ServletConfig;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.UnavailableException;
-
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-
 import jcifs.smb1.Config;
 import jcifs.smb1.UniAddress;
 import jcifs.smb1.netbios.NbtAddress;
@@ -38,10 +35,6 @@ import jcifs.smb1.smb1.NtlmPasswordAuthentication;
 import jcifs.smb1.smb1.SmbAuthException;
 import jcifs.smb1.smb1.SmbSession;
 import jcifs.smb1.util.Base64;
-
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * This servlet may be used with pre-2.3 servlet containers
@@ -69,15 +62,16 @@ public abstract class NtlmServlet extends HttpServlet {
 
     private String realm;
 
-    public void init(ServletConfig config) throws ServletException {
+    @Override
+    public void init(final ServletConfig config) throws ServletException {
         super.init(config);
 
         /* Set jcifs.smb1 properties we know we want; soTimeout and cachePolicy to 10min.
          */
-        Config.setProperty( "jcifs.smb1.smb.client.soTimeout", "300000" );
-        Config.setProperty( "jcifs.smb1.netbios.cachePolicy", "600" );
+        Config.setProperty("jcifs.smb1.smb.client.soTimeout", "300000");
+        Config.setProperty("jcifs.smb1.netbios.cachePolicy", "600");
 
-        Enumeration e = config.getInitParameterNames();
+        final Enumeration e = config.getInitParameterNames();
         String name;
         while (e.hasMoreElements()) {
             name = (String) e.nextElement();
@@ -87,74 +81,71 @@ public abstract class NtlmServlet extends HttpServlet {
         }
         defaultDomain = Config.getProperty("jcifs.smb1.smb.client.domain");
         domainController = Config.getProperty("jcifs.smb1.http.domainController");
-        if( domainController == null ) {
+        if (domainController == null) {
             domainController = defaultDomain;
-            loadBalance = Config.getBoolean( "jcifs.smb1.http.loadBalance", true );
+            loadBalance = Config.getBoolean("jcifs.smb1.http.loadBalance", true);
         }
-        enableBasic = Boolean.valueOf(
-                Config.getProperty("jcifs.smb1.http.enableBasic")).booleanValue();
-        insecureBasic = Boolean.valueOf(
-                Config.getProperty("jcifs.smb1.http.insecureBasic")).booleanValue();
+        enableBasic = Boolean.parseBoolean(Config.getProperty("jcifs.smb1.http.enableBasic"));
+        insecureBasic = Boolean.parseBoolean(Config.getProperty("jcifs.smb1.http.insecureBasic"));
         realm = Config.getProperty("jcifs.smb1.http.basicRealm");
-        if (realm == null) realm = "jCIFS";
+        if (realm == null) {
+            realm = "jCIFS";
+        }
     }
 
-    protected void service(HttpServletRequest request,
-            HttpServletResponse response) throws ServletException, IOException {
+    @Override
+    protected void service(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
         UniAddress dc;
-        boolean offerBasic = enableBasic &&
-                (insecureBasic || request.isSecure());
-        String msg = request.getHeader("Authorization");
-        if (msg != null && (msg.startsWith("NTLM ") ||
-                    (offerBasic && msg.startsWith("Basic ")))) {
-            if( loadBalance ) {
-                dc = new UniAddress( NbtAddress.getByName( domainController, 0x1C, null ));
+        final boolean offerBasic = enableBasic && (insecureBasic || request.isSecure());
+        final String msg = request.getHeader("Authorization");
+        if (msg != null && (msg.startsWith("NTLM ") || offerBasic && msg.startsWith("Basic "))) {
+            if (loadBalance) {
+                dc = new UniAddress(NbtAddress.getByName(domainController, 0x1C, null));
             } else {
-                dc = UniAddress.getByName( domainController, true );
+                dc = UniAddress.getByName(domainController, true);
             }
             NtlmPasswordAuthentication ntlm;
             if (msg.startsWith("NTLM ")) {
-                byte[] challenge = SmbSession.getChallenge(dc);
+                final byte[] challenge = SmbSession.getChallenge(dc);
                 ntlm = NtlmSsp.authenticate(request, response, challenge);
-                if (ntlm == null) return;
+                if (ntlm == null) {
+                    return;
+                }
             } else {
-                String auth = new String(Base64.decode(msg.substring(6)),
-                        "US-ASCII");
+                final String auth = new String(Base64.decode(msg.substring(6)), "US-ASCII");
                 int index = auth.indexOf(':');
-                String user = (index != -1) ? auth.substring(0, index) : auth;
-                String password = (index != -1) ? auth.substring(index + 1) :
-                        "";
+                String user = index != -1 ? auth.substring(0, index) : auth;
+                final String password = index != -1 ? auth.substring(index + 1) : "";
                 index = user.indexOf('\\');
-                if (index == -1) index = user.indexOf('/');
-                String domain = (index != -1) ? user.substring(0, index) :
-                        defaultDomain;
-                user = (index != -1) ? user.substring(index + 1) : user;
+                if (index == -1) {
+                    index = user.indexOf('/');
+                }
+                final String domain = index != -1 ? user.substring(0, index) : defaultDomain;
+                user = index != -1 ? user.substring(index + 1) : user;
                 ntlm = new NtlmPasswordAuthentication(domain, user, password);
             }
             try {
                 SmbSession.logon(dc, ntlm);
-            } catch (SmbAuthException sae) {
+            } catch (final SmbAuthException sae) {
                 response.setHeader("WWW-Authenticate", "NTLM");
                 if (offerBasic) {
-                    response.addHeader("WWW-Authenticate", "Basic realm=\"" +
-                            realm + "\"");
+                    response.addHeader("WWW-Authenticate", "Basic realm=\"" + realm + "\"");
                 }
                 response.setHeader("Connection", "close");
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.flushBuffer();
                 return;
             }
-            HttpSession ssn = request.getSession();
+            final HttpSession ssn = request.getSession();
             ssn.setAttribute("NtlmHttpAuth", ntlm);
-            ssn.setAttribute( "ntlmdomain", ntlm.getDomain() );
-            ssn.setAttribute( "ntlmuser", ntlm.getUsername() );
+            ssn.setAttribute("ntlmdomain", ntlm.getDomain());
+            ssn.setAttribute("ntlmuser", ntlm.getUsername());
         } else {
-            HttpSession ssn = request.getSession(false);
+            final HttpSession ssn = request.getSession(false);
             if (ssn == null || ssn.getAttribute("NtlmHttpAuth") == null) {
                 response.setHeader("WWW-Authenticate", "NTLM");
                 if (offerBasic) {
-                    response.addHeader("WWW-Authenticate", "Basic realm=\"" +
-                            realm + "\"");
+                    response.addHeader("WWW-Authenticate", "Basic realm=\"" + realm + "\"");
                 }
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.flushBuffer();
@@ -164,4 +155,3 @@ public abstract class NtlmServlet extends HttpServlet {
         super.service(request, response);
     }
 }
-

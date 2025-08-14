@@ -19,17 +19,15 @@
 
 package jcifs.https;
 
-
 import jcifs.CIFSContext;
 import jcifs.http.NtlmHttpURLConnection;
-
 
 /**
  * A <code>URLStreamHandler</code> used to provide NTLM authentication
  * capabilities to the default HTTPS handler. This acts as a wrapper,
  * handling authentication and passing control to the underlying
  * stream handler.
- * 
+ *
  * @deprecated {@link NtlmHttpURLConnection} is broken by design.
  */
 @Deprecated
@@ -40,16 +38,14 @@ public class Handler extends jcifs.http.Handler {
      */
     public static final int DEFAULT_HTTPS_PORT = 443;
 
-
     /**
      * @param tc
      *            context to use
-     * 
+     *
      */
-    public Handler ( CIFSContext tc ) {
+    public Handler(final CIFSContext tc) {
         super(tc);
     }
-
 
     /**
      * Returns the default HTTPS port.
@@ -57,7 +53,7 @@ public class Handler extends jcifs.http.Handler {
      * @return An <code>int</code> containing the default HTTPS port.
      */
     @Override
-    protected int getDefaultPort () {
+    protected int getDefaultPort() {
         return DEFAULT_HTTPS_PORT;
     }
 

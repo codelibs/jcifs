@@ -1,22 +1,21 @@
 /*
  * © 2016 AgNO3 Gmbh & Co. KG
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 package jcifs.config;
-
 
 import java.net.InetAddress;
 import java.util.Properties;
@@ -27,10 +26,9 @@ import jcifs.Configuration;
 import jcifs.DialectVersion;
 import jcifs.SmbConstants;
 
-
 /**
  * Configuration implementation reading the classic jcifs settings from properties
- * 
+ *
  * @author mbechler
  *
  */
@@ -40,9 +38,9 @@ public final class PropertyConfiguration extends BaseConfiguration implements Co
      * @param p
      *            read from properties
      * @throws CIFSException
-     * 
+     *
      */
-    public PropertyConfiguration ( Properties p ) throws CIFSException {
+    public PropertyConfiguration(final Properties p) throws CIFSException {
         this.useBatching = Config.getBoolean(p, "jcifs.smb.client.useBatching", false);
         this.useUnicode = Config.getBoolean(p, "jcifs.smb.client.useUnicode", true);
         this.useLargeReadWrite = Config.getBoolean(p, "jcifs.smb.client.useLargeReadWrite", true);
@@ -145,15 +143,14 @@ public final class PropertyConfiguration extends BaseConfiguration implements Co
         this.guestUsername = p.getProperty("jcifs.smb.client.guestUsername", "JCIFSGUEST");
         this.guestPassword = p.getProperty("jcifs.smb.client.guestPassword", "");
 
-        String minVer = p.getProperty("jcifs.smb.client.minVersion");
-        String maxVer = p.getProperty("jcifs.smb.client.maxVersion");
+        final String minVer = p.getProperty("jcifs.smb.client.minVersion");
+        final String maxVer = p.getProperty("jcifs.smb.client.maxVersion");
 
-        if ( minVer != null || maxVer != null ) {
+        if (minVer != null || maxVer != null) {
             initProtocolVersions(minVer, maxVer);
-        }
-        else {
-            boolean smb2 = Config.getBoolean(p, "jcifs.smb.client.enableSMB2", true);
-            boolean nosmb1 = Config.getBoolean(p, "jcifs.smb.client.disableSMB1", false);
+        } else {
+            final boolean smb2 = Config.getBoolean(p, "jcifs.smb.client.enableSMB2", true);
+            final boolean nosmb1 = Config.getBoolean(p, "jcifs.smb.client.disableSMB1", false);
             initProtocolVersions(nosmb1 ? DialectVersion.SMB202 : null, !smb2 ? DialectVersion.SMB1 : null);
         }
 

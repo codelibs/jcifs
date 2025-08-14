@@ -18,21 +18,19 @@
 
 package jcifs.smb;
 
-
 import java.io.Serializable;
 
 import jcifs.netbios.UniAddress;
 import jcifs.util.Hexdump;
 
-
 /**
- * 
+ *
  * @internal
  */
 public final class NtlmChallenge implements Serializable {
 
     /**
-     * 
+     *
      */
     private static final long serialVersionUID = 2484853610174848092L;
 
@@ -46,19 +44,18 @@ public final class NtlmChallenge implements Serializable {
      */
     public UniAddress dc;
 
-
     /**
      * @param challenge
      * @param dc
      */
-    public NtlmChallenge ( byte[] challenge, UniAddress dc ) {
+    public NtlmChallenge(final byte[] challenge, final UniAddress dc) {
         this.challenge = challenge;
         this.dc = dc;
     }
 
-
     @Override
-    public String toString () {
-        return "NtlmChallenge[challenge=0x" + Hexdump.toHexString(this.challenge, 0, this.challenge.length * 2) + ",dc=" + this.dc.toString() + "]";
+    public String toString() {
+        return "NtlmChallenge[challenge=0x" + Hexdump.toHexString(this.challenge, 0, this.challenge.length * 2) + ",dc="
+                + this.dc.toString() + "]";
     }
 }

@@ -18,14 +18,12 @@
 
 package jcifs.smb;
 
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 import jcifs.CIFSException;
 import jcifs.util.Hexdump;
-
 
 /**
  * There are hundreds of error codes that may be returned by a CIFS
@@ -44,31 +42,31 @@ import jcifs.util.Hexdump;
 public class SmbException extends CIFSException implements NtStatus, DosError, WinError {
 
     /**
-     * 
+     *
      */
     private static final long serialVersionUID = 484863569441792249L;
-    
+
     // to replace a bunch of one-off binary searches
     private static final Map<Integer, String> errorCodeMessages;
     private static final Map<Integer, String> winErrorCodeMessages;
     private static final Map<Integer, Integer> dosErrorCodeStatuses;
 
     static {
-        Map<Integer, String> errorCodeMessagesTmp = new HashMap<>();
+        final Map<Integer, String> errorCodeMessagesTmp = new HashMap<>();
         for (int i = 0; i < NT_STATUS_CODES.length; i++) {
             errorCodeMessagesTmp.put(NT_STATUS_CODES[i], NT_STATUS_MESSAGES[i]);
         }
 
-        Map<Integer, Integer> dosErrorCodeStatusesTmp = new HashMap<>();
-        for (int i = 0; i < DOS_ERROR_CODES.length; i++) {
-            dosErrorCodeStatusesTmp.put(DOS_ERROR_CODES[i][0], DOS_ERROR_CODES[i][1]);
-            int mappedNtCode = DOS_ERROR_CODES[i][1];
-            String mappedNtMessage = errorCodeMessagesTmp.get(mappedNtCode);
+        final Map<Integer, Integer> dosErrorCodeStatusesTmp = new HashMap<>();
+        for (final int[] element : DOS_ERROR_CODES) {
+            dosErrorCodeStatusesTmp.put(element[0], element[1]);
+            final int mappedNtCode = element[1];
+            final String mappedNtMessage = errorCodeMessagesTmp.get(mappedNtCode);
             if (mappedNtMessage != null) {
-                errorCodeMessagesTmp.put(DOS_ERROR_CODES[i][0], mappedNtMessage);
+                errorCodeMessagesTmp.put(element[0], mappedNtMessage);
             }
         }
-        
+
         // for backward compatibility since this is was different message in the NtStatus.NT_STATUS_CODES than returned
         // by getMessageByCode
         errorCodeMessagesTmp.put(0, "NT_STATUS_SUCCESS");
@@ -76,7 +74,7 @@ public class SmbException extends CIFSException implements NtStatus, DosError, W
         errorCodeMessages = Collections.unmodifiableMap(errorCodeMessagesTmp);
         dosErrorCodeStatuses = Collections.unmodifiableMap(dosErrorCodeStatusesTmp);
 
-        Map<Integer, String> winErrorCodeMessagesTmp = new HashMap<>();
+        final Map<Integer, String> winErrorCodeMessagesTmp = new HashMap<>();
         for (int i = 0; i < WINERR_CODES.length; i++) {
             winErrorCodeMessagesTmp.put(WINERR_CODES[i], WINERR_MESSAGES[i]);
         }
@@ -85,28 +83,23 @@ public class SmbException extends CIFSException implements NtStatus, DosError, W
 
     }
 
-
-
-
-
     /**
-     * 
+     *
      * @param errcode
      * @return message for NT STATUS code
      * @internal
      */
-    public static String getMessageByCode ( int errcode ) {
+    public static String getMessageByCode(final int errcode) {
         String message = errorCodeMessages.get(errcode);
         if (message == null) {
-            message =  "0x" + Hexdump.toHexString(errcode, 8);
+            message = "0x" + Hexdump.toHexString(errcode, 8);
         }
         return message;
     }
 
-
-    static int getStatusByCode ( int errcode ) {
+    static int getStatusByCode(final int errcode) {
         int statusCode;
-        if ( ( errcode & 0xC0000000 ) != 0 ) {
+        if ((errcode & 0xC0000000) != 0) {
             statusCode = errcode;
         } else if (dosErrorCodeStatuses.containsKey(errcode)) {
             statusCode = dosErrorCodeStatuses.get(errcode);
@@ -116,8 +109,7 @@ public class SmbException extends CIFSException implements NtStatus, DosError, W
         return statusCode;
     }
 
-
-    static String getMessageByWinerrCode ( int errcode ) {
+    static String getMessageByWinerrCode(final int errcode) {
         String message = winErrorCodeMessages.get(errcode);
         if (message == null) {
             message = "W" + Hexdump.toHexString(errcode, 8);
@@ -127,81 +119,74 @@ public class SmbException extends CIFSException implements NtStatus, DosError, W
 
     private int status;
 
-
     /**
-     * 
+     *
      */
-    public SmbException () {}
-
+    public SmbException() {
+    }
 
     /**
-     * 
+     *
      * @param errcode
      * @param rootCause
      */
-    public SmbException ( int errcode, Throwable rootCause ) {
+    public SmbException(final int errcode, final Throwable rootCause) {
         super(getMessageByCode(errcode), rootCause);
         this.status = getStatusByCode(errcode);
     }
 
-
     /**
-     * 
+     *
      * @param msg
      */
-    public SmbException ( String msg ) {
+    public SmbException(final String msg) {
         super(msg);
         this.status = NT_STATUS_UNSUCCESSFUL;
     }
 
-
     /**
-     * 
+     *
      * @param msg
      * @param rootCause
      */
-    public SmbException ( String msg, Throwable rootCause ) {
+    public SmbException(final String msg, final Throwable rootCause) {
         super(msg, rootCause);
         this.status = NT_STATUS_UNSUCCESSFUL;
     }
 
-
     /**
-     * 
+     *
      * @param errcode
      * @param winerr
      */
-    public SmbException ( int errcode, boolean winerr ) {
+    public SmbException(final int errcode, final boolean winerr) {
         super(winerr ? getMessageByWinerrCode(errcode) : getMessageByCode(errcode));
         this.status = winerr ? errcode : getStatusByCode(errcode);
     }
 
-
     /**
-     * 
+     *
      * @return status code
      */
-    public int getNtStatus () {
+    public int getNtStatus() {
         return this.status;
     }
 
-
     /**
-     * 
+     *
      * @return cause
      */
     @Deprecated
-    public Throwable getRootCause () {
+    public Throwable getRootCause() {
         return this.getCause();
     }
-
 
     /**
      * @param e
      * @return a CIFS exception wrapped in an SmbException
      */
-    static SmbException wrap ( CIFSException e ) {
-        if ( e instanceof SmbException ) {
+    static SmbException wrap(final CIFSException e) {
+        if (e instanceof SmbException) {
             return (SmbException) e;
         }
         return new SmbException(e.getMessage(), e);

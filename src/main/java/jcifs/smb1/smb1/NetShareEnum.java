@@ -1,16 +1,16 @@
 /* jcifs smb client library in Java
  * Copyright (C) 2000  "Michael B. Allen" <jcifs at samba dot org>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -27,52 +27,65 @@ class NetShareEnum extends SmbComTransaction {
     NetShareEnum() {
         command = SMB_COM_TRANSACTION;
         subCommand = NET_SHARE_ENUM; // not really true be used by upper logic
-        name = new String( "\\PIPE\\LANMAN" );
+        name = "\\PIPE\\LANMAN";
         maxParameterCount = 8;
 
-//        maxDataCount = 4096; why was this set?
-        maxSetupCount = (byte)0x00;
+        //        maxDataCount = 4096; why was this set?
+        maxSetupCount = (byte) 0x00;
         setupCount = 0;
         timeout = 5000;
     }
 
-    int writeSetupWireFormat( byte[] dst, int dstIndex ) {
+    @Override
+    int writeSetupWireFormat(final byte[] dst, final int dstIndex) {
         return 0;
     }
-    int writeParametersWireFormat( byte[] dst, int dstIndex ) {
-        int start = dstIndex;
+
+    @Override
+    int writeParametersWireFormat(final byte[] dst, int dstIndex) {
+        final int start = dstIndex;
         byte[] descr;
 
         try {
-            descr = DESCR.getBytes( "ASCII" );
-        } catch( UnsupportedEncodingException uee ) {
+            descr = DESCR.getBytes("ASCII");
+        } catch (final UnsupportedEncodingException uee) {
             return 0;
         }
 
-        writeInt2( NET_SHARE_ENUM, dst, dstIndex );
+        writeInt2(NET_SHARE_ENUM, dst, dstIndex);
         dstIndex += 2;
-        System.arraycopy( descr, 0, dst, dstIndex, descr.length );
+        System.arraycopy(descr, 0, dst, dstIndex, descr.length);
         dstIndex += descr.length;
-        writeInt2( 0x0001, dst, dstIndex );
+        writeInt2(0x0001, dst, dstIndex);
         dstIndex += 2;
-        writeInt2( maxDataCount, dst, dstIndex );
+        writeInt2(maxDataCount, dst, dstIndex);
         dstIndex += 2;
 
         return dstIndex - start;
     }
-    int writeDataWireFormat( byte[] dst, int dstIndex ) {
+
+    @Override
+    int writeDataWireFormat(final byte[] dst, final int dstIndex) {
         return 0;
     }
-    int readSetupWireFormat( byte[] buffer, int bufferIndex, int len ) {
+
+    @Override
+    int readSetupWireFormat(final byte[] buffer, final int bufferIndex, final int len) {
         return 0;
     }
-    int readParametersWireFormat( byte[] buffer, int bufferIndex, int len ) {
+
+    @Override
+    int readParametersWireFormat(final byte[] buffer, final int bufferIndex, final int len) {
         return 0;
     }
-    int readDataWireFormat( byte[] buffer, int bufferIndex, int len ) {
+
+    @Override
+    int readDataWireFormat(final byte[] buffer, final int bufferIndex, final int len) {
         return 0;
     }
+
+    @Override
     public String toString() {
-        return new String( "NetShareEnum[" + super.toString() + "]" );
+        return ("NetShareEnum[" + super.toString() + "]");
     }
 }

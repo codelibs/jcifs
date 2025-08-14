@@ -19,10 +19,11 @@
 
 package jcifs.http;
 
-
 import java.io.IOException;
 import java.util.Enumeration;
 import java.util.Properties;
+
+import org.bouncycastle.util.encoders.Base64;
 
 import jakarta.servlet.ServletConfig;
 import jakarta.servlet.ServletException;
@@ -30,9 +31,6 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-
-import org.bouncycastle.util.encoders.Base64;
-
 import jcifs.Address;
 import jcifs.CIFSContext;
 import jcifs.CIFSException;
@@ -42,7 +40,6 @@ import jcifs.context.BaseContext;
 import jcifs.netbios.UniAddress;
 import jcifs.smb.NtlmPasswordAuthentication;
 import jcifs.smb.SmbAuthException;
-
 
 /**
  * This servlet may be used with pre-2.3 servlet containers
@@ -56,14 +53,14 @@ import jcifs.smb.SmbAuthException;
  * <p>
  * Read <a href="../../../ntlmhttpauth.html">jCIFS NTLM HTTP Authentication and the Network Explorer Servlet</a> related
  * information.
- * 
+ *
  * @deprecated NTLMv1 only
  */
 @Deprecated
 public abstract class NtlmServlet extends HttpServlet {
 
     /**
-     * 
+     *
      */
     private static final long serialVersionUID = -4686770199446333333L;
 
@@ -81,12 +78,11 @@ public abstract class NtlmServlet extends HttpServlet {
 
     private CIFSContext transportContext;
 
-
     @Override
-    public void init ( ServletConfig config ) throws ServletException {
+    public void init(final ServletConfig config) throws ServletException {
         super.init(config);
 
-        Properties p = new Properties();
+        final Properties p = new Properties();
         p.putAll(System.getProperties());
         /*
          * Set jcifs properties we know we want; soTimeout and cachePolicy to 10min.
@@ -94,11 +90,11 @@ public abstract class NtlmServlet extends HttpServlet {
         p.setProperty("jcifs.smb.client.soTimeout", "300000");
         p.setProperty("jcifs.netbios.cachePolicy", "600");
 
-        Enumeration<String> e = config.getInitParameterNames();
+        final Enumeration<String> e = config.getInitParameterNames();
         String name;
-        while ( e.hasMoreElements() ) {
+        while (e.hasMoreElements()) {
             name = e.nextElement();
-            if ( name.startsWith("jcifs.") ) {
+            if (name.startsWith("jcifs.")) {
                 p.setProperty(name, config.getInitParameter(name));
             }
         }
@@ -106,61 +102,60 @@ public abstract class NtlmServlet extends HttpServlet {
         try {
             this.defaultDomain = p.getProperty("jcifs.smb.client.domain");
             this.domainController = p.getProperty("jcifs.http.domainController");
-            if ( this.domainController == null ) {
+            if (this.domainController == null) {
                 this.domainController = this.defaultDomain;
                 this.loadBalance = Config.getBoolean(p, "jcifs.http.loadBalance", true);
             }
-            this.enableBasic = Boolean.valueOf(p.getProperty("jcifs.http.enableBasic")).booleanValue();
-            this.insecureBasic = Boolean.valueOf(p.getProperty("jcifs.http.insecureBasic")).booleanValue();
+            this.enableBasic = Boolean.parseBoolean(p.getProperty("jcifs.http.enableBasic"));
+            this.insecureBasic = Boolean.parseBoolean(p.getProperty("jcifs.http.insecureBasic"));
             this.realm = p.getProperty("jcifs.http.basicRealm");
-            if ( this.realm == null )
+            if (this.realm == null) {
                 this.realm = "jCIFS";
+            }
 
-            this.transportContext = new BaseContext(new PropertyConfiguration(p));;
-        }
-        catch ( CIFSException ex ) {
+            this.transportContext = new BaseContext(new PropertyConfiguration(p));
+
+        } catch (final CIFSException ex) {
             throw new ServletException("Failed to initialize config", ex);
         }
     }
 
-
     @Override
-    protected void service ( HttpServletRequest request, HttpServletResponse response ) throws ServletException, IOException {
+    protected void service(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
         Address dc;
-        boolean offerBasic = this.enableBasic && ( this.insecureBasic || request.isSecure() );
-        String msg = request.getHeader("Authorization");
-        if ( msg != null && ( msg.startsWith("NTLM ") || ( offerBasic && msg.startsWith("Basic ") ) ) ) {
-            if ( this.loadBalance ) {
+        final boolean offerBasic = this.enableBasic && (this.insecureBasic || request.isSecure());
+        final String msg = request.getHeader("Authorization");
+        if (msg != null && (msg.startsWith("NTLM ") || offerBasic && msg.startsWith("Basic "))) {
+            if (this.loadBalance) {
                 dc = new UniAddress(getTransportContext().getNameServiceClient().getNbtByName(this.domainController, 0x1C, null));
-            }
-            else {
+            } else {
                 dc = getTransportContext().getNameServiceClient().getByName(this.domainController, true);
             }
             NtlmPasswordAuthentication ntlm;
-            if ( msg.startsWith("NTLM ") ) {
-                byte[] challenge = getTransportContext().getTransportPool().getChallenge(getTransportContext(), dc);
+            if (msg.startsWith("NTLM ")) {
+                final byte[] challenge = getTransportContext().getTransportPool().getChallenge(getTransportContext(), dc);
                 ntlm = NtlmSsp.authenticate(getTransportContext(), request, response, challenge);
-                if ( ntlm == null )
+                if (ntlm == null) {
                     return;
-            }
-            else {
-                String auth = new String(Base64.decode(msg.substring(6)), "US-ASCII");
+                }
+            } else {
+                final String auth = new String(Base64.decode(msg.substring(6)), "US-ASCII");
                 int index = auth.indexOf(':');
-                String user = ( index != -1 ) ? auth.substring(0, index) : auth;
-                String password = ( index != -1 ) ? auth.substring(index + 1) : "";
+                String user = index != -1 ? auth.substring(0, index) : auth;
+                final String password = index != -1 ? auth.substring(index + 1) : "";
                 index = user.indexOf('\\');
-                if ( index == -1 )
+                if (index == -1) {
                     index = user.indexOf('/');
-                String domain = ( index != -1 ) ? user.substring(0, index) : this.defaultDomain;
-                user = ( index != -1 ) ? user.substring(index + 1) : user;
+                }
+                final String domain = index != -1 ? user.substring(0, index) : this.defaultDomain;
+                user = index != -1 ? user.substring(index + 1) : user;
                 ntlm = new NtlmPasswordAuthentication(getTransportContext(), domain, user, password);
             }
             try {
                 getTransportContext().getTransportPool().logon(getTransportContext(), dc);
-            }
-            catch ( SmbAuthException sae ) {
+            } catch (final SmbAuthException sae) {
                 response.setHeader("WWW-Authenticate", "NTLM");
-                if ( offerBasic ) {
+                if (offerBasic) {
                     response.addHeader("WWW-Authenticate", "Basic realm=\"" + this.realm + "\"");
                 }
                 response.setHeader("Connection", "close");
@@ -168,16 +163,15 @@ public abstract class NtlmServlet extends HttpServlet {
                 response.flushBuffer();
                 return;
             }
-            HttpSession ssn = request.getSession();
+            final HttpSession ssn = request.getSession();
             ssn.setAttribute("NtlmHttpAuth", ntlm);
             ssn.setAttribute("ntlmdomain", ntlm.getUserDomain());
             ssn.setAttribute("ntlmuser", ntlm.getUsername());
-        }
-        else {
-            HttpSession ssn = request.getSession(false);
-            if ( ssn == null || ssn.getAttribute("NtlmHttpAuth") == null ) {
+        } else {
+            final HttpSession ssn = request.getSession(false);
+            if (ssn == null || ssn.getAttribute("NtlmHttpAuth") == null) {
                 response.setHeader("WWW-Authenticate", "NTLM");
-                if ( offerBasic ) {
+                if (offerBasic) {
                     response.addHeader("WWW-Authenticate", "Basic realm=\"" + this.realm + "\"");
                 }
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -188,11 +182,10 @@ public abstract class NtlmServlet extends HttpServlet {
         super.service(request, response);
     }
 
-
     /**
      * @return
      */
-    private CIFSContext getTransportContext () {
+    private CIFSContext getTransportContext() {
         return this.transportContext;
     }
 }

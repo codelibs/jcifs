@@ -242,7 +242,7 @@ class SmbPipeHandleInternalTest {
     @Test
     @DisplayName("sendrecv falls back to stream write/read when no call/transact")
     void sendrecv_stream_fallback_uses_streams() throws Exception {
-        // Arrange - use non-transact, non-call pipe type 
+        // Arrange - use non-transact, non-call pipe type
         SmbPipeHandleImpl handle = newHandleWithBasicStubs(SmbPipeResource.PIPE_TYPE_RDWR, "\\\\pipe\\\\x");
 
         // Setup for ensureOpen to avoid NullPointer

@@ -1,22 +1,21 @@
 /*
  * © 2016 AgNO3 Gmbh & Co. KG
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 package jcifs.context;
-
 
 import java.net.MalformedURLException;
 import java.net.URLStreamHandler;
@@ -42,7 +41,6 @@ import jcifs.smb.SmbFile;
 import jcifs.smb.SmbNamedPipe;
 import jcifs.smb.SmbTransportPoolImpl;
 
-
 /**
  * @author mbechler
  *
@@ -58,15 +56,14 @@ public class BaseContext extends AbstractCIFSContext {
     private final SmbTransportPool transportPool;
     private final CredentialsInternal defaultCredentials;
 
-
     /**
      * Construct a context
-     * 
+     *
      * @param config
      *            configuration for the context
-     * 
+     *
      */
-    public BaseContext ( Configuration config ) {
+    public BaseContext(final Configuration config) {
         this.config = config;
         this.dfs = new DfsImpl(this);
         this.sidResolver = new SIDCacheImpl(this);
@@ -74,57 +71,51 @@ public class BaseContext extends AbstractCIFSContext {
         this.nameServiceClient = new NameServiceClientImpl(this);
         this.bufferCache = new BufferCacheImpl(this.config);
         this.transportPool = new SmbTransportPoolImpl();
-        String defUser = config.getDefaultUsername();
-        String defPassword = config.getDefaultPassword();
-        String defDomain = config.getDefaultDomain();
-        if ( defUser != null ) {
+        final String defUser = config.getDefaultUsername();
+        final String defPassword = config.getDefaultPassword();
+        final String defDomain = config.getDefaultDomain();
+        if (defUser != null) {
             this.defaultCredentials = new NtlmPasswordAuthenticator(defDomain, defUser, defPassword);
         } else {
             this.defaultCredentials = new NtlmPasswordAuthenticator();
         }
     }
 
-
     /**
      * {@inheritDoc}
-     * 
+     *
      * @throws CIFSException
-     * 
+     *
      * @see jcifs.CIFSContext#get(java.lang.String)
      */
     @Override
-    public SmbResource get ( String url ) throws CIFSException {
+    public SmbResource get(final String url) throws CIFSException {
         try {
             return new SmbFile(url, this);
-        }
-        catch ( MalformedURLException e ) {
+        } catch (final MalformedURLException e) {
             throw new CIFSException("Invalid URL " + url, e);
         }
     }
 
-
     /**
-     * 
+     *
      * {@inheritDoc}
      *
      * @see jcifs.CIFSContext#getPipe(java.lang.String, int)
      */
     @Override
-    public SmbPipeResource getPipe ( String url, int pipeType ) throws CIFSException {
+    public SmbPipeResource getPipe(final String url, final int pipeType) throws CIFSException {
         try {
             return new SmbNamedPipe(url, pipeType, this);
-        }
-        catch ( MalformedURLException e ) {
+        } catch (final MalformedURLException e) {
             throw new CIFSException("Invalid URL " + url, e);
         }
     }
 
-
     @Override
-    public SmbTransportPool getTransportPool () {
+    public SmbTransportPool getTransportPool() {
         return this.transportPool;
     }
-
 
     /**
      * {@inheritDoc}
@@ -132,10 +123,9 @@ public class BaseContext extends AbstractCIFSContext {
      * @see jcifs.CIFSContext#getConfig()
      */
     @Override
-    public Configuration getConfig () {
+    public Configuration getConfig() {
         return this.config;
     }
-
 
     /**
      * {@inheritDoc}
@@ -143,10 +133,9 @@ public class BaseContext extends AbstractCIFSContext {
      * @see jcifs.CIFSContext#getDfs()
      */
     @Override
-    public DfsResolver getDfs () {
+    public DfsResolver getDfs() {
         return this.dfs;
     }
-
 
     /**
      * {@inheritDoc}
@@ -154,10 +143,9 @@ public class BaseContext extends AbstractCIFSContext {
      * @see jcifs.CIFSContext#getNameServiceClient()
      */
     @Override
-    public NameServiceClient getNameServiceClient () {
+    public NameServiceClient getNameServiceClient() {
         return this.nameServiceClient;
     }
-
 
     /**
      * {@inheritDoc}
@@ -165,10 +153,9 @@ public class BaseContext extends AbstractCIFSContext {
      * @see jcifs.CIFSContext#getBufferCache()
      */
     @Override
-    public BufferCache getBufferCache () {
+    public BufferCache getBufferCache() {
         return this.bufferCache;
     }
-
 
     /**
      * {@inheritDoc}
@@ -176,10 +163,9 @@ public class BaseContext extends AbstractCIFSContext {
      * @see jcifs.CIFSContext#getUrlHandler()
      */
     @Override
-    public URLStreamHandler getUrlHandler () {
+    public URLStreamHandler getUrlHandler() {
         return this.urlHandler;
     }
-
 
     /**
      * {@inheritDoc}
@@ -187,10 +173,9 @@ public class BaseContext extends AbstractCIFSContext {
      * @see jcifs.CIFSContext#getSIDResolver()
      */
     @Override
-    public SidResolver getSIDResolver () {
+    public SidResolver getSIDResolver() {
         return this.sidResolver;
     }
-
 
     /**
      * {@inheritDoc}
@@ -198,10 +183,9 @@ public class BaseContext extends AbstractCIFSContext {
      * @see jcifs.context.AbstractCIFSContext#getDefaultCredentials()
      */
     @Override
-    protected Credentials getDefaultCredentials () {
+    protected Credentials getDefaultCredentials() {
         return this.defaultCredentials;
     }
-
 
     /**
      * {@inheritDoc}
@@ -209,7 +193,7 @@ public class BaseContext extends AbstractCIFSContext {
      * @see jcifs.CIFSContext#close()
      */
     @Override
-    public boolean close () throws CIFSException {
+    public boolean close() throws CIFSException {
         boolean inUse = super.close();
         inUse |= this.transportPool.close();
         return inUse;

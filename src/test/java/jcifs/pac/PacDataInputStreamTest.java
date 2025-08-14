@@ -139,7 +139,8 @@ public class PacDataInputStreamTest {
     public void testReadFiletime() throws IOException {
         // A non-null date
         long time = System.currentTimeMillis();
-        BigInteger filetime = BigInteger.valueOf(time).add(BigInteger.valueOf(SmbConstants.MILLISECONDS_BETWEEN_1970_AND_1601))
+        BigInteger filetime = BigInteger.valueOf(time)
+                .add(BigInteger.valueOf(SmbConstants.MILLISECONDS_BETWEEN_1970_AND_1601))
                 .multiply(BigInteger.valueOf(10000L));
 
         byte[] data = new byte[8];
