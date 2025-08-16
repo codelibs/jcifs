@@ -32,7 +32,10 @@ import jcifs.smb.NtlmPasswordAuthenticator;
 import jcifs.util.Hexdump;
 
 /**
+ * SMB1 Tree Connect AndX request message.
  *
+ * This command is used to connect to a shared resource
+ * on the server, such as a file share or printer.
  */
 public class SmbComTreeConnectAndX extends AndXServerMessageBlock {
 
@@ -44,12 +47,13 @@ public class SmbComTreeConnectAndX extends AndXServerMessageBlock {
     private final ServerData server;
 
     /**
+     * Constructs a tree connect AndX request to establish a connection to a shared resource.
      *
-     * @param ctx
-     * @param server
-     * @param path
-     * @param service
-     * @param andx
+     * @param ctx the CIFS context containing configuration
+     * @param server the server data containing security information
+     * @param path the UNC path to the shared resource
+     * @param service the service type (e.g., "A:" for disk share, "LPT1:" for printer)
+     * @param andx the next command in the AndX chain, or null
      */
     public SmbComTreeConnectAndX(final CIFSContext ctx, final ServerData server, final String path, final String service,
             final ServerMessageBlock andx) {

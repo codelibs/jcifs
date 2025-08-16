@@ -28,8 +28,10 @@ import jcifs.internal.util.SMBUtil;
 import jcifs.util.Hexdump;
 
 /**
+ * SMB1 NT Create AndX request message.
  *
- *
+ * This command is used to create or open a file with extended
+ * capabilities including security descriptors and oplock support.
  */
 public class SmbComNTCreateAndX extends AndXServerMessageBlock implements Request<SmbComNTCreateAndXResponse> {
 
@@ -106,15 +108,16 @@ public class SmbComNTCreateAndX extends AndXServerMessageBlock implements Reques
     private int flags0, desiredAccess;
 
     /**
+     * Constructs an NT Create AndX request.
      *
-     * @param config
-     * @param name
-     * @param flags
-     * @param access
-     * @param shareAccess
-     * @param extFileAttributes
-     * @param createOptions
-     * @param andx
+     * @param config the configuration
+     * @param name the file name to create or open
+     * @param flags the file open flags (O_CREAT, O_EXCL, O_TRUNC)
+     * @param access the desired access rights
+     * @param shareAccess the share access mode
+     * @param extFileAttributes the extended file attributes
+     * @param createOptions the create options
+     * @param andx the next command in the chain
      */
     public SmbComNTCreateAndX(final Configuration config, final String name, final int flags, final int access, final int shareAccess,
             final int extFileAttributes, final int createOptions, final ServerMessageBlock andx) {
@@ -182,6 +185,8 @@ public class SmbComNTCreateAndX extends AndXServerMessageBlock implements Reques
     }
 
     /**
+     * Adds flags to the flags0 field.
+     *
      * @param fl
      *            the flags0 to set
      */

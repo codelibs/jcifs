@@ -30,7 +30,10 @@ import jcifs.smb.NtlmPasswordAuthenticator;
 import jcifs.smb.SmbException;
 
 /**
+ * SMB1 Session Setup AndX request message.
  *
+ * This command is used to authenticate a user session and
+ * establish security context for subsequent operations.
  */
 public class SmbComSessionSetupAndX extends AndXServerMessageBlock {
 
@@ -40,13 +43,14 @@ public class SmbComSessionSetupAndX extends AndXServerMessageBlock {
     private int capabilities;
 
     /**
+     * Constructs a session setup AndX request.
      *
-     * @param tc
-     * @param negotiated
-     * @param andx
-     * @param cred
-     * @throws SmbException
-     * @throws GeneralSecurityException
+     * @param tc the CIFS context containing configuration and credentials
+     * @param negotiated the negotiation response containing server capabilities
+     * @param andx the next command in the AndX chain, or null
+     * @param cred the authentication credentials to use for the session
+     * @throws SmbException if an SMB protocol error occurs
+     * @throws GeneralSecurityException if a security error occurs during authentication
      */
     public SmbComSessionSetupAndX(final CIFSContext tc, final SmbComNegotiateResponse negotiated, final ServerMessageBlock andx,
             final Object cred) throws SmbException, GeneralSecurityException {

@@ -26,7 +26,9 @@ import jcifs.internal.util.SMBUtil;
 import jcifs.util.Hexdump;
 
 /**
- *
+ * Base class for SMB1 transaction request messages.
+ * This abstract class provides the foundation for all SMB1 transaction commands, handling
+ * parameter and data buffer encoding, multi-part transactions, and setup word management.
  */
 public abstract class SmbComTransaction extends ServerMessageBlock implements Enumeration<SmbComTransaction> {
 
@@ -50,86 +52,110 @@ public abstract class SmbComTransaction extends ServerMessageBlock implements En
     static final int TRANSACTION_BUF_SIZE = 0xFFFF;
 
     /**
-     *
+     * SMB TRANS2 subcommand for finding first matching files
      */
     public static final byte TRANS2_FIND_FIRST2 = (byte) 0x01;
     /**
-     *
+     * SMB TRANS2 subcommand for finding next matching files
      */
     public static final byte TRANS2_FIND_NEXT2 = (byte) 0x02;
     /**
-     *
+     * SMB TRANS2 subcommand for querying file system information
      */
     public static final byte TRANS2_QUERY_FS_INFORMATION = (byte) 0x03;
     /**
-     *
+     * SMB TRANS2 subcommand for querying path information
      */
     public static final byte TRANS2_QUERY_PATH_INFORMATION = (byte) 0x05;
     /**
-     *
+     * SMB TRANS2 subcommand for getting DFS referrals
      */
     public static final byte TRANS2_GET_DFS_REFERRAL = (byte) 0x10;
     /**
-     *
+     * SMB TRANS2 subcommand for querying file information
      */
     public static final byte TRANS2_QUERY_FILE_INFORMATION = (byte) 0x07;
     /**
-     *
+     * SMB TRANS2 subcommand for setting file information
      */
     public static final byte TRANS2_SET_FILE_INFORMATION = (byte) 0x08;
 
     /**
-     *
+     * Network share enumeration subcommand
      */
     public static final byte NET_SHARE_ENUM = (byte) 0x00;
     /**
-     *
+     * Network server enumeration subcommand version 2
      */
     public static final byte NET_SERVER_ENUM2 = (byte) 0x68;
     /**
-     *
+     * Network server enumeration subcommand version 3
      */
     public static final byte NET_SERVER_ENUM3 = (byte) 0xD7;
 
     /**
-     *
+     * Transaction subcommand for peeking data from a named pipe
      */
     public static final byte TRANS_PEEK_NAMED_PIPE = (byte) 0x23;
     /**
-     *
+     * Transaction subcommand for waiting on a named pipe
      */
     public static final byte TRANS_WAIT_NAMED_PIPE = (byte) 0x53;
     /**
-     *
+     * Transaction subcommand for calling a named pipe
      */
     public static final byte TRANS_CALL_NAMED_PIPE = (byte) 0x54;
     /**
-     *
+     * Transaction subcommand for transacting with a named pipe
      */
     public static final byte TRANS_TRANSACT_NAMED_PIPE = (byte) 0x26;
 
+    /** Offset to the setup words in the primary request */
     protected int primarySetupOffset;
+    /** Offset to the parameters in secondary requests */
     protected int secondaryParameterOffset;
+    /** Number of parameter bytes being sent in this request */
     protected int parameterCount;
+    /** Offset from the start of the SMB header to the parameter bytes */
     protected int parameterOffset;
+    /** Displacement of these parameter bytes from the start of the total parameter block */
     protected int parameterDisplacement;
+    /** Number of data bytes being sent in this request */
     protected int dataCount;
+    /** Offset from the start of the SMB header to the data bytes */
     protected int dataOffset;
+    /** Displacement of these data bytes from the start of the total data block */
     protected int dataDisplacement;
 
+    /** Total number of parameter bytes to be sent */
     protected int totalParameterCount;
+    /** Total number of data bytes to be sent */
     protected int totalDataCount;
+    /** Maximum number of parameter bytes the server should return */
     protected int maxParameterCount;
+    /** Maximum number of data bytes the server should return */
     protected int maxDataCount;
+    /** Maximum number of setup words the server should return */
     protected byte maxSetupCount;
+    /** Timeout in milliseconds to wait for the transaction to complete */
     protected int timeout = 0;
+    /** Number of setup words in this request */
     protected int setupCount = 1;
     private byte subCommand;
+    /** The transaction name for named pipe transactions */
     protected String name = "";
+    /** Maximum buffer size set in SmbTransport.sendTransaction() before nextElement called */
     protected int maxBufferSize; // set in SmbTransport.sendTransaction() before nextElement called
 
     private byte[] txn_buf;
 
+    /**
+     * Constructs a transaction request.
+     *
+     * @param config the configuration to use
+     * @param command the SMB command code
+     * @param subCommand the transaction subcommand code
+     */
     protected SmbComTransaction(final Configuration config, final byte command, final byte subCommand) {
         super(config, command);
         this.subCommand = subCommand;
@@ -140,6 +166,7 @@ public abstract class SmbComTransaction extends ServerMessageBlock implements En
     }
 
     /**
+     * Sets the maximum buffer size for this transaction
      * @param maxBufferSize
      *            the maxBufferSize to set
      */
@@ -148,6 +175,7 @@ public abstract class SmbComTransaction extends ServerMessageBlock implements En
     }
 
     /**
+     * Sets the maximum data count for this transaction
      * @param maxDataCount
      *            the maxDataCount to set
      */
@@ -156,13 +184,16 @@ public abstract class SmbComTransaction extends ServerMessageBlock implements En
     }
 
     /**
+     * Sets the transaction buffer
      * @param buffer
+     *            the transaction buffer to use
      */
     public void setBuffer(final byte[] buffer) {
         this.txn_buf = buffer;
     }
 
     /**
+     * Releases and returns the transaction buffer
      * @return the txn_buf
      */
     public byte[] releaseBuffer() {
@@ -172,6 +203,7 @@ public abstract class SmbComTransaction extends ServerMessageBlock implements En
     }
 
     /**
+     * Gets the transaction subcommand
      * @return the subCommand
      */
     public final byte getSubCommand() {
@@ -179,6 +211,7 @@ public abstract class SmbComTransaction extends ServerMessageBlock implements En
     }
 
     /**
+     * Sets the transaction subcommand
      * @param subCommand
      *            the subCommand to set
      */
@@ -192,6 +225,13 @@ public abstract class SmbComTransaction extends ServerMessageBlock implements En
         this.isPrimary = this.hasMore = true;
     }
 
+    /**
+     * Resets the transaction state with key and last name
+     * @param key
+     *            the key to use for reset
+     * @param lastName
+     *            the last name for the transaction
+     */
     protected void reset(final int key, final String lastName) {
         reset();
     }
@@ -274,7 +314,10 @@ public abstract class SmbComTransaction extends ServerMessageBlock implements En
     }
 
     /**
-     * @return
+     * Calculates padding needed for the given offset
+     * @param offset
+     *            the current offset
+     * @return padding size in bytes
      */
     protected int pad(final int offset) {
         final int p = offset % getPadding();
@@ -285,7 +328,7 @@ public abstract class SmbComTransaction extends ServerMessageBlock implements En
     }
 
     /**
-     *
+     * Gets the padding size for alignment
      * @return padding size
      */
     public int getPadding() {
@@ -375,16 +418,55 @@ public abstract class SmbComTransaction extends ServerMessageBlock implements En
         return 0;
     }
 
+    /**
+     * Writes setup data in wire format
+     * @param dst destination buffer
+     * @param dstIndex starting index in destination buffer
+     * @return number of bytes written
+     */
     protected abstract int writeSetupWireFormat(byte[] dst, int dstIndex);
 
+    /**
+     * Writes parameters in wire format
+     * @param dst destination buffer
+     * @param dstIndex starting index in destination buffer
+     * @return number of bytes written
+     */
     protected abstract int writeParametersWireFormat(byte[] dst, int dstIndex);
 
+    /**
+     * Writes data in wire format
+     * @param dst destination buffer
+     * @param dstIndex starting index in destination buffer
+     * @return number of bytes written
+     */
     protected abstract int writeDataWireFormat(byte[] dst, int dstIndex);
 
+    /**
+     * Reads setup data from wire format
+     * @param buffer source buffer
+     * @param bufferIndex starting index in source buffer
+     * @param len length of data to read
+     * @return number of bytes read
+     */
     protected abstract int readSetupWireFormat(byte[] buffer, int bufferIndex, int len);
 
+    /**
+     * Reads parameters from wire format
+     * @param buffer source buffer
+     * @param bufferIndex starting index in source buffer
+     * @param len length of data to read
+     * @return number of bytes read
+     */
     protected abstract int readParametersWireFormat(byte[] buffer, int bufferIndex, int len);
 
+    /**
+     * Reads data from wire format
+     * @param buffer source buffer
+     * @param bufferIndex starting index in source buffer
+     * @param len length of data to read
+     * @return number of bytes read
+     */
     protected abstract int readDataWireFormat(byte[] buffer, int bufferIndex, int len);
 
     @Override

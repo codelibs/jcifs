@@ -31,6 +31,9 @@ import jcifs.internal.smb2.info.Smb2QueryDirectoryRequest;
 import jcifs.internal.smb2.info.Smb2QueryDirectoryResponse;
 
 /**
+ * SMB2/SMB3 implementation of directory entry enumeration iterator.
+ * Provides efficient directory listing capabilities for SMB2/SMB3 protocol versions.
+ *
  * @author mbechler
  *
  */
@@ -42,12 +45,14 @@ public class DirFileEntryEnumIterator2 extends DirFileEntryEnumIteratorBase {
     private Smb2QueryDirectoryResponse response;
 
     /**
-     * @param th
-     * @param parent
-     * @param wildcard
-     * @param filter
-     * @param searchAttributes
-     * @throws CIFSException
+     * Creates a directory entry enumeration iterator for SMB2 protocol.
+     *
+     * @param th the SMB tree handle for the connection
+     * @param parent the parent resource being enumerated
+     * @param wildcard the wildcard pattern for filtering entries
+     * @param filter additional resource name filter to apply
+     * @param searchAttributes the file attributes to search for
+     * @throws CIFSException if an error occurs during initialization
      */
     public DirFileEntryEnumIterator2(final SmbTreeHandleImpl th, final SmbResource parent, final String wildcard,
             final ResourceNameFilter filter, final int searchAttributes) throws CIFSException {
@@ -158,7 +163,9 @@ public class DirFileEntryEnumIterator2 extends DirFileEntryEnumIteratorBase {
     }
 
     /**
-     * @throws CIFSException
+     * Performs internal closing operations for SMB2 enumeration.
+     *
+     * @throws CIFSException if an error occurs during closing
      */
     @Override
     protected void doCloseInternal() throws CIFSException {

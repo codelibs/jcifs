@@ -22,9 +22,18 @@ import jcifs.internal.SMBProtocolDecodingException;
 import jcifs.internal.util.SMBUtil;
 
 /**
- *
+ * Represents the SMB_INFO_ALLOCATION information level used in SMB transaction requests.
+ * This structure provides allocation information for a file system including total units,
+ * free units, sectors per allocation unit, and bytes per sector.
  */
 public class SmbInfoAllocation implements AllocInfo {
+
+    /**
+     * Default constructor for SMB allocation information.
+     */
+    public SmbInfoAllocation() {
+        // Default constructor
+    }
 
     private long alloc; // Also handles SmbQueryFSSizeInfo
     private long free;

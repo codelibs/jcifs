@@ -49,25 +49,26 @@ import java.net.UnknownHostException;
  * flags is necessary to distinguish which type of Named Pipe behavior
  * is desired.
  *
- * <p><table border="1" cellpadding="3" cellspacing="0" width="100%">
- * <tr bgcolor="#ccccff">
+ * <table border="1">
+ * <caption>SmbNamedPipe Constructor Examples</caption>
+ * <tr>
  * <td colspan="2"><b><code>SmbNamedPipe</code> Constructor Examples</b></td>
- * <tr><td width="20%"><b>Code Sample</b></td><td><b>Description</b></td></tr>
- * <tr><td width="20%"><pre>
+ * <tr><td ><b>Code Sample</b></td><td><b>Description</b></td></tr>
+ * <tr><td ><pre>
  * new SmbNamedPipe( "smb1://server/IPC$/PIPE/foo",
  *         SmbNamedPipe.PIPE_TYPE_RDWR |
  *         SmbNamedPipe.PIPE_TYPE_CALL );
  * </pre></td><td>
  * Open the Named Pipe foo for reading and writing. The pipe will behave like the <code>CallNamedPipe</code> interface.
  * </td></tr>
- * <tr><td width="20%"><pre>
+ * <tr><td ><pre>
  * new SmbNamedPipe( "smb1://server/IPC$/foo",
  *         SmbNamedPipe.PIPE_TYPE_RDWR |
  *         SmbNamedPipe.PIPE_TYPE_TRANSACT );
  * </pre></td><td>
  * Open the Named Pipe foo for reading and writing. The pipe will behave like the <code>TransactNamedPipe</code> interface.
  * </td></tr>
- * <tr><td width="20%"><pre>
+ * <tr><td ><pre>
  * new SmbNamedPipe( "smb1://server/IPC$/foo",
  *         SmbNamedPipe.PIPE_TYPE_RDWR );
  * </pre></td><td>
@@ -116,6 +117,9 @@ public class SmbNamedPipe extends SmbFile {
 
     public static final int PIPE_TYPE_TRANSACT = 0x0200;
 
+    /**
+     * Named pipe type flag for DCE RPC transact operations.
+     */
     public static final int PIPE_TYPE_DCE_TRANSACT = 0x0200 | 0x0400;
 
     InputStream pipeIn;
@@ -129,12 +133,29 @@ public class SmbNamedPipe extends SmbFile {
      * operator <code>|</code>. See the examples listed above.
      */
 
+    /**
+     * Constructs an SmbNamedPipe for a specified pipe on an SMB server.
+     *
+     * @param url the SMB URL of the named pipe
+     * @param pipeType the type of the pipe
+     * @throws MalformedURLException if the URL is malformed
+     * @throws UnknownHostException if the host cannot be resolved
+     */
     public SmbNamedPipe(final String url, final int pipeType) throws MalformedURLException, UnknownHostException {
         super(url);
         this.pipeType = pipeType;
         type = TYPE_NAMED_PIPE;
     }
 
+    /**
+     * Constructs an SmbNamedPipe for a specified pipe on an SMB server.
+     *
+     * @param url the SMB URL of the named pipe
+     * @param pipeType the type of the pipe
+     * @param auth the authentication credentials to use
+     * @throws MalformedURLException if the URL is not properly formatted
+     * @throws UnknownHostException if the host cannot be resolved
+     */
     public SmbNamedPipe(final String url, final int pipeType, final NtlmPasswordAuthentication auth)
             throws MalformedURLException, UnknownHostException {
         super(url, auth);
@@ -142,6 +163,15 @@ public class SmbNamedPipe extends SmbFile {
         type = TYPE_NAMED_PIPE;
     }
 
+    /**
+     * Constructs an SmbNamedPipe from a URL object.
+     *
+     * @param url the URL object representing the named pipe
+     * @param pipeType the type of the pipe
+     * @param auth the authentication credentials to use
+     * @throws MalformedURLException if the URL is not properly formatted
+     * @throws UnknownHostException if the host cannot be resolved
+     */
     public SmbNamedPipe(final URL url, final int pipeType, final NtlmPasswordAuthentication auth)
             throws MalformedURLException, UnknownHostException {
         super(url, auth);
@@ -158,6 +188,8 @@ public class SmbNamedPipe extends SmbFile {
      * connection). Reading from this stream may block. Therefore it
      * may be necessary that an addition thread be used to read and
      * write to a Named Pipe.
+     * @return the input stream for reading from this pipe
+     * @throws IOException if an I/O error occurs
      */
 
     public InputStream getNamedPipeInputStream() throws IOException {
@@ -177,6 +209,8 @@ public class SmbNamedPipe extends SmbFile {
      * to this stream will result in response data recieved in the
      * <code>InputStream</code> associated with this Named Pipe
      * instance (unless of course it does not elicite a response or the pipe is write-only).
+     * @return the output stream for writing to this pipe
+     * @throws IOException if an I/O error occurs
      */
 
     public OutputStream getNamedPipeOutputStream() throws IOException {

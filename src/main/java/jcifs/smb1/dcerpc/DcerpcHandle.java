@@ -27,7 +27,19 @@ import java.security.Principal;
 import jcifs.smb1.dcerpc.ndr.NdrBuffer;
 import jcifs.smb1.smb1.NtlmPasswordAuthentication;
 
+/**
+ * Abstract base class for DCERPC handles providing core RPC functionality.
+ * This class manages DCE/RPC protocol bindings and communications over SMB transport.
+ */
 public abstract class DcerpcHandle implements DcerpcConstants {
+
+    /**
+     * Default constructor for DcerpcHandle.
+     * Initializes the DCE/RPC handle for protocol operations.
+     */
+    protected DcerpcHandle() {
+        // Default constructor
+    }
 
     /* Bindings are in the form:
      * proto:\\server[key1=val1,key2=val2]
@@ -42,6 +54,12 @@ public abstract class DcerpcHandle implements DcerpcConstants {
      * proto:ts0.win.net[\pipe\srvsvc]
      *
      * If the server is absent it is set to "127.0.0.1"
+     */
+    /**
+     * Parses a DCERPC binding string into a DcerpcBinding object
+     * @param str the binding string to parse
+     * @return the parsed DcerpcBinding object
+     * @throws DcerpcException if the binding string is malformed
      */
     protected static DcerpcBinding parseBinding(final String str) throws DcerpcException {
         int state, mark, si;
@@ -105,13 +123,37 @@ public abstract class DcerpcHandle implements DcerpcConstants {
         return binding;
     }
 
+    /**
+     * The DCERPC binding configuration for this handle
+     */
     protected DcerpcBinding binding;
+    /**
+     * Maximum transmit buffer size for DCERPC messages
+     */
     protected int max_xmit = 4280;
+    /**
+     * Maximum receive buffer size for DCERPC messages
+     */
     protected int max_recv = max_xmit;
+    /**
+     * The current state of the DCERPC connection
+     */
     protected int state = 0;
+    /**
+     * The security provider for authentication and message protection
+     */
     protected DcerpcSecurityProvider securityProvider = null;
     private static int call_id = 1;
 
+    /**
+     * Gets a DCERPC handle for the specified URL and authentication
+     * @param url the DCERPC URL to connect to
+     * @param auth the NTLM authentication credentials
+     * @return a DCERPC handle for the connection
+     * @throws UnknownHostException if the host cannot be resolved
+     * @throws MalformedURLException if the URL is malformed
+     * @throws DcerpcException if DCERPC initialization fails
+     */
     public static DcerpcHandle getHandle(final String url, final NtlmPasswordAuthentication auth)
             throws UnknownHostException, MalformedURLException, DcerpcException {
         if (url.startsWith("ncacn_np:")) {
@@ -120,6 +162,11 @@ public abstract class DcerpcHandle implements DcerpcConstants {
         throw new DcerpcException("DCERPC transport not supported: " + url);
     }
 
+    /**
+     * Binds this handle to the remote DCERPC endpoint
+     * @throws DcerpcException if the bind operation fails
+     * @throws IOException if an I/O error occurs
+     */
     public void bind() throws DcerpcException, IOException {
         synchronized (this) {
             try {
@@ -133,6 +180,12 @@ public abstract class DcerpcHandle implements DcerpcConstants {
         }
     }
 
+    /**
+     * Sends a DCERPC message and receives the response
+     * @param msg the message to send
+     * @throws DcerpcException if the RPC operation fails
+     * @throws IOException if an I/O error occurs
+     */
     public void sendrecv(final DcerpcMessage msg) throws DcerpcException, IOException {
         byte[] stub, frag;
         NdrBuffer buf, fbuf;
@@ -260,10 +313,18 @@ public abstract class DcerpcHandle implements DcerpcConstants {
         }
     }
 
+    /**
+     * Sets the security provider for this handle
+     * @param securityProvider the security provider to use
+     */
     public void setDcerpcSecurityProvider(final DcerpcSecurityProvider securityProvider) {
         this.securityProvider = securityProvider;
     }
 
+    /**
+     * Gets the server hostname or address
+     * @return the server name
+     */
     public String getServer() {
         if (this instanceof DcerpcPipeHandle) {
             return ((DcerpcPipeHandle) this).pipe.getServer();
@@ -271,6 +332,10 @@ public abstract class DcerpcHandle implements DcerpcConstants {
         return null;
     }
 
+    /**
+     * Gets the principal associated with this handle
+     * @return the principal or null if not authenticated
+     */
     public Principal getPrincipal() {
         if (this instanceof DcerpcPipeHandle) {
             return ((DcerpcPipeHandle) this).pipe.getPrincipal();
@@ -283,9 +348,27 @@ public abstract class DcerpcHandle implements DcerpcConstants {
         return binding.toString();
     }
 
+    /**
+     * Sends a DCERPC fragment to the remote endpoint
+     * @param buf the buffer containing the fragment
+     * @param off the offset into the buffer
+     * @param length the length of data to send
+     * @param isDirect whether to use direct transmission
+     * @throws IOException if an I/O error occurs
+     */
     protected abstract void doSendFragment(byte[] buf, int off, int length, boolean isDirect) throws IOException;
 
+    /**
+     * Receives a DCERPC fragment from the remote endpoint
+     * @param buf the buffer to receive the fragment
+     * @param isDirect whether to use direct reception
+     * @throws IOException if an I/O error occurs
+     */
     protected abstract void doReceiveFragment(byte[] buf, boolean isDirect) throws IOException;
 
+    /**
+     * Closes this DCERPC handle and releases resources
+     * @throws IOException if an I/O error occurs during close
+     */
     public abstract void close() throws IOException;
 }

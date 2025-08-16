@@ -20,13 +20,17 @@ package jcifs.dcerpc.msrpc;
 import jcifs.dcerpc.rpc.policy_handle;
 
 /**
- * @author mbechler
+ * Microsoft RPC SAM close handle request.
+ * This class implements the SAMR close handle operation.
  *
+ * @author mbechler
  */
 public class MsrpcSamrCloseHandle extends samr.SamrCloseHandle {
 
     /**
-     * @param handle
+     * Creates a new request to close a SAM handle.
+     *
+     * @param handle the policy handle to close
      */
     public MsrpcSamrCloseHandle(final policy_handle handle) {
         super(handle);

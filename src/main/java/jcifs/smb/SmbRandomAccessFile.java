@@ -46,8 +46,8 @@ import jcifs.internal.smb2.io.Smb2WriteResponse;
 import jcifs.util.Encdec;
 
 /**
- *
- *
+ * Random access file implementation for SMB resources.
+ * Provides random read/write access to SMB files with support for seeking and positioning.
  *
  */
 public class SmbRandomAccessFile implements SmbRandomAccess {
@@ -71,12 +71,12 @@ public class SmbRandomAccessFile implements SmbRandomAccess {
     /**
      * Instantiate a random access file from URL
      *
-     * @param url
-     * @param mode
-     * @param sharing
-     * @param tc
-     * @throws SmbException
-     * @throws MalformedURLException
+     * @param url the SMB URL of the file to access
+     * @param mode the access mode ("r" for read-only, "rw" for read-write)
+     * @param sharing the sharing flags for file access
+     * @param tc the CIFS context to use for the connection
+     * @throws SmbException if an SMB error occurs
+     * @throws MalformedURLException if the URL is malformed
      */
     @SuppressWarnings("resource")
     public SmbRandomAccessFile(final String url, final String mode, final int sharing, final CIFSContext tc)
@@ -87,9 +87,9 @@ public class SmbRandomAccessFile implements SmbRandomAccess {
     /**
      * Instantiate a random access file from a {@link SmbFile}
      *
-     * @param file
-     * @param mode
-     * @throws SmbException
+     * @param file the SmbFile to access
+     * @param mode the access mode ("r" for read-only, "rw" for read-write)
+     * @throws SmbException if an SMB error occurs
      */
     public SmbRandomAccessFile(final SmbFile file, final String mode) throws SmbException {
         this(file, mode, SmbConstants.DEFAULT_SHARING, false);
@@ -159,7 +159,7 @@ public class SmbRandomAccessFile implements SmbRandomAccess {
     /**
      * Ensures that the file descriptor is openend
      *
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs opening the file
      */
     public void open() throws CIFSException {
         try (SmbFileHandleImpl fh = ensureOpen()) {}

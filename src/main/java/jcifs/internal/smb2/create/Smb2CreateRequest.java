@@ -31,6 +31,9 @@ import jcifs.internal.util.SMBUtil;
 import jcifs.util.Hexdump;
 
 /**
+ * SMB2 Create request message. This command is used to create or open a file or directory
+ * on the server with specified access rights and sharing options.
+ *
  * @author mbechler
  *
  */
@@ -39,168 +42,168 @@ public class Smb2CreateRequest extends ServerMessageBlock2Request<Smb2CreateResp
     private static final Logger log = LoggerFactory.getLogger(Smb2CreateRequest.class);
 
     /**
-     *
+     * No oplock
      */
     public static final byte SMB2_OPLOCK_LEVEL_NONE = 0x0;
     /**
-     *
+     * Level II oplock
      */
     public static final byte SMB2_OPLOCK_LEVEL_II = 0x1;
     /**
-     *
+     * Exclusive oplock
      */
     public static final byte SMB2_OPLOCK_LEVEL_EXCLUSIVE = 0x8;
     /**
-     *
+     * Batch oplock
      */
     public static final byte SMB2_OPLOCK_LEVEL_BATCH = 0x9;
     /**
-     *
+     * Lease-based oplock
      */
     public static final byte SMB2_OPLOCK_LEVEL_LEASE = (byte) 0xFF;
 
     /**
-     *
+     * Anonymous impersonation level - client cannot obtain identification information about itself
      */
     public static final int SMB2_IMPERSONATION_LEVEL_ANONYMOUS = 0x0;
 
     /**
-     *
+     * Identification impersonation level - server can obtain the client's identity but cannot impersonate
      */
     public static final int SMB2_IMPERSONATION_LEVEL_IDENTIFICATION = 0x1;
 
     /**
-     *
+     * Impersonation level - server can impersonate the client's security context on the local system
      */
     public static final int SMB2_IMPERSONATION_LEVEL_IMPERSONATION = 0x2;
 
     /**
-     *
+     * Delegate impersonation level - server can impersonate the client's security context on remote systems
      */
     public static final int SMB2_IMPERSONATION_LEVEL_DELEGATE = 0x3;
 
     /**
-     *
+     * Enable other opens for read access
      */
     public static final int FILE_SHARE_READ = 0x1;
 
     /**
-     *
+     * Enable other opens for write access
      */
     public static final int FILE_SHARE_WRITE = 0x2;
 
     /**
-     *
+     * Enable other opens for delete access
      */
     public static final int FILE_SHARE_DELETE = 0x4;
 
     /**
-     *
+     * If file exists, supersede it. Otherwise create the file
      */
     public static final int FILE_SUPERSEDE = 0x0;
     /**
-     *
+     * If file exists, open it. Otherwise fail
      */
     public static final int FILE_OPEN = 0x1;
     /**
-     *
+     * If file exists, fail. Otherwise create the file
      */
     public static final int FILE_CREATE = 0x2;
     /**
-     *
+     * If file exists, open it. Otherwise create the file
      */
     public static final int FILE_OPEN_IF = 0x3;
     /**
-     *
+     * If file exists, overwrite it. Otherwise fail
      */
     public static final int FILE_OVERWRITE = 0x4;
     /**
-     *
+     * If file exists, overwrite it. Otherwise create the file
      */
     public static final int FILE_OVERWRITE_IF = 0x5;
 
     /**
-     *
+     * File being created or opened must be a directory
      */
     public static final int FILE_DIRECTORY_FILE = 0x1;
     /**
-     *
+     * Write operations go directly to persistent storage
      */
     public static final int FILE_WRITE_THROUGH = 0x2;
     /**
-     *
+     * Access to the file is sequential only
      */
     public static final int FILE_SEQUENTIAL_ONLY = 0x4;
     /**
-     *
+     * File cannot be cached or buffered at intermediate levels
      */
     public static final int FILE_NO_IMTERMEDIATE_BUFFERING = 0x8;
     /**
-     *
+     * All operations on the file are performed synchronously with alerts
      */
     public static final int FILE_SYNCHRONOUS_IO_ALERT = 0x10;
     /**
-     *
+     * All operations on the file are performed synchronously without alerts
      */
     public static final int FILE_SYNCHRONOUS_IO_NONALERT = 0x20;
     /**
-     *
+     * File being created or opened must not be a directory
      */
     public static final int FILE_NON_DIRECTORY_FILE = 0x40;
     /**
-     *
+     * Complete this operation immediately with an oplock break if it would break an oplock
      */
     public static final int FILE_COMPLETE_IF_OPLOCKED = 0x100;
     /**
-     *
+     * The client does not understand extended attributes
      */
     public static final int FILE_NO_EA_KNOWLEDGE = 0x200;
     /**
-     *
+     * Open a remote instance of the file
      */
     public static final int FILE_OPEN_REMOTE_INSTANCE = 0x400;
     /**
-     *
+     * Access to the file is random
      */
     public static final int FILE_RANDOM_ACCESS = 0x800;
     /**
-     *
+     * Delete the file when the last handle to it is closed
      */
     public static final int FILE_DELETE_ON_CLOSE = 0x1000;
     /**
-     *
+     * Open file by its file ID
      */
     public static final int FILE_OPEN_BY_FILE_ID = 0x2000;
     /**
-     *
+     * The file is being opened for backup intent
      */
     public static final int FILE_OPEN_FOR_BACKUP_INTENT = 0x4000;
     /**
-     *
+     * Disable compression on the file
      */
     public static final int FILE_NO_COMPRESSION = 0x8000;
     /**
-     *
+     * The file is being opened and an oplock is being requested as an atomic operation
      */
     public static final int FILE_OPEN_REQUIRING_OPLOCK = 0x10000;
     /**
-     *
+     * Any open of this file cannot be exclusive
      */
     public static final int FILE_DISALLOW_EXCLUSIVE = 0x20000;
     /**
-     *
+     * Reserve an opportunistic lock filter on the open
      */
     public static final int FILE_RESERVE_OPFILTER = 0x100000;
     /**
-     *
+     * Open a reparse point and bypass normal reparse point processing
      */
     public static final int FILE_OPEN_REPARSE_POINT = 0x200000;
     /**
-     *
+     * Open does not cause an opportunistic lock break for the file
      */
     public static final int FILE_NOP_RECALL = 0x400000;
     /**
-     *
+     * The file is being opened solely to query its free space
      */
     public static final int FILE_OPEN_FOR_FREE_SPACE_QUERY = 0x800000;
 
@@ -225,9 +228,9 @@ public class Smb2CreateRequest extends ServerMessageBlock2Request<Smb2CreateResp
     private boolean resolveDfs;
 
     /**
-     * @param config
-     * @param name
-     *            uncPath to open, strips a leading \
+     * Constructs an SMB2 create request
+     * @param config the client configuration
+     * @param name uncPath to open, strips a leading \
      */
     public Smb2CreateRequest(final Configuration config, final String name) {
         super(config, SMB2_CREATE);
@@ -331,72 +334,72 @@ public class Smb2CreateRequest extends ServerMessageBlock2Request<Smb2CreateResp
     }
 
     /**
-     * @param securityFlags
-     *            the securityFlags to set
+     * Set the security flags for the create request
+     * @param securityFlags the securityFlags to set
      */
     public void setSecurityFlags(final byte securityFlags) {
         this.securityFlags = securityFlags;
     }
 
     /**
-     * @param requestedOplockLevel
-     *            the requestedOplockLevel to set
+     * Set the requested oplock level for the file
+     * @param requestedOplockLevel the requestedOplockLevel to set
      */
     public void setRequestedOplockLevel(final byte requestedOplockLevel) {
         this.requestedOplockLevel = requestedOplockLevel;
     }
 
     /**
-     * @param impersonationLevel
-     *            the impersonationLevel to set
+     * Set the impersonation level for the create request
+     * @param impersonationLevel the impersonationLevel to set
      */
     public void setImpersonationLevel(final int impersonationLevel) {
         this.impersonationLevel = impersonationLevel;
     }
 
     /**
-     * @param smbCreateFlags
-     *            the smbCreateFlags to set
+     * Set the SMB create flags
+     * @param smbCreateFlags the smbCreateFlags to set
      */
     public void setSmbCreateFlags(final long smbCreateFlags) {
         this.smbCreateFlags = smbCreateFlags;
     }
 
     /**
-     * @param desiredAccess
-     *            the desiredAccess to set
+     * Set the desired access mask for the file
+     * @param desiredAccess the desiredAccess to set
      */
     public void setDesiredAccess(final int desiredAccess) {
         this.desiredAccess = desiredAccess;
     }
 
     /**
-     * @param fileAttributes
-     *            the fileAttributes to set
+     * Set the file attributes for the created file
+     * @param fileAttributes the fileAttributes to set
      */
     public void setFileAttributes(final int fileAttributes) {
         this.fileAttributes = fileAttributes;
     }
 
     /**
-     * @param shareAccess
-     *            the shareAccess to set
+     * Set the share access mode for the file
+     * @param shareAccess the shareAccess to set
      */
     public void setShareAccess(final int shareAccess) {
         this.shareAccess = shareAccess;
     }
 
     /**
-     * @param createDisposition
-     *            the createDisposition to set
+     * Set the create disposition specifying what action to take if file exists or doesn't exist
+     * @param createDisposition the createDisposition to set
      */
     public void setCreateDisposition(final int createDisposition) {
         this.createDisposition = createDisposition;
     }
 
     /**
-     * @param createOptions
-     *            the createOptions to set
+     * Set the create options that control file creation behavior
+     * @param createOptions the createOptions to set
      */
     public void setCreateOptions(final int createOptions) {
         this.createOptions = createOptions;

@@ -16,31 +16,66 @@
  */
 package jcifs.pac;
 
-@SuppressWarnings("javadoc")
+/**
+ * Represents a Unicode string structure as used in PAC data.
+ * This class encapsulates the metadata for a Unicode string including its length,
+ * maximum length, and pointer to the actual string data.
+ */
 public class PacUnicodeString {
 
     private final short length;
     private final short maxLength;
     private final int pointer;
 
+    /**
+     * Constructs a new PacUnicodeString instance.
+     *
+     * @param length the actual length of the string in bytes
+     * @param maxLength the maximum allocated length for the string in bytes
+     * @param pointer the pointer/offset to the string data
+     */
     public PacUnicodeString(final short length, final short maxLength, final int pointer) {
         this.length = length;
         this.maxLength = maxLength;
         this.pointer = pointer;
     }
 
+    /**
+     * Gets the actual length of the string in bytes.
+     *
+     * @return the string length
+     */
     public short getLength() {
         return this.length;
     }
 
+    /**
+     * Gets the maximum allocated length for the string in bytes.
+     *
+     * @return the maximum string length
+     */
     public short getMaxLength() {
         return this.maxLength;
     }
 
+    /**
+     * Gets the pointer/offset to the string data.
+     *
+     * @return the pointer to the string data
+     */
     public int getPointer() {
         return this.pointer;
     }
 
+    /**
+     * Validates the provided string against this structure's metadata.
+     * Checks that the string length matches the expected length and that
+     * null strings have a zero pointer.
+     *
+     * @param string the string to validate
+     * @return the validated string
+     * @throws PACDecodingException if validation fails
+     */
     public String check(final String string) throws PACDecodingException {
         if (this.pointer == 0 && string != null) {
             throw new PACDecodingException("Non-empty string");

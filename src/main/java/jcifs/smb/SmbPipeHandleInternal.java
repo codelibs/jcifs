@@ -24,26 +24,37 @@ import jcifs.SmbFileHandle;
 import jcifs.SmbPipeHandle;
 
 /**
+ * Internal interface for SMB pipe handle operations.
+ *
+ * This interface extends SmbPipeHandle with additional methods needed
+ * for internal pipe management and provides access to low-level pipe details.
+ *
  * @author mbechler
- * @internal
+ *
+ * <p>This interface is intended for internal use.</p>
  */
 public interface SmbPipeHandleInternal extends SmbPipeHandle {
 
     /**
+     * Gets the type of this pipe.
+     *
      * @return the pipe type
      */
     int getPipeType();
 
     /**
+     * Gets the session key from the underlying SMB session.
+     *
      * @return session key of the underlying smb session
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs retrieving the session key
      */
     byte[] getSessionKey() throws CIFSException;
 
     /**
+     * Gets the input stream for reading from this pipe.
      *
      * @return this pipe's input stream
-     * @throws SmbException
+     * @throws CIFSException if an error occurs getting the input stream
      */
     @Override
     SmbPipeInputStream getInput() throws CIFSException;
@@ -51,22 +62,24 @@ public interface SmbPipeHandleInternal extends SmbPipeHandle {
     /**
      *
      * @return this pipe's output stream
-     * @throws SmbException
-     * @throws
+     * @throws CIFSException if an error occurs
      */
     @Override
     SmbPipeOutputStream getOutput() throws CIFSException;
 
     /**
+     * Ensures that the tree connection is established and returns it.
+     *
      * @return tree connection
-     * @throws SmbException
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs connecting to the tree
      */
     SmbTreeHandleInternal ensureTreeConnected() throws CIFSException;
 
     /**
+     * Ensures that the file handle is open and returns it.
+     *
      * @return file handle
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs opening the file
      */
     SmbFileHandle ensureOpen() throws CIFSException;
 
@@ -92,13 +105,15 @@ public interface SmbPipeHandleInternal extends SmbPipeHandle {
     void send(byte[] buf, int off, int length) throws IOException;
 
     /**
-     * @param buf
-     * @param off
-     * @param length
-     * @param inB
-     * @param maxRecvCnt
-     * @return len
-     * @throws IOException
+     * Performs a transaction on the pipe.
+     *
+     * @param buf the buffer containing the transaction data
+     * @param off the offset in the buffer
+     * @param length the length of data to send
+     * @param inB the buffer to receive the response
+     * @param maxRecvCnt the maximum number of bytes to receive
+     * @return len the number of bytes received
+     * @throws IOException if an I/O error occurs
      */
     int sendrecv(byte[] buf, int off, int length, byte[] inB, int maxRecvCnt) throws IOException;
 }

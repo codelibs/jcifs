@@ -29,13 +29,16 @@ import jcifs.internal.util.SMBUtil;
 import jcifs.smb.FileEntry;
 
 /**
+ * SMB2 Query Directory response message. This response contains directory listing
+ * information with file entries and their attributes.
+ *
  * @author mbechler
  *
  */
 public class Smb2QueryDirectoryResponse extends ServerMessageBlock2Response {
 
     /**
-     *
+     * Protocol overhead size for SMB2 query directory response
      */
     public static final int OVERHEAD = Smb2Constants.SMB2_HEADER_LENGTH + 8;
 
@@ -43,8 +46,12 @@ public class Smb2QueryDirectoryResponse extends ServerMessageBlock2Response {
     private FileEntry[] results;
 
     /**
+     * Constructs a SMB2 query directory response with the specified configuration and expected information class
+     *
      * @param config
+     *            the configuration to use for this response
      * @param expectInfoClass
+     *            the expected file information class in the response
      */
     public Smb2QueryDirectoryResponse(final Configuration config, final byte expectInfoClass) {
         super(config);
@@ -52,6 +59,8 @@ public class Smb2QueryDirectoryResponse extends ServerMessageBlock2Response {
     }
 
     /**
+     * Gets the directory entries returned by the query
+     *
      * @return the fileInformation
      */
     public FileEntry[] getResults() {

@@ -18,13 +18,18 @@
 package jcifs.internal;
 
 /**
- * @author mbechler
+ * Interface for SMB protocol negotiation request messages.
+ * Represents the client's request to negotiate SMB protocol version and capabilities
+ * with the server, including security requirements like message signing.
  *
+ * @author mbechler
  */
 public interface SmbNegotiationRequest {
 
     /**
-     * @return whether SMB singing is enforced
+     * Checks whether SMB message signing is enforced by the client.
+     *
+     * @return whether SMB signing is enforced
      */
     boolean isSigningEnforced();
 

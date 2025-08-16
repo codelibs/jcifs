@@ -24,7 +24,10 @@ import org.slf4j.LoggerFactory;
 import jcifs.Configuration;
 
 /**
+ * SMB1 transaction subcommand for calling a named pipe.
  *
+ * This class implements the TRANS_CALL_NAMED_PIPE transaction which allows
+ * writing data to and reading data from a named pipe in a single operation.
  */
 public class TransCallNamedPipe extends SmbComTransaction {
 
@@ -34,12 +37,13 @@ public class TransCallNamedPipe extends SmbComTransaction {
     private final int pipeDataOff, pipeDataLen;
 
     /**
+     * Constructs a TransCallNamedPipe request to write data to a named pipe.
      *
-     * @param config
-     * @param pipeName
-     * @param data
-     * @param off
-     * @param len
+     * @param config the SMB configuration
+     * @param pipeName the name of the pipe to call
+     * @param data the data buffer to write to the pipe
+     * @param off the offset in the data buffer
+     * @param len the length of data to write
      */
     public TransCallNamedPipe(final Configuration config, final String pipeName, final byte[] data, final int off, final int len) {
         super(config, SMB_COM_TRANSACTION, TRANS_CALL_NAMED_PIPE);

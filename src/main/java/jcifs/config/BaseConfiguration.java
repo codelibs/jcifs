@@ -41,8 +41,10 @@ import jcifs.ResolverType;
 import jcifs.SmbConstants;
 
 /**
- * @author mbechler
+ * Base implementation of CIFS configuration providing default settings and behavior.
+ * Serves as the foundation for configuration implementations in the jCIFS library.
  *
+ * @author mbechler
  */
 public class BaseConfiguration implements Configuration {
 
@@ -55,103 +57,187 @@ public class BaseConfiguration implements Configuration {
 
     private final Map<String, Integer> batchLimits = new HashMap<>();
 
+    /** Local process ID for SMB messages */
     protected int localPid = -1;
+    /** Local timezone for time calculations */
     protected TimeZone localTimeZone;
+    /** Secure random generator for cryptographic operations */
     protected SecureRandom random;
+    /** Whether to use command batching for improved performance */
     protected boolean useBatching = false;
+    /** Whether to use Unicode encoding for strings */
     protected boolean useUnicode = true;
+    /** Force use of Unicode encoding regardless of negotiation */
     protected boolean forceUnicode = false;
+    /** Whether SMB signing is preferred but not required */
     protected boolean signingPreferred = false;
+    /** Whether SMB signing is enforced (required) */
     protected boolean signingEnforced = false;
+    /** Whether to enforce signing for IPC connections */
     protected boolean ipcSigningEnforced = true;
+    /** Whether SMB3 encryption is enabled */
     protected boolean encryptionEnabled = false;
+    /** Whether to use NT status codes instead of DOS error codes */
     protected boolean useNtStatus = true;
+    /** Whether to use extended security negotiation */
     protected boolean useExtendedSecurity = true;
+    /** Force use of extended security negotiation */
     protected boolean forceExtendedSecurity = false;
+    /** Whether to negotiate only SMB2 or higher protocols */
     protected boolean smb2OnlyNegotiation = false;
+    /** Whether to failover to port 139 if port 445 fails */
     protected boolean port139FailoverEnabled = false;
+    /** Whether to use NT SMB operations */
     protected boolean useNTSmbs = true;
+    /** Whether to use large read/write operations for better performance */
     protected boolean useLargeReadWrite = true;
+    /** LAN Manager compatibility level for authentication */
     protected int lanmanCompatibility = 3;
+    /** Whether to allow fallback to NTLM authentication */
     protected boolean allowNTLMFallback = true;
+    /** Whether to use raw NTLM authentication without SPNEGO */
     protected boolean useRawNTLM = false;
+    /** Whether to disable SPNEGO integrity checking */
     protected boolean disableSpnegoIntegrity = false;
+    /** Whether to enforce SPNEGO integrity checking */
     protected boolean enforceSpnegoIntegrity = true;
+    /** Whether plain text passwords are disabled */
     protected boolean disablePlainTextPasswords = true;
+    /** OEM encoding for non-Unicode operations */
     protected String oemEncoding = SmbConstants.DEFAULT_OEM_ENCODING;
+    /** SMB flags2 field value */
     protected int flags2 = 0;
+    /** SMB client capabilities */
     protected int capabilities = 0;
+    /** Maximum number of concurrent SMB sessions */
     protected int sessionLimit = SmbConstants.DEFAULT_SSN_LIMIT;
+    /** Whether to disable Nagle's algorithm for TCP connections */
     protected boolean smbTcpNoDelay = false;
+    /** Response timeout in milliseconds for SMB operations */
     protected int smbResponseTimeout = SmbConstants.DEFAULT_RESPONSE_TIMEOUT;
+    /** Socket timeout in milliseconds for SMB connections */
     protected int smbSocketTimeout = SmbConstants.DEFAULT_SO_TIMEOUT;
+    /** Connection timeout in milliseconds for establishing SMB connections */
     protected int smbConnectionTimeout = SmbConstants.DEFAULT_CONN_TIMEOUT;
+    /** Session timeout in milliseconds for SMB sessions */
     protected int smbSessionTimeout = SmbConstants.DEFAULT_SO_TIMEOUT;
+    /** Whether idle timeout is disabled for connections */
     protected boolean idleTimeoutDisabled = false;
+    /** Local address to bind for SMB connections */
     protected InetAddress smbLocalAddress;
+    /** Local port to bind for SMB connections */
     protected int smbLocalPort = 0;
+    /** Maximum multiplex count for concurrent requests */
     protected int maxMpxCount = SmbConstants.DEFAULT_MAX_MPX_COUNT;
+    /** Send buffer size for SMB socket operations */
     protected int smbSendBufferSize = SmbConstants.DEFAULT_SND_BUF_SIZE;
+    /** Receive buffer size for SMB socket operations */
     protected int smbRecvBufferSize = SmbConstants.DEFAULT_RCV_BUF_SIZE;
+    /** Buffer size for SMB notification operations */
     protected int smbNotifyBufferSize = SmbConstants.DEFAULT_NOTIFY_BUF_SIZE;
+    /** Native operating system name to report */
     protected String nativeOs;
+    /** Native LAN Manager string to report */
     protected String nativeLanMan = "jCIFS";
+    /** Virtual circuit number for SMB sessions */
     protected int vcNumber = 1;
+    /** Whether DFS support is disabled */
     protected boolean dfsDisabled = false;
+    /** DFS cache time-to-live in seconds */
     protected long dfsTTL = 300;
+    /** Whether to use strict DFS path resolution */
     protected boolean dfsStrictView = false;
+    /** Whether to convert DFS paths to FQDN */
     protected boolean dfsConvertToFqdn;
+    /** Default logon share */
     protected String logonShare;
+    /** Default domain for authentication */
     protected String defaultDomain;
+    /** Default username for authentication */
     protected String defaultUserName;
+    /** Default password for authentication */
     protected String defaultPassword;
+    /** NetBIOS hostname */
     protected String netbiosHostname;
+    /** NetBIOS name cache policy in seconds */
     protected int netbiosCachePolicy = 60 * 60 * 10;
+    /** NetBIOS socket timeout in milliseconds */
     protected int netbiosSocketTimeout = 5000;
+    /** NetBIOS send buffer size */
     protected int netbiosSendBufferSize = 576;
+    /** NetBIOS receive buffer size */
     protected int netbiosRevcBufferSize = 576;
+    /** NetBIOS retry count */
     protected int netbiosRetryCount = 2;
+    /** NetBIOS retry timeout in milliseconds */
     protected int netbiosRetryTimeout = 3000;
+    /** NetBIOS scope identifier */
     protected String netbiosScope;
+    /** Local port for NetBIOS communications */
     protected int netbiosLocalPort = 0;
+    /** Local address for NetBIOS communications */
     protected InetAddress netbiosLocalAddress;
+    /** Path to lmhosts file for NetBIOS name resolution */
     protected String lmhostsFilename;
+    /** Array of WINS server addresses for NetBIOS name resolution */
     protected InetAddress[] winsServer = {};
+    /** Broadcast address for NetBIOS name resolution */
     protected InetAddress broadcastAddress;
+    /** Order of name resolution methods to use */
     protected List<ResolverType> resolverOrder;
+    /** Maximum buffer size for IO operations */
     protected int maximumBufferSize = 0x10000;
+    /** Maximum buffer size for SMB transaction operations */
     protected int transactionBufferSize = 0xFFFF - 512;
+    /** Number of buffers to keep in cache */
     protected int bufferCacheSize = 16;
+    /** Maximum size for list operations */
     protected int smbListSize = 65435;
+    /** Maximum number of entries to return in list operations */
     protected int smbListCount = 200;
+    /** Time in milliseconds before cached file attributes expire */
     protected long smbAttributeExpiration = 5000L;
+    /** Whether to ignore exceptions during file copy operations */
     protected boolean ignoreCopyToException = false;
+    /** Maximum number of request retries on failure */
     protected int maxRequestRetries = 2;
+    /** Whether to trace resource usage for debugging */
     protected boolean traceResourceUsage;
+    /** Whether to enforce strict resource lifecycle management */
     protected boolean strictResourceLifecycle;
+    /** Set of commands that should not be used in compound requests */
     protected Set<String> disallowCompound;
+    /** Minimum SMB dialect version to negotiate */
     protected DialectVersion minVersion;
+    /** Maximum SMB dialect version to negotiate */
     protected DialectVersion maxVersion;
+    /** Whether to require secure negotiate validation */
     protected boolean requireSecureNegotiate = true;
+    /** Whether to send NTLM target name during authentication */
     protected boolean sendNTLMTargetName = true;
     private byte[] machineId;
+    /** Username for guest authentication */
     protected String guestUsername = "GUEST";
+    /** Password for guest authentication */
     protected String guestPassword = "";
+    /** Whether to allow fallback to guest authentication */
     protected boolean allowGuestFallback = false;
 
     /**
-     * @throws CIFSException
+     * Constructs a BaseConfiguration with default settings
      *
+     * @throws CIFSException if configuration initialization fails
      */
     protected BaseConfiguration() throws CIFSException {
         this(false);
     }
 
     /**
+     * Constructs a BaseConfiguration with optional default initialization
      *
      * @param initDefaults
      *            whether to initialize defaults based on other settings
-     * @throws CIFSException
+     * @throws CIFSException if configuration initialization fails
      */
     public BaseConfiguration(final boolean initDefaults) throws CIFSException {
         if (initDefaults) {
@@ -584,13 +670,20 @@ public class BaseConfiguration implements Configuration {
     }
 
     /**
-     * @param cmd
-     * @return
+     * Gets the batch limit for a specific command
+     *
+     * @param cmd the command to get the batch limit for
+     * @return the batch limit for the command, or null if not set
      */
     protected Integer doGetBatchLimit(final String cmd) {
         return null;
     }
 
+    /**
+     * Initializes the resolver order for name resolution.
+     *
+     * @param ro comma-separated list of resolver types (LMHOSTS, WINS, BCAST, DNS)
+     */
     protected void initResolverOrder(final String ro) {
         this.resolverOrder = new ArrayList<>();
         if (ro == null || ro.length() == 0) {
@@ -632,12 +725,24 @@ public class BaseConfiguration implements Configuration {
         }
     }
 
+    /**
+     * Initializes the minimum and maximum protocol versions from string values.
+     *
+     * @param minStr string representation of minimum protocol version
+     * @param maxStr string representation of maximum protocol version
+     */
     protected void initProtocolVersions(final String minStr, final String maxStr) {
         final DialectVersion min = minStr != null && !minStr.isEmpty() ? DialectVersion.valueOf(minStr) : null;
         final DialectVersion max = maxStr != null && !maxStr.isEmpty() ? DialectVersion.valueOf(maxStr) : null;
         initProtocolVersions(min, max);
     }
 
+    /**
+     * Initializes the minimum and maximum protocol versions.
+     *
+     * @param min minimum protocol version
+     * @param max maximum protocol version
+     */
     protected void initProtocolVersions(final DialectVersion min, final DialectVersion max) {
         this.minVersion = min != null ? min : DialectVersion.SMB1;
         this.maxVersion = max != null ? max : DialectVersion.SMB311;
@@ -647,6 +752,11 @@ public class BaseConfiguration implements Configuration {
         }
     }
 
+    /**
+     * Initializes the disallowed compound operations based on the provided property string.
+     *
+     * @param prop comma-separated list of operations to disallow in compound requests
+     */
     protected void initDisallowCompound(final String prop) {
         if (prop == null) {
             return;
@@ -659,6 +769,12 @@ public class BaseConfiguration implements Configuration {
         this.disallowCompound = disallow;
     }
 
+    /**
+     * Initializes default configuration values.
+     * Sets up default values for various configuration parameters if not already specified.
+     *
+     * @throws CIFSException if there is an error during initialization
+     */
     protected void initDefaults() throws CIFSException {
 
         try {

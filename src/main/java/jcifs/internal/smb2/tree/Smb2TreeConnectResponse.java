@@ -26,111 +26,113 @@ import jcifs.internal.smb2.ServerMessageBlock2Response;
 import jcifs.internal.util.SMBUtil;
 
 /**
- * @author mbechler
+ * SMB2 Tree Connect response message.
  *
+ * This response contains information about the connected
+ * tree, including share type and capabilities.
+ *
+ * @author mbechler
  */
 public class Smb2TreeConnectResponse extends ServerMessageBlock2Response implements TreeConnectResponse {
 
     /**
-     *
+     * Share type constant for disk shares (file shares).
      */
     public static final byte SMB2_SHARE_TYPE_DISK = 0x1;
     /**
-     *
+     * Share type constant for named pipe shares (IPC).
      */
     public static final byte SMB2_SHARE_TYPE_PIPE = 0x2;
     /**
-     *
+     * Share type constant for printer shares.
      */
     public static final byte SMB2_SHARE_TYPE_PRINT = 0x3;
 
     /**
-     *
+     * Share flag indicating manual caching of documents.
      */
     public static final int SMB2_SHAREFLAG_MANUAL_CACHING = 0x0;
     /**
-     *
+     * Share flag indicating automatic caching of documents.
      */
     public static final int SMB2_SHAREFLAG_AUTO_CACHING = 0x10;
     /**
-     *
+     * Share flag indicating automatic caching of programs and documents.
      */
     public static final int SMB2_SHAREFLAG_VDO_CACHING = 0x20;
-
     /**
-     *
+     * Share flag indicating the share is in a DFS namespace.
      */
     public static final int SMB2_SHAREFLAG_DFS = 0x1;
     /**
-     *
+     * Share flag indicating the share is a DFS root.
      */
     public static final int SMB2_SHAREFLAG_DFS_ROOT = 0x2;
-
     /**
-     *
+     * Share flag indicating that exclusive opens are restricted on this share.
      */
     public static final int SMB2_SHAREFLAG_RESTRICT_EXCLUSIVE_OPENS = 0x100;
     /**
-     *
+     * Share flag indicating that shared delete is forced for this share.
      */
     public static final int SMB2_SHAREFLAG_FORCE_SHARED_DELETE = 0x200;
     /**
-     *
+     * Share flag indicating that namespace caching is allowed on this share.
      */
     public static final int SMB2_SHAREFLAG_ALLOW_NAMESPACE_CACHING = 0x400;
     /**
-     *
+     * Share flag indicating that access-based directory enumeration is enabled.
      */
     public static final int SMB2_SHAREFLAG_ACCESS_BASED_DIRECTORY_ENUM = 0x800;
     /**
-     *
-     */
+    * Share flag indicating that level 2 oplocks are forced on this share.
+    */
     public static final int SMB2_SHAREFLAG_FORCE_LEVEL2_OPLOCK = 0x1000;
     /**
-     *
+     * Share flag indicating that hash generation V1 is enabled for this share.
      */
     public static final int SMB2_SHAREFLAG_ENABLE_HASH_V1 = 0x2000;
     /**
-     *
+     * Share flag indicating that hash generation V2 is enabled for this share.
      */
     public static final int SMB2_SHAREFLAG_ENABLE_HASH_V2 = 0x4000;
     /**
-     *
+     * Share flag indicating that encryption is required for this share.
      */
     public static final int SMB2_SHAREFLAG_ENCRYPT_DATA = 0x8000;
-
     /**
-     *
+     * Share capability indicating DFS support.
      */
     public static final int SMB2_SHARE_CAP_DFS = 0x8;
 
     /**
-     *
+     * Share capability indicating continuous availability support.
      */
     public static final int SMB2_SHARE_CAP_CONTINUOUS_AVAILABILITY = 0x10;
 
     /**
-     *
+     * Share capability indicating scale-out support.
      */
     public static final int SMB2_SHARE_CAP_SCALEOUT = 0x20;
 
     /**
-     *
+     * Share capability indicating cluster support.
      */
     public static final int SMB2_SHARE_CAP_CLUSTER = 0x40;
 
     /**
-     *
+     * Share capability indicating asymmetric support.
      */
     public static final int SMB2_SHARE_CAP_ASYMMETRIC = 0x80;
-
     private byte shareType;
     private int shareFlags;
     private int capabilities;
     private int maximalAccess;
 
     /**
-     * @param config
+     * Creates a new SMB2 tree connect response.
+     *
+     * @param config the CIFS configuration
      */
     public Smb2TreeConnectResponse(final Configuration config) {
         super(config);
@@ -150,6 +152,8 @@ public class Smb2TreeConnectResponse extends ServerMessageBlock2Response impleme
     }
 
     /**
+     * Returns the type of the connected share (disk, pipe, or print).
+     *
      * @return the shareType
      */
     public byte getShareType() {
@@ -157,6 +161,8 @@ public class Smb2TreeConnectResponse extends ServerMessageBlock2Response impleme
     }
 
     /**
+     * Returns the flags describing characteristics of the connected share.
+     *
      * @return the shareFlags
      */
     public int getShareFlags() {
@@ -164,6 +170,8 @@ public class Smb2TreeConnectResponse extends ServerMessageBlock2Response impleme
     }
 
     /**
+     * Returns the capabilities of the connected share.
+     *
      * @return the capabilities
      */
     public int getCapabilities() {
@@ -171,6 +179,8 @@ public class Smb2TreeConnectResponse extends ServerMessageBlock2Response impleme
     }
 
     /**
+     * Returns the maximal access rights that the user has on this share.
+     *
      * @return the maximalAccess
      */
     public int getMaximalAccess() {
@@ -226,7 +236,7 @@ public class Smb2TreeConnectResponse extends ServerMessageBlock2Response impleme
     /**
      * {@inheritDoc}
      *
-     * @throws SMBProtocolDecodingException
+     * @throws SMBProtocolDecodingException if an error occurs during decoding
      *
      * @see jcifs.internal.smb2.ServerMessageBlock2#readBytesWireFormat(byte[], int)
      */

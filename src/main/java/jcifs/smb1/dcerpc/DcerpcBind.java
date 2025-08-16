@@ -22,6 +22,10 @@ package jcifs.smb1.dcerpc;
 import jcifs.smb1.dcerpc.ndr.NdrBuffer;
 import jcifs.smb1.dcerpc.ndr.NdrException;
 
+/**
+ * DCERPC Bind message for establishing a connection context.
+ * This class handles the binding of DCERPC interfaces for RPC communication.
+ */
 public class DcerpcBind extends DcerpcMessage {
 
     static final String[] result_message = { "0", "DCERPC_BIND_ERR_ABSTRACT_SYNTAX_NOT_SUPPORTED",
@@ -42,6 +46,9 @@ public class DcerpcBind extends DcerpcMessage {
     DcerpcBinding binding;
     int max_xmit, max_recv;
 
+    /**
+     * Constructs a new DcerpcBind message.
+     */
     public DcerpcBind() {
     }
 

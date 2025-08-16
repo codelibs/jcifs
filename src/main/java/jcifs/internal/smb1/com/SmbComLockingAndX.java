@@ -23,8 +23,12 @@ import jcifs.internal.smb1.AndXServerMessageBlock;
 import jcifs.internal.util.SMBUtil;
 
 /**
- * @author mbechler
+ * SMB1 COM_LOCKING_ANDX command implementation.
  *
+ * This command locks or unlocks byte ranges within a file. It can also
+ * be used to break oplocks and change oplock levels.
+ *
+ * @author mbechler
  */
 public class SmbComLockingAndX extends AndXServerMessageBlock {
 
@@ -37,7 +41,9 @@ public class SmbComLockingAndX extends AndXServerMessageBlock {
     private boolean largeFile;
 
     /**
-     * @param config
+     * Creates a new SMB1 locking request for file byte-range locking operations.
+     *
+     * @param config the CIFS configuration
      */
     public SmbComLockingAndX(final Configuration config) {
         super(config);

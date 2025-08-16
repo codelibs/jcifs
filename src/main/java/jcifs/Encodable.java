@@ -18,19 +18,25 @@
 package jcifs;
 
 /**
- * @author mbechler
+ * Interface for objects that can be encoded to a byte buffer.
+ * This interface provides methods for serializing data to SMB protocol messages.
  *
+ * @author mbechler
  */
 public interface Encodable {
 
     /**
-     * @param dst
-     * @param dstIndex
+     * Encodes this object into the specified byte array.
+     *
+     * @param dst the destination byte array to encode into
+     * @param dstIndex the starting index in the destination array
      * @return encoded length
      */
     int encode(byte[] dst, int dstIndex);
 
     /**
+     * Returns the size in bytes that this object will occupy when encoded.
+     *
      * @return the encoded size
      */
     int size();

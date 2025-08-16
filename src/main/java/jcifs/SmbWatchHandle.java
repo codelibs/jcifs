@@ -46,7 +46,7 @@ public interface SmbWatchHandle extends AutoCloseable, Callable<List<FileNotifyI
      * it will return an empty list of changes.
      *
      * @return changes since the last invocation
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs retrieving file notifications
      */
     List<FileNotifyInformation> watch() throws CIFSException;
 

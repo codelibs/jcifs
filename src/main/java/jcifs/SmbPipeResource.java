@@ -66,6 +66,8 @@ public interface SmbPipeResource extends SmbResource {
     int PIPE_TYPE_UNSHARED = 0x800;
 
     /**
+     * Gets the type of this pipe.
+     *
      * @return the type of the pipe
      */
     int getPipeType();

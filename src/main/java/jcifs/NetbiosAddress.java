@@ -24,14 +24,14 @@ import java.net.UnknownHostException;
  * conditions, users of jCIFS need not be concerned with this class as
  * name resolution and session services are handled internally by the smb package.
  *
- * <p>
- * Applications can use the methods <code>getLocalHost</code>,
+ *
+ *  * Applications can use the methods <code>getLocalHost</code>,
  * <code>getByName</code>, and
  * <code>getAllByAddress</code> to create a new NbtAddress instance. This
  * class is symmetric with {@link java.net.InetAddress}.
  *
- * <p>
- * <b>About NetBIOS:</b> The NetBIOS name
+ *
+ *  * <b>About NetBIOS:</b> The NetBIOS name
  * service is a dynamic distributed service that allows hosts to resolve
  * names by broadcasting a query, directing queries to a server such as
  * Samba or WINS. NetBIOS is currently the primary networking layer for
@@ -40,8 +40,8 @@ import java.net.UnknownHostException;
  * and hosts usually registers several names on the network. From a
  * Windows command prompt you can see
  * what names a host registers with the nbtstat command.
- * <p>
- * <blockquote>
+ *
+ *  * <blockquote>
  *
  * <pre>
  * C:\&gt;nbtstat -a 192.168.1.15
@@ -61,8 +61,8 @@ import java.net.UnknownHostException;
  * </pre>
  *
  * </blockquote>
- * <p>
- * The hostname of this machine is <code>JMORRIS2</code>. It is
+ *
+ *  * The hostname of this machine is <code>JMORRIS2</code>. It is
  * a member of the group(a.k.a workgroup and domain) <code>BILLING-NY</code>. To
  * obtain an {@link java.net.InetAddress} for a host one might do:
  *
@@ -70,8 +70,8 @@ import java.net.UnknownHostException;
  *
  * InetAddress addr = NbtAddress.getByName("jmorris2").getInetAddress();
  * </pre>
- * <p>
- * From a UNIX platform with Samba installed you can perform similar
+ *
+ *  * From a UNIX platform with Samba installed you can perform similar
  * diagnostics using the <code>nmblookup</code> utility.
  *
  * @author Michael B. Allen
@@ -175,6 +175,8 @@ public interface NetbiosAddress extends Address {
     int getNameType();
 
     /**
+     * Gets the NetBIOS name associated with this address.
+     *
      * @return the name for this address
      */
     NetbiosName getName();

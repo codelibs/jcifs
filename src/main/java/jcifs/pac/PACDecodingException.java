@@ -18,23 +18,42 @@ package jcifs.pac;
 
 import jcifs.CIFSException;
 
-@SuppressWarnings("javadoc")
+/**
+ * Exception thrown when PAC (Privilege Attribute Certificate) data cannot be decoded.
+ * Indicates malformed or invalid PAC structures in Kerberos tickets.
+ */
 public class PACDecodingException extends CIFSException {
 
     private static final long serialVersionUID = 1L;
 
+    /**
+     * Constructs a new PAC decoding exception with no detail message.
+     */
     public PACDecodingException() {
         this(null, null);
     }
 
+    /**
+     * Constructs a new PAC decoding exception with the specified detail message.
+     * @param message the detail message
+     */
     public PACDecodingException(final String message) {
         this(message, null);
     }
 
+    /**
+     * Constructs a new PAC decoding exception with the specified cause.
+     * @param cause the cause of the exception
+     */
     public PACDecodingException(final Throwable cause) {
         this(null, cause);
     }
 
+    /**
+     * Constructs a new PAC decoding exception with the specified detail message and cause.
+     * @param message the detail message
+     * @param cause the cause of the exception
+     */
     public PACDecodingException(final String message, final Throwable cause) {
         super(message, cause);
     }

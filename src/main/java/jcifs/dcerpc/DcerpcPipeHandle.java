@@ -30,7 +30,8 @@ import jcifs.smb.SmbPipeHandleInternal;
 import jcifs.util.Encdec;
 
 /**
- *
+ * DCE/RPC handle implementation for named pipe communications.
+ * This class provides DCE/RPC communication over SMB named pipes.
  */
 public class DcerpcPipeHandle extends DcerpcHandle {
 
@@ -41,11 +42,12 @@ public class DcerpcPipeHandle extends DcerpcHandle {
     private final SmbPipeHandleInternal handle;
 
     /**
-     * @param url
-     * @param tc
-     * @param unshared
-     * @throws DcerpcException
-     * @throws MalformedURLException
+     * Creates a DCERPC pipe handle for named pipe communication
+     * @param url the DCERPC URL specifying the endpoint
+     * @param tc the CIFS context for connection configuration
+     * @param unshared whether to use an exclusive connection
+     * @throws DcerpcException if DCERPC initialization fails
+     * @throws MalformedURLException if the URL is malformed
      */
     public DcerpcPipeHandle(final String url, final CIFSContext tc, final boolean unshared) throws DcerpcException, MalformedURLException {
         super(tc, DcerpcHandle.parseBinding(url));

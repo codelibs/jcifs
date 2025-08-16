@@ -22,10 +22,20 @@ import jcifs.internal.SMBProtocolDecodingException;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * SMB2 Validate Negotiate Info response data structure. This structure contains the server's
+ * validation of the originally negotiated SMB2 dialect.
+ *
  * @author mbechler
  *
  */
 public class ValidateNegotiateInfoResponse implements Decodable {
+
+    /**
+     * Default constructor for ValidateNegotiateInfoResponse
+     */
+    public ValidateNegotiateInfoResponse() {
+        // Default constructor
+    }
 
     private int capabilities;
     private final byte[] serverGuid = new byte[16];
@@ -33,28 +43,36 @@ public class ValidateNegotiateInfoResponse implements Decodable {
     private int dialect;
 
     /**
-     * @return the capabilities
+     * Gets the server capabilities
+     *
+     * @return the capabilities flags from the server
      */
     public int getCapabilities() {
         return this.capabilities;
     }
 
     /**
-     * @return the serverGuid
+     * Gets the server GUID
+     *
+     * @return the server's unique identifier
      */
     public byte[] getServerGuid() {
         return this.serverGuid;
     }
 
     /**
-     * @return the securityMode
+     * Gets the security mode
+     *
+     * @return the security mode flags from the server
      */
     public int getSecurityMode() {
         return this.securityMode;
     }
 
     /**
-     * @return the dialect
+     * Gets the negotiated SMB dialect
+     *
+     * @return the SMB dialect negotiated with the server
      */
     public int getDialect() {
         return this.dialect;

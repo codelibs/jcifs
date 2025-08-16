@@ -32,8 +32,13 @@ import jcifs.internal.util.SMBUtil;
 import jcifs.util.Crypto;
 
 /**
- * @author mbechler
+ * SMB2/SMB3 message signing digest implementation.
  *
+ * This class handles cryptographic signing of SMB2/SMB3 messages to ensure
+ * message integrity and authenticity. It supports different signing algorithms
+ * used in various SMB2/SMB3 dialect versions.
+ *
+ * @author mbechler
  */
 public class Smb2SigningDigest implements SMBSigningDigest {
 
@@ -47,10 +52,16 @@ public class Smb2SigningDigest implements SMBSigningDigest {
     private final Mac digest;
 
     /**
+     * Constructs a SMB2 signing digest with the specified session key and dialect
+     *
      * @param sessionKey
+     *            the session key for signing
      * @param dialect
+     *            the SMB2 dialect version
      * @param preauthIntegrityHash
+     *            the pre-authentication integrity hash (for SMB 3.1.1)
      * @throws GeneralSecurityException
+     *             if the signing algorithm cannot be initialized
      *
      */
     public Smb2SigningDigest(final byte[] sessionKey, final int dialect, final byte[] preauthIntegrityHash)

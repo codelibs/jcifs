@@ -39,10 +39,21 @@ import jcifs.SmbTransportPool;
 import jcifs.util.transport.TransportException;
 
 /**
+ * Implementation of the SMB transport pool for managing SMB connections.
+ * Provides connection pooling and reuse for improved performance.
+ *
  * @author mbechler
- * @internal
+ *
+ * <p>This class is intended for internal use.</p>
  */
 public class SmbTransportPoolImpl implements SmbTransportPool {
+
+    /**
+     * Constructs a new SmbTransportPoolImpl instance.
+     * This transport pool manages SMB connections for the client.
+     */
+    public SmbTransportPoolImpl() {
+    }
 
     private static final Logger log = LoggerFactory.getLogger(SmbTransportPoolImpl.class);
 
@@ -222,8 +233,8 @@ public class SmbTransportPoolImpl implements SmbTransportPool {
     }
 
     /**
-     *
-     * @param trans
+     * Checks if the specified transport is contained in the connection pool
+     * @param trans the transport to check for
      * @return whether (non-exclusive) connection is in the pool
      */
     public boolean contains(final SmbTransport trans) {

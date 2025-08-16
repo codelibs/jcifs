@@ -25,16 +25,20 @@ import jcifs.internal.util.SMBUtil;
 import jcifs.util.Hexdump;
 
 /**
+ * SMB1 Delete file request message.
  *
+ * This command is used to delete a file on the server.
+ * The file must not be in use before it can be deleted.
  */
 public class SmbComDelete extends ServerMessageBlock {
 
     private final int searchAttributes;
 
     /**
+     * Creates a new SMB1 delete file request.
      *
-     * @param config
-     * @param path
+     * @param config the CIFS configuration
+     * @param path the path of the file to delete
      */
     public SmbComDelete(final Configuration config, final String path) {
         super(config, SMB_COM_DELETE, path);

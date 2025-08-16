@@ -24,7 +24,18 @@ package jcifs.smb;
  * and NtlmAuthenticator</a> for complete details.
  */
 
+/**
+ * An abstract class for NTLM authentication.
+ * Provides a callback mechanism for retrieving user credentials when authentication is required.
+ */
 public abstract class NtlmAuthenticator {
+
+    /**
+     * Default constructor.
+     */
+    protected NtlmAuthenticator() {
+        // Protected constructor for abstract class
+    }
 
     private static NtlmAuthenticator auth;
 
@@ -32,10 +43,10 @@ public abstract class NtlmAuthenticator {
     private SmbAuthException sae;
 
     /**
-     * Set the default <tt>NtlmAuthenticator</tt>. Once the default authenticator is set it cannot be changed. Calling
+     * Set the default <code>NtlmAuthenticator</code>. Once the default authenticator is set it cannot be changed. Calling
      * this metho again will have no effect.
      *
-     * @param a
+     * @param a the authenticator to set as default
      */
 
     public synchronized static void setDefault(final NtlmAuthenticator a) {
@@ -46,26 +57,34 @@ public abstract class NtlmAuthenticator {
     }
 
     /**
-     *
-     * @return the default authentiucation credentials
+     * Gets the default NTLM authenticator.
+     * @return the default authentication credentials provider
      */
     public static NtlmAuthenticator getDefault() {
         return auth;
     }
 
+    /**
+     * Gets the URL that is requesting authentication.
+     * @return the URL requiring authentication
+     */
     protected final String getRequestingURL() {
         return this.url;
     }
 
+    /**
+     * Gets the authentication exception that triggered this request.
+     * @return the authentication exception
+     */
     protected final SmbAuthException getRequestingException() {
         return this.sae;
     }
 
     /**
-     * Used internally by jCIFS when an <tt>SmbAuthException</tt> is trapped to retrieve new user credentials.
+     * Used internally by jCIFS when an <code>SmbAuthException</code> is trapped to retrieve new user credentials.
      *
-     * @param url
-     * @param sae
+     * @param url the URL that requires authentication
+     * @param sae the authentication exception that was thrown
      * @return credentials returned by prompt
      */
     public static NtlmPasswordAuthenticator requestNtlmPasswordAuthentication(final String url, final SmbAuthException sae) {
@@ -73,9 +92,10 @@ public abstract class NtlmAuthenticator {
     }
 
     /**
-     * @param a
-     * @param url
-     * @param sae
+     * Requests NTLM password authentication using the specified authenticator.
+     * @param a the authenticator to use for retrieving credentials
+     * @param url the URL that requires authentication
+     * @param sae the authentication exception that was thrown
      * @return credentials returned by prompt
      */
     public static NtlmPasswordAuthenticator requestNtlmPasswordAuthentication(final NtlmAuthenticator a, final String url,
@@ -92,10 +112,11 @@ public abstract class NtlmAuthenticator {
 
     /**
      * An application extending this class must provide an implementation for this method that returns new user
-     * credentials try try when accessing SMB resources described by the <tt>getRequestingURL</tt> and
-     * <tt>getRequestingException</tt> methods.
-     * If this method returns <tt>null</tt> the <tt>SmbAuthException</tt> that triggered the authenticator check will
-     * simply be rethrown. The default implementation returns <tt>null</tt>.
+     * credentials try try when accessing SMB resources described by the <code>getRequestingURL</code> and
+     * <code>getRequestingException</code> methods.
+     * If this method returns <code>null</code> the <code>SmbAuthException</code> that triggered the authenticator check will
+     * simply be rethrown. The default implementation returns <code>null</code>.
+     * @return the authentication credentials or null if none available
      */
     protected NtlmPasswordAuthenticator getNtlmPasswordAuthentication() {
         return null;

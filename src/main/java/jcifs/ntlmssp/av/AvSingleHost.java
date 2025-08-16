@@ -21,30 +21,36 @@ import jcifs.Configuration;
 import jcifs.internal.util.SMBUtil;
 
 /**
- * @author mbechler
+ * NTLMSSP AV pair representing single host information in NTLM authentication.
+ * Contains host-specific data used during the NTLM challenge-response process.
  *
+ * @author mbechler
  */
 public class AvSingleHost extends AvPair {
 
     /**
-     * @param raw
+     * Constructs an AvSingleHost from raw byte data
+     *
+     * @param raw the raw byte data for the single host AV pair
      */
     public AvSingleHost(final byte[] raw) {
         super(AvPair.MsvAvSingleHost, raw);
     }
 
     /**
+     * Constructs an AvSingleHost using configuration settings
      *
-     * @param cfg
+     * @param cfg the configuration containing machine ID
      */
     public AvSingleHost(final Configuration cfg) {
         this(new byte[8], cfg.getMachineId());
     }
 
     /**
+     * Constructs an AvSingleHost with custom data and machine ID
      *
-     * @param customData
-     * @param machineId
+     * @param customData custom data for the single host (8 bytes)
+     * @param machineId the machine identifier (32 bytes)
      */
     public AvSingleHost(final byte[] customData, final byte[] machineId) {
         this(encode(customData, machineId));

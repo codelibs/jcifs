@@ -27,15 +27,18 @@ import jcifs.internal.NotifyResponse;
 import jcifs.internal.SMBProtocolDecodingException;
 
 /**
+ * Response for SMB1 NT Transaction change notification.
  *
+ * This response contains file system change notifications that occurred
+ * in the monitored directory, such as file creation, modification, or deletion.
  */
 public class NtTransNotifyChangeResponse extends SmbComNtTransactionResponse implements NotifyResponse {
 
     private final List<FileNotifyInformation> notifyInformation = new ArrayList<>();
 
     /**
-     *
-     * @param config
+     * Constructs an NT transaction notify change response.
+     * @param config the configuration context for this response
      */
     public NtTransNotifyChangeResponse(final Configuration config) {
         super(config);

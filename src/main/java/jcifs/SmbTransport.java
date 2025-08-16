@@ -21,18 +21,23 @@ package jcifs;
  * Opaque reference to a SMB transport
  *
  * @author mbechler
- * @internal
+ *
+ * <p>This interface is intended for internal use.</p>
  */
 public interface SmbTransport extends AutoCloseable {
 
     /**
+     * Gets the CIFS context associated with this transport.
+     *
      * @return the context this transport is attached to
      */
     CIFSContext getContext();
 
     /**
+     * Unwraps the transport to the specified type.
      *
-     * @param type
+     * @param <T> the type to unwrap to
+     * @param type the class of the transport type to unwrap
      * @return transport instance with the given type
      */
     <T extends SmbTransport> T unwrap(Class<T> type);
@@ -47,11 +52,15 @@ public interface SmbTransport extends AutoCloseable {
     void close();
 
     /**
+     * Gets the address of the remote SMB server.
+     *
      * @return the connected address
      */
     Address getRemoteAddress();
 
     /**
+     * Gets the host name of the remote SMB server.
+     *
      * @return the connected host name
      */
     String getRemoteHostName();

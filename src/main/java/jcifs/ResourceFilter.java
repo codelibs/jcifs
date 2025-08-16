@@ -26,10 +26,11 @@ package jcifs;
 public interface ResourceFilter {
 
     /**
+     * Tests whether the specified SMB resource should be included.
      *
-     * @param resource
+     * @param resource the SMB resource to test
      * @return whether the given resource should be included
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs while accessing the resource
      */
     boolean accept(SmbResource resource) throws CIFSException;
 

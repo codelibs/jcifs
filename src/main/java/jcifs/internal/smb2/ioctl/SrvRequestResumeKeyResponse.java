@@ -22,14 +22,25 @@ import jcifs.internal.SMBProtocolDecodingException;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * SMB2 SRV_REQUEST_RESUME_KEY response data structure. This structure contains a resume key
+ * that can be used for server-side copy operations.
+ *
  * @author mbechler
  *
  */
 public class SrvRequestResumeKeyResponse implements Decodable {
 
+    /**
+     * Constructs a new SrvRequestResumeKeyResponse.
+     * This response contains the resume key used for server-side copy operations.
+     */
+    public SrvRequestResumeKeyResponse() {
+    }
+
     private byte[] resumeKey;
 
     /**
+     * Gets the resume key for server-side copy operations
      * @return the resumeKey
      */
     public byte[] getResumeKey() {

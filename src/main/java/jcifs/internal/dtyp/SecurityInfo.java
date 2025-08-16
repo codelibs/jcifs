@@ -20,48 +20,51 @@ package jcifs.internal.dtyp;
 import jcifs.Decodable;
 
 /**
- * @author mbechler
+ * Interface for Windows Data Type (DTYP) security information structures.
+ * Defines constants and functionality for security information types used in
+ * SMB security descriptor operations and access control management.
  *
+ * @author mbechler
  */
 public interface SecurityInfo extends Decodable {
 
     /**
-     *
+     * Flag indicating that owner security information is requested or being set.
      */
     int OWNER_SECURITY_INFO = 0x1;
 
     /**
-     *
+     * Flag indicating that group security information is requested or being set.
      */
     int GROUP_SECURITY_INFO = 0x2;
 
     /**
-     *
+     * Flag indicating that discretionary access control list (DACL) information is requested or being set.
      */
     int DACL_SECURITY_INFO = 0x4;
 
     /**
-     *
+     * Flag indicating that system access control list (SACL) information is requested or being set.
      */
     int SACL_SECURITY_INFO = 0x8;
 
     /**
-     *
+     * Flag indicating that mandatory label information is requested or being set.
      */
     int LABEL_SECURITY_INFO = 0x10;
 
     /**
-     *
+     * Flag indicating that attribute security information is requested or being set.
      */
     int ATTRIBUTE_SECURITY_INFO = 0x20;
 
     /**
-     *
+     * Flag indicating that central access policy information is requested or being set.
      */
     int SCOPE_SECURITY_INFO = 0x40;
 
     /**
-     *
+     * Flag indicating that backup security information is requested or being set.
      */
     int BACKUP_SECURITY_INFO = 0x1000;
 }

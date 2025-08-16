@@ -29,28 +29,32 @@ import java.io.OutputStream;
 public interface SmbPipeHandle extends AutoCloseable {
 
     /**
+     * Gets the pipe resource associated with this handle.
+     *
      * @return the pipe
      */
     SmbPipeResource getPipe();
 
     /**
+     * Gets the input stream for reading from this pipe.
      *
      * @return this pipe's input stream
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs getting the input stream
      */
     InputStream getInput() throws CIFSException;
 
     /**
+     * Gets the output stream for writing to this pipe.
      *
      * @return this pipe's output stream
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs getting the output stream
      */
     OutputStream getOutput() throws CIFSException;
 
     /**
      * {@inheritDoc}
      *
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs closing the handle
      *
      * @see java.lang.AutoCloseable#close()
      */
@@ -58,17 +62,24 @@ public interface SmbPipeHandle extends AutoCloseable {
     void close() throws CIFSException;
 
     /**
+     * Tests whether this file descriptor is open and valid.
+     *
      * @return whether the FD is open and valid
      */
     boolean isOpen();
 
     /**
+     * Tests whether this file descriptor was previously open but has become invalid.
+     *
      * @return whether the FD was previously open but became invalid
      */
     boolean isStale();
 
     /**
-     * @param type
+     * Unwraps this handle to the specified type.
+     *
+     * @param <T> the type to unwrap to
+     * @param type the class of the type to unwrap to
      * @return unwrapped instance
      */
     <T extends SmbPipeHandle> T unwrap(Class<T> type);

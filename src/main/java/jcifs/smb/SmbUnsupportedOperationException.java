@@ -18,6 +18,9 @@
 package jcifs.smb;
 
 /**
+ * Exception thrown when an unsupported SMB operation is attempted.
+ * Indicates that the requested operation is not supported by the SMB server or protocol version.
+ *
  * @author mbechler
  *
  */
@@ -29,15 +32,15 @@ public class SmbUnsupportedOperationException extends SmbException {
     private static final long serialVersionUID = -5576981906065713710L;
 
     /**
-     *
+     * Constructs a new SmbUnsupportedOperationException with a default message
      */
     public SmbUnsupportedOperationException() {
         super("Operation is not supported with the negotiated capabilities");
     }
 
     /**
-     *
-     * @param msg
+     * Constructs a new SmbUnsupportedOperationException with the specified message
+     * @param msg the detail message
      */
     public SmbUnsupportedOperationException(final String msg) {
         super(msg);

@@ -19,16 +19,46 @@
 
 package jcifs.smb1.dcerpc;
 
+/**
+ * DCE/RPC protocol constants for SMB1 compatibility
+ */
 public interface DcerpcConstants {
 
+    /**
+     * NDR syntax UUID for DCE/RPC protocol
+     */
     UUID DCERPC_UUID_SYNTAX_NDR = new UUID("8a885d04-1ceb-11c9-9fe8-08002b104860");
 
+    /**
+     * First fragment flag - indicates first fragment of a multi-fragment message
+     */
     int DCERPC_FIRST_FRAG = 0x01; /* First fragment */
+    /**
+     * Last fragment flag - indicates last fragment of a multi-fragment message
+     */
     int DCERPC_LAST_FRAG = 0x02; /* Last fragment */
+    /**
+     * Pending cancel flag - indicates cancel was pending at sender
+     */
     int DCERPC_PENDING_CANCEL = 0x04; /* Cancel was pending at sender */
+    /**
+     * Reserved flag for future use
+     */
     int DCERPC_RESERVED_1 = 0x08;
+    /**
+     * Supports concurrent multiplexing flag
+     */
     int DCERPC_CONC_MPX = 0x10; /* supports concurrent multiplexing */
+    /**
+     * Did not execute flag - indicates request was not executed
+     */
     int DCERPC_DID_NOT_EXECUTE = 0x20;
+    /**
+     * Maybe flag - indicates 'maybe' call semantics requested
+     */
     int DCERPC_MAYBE = 0x40; /* `maybe' call semantics requested */
+    /**
+     * Object UUID flag - if true, a non-nil object UUID is present
+     */
     int DCERPC_OBJECT_UUID = 0x80; /* if true, a non-nil object UUID */
 }

@@ -23,15 +23,29 @@ import javax.security.auth.kerberos.KerberosKey;
 import jcifs.pac.PACDecodingException;
 import jcifs.pac.Pac;
 
-@SuppressWarnings("javadoc")
+/**
+ * Kerberos authorization data containing PAC (Privilege Attribute Certificate) information.
+ */
 public class KerberosPacAuthData extends KerberosAuthData {
 
     private Pac pac;
 
+    /**
+     * Constructs KerberosPacAuthData from token bytes.
+     *
+     * @param token the PAC token bytes
+     * @param keys map of Kerberos keys indexed by key type
+     * @throws PACDecodingException if PAC decoding fails
+     */
     public KerberosPacAuthData(byte[] token, Map<Integer, KerberosKey> keys) throws PACDecodingException {
         this.pac = new Pac(token, keys);
     }
 
+    /**
+     * Returns the PAC object.
+     *
+     * @return the Privilege Attribute Certificate
+     */
     public Pac getPac() {
         return this.pac;
     }

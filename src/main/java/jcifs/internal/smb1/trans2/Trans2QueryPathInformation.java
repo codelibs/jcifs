@@ -25,17 +25,20 @@ import jcifs.internal.util.SMBUtil;
 import jcifs.util.Hexdump;
 
 /**
- *
+ * Trans2 QueryPathInformation request message for querying file metadata.
+ * This class implements the TRANS2_QUERY_PATH_INFORMATION transaction to retrieve
+ * various file information levels such as basic info, standard info, and attributes.
  */
 public class Trans2QueryPathInformation extends SmbComTransaction {
 
     private final int informationLevel;
 
     /**
+     * Constructs a Trans2QueryPathInformation request.
      *
-     * @param config
-     * @param filename
-     * @param informationLevel
+     * @param config the SMB configuration
+     * @param filename the path to query information for
+     * @param informationLevel the information level to query
      */
     public Trans2QueryPathInformation(final Configuration config, final String filename, final int informationLevel) {
         super(config, SMB_COM_TRANSACTION2, TRANS2_QUERY_PATH_INFORMATION);

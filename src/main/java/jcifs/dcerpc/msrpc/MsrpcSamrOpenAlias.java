@@ -18,9 +18,21 @@
 
 package jcifs.dcerpc.msrpc;
 
-@SuppressWarnings("javadoc")
+/**
+ * MSRPC implementation for opening an alias handle.
+ * This class provides functionality to open a handle to a SAM alias
+ * (local group) using the SAMR RPC interface.
+ */
 public class MsrpcSamrOpenAlias extends samr.SamrOpenAlias {
 
+    /**
+     * Creates a new request to open an alias handle.
+     *
+     * @param handle the domain handle
+     * @param access the desired access rights
+     * @param rid the relative identifier of the alias
+     * @param aliasHandle the alias handle to be populated
+     */
     public MsrpcSamrOpenAlias(final SamrDomainHandle handle, final int access, final int rid, final SamrAliasHandle aliasHandle) {
         super(handle, access, rid, aliasHandle);
         this.ptype = 0;

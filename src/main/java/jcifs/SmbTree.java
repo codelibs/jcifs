@@ -26,8 +26,9 @@ package jcifs;
 public interface SmbTree extends AutoCloseable {
 
     /**
-     *
-     * @param type
+     * Unwraps the tree instance to the specified type
+     * @param <T> the target tree type
+     * @param type the class of the tree type to unwrap to
      * @return tree instance with the given type
      */
     <T extends SmbTree> T unwrap(Class<T> type);

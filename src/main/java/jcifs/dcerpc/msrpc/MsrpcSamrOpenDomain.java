@@ -20,9 +20,21 @@ package jcifs.dcerpc.msrpc;
 
 import jcifs.dcerpc.rpc;
 
-@SuppressWarnings("javadoc")
+/**
+ * MSRPC implementation for opening a domain handle.
+ * This class provides functionality to open a handle to a SAM domain
+ * using the SAMR RPC interface.
+ */
 public class MsrpcSamrOpenDomain extends samr.SamrOpenDomain {
 
+    /**
+     * Creates a new request to open a domain handle.
+     *
+     * @param handle the SAM policy handle
+     * @param access the desired access rights
+     * @param sid the security identifier of the domain
+     * @param domainHandle the domain handle to be populated
+     */
     public MsrpcSamrOpenDomain(final SamrPolicyHandle handle, final int access, final rpc.sid_t sid, final SamrDomainHandle domainHandle) {
         super(handle, access, sid, domainHandle);
         this.ptype = 0;

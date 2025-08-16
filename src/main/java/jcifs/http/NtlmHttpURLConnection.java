@@ -92,6 +92,7 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
     private final CIFSContext transportContext;
 
     /**
+     * Creates a new NTLM HTTP URL connection that wraps an existing HTTP connection.
      *
      * @param connection
      *            connection to wrap

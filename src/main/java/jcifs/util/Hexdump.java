@@ -20,12 +20,21 @@
 package jcifs.util;
 
 /**
+ * Utility class for hexadecimal dumping of binary data.
+ * This class provides methods for converting binary data to readable hex format.
  */
 
 public class Hexdump {
 
     /**
-     *
+     * Default constructor.
+     */
+    public Hexdump() {
+        // Utility class - no instance variables to initialize
+    }
+
+    /**
+     * Array of hexadecimal digit characters used for converting binary data to hex representation.
      */
     public static final char[] HEX_DIGITS = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
 
@@ -34,9 +43,9 @@ public class Hexdump {
      * method. It is an efficient relative that also will pad the left side so
      * that the result is <code>size</code> digits.
      *
-     * @param val
-     * @param size
-     * @return hex string
+     * @param val the integer value to convert to hexadecimal
+     * @param size the desired length of the resulting hex string (will be left-padded with zeros)
+     * @return a hexadecimal string representation of the value, padded to the specified size
      */
     public static String toHexString(final int val, final int size) {
         final char[] c = new char[size];
@@ -45,9 +54,11 @@ public class Hexdump {
     }
 
     /**
-     * @param val
-     * @param size
-     * @return hex string
+     * Converts a long value to a hexadecimal string representation with specified padding.
+     *
+     * @param val the long value to convert to hexadecimal
+     * @param size the desired length of the resulting hex string (will be left-padded with zeros)
+     * @return a hexadecimal string representation of the value, padded to the specified size
      */
     public static String toHexString(final long val, final int size) {
         final char[] c = new char[size];
@@ -56,11 +67,12 @@ public class Hexdump {
     }
 
     /**
+     * Converts a byte array to a hexadecimal string representation.
      *
-     * @param src
-     * @param srcIndex
-     * @param size
-     * @return hex string
+     * @param src the source byte array to convert
+     * @param srcIndex the starting index in the source array
+     * @param size the number of bytes to convert from the source array
+     * @return a hexadecimal string representation of the byte array
      */
     public static String toHexString(final byte[] src, final int srcIndex, final int size) {
         final char[] c = new char[2 * size];
@@ -73,8 +85,10 @@ public class Hexdump {
     }
 
     /**
-     * @param data
-     * @return hex string
+     * Converts a byte array to a hexadecimal string representation.
+     *
+     * @param data the byte array to convert
+     * @return a hexadecimal string representation of the entire byte array
      */
     public static String toHexString(final byte[] data) {
         return toHexString(data, 0, data.length);
@@ -85,10 +99,10 @@ public class Hexdump {
      * size)} but provides a more practical form when trying to avoid {@link
      * java.lang.String} concatenation and {@link java.lang.StringBuffer}.
      *
-     * @param val
-     * @param dst
-     * @param dstIndex
-     * @param size
+     * @param val the integer value to convert to hexadecimal characters
+     * @param dst the destination character array to write the hex digits into
+     * @param dstIndex the starting index in the destination array
+     * @param size the number of hex digits to write (will be left-padded with zeros)
      */
     public static void toHexChars(int val, final char dst[], final int dstIndex, int size) {
         while (size > 0) {
@@ -104,10 +118,12 @@ public class Hexdump {
     }
 
     /**
-     * @param val
-     * @param dst
-     * @param dstIndex
-     * @param size
+     * Converts a long value to hexadecimal characters and writes them to the specified character array.
+     *
+     * @param val the long value to convert to hexadecimal characters
+     * @param dst the destination character array to write the hex digits into
+     * @param dstIndex the starting index in the destination array
+     * @param size the number of hex digits to write (will be left-padded with zeros)
      */
     public static void toHexChars(long val, final char dst[], final int dstIndex, int size) {
         while (size > 0) {

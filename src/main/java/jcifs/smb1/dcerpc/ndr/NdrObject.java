@@ -19,9 +19,30 @@
 
 package jcifs.smb1.dcerpc.ndr;
 
+/**
+ * Base class for NDR (Network Data Representation) objects used in DCE/RPC communication.
+ * This abstract class defines the interface for encoding and decoding NDR data types.
+ */
 public abstract class NdrObject {
 
+    /**
+     * Default constructor for NDR object
+     */
+    public NdrObject() {
+        // Default constructor
+    }
+
+    /**
+     * Encodes this NDR object into the specified buffer
+     * @param dst the destination buffer for encoding
+     * @throws NdrException if encoding fails
+     */
     public abstract void encode(NdrBuffer dst) throws NdrException;
 
+    /**
+     * Decodes this NDR object from the specified buffer
+     * @param src the source buffer for decoding
+     * @throws NdrException if decoding fails
+     */
     public abstract void decode(NdrBuffer src) throws NdrException;
 }

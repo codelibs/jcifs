@@ -50,6 +50,9 @@ public class SmbFileOutputStream extends OutputStream {
      * the smb URL syntax.
      *
      * @param url An smb URL string representing the file to write to
+     * @throws SmbException if an SMB error occurs
+     * @throws MalformedURLException if the URL is not properly formatted
+     * @throws UnknownHostException if the host cannot be resolved
      */
 
     public SmbFileOutputStream(final String url) throws SmbException, MalformedURLException, UnknownHostException {
@@ -63,6 +66,9 @@ public class SmbFileOutputStream extends OutputStream {
      * the smb URL syntax.
      *
      * @param file An <code>SmbFile</code> specifying the file to write to
+     * @throws SmbException if an SMB error occurs
+     * @throws MalformedURLException if the URL is not properly formatted
+     * @throws UnknownHostException if the host cannot be resolved
      */
 
     public SmbFileOutputStream(final SmbFile file) throws SmbException, MalformedURLException, UnknownHostException {
@@ -78,6 +84,9 @@ public class SmbFileOutputStream extends OutputStream {
      *
      * @param url An smb URL string representing the file to write to
      * @param append Append to the end of file
+     * @throws SmbException if an SMB error occurs
+     * @throws MalformedURLException if the URL is not properly formatted
+     * @throws UnknownHostException if the host cannot be resolved
      */
 
     public SmbFileOutputStream(final String url, final boolean append) throws SmbException, MalformedURLException, UnknownHostException {
@@ -93,6 +102,9 @@ public class SmbFileOutputStream extends OutputStream {
      *
      * @param file An <code>SmbFile</code> representing the file to write to
      * @param append Append to the end of file
+     * @throws SmbException if an SMB error occurs
+     * @throws MalformedURLException if the URL is not properly formatted
+     * @throws UnknownHostException if the host cannot be resolved
      */
 
     public SmbFileOutputStream(final SmbFile file, final boolean append) throws SmbException, MalformedURLException, UnknownHostException {
@@ -117,6 +129,9 @@ public class SmbFileOutputStream extends OutputStream {
      *
      * @param url An smb URL representing the file to write to
      * @param shareAccess File sharing flag: <code>SmbFile.FILE_NOSHARE</code> or any combination of <code>SmbFile.FILE_READ</code>, <code>SmbFile.FILE_WRITE</code>, and <code>SmbFile.FILE_DELETE</code>
+     * @throws SmbException if an SMB error occurs
+     * @throws MalformedURLException if the URL is not properly formatted
+     * @throws UnknownHostException if the host cannot be resolved
      */
 
     public SmbFileOutputStream(final String url, final int shareAccess) throws SmbException, MalformedURLException, UnknownHostException {
@@ -193,6 +208,11 @@ public class SmbFileOutputStream extends OutputStream {
         write(b, 0, b.length);
     }
 
+    /**
+     * Tests whether the output stream is currently open.
+     *
+     * @return true if the stream is open, false otherwise
+     */
     public boolean isOpen() {
         return file.isOpen();
     }
@@ -225,6 +245,12 @@ public class SmbFileOutputStream extends OutputStream {
 
     /**
      * Just bypasses TransWaitNamedPipe - used by DCERPC bind.
+     *
+     * @param b the byte array containing the data to write
+     * @param off the start offset in the data
+     * @param len the number of bytes to write
+     * @param flags write operation flags
+     * @throws IOException if an I/O error occurs
      */
     public void writeDirect(final byte[] b, int off, int len, final int flags) throws IOException {
         if (len <= 0) {

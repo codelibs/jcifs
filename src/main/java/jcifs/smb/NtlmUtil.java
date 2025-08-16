@@ -32,7 +32,8 @@ import jcifs.util.Strings;
  * Internal use only
  *
  * @author mbechler
- * @internal
+ *
+ * <p>This class is intended for internal use.</p>
  */
 public final class NtlmUtil {
 
@@ -43,12 +44,13 @@ public final class NtlmUtil {
     }
 
     /**
+     * Creates the NTLMv2 response for the supplied information.
      *
-     * @param responseKeyNT
-     * @param serverChallenge
-     * @param clientChallenge
-     * @param nanos1601
-     * @param avPairs
+     * @param responseKeyNT the NT response key
+     * @param serverChallenge the server challenge bytes
+     * @param clientChallenge the client challenge bytes
+     * @param nanos1601 the timestamp in nanoseconds since 1601
+     * @param avPairs the AV pairs from the Type 2 message
      * @return the calculated response
      */
     public static byte[] getNTLMv2Response(final byte[] responseKeyNT, final byte[] serverChallenge, final byte[] clientChallenge,
@@ -70,10 +72,11 @@ public final class NtlmUtil {
     }
 
     /**
+     * Creates the LMv2 response for the supplied keys and challenges.
      *
-     * @param responseKeyLM
-     * @param serverChallenge
-     * @param clientChallenge
+     * @param responseKeyLM the LM response key
+     * @param serverChallenge the server challenge bytes
+     * @param clientChallenge the client challenge bytes
      * @return the calculated response
      */
     public static byte[] getLMv2Response(final byte[] responseKeyLM, final byte[] serverChallenge, final byte[] clientChallenge) {
@@ -93,25 +96,27 @@ public final class NtlmUtil {
     }
 
     /**
+     * Generates the NTOWFv2 hash for the given domain, username, and password.
      *
-     * @param domain
-     * @param username
-     * @param password
+     * @param domain the authentication domain
+     * @param username the username
+     * @param password the password
      *
-     * @return the caclulated mac
+     * @return the calculated mac
      */
     public static byte[] nTOWFv2(final String domain, final String username, final String password) {
         return nTOWFv2(domain, username, getNTHash(password));
     }
 
     /**
+     * Generates the NTOWFv2 hash for the given domain, username, and password hash.
      *
-     * @param domain
-     * @param username
+     * @param domain the authentication domain
+     * @param username the username
      * @param passwordHash
      *            NT password hash
      *
-     * @return the caclulated mac
+     * @return the calculated mac
      */
     public static byte[] nTOWFv2(final String domain, final String username, final byte[] passwordHash) {
         final MessageDigest hmac = Crypto.getHMACT64(passwordHash);
@@ -121,7 +126,9 @@ public final class NtlmUtil {
     }
 
     /**
-     * @param password
+     * Generates the NT password hash for the given password.
+     *
+     * @param password the password to hash
      * @return nt password hash
      */
     public static byte[] getNTHash(final String password) {
@@ -134,8 +141,9 @@ public final class NtlmUtil {
     }
 
     /**
+     * Generates the NTOWFv1 hash for the given password.
      *
-     * @param password
+     * @param password the password to hash
      * @return the calculated hash
      */
     public static byte[] nTOWFv1(final String password) {
@@ -143,12 +151,13 @@ public final class NtlmUtil {
     }
 
     /**
+     * Creates the NTLM2 session response for the supplied information.
      *
-     * @param passwordHash
-     * @param serverChallenge
-     * @param clientChallenge
+     * @param passwordHash the password hash to use
+     * @param serverChallenge the server challenge bytes
+     * @param clientChallenge the client challenge bytes
      * @return the calculated response
-     * @throws GeneralSecurityException
+     * @throws GeneralSecurityException if a cryptographic error occurs
      */
     public static byte[] getNTLM2Response(final byte[] passwordHash, final byte[] serverChallenge, final byte[] clientChallenge)
             throws GeneralSecurityException {
@@ -181,7 +190,7 @@ public final class NtlmUtil {
      * @param clientChallenge
      *            The client challenge (nonce).
      * @return the calculated response
-     * @throws GeneralSecurityException
+     * @throws GeneralSecurityException if a cryptographic error occurs
      */
     public static byte[] getLMv2Response(final String domain, final String user, final String password, final byte[] challenge,
             final byte[] clientChallenge) throws GeneralSecurityException {
@@ -202,7 +211,7 @@ public final class NtlmUtil {
      * @param clientChallenge
      *            The client challenge (nonce).
      * @return the calculated response
-     * @throws GeneralSecurityException
+     * @throws GeneralSecurityException if a cryptographic error occurs
      */
     public static byte[] getLMv2Response(final String domain, final String user, final byte[] passwordHash, final byte[] challenge,
             final byte[] clientChallenge) throws GeneralSecurityException {
@@ -221,10 +230,10 @@ public final class NtlmUtil {
     /**
      * Generate the Unicode MD4 hash for the password associated with these credentials.
      *
-     * @param password
-     * @param challenge
+     * @param password the password to hash
+     * @param challenge the server challenge bytes
      * @return the calculated response
-     * @throws GeneralSecurityException
+     * @throws GeneralSecurityException if a cryptographic error occurs
      */
     public static byte[] getNTLMResponse(final String password, final byte[] challenge) throws GeneralSecurityException {
         return getNTLMResponse(getNTHash(password), challenge);
@@ -235,9 +244,9 @@ public final class NtlmUtil {
      *
      * @param passwordHash
      *            NT Hash
-     * @param challenge
+     * @param challenge the server challenge bytes
      * @return the calculated response
-     * @throws GeneralSecurityException
+     * @throws GeneralSecurityException if a cryptographic error occurs
      */
     public static byte[] getNTLMResponse(final byte[] passwordHash, final byte[] challenge) throws GeneralSecurityException {
         final byte[] p21 = new byte[21];
@@ -250,11 +259,11 @@ public final class NtlmUtil {
     /**
      * Generate the ANSI DES hash for the password associated with these credentials.
      *
-     * @param tc
-     * @param password
-     * @param challenge
+     * @param tc the CIFS context to use for configuration
+     * @param password the password to hash
+     * @param challenge the server challenge bytes
      * @return the calculated response
-     * @throws GeneralSecurityException
+     * @throws GeneralSecurityException if a cryptographic error occurs
      */
     static public byte[] getPreNTLMResponse(final CIFSContext tc, final String password, final byte[] challenge)
             throws GeneralSecurityException {

@@ -60,7 +60,6 @@
 					<docencoding>UTF-8</docencoding>
 					<charset>UTF-8</charset>
 					<source>17</source>
-					<doclint>none</doclint>
 				</configuration>
 			</plugin>
 			<plugin>

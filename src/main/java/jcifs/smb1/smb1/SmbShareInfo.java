@@ -20,15 +20,38 @@ package jcifs.smb1.smb1;
 
 import jcifs.smb1.util.Hexdump;
 
+/**
+ * Represents information about an SMB network share.
+ * This class encapsulates the properties of a shared resource on an SMB server.
+ */
 public class SmbShareInfo implements FileEntry {
 
+    /**
+     * The network name of the share.
+     */
     protected String netName;
+    /**
+     * The type of the share (e.g., disk, printer, named pipe).
+     */
     protected int type;
+    /**
+     * A descriptive comment or remark about the share.
+     */
     protected String remark;
 
+    /**
+     * Default constructor for SMB share information.
+     */
     public SmbShareInfo() {
     }
 
+    /**
+     * Constructs SMB share information with specified properties.
+     *
+     * @param netName the network name of the share
+     * @param type the type of the share
+     * @param remark the descriptive comment about the share
+     */
     public SmbShareInfo(final String netName, final int type, final String remark) {
         this.netName = netName;
         this.type = type;

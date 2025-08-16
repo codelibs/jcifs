@@ -18,9 +18,16 @@
 
 package jcifs.smb;
 
-@SuppressWarnings("javadoc")
+/**
+ * Interface defining DOS error codes and their mappings to NT status codes.
+ * Provides lookup tables for converting between DOS and NT error representations.
+ */
 public interface DosError {
 
+    /**
+     * Mapping table from DOS error codes to NT status codes.
+     * Each entry contains a pair of [DOS error code, NT status code].
+     */
     int[][] DOS_ERROR_CODES = { { 0x00000000, 0x00000000 }, { 0x00010001, 0xc0000002 }, { 0x00010002, 0xc0000002 },
             { 0x00020001, 0xc000000f }, { 0x00020002, 0xc000006a }, { 0x00030001, 0xc000003a }, { 0x00030002, 0xc00000cb },
             { 0x00040002, 0xc00000ca }, { 0x00050001, 0xc0000022 }, { 0x00050002, 0xc000000d }, { 0x00060001, 0xc0000008 },
@@ -33,9 +40,18 @@ public interface DosError {
             { 0x00e90001, 0xc00000b0 }, { 0x00ea0001, 0xc0000016 }, { 0x08bf0002, 0xC0000193 }, { 0x08c00002, 0xC0000070 },
             { 0x08c10002, 0xC000006f }, { 0x08c20002, 0xC0000071 }, };
 
+    /**
+     * Human-readable error messages corresponding to DOS error codes.
+     * Provides descriptive text for each error condition.
+     */
     /*
-     * These aren't really used by jCIFS -- the map above is used
-     * to immediately map to NTSTATUS codes.
+     * These aren't really used by jCIFS--
+     * the map above is used to immediately
+     * map to NTSTATUS codes.
+     */
+    /**
+     * Human-readable error messages corresponding to DOS error codes.
+     * Array of descriptive strings for each DOS error condition.
      */
     String[] DOS_ERROR_MESSAGES = { "The operation completed successfully.", "Incorrect function.", "Incorrect function.",
             "The system cannot find the file specified.", "Bad password.", "The system cannot find the path specified.", "reserved",

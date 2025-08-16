@@ -24,23 +24,30 @@ import jcifs.internal.CommonServerMessageBlockResponse;
 import jcifs.internal.Request;
 
 /**
+ * Internal SMB tree connection interface providing extended tree management capabilities.
+ * Defines methods for internal tree operations and resource management.
+ *
  * @author mbechler
- * @internal
+ *
+ * <p>This interface is intended for internal use.</p>
  */
 public interface SmbTreeInternal extends SmbTree {
 
     /**
-     * @param tf
-     * @throws SmbException
+     * Connects and performs logon to the tree using the specified context
+     * @param tf the CIFS context to use for connection
+     * @throws SmbException if an SMB error occurs during connection
      */
     @Deprecated
     void connectLogon(CIFSContext tf) throws SmbException;
 
     /**
-     * @param request
-     * @param params
+     * Sends an SMB request and returns the response
+     * @param <T> the response type
+     * @param request the request to send
+     * @param params optional request parameters
      * @return response message
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs sending the request
      */
     <T extends CommonServerMessageBlockResponse> T send(Request<T> request, RequestParam... params) throws CIFSException;
 }

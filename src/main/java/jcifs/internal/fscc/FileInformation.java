@@ -21,38 +21,42 @@ import jcifs.Decodable;
 import jcifs.Encodable;
 
 /**
- * @author mbechler
+ * Base interface for File System Control Code (FSCC) file information structures.
+ * Defines common functionality for various SMB2/SMB3 file information classes used in
+ * query and set file information operations, with constants for information levels.
  *
+ * @author mbechler
  */
 public interface FileInformation extends Decodable, Encodable {
 
     // information levels
 
     /**
-     *
+     * File end-of-file information class constant.
      */
     byte FILE_ENDOFFILE_INFO = 20;
 
     /**
-     *
+     * File basic information class constant.
      */
     byte FILE_BASIC_INFO = 0x4;
     /**
-     *
+     * File standard information class constant.
      */
     byte FILE_STANDARD_INFO = 0x5;
 
     /**
-     *
+     * File internal information class constant.
      */
     byte FILE_INTERNAL_INFO = 0x6;
 
     /**
-     *
+     * File rename information class constant.
      */
     byte FILE_RENAME_INFO = 10;
 
     /**
+     * Gets the file information level/class for this file information object.
      *
      * @return the file information class
      */

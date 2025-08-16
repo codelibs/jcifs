@@ -3,7 +3,18 @@ package jcifs.smb1.smb1;
 import java.io.IOException;
 import java.io.InputStream;
 
+/**
+ * Test class for SMB file locking operations.
+ * This class is used to test concurrent file access and locking behavior.
+ */
 public class TestLocking implements Runnable {
+
+    /**
+     * Default constructor for TestLocking
+     */
+    public TestLocking() {
+        // Default constructor
+    }
 
     int numThreads = 1;
     int numIter = 1;
@@ -54,6 +65,12 @@ public class TestLocking implements Runnable {
         }
     }
 
+    /**
+     * Main method to run the locking test.
+     *
+     * @param args command line arguments: [-t numThreads] [-i numIter] [-d delay] url
+     * @throws Exception if an error occurs during test execution
+     */
     public static void main(final String[] args) throws Exception {
         if (args.length < 1) {
             System.err.println("usage: TestLocking [-t <numThreads>] [-i <numIter>] [-d <delay>] url");

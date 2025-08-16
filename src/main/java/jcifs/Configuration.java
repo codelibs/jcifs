@@ -34,6 +34,7 @@ import java.util.TimeZone;
 public interface Configuration {
 
     /**
+     * Gets the secure random number generator for cryptographic operations
      *
      * @return random source to use
      */
@@ -42,7 +43,7 @@ public interface Configuration {
     /**
      *
      *
-     * Property <tt>jcifs.smb.client.dfs.ttl</tt> (int, default 300)
+     * Property {@code jcifs.smb.client.dfs.ttl} (int, default 300)
      *
      * @return title to live, in seconds, for DFS cache entries
      */
@@ -50,7 +51,7 @@ public interface Configuration {
 
     /**
      *
-     * Property <tt>jcifs.smb.client.dfs.strictView</tt> (boolean, default false)
+     * Property {@code jcifs.smb.client.dfs.strictView} (boolean, default false)
      *
      * @return whether a authentication failure during DFS resolving will throw an exception
      */
@@ -58,7 +59,7 @@ public interface Configuration {
 
     /**
      *
-     * Property <tt>jcifs.smb.client.dfs.disabled</tt> (boolean, default false)
+     * Property {@code jcifs.smb.client.dfs.disabled} (boolean, default false)
      *
      * @return whether DFS lookup is disabled
      */
@@ -70,7 +71,7 @@ public interface Configuration {
      * This works by appending the domain name to the netbios short name and will fail horribly if this mapping is not
      * correct for your domain.
      *
-     * Property <tt>jcifs.smb.client.dfs.convertToFQDN</tt> (boolean, default false)
+     * Property {@code jcifs.smb.client.dfs.convertToFQDN} (boolean, default false)
      *
      * @return whether to convert NetBIOS names returned by DFS to FQDNs
      */
@@ -79,7 +80,7 @@ public interface Configuration {
     /**
      * Minimum protocol version
      *
-     * Property <tt>jcifs.smb.client.minVersion</tt> (string, default SMB1)
+     * Property {@code jcifs.smb.client.minVersion} (string, default SMB1)
      *
      * @see DialectVersion
      * @return minimum protocol version to use/allow
@@ -90,7 +91,7 @@ public interface Configuration {
     /**
      * Maximum protocol version
      *
-     * Property <tt>jcifs.smb.client.maxVersion</tt> (string, default SMB210)
+     * Property {@code jcifs.smb.client.maxVersion} (string, default SMB210)
      *
      * @see DialectVersion
      * @return maximum protocol version to use/allow
@@ -101,7 +102,7 @@ public interface Configuration {
     /**
      * Use SMB2 non-backward compatible negotiation style
      *
-     * Property <tt>jcifs.smb.client.useSMB2Negotiation</tt> (boolean, default false)
+     * Property {@code jcifs.smb.client.useSMB2Negotiation} (boolean, default false)
      *
      * @return whether to use non-backward compatible protocol negotiation
      */
@@ -110,7 +111,7 @@ public interface Configuration {
     /**
      * Enforce secure negotiation
      *
-     * Property <tt>jcifs.smb.client.requireSecureNegotiate</tt> (boolean, default true)
+     * Property {@code jcifs.smb.client.requireSecureNegotiate} (boolean, default true)
      *
      * This does not provide any actual downgrade protection if SMB1 is allowed.
      *
@@ -123,7 +124,7 @@ public interface Configuration {
     /**
      * Enable port 139 failover
      *
-     * Property <tt>jcifs.smb.client.port139.enabled</tt> (boolean, default false)
+     * Property {@code jcifs.smb.client.port139.enabled} (boolean, default false)
      *
      * @return whether to failover to legacy transport on port 139
      */
@@ -131,7 +132,7 @@ public interface Configuration {
 
     /**
      *
-     * Property <tt>jcifs.smb.client.useUnicode</tt> (boolean, default true)
+     * Property {@code jcifs.smb.client.useUnicode} (boolean, default true)
      *
      * @return whether to announce support for unicode
      */
@@ -139,7 +140,7 @@ public interface Configuration {
 
     /**
      *
-     * Property <tt>jcifs.smb.client.forceUnicode</tt> (boolean, default false)
+     * Property {@code jcifs.smb.client.forceUnicode} (boolean, default false)
      *
      * @return whether to use unicode, even if the server does not announce it
      */
@@ -147,7 +148,7 @@ public interface Configuration {
 
     /**
      *
-     * Property <tt>jcifs.smb.client.useBatching</tt> (boolean, default false)
+     * Property {@code jcifs.smb.client.useBatching} (boolean, default false)
      *
      * @return whether to enable support for SMB1 AndX command batching
      */
@@ -155,7 +156,7 @@ public interface Configuration {
 
     /**
      *
-     * Property <tt>jcifs.smb.client.nativeOs</tt> (string, default <tt>os.name</tt>)
+     * Property {@code jcifs.smb.client.nativeOs} (string, default {@code os.name})
      *
      * @return OS string to report
      */
@@ -163,7 +164,7 @@ public interface Configuration {
 
     /**
      *
-     * Property <tt>jcifs.smb.client.nativeLanMan</tt> (string, default <tt>jCIFS</tt>)
+     * Property {@code jcifs.smb.client.nativeLanMan} (string, default {@code jCIFS})
      *
      * @return Lanman string to report
      */
@@ -171,7 +172,7 @@ public interface Configuration {
 
     /**
      *
-     * Property <tt>jcifs.smb.client.rcv_buf_size</tt> (int, default 65535)
+     * Property {@code jcifs.smb.client.rcv_buf_size} (int, default 65535)
      *
      * @return receive buffer size, in bytes
      * @deprecated use getReceiveBufferSize instead
@@ -181,7 +182,7 @@ public interface Configuration {
 
     /**
      *
-     * Property <tt>jcifs.smb.client.rcv_buf_size</tt> (int, default 65535)
+     * Property {@code jcifs.smb.client.rcv_buf_size} (int, default 65535)
      *
      * @return receive buffer size, in bytes
      */
@@ -189,7 +190,7 @@ public interface Configuration {
 
     /**
      *
-     * Property <tt>jcifs.smb.client.snd_buf_size</tt> (int, default 65535)
+     * Property {@code jcifs.smb.client.snd_buf_size} (int, default 65535)
      *
      * @return send buffer size, in bytes
      */
@@ -197,7 +198,7 @@ public interface Configuration {
 
     /**
      *
-     * Property <tt>jcifs.smb.client.soTimeout</tt> (int, default 35000)
+     * Property {@code jcifs.smb.client.soTimeout} (int, default 35000)
      *
      * @return socket timeout, in milliseconds
      */
@@ -205,14 +206,14 @@ public interface Configuration {
 
     /**
      *
-     * Property <tt>jcifs.smb.client.connTimeout</tt> (int, default 35000)
+     * Property {@code jcifs.smb.client.connTimeout} (int, default 35000)
      *
      * @return timeout for establishing a socket connection, in milliseconds
      */
     int getConnTimeout();
 
     /**
-     * Property <tt>jcifs.smb.client.sessionTimeout</tt> (int, default 35000)
+     * Property {@code jcifs.smb.client.sessionTimeout} (int, default 35000)
      *
      *
      * @return timeout for SMB sessions, in milliseconds
@@ -221,7 +222,7 @@ public interface Configuration {
 
     /**
      *
-     * Property <tt>jcifs.smb.client.responseTimeout</tt> (int, default 30000)
+     * Property {@code jcifs.smb.client.responseTimeout} (int, default 30000)
      *
      * @return timeout for SMB responses, in milliseconds
      */
@@ -229,7 +230,7 @@ public interface Configuration {
 
     /**
      *
-     * Property <tt>jcifs.smb.client.lport</tt> (int)
+     * Property {@code jcifs.smb.client.lport} (int)
      *
      * @return local port to use for outgoing connections
      */
@@ -237,7 +238,7 @@ public interface Configuration {
 
     /**
      *
-     * Property <tt>jcifs.smb.client.laddr</tt> (string)
+     * Property {@code jcifs.smb.client.laddr} (string)
      *
      * @return local address to use for outgoing connections
      */
@@ -245,7 +246,7 @@ public interface Configuration {
 
     /**
      *
-     * Property <tt>jcifs.netbios.hostname</tt> (string)
+     * Property {@code jcifs.netbios.hostname} (string)
      *
      * @return local NETBIOS/short name to announce
      */
@@ -253,7 +254,7 @@ public interface Configuration {
 
     /**
      *
-     * Property <tt>jcifs.smb.client.logonShare</tt>
+     * Property {@code jcifs.smb.client.logonShare}
      *
      * @return share to connect to during authentication, if unset connect to IPC$
      */
@@ -262,7 +263,7 @@ public interface Configuration {
     /**
      *
      *
-     * Property <tt>jcifs.smb.client.domain</tt>
+     * Property {@code jcifs.smb.client.domain}
      *
      * @return default credentials, domain name
      */
@@ -270,7 +271,7 @@ public interface Configuration {
 
     /**
      *
-     * Property <tt>jcifs.smb.client.username</tt>
+     * Property {@code jcifs.smb.client.username}
      *
      * @return default credentials, user name
      */
@@ -278,7 +279,7 @@ public interface Configuration {
 
     /**
      *
-     * Property <tt>jcifs.smb.client.password</tt>
+     * Property {@code jcifs.smb.client.password}
      *
      * @return default credentials, password
      */
@@ -287,10 +288,11 @@ public interface Configuration {
     /**
      * Lanman compatibility level
      *
-     * {@href https://technet.microsoft.com/en-us/library/cc960646.aspx}
+     * <a href="https://technet.microsoft.com/en-us/library/cc960646.aspx">Microsoft TechNet Documentation</a>
      *
      *
      * <table>
+     * <caption>LM Compatibility Levels</caption>
      * <tr>
      * <td>0 or 1</td>
      * <td>LM and NTLM</td>
@@ -306,7 +308,7 @@ public interface Configuration {
      * </table>
      *
      *
-     * Property <tt>jcifs.smb.lmCompatibility</tt> (int, default 3)
+     * Property {@code jcifs.smb.lmCompatibility} (int, default 3)
      *
      * @return lanman compatibility level, defaults to 3 i.e. NTLMv2 only
      */
@@ -314,14 +316,14 @@ public interface Configuration {
 
     /**
      *
-     * Property <tt>jcifs.smb.allowNTLMFallback</tt> (boolean, default true)
+     * Property {@code jcifs.smb.allowNTLMFallback} (boolean, default true)
      *
      * @return whether to allow fallback from kerberos to NTLM
      */
     boolean isAllowNTLMFallback();
 
     /**
-     * Property <tt>jcifs.smb.useRawNTLM</tt> (boolean, default false)
+     * Property {@code jcifs.smb.useRawNTLM} (boolean, default false)
      *
      * @return whether to use raw NTLMSSP tokens instead of SPNEGO wrapped ones
      * @since 2.1
@@ -330,7 +332,7 @@ public interface Configuration {
 
     /**
      *
-     * Property <tt>jcifs.smb.client.disablePlainTextPasswords</tt> (boolean, default true)
+     * Property {@code jcifs.smb.client.disablePlainTextPasswords} (boolean, default true)
      *
      * @return whether the usage of plaintext passwords is prohibited, defaults to false
      */
@@ -339,7 +341,7 @@ public interface Configuration {
     /**
      *
      *
-     * Property <tt>jcifs.resolveOrder</tt> (string, default <tt>LMHOSTS,DNS,WINS,BCAST</tt>)
+     * Property {@code jcifs.resolveOrder} (string, default {@code LMHOSTS,DNS,WINS,BCAST})
      *
      * @return order and selection of resolver modules, see {@link ResolverType}
      */
@@ -347,7 +349,7 @@ public interface Configuration {
 
     /**
      *
-     * Property <tt>jcifs.netbios.baddr</tt> (string, default <tt>255.255.255.255</tt>)
+     * Property {@code jcifs.netbios.baddr} (string, default {@code 255.255.255.255})
      *
      * @return broadcast address to use
      */
@@ -356,7 +358,7 @@ public interface Configuration {
     /**
      *
      *
-     * Property <tt>jcifs.netbios.wins</tt> (string, comma separated)
+     * Property {@code jcifs.netbios.wins} (string, comma separated)
      *
      * @return WINS server to use
      */
@@ -364,7 +366,7 @@ public interface Configuration {
 
     /**
      *
-     * Property <tt>jcifs.netbios.lport</tt> (int)
+     * Property {@code jcifs.netbios.lport} (int)
      *
      * @return local bind port for nebios connections
      */
@@ -372,7 +374,7 @@ public interface Configuration {
 
     /**
      *
-     * Property <tt>jcifs.netbios.laddr</tt> (string)
+     * Property {@code jcifs.netbios.laddr} (string)
      *
      * @return local bind address for netbios connections
      */
@@ -381,14 +383,14 @@ public interface Configuration {
     /**
      *
      *
-     * Property <tt>jcifs.netbios.soTimeout</tt> (int, default 5000)
+     * Property {@code jcifs.netbios.soTimeout} (int, default 5000)
      *
      * @return socket timeout for netbios connections, in milliseconds
      */
     int getNetbiosSoTimeout();
 
     /**
-     *
+     * Gets the virtual circuit number for SMB connections
      *
      * @return virtual circuit number to use
      */
@@ -396,7 +398,7 @@ public interface Configuration {
 
     /**
      *
-     * Property <tt>jcifs.smb.client.capabilities</tt> (int)
+     * Property {@code jcifs.smb.client.capabilities} (int)
      *
      * @return custom capabilities
      */
@@ -405,7 +407,7 @@ public interface Configuration {
     /**
      *
      *
-     * Property <tt>jcifs.smb.client.flags2</tt> (int)
+     * Property {@code jcifs.smb.client.flags2} (int)
      *
      * @return custom flags2
      */
@@ -413,7 +415,7 @@ public interface Configuration {
 
     /**
      *
-     * Property <tt>jcifs.smb.client.ssnLimit</tt> (int, 250)
+     * Property {@code jcifs.smb.client.ssnLimit} (int, 250)
      *
      * @return maximum number of sessions on a single connection
      */
@@ -421,25 +423,29 @@ public interface Configuration {
 
     /**
      *
-     * Property <tt>jcifs.encoding</tt> (string, default <tt>Cp850</tt>)
+     * Property {@code jcifs.encoding} (string, default {@code Cp850})
      *
      * @return OEM encoding to use
      */
     String getOemEncoding();
 
     /**
+     * Gets the local timezone for time-related operations
+     *
      * @return local timezone
      */
     TimeZone getLocalTimezone();
 
     /**
+     * Gets the process ID to use in SMB messages
+     *
      * @return Process id to send, randomized if unset
      */
     int getPid();
 
     /**
      *
-     * Property <tt>jcifs.smb.client.maxMpxCount</tt> (int, default 10)
+     * Property {@code jcifs.smb.client.maxMpxCount} (int, default 10)
      *
      * @return maximum count of concurrent commands to announce
      */
@@ -447,7 +453,7 @@ public interface Configuration {
 
     /**
      *
-     * Property <tt>jcifs.smb.client.signingPreferred</tt> (boolean, default false)
+     * Property {@code jcifs.smb.client.signingPreferred} (boolean, default false)
      *
      * @return whether to enable SMB signing (for everything), if available
      */
@@ -455,7 +461,7 @@ public interface Configuration {
 
     /**
      *
-     * Property <tt>jcifs.smb.client.ipcSigningEnforced</tt> (boolean, default true)
+     * Property {@code jcifs.smb.client.ipcSigningEnforced} (boolean, default true)
      *
      * @return whether to enforce SMB signing for IPC connections
      */
@@ -463,14 +469,14 @@ public interface Configuration {
 
     /**
      *
-     * Property <tt>jcifs.smb.client.signingEnforced</tt> (boolean, default false)
+     * Property {@code jcifs.smb.client.signingEnforced} (boolean, default false)
      *
      * @return whether to enforce SMB signing (for everything)
      */
     boolean isSigningEnforced();
 
     /**
-     * Property <tt>jcifs.smb.client.encryptionEnabled</tt> (boolean, default false)
+     * Property {@code jcifs.smb.client.encryptionEnabled} (boolean, default false)
      *
      * This is an experimental option allowing to indicate support during protocol
      * negotiation, SMB encryption is not implemented yet.
@@ -482,7 +488,7 @@ public interface Configuration {
 
     /**
      *
-     * Property <tt>jcifs.smb.client.forceExtendedSecurity</tt> (boolean, default false)
+     * Property {@code jcifs.smb.client.forceExtendedSecurity} (boolean, default false)
      *
      * @return whether to force extended security usage
      */
@@ -491,7 +497,7 @@ public interface Configuration {
     /**
      *
      *
-     * Property <tt>jcifs.netbios.lmhosts</tt> (string)
+     * Property {@code jcifs.netbios.lmhosts} (string)
      *
      * @return lmhosts file to use
      */
@@ -499,7 +505,7 @@ public interface Configuration {
 
     /**
      *
-     * Property <tt>jcifs.netbios.scope</tt> (string)
+     * Property {@code jcifs.netbios.scope} (string)
      *
      * @return default netbios scope to set in requests
      */
@@ -507,7 +513,7 @@ public interface Configuration {
 
     /**
      *
-     * Property <tt>jcifs.netbios.snd_buf_size</tt> (int, default 576)
+     * Property {@code jcifs.netbios.snd_buf_size} (int, default 576)
      *
      * @return netbios send buffer size
      */
@@ -515,7 +521,7 @@ public interface Configuration {
 
     /**
      *
-     * Property <tt>jcifs.netbios.rcv_buf_size</tt> (int, default 576)
+     * Property {@code jcifs.netbios.rcv_buf_size} (int, default 576)
      *
      * @return netbios recieve buffer size
      */
@@ -523,7 +529,7 @@ public interface Configuration {
 
     /**
      *
-     * Property <tt>jcifs.netbios.retryTimeout</tt> (int, default 3000)
+     * Property {@code jcifs.netbios.retryTimeout} (int, default 3000)
      *
      * @return timeout of retry requests, in milliseconds
      */
@@ -531,7 +537,7 @@ public interface Configuration {
 
     /**
      *
-     * Property <tt>jcifs.netbios.retryCount</tt> (int, default 2)
+     * Property {@code jcifs.netbios.retryCount} (int, default 2)
      *
      * @return maximum number of retries for netbios requests
      */
@@ -540,13 +546,14 @@ public interface Configuration {
     /**
      *
      *
-     * Property <tt>jcifs.netbios.cachePolicy</tt> in minutes (int, default 600)
+     * Property {@code jcifs.netbios.cachePolicy} in minutes (int, default 600)
      *
      * @return netbios cache timeout, in seconds, 0 - disable caching, -1 - cache forever
      */
     int getNetbiosCachePolicy();
 
     /**
+     * Gets the maximum buffer size for IO operations
      *
      * @return the maximum size of IO buffers, limits the maximum message size
      */
@@ -554,7 +561,7 @@ public interface Configuration {
 
     /**
      *
-     * Property <tt>jcifs.smb.client.transaction_buf_size</tt> (int, default 65535)
+     * Property {@code jcifs.smb.client.transaction_buf_size} (int, default 65535)
      *
      * @return maximum data size for SMB transactions
      */
@@ -562,7 +569,7 @@ public interface Configuration {
 
     /**
      *
-     * Property <tt>jcifs.smb.maxBuffers</tt> (int, default 16)
+     * Property {@code jcifs.smb.maxBuffers} (int, default 16)
      *
      * @return number of buffers to keep in cache
      */
@@ -570,7 +577,7 @@ public interface Configuration {
 
     /**
      *
-     * Property <tt>jcifs.smb.client.listCount</tt> (int, default 200)
+     * Property {@code jcifs.smb.client.listCount} (int, default 200)
      *
      * @return maxmimum number of elements to request in a list request
      */
@@ -578,7 +585,7 @@ public interface Configuration {
 
     /**
      *
-     * Property <tt>jcifs.smb.client.listSize</tt> (int, default 65435)
+     * Property {@code jcifs.smb.client.listSize} (int, default 65435)
      *
      * @return maximum data size for list/info requests (known overhead is subtracted)
      */
@@ -587,7 +594,7 @@ public interface Configuration {
     /**
      *
      *
-     * Property <tt>jcifs.smb.client.attrExpirationPeriod</tt> (int, 5000)
+     * Property {@code jcifs.smb.client.attrExpirationPeriod} (int, 5000)
      *
      * @return timeout of file attribute cache
      */
@@ -596,21 +603,23 @@ public interface Configuration {
     /**
      *
      *
-     * Property <tt>jcifs.smb.client.ignoreCopyToException</tt> (boolean, false)
+     * Property {@code jcifs.smb.client.ignoreCopyToException} (boolean, false)
      *
      * @return whether to ignore exceptions that occur during file copy
      */
     boolean isIgnoreCopyToException();
 
     /**
-     * @param cmd
+     * Gets the batch limit for a specific SMB command
+     *
+     * @param cmd the SMB command name
      * @return the batch limit for the given command
      */
     int getBatchLimit(String cmd);
 
     /**
      *
-     * Property <tt>jcifs.smb.client.notify_buf_size</tt> (int, default 1024)
+     * Property {@code jcifs.smb.client.notify_buf_size} (int, default 1024)
      *
      * @return the size of the requested server notify buffer
      */
@@ -619,14 +628,14 @@ public interface Configuration {
     /**
      *
      *
-     * Property <tt>jcifs.smb.client.maxRequestRetries</tt> (int, default 2)
+     * Property {@code jcifs.smb.client.maxRequestRetries} (int, default 2)
      *
      * @return retry SMB requests on failure up to n times
      */
     int getMaxRequestRetries();
 
     /**
-     * Property <tt>jcifs.smb.client.strictResourceLifecycle</tt> (bool, default false)
+     * Property {@code jcifs.smb.client.strictResourceLifecycle} (bool, default false)
      *
      * If enabled, SmbFile instances starting with their first use will hold a reference to their tree.
      * This means that trees/sessions/connections won't be idle-disconnected even if there are no other active
@@ -647,7 +656,9 @@ public interface Configuration {
     boolean isTraceResourceUsage();
 
     /**
-     * @param command
+     * Checks if compound requests are allowed for the specified command
+     *
+     * @param command the SMB command to check
      * @return whether to allow creating compound requests with that command
      */
     boolean isAllowCompound(String command);
@@ -666,7 +677,7 @@ public interface Configuration {
     /**
      *
      *
-     * Property <tt>jcifs.smb.client.disableSpnegoIntegrity</tt> (boolean, false)
+     * Property {@code jcifs.smb.client.disableSpnegoIntegrity} (boolean, false)
      *
      * @return whether to disable sending/verifying SPNEGO mechanismListMIC
      */
@@ -674,35 +685,35 @@ public interface Configuration {
 
     /**
      *
-     * Property <tt>jcifs.smb.client.enforceSpnegoIntegrity</tt> (boolean, false)
+     * Property {@code jcifs.smb.client.enforceSpnegoIntegrity} (boolean, false)
      *
      * @return whether to enforce verifying SPNEGO mechanismListMIC
      */
     boolean isEnforceSpnegoIntegrity();
 
     /**
-     * Property <tt>jcifs.smb.client.SendNTLMTargetName</tt> (boolean, true)
+     * Property {@code jcifs.smb.client.SendNTLMTargetName} (boolean, true)
      *
      * @return whether to send an AvTargetName with the NTLM exchange
      */
     boolean isSendNTLMTargetName();
 
     /**
-     * Property <tt>jcifs.smb.client.guestPassword</tt>, defaults to empty string
+     * Property {@code jcifs.smb.client.guestPassword}, defaults to empty string
      *
      * @return password used when guest authentication is requested
      */
     String getGuestPassword();
 
     /**
-     * Property <tt>jcifs.smb.client.guestUsername</tt>, defaults to GUEST
+     * Property {@code jcifs.smb.client.guestUsername}, defaults to GUEST
      *
      * @return username used when guest authentication is requested
      */
     String getGuestUsername();
 
     /**
-     * Property <tt>jcifs.smb.client.allowGuestFallback</tt>, defaults to false
+     * Property {@code jcifs.smb.client.allowGuestFallback}, defaults to false
      *
      * @return whether to permit guest logins when user authentication is requested
      */

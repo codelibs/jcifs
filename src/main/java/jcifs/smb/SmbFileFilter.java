@@ -19,16 +19,19 @@
 package jcifs.smb;
 
 /**
+ * Filter interface for SMB file filtering.
  *
- *
+ * This interface allows selective filtering of files
+ * when listing directory contents in SMB shares.
  */
 public interface SmbFileFilter {
 
     /**
+     * Tests whether the specified SMB file should be included in a file list.
      *
-     * @param file
+     * @param file the SMB file to test for inclusion
      * @return whether the given file should be included
-     * @throws SmbException
+     * @throws SmbException if an error occurs while accessing the file
      */
     boolean accept(SmbFile file) throws SmbException;
 }

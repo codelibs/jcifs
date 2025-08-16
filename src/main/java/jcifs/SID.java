@@ -20,11 +20,11 @@ package jcifs;
 /**
  * A Windows SID is a numeric identifier used to represent Windows
  * accounts. SIDs are commonly represented using a textual format such as
- * <tt>S-1-5-21-1496946806-2192648263-3843101252-1029</tt> but they may
+ * <code>S-1-5-21-1496946806-2192648263-3843101252-1029</code> but they may
  * also be resolved to yield the name of the associated Windows account
- * such as <tt>Administrators</tt> or <tt>MYDOM\alice</tt>.
+ * such as <code>Administrators</code> or <code>MYDOM\alice</code>.
  * <p>
- * Consider the following output of <tt>examples/SidLookup.java</tt>:
+ * Consider the following output of <code>examples/SidLookup.java</code>:
  *
  * <pre>
  *        toString: S-1-5-21-4133388617-793952518-2001621813-512
@@ -38,51 +38,52 @@ package jcifs;
 public interface SID {
 
     /**
-     *
+     * SID type indicating no type information.
      */
     int SID_TYPE_USE_NONE = 0;
 
     /**
-     *
+     * SID type indicating a user account.
      */
     int SID_TYPE_USER = 1;
 
     /**
-     *
+     * SID type indicating a domain group.
      */
     int SID_TYPE_DOM_GRP = 2;
 
     /**
-     *
+     * SID type indicating a domain.
      */
     int SID_TYPE_DOMAIN = 3;
 
     /**
-     *
+     * SID type indicating a local group or alias.
      */
     int SID_TYPE_ALIAS = 4;
 
     /**
-     *
+     * SID type indicating a well-known group.
      */
     int SID_TYPE_WKN_GRP = 5;
 
     /**
-     *
+     * SID type indicating a deleted account.
      */
     int SID_TYPE_DELETED = 6;
 
     /**
-     *
+     * SID type indicating an invalid SID.
      */
     int SID_TYPE_INVALID = 7;
 
     /**
-     *
+     * SID type indicating an unknown account type.
      */
     int SID_TYPE_UNKNOWN = 8;
 
     /**
+     * Gets the domain SID for this SID.
      *
      * @return domain SID
      */
@@ -146,7 +147,8 @@ public interface SID {
      * Returns the type of this SID indicating the state or type of account.
      * <p>
      * SID types are described in the following table.
-     * <table summary="Type codes">
+     * <table>
+     * <caption>Type codes</caption>
      * <tr>
      * <th>Type</th>
      * <th>Name</th>
@@ -194,8 +196,10 @@ public interface SID {
     int getType();
 
     /**
+     * Unwraps this SID to the specified type.
      *
-     * @param type
+     * @param <T> the type to unwrap to
+     * @param type the class of the type to unwrap to
      * @return unwrapped instance
      */
     <T> T unwrap(Class<T> type);

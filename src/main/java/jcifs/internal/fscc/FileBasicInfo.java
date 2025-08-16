@@ -24,7 +24,9 @@ import jcifs.internal.util.SMBUtil;
 import jcifs.util.Hexdump;
 
 /**
- *
+ * Represents the FILE_BASIC_INFORMATION structure used in SMB2/3 file system control code (FSCC) operations.
+ * This structure contains basic file information including creation time, last access time, last write time,
+ * change time, and file attributes for querying and setting file metadata.
  */
 public class FileBasicInfo implements BasicFileInformation {
 
@@ -35,17 +37,19 @@ public class FileBasicInfo implements BasicFileInformation {
     private int attributes;
 
     /**
-     *
+     * Default constructor for decoding.
      */
     public FileBasicInfo() {
     }
 
     /**
-     * @param create
-     * @param lastAccess
-     * @param lastWrite
-     * @param change
-     * @param attributes
+     * Constructs file basic information.
+     *
+     * @param create file creation time
+     * @param lastAccess last access time
+     * @param lastWrite last write time
+     * @param change last change time
+     * @param attributes file attributes
      */
     public FileBasicInfo(final long create, final long lastAccess, final long lastWrite, final long change, final int attributes) {
         this.createTime = create;

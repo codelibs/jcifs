@@ -26,7 +26,9 @@ import jcifs.internal.smb1.trans.SmbComTransactionResponse;
 import jcifs.internal.util.SMBUtil;
 
 /**
- *
+ * SMB1 NetShareEnum response message for enumerating network shares on a server.
+ * This class handles the response data from a NetShareEnum RPC call, which returns
+ * information about all available shares on the target server.
  */
 public class NetShareEnumResponse extends SmbComTransactionResponse {
 
@@ -35,8 +37,9 @@ public class NetShareEnumResponse extends SmbComTransactionResponse {
     private int converter, totalAvailableEntries;
 
     /**
-     *
+     * Constructs a NetShareEnumResponse
      * @param config
+     *            the configuration to use
      */
     public NetShareEnumResponse(final Configuration config) {
         super(config);

@@ -21,7 +21,9 @@ import jcifs.internal.SMBProtocolDecodingException;
 import jcifs.internal.util.SMBUtil;
 
 /**
- *
+ * Represents the FILE_STANDARD_INFORMATION structure used in SMB2/3 file system control code (FSCC) operations.
+ * This structure provides standard file information including allocation size, end-of-file position,
+ * number of links, deletion status, and directory flag.
  */
 public class FileStandardInfo implements BasicFileInformation {
 
@@ -30,6 +32,12 @@ public class FileStandardInfo implements BasicFileInformation {
     private int numberOfLinks;
     private boolean deletePending;
     private boolean directory;
+
+    /**
+     * Default constructor for decoding file standard information.
+     */
+    public FileStandardInfo() {
+    }
 
     @Override
     public byte getFileInformationLevel() {

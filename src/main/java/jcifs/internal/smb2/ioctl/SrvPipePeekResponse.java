@@ -22,10 +22,20 @@ import jcifs.internal.SMBProtocolDecodingException;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * Response structure for SMB2 IOCTL pipe peek operation.
+ * Provides information about data available in a named pipe.
+ *
  * @author svella
  *
  */
 public class SrvPipePeekResponse implements Decodable {
+
+    /**
+     * Constructs a new SrvPipePeekResponse.
+     * This response contains information about data available in a named pipe.
+     */
+    public SrvPipePeekResponse() {
+    }
 
     // see https://msdn.microsoft.com/en-us/library/dd414577.aspx
 
@@ -36,35 +46,40 @@ public class SrvPipePeekResponse implements Decodable {
     private byte[] data;
 
     /**
-     * @return the chunkBytesWritten
+     * Gets the current state of the named pipe
+     * @return the namedPipeState
      */
     public int getNamedPipeState() {
         return this.namedPipeState;
     }
 
     /**
-     * @return the chunksWritten
+     * Gets the amount of data available to read from the pipe
+     * @return the readDataAvailable
      */
     public int getReadDataAvailable() {
         return this.readDataAvailable;
     }
 
     /**
-     * @return the totalBytesWritten
+     * Gets the number of messages available in the pipe
+     * @return the numberOfMessages
      */
     public int getNumberOfMessages() {
         return this.numberOfMessages;
     }
 
     /**
-     * @return the totalBytesWritten
+     * Gets the length of the first message in the pipe
+     * @return the messageLength
      */
     public int getMessageLength() {
         return this.messageLength;
     }
 
     /**
-     * @return the totalBytesWritten
+     * Gets the data peeked from the pipe
+     * @return the data
      */
     public byte[] getData() {
         return this.data;

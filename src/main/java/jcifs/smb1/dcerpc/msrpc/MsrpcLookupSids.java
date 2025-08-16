@@ -21,10 +21,21 @@ package jcifs.smb1.dcerpc.msrpc;
 
 import jcifs.smb1.smb1.SID;
 
+/**
+ * MSRPC implementation for looking up security identifiers (SIDs).
+ * This class provides functionality to resolve SIDs to their corresponding
+ * account names using the LSA RPC interface.
+ */
 public class MsrpcLookupSids extends lsarpc.LsarLookupSids {
 
     SID[] sids;
 
+    /**
+     * Creates a new request to lookup SIDs.
+     *
+     * @param policyHandle the LSA policy handle
+     * @param sids the array of SIDs to lookup
+     */
     public MsrpcLookupSids(final LsaPolicyHandle policyHandle, final SID[] sids) {
         super(policyHandle, new LsarSidArrayX(sids), new lsarpc.LsarRefDomainList(), new lsarpc.LsarTransNameArray(), (short) 1,
                 sids.length);

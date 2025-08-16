@@ -26,23 +26,28 @@ package jcifs;
 public interface Credentials {
 
     /**
+     * Unwrap credentials to a specific type.
      *
-     * @param type
+     * @param <T> the credential type to unwrap to
+     * @param type the class of the credential type to unwrap to
      * @return instance for type, null if the type cannot be unwrapped
      */
     <T extends Credentials> T unwrap(Class<T> type);
 
     /**
+     * Get the domain of the user account.
      * @return the domain the user account is in
      */
     String getUserDomain();
 
     /**
+     * Check if these are anonymous credentials.
      * @return whether these are anonymous credentials
      */
     boolean isAnonymous();
 
     /**
+     * Check if these are guest credentials.
      * @return whether these are guest credentials
      */
     boolean isGuest();

@@ -22,8 +22,12 @@ import jcifs.internal.SMBProtocolDecodingException;
 import jcifs.internal.util.SMBUtil;
 
 /**
- * @author mbechler
+ * SMB2 Pre-authentication Integrity Negotiate Context.
  *
+ * This negotiate context is used in SMB 3.1.1 to establish
+ * pre-authentication integrity protection against downgrade attacks.
+ *
+ * @author mbechler
  */
 public class PreauthIntegrityNegotiateContext implements NegotiateContextRequest, NegotiateContextResponse {
 
@@ -41,10 +45,11 @@ public class PreauthIntegrityNegotiateContext implements NegotiateContextRequest
     private byte[] salt;
 
     /**
+     * Constructs a preauth integrity negotiate context with the specified parameters.
      *
-     * @param config
-     * @param hashAlgos
-     * @param salt
+     * @param config the SMB configuration
+     * @param hashAlgos the supported hash algorithms
+     * @param salt the salt value for preauth integrity
      */
     public PreauthIntegrityNegotiateContext(final Configuration config, final int[] hashAlgos, final byte[] salt) {
         this.hashAlgos = hashAlgos;
@@ -52,12 +57,14 @@ public class PreauthIntegrityNegotiateContext implements NegotiateContextRequest
     }
 
     /**
-     *
+     * Default constructor for deserialization.
      */
     public PreauthIntegrityNegotiateContext() {
     }
 
     /**
+     * Gets the salt value used for preauth integrity.
+     *
      * @return the salt
      */
     public byte[] getSalt() {
@@ -65,6 +72,8 @@ public class PreauthIntegrityNegotiateContext implements NegotiateContextRequest
     }
 
     /**
+     * Gets the supported hash algorithms for preauth integrity.
+     *
      * @return the hashAlgos
      */
     public int[] getHashAlgos() {

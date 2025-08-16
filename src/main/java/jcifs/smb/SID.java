@@ -36,11 +36,11 @@ import jcifs.util.Hexdump;
  *
  * A Windows SID is a numeric identifier used to represent Windows
  * accounts. SIDs are commonly represented using a textual format such as
- * <tt>S-1-5-21-1496946806-2192648263-3843101252-1029</tt> but they may
+ * {@code S-1-5-21-1496946806-2192648263-3843101252-1029} but they may
  * also be resolved to yield the name of the associated Windows account
- * such as <tt>Administrators</tt> or <tt>MYDOM\alice</tt>.
+ * such as {@code Administrators} or {@code MYDOM\alice}.
  * <p>
- * Consider the following output of <tt>examples/SidLookup.java</tt>:
+ * Consider the following output of {@code examples/SidLookup.java}:
  *
  * <pre>
  *        toString: S-1-5-21-4133388617-793952518-2001621813-512
@@ -51,7 +51,8 @@ import jcifs.util.Hexdump;
  *  getAccountName: Domain Admins
  * </pre>
  *
- * @internal
+ *
+ * <p>This section is intended for internal use.</p>
  */
 public class SID extends rpc.sid_t implements jcifs.SID {
 
@@ -61,7 +62,7 @@ public class SID extends rpc.sid_t implements jcifs.SID {
             { "0", "User", "Domain group", "Domain", "Local group", "Builtin group", "Deleted", "Invalid", "Unknown" };
 
     /**
-     *
+     * Flag indicating that SIDs should be resolved to names.
      */
     public static final int SID_FLAG_RESOLVE_SIDS = 0x0001;
 
@@ -93,7 +94,7 @@ public class SID extends rpc.sid_t implements jcifs.SID {
     /**
      * Convert a sid_t to byte array
      *
-     * @param sid
+     * @param sid the RPC sid_t structure to convert
      * @return byte encoded form
      */
     public static byte[] toByteArray(final rpc.sid_t sid) {
@@ -121,8 +122,8 @@ public class SID extends rpc.sid_t implements jcifs.SID {
      * Construct a SID from it's binary representation.
      *
      *
-     * @param src
-     * @param si
+     * @param src the byte array containing the SID
+     * @param si the starting index in the array
      */
     public SID(final byte[] src, int si) {
         this.revision = src[si];
@@ -143,10 +144,10 @@ public class SID extends rpc.sid_t implements jcifs.SID {
 
     /**
      * Construct a SID from it's textual representation such as
-     * <tt>S-1-5-21-1496946806-2192648263-3843101252-1029</tt>.
+     * {@code S-1-5-21-1496946806-2192648263-3843101252-1029}.
      *
-     * @param textual
-     * @throws SmbException
+     * @param textual the textual representation of the SID
+     * @throws SmbException if the textual format is invalid
      */
     public SID(final String textual) throws SmbException {
         final StringTokenizer st = new StringTokenizer(textual, "-");
@@ -182,11 +183,11 @@ public class SID extends rpc.sid_t implements jcifs.SID {
     /**
      * Construct a SID from a domain SID and an RID
      * (relative identifier). For example, a domain SID
-     * <tt>S-1-5-21-1496946806-2192648263-3843101252</tt> and RID <tt>1029</tt> would
-     * yield the SID <tt>S-1-5-21-1496946806-2192648263-3843101252-1029</tt>.
+     * {@code S-1-5-21-1496946806-2192648263-3843101252} and RID {@code 1029} would
+     * yield the SID {@code S-1-5-21-1496946806-2192648263-3843101252-1029}.
      *
-     * @param domsid
-     * @param rid
+     * @param domsid the domain SID
+     * @param rid the relative identifier
      */
     public SID(final SID domsid, final int rid) {
         this.revision = domsid.revision;
@@ -203,8 +204,8 @@ public class SID extends rpc.sid_t implements jcifs.SID {
     /**
      * Construct a relative SID
      *
-     * @param domsid
-     * @param id
+     * @param domsid the domain SID
+     * @param id the SID to append to the domain SID
      */
     public SID(final SID domsid, final SID id) {
         this.revision = domsid.revision;
@@ -221,12 +222,13 @@ public class SID extends rpc.sid_t implements jcifs.SID {
     }
 
     /**
+     * Constructs a SID from an RPC sid_t structure.
      *
-     * @param sid
-     * @param type
-     * @param domainName
-     * @param acctName
-     * @param decrementAuthority
+     * @param sid the RPC sid_t structure
+     * @param type the SID type
+     * @param domainName the domain name for this SID
+     * @param acctName the account name for this SID
+     * @param decrementAuthority whether to decrement the authority count
      */
     public SID(final rpc.sid_t sid, final int type, final String domainName, final String acctName, final boolean decrementAuthority) {
         this.revision = sid.revision;
@@ -262,6 +264,7 @@ public class SID extends rpc.sid_t implements jcifs.SID {
     }
 
     /**
+     * Gets the byte array representation of this SID.
      *
      * @return encoded SID
      */
@@ -270,6 +273,7 @@ public class SID extends rpc.sid_t implements jcifs.SID {
     }
 
     /**
+     * Checks whether the SID is empty (no sub-authorities).
      *
      * @return whether the SID is empty (no sub-authorities)
      */
@@ -278,6 +282,7 @@ public class SID extends rpc.sid_t implements jcifs.SID {
     }
 
     /**
+     * Checks whether the SID is blank (all sub-authorities zero).
      *
      * @return whether the SID is blank (all sub-authorities zero)
      */
@@ -391,7 +396,7 @@ public class SID extends rpc.sid_t implements jcifs.SID {
 
     /**
      * Return the numeric representation of this sid such as
-     * <tt>S-1-5-21-1496946806-2192648263-3843101252-1029</tt>.
+     * {@code S-1-5-21-1496946806-2192648263-3843101252-1029}.
      */
     @Override
     public String toString() {
@@ -453,7 +458,7 @@ public class SID extends rpc.sid_t implements jcifs.SID {
      *            The FQDN of the server that is an authority for the SID.
      * @param tc
      *            Context to use
-     * @throws IOException
+     * @throws IOException if there is an error resolving the SID
      */
     public void resolve(final String authorityServerName, final CIFSContext tc) throws IOException {
         final SID[] sids = new SID[1];
@@ -477,11 +482,11 @@ public class SID extends rpc.sid_t implements jcifs.SID {
     /**
      * Get members of the group represented by this SID, if it is one.
      *
-     * @param authorityServerName
-     * @param tc
-     * @param flags
+     * @param authorityServerName the server to use for SID resolution
+     * @param tc the CIFS context to use
+     * @param flags resolution flags
      * @return the members of the group
-     * @throws IOException
+     * @throws IOException if there is an error retrieving group members
      */
     public jcifs.SID[] getGroupMemberSids(final String authorityServerName, final CIFSContext tc, final int flags) throws IOException {
         if (this.type != SID_TYPE_DOM_GRP && this.type != SID_TYPE_ALIAS) {
@@ -492,8 +497,10 @@ public class SID extends rpc.sid_t implements jcifs.SID {
     }
 
     /**
-     * @param context
-     * @param server
+     * Initializes the context and server for this SID for deferred resolution.
+     *
+     * @param context the CIFS context to use
+     * @param server the server name for SID resolution
      */
     public void initContext(final String server, final CIFSContext context) {
         this.origin_ctx = context;

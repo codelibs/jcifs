@@ -24,15 +24,31 @@ import java.io.IOException;
 import jcifs.internal.dtyp.ACE;
 import jcifs.internal.dtyp.SecurityDescriptor;
 
-@SuppressWarnings("javadoc")
+/**
+ * MSRPC implementation for retrieving share information.
+ * This class provides functionality to get detailed information about
+ * a specific share using the Server Service RPC interface.
+ */
 public class MsrpcShareGetInfo extends srvsvc.ShareGetInfo {
 
+    /**
+     * Creates a new request to get share information.
+     *
+     * @param server the server name
+     * @param sharename the name of the share to query
+     */
     public MsrpcShareGetInfo(final String server, final String sharename) {
         super(server, sharename, 502, new srvsvc.ShareInfo502());
         this.ptype = 0;
         this.flags = DCERPC_FIRST_FRAG | DCERPC_LAST_FRAG;
     }
 
+    /**
+     * Returns the security descriptor of the share as an array of ACEs.
+     *
+     * @return an array of ACE objects representing the share's security descriptor
+     * @throws IOException if there is an error retrieving the security information
+     */
     public ACE[] getSecurity() throws IOException {
         final srvsvc.ShareInfo502 info502 = (srvsvc.ShareInfo502) this.info;
         if (info502.security_descriptor != null) {

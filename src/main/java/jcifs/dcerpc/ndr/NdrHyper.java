@@ -19,11 +19,21 @@
 
 package jcifs.dcerpc.ndr;
 
-@SuppressWarnings("javadoc")
+/**
+ * NDR representation of a hyper integer (8-byte signed integer).
+ */
 public class NdrHyper extends NdrObject {
 
+    /**
+     * The hyper integer value.
+     */
     public long value;
 
+    /**
+     * Constructs an NdrHyper with the specified value.
+     *
+     * @param value the hyper integer value
+     */
     public NdrHyper(final long value) {
         this.value = value;
     }

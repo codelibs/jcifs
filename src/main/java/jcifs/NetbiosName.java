@@ -26,16 +26,22 @@ package jcifs;
 public interface NetbiosName {
 
     /**
+     * Returns the NetBIOS name.
+     *
      * @return the name
      */
     String getName();
 
     /**
+     * Returns the NetBIOS scope identifier.
+     *
      * @return the scope id
      */
     String getScope();
 
     /**
+     * Returns the NetBIOS name type.
+     *
      * @return the name type
      */
     int getNameType();

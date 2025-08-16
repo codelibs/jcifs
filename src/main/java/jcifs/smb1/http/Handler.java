@@ -42,6 +42,12 @@ public class Handler extends URLStreamHandler {
      */
     public static final int DEFAULT_HTTP_PORT = 80;
 
+    /**
+     * Default constructor for SMB1 HTTP URL handler.
+     */
+    public Handler() {
+    }
+
     private static final Map PROTOCOL_HANDLERS = new HashMap();
 
     private static final String HANDLER_PKGS_PROPERTY = "java.protocol.handler.pkgs";

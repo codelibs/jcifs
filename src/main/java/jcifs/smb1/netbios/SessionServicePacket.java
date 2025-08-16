@@ -21,12 +21,30 @@ package jcifs.smb1.netbios;
 import java.io.IOException;
 import java.io.InputStream;
 
+/**
+ * Abstract base class for NetBIOS session service packets.
+ * This class provides common functionality for session layer communication in SMB1.
+ */
 public abstract class SessionServicePacket {
+
+    /**
+     * Default constructor for SessionServicePacket.
+     * Creates a new session service packet instance.
+     */
+    public SessionServicePacket() {
+        // Default constructor
+    }
 
     // session service packet types
     static final int SESSION_MESSAGE = 0x00;
     static final int SESSION_REQUEST = 0x81;
+    /**
+     * NetBIOS positive session response packet type.
+     */
     public static final int POSITIVE_SESSION_RESPONSE = 0x82;
+    /**
+     * NetBIOS negative session response packet type.
+     */
     public static final int NEGATIVE_SESSION_RESPONSE = 0x83;
     static final int SESSION_RETARGET_RESPONSE = 0x84;
     static final int SESSION_KEEP_ALIVE = 0x85;
@@ -89,6 +107,13 @@ public abstract class SessionServicePacket {
 
     int type, length;
 
+    /**
+     * Writes the packet to the specified byte array in wire format.
+     *
+     * @param dst the destination byte array to write to
+     * @param dstIndex the starting index in the destination array
+     * @return the number of bytes written
+     */
     public int writeWireFormat(final byte[] dst, final int dstIndex) {
         length = writeTrailerWireFormat(dst, dstIndex + HEADER_LENGTH);
         writeHeaderWireFormat(dst, dstIndex);

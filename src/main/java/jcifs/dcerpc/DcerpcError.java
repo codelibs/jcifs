@@ -19,23 +19,58 @@
 
 package jcifs.dcerpc;
 
-@SuppressWarnings("javadoc")
+/**
+ * DCE/RPC error codes and fault constants
+ */
 public interface DcerpcError {
 
+    /**
+     * Generic fault code for other errors
+     */
     int DCERPC_FAULT_OTHER = 0x00000001;
+    /**
+     * Access denied fault code
+     */
     int DCERPC_FAULT_ACCESS_DENIED = 0x00000005;
+    /**
+     * Cannot perform operation fault code
+     */
     int DCERPC_FAULT_CANT_PERFORM = 0x000006D8;
+    /**
+     * NDR encoding error fault code
+     */
     int DCERPC_FAULT_NDR = 0x000006F7;
+    /**
+     * Invalid tag fault code
+     */
     int DCERPC_FAULT_INVALID_TAG = 0x1C000006;
+    /**
+     * Context mismatch fault code
+     */
     int DCERPC_FAULT_CONTEXT_MISMATCH = 0x1C00001A;
+    /**
+     * Operation range error fault code
+     */
     int DCERPC_FAULT_OP_RNG_ERROR = 0x1C010002;
+    /**
+     * Unknown interface fault code
+     */
     int DCERPC_FAULT_UNK_IF = 0x1C010003;
+    /**
+     * Protocol error fault code
+     */
     int DCERPC_FAULT_PROTO_ERROR = 0x1c01000b;
 
+    /**
+     * Array of all DCE/RPC fault codes
+     */
     int[] DCERPC_FAULT_CODES =
             { DCERPC_FAULT_OTHER, DCERPC_FAULT_ACCESS_DENIED, DCERPC_FAULT_CANT_PERFORM, DCERPC_FAULT_NDR, DCERPC_FAULT_INVALID_TAG,
                     DCERPC_FAULT_CONTEXT_MISMATCH, DCERPC_FAULT_OP_RNG_ERROR, DCERPC_FAULT_UNK_IF, DCERPC_FAULT_PROTO_ERROR };
 
+    /**
+     * Array of human-readable messages for DCE/RPC fault codes
+     */
     String[] DCERPC_FAULT_MESSAGES = { "DCERPC_FAULT_OTHER", "DCERPC_FAULT_ACCESS_DENIED", "DCERPC_FAULT_CANT_PERFORM", "DCERPC_FAULT_NDR",
             "DCERPC_FAULT_INVALID_TAG", "DCERPC_FAULT_CONTEXT_MISMATCH", "DCERPC_FAULT_OP_RNG_ERROR", "DCERPC_FAULT_UNK_IF",
             "DCERPC_FAULT_PROTO_ERROR" };

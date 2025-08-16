@@ -23,21 +23,28 @@ import jcifs.internal.smb1.ServerMessageBlock;
 import jcifs.internal.util.SMBUtil;
 
 /**
- * @author mbechler
+ * SMB1 Seek command response implementation.
+ * Handles server responses to file seek operations, returning the new file
+ * position after a seek request in SMB1 protocol file operations.
  *
+ * @author mbechler
  */
 public class SmbComSeekResponse extends ServerMessageBlock {
 
     private long offset;
 
     /**
-     * @param config
+     * Constructs a seek response.
+     *
+     * @param config the configuration
      */
     public SmbComSeekResponse(final Configuration config) {
         super(config);
     }
 
     /**
+     * Gets the current file offset after the seek operation.
+     *
      * @return the offset
      */
     public long getOffset() {

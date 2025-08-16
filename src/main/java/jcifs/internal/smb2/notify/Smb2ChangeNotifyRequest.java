@@ -24,62 +24,66 @@ import jcifs.internal.smb2.Smb2Constants;
 import jcifs.internal.util.SMBUtil;
 
 /**
- * @author mbechler
+ * SMB2 Change Notify request message.
  *
+ * This command is used to monitor a directory for changes
+ * and receive notifications when modifications occur.
+ *
+ * @author mbechler
  */
 public class Smb2ChangeNotifyRequest extends ServerMessageBlock2Request<Smb2ChangeNotifyResponse> {
 
     /**
-     *
+     * Flag to watch the directory tree recursively
      */
     public static final int SMB2_WATCH_TREE = 0x1;
 
     /**
-     *
+     * Notify when a file name changes
      */
     public static final int FILE_NOTIFY_CHANGE_FILE_NAME = 0x1;
     /**
-     *
+     * Notify when a directory name changes
      */
     public static final int FILE_NOTIFY_CHANGE_DIR_NAME = 0x2;
     /**
-     *
+     * Notify when file attributes change
      */
     public static final int FILE_NOTIFY_CHANGE_ATTRIBUTES = 0x4;
     /**
-     *
+     * Notify when file size changes
      */
     public static final int FILE_NOTIFY_CHANGE_SIZE = 0x8;
     /**
-     *
+     * Notify when last write time changes
      */
     public static final int FILE_NOTIFY_CHANGE_LAST_WRITE = 0x10;
     /**
-     *
+     * Notify when last access time changes
      */
     public static final int FILE_NOTIFY_CHANGE_LAST_ACCESS = 0x20;
     /**
-     *
+     * Notify when creation time changes
      */
     public static final int FILE_NOTIFY_CHANGE_CREATION = 0x40;
     /**
-     *
+     * Notify when extended attributes change
      */
     public static final int FILE_NOTIFY_CHANGE_EA = 0x80;
     /**
-     *
+     * Notify when security descriptor changes
      */
     public static final int FILE_NOTIFY_CHANGE_SECURITY = 0x100;
     /**
-     *
+     * Notify when alternate data stream name changes
      */
     public static final int FILE_NOTIFY_CHANGE_STREAM_NAME = 0x200;
     /**
-     *
+     * Notify when alternate data stream size changes
      */
     public static final int FILE_NOTIFY_CHANGE_STREAM_SIZE = 0x400;
     /**
-     *
+     * Notify when alternate data stream is written
      */
     public static final int FILE_NOTIFY_CHANGE_STREAM_WRITE = 0x800;
 
@@ -89,8 +93,12 @@ public class Smb2ChangeNotifyRequest extends ServerMessageBlock2Request<Smb2Chan
     private int completionFilter;
 
     /**
+     * Constructs a change notify request
+     *
      * @param config
+     *            The configuration to use
      * @param fileId
+     *            The file ID to monitor for changes
      */
     public Smb2ChangeNotifyRequest(final Configuration config, final byte[] fileId) {
         super(config, SMB2_CHANGE_NOTIFY);
@@ -99,6 +107,8 @@ public class Smb2ChangeNotifyRequest extends ServerMessageBlock2Request<Smb2Chan
     }
 
     /**
+     * Set the notification flags
+     *
      * @param notifyFlags
      *            the notifyFlags to set
      */
@@ -107,6 +117,8 @@ public class Smb2ChangeNotifyRequest extends ServerMessageBlock2Request<Smb2Chan
     }
 
     /**
+     * Set the completion filter specifying which changes to monitor
+     *
      * @param completionFilter
      *            the completionFilter to set
      */

@@ -46,14 +46,25 @@ import jcifs.smb1.util.LogStream;
 
 /**
  * This servlet Filter can be used to negotiate password hashes with
- * MSIE clients using NTLM SSP. This is similar to <tt>Authentication:
- * BASIC</tt> but weakly encrypted and without requiring the user to re-supply
+ * MSIE clients using NTLM SSP. This is similar to {@code Authentication:
+ * BASIC} but weakly encrypted and without requiring the user to re-supply
  * authentication credentials.
  * <p>
  * Read <a href="../../../ntlmhttpauth.html">jCIFS NTLM HTTP Authentication and the Network Explorer Servlet</a> for complete details.
  */
 
+/**
+ * An HTTP servlet filter that provides NTLM authentication support for SMB1 protocol.
+ * This filter allows web applications to authenticate users via NTLM/Windows authentication.
+ */
 public class NtlmHttpFilter implements Filter {
+
+    /**
+     * Default constructor.
+     */
+    public NtlmHttpFilter() {
+        // Default constructor
+    }
 
     private static LogStream log = LogStream.getInstance();
 
@@ -117,8 +128,8 @@ public class NtlmHttpFilter implements Filter {
     }
 
     /**
-     * This method simply calls <tt>negotiate( req, resp, false )</tt>
-     * and then <tt>chain.doFilter</tt>. You can override and call
+     * This method simply calls {@code negotiate( req, resp, false )}
+     * and then {@code chain.doFilter}. You can override and call
      * negotiate manually to achive a variety of different behavior.
      */
     @Override
@@ -145,6 +156,8 @@ public class NtlmHttpFilter implements Filter {
      * the client will be forced to send an authentication (server sends
      * HttpServletResponse.SC_UNAUTHORIZED).
      * @return True if the negotiation is complete, otherwise false
+     * @throws IOException if an I/O error occurs
+     * @throws ServletException if a servlet error occurs
      */
     protected NtlmPasswordAuthentication negotiate(final HttpServletRequest req, final HttpServletResponse resp,
             final boolean skipAuthentication) throws IOException, ServletException {
@@ -241,6 +254,11 @@ public class NtlmHttpFilter implements Filter {
     }
 
     // Added by cgross to work with weblogic 6.1.
+    /**
+     * Sets the filter configuration for WebLogic 6.1 compatibility.
+     *
+     * @param f the filter configuration to set
+     */
     public void setFilterConfig(final FilterConfig f) {
         try {
             init(f);
@@ -249,6 +267,10 @@ public class NtlmHttpFilter implements Filter {
         }
     }
 
+    /**
+     * Gets the filter configuration.
+     * @return the filter configuration or null
+     */
     public FilterConfig getFilterConfig() {
         return null;
     }

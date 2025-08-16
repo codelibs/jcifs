@@ -30,7 +30,8 @@ import jcifs.dcerpc.msrpc.samr;
 import jcifs.dcerpc.msrpc.srvsvc;
 
 /**
- *
+ * DCE/RPC binding information for connecting to remote endpoints.
+ * This class encapsulates the details needed to establish a DCE/RPC connection.
  */
 public class DcerpcBinding {
 
@@ -49,8 +50,8 @@ public class DcerpcBinding {
     /**
      * Add an interface to the registry
      *
-     * @param name
-     * @param syntax
+     * @param name the interface name
+     * @param syntax the interface syntax (UUID:version)
      */
     public static void addInterface(final String name, final String syntax) {
         INTERFACES.put(name, syntax);
@@ -70,6 +71,7 @@ public class DcerpcBinding {
     }
 
     /**
+     * Get the protocol for this binding.
      * @return the proto
      */
     public String getProto() {
@@ -77,6 +79,7 @@ public class DcerpcBinding {
     }
 
     /**
+     * Get the options for this binding.
      * @return the options
      */
     public Map<String, Object> getOptions() {
@@ -84,6 +87,7 @@ public class DcerpcBinding {
     }
 
     /**
+     * Get the server for this binding.
      * @return the server
      */
     public String getServer() {
@@ -91,6 +95,7 @@ public class DcerpcBinding {
     }
 
     /**
+     * Get the endpoint for this binding.
      * @return the endpoint
      */
     public String getEndpoint() {

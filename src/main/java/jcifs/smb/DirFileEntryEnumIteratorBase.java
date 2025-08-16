@@ -26,8 +26,12 @@ import jcifs.ResourceNameFilter;
 import jcifs.SmbResource;
 
 /**
- * @author mbechler
+ * Base class for directory enumeration iterators.
  *
+ * This abstract class provides common functionality for iterating
+ * over directory entries in SMB file shares.
+ *
+ * @author mbechler
  */
 public abstract class DirFileEntryEnumIteratorBase implements CloseableIterator<FileEntry> {
 
@@ -44,13 +48,14 @@ public abstract class DirFileEntryEnumIteratorBase implements CloseableIterator<
     private boolean closed = false;
 
     /**
-     * @param th
-     * @param parent
-     * @param wildcard
-     * @param filter
-     * @param searchAttributes
-     * @throws CIFSException
+     * Creates a directory entry enumeration iterator.
      *
+     * @param th the SMB tree handle for the connection
+     * @param parent the parent resource being enumerated
+     * @param wildcard the wildcard pattern for filtering entries
+     * @param filter additional resource name filter to apply
+     * @param searchAttributes the file attributes to search for
+     * @throws CIFSException if an error occurs during initialization
      */
     public DirFileEntryEnumIteratorBase(final SmbTreeHandleImpl th, final SmbResource parent, final String wildcard,
             final ResourceNameFilter filter, final int searchAttributes) throws CIFSException {
@@ -73,6 +78,8 @@ public abstract class DirFileEntryEnumIteratorBase implements CloseableIterator<
     }
 
     /**
+     * Gets the SMB tree handle for this iterator.
+     *
      * @return the treeHandle
      */
     public final SmbTreeHandleImpl getTreeHandle() {
@@ -80,13 +87,17 @@ public abstract class DirFileEntryEnumIteratorBase implements CloseableIterator<
     }
 
     /**
-     * @return the searchAttributes
+     * Gets the search attributes for this iterator.
+     *
+     * @return the search attributes used for filtering directory entries
      */
     public final int getSearchAttributes() {
         return this.searchAttributes;
     }
 
     /**
+     * Gets the wildcard pattern for this iterator.
+     *
      * @return the wildcard
      */
     public final String getWildcard() {
@@ -94,6 +105,8 @@ public abstract class DirFileEntryEnumIteratorBase implements CloseableIterator<
     }
 
     /**
+     * Gets the parent resource being enumerated.
+     *
      * @return the parent
      */
     public final SmbResource getParent() {
@@ -122,6 +135,13 @@ public abstract class DirFileEntryEnumIteratorBase implements CloseableIterator<
         }
     }
 
+    /**
+     * Advances to the next file entry in the enumeration.
+     *
+     * @param last whether this is the last attempt to advance
+     * @return the next file entry, or null if no more entries
+     * @throws CIFSException if an error occurs during enumeration
+     */
     protected final FileEntry advance(final boolean last) throws CIFSException {
         final FileEntry[] results = getResults();
         while (this.ridx < results.length) {
@@ -143,16 +163,40 @@ public abstract class DirFileEntryEnumIteratorBase implements CloseableIterator<
         return null;
     }
 
+    /**
+     * Opens the enumeration and returns the first entry.
+     *
+     * @return the first file entry, or null if empty
+     * @throws CIFSException if an error occurs during opening
+     */
     protected abstract FileEntry open() throws CIFSException;
 
+    /**
+     * Checks if the enumeration is complete.
+     *
+     * @return true if enumeration is done, false otherwise
+     */
     protected abstract boolean isDone();
 
+    /**
+     * Fetches more entries from the server.
+     *
+     * @return true if more entries were fetched, false otherwise
+     * @throws CIFSException if an error occurs during fetching
+     */
     protected abstract boolean fetchMore() throws CIFSException;
 
+    /**
+     * Gets the current batch of results.
+     *
+     * @return array of file entries in the current batch
+     */
     protected abstract FileEntry[] getResults();
 
     /**
+     * Closes the enumeration and releases resources.
      *
+     * @throws CIFSException if an error occurs during closing
      */
     protected synchronized void doClose() throws CIFSException {
         // otherwise already closed
@@ -168,7 +212,9 @@ public abstract class DirFileEntryEnumIteratorBase implements CloseableIterator<
     }
 
     /**
+     * Performs the internal closing operations specific to the implementation.
      *
+     * @throws CIFSException if an error occurs during internal closing
      */
     protected abstract void doCloseInternal() throws CIFSException;
 

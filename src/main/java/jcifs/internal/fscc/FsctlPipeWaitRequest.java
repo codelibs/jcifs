@@ -23,8 +23,11 @@ import jcifs.Encodable;
 import jcifs.internal.util.SMBUtil;
 
 /**
- * @author mbechler
+ * File System Control Code (FSCC) request for pipe wait operations.
+ * Implements the FSCTL_PIPE_WAIT control code used to wait for a named pipe
+ * to become available when attempting to connect to a busy pipe.
  *
+ * @author mbechler
  */
 public class FsctlPipeWaitRequest implements Encodable {
 
@@ -33,8 +36,9 @@ public class FsctlPipeWaitRequest implements Encodable {
     private final boolean timeoutSpecified;
 
     /**
-     * @param name
+     * Constructs a pipe wait request without timeout.
      *
+     * @param name the pipe name to wait for
      */
     public FsctlPipeWaitRequest(final String name) {
         this.nameBytes = name.getBytes(StandardCharsets.UTF_16LE);
@@ -43,9 +47,10 @@ public class FsctlPipeWaitRequest implements Encodable {
     }
 
     /**
-     * @param name
-     * @param timeout
+     * Constructs a pipe wait request with timeout.
      *
+     * @param name the pipe name to wait for
+     * @param timeout the timeout value in milliseconds
      */
     public FsctlPipeWaitRequest(final String name, final long timeout) {
         this.nameBytes = name.getBytes(StandardCharsets.UTF_16LE);

@@ -6,21 +6,64 @@ import jcifs.dcerpc.ndr.NdrException;
 import jcifs.dcerpc.ndr.NdrLong;
 import jcifs.dcerpc.ndr.NdrObject;
 
+/**
+ * DCE/RPC interface for Distributed File System (DFS) operations.
+ * Provides structures and methods for DFS management and enumeration.
+ */
 @SuppressWarnings("all")
 public class netdfs {
 
+    /**
+     * Default constructor for netdfs
+     */
+    public netdfs() {
+        // Default constructor
+    }
+
+    /**
+     * Gets the DCE/RPC syntax identifier for the DFS interface
+     * @return the syntax identifier string
+     */
     public static String getSyntax() {
         return "4fc742e0-4a10-11cf-8273-00aa004ae673:3.0";
     }
 
+    /**
+     * DFS volume flavor indicating standalone DFS
+     */
     public static final int DFS_VOLUME_FLAVOR_STANDALONE = 0x100;
+    /**
+     * DFS volume flavor indicating Active Directory blob storage
+     */
     public static final int DFS_VOLUME_FLAVOR_AD_BLOB = 0x200;
+    /**
+     * DFS storage state indicating offline status
+     */
     public static final int DFS_STORAGE_STATE_OFFLINE = 0x0001;
+    /**
+     * DFS storage state indicating online status
+     */
     public static final int DFS_STORAGE_STATE_ONLINE = 0x0002;
+    /**
+     * DFS storage state indicating active status
+     */
     public static final int DFS_STORAGE_STATE_ACTIVE = 0x0004;
 
+    /**
+     * DFS information level 1 structure containing basic DFS entry information
+     */
     public static class DfsInfo1 extends NdrObject {
 
+        /**
+         * Default constructor for DfsInfo1
+         */
+        public DfsInfo1() {
+            // Default constructor
+        }
+
+        /**
+         * The DFS entry path
+         */
         public String entry_path;
 
         @Override
@@ -48,9 +91,25 @@ public class netdfs {
         }
     }
 
+    /**
+     * Array structure for DFS enumeration containing level 1 information
+     */
     public static class DfsEnumArray1 extends NdrObject {
 
+        /**
+         * Default constructor for DfsEnumArray1
+         */
+        public DfsEnumArray1() {
+            // Default constructor
+        }
+
+        /**
+         * Number of DFS entries in the array
+         */
         public int count;
+        /**
+         * Array of DFS information level 1 structures
+         */
         public DfsInfo1[] s;
 
         @Override
@@ -102,10 +161,29 @@ public class netdfs {
         }
     }
 
+    /**
+     * DFS storage information structure containing server and share details
+     */
     public static class DfsStorageInfo extends NdrObject {
 
+        /**
+         * Default constructor for DfsStorageInfo
+         */
+        public DfsStorageInfo() {
+            // Default constructor
+        }
+
+        /**
+         * Storage state flags
+         */
         public int state;
+        /**
+         * Server name hosting the storage
+         */
         public String server_name;
+        /**
+         * Share name on the server
+         */
         public String share_name;
 
         @Override
@@ -147,12 +225,37 @@ public class netdfs {
         }
     }
 
+    /**
+     * DFS information level 3 structure containing detailed DFS entry information
+     */
     public static class DfsInfo3 extends NdrObject {
 
+        /**
+         * Default constructor for DfsInfo3
+         */
+        public DfsInfo3() {
+            // Default constructor
+        }
+
+        /**
+         * DFS path
+         */
         public String path;
+        /**
+         * Comment or description
+         */
         public String comment;
+        /**
+         * DFS state flags
+         */
         public int state;
+        /**
+         * Number of storage servers
+         */
         public int num_stores;
+        /**
+         * Array of storage information
+         */
         public DfsStorageInfo[] stores;
 
         @Override
@@ -230,9 +333,25 @@ public class netdfs {
         }
     }
 
+    /**
+     * Array structure for DFS enumeration containing level 3 information
+     */
     public static class DfsEnumArray3 extends NdrObject {
 
+        /**
+         * Default constructor for DfsEnumArray3
+         */
+        public DfsEnumArray3() {
+            // Default constructor
+        }
+
+        /**
+         * Number of DFS entries in the array
+         */
         public int count;
+        /**
+         * Array of DFS information level 3 structures
+         */
         public DfsInfo3[] s;
 
         @Override
@@ -284,8 +403,21 @@ public class netdfs {
         }
     }
 
+    /**
+     * DFS information level 200 structure for extended DFS information
+     */
     public static class DfsInfo200 extends NdrObject {
 
+        /**
+         * Default constructor for DfsInfo200
+         */
+        public DfsInfo200() {
+            // Default constructor
+        }
+
+        /**
+         * The DFS name
+         */
         public String dfs_name;
 
         @Override
@@ -313,9 +445,25 @@ public class netdfs {
         }
     }
 
+    /**
+     * Array structure for DFS enumeration containing level 200 information
+     */
     public static class DfsEnumArray200 extends NdrObject {
 
+        /**
+         * Default constructor for DfsEnumArray200
+         */
+        public DfsEnumArray200() {
+            // Default constructor
+        }
+
+        /**
+         * Number of DFS entries in the array
+         */
         public int count;
+        /**
+         * Array of DFS information level 200 structures
+         */
         public DfsInfo200[] s;
 
         @Override
@@ -367,9 +515,25 @@ public class netdfs {
         }
     }
 
+    /**
+     * DFS information level 300 structure for extended DFS information
+     */
     public static class DfsInfo300 extends NdrObject {
 
+        /**
+         * Default constructor for DfsInfo300
+         */
+        public DfsInfo300() {
+            // Default constructor
+        }
+
+        /**
+         * DFS flags
+         */
         public int flags;
+        /**
+         * The DFS name
+         */
         public String dfs_name;
 
         @Override
@@ -399,9 +563,25 @@ public class netdfs {
         }
     }
 
+    /**
+     * Array structure for DFS enumeration containing level 300 information
+     */
     public static class DfsEnumArray300 extends NdrObject {
 
+        /**
+         * Default constructor for DfsEnumArray300
+         */
+        public DfsEnumArray300() {
+            // Default constructor
+        }
+
+        /**
+         * Number of DFS entries in the array
+         */
         public int count;
+        /**
+         * Array of DFS information level 300 structures
+         */
         public DfsInfo300[] s;
 
         @Override
@@ -453,9 +633,25 @@ public class netdfs {
         }
     }
 
+    /**
+     * DFS enumeration structure containing the level and corresponding data
+     */
     public static class DfsEnumStruct extends NdrObject {
 
+        /**
+         * Default constructor for DfsEnumStruct
+         */
+        public DfsEnumStruct() {
+            // Default constructor
+        }
+
+        /**
+         * Information level for the enumeration
+         */
         public int level;
+        /**
+         * Enumeration data object corresponding to the level
+         */
         public NdrObject e;
 
         @Override
@@ -491,6 +687,9 @@ public class netdfs {
         }
     }
 
+    /**
+     * DCE/RPC message for NetrDfsEnumEx operation to enumerate DFS entries
+     */
     public static class NetrDfsEnumEx extends DcerpcMessage {
 
         @Override
@@ -498,13 +697,39 @@ public class netdfs {
             return 0x15;
         }
 
+        /**
+         * Return value from the RPC call
+         */
         public int retval;
+        /**
+         * DFS name to enumerate
+         */
         public String dfs_name;
+        /**
+         * Information level for enumeration
+         */
         public int level;
+        /**
+         * Preferred maximum length of returned data
+         */
         public int prefmaxlen;
+        /**
+         * DFS enumeration structure containing results
+         */
         public DfsEnumStruct info;
+        /**
+         * Total number of entries available
+         */
         public NdrLong totalentries;
 
+        /**
+         * Constructs a NetrDfsEnumEx request
+         * @param dfs_name the DFS name to enumerate
+         * @param level the information level
+         * @param prefmaxlen the preferred maximum length
+         * @param info the enumeration structure
+         * @param totalentries holder for total entries count
+         */
         public NetrDfsEnumEx(final String dfs_name, final int level, final int prefmaxlen, final DfsEnumStruct info,
                 final NdrLong totalentries) {
             this.dfs_name = dfs_name;

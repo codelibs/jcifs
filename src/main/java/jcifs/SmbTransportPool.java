@@ -25,19 +25,22 @@ import java.net.UnknownHostException;
  * This is an internal API for managing pools of SMB connections
  *
  * @author mbechler
- * @internal
+ *
+ * <p>This interface is intended for internal use.</p>
  */
 public interface SmbTransportPool {
 
     /**
-     * @param tf
-     * @param name
-     * @param port
-     * @param exclusive
-     * @param forceSigning
+     * Gets an SMB transport connection to the specified server.
+     *
+     * @param tf the CIFS context to use
+     * @param name the server name or address
+     * @param port the port number
+     * @param exclusive whether to acquire an unshared connection
+     * @param forceSigning whether to enforce SMB signing
      * @return a connected transport
-     * @throws UnknownHostException
-     * @throws IOException
+     * @throws UnknownHostException if the host cannot be resolved
+     * @throws IOException if an I/O error occurs
      */
     SmbTransport getSmbTransport(CIFSContext tf, String name, int port, boolean exclusive, boolean forceSigning)
             throws UnknownHostException, IOException;
@@ -47,8 +50,8 @@ public interface SmbTransportPool {
      *
      * @param tc
      *            context to use
-     * @param address
-     * @param port
+     * @param address the server address
+     * @param port the port number
      * @param exclusive
      *            whether to acquire an unshared connection
      * @return a transport connection to the target
@@ -60,8 +63,8 @@ public interface SmbTransportPool {
      *
      * @param tc
      *            context to use
-     * @param address
-     * @param port
+     * @param address the server address
+     * @param port the port number
      * @param exclusive
      *            whether to acquire an unshared connection
      * @param forceSigning
@@ -75,11 +78,11 @@ public interface SmbTransportPool {
      *
      * @param tc
      *            context to use
-     * @param address
-     * @param port
-     * @param localAddr
-     * @param localPort
-     * @param hostName
+     * @param address the server address
+     * @param port the port number
+     * @param localAddr the local address to bind to
+     * @param localPort the local port to bind to
+     * @param hostName the server host name
      * @param exclusive
      *            whether to acquire an unshared connection
      * @return a transport connection to the target
@@ -88,13 +91,15 @@ public interface SmbTransportPool {
             boolean exclusive);
 
     /**
+     * Gets or creates an SMB transport for the given context.
+     *
      * @param tc
      *            context to use
-     * @param address
-     * @param port
-     * @param localAddr
-     * @param localPort
-     * @param hostName
+     * @param address the server address
+     * @param port the port number
+     * @param localAddr the local address to bind to
+     * @param localPort the local port to bind to
+     * @param hostName the server host name
      * @param exclusive
      *            whether to acquire an unshared connection
      * @param forceSigning
@@ -105,8 +110,9 @@ public interface SmbTransportPool {
             boolean exclusive, boolean forceSigning);
 
     /**
+     * Removes a transport from the pool.
      *
-     * @param trans
+     * @param trans the transport to remove
      */
     void removeTransport(SmbTransport trans);
 
@@ -115,25 +121,25 @@ public interface SmbTransportPool {
      *
      * @return whether any transport was still in use
      *
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs during authentication
      *
      */
     boolean close() throws CIFSException;
 
     /**
      * Authenticate arbitrary credentials represented by the
-     * <tt>NtlmPasswordAuthentication</tt> object against the domain controller
-     * specified by the <tt>UniAddress</tt> parameter. If the credentials are
-     * not accepted, an <tt>SmbAuthException</tt> will be thrown. If an error
-     * occurs an <tt>SmbException</tt> will be thrown. If the credentials are
+     * <code>NtlmPasswordAuthentication</code> object against the domain controller
+     * specified by the <code>UniAddress</code> parameter. If the credentials are
+     * not accepted, an <code>SmbAuthException</code> will be thrown. If an error
+     * occurs an <code>SmbException</code> will be thrown. If the credentials are
      * valid, the method will return without throwing an exception. See the
      * last <a href="../../../faq.html">FAQ</a> question.
      * <p>
-     * See also the <tt>jcifs.smb.client.logonShare</tt> property.
+     * See also the <code>jcifs.smb.client.logonShare</code> property.
      *
-     * @param dc
-     * @param tc
-     * @throws CIFSException
+     * @param dc the domain controller address
+     * @param tc the CIFS context containing credentials
+     * @throws CIFSException if an error occurs during authentication
      * @deprecated functionality is broken and will be removed at some point,
      *             use actual Active Directory authentication instead
      */
@@ -142,19 +148,19 @@ public interface SmbTransportPool {
 
     /**
      * Authenticate arbitrary credentials represented by the
-     * <tt>NtlmPasswordAuthentication</tt> object against the domain controller
-     * specified by the <tt>UniAddress</tt> parameter. If the credentials are
-     * not accepted, an <tt>SmbAuthException</tt> will be thrown. If an error
-     * occurs an <tt>SmbException</tt> will be thrown. If the credentials are
+     * <code>NtlmPasswordAuthentication</code> object against the domain controller
+     * specified by the <code>UniAddress</code> parameter. If the credentials are
+     * not accepted, an <code>SmbAuthException</code> will be thrown. If an error
+     * occurs an <code>SmbException</code> will be thrown. If the credentials are
      * valid, the method will return without throwing an exception. See the
      * last <a href="../../../faq.html">FAQ</a> question.
      * <p>
-     * See also the <tt>jcifs.smb.client.logonShare</tt> property.
+     * See also the <code>jcifs.smb.client.logonShare</code> property.
      *
-     * @param dc
-     * @param port
-     * @param tc
-     * @throws CIFSException
+     * @param dc the domain controller address
+     * @param port the port number
+     * @param tc the CIFS context containing credentials
+     * @throws CIFSException if an error occurs during authentication
      * @deprecated functionality is broken and will be removed at some point,
      *             use actual Active Directory authentication instead
      */
@@ -164,10 +170,10 @@ public interface SmbTransportPool {
     /**
      * Get NTLM challenge from a server
      *
-     * @param dc
-     * @param tc
+     * @param dc the domain controller address
+     * @param tc the CIFS context containing credentials
      * @return NTLM challenge
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs during authentication
      * @deprecated functionality is broken and will be removed at some point,
      *             use actual Active Directory authentication instead
      */
@@ -177,11 +183,11 @@ public interface SmbTransportPool {
     /**
      * Get NTLM challenge from a server
      *
-     * @param dc
-     * @param port
-     * @param tc
+     * @param dc the domain controller address
+     * @param port the port number
+     * @param tc the CIFS context containing credentials
      * @return NTLM challenge
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs during authentication
      * @deprecated functionality is broken and will be removed at some point,
      *             use actual Active Directory authentication instead
      */

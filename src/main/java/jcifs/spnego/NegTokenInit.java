@@ -45,15 +45,35 @@ import jcifs.util.Hexdump;
 /**
  * SPNEGO initial token
  */
-@SuppressWarnings("javadoc")
 public class NegTokenInit extends SpnegoToken {
 
+    /**
+     * Context flag for delegation capability
+     */
     public static final int DELEGATION = 0x80;
+    /**
+     * Context flag for mutual authentication requirement
+     */
     public static final int MUTUAL_AUTHENTICATION = 0x40;
+    /**
+     * Context flag for replay detection capability
+     */
     public static final int REPLAY_DETECTION = 0x20;
+    /**
+     * Context flag for sequence checking capability
+     */
     public static final int SEQUENCE_CHECKING = 0x10;
+    /**
+     * Context flag for anonymity capability
+     */
     public static final int ANONYMITY = 0x08;
+    /**
+     * Context flag for confidentiality (encryption) capability
+     */
     public static final int CONFIDENTIALITY = 0x04;
+    /**
+     * Context flag for integrity (signing) capability
+     */
     public static final int INTEGRITY = 0x02;
 
     private static final ASN1ObjectIdentifier SPNEGO_OID = new ASN1ObjectIdentifier(SpnegoConstants.SPNEGO_MECHANISM);
@@ -62,9 +82,19 @@ public class NegTokenInit extends SpnegoToken {
 
     private int contextFlags;
 
+    /**
+     * Default constructor for NegTokenInit
+     */
     public NegTokenInit() {
     }
 
+    /**
+     * Constructs a NegTokenInit with the specified parameters
+     * @param mechanisms the array of supported authentication mechanisms
+     * @param contextFlags the context flags indicating security capabilities
+     * @param mechanismToken the initial token for the selected mechanism
+     * @param mechanismListMIC the MIC over the mechanism list
+     */
     public NegTokenInit(final ASN1ObjectIdentifier[] mechanisms, final int contextFlags, final byte[] mechanismToken,
             final byte[] mechanismListMIC) {
         setMechanisms(mechanisms);
@@ -73,30 +103,61 @@ public class NegTokenInit extends SpnegoToken {
         setMechanismListMIC(mechanismListMIC);
     }
 
+    /**
+     * Constructs a NegTokenInit by parsing the provided token bytes
+     * @param token the SPNEGO token bytes to parse
+     * @throws IOException if parsing fails
+     */
     public NegTokenInit(final byte[] token) throws IOException {
         parse(token);
     }
 
+    /**
+     * Gets the context flags indicating security capabilities
+     * @return the context flags
+     */
     public int getContextFlags() {
         return this.contextFlags;
     }
 
+    /**
+     * Sets the context flags indicating security capabilities
+     * @param contextFlags the context flags to set
+     */
     public void setContextFlags(final int contextFlags) {
         this.contextFlags = contextFlags;
     }
 
+    /**
+     * Checks if a specific context flag is set
+     * @param flag the context flag to check
+     * @return true if the flag is set, false otherwise
+     */
     public boolean getContextFlag(final int flag) {
         return (getContextFlags() & flag) == flag;
     }
 
+    /**
+     * Sets or clears a specific context flag
+     * @param flag the context flag to set or clear
+     * @param value true to set the flag, false to clear it
+     */
     public void setContextFlag(final int flag, final boolean value) {
         setContextFlags(value ? getContextFlags() | flag : getContextFlags() & (0xffffffff ^ flag));
     }
 
+    /**
+     * Gets the array of supported authentication mechanisms
+     * @return the mechanisms array
+     */
     public ASN1ObjectIdentifier[] getMechanisms() {
         return this.mechanisms;
     }
 
+    /**
+     * Sets the array of supported authentication mechanisms
+     * @param mechanisms the mechanisms to set
+     */
     public void setMechanisms(final ASN1ObjectIdentifier[] mechanisms) {
         this.mechanisms = mechanisms;
     }

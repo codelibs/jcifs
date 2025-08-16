@@ -17,18 +17,39 @@
 
 package jcifs.smb1.util;
 
+/**
+ * Implementation of the RC4 (ARCFOUR) stream cipher algorithm.
+ * This class provides RC4 encryption/decryption functionality used in SMB1 protocol operations.
+ */
 public class RC4 {
 
     byte[] s;
     int i, j;
 
+    /**
+     * Default constructor for RC4 cipher.
+     * Call init() to initialize with a key before use.
+     */
     public RC4() {
     }
 
+    /**
+     * Constructs and initializes an RC4 cipher with the specified key.
+     *
+     * @param key the encryption key
+     */
     public RC4(final byte[] key) {
         init(key, 0, key.length);
     }
 
+    /**
+     * Initializes the RC4 cipher with a key.
+     * This method sets up the RC4 state array using the key scheduling algorithm.
+     *
+     * @param key the key array
+     * @param ki the starting offset in the key array
+     * @param klen the length of the key to use
+     */
     public void init(final byte[] key, final int ki, final int klen) {
         s = new byte[256];
 
@@ -46,6 +67,16 @@ public class RC4 {
         i = j = 0;
     }
 
+    /**
+     * Encrypts or decrypts data using the RC4 stream cipher.
+     * Since RC4 is a stream cipher, the same operation is used for both encryption and decryption.
+     *
+     * @param src the source data array
+     * @param soff the offset in the source array
+     * @param slen the length of data to process
+     * @param dst the destination array for the result
+     * @param doff the offset in the destination array
+     */
     public void update(final byte[] src, int soff, final int slen, final byte[] dst, int doff) {
         int slim = soff + slen;
         while (soff < slim) {

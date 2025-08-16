@@ -23,22 +23,28 @@ import jcifs.internal.smb1.ServerMessageBlock;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * SMB1 Write Response message.
  *
+ * This response contains information about the write operation,
+ * including the number of bytes that were written to the file.
  */
 public class SmbComWriteResponse extends ServerMessageBlock {
 
     private long count;
 
     /**
+     * Constructs a write response for SMB1 protocol.
      *
-     * @param config
+     * @param config the configuration for this SMB session
      */
     public SmbComWriteResponse(final Configuration config) {
         super(config);
     }
 
     /**
-     * @return the count
+     * Gets the number of bytes written.
+     *
+     * @return the count of bytes written
      */
     public long getCount() {
         return this.count;

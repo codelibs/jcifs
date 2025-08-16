@@ -28,8 +28,11 @@ import jcifs.DfsReferralData;
 import jcifs.internal.smb1.trans2.Trans2GetDfsReferralResponse;
 
 /**
- * @author mbechler
+ * Implementation of DFS referral data for internal use.
+ * Provides concrete implementation of DFS referral information including server details,
+ * share paths, expiration handling, and referral management for DFS path resolution.
  *
+ * @author mbechler
  */
 public class DfsReferralDataImpl implements DfsReferralDataInternal {
 
@@ -55,7 +58,7 @@ public class DfsReferralDataImpl implements DfsReferralDataInternal {
     private boolean intermediate;
 
     /**
-     *
+     * Constructs a new DfsReferralDataImpl instance
      */
     public DfsReferralDataImpl() {
         this.next = this;
@@ -96,6 +99,8 @@ public class DfsReferralDataImpl implements DfsReferralDataInternal {
     }
 
     /**
+     * Set the domain for this referral
+     *
      * @param domain
      *            the domain to set
      */
@@ -146,6 +151,8 @@ public class DfsReferralDataImpl implements DfsReferralDataInternal {
     }
 
     /**
+     * Get the referral flags
+     *
      * @return the rflags
      */
     public int getFlags() {
@@ -180,8 +187,9 @@ public class DfsReferralDataImpl implements DfsReferralDataInternal {
     }
 
     /**
+     * Append another referral to this referral chain
      *
-     * @param dr
+     * @param dr the referral to append
      */
     @Override
     public void append(final DfsReferralDataInternal dr) {
@@ -239,7 +247,7 @@ public class DfsReferralDataImpl implements DfsReferralDataInternal {
     }
 
     /**
-     *
+     * Mark this referral as intermediate (requires further resolution)
      */
     public void intermediate() {
         this.intermediate = true;
@@ -261,6 +269,8 @@ public class DfsReferralDataImpl implements DfsReferralDataInternal {
     }
 
     /**
+     * Get the time to live for this referral
+     *
      * @return the ttl
      */
     public long getTtl() {
@@ -292,10 +302,12 @@ public class DfsReferralDataImpl implements DfsReferralDataInternal {
     }
 
     /**
-     * @param ref
-     * @param reqPath
-     * @param expire
-     * @param consumed
+     * Set the referral data from a referral response
+     *
+     * @param ref the referral response
+     * @param reqPath the requested path
+     * @param expire the expiration time
+     * @param consumed the number of characters consumed from the path
      * @return referral data
      */
     public static DfsReferralDataImpl fromReferral(final Referral ref, final String reqPath, final long expire, final int consumed) {

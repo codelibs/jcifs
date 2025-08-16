@@ -75,11 +75,18 @@ public class DES {
 
     private final int[] tempInts = new int[2];
 
+    /**
+     * Creates a DES cipher instance without a key
+     */
     public DES() {
 
     }
 
     // Constructor, byte-array key.
+    /**
+     * Creates a DES cipher instance with the specified key
+     * @param key the DES key (7 or 8 bytes)
+     */
     public DES(final byte[] key) {
         if (key.length == 7) {
             final byte[] key8 = new byte[8];
@@ -90,6 +97,11 @@ public class DES {
         }
     }
 
+    /**
+     * Converts a 7-byte SMB key to an 8-byte DES key with parity bits
+     * @param key7 the 7-byte SMB key
+     * @param key8 the output 8-byte DES key
+     */
     public static void makeSMBKey(final byte[] key7, final byte[] key8) {
 
         int i;
@@ -108,6 +120,10 @@ public class DES {
     }
 
     /// Set the key.
+    /**
+     * Sets the DES encryption key
+     * @param key the 8-byte DES key
+     */
     public void setKey(final byte[] key) {
 
         // CHECK PAROTY TBD
@@ -286,11 +302,21 @@ public class DES {
     }
 
     /// Encrypt a block of bytes.
+    /**
+     * Encrypts an 8-byte block using DES
+     * @param clearText the 8-byte plaintext block
+     * @param cipherText the output 8-byte ciphertext block
+     */
     public void encrypt(final byte[] clearText, final byte[] cipherText) {
         encrypt(clearText, 0, cipherText, 0);
     }
 
     /// Decrypt a block of bytes.
+    /**
+     * Decrypts an 8-byte block using DES
+     * @param cipherText the 8-byte ciphertext block
+     * @param clearText the output 8-byte plaintext block
+     */
     public void decrypt(final byte[] cipherText, final byte[] clearText) {
 
         decrypt(cipherText, 0, clearText, 0);
@@ -298,6 +324,11 @@ public class DES {
 
     /**
      * encrypts an array where the length must be a multiple of 8
+     */
+    /**
+     * Encrypts an 8-byte block using DES
+     * @param clearText the 8-byte plaintext block
+     * @return the 8-byte ciphertext block
      */
     public byte[] encrypt(final byte[] clearText) {
 
@@ -320,6 +351,11 @@ public class DES {
 
     /**
      * decrypts an array where the length must be a multiple of 8
+     */
+    /**
+     * Decrypts an 8-byte block using DES
+     * @param cipherText the 8-byte ciphertext block
+     * @return the 8-byte plaintext block
      */
     public byte[] decrypt(final byte[] cipherText) {
 
@@ -419,6 +455,14 @@ public class DES {
             0x00001040, 0x00001040, 0x00040040, 0x10000000, 0x10041000 };
 
     /// Squash bytes down to ints.
+    /**
+     * Converts bytes to integers for internal DES processing
+     * @param inBytes the input byte array
+     * @param inOff the offset into the input array
+     * @param outInts the output integer array
+     * @param outOff the offset into the output array
+     * @param intLen the number of integers to convert
+     */
     public static void squashBytesToInts(final byte[] inBytes, final int inOff, final int[] outInts, final int outOff, final int intLen) {
 
         for (int i = 0; i < intLen; ++i) {
@@ -428,6 +472,14 @@ public class DES {
     }
 
     /// Spread ints into bytes.
+    /**
+     * Converts integers to bytes after internal DES processing
+     * @param inInts the input integer array
+     * @param inOff the offset into the input array
+     * @param outBytes the output byte array
+     * @param outOff the offset into the output array
+     * @param intLen the number of integers to convert
+     */
     public static void spreadIntsToBytes(final int[] inInts, final int inOff, final byte[] outBytes, final int outOff, final int intLen) {
 
         for (int i = 0; i < intLen; ++i) {

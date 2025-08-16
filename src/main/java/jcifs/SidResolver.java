@@ -24,7 +24,8 @@ import java.util.Map;
  * This is an internal API for resolving SIDs to names and/or retrieving member SIDs
  *
  * @author mbechler
- * @internal
+ *
+ * <p>This interface is intended for internal use.</p>
  */
 public interface SidResolver {
 
@@ -45,40 +46,44 @@ public interface SidResolver {
      *            authority.
      * @param sids
      *            The SIDs that should be resolved. After this function is called, the names associated with the SIDs
-     *            may be queried with the <tt>toDisplayString</tt>, <tt>getDomainName</tt>, and <tt>getAccountName</tt>
+     *            may be queried with the <code>toDisplayString</code>, <code>getDomainName</code>, and <code>getAccountName</code>
      *            methods.
-     * @throws CIFSException
+     * @throws CIFSException if there is an error resolving the SIDs
      */
     void resolveSids(CIFSContext tc, String authorityServerName, SID[] sids) throws CIFSException;
 
     /**
      * Resolve part of an array of SIDs using a cache and at most one MSRPC request.
      *
-     * @param tc
-     * @param authorityServerName
-     * @param sids
-     * @param off
-     * @param len
-     * @throws CIFSException
+     * @param tc the CIFS context to use
+     * @param authorityServerName the server to use for SID resolution
+     * @param sids the array of SIDs to resolve
+     * @param off the starting offset in the array
+     * @param len the number of SIDs to resolve
+     * @throws CIFSException if there is an error resolving the SIDs
      */
     void resolveSids(CIFSContext tc, String authorityServerName, SID[] sids, int off, int len) throws CIFSException;
 
     /**
-     * @param tc
-     * @param authorityServerName
-     * @param domsid
-     * @param rid
-     * @param flags
+     * Gets the SIDs of members of a group.
+     *
+     * @param tc the CIFS context to use
+     * @param authorityServerName the server to use for resolution
+     * @param domsid the domain SID
+     * @param rid the group RID
+     * @param flags resolution flags
      * @return the SIDs of the group members
-     * @throws CIFSException
+     * @throws CIFSException if there is an error retrieving group members
      */
     SID[] getGroupMemberSids(CIFSContext tc, String authorityServerName, SID domsid, int rid, int flags) throws CIFSException;
 
     /**
-     * @param authorityServerName
-     * @param tc
+     * Gets the domain SID for the specified server.
+     *
+     * @param authorityServerName the server name
+     * @param tc the CIFS context to use
      * @return the server's SID
-     * @throws CIFSException
+     * @throws CIFSException if there is an error retrieving the server SID
      */
     SID getServerSid(CIFSContext tc, String authorityServerName) throws CIFSException;
 
@@ -87,12 +92,12 @@ public interface SidResolver {
      * target server where keys are SIDs representing an account and each value
      * is an ArrayList of SIDs represents the local groups that the account is
      * a member of.
-     * <p/>
+     *
      * This method is designed to assist with computing access control for a
      * given user when the target object's ACL has local groups. Local groups
      * are not listed in a user's group membership (e.g. as represented by the
      * tokenGroups constructed attribute retrieved via LDAP).
-     * <p/>
+     *
      * Domain groups nested inside a local group are currently not expanded. In
      * this case the key (SID) type will be SID_TYPE_DOM_GRP rather than
      * SID_TYPE_USER.
@@ -107,7 +112,7 @@ public interface SidResolver {
      *            flag should be used which causes all group member SIDs to be resolved
      *            together in a single more efficient operation.
      * @return a map of group SID to member SIDs
-     * @throws CIFSException
+     * @throws CIFSException if there is an error retrieving local groups
      */
     Map<SID, List<SID>> getLocalGroupsMap(CIFSContext tc, String authorityServerName, int flags) throws CIFSException;
 

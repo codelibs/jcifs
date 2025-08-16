@@ -18,21 +18,40 @@ package jcifs.pac;
 
 import jcifs.smb.SID;
 
-@SuppressWarnings("javadoc")
+/**
+ * Represents a Security Identifier (SID) with associated attributes within a PAC structure.
+ * This class encapsulates a SID and its attribute flags as used in Kerberos PAC data.
+ */
 public class PacSidAttributes {
 
     private final SID id;
     private final int attributes;
 
+    /**
+     * Constructs a new PacSidAttributes instance.
+     *
+     * @param id the Security Identifier
+     * @param attributes the attribute flags associated with the SID
+     */
     public PacSidAttributes(final SID id, final int attributes) {
         this.id = id;
         this.attributes = attributes;
     }
 
+    /**
+     * Gets the Security Identifier.
+     *
+     * @return the SID associated with this instance
+     */
     public SID getId() {
         return this.id;
     }
 
+    /**
+     * Gets the attribute flags associated with the SID.
+     *
+     * @return the attribute flags
+     */
     public int getAttributes() {
         return this.attributes;
     }

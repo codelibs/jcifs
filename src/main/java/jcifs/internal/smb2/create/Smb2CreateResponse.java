@@ -33,6 +33,9 @@ import jcifs.internal.util.SMBUtil;
 import jcifs.util.Hexdump;
 
 /**
+ * SMB2 Create response message. This response contains the file ID and attributes
+ * of the created or opened file or directory.
+ *
  * @author mbechler
  *
  */
@@ -55,8 +58,9 @@ public class Smb2CreateResponse extends ServerMessageBlock2Response implements S
     private final String fileName;
 
     /**
-     * @param config
-     * @param name
+     * Constructs an SMB2 create response
+     * @param config the client configuration
+     * @param name the file name
      */
     public Smb2CreateResponse(final Configuration config, final String name) {
         super(config);
@@ -77,6 +81,7 @@ public class Smb2CreateResponse extends ServerMessageBlock2Response implements S
     }
 
     /**
+     * Get the oplock level granted by the server
      * @return the oplockLevel
      */
     public final byte getOplockLevel() {
@@ -84,6 +89,7 @@ public class Smb2CreateResponse extends ServerMessageBlock2Response implements S
     }
 
     /**
+     * Get the open flags returned by the server
      * @return the flags
      */
     public final byte getOpenFlags() {
@@ -91,6 +97,7 @@ public class Smb2CreateResponse extends ServerMessageBlock2Response implements S
     }
 
     /**
+     * Get the create action taken by the server
      * @return the createAction
      */
     public final int getCreateAction() {
@@ -98,6 +105,7 @@ public class Smb2CreateResponse extends ServerMessageBlock2Response implements S
     }
 
     /**
+     * Get the file creation time
      * @return the creationTime
      */
     public final long getCreationTime() {
@@ -131,6 +139,7 @@ public class Smb2CreateResponse extends ServerMessageBlock2Response implements S
     }
 
     /**
+     * Get the file change time
      * @return the changeTime
      */
     public final long getChangeTime() {
@@ -138,6 +147,7 @@ public class Smb2CreateResponse extends ServerMessageBlock2Response implements S
     }
 
     /**
+     * Get the allocation size of the file
      * @return the allocationSize
      */
     public final long getAllocationSize() {
@@ -145,6 +155,7 @@ public class Smb2CreateResponse extends ServerMessageBlock2Response implements S
     }
 
     /**
+     * Get the end of file position
      * @return the endOfFile
      */
     public final long getEndOfFile() {
@@ -162,6 +173,7 @@ public class Smb2CreateResponse extends ServerMessageBlock2Response implements S
     }
 
     /**
+     * Get the file attributes
      * @return the fileAttributes
      */
     public final int getFileAttributes() {
@@ -179,6 +191,7 @@ public class Smb2CreateResponse extends ServerMessageBlock2Response implements S
     }
 
     /**
+     * Get the unique file identifier
      * @return the fileId
      */
     public final byte[] getFileId() {
@@ -186,6 +199,7 @@ public class Smb2CreateResponse extends ServerMessageBlock2Response implements S
     }
 
     /**
+     * Get the file name
      * @return the fileName
      */
     public final String getFileName() {
@@ -193,6 +207,7 @@ public class Smb2CreateResponse extends ServerMessageBlock2Response implements S
     }
 
     /**
+     * Get the create context responses
      * @return the createContexts
      */
     public CreateContextResponse[] getCreateContexts() {
@@ -212,7 +227,7 @@ public class Smb2CreateResponse extends ServerMessageBlock2Response implements S
     /**
      * {@inheritDoc}
      *
-     * @throws SMBProtocolDecodingException
+     * @throws SMBProtocolDecodingException if there is an error decoding the response
      *
      * @see jcifs.internal.smb2.ServerMessageBlock2#readBytesWireFormat(byte[], int)
      */

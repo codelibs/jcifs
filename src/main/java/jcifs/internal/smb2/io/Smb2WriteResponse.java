@@ -23,8 +23,12 @@ import jcifs.internal.smb2.ServerMessageBlock2Response;
 import jcifs.internal.util.SMBUtil;
 
 /**
- * @author mbechler
+ * SMB2 Write response message.
  *
+ * This response contains information about the write operation,
+ * including the number of bytes actually written.
+ *
+ * @author mbechler
  */
 public class Smb2WriteResponse extends ServerMessageBlock2Response {
 
@@ -32,13 +36,17 @@ public class Smb2WriteResponse extends ServerMessageBlock2Response {
     private int remaining;
 
     /**
-     * @param config
+     * Creates a new SMB2 write response.
+     *
+     * @param config the CIFS configuration
      */
     public Smb2WriteResponse(final Configuration config) {
         super(config);
     }
 
     /**
+     * Returns the number of bytes written.
+     *
      * @return the count
      */
     public final int getCount() {
@@ -46,6 +54,8 @@ public class Smb2WriteResponse extends ServerMessageBlock2Response {
     }
 
     /**
+     * Returns the number of bytes remaining to be written.
+     *
      * @return the remaining
      */
     public final int getRemaining() {

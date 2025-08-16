@@ -52,7 +52,9 @@ import jcifs.pac.ASN1Util;
 import jcifs.pac.PACDecodingException;
 import jcifs.util.Encdec;
 
-@SuppressWarnings("javadoc")
+/**
+ * Represents encrypted Kerberos ticket data.
+ */
 public class KerberosEncData {
 
     private String userRealm;
@@ -60,6 +62,13 @@ public class KerberosEncData {
     private ArrayList<InetAddress> userAddresses;
     private List<KerberosAuthData> userAuthorizations;
 
+    /**
+     * Constructs KerberosEncData from encrypted token bytes.
+     *
+     * @param token the encrypted Kerberos token
+     * @param keys map of encryption keys indexed by key type
+     * @throws PACDecodingException if decoding fails
+     */
     public KerberosEncData(byte[] token, Map<Integer, KerberosKey> keys) throws PACDecodingException {
         ASN1InputStream stream = new ASN1InputStream(new ByteArrayInputStream(token));
         ASN1TaggedObject derToken;
@@ -164,6 +173,15 @@ public class KerberosEncData {
         }
     }
 
+    /**
+     * Decrypts Kerberos encrypted data using the specified key.
+     *
+     * @param data the encrypted data to decrypt
+     * @param key the decryption key
+     * @param type the encryption type
+     * @return the decrypted data
+     * @throws GeneralSecurityException if decryption fails
+     */
     public static byte[] decrypt(byte[] data, Key key, int type) throws GeneralSecurityException {
         Cipher cipher = null;
         byte[] decrypt = null;
@@ -269,18 +287,38 @@ public class KerberosEncData {
         return mac.doFinal(data);
     }
 
+    /**
+     * Returns the user's Kerberos realm.
+     *
+     * @return the user realm
+     */
     public String getUserRealm() {
         return this.userRealm;
     }
 
+    /**
+     * Returns the user's principal name.
+     *
+     * @return the user principal name
+     */
     public String getUserPrincipalName() {
         return this.userPrincipalName;
     }
 
+    /**
+     * Returns the list of user addresses.
+     *
+     * @return list of user InetAddress objects
+     */
     public ArrayList<InetAddress> getUserAddresses() {
         return this.userAddresses;
     }
 
+    /**
+     * Returns the list of user authorization data.
+     *
+     * @return list of KerberosAuthData objects
+     */
     public List<KerberosAuthData> getUserAuthorizations() {
         return this.userAuthorizations;
     }

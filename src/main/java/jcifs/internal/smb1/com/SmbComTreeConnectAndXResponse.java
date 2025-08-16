@@ -26,9 +26,11 @@ import jcifs.internal.smb1.AndXServerMessageBlock;
 import jcifs.internal.smb1.ServerMessageBlock;
 
 /**
+ * SMB1 Tree Connect AndX response implementation.
+ * Handles server responses to tree connect requests in SMB1 protocol, providing
+ * information about the connected share including service type and DFS capabilities.
  *
  * @author mbechler
- *
  */
 public class SmbComTreeConnectAndXResponse extends AndXServerMessageBlock implements TreeConnectResponse {
 
@@ -40,9 +42,10 @@ public class SmbComTreeConnectAndXResponse extends AndXServerMessageBlock implem
     private String nativeFileSystem = "";
 
     /**
+     * Constructs a tree connect AndX response.
      *
-     * @param config
-     * @param andx
+     * @param config the configuration to use
+     * @param andx the next command in the AndX chain, or null
      */
     public SmbComTreeConnectAndXResponse(final Configuration config, final ServerMessageBlock andx) {
         super(config, andx);
@@ -57,6 +60,8 @@ public class SmbComTreeConnectAndXResponse extends AndXServerMessageBlock implem
     }
 
     /**
+     * Returns the native file system type of the connected share.
+     *
      * @return the nativeFileSystem
      */
     public final String getNativeFileSystem() {
@@ -64,6 +69,8 @@ public class SmbComTreeConnectAndXResponse extends AndXServerMessageBlock implem
     }
 
     /**
+     * Indicates whether the share supports search operations with search bits.
+     *
      * @return the supportSearchBits
      */
     public final boolean isSupportSearchBits() {

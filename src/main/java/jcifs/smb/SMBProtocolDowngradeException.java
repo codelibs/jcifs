@@ -20,39 +20,48 @@ package jcifs.smb;
 import jcifs.CIFSException;
 
 /**
+ * Exception thrown when an SMB protocol downgrade attack is detected.
+ * Indicates that the negotiated protocol version is lower than expected or required.
+ *
  * @author mbechler
  *
  */
 public class SMBProtocolDowngradeException extends CIFSException {
 
     /**
-     *
+     * Serial version UID for serialization compatibility.
      */
     private static final long serialVersionUID = 1913365058349456689L;
 
     /**
-     *
+     * Creates a new SMBProtocolDowngradeException with no message.
      */
     public SMBProtocolDowngradeException() {
     }
 
     /**
-     * @param message
-     * @param cause
+     * Creates a new SMBProtocolDowngradeException with the specified detail message and cause.
+     *
+     * @param message the detail message
+     * @param cause the cause of the exception
      */
     public SMBProtocolDowngradeException(final String message, final Throwable cause) {
         super(message, cause);
     }
 
     /**
-     * @param message
+     * Creates a new SMBProtocolDowngradeException with the specified detail message.
+     *
+     * @param message the detail message
      */
     public SMBProtocolDowngradeException(final String message) {
         super(message);
     }
 
     /**
-     * @param cause
+     * Creates a new SMBProtocolDowngradeException with the specified cause.
+     *
+     * @param cause the cause of the exception
      */
     public SMBProtocolDowngradeException(final Throwable cause) {
         super(cause);

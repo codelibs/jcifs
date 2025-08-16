@@ -27,7 +27,9 @@ import jcifs.internal.util.SMBUtil;
 import jcifs.smb.FileEntry;
 
 /**
- *
+ * Base class for SMB1 transaction response messages.
+ * This abstract class handles the common functionality for all SMB1 transaction responses,
+ * including parameter and data buffer management, multi-part responses, and enumeration support.
  */
 public abstract class SmbComTransactionResponse extends ServerMessageBlock implements Enumeration<SmbComTransactionResponse> {
 
@@ -41,15 +43,25 @@ public abstract class SmbComTransactionResponse extends ServerMessageBlock imple
     private int pad1;
     private boolean parametersDone, dataDone;
 
+    /** Total number of parameter bytes the server is returning */
     protected int totalParameterCount;
+    /** Total number of data bytes the server is returning */
     protected int totalDataCount;
+    /** Number of parameter bytes in this response */
     protected int parameterCount;
+    /** Offset from the start of the SMB header to the parameter bytes */
     protected int parameterOffset;
+    /** Displacement of these parameter bytes from the start of the total parameter block */
     protected int parameterDisplacement;
+    /** Offset from the start of the SMB header to the data bytes */
     protected int dataOffset;
+    /** Displacement of these data bytes from the start of the total data block */
     protected int dataDisplacement;
+    /** Number of setup words in this response */
     protected int setupCount;
+    /** Start position of parameter data in the buffer */
     protected int bufParameterStart;
+    /** Start position of data bytes in the buffer */
     protected int bufDataStart;
 
     int dataCount;
@@ -63,16 +75,29 @@ public abstract class SmbComTransactionResponse extends ServerMessageBlock imple
     private int numEntries;
     private FileEntry[] results;
 
+    /**
+     * Constructs a transaction response.
+     *
+     * @param config the configuration to use
+     */
     protected SmbComTransactionResponse(final Configuration config) {
         super(config);
     }
 
+    /**
+     * Constructs a transaction response with specified command.
+     *
+     * @param config the configuration to use
+     * @param command the SMB command code
+     * @param subcommand the transaction subcommand code
+     */
     protected SmbComTransactionResponse(final Configuration config, final byte command, final byte subcommand) {
         super(config, command);
         this.subCommand = subcommand;
     }
 
     /**
+     * Gets the data count for this transaction response
      * @return the dataCount
      */
     protected final int getDataCount() {
@@ -80,6 +105,7 @@ public abstract class SmbComTransactionResponse extends ServerMessageBlock imple
     }
 
     /**
+     * Sets the data count for this transaction response
      * @param dataCount
      *            the dataCount to set
      */
@@ -88,13 +114,16 @@ public abstract class SmbComTransactionResponse extends ServerMessageBlock imple
     }
 
     /**
+     * Sets the transaction buffer
      * @param buffer
+     *            the transaction buffer to use
      */
     public void setBuffer(final byte[] buffer) {
         this.txn_buf = buffer;
     }
 
     /**
+     * Releases and returns the transaction buffer
      * @return the txn_buf
      */
     public byte[] releaseBuffer() {
@@ -104,6 +133,7 @@ public abstract class SmbComTransactionResponse extends ServerMessageBlock imple
     }
 
     /**
+     * Gets the transaction subcommand
      * @return the subCommand
      */
     public final byte getSubCommand() {
@@ -111,6 +141,7 @@ public abstract class SmbComTransactionResponse extends ServerMessageBlock imple
     }
 
     /**
+     * Sets the transaction subcommand
      * @param subCommand
      *            the subCommand to set
      */
@@ -119,6 +150,7 @@ public abstract class SmbComTransactionResponse extends ServerMessageBlock imple
     }
 
     /**
+     * Gets the response status code
      * @return the status
      */
     public final int getStatus() {
@@ -126,6 +158,7 @@ public abstract class SmbComTransactionResponse extends ServerMessageBlock imple
     }
 
     /**
+     * Sets the response status code
      * @param status
      *            the status to set
      */
@@ -134,6 +167,7 @@ public abstract class SmbComTransactionResponse extends ServerMessageBlock imple
     }
 
     /**
+     * Gets the number of entries in the response
      * @return the numEntries
      */
     public final int getNumEntries() {
@@ -141,6 +175,7 @@ public abstract class SmbComTransactionResponse extends ServerMessageBlock imple
     }
 
     /**
+     * Sets the number of entries in the response
      * @param numEntries
      *            the numEntries to set
      */
@@ -149,6 +184,7 @@ public abstract class SmbComTransactionResponse extends ServerMessageBlock imple
     }
 
     /**
+     * Gets the file entry results from the response
      * @return the results
      */
     public final FileEntry[] getResults() {
@@ -156,6 +192,7 @@ public abstract class SmbComTransactionResponse extends ServerMessageBlock imple
     }
 
     /**
+     * Sets the file entry results for the response
      * @param results
      *            the results to set
      */
@@ -275,16 +312,57 @@ public abstract class SmbComTransactionResponse extends ServerMessageBlock imple
         return this.pad + this.parameterCount + this.pad1 + this.dataCount;
     }
 
+    /**
+     * Writes setup data in wire format
+     * @param dst destination buffer
+     * @param dstIndex starting index in destination buffer
+     * @return number of bytes written
+     */
     protected abstract int writeSetupWireFormat(byte[] dst, int dstIndex);
 
+    /**
+     * Writes parameters in wire format
+     * @param dst destination buffer
+     * @param dstIndex starting index in destination buffer
+     * @return number of bytes written
+     */
     protected abstract int writeParametersWireFormat(byte[] dst, int dstIndex);
 
+    /**
+     * Writes data in wire format
+     * @param dst destination buffer
+     * @param dstIndex starting index in destination buffer
+     * @return number of bytes written
+     */
     protected abstract int writeDataWireFormat(byte[] dst, int dstIndex);
 
+    /**
+     * Reads setup data from wire format
+     * @param buffer source buffer
+     * @param bufferIndex starting index in source buffer
+     * @param len length of data to read
+     * @return number of bytes read
+     */
     protected abstract int readSetupWireFormat(byte[] buffer, int bufferIndex, int len);
 
+    /**
+     * Reads parameters from wire format
+     * @param buffer source buffer
+     * @param bufferIndex starting index in source buffer
+     * @param len length of data to read
+     * @return number of bytes read
+     * @throws SMBProtocolDecodingException if decoding fails
+     */
     protected abstract int readParametersWireFormat(byte[] buffer, int bufferIndex, int len) throws SMBProtocolDecodingException;
 
+    /**
+     * Reads data from wire format
+     * @param buffer source buffer
+     * @param bufferIndex starting index in source buffer
+     * @param len length of data to read
+     * @return number of bytes read
+     * @throws SMBProtocolDecodingException if decoding fails
+     */
     protected abstract int readDataWireFormat(byte[] buffer, int bufferIndex, int len) throws SMBProtocolDecodingException;
 
     @Override

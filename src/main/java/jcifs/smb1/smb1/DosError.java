@@ -18,8 +18,16 @@
 
 package jcifs.smb1.smb1;
 
+/**
+ * Interface defining DOS error codes and their mappings to NT status codes for SMB1 protocol.
+ * Provides lookup tables for converting between DOS and NT error representations.
+ */
 public interface DosError {
 
+    /**
+     * Mapping table from DOS error codes to NT status codes.
+     * Each entry contains a pair of [DOS error code, NT status code].
+     */
     int[][] DOS_ERROR_CODES =
             { { 0x00000000, 0x00000000 }, { 0x00010001, 0xc0000002 }, { 0x00010002, 0xc0000002 }, { 0x00020001, 0xc000000f },
                     { 0x00020002, 0xc000006a }, { 0x00030001, 0xc000003a }, { 0x00030002, 0xc00000cb }, { 0x00040002, 0xc00000ca },
@@ -34,6 +42,10 @@ public interface DosError {
 
     /* These aren't really used by jCIFS -- the map above is used
      * to immediately map to NTSTATUS codes.
+     */
+    /**
+     * Human-readable error messages corresponding to DOS error codes.
+     * Array of descriptive strings for each DOS error condition.
      */
     String[] DOS_ERROR_MESSAGES = { "The operation completed successfully.", "Incorrect function.", "Incorrect function.",
             "The system cannot find the file specified.", "Bad password.", "The system cannot find the path specified.", "reserved",

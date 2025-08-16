@@ -30,6 +30,9 @@ import jcifs.smb.FileEntry;
 import jcifs.util.Hexdump;
 
 /**
+ * SMB1 NetServerEnum2 transaction response implementation.
+ * Handles responses from network server enumeration operations, parsing server
+ * information returned by the NetServerEnum2 transaction in SMB1 protocol.
  *
  * @author mbechler
  *
@@ -103,14 +106,16 @@ public class NetServerEnum2Response extends SmbComTransactionResponse {
     private String lastName;
 
     /**
-     *
+     * Constructs a NetServerEnum2Response
      * @param config
+     *            the configuration to use
      */
     public NetServerEnum2Response(final Configuration config) {
         super(config);
     }
 
     /**
+     * Gets the last server name from the enumeration
      * @return the lastName
      */
     public final String getLastName() {

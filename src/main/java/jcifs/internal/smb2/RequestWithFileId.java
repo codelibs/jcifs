@@ -18,14 +18,19 @@
 package jcifs.internal.smb2;
 
 /**
- * @author mbechler
+ * Interface for SMB2 requests that require a file ID.
  *
+ * This interface is implemented by SMB2 request classes that need
+ * to reference a specific file using its file ID.
+ *
+ * @author mbechler
  */
 public interface RequestWithFileId {
 
     /**
+     * Sets the file ID for this request.
      *
-     * @param fileId
+     * @param fileId the file ID to set
      */
     void setFileId(byte[] fileId);
 }

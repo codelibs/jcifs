@@ -18,8 +18,10 @@
 package jcifs.ntlmssp.av;
 
 /**
- * @author mbechler
+ * Base class for NTLMSSP AV (Attribute-Value) pairs used in NTLM authentication.
+ * Provides common functionality for encoding and decoding attribute-value pairs.
  *
+ * @author mbechler
  */
 public class AvPair {
 
@@ -57,8 +59,9 @@ public class AvPair {
     private final byte[] raw;
 
     /**
-     * @param type
-     * @param raw
+     * Constructs an AV pair with type and raw data
+     * @param type the AV pair type
+     * @param raw the raw data bytes
      */
     public AvPair(final int type, final byte[] raw) {
         this.type = type;
@@ -66,6 +69,7 @@ public class AvPair {
     }
 
     /**
+     * Gets the AV pair type
      * @return the type
      */
     public final int getType() {
@@ -73,6 +77,7 @@ public class AvPair {
     }
 
     /**
+     * Gets the raw data bytes
      * @return the raw
      */
     public final byte[] getRaw() {

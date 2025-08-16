@@ -44,7 +44,7 @@ import jcifs.smb1.util.Hexdump;
  * and hosts usually registers several names on the network. From a
  * Windows command prompt you can see
  * what names a host registers with the nbtstat command.
- * <p><blockquote><pre>
+ * <pre>
  * C:\>nbtstat -a 192.168.1.15
  *
  *        NetBIOS Remote Machine Name Table
@@ -59,7 +59,7 @@ import jcifs.smb1.util.Hexdump;
  * JMORRIS         &lt;03&gt;  UNIQUE      Registered
  *
  * MAC Address = 00-B0-34-21-FA-3B
- * </blockquote></pre>
+ * </pre>
  * <p> The hostname of this machine is <code>JMORRIS2</code>. It is
  * a member of the group(a.k.a workgroup and domain) <code>BILLING-NY</code>. To
  * obtain an {@link java.net.InetAddress} for a host one might do:
@@ -345,10 +345,21 @@ public final class NbtAddress {
      *                    by <code>InetAddress</code> should be available
      */
 
+    /**
+     * Gets the local host NetBIOS address.
+     *
+     * @return the local host address
+     * @throws UnknownHostException if the local host cannot be determined
+     */
     public static NbtAddress getLocalHost() throws UnknownHostException {
         return localhost;
     }
 
+    /**
+     * Gets the local host NetBIOS name.
+     *
+     * @return the local host name
+     */
     public static Name getLocalName() {
         return localhost.hostName;
     }
@@ -360,6 +371,7 @@ public final class NbtAddress {
      * <code>getByName</code> methods can be used for that.
      *
      * @param host hostname to resolve
+     * @return the resolved NetBIOS address
      * @throws java.net.UnknownHostException if there is an error resolving the name
      */
 
@@ -380,6 +392,7 @@ public final class NbtAddress {
      * @param host the name to resolve
      * @param type the hex code of the name
      * @param scope the scope of the name
+     * @return the resolved NetBIOS address
      * @throws java.net.UnknownHostException if there is an error resolving the name
      */
 
@@ -388,10 +401,18 @@ public final class NbtAddress {
         return getByName(host, type, scope, null);
     }
 
-    /*
+    /**
+     * Determines the address of a host given its host name with a specific server.
      * The additional <code>svr</code> parameter specifies the address to
      * query. This might be the address of a specific host, a name server,
      * or a broadcast address.
+     *
+     * @param host the name to resolve
+     * @param type the hex code of the name
+     * @param scope the scope of the name
+     * @param svr the server to query
+     * @return the resolved NetBIOS address
+     * @throws UnknownHostException if there is an error resolving the name
      */
 
     public static NbtAddress getByName(final String host, final int type, final String scope, final InetAddress svr)
@@ -438,6 +459,16 @@ public final class NbtAddress {
         return new NbtAddress(UNKNOWN_NAME, IP, false, B_NODE);
     }
 
+    /**
+     * Retrieves all NetBIOS addresses for a host name.
+     *
+     * @param host the name to resolve
+     * @param type the hex code of the name
+     * @param scope the scope of the name
+     * @param svr the server to query
+     * @return array of resolved NetBIOS addresses
+     * @throws UnknownHostException if there is an error resolving the name
+     */
     public static NbtAddress[] getAllByName(final String host, final int type, final String scope, final InetAddress svr)
             throws UnknownHostException {
         return CLIENT.getAllByName(new Name(host, type, scope), svr);
@@ -450,6 +481,7 @@ public final class NbtAddress {
      * host with the same IP address.
      *
      * @param host hostname to lookup all addresses for
+     * @return array of NetBIOS addresses
      * @throws java.net.UnknownHostException if there is an error resolving the name
      */
 
@@ -468,6 +500,7 @@ public final class NbtAddress {
      * @param host hostname to lookup all addresses for
      * @param type the hexcode of the name
      * @param scope the scope of the name
+     * @return array of NetBIOS addresses
      * @throws java.net.UnknownHostException if there is an error resolving the name
      */
 
@@ -482,6 +515,7 @@ public final class NbtAddress {
      * host with the same IP address.
      *
      * @param addr the address to query
+     * @return array of NetBIOS addresses
      * @throws UnknownHostException if address cannot be resolved
      */
 
@@ -498,10 +532,21 @@ public final class NbtAddress {
         }
     }
 
+    /**
+     * Gets the current WINS server address.
+     *
+     * @return the WINS server address, or null if no WINS servers are configured
+     */
     public static InetAddress getWINSAddress() {
         return NBNS.length == 0 ? null : NBNS[nbnsIndex];
     }
 
+    /**
+     * Checks if the given address is a configured WINS server.
+     *
+     * @param svr the server address to check
+     * @return true if the address is a WINS server, false otherwise
+     */
     public static boolean isWINS(final InetAddress svr) {
         for (int i = 0; svr != null && i < NBNS.length; i++) {
             if (svr.hashCode() == NBNS[i].hashCode()) {
@@ -552,6 +597,11 @@ public final class NbtAddress {
      * methods are used by the smb package.
      */
 
+    /**
+     * Gets the first called name for session establishment.
+     *
+     * @return the first called name to try
+     */
     public String firstCalledName() {
 
         calledName = hostName.name;
@@ -586,6 +636,11 @@ public final class NbtAddress {
         return calledName;
     }
 
+    /**
+     * Gets the next called name for session establishment.
+     *
+     * @return the next called name to try, or null if no more names available
+     */
     public String nextCalledName() {
 
         if (calledName == hostName.name) {
@@ -663,6 +718,7 @@ public final class NbtAddress {
      * Determines if the address is a group address. This is also
      * known as a workgroup name or group name.
      *
+     * @return true if this is a group address, false otherwise
      * @throws UnknownHostException if the host cannot be resolved to find out.
      */
 
@@ -688,6 +744,7 @@ public final class NbtAddress {
     /**
      * Determines if this address in the process of being deleted.
      *
+     * @return true if the address is being deleted, false otherwise
      * @throws UnknownHostException if the host cannot be resolved to find out.
      */
 
@@ -699,6 +756,7 @@ public final class NbtAddress {
     /**
      * Determines if this address in conflict with another address.
      *
+     * @return true if the address is in conflict, false otherwise
      * @throws UnknownHostException if the host cannot be resolved to find out.
      */
 
@@ -710,6 +768,7 @@ public final class NbtAddress {
     /**
      * Determines if this address is active.
      *
+     * @return true if the address is active, false otherwise
      * @throws UnknownHostException if the host cannot be resolved to find out.
      */
 
@@ -721,6 +780,7 @@ public final class NbtAddress {
     /**
      * Determines if this address is set to be permanent.
      *
+     * @return true if the address is permanent, false otherwise
      * @throws UnknownHostException if the host cannot be resolved to find out.
      */
 
@@ -783,6 +843,7 @@ public final class NbtAddress {
      * To convert this address to an <code>InetAddress</code>.
      *
      * @return the {@link java.net.InetAddress} representation of this address.
+     * @throws UnknownHostException if the address cannot be resolved
      */
 
     public InetAddress getInetAddress() throws UnknownHostException {
@@ -791,6 +852,8 @@ public final class NbtAddress {
 
     /**
      * Returns this IP adress as a {@link java.lang.String} in the form "%d.%d.%d.%d".
+     *
+     * @return the IP address string
      */
 
     public String getHostAddress() {
@@ -799,6 +862,8 @@ public final class NbtAddress {
 
     /**
      * Returned the hex code associated with this name(e.g. 0x20 is for the file service)
+     *
+     * @return the NetBIOS name type code
      */
 
     public int getNameType() {

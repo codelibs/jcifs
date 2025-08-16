@@ -21,7 +21,6 @@ package jcifs;
  * Opaque reference to a SMB session
  *
  * @author mbechler
- * @internal
  */
 public interface SmbSession extends AutoCloseable {
 
@@ -34,18 +33,23 @@ public interface SmbSession extends AutoCloseable {
     void close();
 
     /**
+     * Returns the configuration object used by this SMB session.
+     *
      * @return the configuration used by this session
      */
     Configuration getConfig();
 
     /**
+     * Unwraps this session to the specified type, allowing access to implementation-specific functionality.
      *
-     * @param type
+     * @param <T> the type to unwrap to
+     * @param type the class of the type to unwrap to
      * @return session instance with the given type
      */
     <T extends SmbSession> T unwrap(Class<T> type);
 
     /**
+     * Returns the CIFS context that this session is attached to.
      *
      * @return the context this session is attached to
      */

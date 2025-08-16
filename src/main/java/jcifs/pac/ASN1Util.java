@@ -28,8 +28,10 @@ import org.bouncycastle.asn1.ASN1TaggedObject;
 import org.bouncycastle.asn1.DLSequence;
 
 /**
+ * Utility class for ASN.1 parsing and manipulation operations.
  *
- *
+ * This class provides helper methods for working with ASN.1
+ * encoded data structures used in Kerberos PAC processing.
  */
 public final class ASN1Util {
 
@@ -37,11 +39,12 @@ public final class ASN1Util {
     }
 
     /**
-     *
-     * @param type
-     * @param object
+     * Casts an object to the specified type with type checking
+     * @param <T> the target type
+     * @param type the target class type
+     * @param object the object to cast
      * @return object cast to type
-     * @throws PACDecodingException
+     * @throws PACDecodingException if types are incompatible
      */
     public static <T> T as(final Class<T> type, final Object object) throws PACDecodingException {
         if (!type.isInstance(object)) {
@@ -52,23 +55,25 @@ public final class ASN1Util {
     }
 
     /**
-     *
-     * @param type
-     * @param enumeration
+     * Gets the next element from an enumeration and casts it to the specified type
+     * @param <T> the target type
+     * @param type the target class type
+     * @param enumeration the enumeration to read from
      * @return next element from enumeration cast to type
-     * @throws PACDecodingException
+     * @throws PACDecodingException if types are incompatible
      */
     public static <T extends Object> T as(final Class<T> type, final Enumeration<?> enumeration) throws PACDecodingException {
         return as(type, enumeration.nextElement());
     }
 
     /**
-     *
-     * @param type
-     * @param stream
+     * Reads the next ASN.1 object from a stream and casts it to the specified type
+     * @param <T> the target ASN.1 primitive type
+     * @param type the target class type
+     * @param stream the ASN.1 input stream
      * @return next object from stream cast to type
-     * @throws PACDecodingException
-     * @throws IOException
+     * @throws PACDecodingException if types are incompatible
+     * @throws IOException if reading from stream fails
      */
     public static <T extends ASN1Primitive> T as(final Class<T> type, final ASN1InputStream stream)
             throws PACDecodingException, IOException {
@@ -76,23 +81,25 @@ public final class ASN1Util {
     }
 
     /**
-     *
-     * @param type
-     * @param tagged
+     * Extracts the base object from an ASN.1 tagged object and casts it to the specified type
+     * @param <T> the target ASN.1 primitive type
+     * @param type the target class type
+     * @param tagged the ASN.1 tagged object
      * @return tagged object contents cast to type
-     * @throws PACDecodingException
+     * @throws PACDecodingException if types are incompatible
      */
     public static <T extends ASN1Primitive> T as(final Class<T> type, final ASN1TaggedObject tagged) throws PACDecodingException {
         return as(type, tagged.getBaseObject());
     }
 
     /**
-     *
-     * @param type
-     * @param sequence
-     * @param index
+     * Gets an element from a DLSequence at the specified index and casts it to the specified type
+     * @param <T> the target ASN.1 primitive type
+     * @param type the target class type
+     * @param sequence the DLSequence
+     * @param index the element index
      * @return sequence element cast to type
-     * @throws PACDecodingException
+     * @throws PACDecodingException if types are incompatible
      */
     public static <T extends ASN1Primitive> T as(final Class<T> type, final DLSequence sequence, final int index)
             throws PACDecodingException {
@@ -100,12 +107,13 @@ public final class ASN1Util {
     }
 
     /**
-     *
-     * @param type
-     * @param sequence
-     * @param index
+     * Gets an element from an ASN1Sequence at the specified index and casts it to the specified type
+     * @param <T> the target ASN.1 primitive type
+     * @param type the target class type
+     * @param sequence the ASN1Sequence
+     * @param index the element index
      * @return sequence element cast to type
-     * @throws PACDecodingException
+     * @throws PACDecodingException if types are incompatible
      */
     public static <T extends ASN1Primitive> T as(final Class<T> type, final ASN1Sequence sequence, final int index)
             throws PACDecodingException {
@@ -113,14 +121,15 @@ public final class ASN1Util {
     }
 
     /**
-     * Read a  tagged object without parsing it's contents
+     * Read a tagged object without parsing it's contents
      *
      * BC no longer seems to allow that out of the box
      *
-     * @param expectTag
-     * @param in
+     * @param expectTag the expected tag number
+     * @param limit the maximum length limit
+     * @param in the ASN.1 input stream
      * @return coded bytes of the tagged object
-     * @throws IOException
+     * @throws IOException if reading fails or tag mismatch
      */
     public static byte[] readUnparsedTagged(final int expectTag, final int limit, final ASN1InputStream in) throws IOException {
         final int ftag = in.read();

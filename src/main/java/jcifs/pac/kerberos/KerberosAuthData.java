@@ -24,9 +24,28 @@ import javax.security.auth.kerberos.KerberosKey;
 
 import jcifs.pac.PACDecodingException;
 
-@SuppressWarnings("javadoc")
+/**
+ * Abstract base class for Kerberos authorization data.
+ * This class provides parsing capabilities for different types of Kerberos authorization data.
+ */
 public abstract class KerberosAuthData {
 
+    /**
+     * Default constructor for KerberosAuthData.
+     */
+    protected KerberosAuthData() {
+        // Default constructor
+    }
+
+    /**
+     * Parse Kerberos authorization data based on the authorization type.
+     *
+     * @param authType the type of authorization data
+     * @param token the authorization data token
+     * @param keys the Kerberos keys for decryption
+     * @return a list of parsed authorization data
+     * @throws PACDecodingException if the data cannot be decoded
+     */
     public static List<KerberosAuthData> parse(int authType, byte[] token, Map<Integer, KerberosKey> keys) throws PACDecodingException {
 
         List<KerberosAuthData> authorizations = new ArrayList<>();

@@ -23,7 +23,10 @@ import jcifs.internal.smb1.AndXServerMessageBlock;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * SMB1 Read AndX Response message.
  *
+ * This response contains the data that was read from the file
+ * along with information about the read operation.
  */
 public class SmbComReadAndXResponse extends AndXServerMessageBlock {
 
@@ -31,18 +34,20 @@ public class SmbComReadAndXResponse extends AndXServerMessageBlock {
     private int offset, dataCompactionMode, dataLength, dataOffset;
 
     /**
+     * Constructs a Read AndX response.
      *
-     * @param config
+     * @param config the configuration
      */
     public SmbComReadAndXResponse(final Configuration config) {
         super(config);
     }
 
     /**
+     * Constructs a Read AndX response with buffer.
      *
-     * @param config
-     * @param b
-     * @param off
+     * @param config the configuration
+     * @param b the data buffer
+     * @param off the offset in the buffer
      */
     public SmbComReadAndXResponse(final Configuration config, final byte[] b, final int off) {
         super(config);
@@ -56,6 +61,7 @@ public class SmbComReadAndXResponse extends AndXServerMessageBlock {
     }
 
     /**
+     * Gets the read data buffer.
      *
      * @return the read data
      */
@@ -64,6 +70,8 @@ public class SmbComReadAndXResponse extends AndXServerMessageBlock {
     }
 
     /**
+     * Gets the offset in the data buffer.
+     *
      * @return the offset
      */
     public final int getOffset() {
@@ -71,13 +79,17 @@ public class SmbComReadAndXResponse extends AndXServerMessageBlock {
     }
 
     /**
-     * @param n
+     * Adjusts the offset by the specified amount.
+     *
+     * @param n the amount to adjust the offset
      */
     public void adjustOffset(final int n) {
         this.offset += n;
     }
 
     /**
+     * Gets the data length.
+     *
      * @return the dataLength
      */
     public final int getDataLength() {
@@ -85,6 +97,8 @@ public class SmbComReadAndXResponse extends AndXServerMessageBlock {
     }
 
     /**
+     * Gets the data offset.
+     *
      * @return the dataOffset
      */
     public final int getDataOffset() {

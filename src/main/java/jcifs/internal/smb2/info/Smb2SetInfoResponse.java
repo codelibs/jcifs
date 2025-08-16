@@ -23,13 +23,19 @@ import jcifs.internal.smb2.ServerMessageBlock2Response;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * SMB2 Set Info response message. This response acknowledges the successful
+ * modification of file or security information.
+ *
  * @author mbechler
  *
  */
 public class Smb2SetInfoResponse extends ServerMessageBlock2Response {
 
     /**
+     * Constructs a SMB2 set info response with the specified configuration
+     *
      * @param config
+     *            the configuration to use for this response
      */
     public Smb2SetInfoResponse(final Configuration config) {
         super(config);
@@ -49,6 +55,7 @@ public class Smb2SetInfoResponse extends ServerMessageBlock2Response {
      * {@inheritDoc}
      *
      * @throws SMBProtocolDecodingException
+     *             if the response data is malformed
      *
      * @see jcifs.internal.smb2.ServerMessageBlock2#readBytesWireFormat(byte[], int)
      */

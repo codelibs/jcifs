@@ -19,10 +19,21 @@
 
 package jcifs.smb1.dcerpc.ndr;
 
+/**
+ * NDR representation of a short integer (2-byte signed integer).
+ */
 public class NdrShort extends NdrObject {
 
+    /**
+     * The short integer value.
+     */
     public int value;
 
+    /**
+     * Constructs an NdrShort with the specified value.
+     *
+     * @param value the short integer value
+     */
     public NdrShort(final int value) {
         this.value = value & 0xFF;
     }

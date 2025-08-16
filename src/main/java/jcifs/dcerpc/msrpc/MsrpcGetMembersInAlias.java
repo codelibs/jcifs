@@ -18,9 +18,19 @@
 
 package jcifs.dcerpc.msrpc;
 
-@SuppressWarnings("javadoc")
+/**
+ * MSRPC implementation for retrieving members of an alias.
+ * This class provides functionality to get the list of security identifiers (SIDs)
+ * that are members of a specific alias using the SAMR RPC interface.
+ */
 public class MsrpcGetMembersInAlias extends samr.SamrGetMembersInAlias {
 
+    /**
+     * Creates a new request to get members of an alias.
+     *
+     * @param aliasHandle the handle to the alias
+     * @param sids the SID array to store the member SIDs
+     */
     public MsrpcGetMembersInAlias(final SamrAliasHandle aliasHandle, final lsarpc.LsarSidArray sids) {
         super(aliasHandle, sids);
         this.sids = sids;

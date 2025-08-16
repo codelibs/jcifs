@@ -57,11 +57,13 @@ public class SmbFileInputStream extends InputStream {
     private boolean smb2;
 
     /**
-     * @param url
+     * Creates an input stream for reading from the specified SMB URL
+     *
+     * @param url the SMB URL to read from
      * @param tc
      *            context to use
-     * @throws SmbException
-     * @throws MalformedURLException
+     * @throws SmbException if an SMB error occurs
+     * @throws MalformedURLException if the URL is malformed
      */
     @SuppressWarnings("resource")
     public SmbFileInputStream(final String url, final CIFSContext tc) throws SmbException, MalformedURLException {
@@ -76,7 +78,7 @@ public class SmbFileInputStream extends InputStream {
      *
      * @param file
      *            An <code>SmbFile</code> specifying the file to read from
-     * @throws SmbException
+     * @throws SmbException if an SMB error occurs
      */
     public SmbFileInputStream(final SmbFile file) throws SmbException {
         this(file, 0, SmbConstants.O_RDONLY, SmbConstants.DEFAULT_SHARING, false);
@@ -151,7 +153,7 @@ public class SmbFileInputStream extends InputStream {
     /**
      * Ensures that the file descriptor is openend
      *
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs while opening the file
      */
     public void open() throws CIFSException {
         try (SmbFileHandleImpl fh = ensureOpen()) {}
@@ -177,6 +179,12 @@ public class SmbFileInputStream extends InputStream {
         return this.handle.acquire();
     }
 
+    /**
+     * Converts an SmbException to an IOException
+     *
+     * @param se the SmbException to convert
+     * @return an IOException wrapping the SmbException
+     */
     protected static IOException seToIoe(final SmbException se) {
         IOException ioe = se;
         Throwable root = se.getCause();
@@ -259,9 +267,9 @@ public class SmbFileInputStream extends InputStream {
     /**
      * Reads up to len bytes of data from this input stream into an array of bytes.
      *
-     * @param b
-     * @param off
-     * @param len
+     * @param b the buffer to read into
+     * @param off the offset in the buffer to start writing
+     * @param len the maximum number of bytes to read
      * @return number of bytes read
      *
      * @throws IOException
@@ -372,7 +380,7 @@ public class SmbFileInputStream extends InputStream {
 
     /**
      * Skip n bytes of data on this stream. This operation will not result
-     * in any IO with the server. Unlink <tt>InputStream</tt> value less than
+     * in any IO with the server. Unlink <code>InputStream</code> value less than
      * the one provided will not be returned if it exceeds the end of the file
      * (if this is a problem let us know).
      */

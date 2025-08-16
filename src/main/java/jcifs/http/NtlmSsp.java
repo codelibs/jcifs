@@ -35,8 +35,8 @@ import jcifs.ntlmssp.Type3Message;
 import jcifs.smb.NtlmPasswordAuthentication;
 
 /**
- * This class is used internally by <tt>NtlmHttpFilter</tt>,
- * <tt>NtlmServlet</tt>, and <tt>NetworkExplorer</tt> to negotiate password
+ * This class is used internally by {@code NtlmHttpFilter},
+ * {@code NtlmServlet}, and {@code NetworkExplorer} to negotiate password
  * hashes via NTLM SSP with MSIE. It might also be used directly by servlet
  * containers to incorporate similar functionality.
  * <p>
@@ -52,11 +52,18 @@ import jcifs.smb.NtlmPasswordAuthentication;
 public class NtlmSsp implements NtlmFlags {
 
     /**
+     * Default constructor.
+     */
+    public NtlmSsp() {
+        // Default constructor
+    }
+
+    /**
      * Calls the static {@link #authenticate(CIFSContext, HttpServletRequest,
      * HttpServletResponse, byte[])} method to perform NTLM authentication
      * for the specified servlet request.
      *
-     * @param tc
+     * @param tc the CIFS context to use
      *
      * @param req
      *            The request being serviced.

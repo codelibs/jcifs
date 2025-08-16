@@ -51,6 +51,9 @@ import jcifs.smb1.util.LogStream;
 
 public class Config {
 
+    /**
+     * Counter for tracking socket connections.
+     */
     public static int socketCount = 0;
 
     /**
@@ -59,6 +62,9 @@ public class Config {
 
     private static Properties prp = new Properties();
     private static LogStream log;
+    /**
+     * Default OEM encoding used for SMB communication.
+     */
     public static String DEFAULT_OEM_ENCODING = "Cp850";
 
     static {
@@ -107,17 +113,17 @@ public class Config {
 
     /**
      * This static method registers the SMB URL protocol handler which is
-     * required to use SMB URLs with the <tt>java.net.URL</tt> class. If this
+     * required to use SMB URLs with the <code>java.net.URL</code> class. If this
      * method is not called before attempting to create an SMB URL with the
      * URL class the following exception will occur:
      * <blockquote><pre>
      * Exception MalformedURLException: unknown protocol: smb
-     *     at java.net.URL.<init>(URL.java:480)
-     *     at java.net.URL.<init>(URL.java:376)
-     *     at java.net.URL.<init>(URL.java:330)
-     *     at jcifs.smb1.smb1.SmbFile.<init>(SmbFile.java:355)
+     *     at java.net.URL.&lt;init&gt;(URL.java:480)
+     *     at java.net.URL.&lt;init&gt;(URL.java:376)
+     *     at java.net.URL.&lt;init&gt;(URL.java:330)
+     *     at jcifs.smb1.smb1.SmbFile.&lt;init&gt;(SmbFile.java:355)
      *     ...
-     * </pre><blockquote>
+     * </pre></blockquote>
      */
 
     public static void registerSmbURLHandler() {
@@ -141,14 +147,19 @@ public class Config {
     }
 
     /**
-     * Set the default properties of the static Properties used by <tt>Config</tt>. This permits
+     * Set the default properties of the static Properties used by <code>Config</code>. This permits
      * a different Properties object/file to be used as the source of properties for
      * use by the jCIFS library. The Properties must be set <i>before jCIFS
      * classes are accessed</i> as most jCIFS classes load properties statically once.
      * Using this method will also override properties loaded
-     * using the <tt>-Djcifs.properties=</tt> commandline parameter.
+     * using the <code>-Djcifs.properties=</code> commandline parameter.
      */
 
+    /**
+     * Set the properties to be used for configuration.
+     *
+     * @param prp the properties to set
+     */
     public static void setProperties(final Properties prp) {
         Config.prp = new Properties(prp);
         try {
@@ -163,6 +174,9 @@ public class Config {
     /**
      * Load the <code>Config</code> with properties from the stream
      * <code>in</code> from a <code>Properties</code> file.
+     *
+     * @param in the input stream to load properties from
+     * @throws IOException if an I/O error occurs
      */
 
     public static void load(final InputStream in) throws IOException {
@@ -178,12 +192,22 @@ public class Config {
         }
     }
 
+    /**
+     * Save the configuration properties to an output stream.
+     *
+     * @param out the output stream to write properties to
+     * @param header a descriptive header for the properties
+     * @throws IOException if an I/O error occurs
+     */
     public static void store(final OutputStream out, final String header) throws IOException {
         prp.store(out, header);
     }
 
     /**
-     * List the properties in the <code>Code</code>.
+     * List the properties in the <code>Config</code>.
+     *
+     * @param out the print stream to write the properties to
+     * @throws IOException if an I/O error occurs
      */
 
     public static void list(final PrintStream out) throws IOException {
@@ -192,6 +216,10 @@ public class Config {
 
     /**
      * Add a property.
+     *
+     * @param key the property key
+     * @param value the property value
+     * @return the previous value of the property, or null if it did not have one
      */
 
     public static Object setProperty(final String key, final String value) {
@@ -200,6 +228,9 @@ public class Config {
 
     /**
      * Retrieve a property as an <code>Object</code>.
+     *
+     * @param key the property key to look up
+     * @return the property value as an Object, or null if not found
      */
 
     public static Object get(final String key) {
@@ -209,6 +240,10 @@ public class Config {
     /**
      * Retrieve a <code>String</code>. If the key cannot be found,
      * the provided <code>def</code> default parameter will be returned.
+     *
+     * @param key the property key to look up
+     * @param def the default value to return if the property is not found
+     * @return the property value, or the default value if not found
      */
 
     public static String getProperty(final String key, final String def) {
@@ -217,6 +252,9 @@ public class Config {
 
     /**
      * Retrieve a <code>String</code>. If the property is not found, <code>null</code> is returned.
+     *
+     * @param key the property key to look up
+     * @return the property value, or null if not found
      */
 
     public static String getProperty(final String key) {
@@ -227,6 +265,10 @@ public class Config {
      * Retrieve an <code>int</code>. If the key does not exist or
      * cannot be converted to an <code>int</code>, the provided default
      * argument will be returned.
+     *
+     * @param key the property key to look up
+     * @param def the default value to return if the property is not found or cannot be parsed
+     * @return the property value as an int, or the default value
      */
 
     public static int getInt(final String key, int def) {
@@ -245,6 +287,9 @@ public class Config {
 
     /**
      * Retrieve an <code>int</code>. If the property is not found, <code>-1</code> is returned.
+     *
+     * @param key the property key to look up
+     * @return the property value as an int, or -1 if not found
      */
 
     public static int getInt(final String key) {
@@ -266,6 +311,10 @@ public class Config {
      * Retrieve a <code>long</code>. If the key does not exist or
      * cannot be converted to a <code>long</code>, the provided default
      * argument will be returned.
+     *
+     * @param key the property key to look up
+     * @param def the default value to return if the property is not found or cannot be parsed
+     * @return the property value as a long, or the default value
      */
 
     public static long getLong(final String key, long def) {
@@ -286,6 +335,10 @@ public class Config {
      * Retrieve an <code>InetAddress</code>. If the address is not
      * an IP address and cannot be resolved <code>null</code> will
      * be returned.
+     *
+     * @param key the property key to look up
+     * @param def the default InetAddress to return if the property is not found or cannot be resolved
+     * @return the property value as an InetAddress, or the default value
      */
 
     public static InetAddress getInetAddress(final String key, InetAddress def) {
@@ -303,6 +356,11 @@ public class Config {
         return def;
     }
 
+    /**
+     * Get the local host address configured for the client.
+     *
+     * @return the configured local InetAddress, or null if not configured
+     */
     public static InetAddress getLocalHost() {
         final String addr = prp.getProperty("jcifs.smb1.smb.client.laddr");
 
@@ -322,6 +380,10 @@ public class Config {
 
     /**
      * Retrieve a boolean value. If the property is not found, the value of <code>def</code> is returned.
+     *
+     * @param key the property key to look up
+     * @param def the default value to return if the property is not found
+     * @return the property value as a boolean, or the default value
      */
 
     public static boolean getBoolean(final String key, boolean def) {
@@ -333,9 +395,14 @@ public class Config {
     }
 
     /**
-     * Retrieve an array of <tt>InetAddress</tt> created from a property
-     * value containting a <tt>delim</tt> separated list of hostnames and/or
+     * Retrieve an array of <code>InetAddress</code> created from a property
+     * value containting a <code>delim</code> separated list of hostnames and/or
      * ipaddresses.
+     *
+     * @param key the property key to look up
+     * @param delim the delimiter used to separate addresses in the property value
+     * @param def the default array to return if the property is not found or cannot be parsed
+     * @return an array of InetAddress objects, or the default array
      */
 
     public static InetAddress[] getInetAddressArray(final String key, final String delim, final InetAddress[] def) {

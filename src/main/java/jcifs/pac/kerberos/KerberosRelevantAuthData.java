@@ -34,11 +34,20 @@ import org.bouncycastle.asn1.DEROctetString;
 import jcifs.pac.ASN1Util;
 import jcifs.pac.PACDecodingException;
 
-@SuppressWarnings("javadoc")
+/**
+ * Kerberos relevant authorization data container.
+ */
 public class KerberosRelevantAuthData extends KerberosAuthData {
 
     private List<KerberosAuthData> authorizations;
 
+    /**
+     * Constructs KerberosRelevantAuthData from token bytes.
+     *
+     * @param token the authorization data token
+     * @param keys map of Kerberos keys indexed by key type
+     * @throws PACDecodingException if decoding fails
+     */
     public KerberosRelevantAuthData(byte[] token, Map<Integer, KerberosKey> keys) throws PACDecodingException {
         ASN1Sequence authSequence;
         try {
@@ -60,6 +69,11 @@ public class KerberosRelevantAuthData extends KerberosAuthData {
         }
     }
 
+    /**
+     * Returns the list of authorization data.
+     *
+     * @return list of KerberosAuthData objects
+     */
     public List<KerberosAuthData> getAuthorizations() {
         return this.authorizations;
     }

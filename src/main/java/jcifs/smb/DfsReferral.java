@@ -21,12 +21,14 @@ package jcifs.smb;
 import jcifs.DfsReferralData;
 
 /**
+ * Exception containing DFS referral information.
+ * Thrown when a DFS referral is encountered during SMB operations.
  *
  * @author mbechler
  *
- * @internal
+ *
+ * <p>This class is intended for internal use.</p>
  */
-@SuppressWarnings("javadoc")
 public class DfsReferral extends SmbException {
 
     /**
@@ -34,15 +36,23 @@ public class DfsReferral extends SmbException {
      */
     private static final long serialVersionUID = 1486630733410281686L;
 
+    /** The underlying DFS referral data */
     private final DfsReferralData data;
 
     /**
+     * Constructs a DfsReferral with the specified referral data
+     *
      * @param data the DFS referral data
      */
     public DfsReferral(final DfsReferralData data) {
         this.data = data;
     }
 
+    /**
+     * Get the DFS referral data associated with this referral
+     *
+     * @return the DFS referral data
+     */
     public DfsReferralData getData() {
         return this.data;
     }

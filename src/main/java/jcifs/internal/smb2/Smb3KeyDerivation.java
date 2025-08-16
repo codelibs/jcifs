@@ -56,10 +56,11 @@ public final class Smb3KeyDerivation {
     }
 
     /**
+     * Derives the SMB3 signing key from the session key using the appropriate KDF for the dialect.
      *
-     * @param dialect
-     * @param sessionKey
-     * @param preauthIntegrity
+     * @param dialect the SMB dialect version
+     * @param sessionKey the base session key
+     * @param preauthIntegrity the pre-authentication integrity hash (for SMB 3.1.1) or null
      * @return derived signing key
      */
     public static byte[] deriveSigningKey(final int dialect, final byte[] sessionKey, final byte[] preauthIntegrity) {
@@ -68,10 +69,11 @@ public final class Smb3KeyDerivation {
     }
 
     /**
+     * Derives the SMB3 application key from the session key using the appropriate KDF for the dialect.
      *
-     * @param dialect
-     * @param sessionKey
-     * @param preauthIntegrity
+     * @param dialect the SMB dialect version
+     * @param sessionKey the base session key
+     * @param preauthIntegrity the pre-authentication integrity hash (for SMB 3.1.1) or null
      * @return derived application key
      */
     public static byte[] dervieApplicationKey(final int dialect, final byte[] sessionKey, final byte[] preauthIntegrity) {
@@ -80,10 +82,11 @@ public final class Smb3KeyDerivation {
     }
 
     /**
+     * Derives the SMB3 encryption key from the session key using the appropriate KDF for the dialect.
      *
-     * @param dialect
-     * @param sessionKey
-     * @param preauthIntegrity
+     * @param dialect the SMB dialect version
+     * @param sessionKey the base session key
+     * @param preauthIntegrity the pre-authentication integrity hash (for SMB 3.1.1) or null
      * @return derived encryption key
      */
     public static byte[] deriveEncryptionKey(final int dialect, final byte[] sessionKey, final byte[] preauthIntegrity) {
@@ -92,10 +95,11 @@ public final class Smb3KeyDerivation {
     }
 
     /**
+     * Derives the SMB3 decryption key from the session key using the appropriate KDF for the dialect.
      *
-     * @param dialect
-     * @param sessionKey
-     * @param preauthIntegrity
+     * @param dialect the SMB dialect version
+     * @param sessionKey the base session key
+     * @param preauthIntegrity the pre-authentication integrity hash (for SMB 3.1.1) or null
      * @return derived decryption key
      */
     public static byte[] deriveDecryptionKey(final int dialect, final byte[] sessionKey, final byte[] preauthIntegrity) {

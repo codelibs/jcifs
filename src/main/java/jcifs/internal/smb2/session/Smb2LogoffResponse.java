@@ -23,13 +23,17 @@ import jcifs.internal.smb2.ServerMessageBlock2Response;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * SMB2 Logoff response message. This response acknowledges the termination of an SMB2 session.
+ *
  * @author mbechler
  *
  */
 public class Smb2LogoffResponse extends ServerMessageBlock2Response {
 
     /**
-     * @param config
+     * Constructs an SMB2 logoff response with the given configuration.
+     *
+     * @param config the configuration for this response
      */
     public Smb2LogoffResponse(final Configuration config) {
         super(config);
@@ -48,7 +52,7 @@ public class Smb2LogoffResponse extends ServerMessageBlock2Response {
     /**
      * {@inheritDoc}
      *
-     * @throws SMBProtocolDecodingException
+     * @throws SMBProtocolDecodingException if the response structure is invalid
      *
      * @see jcifs.internal.smb2.ServerMessageBlock2#readBytesWireFormat(byte[], int)
      */

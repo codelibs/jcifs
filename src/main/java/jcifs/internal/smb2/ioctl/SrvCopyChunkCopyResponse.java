@@ -22,16 +22,27 @@ import jcifs.internal.SMBProtocolDecodingException;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * SMB2 SRV_COPYCHUNK_COPY response data structure. This structure contains the result
+ * of a server-side copy operation.
+ *
  * @author mbechler
  *
  */
 public class SrvCopyChunkCopyResponse implements Decodable {
+
+    /**
+     * Constructs a new SrvCopyChunkCopyResponse.
+     * This response contains the results of a server-side copy operation.
+     */
+    public SrvCopyChunkCopyResponse() {
+    }
 
     private int chunksWritten;
     private int chunkBytesWritten;
     private int totalBytesWritten;
 
     /**
+     * Gets the number of bytes written in the last chunk
      * @return the chunkBytesWritten
      */
     public int getChunkBytesWritten() {
@@ -39,6 +50,7 @@ public class SrvCopyChunkCopyResponse implements Decodable {
     }
 
     /**
+     * Gets the number of chunks successfully written
      * @return the chunksWritten
      */
     public int getChunksWritten() {
@@ -46,6 +58,7 @@ public class SrvCopyChunkCopyResponse implements Decodable {
     }
 
     /**
+     * Gets the total number of bytes written in the copy operation
      * @return the totalBytesWritten
      */
     public int getTotalBytesWritten() {

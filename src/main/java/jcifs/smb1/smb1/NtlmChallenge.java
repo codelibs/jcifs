@@ -23,9 +23,18 @@ import java.io.Serializable;
 import jcifs.smb1.UniAddress;
 import jcifs.smb1.util.Hexdump;
 
+/**
+ * Represents an NTLM authentication challenge in SMB1 protocol.
+ */
 public final class NtlmChallenge implements Serializable {
 
+    /**
+     * The NTLM challenge bytes received from the server.
+     */
     public byte[] challenge;
+    /**
+     * The domain controller address that issued the challenge.
+     */
     public UniAddress dc;
 
     NtlmChallenge(final byte[] challenge, final UniAddress dc) {

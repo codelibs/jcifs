@@ -24,10 +24,24 @@ import jcifs.smb1.dcerpc.DcerpcHandle;
 import jcifs.smb1.dcerpc.rpc;
 import jcifs.smb1.smb1.SmbException;
 
+/**
+ * Handle for Security Account Manager (SAM) alias operations.
+ * This class represents an open handle to a SAM alias and provides
+ * operations for managing alias membership and properties.
+ */
 public class SamrAliasHandle extends rpc.policy_handle {
 
     DcerpcHandle handle;
 
+    /**
+     * Creates a new SAM alias handle.
+     *
+     * @param handle the DCE/RPC handle for communication
+     * @param domainHandle the domain handle containing this alias
+     * @param access the desired access rights
+     * @param rid the relative identifier of the alias
+     * @throws IOException if an I/O error occurs during handle creation
+     */
     public SamrAliasHandle(final DcerpcHandle handle, final SamrDomainHandle domainHandle, final int access, final int rid)
             throws IOException {
         this.handle = handle;
@@ -38,6 +52,11 @@ public class SamrAliasHandle extends rpc.policy_handle {
         }
     }
 
+    /**
+     * Closes this SAM alias handle.
+     *
+     * @throws IOException if an I/O error occurs during handle closure
+     */
     public void close() throws IOException {
         final MsrpcSamrCloseHandle rpc = new MsrpcSamrCloseHandle(this);
         handle.sendrecv(rpc);

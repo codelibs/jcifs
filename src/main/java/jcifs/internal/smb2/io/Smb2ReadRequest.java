@@ -25,25 +25,29 @@ import jcifs.internal.smb2.Smb2Constants;
 import jcifs.internal.util.SMBUtil;
 
 /**
- * @author mbechler
+ * SMB2 Read request message.
  *
+ * This command is used to read data from a file that has been
+ * previously opened with a Create request.
+ *
+ * @author mbechler
  */
 public class Smb2ReadRequest extends ServerMessageBlock2Request<Smb2ReadResponse> implements RequestWithFileId {
 
     /**
-     *
+     * Flag to indicate unbuffered read operation
      */
     public static byte SMB2_READFLAG_READ_UNBUFFERED = 0x1;
     /**
-     *
+     * Channel type for standard read without RDMA
      */
     public static int SMB2_CHANNEL_NONE = 0x0;
     /**
-     *
+     * Channel type for RDMA version 1
      */
     public static int SMB2_CHANNEL_RDMA_V1 = 0x1;
     /**
-     *
+     * Channel type for RDMA version 1 with invalidate
      */
     public static int SMB2_CHANNEL_RDMA_V1_INVALIDATE = 0x2;
 
@@ -59,10 +63,16 @@ public class Smb2ReadRequest extends ServerMessageBlock2Request<Smb2ReadResponse
     private int remainingBytes;
 
     /**
+     * Constructs a SMB2 read request with the specified parameters
+     *
      * @param config
+     *            the configuration to use for this request
      * @param fileId
+     *            the file ID to read from
      * @param outputBuffer
+     *            the buffer to read data into
      * @param outputBufferOffset
+     *            the offset in the output buffer to start writing data
      */
     public Smb2ReadRequest(final Configuration config, final byte[] fileId, final byte[] outputBuffer, final int outputBufferOffset) {
         super(config, SMB2_READ);
@@ -87,6 +97,8 @@ public class Smb2ReadRequest extends ServerMessageBlock2Request<Smb2ReadResponse
     }
 
     /**
+     * Sets the padding for the read request
+     *
      * @param padding
      *            the padding to set
      */
@@ -95,6 +107,8 @@ public class Smb2ReadRequest extends ServerMessageBlock2Request<Smb2ReadResponse
     }
 
     /**
+     * Sets the read flags for the read operation
+     *
      * @param readFlags
      *            the readFlags to set
      */
@@ -103,6 +117,8 @@ public class Smb2ReadRequest extends ServerMessageBlock2Request<Smb2ReadResponse
     }
 
     /**
+     * Sets the number of bytes to read
+     *
      * @param readLength
      *            the readLength to set
      */
@@ -111,6 +127,8 @@ public class Smb2ReadRequest extends ServerMessageBlock2Request<Smb2ReadResponse
     }
 
     /**
+     * Sets the file offset from which to start reading
+     *
      * @param offset
      *            the offset to set
      */
@@ -119,6 +137,8 @@ public class Smb2ReadRequest extends ServerMessageBlock2Request<Smb2ReadResponse
     }
 
     /**
+     * Sets the minimum number of bytes that must be read for the operation to succeed
+     *
      * @param minimumCount
      *            the minimumCount to set
      */
@@ -127,6 +147,8 @@ public class Smb2ReadRequest extends ServerMessageBlock2Request<Smb2ReadResponse
     }
 
     /**
+     * Sets the number of bytes remaining to be read after this request
+     *
      * @param remainingBytes
      *            the remainingBytes to set
      */

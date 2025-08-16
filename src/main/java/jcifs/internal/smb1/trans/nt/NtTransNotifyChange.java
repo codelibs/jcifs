@@ -23,7 +23,10 @@ import jcifs.internal.util.SMBUtil;
 import jcifs.util.Hexdump;
 
 /**
+ * SMB1 NT Transaction subcommand for file system change notification.
  *
+ * This transaction allows monitoring of file system changes in a directory,
+ * such as file creation, modification, deletion, and attribute changes.
  */
 public class NtTransNotifyChange extends SmbComNtTransaction {
 
@@ -32,11 +35,11 @@ public class NtTransNotifyChange extends SmbComNtTransaction {
     private final boolean watchTree;
 
     /**
-     *
-     * @param config
-     * @param fid
-     * @param completionFilter
-     * @param watchTree
+     * Constructs an NT transaction for change notification monitoring.
+     * @param config the configuration context
+     * @param fid the file identifier to monitor
+     * @param completionFilter bitmask specifying the types of changes to monitor
+     * @param watchTree true to monitor the entire directory tree, false for directory only
      */
     public NtTransNotifyChange(final Configuration config, final int fid, final int completionFilter, final boolean watchTree) {
         super(config, NT_TRANSACT_NOTIFY_CHANGE);

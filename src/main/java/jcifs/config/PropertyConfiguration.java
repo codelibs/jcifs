@@ -35,9 +35,11 @@ import jcifs.SmbConstants;
 public final class PropertyConfiguration extends BaseConfiguration implements Configuration {
 
     /**
+     * Constructs a PropertyConfiguration from the provided properties.
+     *
      * @param p
      *            read from properties
-     * @throws CIFSException
+     * @throws CIFSException if configuration initialization fails
      *
      */
     public PropertyConfiguration(final Properties p) throws CIFSException {

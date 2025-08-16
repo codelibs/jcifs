@@ -21,12 +21,13 @@ package jcifs.smb;
  * Internal use only
  *
  * @author mbechler
- * @internal
+ *
+ * <p>This interface is intended for internal use.</p>
  */
 public enum RequestParam {
 
     /**
-     *
+     * No special request parameters.
      */
     NONE,
 

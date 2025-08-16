@@ -19,7 +19,9 @@
 package jcifs.internal.util;
 
 /**
- *
+ * Utility class providing string manipulation methods for the jCIFS library.
+ * Contains helper methods for string operations, including backported JDK functionality
+ * for compatibility with older Java versions.
  */
 public final class StringUtil {
 
@@ -32,8 +34,8 @@ public final class StringUtil {
     /**
      * Implementation of {@link java.lang.String#join} backported for JDK7.
      *
-     * @param delimiter
-     * @param elements
+     * @param delimiter the separator to use between elements
+     * @param elements the elements to join
      * @return elements separated by delimiter
      */
     public static String join(final CharSequence delimiter, final CharSequence... elements) {

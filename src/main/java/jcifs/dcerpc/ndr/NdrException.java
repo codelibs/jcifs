@@ -21,16 +21,30 @@ package jcifs.dcerpc.ndr;
 
 import jcifs.CIFSException;
 
-@SuppressWarnings("javadoc")
+/**
+ * Exception thrown when an error occurs during NDR encoding or decoding operations.
+ */
 public class NdrException extends CIFSException {
 
     /**
      *
      */
     private static final long serialVersionUID = 7621650016319792189L;
+    /**
+     * Error message for null reference pointers.
+     */
     public static final String NO_NULL_REF = "ref pointer cannot be null";
+
+    /**
+     * Error message for invalid array conformance.
+     */
     public static final String INVALID_CONFORMANCE = "invalid array conformance";
 
+    /**
+     * Constructs an NdrException with the specified error message.
+     *
+     * @param msg the error message
+     */
     public NdrException(final String msg) {
         super(msg);
     }

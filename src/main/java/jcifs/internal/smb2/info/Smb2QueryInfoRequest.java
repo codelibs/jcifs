@@ -26,6 +26,9 @@ import jcifs.internal.smb2.Smb2Constants;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * SMB2 Query Info request message. This command is used to query file system,
+ * file, or security information from the server.
+ *
  * @author mbechler
  *
  */
@@ -40,15 +43,22 @@ public class Smb2QueryInfoRequest extends ServerMessageBlock2Request<Smb2QueryIn
     private Encodable inputBuffer;
 
     /**
+     * Constructs a SMB2 query info request with the specified configuration
+     *
      * @param config
+     *            the configuration to use for this request
      */
     public Smb2QueryInfoRequest(final Configuration config) {
         this(config, Smb2Constants.UNSPECIFIED_FILEID);
     }
 
     /**
+     * Constructs a SMB2 query info request with the specified configuration and file ID
+     *
      * @param config
+     *            the configuration to use for this request
      * @param fileId
+     *            the file ID to query information for
      */
     public Smb2QueryInfoRequest(final Configuration config, final byte[] fileId) {
         super(config, SMB2_QUERY_INFO);
@@ -67,6 +77,8 @@ public class Smb2QueryInfoRequest extends ServerMessageBlock2Request<Smb2QueryIn
     }
 
     /**
+     * Sets the information type for the query
+     *
      * @param infoType
      *            the infoType to set
      */
@@ -75,6 +87,8 @@ public class Smb2QueryInfoRequest extends ServerMessageBlock2Request<Smb2QueryIn
     }
 
     /**
+     * Sets the file information class for the query
+     *
      * @param fileInfoClass
      *            the fileInfoClass to set
      */
@@ -84,6 +98,8 @@ public class Smb2QueryInfoRequest extends ServerMessageBlock2Request<Smb2QueryIn
     }
 
     /**
+     * Sets the filesystem information class for the query
+     *
      * @param fileInfoClass
      *            the fileInfoClass to set
      */
@@ -93,6 +109,8 @@ public class Smb2QueryInfoRequest extends ServerMessageBlock2Request<Smb2QueryIn
     }
 
     /**
+     * Sets additional information flags for the query
+     *
      * @param additionalInformation
      *            the additionalInformation to set
      */
@@ -101,6 +119,8 @@ public class Smb2QueryInfoRequest extends ServerMessageBlock2Request<Smb2QueryIn
     }
 
     /**
+     * Sets the query flags for the information request
+     *
      * @param queryFlags
      *            the queryFlags to set
      */

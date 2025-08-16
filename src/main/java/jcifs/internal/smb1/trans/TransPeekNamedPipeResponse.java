@@ -22,41 +22,47 @@ import jcifs.Configuration;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * Response for SMB1 TRANS_PEEK_NAMED_PIPE transaction.
  *
+ * This response contains information about the data available in the
+ * named pipe without actually removing the data from the pipe.
  */
 public class TransPeekNamedPipeResponse extends SmbComTransactionResponse {
 
     /**
-     *
+     * Named pipe status indicating the pipe is disconnected.
      */
     public static final int STATUS_DISCONNECTED = 1;
 
     /**
-     *
+     * Named pipe status indicating the pipe is listening for connections.
      */
     public static final int STATUS_LISTENING = 2;
 
     /**
-     *
+     * Named pipe status indicating the connection is established and operational.
      */
     public static final int STATUS_CONNECTION_OK = 3;
 
     /**
-     *
+     * Named pipe status indicating the server end of the pipe is closed.
      */
     public static final int STATUS_SERVER_END_CLOSED = 4;
 
     private int available;
 
     /**
+     * Constructs a TransPeekNamedPipeResponse with the specified configuration.
      *
-     * @param config
+     * @param config the SMB configuration
      */
     public TransPeekNamedPipeResponse(final Configuration config) {
         super(config);
     }
 
     /**
+     * Gets the number of bytes available to read from the named pipe.
+     *
      * @return the available
      */
     public final int getAvailable() {

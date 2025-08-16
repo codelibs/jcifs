@@ -22,28 +22,36 @@ import jcifs.DfsReferralData;
 import jcifs.SmbResourceLocator;
 
 /**
- * @author mbechler
+ * Internal interface for SMB resource locators.
  *
+ * This interface provides internal methods for locating
+ * and resolving SMB resources.
+ *
+ * @author mbechler
  */
 public interface SmbResourceLocatorInternal extends SmbResourceLocator {
 
     /**
+     * Determines whether SMB signing should be enforced for connections to this resource.
+     *
      * @return whether to enforce the use of signing on connection to this resource
      */
     boolean shouldForceSigning();
 
     /**
-     * @param other
+     * Determines whether this resource path overlaps with another resource path by sharing a common root.
+     *
+     * @param other the other resource locator to compare with
      * @return whether the paths share a common root
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs during comparison
      */
     boolean overlaps(SmbResourceLocator other) throws CIFSException;
 
     /**
      * Internal: for testing only
      *
-     * @param dr
-     * @param reqPath
+     * @param dr the DFS referral data to process
+     * @param reqPath the requested path to resolve
      * @return resolved unc path
      */
     String handleDFSReferral(DfsReferralData dr, String reqPath);

@@ -26,8 +26,8 @@ import jcifs.CIFSContext;
 
 /**
  * This class stores and encrypts NTLM user credentials. The default
- * credentials are retrieved from the <tt>jcifs.smb.client.domain</tt>,
- * <tt>jcifs.smb.client.username</tt>, and <tt>jcifs.smb.client.password</tt>
+ * credentials are retrieved from the {@code jcifs.smb.client.domain},
+ * {@code jcifs.smb.client.username}, and {@code jcifs.smb.client.password}
  * properties.
  * <p>
  * Read <a href="../../../authhandler.html">jCIFS Exceptions and
@@ -43,9 +43,13 @@ public class NtlmPasswordAuthentication extends NtlmPasswordAuthenticator {
      */
     private static final long serialVersionUID = -2832037191318016836L;
 
+    /** The ANSI password hash */
     private byte[] ansiHash;
+    /** The Unicode password hash */
     private byte[] unicodeHash;
+    /** Flag indicating if hashes are externally provided */
     private boolean hashesExternal = false;
+    /** The CIFS context for this authentication */
     private CIFSContext context;
 
     /**
@@ -57,19 +61,19 @@ public class NtlmPasswordAuthentication extends NtlmPasswordAuthenticator {
     /**
      * Construct anonymous credentials
      *
-     * @param tc
+     * @param tc the CIFS context to use
      */
     public NtlmPasswordAuthentication(final CIFSContext tc) {
         this(tc, "", "", "");
     }
 
     /**
-     * Create an <tt>NtlmPasswordAuthentication</tt> object from the userinfo
-     * component of an SMB URL like "<tt>domain;user:pass</tt>". This constructor
+     * Create an {@code NtlmPasswordAuthentication} object from the userinfo
+     * component of an SMB URL like "{@code domain;user:pass}". This constructor
      * is used internally be jCIFS when parsing SMB URLs.
      *
-     * @param tc
-     * @param userInfo
+     * @param tc the CIFS context to use
+     * @param userInfo the user information string in the format "domain;user:pass"
      */
     public NtlmPasswordAuthentication(final CIFSContext tc, final String userInfo) {
         super(userInfo, tc.getConfig().getDefaultDomain(),
@@ -79,17 +83,17 @@ public class NtlmPasswordAuthentication extends NtlmPasswordAuthenticator {
     }
 
     /**
-     * Create an <tt>NtlmPasswordAuthentication</tt> object from a
-     * domain, username, and password. Parameters that are <tt>null</tt>
-     * will be substituted with <tt>jcifs.smb.client.domain</tt>,
-     * <tt>jcifs.smb.client.username</tt>, <tt>jcifs.smb.client.password</tt>
+     * Create an {@code NtlmPasswordAuthentication} object from a
+     * domain, username, and password. Parameters that are {@code null}
+     * will be substituted with {@code jcifs.smb.client.domain},
+     * {@code jcifs.smb.client.username}, {@code jcifs.smb.client.password}
      * property values.
      *
      * @param tc
      *            context to use
-     * @param domain
-     * @param username
-     * @param password
+     * @param domain the authentication domain
+     * @param username the username to authenticate with
+     * @param password the password to authenticate with
      */
     public NtlmPasswordAuthentication(final CIFSContext tc, final String domain, final String username, final String password) {
         super(domain != null ? domain : tc.getConfig().getDefaultDomain(),
@@ -100,15 +104,15 @@ public class NtlmPasswordAuthentication extends NtlmPasswordAuthenticator {
     }
 
     /**
-     * Create an <tt>NtlmPasswordAuthentication</tt> object with raw password
-     * hashes. This is used exclusively by the <tt>jcifs.http.NtlmSsp</tt>
+     * Create an {@code NtlmPasswordAuthentication} object with raw password
+     * hashes. This is used exclusively by the {@code jcifs.http.NtlmSsp}
      * class which is in turn used by NTLM HTTP authentication functionality.
      *
-     * @param domain
-     * @param username
-     * @param challenge
-     * @param ansiHash
-     * @param unicodeHash
+     * @param domain the authentication domain
+     * @param username the username to authenticate with
+     * @param challenge the server challenge bytes
+     * @param ansiHash the ANSI password hash
+     * @param unicodeHash the Unicode password hash
      */
     public NtlmPasswordAuthentication(final String domain, final String username, final byte[] challenge, final byte[] ansiHash,
             final byte[] unicodeHash) {
@@ -121,6 +125,11 @@ public class NtlmPasswordAuthentication extends NtlmPasswordAuthenticator {
         this.hashesExternal = true;
     }
 
+    /**
+     * Get the CIFS context associated with this authentication.
+     *
+     * @return the CIFS context
+     */
     protected CIFSContext getContext() {
         return this.context;
     }
@@ -133,8 +142,10 @@ public class NtlmPasswordAuthentication extends NtlmPasswordAuthenticator {
     }
 
     /**
-     * @param to
-     * @param from
+     * Clone internal fields from one NtlmPasswordAuthentication to another.
+     *
+     * @param to the target authentication object to copy to
+     * @param from the source authentication object to copy from
      */
     protected static void cloneInternal(final NtlmPasswordAuthentication to, final NtlmPasswordAuthentication from) {
         to.context = from.context;
@@ -148,10 +159,10 @@ public class NtlmPasswordAuthentication extends NtlmPasswordAuthenticator {
     }
 
     /**
-     * Compares two <tt>NtlmPasswordAuthentication</tt> objects for
-     * equality. Two <tt>NtlmPasswordAuthentication</tt> objects are equal if
+     * Compares two {@code NtlmPasswordAuthentication} objects for
+     * equality. Two {@code NtlmPasswordAuthentication} objects are equal if
      * their caseless domain and username fields are equal and either both hashes are external and they are equal or
-     * both internally supplied passwords are equal. If one <tt>NtlmPasswordAuthentication</tt> object has external
+     * both internally supplied passwords are equal. If one {@code NtlmPasswordAuthentication} object has external
      * hashes (meaning negotiated via NTLM HTTP Authentication) and the other does not they will not be equal. This is
      * technically not correct however the server 8 byte challenge would be required to compute and compare the password
      * hashes but that it not available with this method.
@@ -176,6 +187,8 @@ public class NtlmPasswordAuthentication extends NtlmPasswordAuthenticator {
     }
 
     /**
+     * Check whether the password hashes are externally supplied.
+     *
      * @return whether the hashes are externally supplied
      */
     public boolean areHashesExternal() {

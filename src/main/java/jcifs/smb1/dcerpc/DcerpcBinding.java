@@ -27,6 +27,10 @@ import jcifs.smb1.dcerpc.msrpc.netdfs;
 import jcifs.smb1.dcerpc.msrpc.samr;
 import jcifs.smb1.dcerpc.msrpc.srvsvc;
 
+/**
+ * DCERPC binding information for RPC connections.
+ * This class manages the binding parameters and interface registry for DCERPC communications.
+ */
 public class DcerpcBinding {
 
     private static HashMap INTERFACES;
@@ -39,6 +43,12 @@ public class DcerpcBinding {
         INTERFACES.put("netdfs", netdfs.getSyntax());
     }
 
+    /**
+     * Add an interface to the registry.
+     *
+     * @param name the interface name
+     * @param syntax the interface syntax (UUID:version)
+     */
     public static void addInterface(final String name, final String syntax) {
         INTERFACES.put(name, syntax);
     }

@@ -18,8 +18,11 @@
 package jcifs.internal;
 
 /**
- * @author mbechler
+ * Interface for SMB message signing and verification operations.
+ * Provides cryptographic signing capabilities for SMB protocol messages to ensure
+ * message integrity and authenticity using MAC (Message Authentication Code) algorithms.
  *
+ * @author mbechler
  */
 public interface SMBSigningDigest {
 
@@ -51,6 +54,7 @@ public interface SMBSigningDigest {
      * @param offset
      *            The starting offset at which the SMB header begins.
      * @param length
+     *            The length of the data to verify
      * @param extraPad
      *            extra padding to include in signature
      * @param msg

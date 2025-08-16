@@ -18,8 +18,12 @@
 package jcifs.smb;
 
 /**
- * @author mbechler
+ * Handler for SMB session setup operations.
  *
+ * This interface defines methods for handling the session
+ * setup process in SMB authentication.
+ *
+ * @author mbechler
  */
 public interface SessionSetupHandler {
 

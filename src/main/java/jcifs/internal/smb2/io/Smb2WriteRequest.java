@@ -25,13 +25,17 @@ import jcifs.internal.smb2.Smb2Constants;
 import jcifs.internal.util.SMBUtil;
 
 /**
- * @author mbechler
+ * SMB2 Write request message.
  *
+ * This command is used to write data to a file that has been
+ * previously opened with a Create request.
+ *
+ * @author mbechler
  */
 public class Smb2WriteRequest extends ServerMessageBlock2Request<Smb2WriteResponse> implements RequestWithFileId {
 
     /**
-     *
+     * The overhead size in bytes for an SMB2 write request packet.
      */
     public static final int OVERHEAD = Smb2Constants.SMB2_HEADER_LENGTH + 48;
 
@@ -46,8 +50,10 @@ public class Smb2WriteRequest extends ServerMessageBlock2Request<Smb2WriteRespon
     private int writeFlags;
 
     /**
-     * @param config
-     * @param fileId
+     * Creates a new SMB2 write request for writing data to a file.
+     *
+     * @param config the CIFS configuration
+     * @param fileId the file identifier for the target file
      */
     public Smb2WriteRequest(final Configuration config, final byte[] fileId) {
         super(config, SMB2_WRITE);
@@ -70,10 +76,11 @@ public class Smb2WriteRequest extends ServerMessageBlock2Request<Smb2WriteRespon
     }
 
     /**
-     * @param data
-     *            the data to set
-     * @param offset
-     * @param length
+     * Sets the data to be written to the file.
+     *
+     * @param data the data buffer to write
+     * @param offset the offset in the data buffer
+     * @param length the number of bytes to write
      */
     public void setData(final byte[] data, final int offset, final int length) {
         this.data = data;
@@ -82,24 +89,27 @@ public class Smb2WriteRequest extends ServerMessageBlock2Request<Smb2WriteRespon
     }
 
     /**
-     * @param remainingBytes
-     *            the remainingBytes to set
+     * Sets the number of bytes remaining to be written in a sequence of write operations.
+     *
+     * @param remainingBytes the remainingBytes to set
      */
     public void setRemainingBytes(final int remainingBytes) {
         this.remainingBytes = remainingBytes;
     }
 
     /**
-     * @param writeFlags
-     *            the writeFlags to set
+     * Sets the write operation flags.
+     *
+     * @param writeFlags the writeFlags to set
      */
     public void setWriteFlags(final int writeFlags) {
         this.writeFlags = writeFlags;
     }
 
     /**
-     * @param offset
-     *            the offset to set
+     * Sets the file offset where the write operation should begin.
+     *
+     * @param offset the offset to set
      */
     public void setOffset(final long offset) {
         this.offset = offset;

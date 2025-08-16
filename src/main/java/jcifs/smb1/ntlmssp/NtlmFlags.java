@@ -63,6 +63,9 @@ public interface NtlmFlags {
     */
     int NTLMSSP_NEGOTIATE_LM_KEY = 0x00000080;
 
+    /**
+     * Indicates support for NetWare authentication.
+     */
     int NTLMSSP_NEGOTIATE_NETWARE = 0x00000100;
 
     /**
@@ -125,10 +128,19 @@ public interface NtlmFlags {
     */
     int NTLMSSP_NEGOTIATE_NTLM2 = 0x00080000;
 
+    /**
+     * Requests an initial response token.
+     */
     int NTLMSSP_REQUEST_INIT_RESPONSE = 0x00100000;
 
+    /**
+     * Requests an accept response token.
+     */
     int NTLMSSP_REQUEST_ACCEPT_RESPONSE = 0x00200000;
 
+    /**
+     * Requests the use of a non-NT session key.
+     */
     int NTLMSSP_REQUEST_NON_NT_SESSION_KEY = 0x00400000;
 
     /**
@@ -143,6 +155,9 @@ public interface NtlmFlags {
     */
     int NTLMSSP_NEGOTIATE_128 = 0x20000000;
 
+    /**
+     * Indicates that key exchange is supported for session security.
+     */
     int NTLMSSP_NEGOTIATE_KEY_EXCH = 0x40000000;
 
     /**

@@ -26,6 +26,11 @@ import java.net.UnknownHostException;
 
 import jcifs.smb1.util.Encdec;
 
+/**
+ * This class provides random access to files stored on an SMB/CIFS network resource.
+ * It implements the DataInput and DataOutput interfaces for reading and writing primitive
+ * Java data types to the file.
+ */
 public class SmbRandomAccessFile implements DataOutput, DataInput {
 
     private static final int WRITE_OPTIONS = 0x0842;
@@ -44,11 +49,30 @@ public class SmbRandomAccessFile implements DataOutput, DataInput {
     private final byte[] tmp = new byte[8];
     private SmbComWriteAndXResponse write_andx_resp = null;
 
+    /**
+     * Constructs an SmbRandomAccessFile with the specified URL, mode, and share access flags.
+     *
+     * @param url the SMB URL of the file to access
+     * @param mode the access mode ("r" for read-only, "rw" for read-write)
+     * @param shareAccess the share access flags for file sharing
+     * @throws SmbException if an SMB error occurs
+     * @throws MalformedURLException if the URL is malformed
+     * @throws UnknownHostException if the host cannot be resolved
+     */
     public SmbRandomAccessFile(final String url, final String mode, final int shareAccess)
             throws SmbException, MalformedURLException, UnknownHostException {
         this(new SmbFile(url, "", null, shareAccess), mode);
     }
 
+    /**
+     * Constructs an SmbRandomAccessFile from an existing SmbFile with the specified access mode.
+     *
+     * @param file the SmbFile to access
+     * @param mode the access mode ("r" for read-only, "rw" for read-write)
+     * @throws SmbException if an SMB error occurs
+     * @throws MalformedURLException if the URL is malformed
+     * @throws UnknownHostException if the host cannot be resolved
+     */
     public SmbRandomAccessFile(final SmbFile file, final String mode) throws SmbException, MalformedURLException, UnknownHostException {
         this.file = file;
         if (mode.equals("r")) {
@@ -67,6 +91,12 @@ public class SmbRandomAccessFile implements DataOutput, DataInput {
         fp = 0L;
     }
 
+    /**
+     * Reads a single byte from the file at the current file pointer position.
+     *
+     * @return the byte read as an integer (0-255), or -1 if end of file is reached
+     * @throws SmbException if an I/O error occurs
+     */
     public int read() throws SmbException {
         if (read(tmp, 0, 1) == -1) {
             return -1;
@@ -74,10 +104,26 @@ public class SmbRandomAccessFile implements DataOutput, DataInput {
         return tmp[0] & 0xFF;
     }
 
+    /**
+     * Reads bytes from the file into the specified byte array.
+     *
+     * @param b the byte array to read data into
+     * @return the number of bytes read, or -1 if end of file is reached
+     * @throws SmbException if an I/O error occurs
+     */
     public int read(final byte b[]) throws SmbException {
         return read(b, 0, b.length);
     }
 
+    /**
+     * Reads up to len bytes from the file into the specified byte array.
+     *
+     * @param b the byte array to read data into
+     * @param off the offset in the array at which to start storing bytes
+     * @param len the maximum number of bytes to read
+     * @return the number of bytes read, or -1 if end of file is reached
+     * @throws SmbException if an I/O error occurs
+     */
     public int read(final byte b[], final int off, int len) throws SmbException {
         if (len <= 0) {
             return 0;
@@ -166,18 +212,42 @@ public class SmbRandomAccessFile implements DataOutput, DataInput {
         } while (len > 0);
     }
 
+    /**
+     * Returns the current position of the file pointer.
+     *
+     * @return the current file pointer position
+     * @throws SmbException if an I/O error occurs
+     */
     public long getFilePointer() throws SmbException {
         return fp;
     }
 
+    /**
+     * Sets the file pointer to the specified position.
+     *
+     * @param pos the new file pointer position
+     * @throws SmbException if an I/O error occurs
+     */
     public void seek(final long pos) throws SmbException {
         fp = pos;
     }
 
+    /**
+     * Returns the length of the file.
+     *
+     * @return the file length in bytes
+     * @throws SmbException if an I/O error occurs
+     */
     public long length() throws SmbException {
         return file.length();
     }
 
+    /**
+     * Sets the length of the file. The file will be truncated or extended as necessary.
+     *
+     * @param newLength the new file length in bytes
+     * @throws SmbException if an I/O error occurs
+     */
     public void setLength(final long newLength) throws SmbException {
         // ensure file is open
         if (!file.isOpen()) {
@@ -187,6 +257,11 @@ public class SmbRandomAccessFile implements DataOutput, DataInput {
         file.send(new SmbComWrite(file.fid, (int) (newLength & 0xFFFFFFFFL), 0, tmp, 0, 0), rsp);
     }
 
+    /**
+     * Closes the file and releases any system resources associated with it.
+     *
+     * @throws SmbException if an I/O error occurs
+     */
     public void close() throws SmbException {
         file.close();
     }

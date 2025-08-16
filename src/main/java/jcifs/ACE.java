@@ -42,9 +42,9 @@ package jcifs;
  * are "allowed". If all of the desired access bits are not "allowed"
  * the then same process is repeated for inherited ACEs.
  * <p>
- * For example, if user <tt>WNET\alice</tt> tries to open a file
- * with desired access bits <tt>0x00000003</tt> (<tt>FILE_READ_DATA |
- * FILE_WRITE_DATA</tt>) and the target file has the following security
+ * For example, if user <code>WNET\alice</code> tries to open a file
+ * with desired access bits <code>0x00000003</code> (<code>FILE_READ_DATA |
+ * FILE_WRITE_DATA</code>) and the target file has the following security
  * descriptor ACEs:
  *
  * <pre>
@@ -54,105 +54,105 @@ package jcifs;
  * </pre>
  *
  * the access check would fail because the direct ACE has an access mask
- * of <tt>0x001200A9</tt> which doesn't have the
- * <tt>FILE_WRITE_DATA</tt> bit on (bit <tt>0x00000002</tt>). Actually, this isn't quite correct. If
- * <tt>WNET\alice</tt> is in the local <tt>Administrators</tt> group the access check
- * will succeed because the inherited ACE allows local <tt>Administrators</tt>
- * both <tt>FILE_READ_DATA</tt> and <tt>FILE_WRITE_DATA</tt> access.
+ * of <code>0x001200A9</code> which doesn't have the
+ * <code>FILE_WRITE_DATA</code> bit on (bit <code>0x00000002</code>). Actually, this isn't quite correct. If
+ * <code>WNET\alice</code> is in the local <code>Administrators</code> group the access check
+ * will succeed because the inherited ACE allows local <code>Administrators</code>
+ * both <code>FILE_READ_DATA</code> and <code>FILE_WRITE_DATA</code> access.
  */
 public interface ACE {
 
     /**
-     *
+     * Permission to read data from a file or list directory contents
      */
     int FILE_READ_DATA = 0x00000001; // 1
     /**
-     *
+     * Permission to write data to a file or add files to a directory
      */
     int FILE_WRITE_DATA = 0x00000002; // 2
     /**
-     *
+     * Permission to append data to a file or add subdirectories
      */
     int FILE_APPEND_DATA = 0x00000004; // 3
     /**
-     *
+     * Permission to read extended attributes
      */
     int FILE_READ_EA = 0x00000008; // 4
     /**
-     *
+     * Permission to write extended attributes
      */
     int FILE_WRITE_EA = 0x00000010; // 5
     /**
-     *
+     * Permission to execute a file or traverse a directory
      */
     int FILE_EXECUTE = 0x00000020; // 6
     /**
-     *
+     * Permission to delete a file or directory
      */
     int FILE_DELETE = 0x00000040; // 7
     /**
-     *
+     * Permission to read file attributes
      */
     int FILE_READ_ATTRIBUTES = 0x00000080; // 8
     /**
-     *
+     * Permission to write file attributes
      */
     int FILE_WRITE_ATTRIBUTES = 0x00000100; // 9
     /**
-     *
+     * Standard delete permission
      */
     int DELETE = 0x00010000; // 16
     /**
-     *
+     * Permission to read the security descriptor
      */
     int READ_CONTROL = 0x00020000; // 17
     /**
-     *
+     * Permission to write the discretionary access control list
      */
     int WRITE_DAC = 0x00040000; // 18
     /**
-     *
+     * Permission to change the owner in the security descriptor
      */
     int WRITE_OWNER = 0x00080000; // 19
     /**
-     *
+     * Permission to synchronize with the file
      */
     int SYNCHRONIZE = 0x00100000; // 20
     /**
-     *
+     * Generic all permissions
      */
     int GENERIC_ALL = 0x10000000; // 28
     /**
-     *
+     * Generic execute permission
      */
     int GENERIC_EXECUTE = 0x20000000; // 29
     /**
-     *
+     * Generic write permission
      */
     int GENERIC_WRITE = 0x40000000; // 30
     /**
-     *
+     * Generic read permission
      */
     int GENERIC_READ = 0x80000000; // 31
 
     /**
-     *
+     * Inheritance flag: child objects inherit this ACE
      */
     int FLAGS_OBJECT_INHERIT = 0x01;
     /**
-     *
+     * Inheritance flag: child containers inherit this ACE
      */
     int FLAGS_CONTAINER_INHERIT = 0x02;
     /**
-     *
+     * Inheritance flag: inheritance stops after one level
      */
     int FLAGS_NO_PROPAGATE = 0x04;
     /**
-     *
+     * Inheritance flag: ACE applies only to children, not to the object itself
      */
     int FLAGS_INHERIT_ONLY = 0x08;
     /**
-     *
+     * Inheritance flag: ACE was inherited from parent
      */
     int FLAGS_INHERITED = 0x10;
 
@@ -165,8 +165,8 @@ public interface ACE {
 
     /**
      * Returns the access mask associated with this ACE. Use the
-     * constants for <tt>FILE_READ_DATA</tt>, <tt>FILE_WRITE_DATA</tt>,
-     * <tt>READ_CONTROL</tt>, <tt>GENERIC_ALL</tt>, etc with bitwise
+     * constants for <code>FILE_READ_DATA</code>, <code>FILE_WRITE_DATA</code>,
+     * <code>READ_CONTROL</code>, <code>GENERIC_ALL</code>, etc with bitwise
      * operators to determine which bits of the mask are on or off.
      *
      * @return the access mask
@@ -183,8 +183,8 @@ public interface ACE {
     String getApplyToText();
 
     /**
-     * Returns the flags for this ACE. The <tt>isInherited()</tt>
-     * method checks the <tt>FLAGS_INHERITED</tt> bit in these flags.
+     * Returns the flags for this ACE. The <code>isInherited()</code>
+     * method checks the <code>FLAGS_INHERITED</code> bit in these flags.
      *
      * @return the ACE flags
      */
@@ -193,7 +193,7 @@ public interface ACE {
     /**
      * Returns true if this ACE is an inherited ACE and false if it is a direct ACE.
      * <p>
-     * Note: For reasons not fully understood, <tt>FLAGS_INHERITED</tt> may
+     * Note: For reasons not fully understood, <code>FLAGS_INHERITED</code> may
      * not be set within all security descriptors even though the ACE was in
      * face inherited. If an inherited ACE is added to a parent the Windows
      * ACL editor will rebuild all children ACEs and set this flag accordingly.

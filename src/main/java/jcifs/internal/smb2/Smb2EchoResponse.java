@@ -22,13 +22,18 @@ import jcifs.internal.SMBProtocolDecodingException;
 import jcifs.internal.util.SMBUtil;
 
 /**
- * @author mbechler
+ * SMB2 Echo response message.
  *
+ * This response confirms that the server is still active
+ * and the connection is working properly.
+ *
+ * @author mbechler
  */
 public class Smb2EchoResponse extends ServerMessageBlock2Response {
 
     /**
-     * @param config
+     * Constructs an SMB2 echo response
+     * @param config the client configuration
      */
     public Smb2EchoResponse(final Configuration config) {
         super(config);

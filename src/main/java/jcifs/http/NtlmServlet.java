@@ -46,9 +46,9 @@ import jcifs.smb.SmbAuthException;
  * to protect content with NTLM HTTP Authentication. Servlets that
  * extend this abstract base class may be authenticated against an SMB
  * server or domain controller depending on how the
- * <tt>jcifs.smb.client.domain</tt> or <tt>jcifs.http.domainController</tt>
+ * {@code jcifs.smb.client.domain} or {@code jcifs.http.domainController}
  * properties are be specified. <b>With later containers the
- * <tt>NtlmHttpFilter</tt> should be used</b>. For custom NTLM HTTP Authentication schemes the <tt>NtlmSsp</tt> may be
+ * {@code NtlmHttpFilter} should be used</b>. For custom NTLM HTTP Authentication schemes the {@code NtlmSsp} may be
  * used.
  * <p>
  * Read <a href="../../../ntlmhttpauth.html">jCIFS NTLM HTTP Authentication and the Network Explorer Servlet</a> related
@@ -60,22 +60,36 @@ import jcifs.smb.SmbAuthException;
 public abstract class NtlmServlet extends HttpServlet {
 
     /**
+     * Default constructor.
+     */
+    protected NtlmServlet() {
+        super();
+    }
+
+    /**
      *
      */
     private static final long serialVersionUID = -4686770199446333333L;
 
+    /** The default domain for NTLM authentication */
     private String defaultDomain;
 
+    /** The domain controller for authentication */
     private String domainController;
 
+    /** Flag to enable load balancing across domain controllers */
     private boolean loadBalance;
 
+    /** Flag to enable basic authentication */
     private boolean enableBasic;
 
+    /** Flag to allow insecure basic authentication */
     private boolean insecureBasic;
 
+    /** The authentication realm */
     private String realm;
 
+    /** The CIFS context for transport operations */
     private CIFSContext transportContext;
 
     @Override

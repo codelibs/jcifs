@@ -29,15 +29,30 @@ import org.bouncycastle.asn1.BERTags;
 import jcifs.pac.ASN1Util;
 import jcifs.pac.PACDecodingException;
 
-@SuppressWarnings("javadoc")
+/**
+ * Represents a Kerberos authentication token.
+ */
 public class KerberosToken {
 
     private KerberosApRequest apRequest;
 
+    /**
+     * Constructs a KerberosToken from token bytes.
+     *
+     * @param token the token bytes
+     * @throws PACDecodingException if token decoding fails
+     */
     public KerberosToken(byte[] token) throws PACDecodingException {
         this(token, null);
     }
 
+    /**
+     * Constructs a KerberosToken from token bytes with decryption keys.
+     *
+     * @param token the token bytes
+     * @param keys array of Kerberos keys for decryption
+     * @throws PACDecodingException if token decoding fails
+     */
     public KerberosToken(byte[] token, KerberosKey[] keys) throws PACDecodingException {
 
         if (token.length <= 0) {
@@ -77,10 +92,20 @@ public class KerberosToken {
         }
     }
 
+    /**
+     * Returns the Kerberos ticket.
+     *
+     * @return the KerberosTicket object
+     */
     public KerberosTicket getTicket() {
         return this.apRequest.getTicket();
     }
 
+    /**
+     * Returns the Kerberos AP request.
+     *
+     * @return the KerberosApRequest object
+     */
     public KerberosApRequest getApRequest() {
         return this.apRequest;
     }

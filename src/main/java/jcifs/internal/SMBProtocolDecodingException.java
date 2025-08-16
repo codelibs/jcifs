@@ -20,8 +20,11 @@ package jcifs.internal;
 import jcifs.CIFSException;
 
 /**
- * @author mbechler
+ * Exception thrown when errors occur during SMB protocol message decoding.
+ * Indicates that an SMB message could not be properly parsed or decoded due to
+ * malformed data, protocol violations, or unsupported message formats.
  *
+ * @author mbechler
  */
 public class SMBProtocolDecodingException extends CIFSException {
 
@@ -31,28 +34,34 @@ public class SMBProtocolDecodingException extends CIFSException {
     private static final long serialVersionUID = 4862398838709265475L;
 
     /**
-     *
+     * Constructs a new SMBProtocolDecodingException with no detail message.
      */
     public SMBProtocolDecodingException() {
     }
 
     /**
-     * @param message
-     * @param cause
+     * Constructs a new SMBProtocolDecodingException with the specified detail message and cause.
+     *
+     * @param message the detail message
+     * @param cause the cause of the exception
      */
     public SMBProtocolDecodingException(final String message, final Throwable cause) {
         super(message, cause);
     }
 
     /**
-     * @param message
+     * Constructs a new SMBProtocolDecodingException with the specified detail message.
+     *
+     * @param message the detail message
      */
     public SMBProtocolDecodingException(final String message) {
         super(message);
     }
 
     /**
-     * @param cause
+     * Constructs a new SMBProtocolDecodingException with the specified cause.
+     *
+     * @param cause the cause of the exception
      */
     public SMBProtocolDecodingException(final Throwable cause) {
         super(cause);

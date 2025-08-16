@@ -31,7 +31,10 @@ import jcifs.internal.smb1.net.NetServerEnum2Response;
 import jcifs.internal.smb1.trans.SmbComTransaction;
 
 /**
+ * Iterator for enumerating network servers.
  *
+ * This class provides iteration over network servers discovered
+ * through NetBIOS server enumeration requests.
  */
 public class NetServerEnumIterator implements CloseableIterator<FileEntry> {
 
@@ -47,13 +50,19 @@ public class NetServerEnumIterator implements CloseableIterator<FileEntry> {
     private FileEntry next;
 
     /**
+     * Constructs a NetServerEnumIterator for enumerating network servers
      * @param parent
+     *            the parent SMB file
      * @param th
+     *            the tree handle to use
      * @param wildcard
+     *            wildcard pattern for filtering servers
      * @param searchAttributes
+     *            attributes to search for
      * @param filter
+     *            optional resource name filter
      * @throws CIFSException
-     *
+     *            if enumeration fails
      */
     public NetServerEnumIterator(final SmbFile parent, final SmbTreeHandleImpl th, final String wildcard, final int searchAttributes,
             final ResourceNameFilter filter) throws CIFSException {

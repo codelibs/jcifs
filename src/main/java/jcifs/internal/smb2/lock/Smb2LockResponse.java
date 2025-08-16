@@ -23,13 +23,18 @@ import jcifs.internal.smb2.ServerMessageBlock2Response;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * SMB2 Lock response message. This response acknowledges the successful
+ * acquisition or release of byte-range locks.
+ *
  * @author mbechler
  *
  */
 public class Smb2LockResponse extends ServerMessageBlock2Response {
 
     /**
-     * @param config
+     * Constructs an SMB2 lock response with the given configuration.
+     *
+     * @param config the configuration for this response
      */
     public Smb2LockResponse(final Configuration config) {
         super(config);

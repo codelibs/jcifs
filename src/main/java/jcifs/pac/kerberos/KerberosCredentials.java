@@ -26,21 +26,39 @@ import javax.security.auth.kerberos.KerberosKey;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
-@SuppressWarnings("javadoc")
+/**
+ * Kerberos credentials management class that handles authentication through JAAS.
+ */
 public class KerberosCredentials {
 
     private Subject subject;
 
+    /**
+     * Creates KerberosCredentials using the default JAAS configuration.
+     *
+     * @throws LoginException if authentication fails
+     */
     public KerberosCredentials() throws LoginException {
         this(System.getProperty("jaaslounge.sso.jaas.config"));
     }
 
+    /**
+     * Creates KerberosCredentials using the specified JAAS login context.
+     *
+     * @param loginContextName the name of the JAAS login context
+     * @throws LoginException if authentication fails
+     */
     public KerberosCredentials(String loginContextName) throws LoginException {
         LoginContext lc = new LoginContext(loginContextName);
         lc.login();
         this.subject = lc.getSubject();
     }
 
+    /**
+     * Retrieves all Kerberos keys from the authenticated subject.
+     *
+     * @return array of KerberosKey objects
+     */
     public KerberosKey[] getKeys() {
         List<Key> serverKeys = new ArrayList<>();
 
@@ -54,6 +72,12 @@ public class KerberosCredentials {
         return serverKeys.toArray(new KerberosKey[0]);
     }
 
+    /**
+     * Retrieves a specific Kerberos key by key type.
+     *
+     * @param keyType the encryption type of the key to retrieve
+     * @return the KerberosKey with the specified type, or null if not found
+     */
     public KerberosKey getKey(int keyType) {
         KerberosKey serverKey = null;
 
@@ -69,6 +93,11 @@ public class KerberosCredentials {
         return serverKey;
     }
 
+    /**
+     * Returns the authenticated JAAS Subject.
+     *
+     * @return the authenticated Subject
+     */
     public Subject getSubject() {
         return this.subject;
     }

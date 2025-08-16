@@ -52,16 +52,16 @@ import jcifs.internal.smb1.com.SmbComNTCreateAndXResponse;
  * flags is necessary to distinguish which type of Named Pipe behavior
  * is desired.
  *
- * <p>
- * <table border="1" cellpadding="3" cellspacing="0" width="100%" summary="Usage examples">
- * <tr bgcolor="#ccccff">
+ * <table border="1">
+ * <caption>SmbNamedPipe Constructor Examples</caption>
+ * <tr >
  * <td colspan="2"><b><code>SmbNamedPipe</code> Constructor Examples</b></td>
  * <tr>
- * <td width="20%"><b>Code Sample</b></td>
+ * <td ><b>Code Sample</b></td>
  * <td><b>Description</b></td>
  * </tr>
  * <tr>
- * <td width="20%">
+ * <td >
  *
  * <pre>
  * new SmbNamedPipe("smb://server/IPC$/PIPE/foo", SmbNamedPipe.PIPE_TYPE_RDWR | SmbNamedPipe.PIPE_TYPE_CALL, context);
@@ -73,7 +73,7 @@ import jcifs.internal.smb1.com.SmbComNTCreateAndXResponse;
  * </td>
  * </tr>
  * <tr>
- * <td width="20%">
+ * <td >
  *
  * <pre>
  * new SmbNamedPipe("smb://server/IPC$/foo", SmbNamedPipe.PIPE_TYPE_RDWR | SmbNamedPipe.PIPE_TYPE_TRANSACT, context);
@@ -86,7 +86,7 @@ import jcifs.internal.smb1.com.SmbComNTCreateAndXResponse;
  * </td>
  * </tr>
  * <tr>
- * <td width="20%">
+ * <td >
  *
  * <pre>
  * new SmbNamedPipe("smb://server/IPC$/foo", SmbNamedPipe.PIPE_TYPE_RDWR, context);
@@ -119,12 +119,12 @@ public class SmbNamedPipe extends SmbFile implements SmbPipeResource {
      * the <code>PIPE_TYPE</code> flags combined with the bitwise OR
      * operator <code>|</code>. See the examples listed above.
      *
-     * @param url
-     * @param pipeType
+     * @param url the SMB URL for the named pipe
+     * @param pipeType the type of the pipe
      * @param unshared
      *            whether to use an exclusive connection for this pipe
-     * @param tc
-     * @throws MalformedURLException
+     * @param tc the CIFS context to use
+     * @throws MalformedURLException if the URL is not properly formatted
      */
 
     public SmbNamedPipe(final String url, final int pipeType, final boolean unshared, final CIFSContext tc) throws MalformedURLException {
@@ -143,10 +143,10 @@ public class SmbNamedPipe extends SmbFile implements SmbPipeResource {
      * the <code>PIPE_TYPE</code> flags combined with the bitwise OR
      * operator <code>|</code>. See the examples listed above.
      *
-     * @param url
-     * @param pipeType
-     * @param tc
-     * @throws MalformedURLException
+     * @param url the SMB URL for the named pipe
+     * @param pipeType the type of the pipe
+     * @param tc the CIFS context to use
+     * @throws MalformedURLException if the URL is not properly formatted
      */
     public SmbNamedPipe(final String url, final int pipeType, final CIFSContext tc) throws MalformedURLException {
         this(url, pipeType, (pipeType & SmbPipeResource.PIPE_TYPE_UNSHARED) != 0, tc);

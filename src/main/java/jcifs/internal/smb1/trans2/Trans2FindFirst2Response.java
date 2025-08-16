@@ -26,7 +26,9 @@ import jcifs.internal.smb1.trans.SmbComTransactionResponse;
 import jcifs.internal.util.SMBUtil;
 
 /**
- *
+ * Trans2 FindFirst2 response message for SMB1 directory enumeration.
+ * This class handles the response from a TRANS2_FIND_FIRST2 request, which returns
+ * the first set of directory entries matching the specified search criteria.
  */
 public class Trans2FindFirst2Response extends SmbComTransactionResponse {
 
@@ -48,14 +50,17 @@ public class Trans2FindFirst2Response extends SmbComTransactionResponse {
     private int resumeKey;
 
     /**
+     * Constructs a Trans2FindFirst2Response.
      *
-     * @param config
+     * @param config the configuration to use
      */
     public Trans2FindFirst2Response(final Configuration config) {
         super(config, SMB_COM_TRANSACTION2, SmbComTransaction.TRANS2_FIND_FIRST2);
     }
 
     /**
+     * Gets the search ID for this response.
+     *
      * @return the sid
      */
     public final int getSid() {
@@ -63,6 +68,8 @@ public class Trans2FindFirst2Response extends SmbComTransactionResponse {
     }
 
     /**
+     * Checks if this is the end of the search results.
+     *
      * @return the isEndOfSearch
      */
     public final boolean isEndOfSearch() {
@@ -70,6 +77,8 @@ public class Trans2FindFirst2Response extends SmbComTransactionResponse {
     }
 
     /**
+     * Gets the last file name in the response.
+     *
      * @return the lastName
      */
     public final String getLastName() {
@@ -77,6 +86,8 @@ public class Trans2FindFirst2Response extends SmbComTransactionResponse {
     }
 
     /**
+     * Gets the resume key for continuing the search.
+     *
      * @return the resumeKey
      */
     public final int getResumeKey() {

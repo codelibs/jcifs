@@ -33,7 +33,7 @@ public interface SmbRandomAccess extends DataOutput, DataInput, AutoCloseable {
     /**
      * Close the file
      *
-     * @throws SmbException
+     * @throws SmbException if an I/O error occurs during close
      */
     @Override
     void close() throws SmbException;
@@ -42,7 +42,7 @@ public interface SmbRandomAccess extends DataOutput, DataInput, AutoCloseable {
      * Read a single byte from the current position
      *
      * @return read byte, -1 if EOF
-     * @throws SmbException
+     * @throws SmbException if an I/O error occurs during read
      */
     int read() throws SmbException;
 
@@ -52,7 +52,7 @@ public interface SmbRandomAccess extends DataOutput, DataInput, AutoCloseable {
      * @param b
      *            buffer
      * @return number of bytes read
-     * @throws SmbException
+     * @throws SmbException if an I/O error occurs during read
      */
     int read(byte[] b) throws SmbException;
 
@@ -64,9 +64,9 @@ public interface SmbRandomAccess extends DataOutput, DataInput, AutoCloseable {
      * @param off
      *            offset into buffer
      * @param len
-     *            read up to <tt>len</tt> bytes
+     *            read up to <code>len</code> bytes
      * @return number of bytes read
-     * @throws SmbException
+     * @throws SmbException if an I/O error occurs during read
      */
     int read(byte[] b, int off, int len) throws SmbException;
 
@@ -80,7 +80,7 @@ public interface SmbRandomAccess extends DataOutput, DataInput, AutoCloseable {
     /**
      * Seek to new position
      *
-     * @param pos
+     * @param pos the new position to seek to
      */
     void seek(long pos);
 
@@ -88,7 +88,7 @@ public interface SmbRandomAccess extends DataOutput, DataInput, AutoCloseable {
      * Get the current file length
      *
      * @return file length
-     * @throws SmbException
+     * @throws SmbException if an I/O error occurs
      */
     long length() throws SmbException;
 
@@ -97,7 +97,7 @@ public interface SmbRandomAccess extends DataOutput, DataInput, AutoCloseable {
      *
      * @param newLength
      *            new file length
-     * @throws SmbException
+     * @throws SmbException if an I/O error occurs
      */
     void setLength(long newLength) throws SmbException;
 

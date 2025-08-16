@@ -24,7 +24,10 @@ import jcifs.internal.smb1.ServerMessageBlock;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * SMB1 Read AndX request message.
  *
+ * This command is used to read data from a file that has been
+ * previously opened with an Open command.
  */
 public class SmbComReadAndX extends AndXServerMessageBlock {
 
@@ -34,8 +37,9 @@ public class SmbComReadAndX extends AndXServerMessageBlock {
     int maxCount, minCount, remaining;
 
     /**
+     * Constructs a Read AndX request.
      *
-     * @param config
+     * @param config the configuration
      */
     public SmbComReadAndX(final Configuration config) {
         super(config, SMB_COM_READ_ANDX);
@@ -43,12 +47,13 @@ public class SmbComReadAndX extends AndXServerMessageBlock {
     }
 
     /**
+     * Constructs a Read AndX request with parameters.
      *
-     * @param config
-     * @param fid
-     * @param offset
-     * @param maxCount
-     * @param andx
+     * @param config the configuration
+     * @param fid the file identifier
+     * @param offset the file offset to read from
+     * @param maxCount the maximum number of bytes to read
+     * @param andx the next command in the chain
      */
     public SmbComReadAndX(final Configuration config, final int fid, final long offset, final int maxCount, final ServerMessageBlock andx) {
         super(config, SMB_COM_READ_ANDX, andx);
@@ -59,6 +64,8 @@ public class SmbComReadAndX extends AndXServerMessageBlock {
     }
 
     /**
+     * Gets the maximum count of bytes to read.
+     *
      * @return the maxCount
      */
     public final int getMaxCount() {
@@ -66,6 +73,8 @@ public class SmbComReadAndX extends AndXServerMessageBlock {
     }
 
     /**
+     * Sets the maximum count of bytes to read.
+     *
      * @param maxCount
      *            the maxCount to set
      */
@@ -74,6 +83,8 @@ public class SmbComReadAndX extends AndXServerMessageBlock {
     }
 
     /**
+     * Gets the minimum count of bytes to read.
+     *
      * @return the minCount
      */
     public final int getMinCount() {
@@ -81,6 +92,8 @@ public class SmbComReadAndX extends AndXServerMessageBlock {
     }
 
     /**
+     * Sets the minimum count of bytes to read.
+     *
      * @param minCount
      *            the minCount to set
      */
@@ -89,6 +102,8 @@ public class SmbComReadAndX extends AndXServerMessageBlock {
     }
 
     /**
+     * Gets the remaining bytes count.
+     *
      * @return the remaining
      */
     public final int getRemaining() {
@@ -96,6 +111,8 @@ public class SmbComReadAndX extends AndXServerMessageBlock {
     }
 
     /**
+     * Sets the open timeout value.
+     *
      * @param openTimeout
      *            the openTimeout to set
      */
@@ -104,6 +121,8 @@ public class SmbComReadAndX extends AndXServerMessageBlock {
     }
 
     /**
+     * Sets the remaining bytes count.
+     *
      * @param remaining
      *            the remaining to set
      */

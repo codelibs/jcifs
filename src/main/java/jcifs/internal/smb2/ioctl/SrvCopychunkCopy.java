@@ -21,6 +21,9 @@ import jcifs.Encodable;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * SMB2 SRV_COPYCHUNK_COPY data structure. This structure is used to perform server-side
+ * copy operations with multiple chunk specifications.
+ *
  * @author mbechler
  *
  */
@@ -30,9 +33,9 @@ public class SrvCopychunkCopy implements Encodable {
     private final SrvCopychunk[] chunks;
 
     /**
-     * @param sourceKey
-     * @param chunks
-     *
+     * Constructs a server copy chunk operation request
+     * @param sourceKey the resume key identifying the source file
+     * @param chunks the array of copy chunk descriptors
      */
     public SrvCopychunkCopy(final byte[] sourceKey, final SrvCopychunk... chunks) {
         this.sourceKey = sourceKey;

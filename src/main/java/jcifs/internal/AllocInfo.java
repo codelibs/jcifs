@@ -20,19 +20,22 @@ package jcifs.internal;
 import jcifs.internal.fscc.FileSystemInformation;
 
 /**
+ * Interface for file system allocation information providing capacity and free space details.
+ * Used in SMB protocol operations to query disk space information from remote SMB shares.
  *
  * @author mbechler
- *
  */
 public interface AllocInfo extends FileSystemInformation {
 
     /**
+     * Gets the total capacity of the allocation.
      *
      * @return total capacity
      */
     long getCapacity();
 
     /**
+     * Gets the free space available.
      *
      * @return free space
      */

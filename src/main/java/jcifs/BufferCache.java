@@ -21,11 +21,13 @@ package jcifs;
  * Internal API for managing reusable buffers
  *
  * @author mbechler
- * @internal
+ *
+ * <p>This interface is intended for internal use.</p>
  */
 public interface BufferCache {
 
     /**
+     * Gets a buffer from the cache or creates a new one if the cache is empty.
      *
      * @return a buffer from the cache, or a new one
      */
@@ -34,7 +36,7 @@ public interface BufferCache {
     /**
      * Return a buffer to the cache
      *
-     * @param buf
+     * @param buf the buffer to return to the cache for reuse
      */
     void releaseBuffer(byte[] buf);
 

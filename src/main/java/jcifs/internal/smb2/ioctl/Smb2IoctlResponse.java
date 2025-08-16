@@ -27,6 +27,9 @@ import jcifs.smb.NtStatus;
 import jcifs.smb.SmbException;
 
 /**
+ * SMB2 IOCTL response message. This response contains the result of a device control
+ * operation on the server.
+ *
  * @author mbechler
  *
  */
@@ -41,7 +44,9 @@ public class Smb2IoctlResponse extends ServerMessageBlock2Response {
     private int outputLength;
 
     /**
-     * @param config
+     * Constructs an SMB2 IOCTL response with the given configuration.
+     *
+     * @param config the configuration for this response
      */
     public Smb2IoctlResponse(final Configuration config) {
         super(config);
@@ -49,8 +54,10 @@ public class Smb2IoctlResponse extends ServerMessageBlock2Response {
     }
 
     /**
-     * @param config
-     * @param outputBuffer
+     * Constructs an SMB2 IOCTL response with the given configuration and output buffer.
+     *
+     * @param config the configuration for this response
+     * @param outputBuffer the buffer to receive output data
      */
     public Smb2IoctlResponse(final Configuration config, final byte[] outputBuffer) {
         super(config);
@@ -58,9 +65,11 @@ public class Smb2IoctlResponse extends ServerMessageBlock2Response {
     }
 
     /**
-     * @param config
-     * @param outputBuffer
-     * @param ctlCode
+     * Constructs an SMB2 IOCTL response with the given configuration, output buffer and control code.
+     *
+     * @param config the configuration for this response
+     * @param outputBuffer the buffer to receive output data
+     * @param ctlCode the IOCTL control code
      */
     public Smb2IoctlResponse(final Configuration config, final byte[] outputBuffer, final int ctlCode) {
         super(config);
@@ -69,6 +78,8 @@ public class Smb2IoctlResponse extends ServerMessageBlock2Response {
     }
 
     /**
+     * Gets the IOCTL control code from the response.
+     *
      * @return the ctlCode
      */
     public int getCtlCode() {
@@ -76,6 +87,8 @@ public class Smb2IoctlResponse extends ServerMessageBlock2Response {
     }
 
     /**
+     * Gets the IOCTL flags from the response.
+     *
      * @return the ioctlFlags
      */
     public int getIoctlFlags() {
@@ -83,6 +96,8 @@ public class Smb2IoctlResponse extends ServerMessageBlock2Response {
     }
 
     /**
+     * Gets the file identifier from the response.
+     *
      * @return the fileId
      */
     public byte[] getFileId() {
@@ -90,6 +105,8 @@ public class Smb2IoctlResponse extends ServerMessageBlock2Response {
     }
 
     /**
+     * Gets the decoded output data from the response.
+     *
      * @return the outputData
      */
     public Decodable getOutputData() {
@@ -97,6 +114,8 @@ public class Smb2IoctlResponse extends ServerMessageBlock2Response {
     }
 
     /**
+     * Gets the length of the output data.
+     *
      * @return the outputLength
      */
     public int getOutputLength() {
@@ -104,6 +123,8 @@ public class Smb2IoctlResponse extends ServerMessageBlock2Response {
     }
 
     /**
+     * Gets the decoded input data from the response.
+     *
      * @return the inputData
      */
     public Decodable getInputData() {
@@ -197,7 +218,9 @@ public class Smb2IoctlResponse extends ServerMessageBlock2Response {
     }
 
     /**
-     * @return
+     * Creates a decodable object for the output data based on the control code.
+     *
+     * @return the appropriate decodable object for the control code, or null if not recognized
      */
     protected Decodable createOutputDecodable() {
         switch (this.ctlCode) {
@@ -217,16 +240,21 @@ public class Smb2IoctlResponse extends ServerMessageBlock2Response {
     }
 
     /**
-     * @return
+     * Creates a decodable object for the input data based on the control code.
+     *
+     * @return the appropriate decodable object for the control code, or null if not recognized
      */
     protected Decodable createInputDecodable() {
         return null;
     }
 
     /**
-     * @param responseType
+     * Gets the output data decoded as the specified response type.
+     *
+     * @param <T> the type of the decoded response data
+     * @param responseType the class of the expected response type
      * @return decoded data
-     * @throws SmbException
+     * @throws SmbException if decoding fails or the response type is incompatible
      */
     @SuppressWarnings("unchecked")
     public <T extends Decodable> T getOutputData(final Class<T> responseType) throws SmbException {

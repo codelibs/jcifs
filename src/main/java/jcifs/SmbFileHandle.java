@@ -26,18 +26,24 @@ package jcifs;
 public interface SmbFileHandle extends AutoCloseable {
 
     /**
+     * Returns the tree handle associated with this file handle
+     *
      * @return the tree
      */
     SmbTreeHandle getTree();
 
     /**
+     * Checks if this file handle is still valid
+     *
      * @return whether the file descriptor is valid
      */
     boolean isValid();
 
     /**
-     * @param lastWriteTime
-     * @throws CIFSException
+     * Closes this file handle and optionally sets the last write time
+     *
+     * @param lastWriteTime the last write time to set, or 0 to leave unchanged
+     * @throws CIFSException if an error occurs while closing the file
      */
     void close(long lastWriteTime) throws CIFSException;
 
@@ -50,12 +56,15 @@ public interface SmbFileHandle extends AutoCloseable {
     void close() throws CIFSException;
 
     /**
-     * @throws CIFSException
+     * Releases this file handle without closing it
      *
+     * @throws CIFSException if an error occurs while releasing the handle
      */
     void release() throws CIFSException;
 
     /**
+     * Returns the initial size of the file when it was opened
+     *
      * @return the file size when it was opened
      */
     long getInitialSize();

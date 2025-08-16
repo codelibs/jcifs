@@ -29,6 +29,13 @@ import jcifs.SmbConstants;
 public abstract class NtlmMessage implements NtlmFlags {
 
     /**
+     * Default constructor.
+     */
+    protected NtlmMessage() {
+        // Protected constructor for abstract class
+    }
+
+    /**
      * The NTLMSSP "preamble".
      */
     protected static final byte[] NTLMSSP_SIGNATURE =
@@ -39,11 +46,25 @@ public abstract class NtlmMessage implements NtlmFlags {
      */
     protected static final byte[] NTLMSSP_VERSION = { 6, 1, 0, 0, 0, 0, 0, 15 };
 
+    /**
+     * NTLMSSP Type 1 message identifier.
+     */
     protected static final int NTLMSSP_TYPE1 = 0x1;
+
+    /**
+     * NTLMSSP Type 2 message identifier.
+     */
     protected static final int NTLMSSP_TYPE2 = 0x2;
+
+    /**
+     * NTLMSSP Type 3 message identifier.
+     */
     protected static final int NTLMSSP_TYPE3 = 0x3;
 
     private static final String OEM_ENCODING = SmbConstants.DEFAULT_OEM_ENCODING;
+    /**
+     * Unicode encoding used for NTLM messages.
+     */
     protected static final String UNI_ENCODING = "UTF-16LE";
 
     private int flags;
@@ -148,7 +169,7 @@ public abstract class NtlmMessage implements NtlmFlags {
      * Returns the raw byte representation of this message.
      *
      * @return A <code>byte[]</code> containing the raw message material.
-     * @throws IOException
+     * @throws IOException if an error occurs during message serialization
      */
     public abstract byte[] toByteArray() throws IOException;
 

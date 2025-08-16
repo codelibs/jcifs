@@ -26,15 +26,18 @@ import jcifs.internal.smb1.trans.SmbComTransactionResponse;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * Base class for SMB1 NT Transaction response messages.
  *
+ * NT Transactions are an extended form of the basic transaction protocol
+ * that provides additional functionality for Windows NT-specific operations.
  */
 public abstract class SmbComNtTransactionResponse extends SmbComTransactionResponse {
 
     private static final Logger log = LoggerFactory.getLogger(SmbComNtTransactionResponse.class);
 
     /**
-     *
-     * @param config
+     * Constructs an NT transaction response.
+     * @param config the configuration context for this response
      */
     protected SmbComNtTransactionResponse(final Configuration config) {
         super(config);

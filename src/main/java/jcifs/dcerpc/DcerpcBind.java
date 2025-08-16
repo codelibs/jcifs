@@ -23,9 +23,10 @@ import jcifs.dcerpc.ndr.NdrBuffer;
 import jcifs.dcerpc.ndr.NdrException;
 
 /**
+ * DCE/RPC bind request message implementation.
+ * This class handles the binding process for establishing DCE/RPC communication channels.
  *
  * @author mbechler
- *
  */
 public class DcerpcBind extends DcerpcMessage {
 

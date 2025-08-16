@@ -27,8 +27,12 @@ import jcifs.internal.smb2.ioctl.Smb2IoctlResponse;
 import jcifs.internal.smb2.ioctl.SrvPipePeekResponse;
 
 /**
- * @author mbechler
+ * Input stream for reading from SMB named pipes.
  *
+ * This class provides a stream-based interface for reading
+ * data from SMB named pipes over the network.
+ *
+ * @author mbechler
  */
 public class SmbPipeInputStream extends SmbFileInputStream {
 
@@ -44,6 +48,12 @@ public class SmbPipeInputStream extends SmbFileInputStream {
         this.handle = handle;
     }
 
+    /**
+     * Ensures that the tree connection is established.
+     *
+     * @return the tree handle implementation
+     * @throws CIFSException if a connection error occurs
+     */
     protected synchronized SmbTreeHandleImpl ensureTreeConnected() throws CIFSException {
         return this.handle.ensureTreeConnected();
     }

@@ -25,7 +25,9 @@ import jcifs.internal.smb1.trans.SmbComTransaction;
 import jcifs.internal.util.SMBUtil;
 
 /**
- *
+ * Trans2 SetFileInformation request message for modifying file metadata.
+ * This class implements the TRANS2_SET_FILE_INFORMATION transaction to update
+ * file attributes, timestamps, and other metadata properties.
  */
 public class Trans2SetFileInformation extends SmbComTransaction {
 
@@ -33,10 +35,11 @@ public class Trans2SetFileInformation extends SmbComTransaction {
     private final FileInformation info;
 
     /**
-     * @param config
-     * @param fid
-     * @param info
+     * Constructs a Trans2SetFileInformation request with file information object.
      *
+     * @param config the SMB configuration
+     * @param fid the file identifier
+     * @param info the file information to set
      */
     public Trans2SetFileInformation(final Configuration config, final int fid, final FileInformation info) {
         super(config, SMB_COM_TRANSACTION2, TRANS2_SET_FILE_INFORMATION);
@@ -48,13 +51,14 @@ public class Trans2SetFileInformation extends SmbComTransaction {
     }
 
     /**
+     * Constructs a Trans2SetFileInformation request with specific file attributes and timestamps.
      *
-     * @param config
-     * @param fid
-     * @param attributes
-     * @param createTime
-     * @param lastWriteTime
-     * @param lastAccessTime
+     * @param config the SMB configuration
+     * @param fid the file identifier
+     * @param attributes the file attributes to set
+     * @param createTime the file creation time
+     * @param lastWriteTime the last write time
+     * @param lastAccessTime the last access time
      */
     public Trans2SetFileInformation(final Configuration config, final int fid, final int attributes, final long createTime,
             final long lastWriteTime, final long lastAccessTime) {

@@ -20,9 +20,11 @@ package jcifs;
 import java.util.Iterator;
 
 /**
- * @author mbechler
- * @param <T>
+ * An iterator that implements AutoCloseable to allow resource cleanup.
+ * This interface combines Iterator functionality with automatic resource management.
  *
+ * @param <T> the type of elements returned by this iterator
+ * @author mbechler
  */
 public interface CloseableIterator<T> extends Iterator<T>, AutoCloseable {
 

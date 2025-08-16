@@ -23,9 +23,18 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
 
+/**
+ * URL handler for SMB1 protocol URLs.
+ */
 public class Handler extends URLStreamHandler {
 
     static final URLStreamHandler SMB_HANDLER = new Handler();
+
+    /**
+     * Default constructor for SMB1 URL handler.
+     */
+    public Handler() {
+    }
 
     @Override
     protected int getDefaultPort() {

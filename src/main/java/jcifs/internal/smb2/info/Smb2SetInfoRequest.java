@@ -27,6 +27,9 @@ import jcifs.internal.smb2.Smb2Constants;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * SMB2 Set Info request message. This command is used to modify file attributes,
+ * security information, or other metadata on the server.
+ *
  * @author mbechler
  *
  */
@@ -39,16 +42,22 @@ public class Smb2SetInfoRequest extends ServerMessageBlock2Request<Smb2SetInfoRe
     private Encodable info;
 
     /**
+     * Constructs a SMB2 set info request with the specified configuration
      *
      * @param config
+     *            the configuration to use for this request
      */
     public Smb2SetInfoRequest(final Configuration config) {
         this(config, Smb2Constants.UNSPECIFIED_FILEID);
     }
 
     /**
+     * Constructs a SMB2 set info request with the specified configuration and file ID
+     *
      * @param config
+     *            the configuration to use for this request
      * @param fileId
+     *            the file ID to set information for
      */
     public Smb2SetInfoRequest(final Configuration config, final byte[] fileId) {
         super(config, SMB2_SET_INFO);
@@ -66,6 +75,8 @@ public class Smb2SetInfoRequest extends ServerMessageBlock2Request<Smb2SetInfoRe
     }
 
     /**
+     * Sets the information type for the set info operation
+     *
      * @param infoType
      *            the infoType to set
      */
@@ -74,6 +85,8 @@ public class Smb2SetInfoRequest extends ServerMessageBlock2Request<Smb2SetInfoRe
     }
 
     /**
+     * Sets the file information class for the set info operation
+     *
      * @param fileInfoClass
      *            the fileInfoClass to set
      */
@@ -82,6 +95,8 @@ public class Smb2SetInfoRequest extends ServerMessageBlock2Request<Smb2SetInfoRe
     }
 
     /**
+     * Sets additional information flags for the set info operation
+     *
      * @param additionalInformation
      *            the additionalInformation to set
      */
@@ -90,8 +105,12 @@ public class Smb2SetInfoRequest extends ServerMessageBlock2Request<Smb2SetInfoRe
     }
 
     /**
+     * Sets the file information to be set on the target file
      *
+     * @param <T>
+     *            the type of file information
      * @param fi
+     *            the file information to set
      */
     public <T extends FileInformation & Encodable> void setFileInformation(final T fi) {
         setInfoType(Smb2Constants.SMB2_0_INFO_FILE);
@@ -100,6 +119,8 @@ public class Smb2SetInfoRequest extends ServerMessageBlock2Request<Smb2SetInfoRe
     }
 
     /**
+     * Sets the encodable information object for this request
+     *
      * @param info
      *            the info to set
      */

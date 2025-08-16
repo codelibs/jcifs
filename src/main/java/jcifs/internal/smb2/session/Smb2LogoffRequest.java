@@ -24,13 +24,17 @@ import jcifs.internal.smb2.Smb2Constants;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * SMB2 Logoff request message. This command is used to terminate an SMB2 session.
+ *
  * @author mbechler
  *
  */
 public class Smb2LogoffRequest extends ServerMessageBlock2Request<Smb2LogoffResponse> {
 
     /**
-     * @param config
+     * Constructs an SMB2 logoff request with the given configuration.
+     *
+     * @param config the configuration for this request
      */
     public Smb2LogoffRequest(final Configuration config) {
         super(config, SMB2_LOGOFF);

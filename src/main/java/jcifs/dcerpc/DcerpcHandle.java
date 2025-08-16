@@ -29,8 +29,8 @@ import jcifs.dcerpc.ndr.NdrBuffer;
 import jcifs.dcerpc.ndr.NdrException;
 
 /**
- *
- *
+ * Abstract base class for DCE/RPC communication handles.
+ * This class provides the foundation for DCE/RPC client communication.
  */
 public abstract class DcerpcHandle implements DcerpcConstants, AutoCloseable {
 
@@ -48,6 +48,12 @@ public abstract class DcerpcHandle implements DcerpcConstants, AutoCloseable {
      * proto:ts0.win.net[\pipe\srvsvc]
      *
      * If the server is absent it is set to "127.0.0.1"
+     */
+    /**
+     * Parses a DCERPC binding string into a DcerpcBinding object
+     * @param str the binding string to parse
+     * @return the parsed DcerpcBinding object
+     * @throws DcerpcException if the binding string is malformed
      */
     protected static DcerpcBinding parseBinding(final String str) throws DcerpcException {
         int state, mark, si;
@@ -132,8 +138,10 @@ public abstract class DcerpcHandle implements DcerpcConstants, AutoCloseable {
     private final CIFSContext transportContext;
 
     /**
-     * @param tc
+     * Constructs a DcerpcHandle with the specified CIFS context
      *
+     * @param tc
+     *            the CIFS context for this handle
      */
     public DcerpcHandle(final CIFSContext tc) {
         this.transportContext = tc;
@@ -141,8 +149,12 @@ public abstract class DcerpcHandle implements DcerpcConstants, AutoCloseable {
     }
 
     /**
+     * Constructs a DcerpcHandle with the specified CIFS context and binding
+     *
      * @param tc
+     *            the CIFS context for this handle
      * @param binding
+     *            the DCE/RPC binding for this connection
      */
     public DcerpcHandle(final CIFSContext tc, final DcerpcBinding binding) {
         this.transportContext = tc;
@@ -150,6 +162,8 @@ public abstract class DcerpcHandle implements DcerpcConstants, AutoCloseable {
     }
 
     /**
+     * Returns the DCE/RPC binding for this handle
+     *
      * @return the binding
      */
     public DcerpcBinding getBinding() {
@@ -174,11 +188,14 @@ public abstract class DcerpcHandle implements DcerpcConstants, AutoCloseable {
      * Get a handle to a service
      *
      * @param url
+     *            the DCE/RPC service URL
      * @param tc
      *            context to use
      * @return a DCERPC handle for the given url
      * @throws MalformedURLException
+     *            if the URL is malformed
      * @throws DcerpcException
+     *            if there is an error establishing the connection
      */
     public static DcerpcHandle getHandle(final String url, final CIFSContext tc) throws MalformedURLException, DcerpcException {
         return getHandle(url, tc, false);
@@ -188,12 +205,16 @@ public abstract class DcerpcHandle implements DcerpcConstants, AutoCloseable {
      * Get a handle to a service
      *
      * @param url
+     *            the DCE/RPC service URL
      * @param tc
+     *            context to use
      * @param unshared
      *            whether an exclusive connection should be used
      * @return a DCERPC handle for the given url
      * @throws MalformedURLException
+     *            if the URL is malformed
      * @throws DcerpcException
+     *            if there is an error establishing the connection
      */
     public static DcerpcHandle getHandle(final String url, final CIFSContext tc, final boolean unshared)
             throws MalformedURLException, DcerpcException {
@@ -207,7 +228,9 @@ public abstract class DcerpcHandle implements DcerpcConstants, AutoCloseable {
      * Bind the handle
      *
      * @throws DcerpcException
+     *            if there is a DCE/RPC protocol error
      * @throws IOException
+     *            if there is an I/O error during binding
      */
     public void bind() throws DcerpcException, IOException {
         synchronized (this) {
@@ -223,10 +246,14 @@ public abstract class DcerpcHandle implements DcerpcConstants, AutoCloseable {
     }
 
     /**
+     * Send and receive a DCE/RPC message
      *
      * @param msg
+     *            the message to send
      * @throws DcerpcException
+     *            if there is a DCE/RPC protocol error
      * @throws IOException
+     *            if there is an I/O error during communication
      */
     public void sendrecv(final DcerpcMessage msg) throws DcerpcException, IOException {
         if (this.state == 0) {
@@ -361,11 +388,17 @@ public abstract class DcerpcHandle implements DcerpcConstants, AutoCloseable {
     }
 
     /**
+     * Encode a DCE/RPC message for transmission
+     *
      * @param msg
+     *            the message to encode
      * @param out
-     * @return
+     *            the output buffer for the encoded message
+     * @return the NdrBuffer containing the encoded message
      * @throws NdrException
+     *            if there is an error encoding the message
      * @throws DcerpcException
+     *            if there is a DCE/RPC protocol error
      */
     protected NdrBuffer encodeMessage(final DcerpcMessage msg, final byte[] out) throws NdrException, DcerpcException {
         final NdrBuffer buf = new NdrBuffer(out, 0);
@@ -383,33 +416,35 @@ public abstract class DcerpcHandle implements DcerpcConstants, AutoCloseable {
     }
 
     /**
-     *
-     * @param securityProvider
+     * Sets the DCERPC security provider for authentication and message protection
+     * @param securityProvider the security provider to use for DCERPC authentication
      */
     public void setDcerpcSecurityProvider(final DcerpcSecurityProvider securityProvider) {
         this.securityProvider = securityProvider;
     }
 
     /**
-     *
+     * Gets the server hostname or address currently connected to
      * @return the server connected to
      */
     public abstract String getServer();
 
     /**
+     * Gets the server hostname resolved through DFS (Distributed File System)
      * @return the server resolved by DFS
      */
     public abstract String getServerWithDfs();
 
     /**
+     * Gets the CIFS context used for transport operations
      * @return the transport context used
      */
     public abstract CIFSContext getTransportContext();
 
     /**
-     *
+     * Gets the session key from the underlying SMB session for encryption
      * @return session key of the underlying smb session
-     * @throws CIFSException
+     * @throws CIFSException if unable to retrieve the session key
      */
     public abstract byte[] getSessionKey() throws CIFSException;
 
@@ -418,10 +453,32 @@ public abstract class DcerpcHandle implements DcerpcConstants, AutoCloseable {
         return this.binding.toString();
     }
 
+    /**
+     * Sends a DCERPC fragment to the remote endpoint
+     * @param buf the buffer containing the fragment data
+     * @param off the offset into the buffer
+     * @param length the length of data to send
+     * @throws IOException if an I/O error occurs during transmission
+     */
     protected abstract void doSendFragment(byte[] buf, int off, int length) throws IOException;
 
+    /**
+     * Receives a DCERPC fragment from the remote endpoint
+     * @param buf the buffer to receive the fragment data
+     * @return the number of bytes received
+     * @throws IOException if an I/O error occurs during reception
+     */
     protected abstract int doReceiveFragment(byte[] buf) throws IOException;
 
+    /**
+     * Sends a DCERPC fragment and receives the response in a single operation
+     * @param out the outgoing buffer containing the request
+     * @param off the offset into the outgoing buffer
+     * @param length the length of data to send
+     * @param inB the buffer to receive the response
+     * @return the number of bytes received
+     * @throws IOException if an I/O error occurs during the operation
+     */
     protected abstract int doSendReceiveFragment(byte[] out, int off, int length, byte[] inB) throws IOException;
 
     @Override

@@ -21,13 +21,17 @@ package jcifs.pac;
  *
  * @author jbbugeau
  */
-@SuppressWarnings("javadoc")
 public class PacCredentialType {
 
     private static final int MINIMAL_BUFFER_SIZE = 32;
 
     private final byte[] credentialType;
 
+    /**
+     * Constructs a PAC credential type from raw data.
+     * @param data the raw credential type data
+     * @throws PACDecodingException if the credential type data is invalid
+     */
     public PacCredentialType(final byte[] data) throws PACDecodingException {
         this.credentialType = data;
         if (!isCredentialTypeCorrect()) {
@@ -35,6 +39,10 @@ public class PacCredentialType {
         }
     }
 
+    /**
+     * Validates whether the credential type data is correct.
+     * @return true if the credential type is valid, false otherwise
+     */
     public boolean isCredentialTypeCorrect() {
         return this.credentialType != null && this.credentialType.length < MINIMAL_BUFFER_SIZE;
     }

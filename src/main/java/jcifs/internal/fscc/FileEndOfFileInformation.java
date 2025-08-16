@@ -22,15 +22,18 @@ import jcifs.internal.SMBProtocolDecodingException;
 import jcifs.internal.util.SMBUtil;
 
 /**
- * @author mbechler
+ * File System Control Code (FSCC) structure for File End-of-File Information.
+ * Used in SMB2/SMB3 operations to set or query the end-of-file position for a file,
+ * effectively controlling file size truncation or extension.
  *
+ * @author mbechler
  */
 public class FileEndOfFileInformation implements FileInformation, Encodable {
 
     private long endOfFile;
 
     /**
-     *
+     * Default constructor for decoding.
      */
     public FileEndOfFileInformation() {
     }
@@ -46,8 +49,9 @@ public class FileEndOfFileInformation implements FileInformation, Encodable {
     }
 
     /**
+     * Constructs file end of file information.
      *
-     * @param eofOfFile
+     * @param eofOfFile the end of file position
      */
     public FileEndOfFileInformation(final long eofOfFile) {
         this.endOfFile = eofOfFile;

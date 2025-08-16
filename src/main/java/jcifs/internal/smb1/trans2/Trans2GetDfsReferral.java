@@ -23,7 +23,9 @@ import jcifs.internal.dfs.DfsReferralRequestBuffer;
 import jcifs.internal.smb1.trans.SmbComTransaction;
 
 /**
- *
+ * Trans2 GetDfsReferral request message for DFS referral queries.
+ * This class implements the TRANS2_GET_DFS_REFERRAL transaction to request
+ * DFS referral information for distributed file system path resolution.
  */
 public class Trans2GetDfsReferral extends SmbComTransaction {
 
@@ -32,19 +34,21 @@ public class Trans2GetDfsReferral extends SmbComTransaction {
     private final DfsReferralRequestBuffer request;
 
     /**
+     * Constructs a Trans2GetDfsReferral request with default referral level.
      *
-     * @param config
-     * @param filename
+     * @param config the configuration to use
+     * @param filename the DFS path to get referrals for
      */
     public Trans2GetDfsReferral(final Configuration config, final String filename) {
         this(config, filename, 3);
     }
 
     /**
+     * Constructs a Trans2GetDfsReferral request with specified referral level.
      *
-     * @param config
-     * @param filename
-     * @param maxReferralLevel
+     * @param config the configuration to use
+     * @param filename the DFS path to get referrals for
+     * @param maxReferralLevel the maximum referral level to request
      */
     public Trans2GetDfsReferral(final Configuration config, final String filename, final int maxReferralLevel) {
         super(config, SMB_COM_TRANSACTION2, TRANS2_GET_DFS_REFERRAL);

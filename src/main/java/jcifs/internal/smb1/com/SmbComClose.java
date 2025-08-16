@@ -29,8 +29,10 @@ import jcifs.internal.smb1.ServerMessageBlock;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * SMB1 Close file request message.
  *
- *
+ * This command is used to close a file that was previously opened
+ * with an Open command.
  */
 public class SmbComClose extends ServerMessageBlock implements Request<SmbComBlankResponse> {
 
@@ -40,10 +42,11 @@ public class SmbComClose extends ServerMessageBlock implements Request<SmbComBla
     private final long lastWriteTime;
 
     /**
+     * Creates a new SMB1 close file request.
      *
-     * @param config
-     * @param fid
-     * @param lastWriteTime
+     * @param config the CIFS configuration
+     * @param fid the file identifier to close
+     * @param lastWriteTime the last write time to set on the file
      */
     public SmbComClose(final Configuration config, final int fid, final long lastWriteTime) {
         super(config, SMB_COM_CLOSE);

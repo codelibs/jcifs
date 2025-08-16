@@ -18,8 +18,12 @@
 package jcifs.smb;
 
 /**
- * @author mbechler
+ * Interface for renewable SMB credentials.
  *
+ * This interface defines methods for credentials that can be
+ * automatically renewed during long-running operations.
+ *
+ * @author mbechler
  */
 public interface SmbRenewableCredentials extends CredentialsInternal {
 

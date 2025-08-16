@@ -23,7 +23,10 @@ import jcifs.internal.smb1.ServerMessageBlock;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * SMB1 COM_WRITE command implementation.
  *
+ * This command writes data to an open file on the server.
+ * It's the basic write operation in the SMB1 protocol.
  */
 public class SmbComWrite extends ServerMessageBlock {
 
@@ -31,22 +34,24 @@ public class SmbComWrite extends ServerMessageBlock {
     private byte[] b;
 
     /**
+     * Constructs an empty write request.
      *
-     * @param config
+     * @param config the configuration to use
      */
     public SmbComWrite(final Configuration config) {
         super(config, SMB_COM_WRITE);
     }
 
     /**
+     * Constructs a write request to write data to a file.
      *
-     * @param config
-     * @param fid
-     * @param offset
-     * @param remaining
-     * @param b
-     * @param off
-     * @param len
+     * @param config the configuration to use
+     * @param fid the file identifier
+     * @param offset the file offset at which to write
+     * @param remaining the number of bytes remaining to be written
+     * @param b the data buffer containing bytes to write
+     * @param off the offset in the buffer where data starts
+     * @param len the number of bytes to write
      */
     public SmbComWrite(final Configuration config, final int fid, final int offset, final int remaining, final byte[] b, final int off,
             final int len) {
@@ -60,13 +65,14 @@ public class SmbComWrite extends ServerMessageBlock {
     }
 
     /**
+     * Sets the parameters for this write request.
      *
-     * @param fid
-     * @param offset
-     * @param remaining
-     * @param b
-     * @param off
-     * @param len
+     * @param fid the file identifier
+     * @param offset the file offset at which to write
+     * @param remaining the number of bytes remaining to be written
+     * @param b the data buffer containing bytes to write
+     * @param off the offset in the buffer where data starts
+     * @param len the number of bytes to write
      */
     public final void setParam(final int fid, final long offset, final int remaining, final byte[] b, final int off, final int len) {
         this.fid = fid;

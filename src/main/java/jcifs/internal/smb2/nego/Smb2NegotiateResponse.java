@@ -38,8 +38,12 @@ import jcifs.util.Hexdump;
 import jcifs.util.transport.Response;
 
 /**
- * @author mbechler
+ * SMB2 Negotiate Protocol response message.
  *
+ * This response contains the server's protocol capabilities,
+ * security mode, and negotiated dialect version.
+ *
+ * @author mbechler
  */
 public class Smb2NegotiateResponse extends ServerMessageBlock2Response implements SmbNegotiationResponse {
 
@@ -64,8 +68,9 @@ public class Smb2NegotiateResponse extends ServerMessageBlock2Response implement
     private int selectedPreauthHash = -1;
 
     /**
+     * Constructs an SMB2 negotiate response with the given configuration.
      *
-     * @param cfg
+     * @param cfg the configuration for this response
      */
     public Smb2NegotiateResponse(final Configuration cfg) {
         super(cfg);
@@ -82,6 +87,8 @@ public class Smb2NegotiateResponse extends ServerMessageBlock2Response implement
     }
 
     /**
+     * Gets the SMB dialect revision selected by the server.
+     *
      * @return the dialectRevision
      */
     public int getDialectRevision() {
@@ -89,6 +96,8 @@ public class Smb2NegotiateResponse extends ServerMessageBlock2Response implement
     }
 
     /**
+     * Gets the server GUID used for identification.
+     *
      * @return the serverGuid
      */
     public byte[] getServerGuid() {
@@ -104,6 +113,8 @@ public class Smb2NegotiateResponse extends ServerMessageBlock2Response implement
     }
 
     /**
+     * Gets the encryption cipher selected for SMB3 encryption.
+     *
      * @return the selectedCipher
      */
     public int getSelectedCipher() {
@@ -111,6 +122,8 @@ public class Smb2NegotiateResponse extends ServerMessageBlock2Response implement
     }
 
     /**
+     * Gets the pre-authentication integrity hash algorithm selected for SMB 3.1.1.
+     *
      * @return the selectedPreauthHash
      */
     public int getSelectedPreauthHash() {
@@ -118,6 +131,8 @@ public class Smb2NegotiateResponse extends ServerMessageBlock2Response implement
     }
 
     /**
+     * Gets the capabilities returned by the server.
+     *
      * @return the server returned capabilities
      */
     public final int getCapabilities() {
@@ -125,13 +140,17 @@ public class Smb2NegotiateResponse extends ServerMessageBlock2Response implement
     }
 
     /**
-     * @return the common/negotiated capabilieis
+     * Gets the common capabilities negotiated between client and server.
+     *
+     * @return the common/negotiated capabilities
      */
     public final int getCommonCapabilities() {
         return this.commonCapabilities;
     }
 
     /**
+     * Gets the initial security blob for authentication negotiation.
+     *
      * @return initial security blob
      */
     public byte[] getSecurityBlob() {
@@ -139,6 +158,8 @@ public class Smb2NegotiateResponse extends ServerMessageBlock2Response implement
     }
 
     /**
+     * Gets the maximum transaction size supported by the server.
+     *
      * @return the maxTransactSize
      */
     public int getMaxTransactSize() {
@@ -156,6 +177,8 @@ public class Smb2NegotiateResponse extends ServerMessageBlock2Response implement
     }
 
     /**
+     * Gets the negotiate contexts from the SMB 3.1.1 negotiation response.
+     *
      * @return the negotiateContexts
      */
     public NegotiateContextResponse[] getNegotiateContexts() {
@@ -163,6 +186,8 @@ public class Smb2NegotiateResponse extends ServerMessageBlock2Response implement
     }
 
     /**
+     * Gets the server start time timestamp.
+     *
      * @return the serverStartTime
      */
     public long getServerStartTime() {
@@ -170,6 +195,8 @@ public class Smb2NegotiateResponse extends ServerMessageBlock2Response implement
     }
 
     /**
+     * Gets the security mode flags from the server.
+     *
      * @return the securityMode
      */
     public int getSecurityMode() {
@@ -197,6 +224,7 @@ public class Smb2NegotiateResponse extends ServerMessageBlock2Response implement
     }
 
     /**
+     * Checks whether SMB3 encryption is supported by the server.
      *
      * @return whether SMB encryption is supported by the server
      */
@@ -529,8 +557,10 @@ public class Smb2NegotiateResponse extends ServerMessageBlock2Response implement
     }
 
     /**
-     * @param type
-     * @return
+     * Creates a negotiate context response based on the context type.
+     *
+     * @param type the negotiate context type
+     * @return the appropriate negotiate context response, or null if not recognized
      */
     protected static NegotiateContextResponse createContext(final int type) {
         switch (type) {

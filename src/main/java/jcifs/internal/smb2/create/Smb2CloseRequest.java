@@ -29,6 +29,9 @@ import jcifs.internal.util.SMBUtil;
 import jcifs.util.Hexdump;
 
 /**
+ * SMB2 Close request message. This command is used to close a file or directory
+ * that was previously opened.
+ *
  * @author mbechler
  *
  */
@@ -41,9 +44,14 @@ public class Smb2CloseRequest extends ServerMessageBlock2Request<Smb2CloseRespon
     private int closeFlags;
 
     /**
+     * Constructs a close request with file ID and name
+     *
      * @param config
+     *            The configuration to use
      * @param fileId
+     *            The file ID to close
      * @param fileName
+     *            The name of the file being closed
      */
     public Smb2CloseRequest(final Configuration config, final byte[] fileId, final String fileName) {
         super(config, SMB2_CLOSE);
@@ -52,9 +60,12 @@ public class Smb2CloseRequest extends ServerMessageBlock2Request<Smb2CloseRespon
     }
 
     /**
+     * Constructs a close request with file ID only
      *
      * @param config
+     *            The configuration to use
      * @param fileId
+     *            The file ID to close
      */
     public Smb2CloseRequest(final Configuration config, final byte[] fileId) {
         this(config, fileId, "");
@@ -71,8 +82,12 @@ public class Smb2CloseRequest extends ServerMessageBlock2Request<Smb2CloseRespon
     }
 
     /**
+     * Constructs a close request with file name only
+     *
      * @param config
+     *            The configuration to use
      * @param fileName
+     *            The name of the file to close
      */
     public Smb2CloseRequest(final Configuration config, final String fileName) {
         this(config, Smb2Constants.UNSPECIFIED_FILEID, fileName);
@@ -90,6 +105,8 @@ public class Smb2CloseRequest extends ServerMessageBlock2Request<Smb2CloseRespon
     }
 
     /**
+     * Set the close flags
+     *
      * @param flags
      *            the flags to set
      */

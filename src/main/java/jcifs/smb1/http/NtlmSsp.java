@@ -34,8 +34,8 @@ import jcifs.smb1.smb1.NtlmPasswordAuthentication;
 import jcifs.smb1.util.Base64;
 
 /**
- * This class is used internally by <tt>NtlmHttpFilter</tt>,
- * <tt>NtlmServlet</tt>, and <tt>NetworkExplorer</tt> to negiotiate password
+ * This class is used internally by {@code NtlmHttpFilter},
+ * {@code NtlmServlet}, and {@code NetworkExplorer} to negiotiate password
  * hashes via NTLM SSP with MSIE. It might also be used directly by servlet
  * containers to incorporate similar functionality.
  * <p>
@@ -49,6 +49,13 @@ import jcifs.smb1.util.Base64;
 public class NtlmSsp implements NtlmFlags {
 
     /**
+     * Default constructor.
+     */
+    public NtlmSsp() {
+        // Default constructor
+    }
+
+    /**
      * Calls the static {@link #authenticate(HttpServletRequest,
      * HttpServletResponse, byte[])} method to perform NTLM authentication
      * for the specified servlet request.
@@ -56,6 +63,18 @@ public class NtlmSsp implements NtlmFlags {
      * @param req The request being serviced.
      * @param resp The response.
      * @param challenge The domain controller challenge.
+     * @throws IOException If an IO error occurs.
+     * @throws ServletException If an error occurs.
+     */
+    /**
+     * Calls the static {@link #authenticate(HttpServletRequest,
+     * HttpServletResponse, byte[])} method to perform NTLM authentication
+     * for the specified servlet request.
+     *
+     * @param req The request being serviced.
+     * @param resp The response.
+     * @param challenge The domain controller challenge.
+     * @return the authenticated NtlmPasswordAuthentication object
      * @throws IOException If an IO error occurs.
      * @throws ServletException If an error occurs.
      */
@@ -70,6 +89,8 @@ public class NtlmSsp implements NtlmFlags {
      * @param req The request being serviced.
      * @param resp The response.
      * @param challenge The domain controller challenge.
+     * @throws IOException If an IO error occurs.
+     * @return the authenticated NtlmPasswordAuthentication object
      * @throws IOException If an IO error occurs.
      * @throws ServletException If an error occurs.
      */

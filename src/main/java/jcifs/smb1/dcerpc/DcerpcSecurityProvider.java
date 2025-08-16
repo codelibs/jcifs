@@ -20,8 +20,21 @@ package jcifs.smb1.dcerpc;
 
 import jcifs.smb1.dcerpc.ndr.NdrBuffer;
 
+/**
+ * Interface for DCERPC security providers that handle message protection
+ */
 public interface DcerpcSecurityProvider {
+    /**
+     * Wraps outgoing DCERPC message data for security protection
+     * @param outgoing the buffer containing data to be wrapped
+     * @throws DcerpcException if the wrapping operation fails
+     */
     void wrap(NdrBuffer outgoing) throws DcerpcException;
 
+    /**
+     * Unwraps incoming DCERPC message data after security processing
+     * @param incoming the buffer containing data to be unwrapped
+     * @throws DcerpcException if the unwrapping operation fails
+     */
     void unwrap(NdrBuffer incoming) throws DcerpcException;
 }

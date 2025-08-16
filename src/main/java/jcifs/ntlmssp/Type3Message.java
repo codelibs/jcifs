@@ -86,9 +86,9 @@ public class Type3Message extends NtlmMessage {
      * @param workstation
      *            The workstation from which authentication is
      *            taking place.
-     * @param flags
-     * @throws GeneralSecurityException
-     * @throws CIFSException
+     * @param flags the flags to use for the Type-3 message
+     * @throws GeneralSecurityException if a cryptographic error occurs
+     * @throws CIFSException if a CIFS protocol error occurs
      */
     public Type3Message(final CIFSContext tc, final Type2Message type2, final String targetName, final String password, final String domain,
             final String user, final String workstation, final int flags) throws GeneralSecurityException, CIFSException {
@@ -114,11 +114,11 @@ public class Type3Message extends NtlmMessage {
      * @param workstation
      *            The workstation from which authentication is
      *            taking place.
-     * @param flags
+     * @param flags the flags to use for the Type-3 message
      * @param nonAnonymous
      *            actually perform authentication with empty password
-     * @throws GeneralSecurityException
-     * @throws CIFSException
+     * @throws GeneralSecurityException if a cryptographic error occurs
+     * @throws CIFSException if a CIFS protocol error occurs
      */
     public Type3Message(final CIFSContext tc, final Type2Message type2, final String targetName, final String password, final String domain,
             final String user, final String workstation, final int flags, final boolean nonAnonymous)
@@ -144,9 +144,9 @@ public class Type3Message extends NtlmMessage {
      * @param workstation
      *            The workstation from which authentication is
      *            taking place.
-     * @param flags
-     * @throws GeneralSecurityException
-     * @throws CIFSException
+     * @param flags the flags to use for the Type-3 message
+     * @throws GeneralSecurityException if a cryptographic error occurs
+     * @throws CIFSException if a CIFS protocol error occurs
      */
     public Type3Message(final CIFSContext tc, final Type2Message type2, final String targetName, final byte[] passwordHash,
             final String domain, final String user, final String workstation, final int flags)
@@ -175,11 +175,11 @@ public class Type3Message extends NtlmMessage {
      * @param workstation
      *            The workstation from which authentication is
      *            taking place.
-     * @param flags
+     * @param flags the flags to use for the Type-3 message
      * @param nonAnonymous
      *            actually perform authentication with empty password
-     * @throws GeneralSecurityException
-     * @throws CIFSException
+     * @throws GeneralSecurityException if a cryptographic error occurs
+     * @throws CIFSException if a CIFS protocol error occurs
      */
     public Type3Message(final CIFSContext tc, final Type2Message type2, final String targetName, byte[] passwordHash, final String password,
             final String domain, final String user, final String workstation, final int flags, final boolean nonAnonymous)
@@ -344,10 +344,10 @@ public class Type3Message extends NtlmMessage {
     /**
      * Sets the MIC
      *
-     * @param type1
-     * @param type2
-     * @throws GeneralSecurityException
-     * @throws IOException
+     * @param type1 the Type-1 message bytes
+     * @param type2 the Type-2 message bytes
+     * @throws GeneralSecurityException if a cryptographic error occurs
+     * @throws IOException if an I/O error occurs
      */
     public void setupMIC(final byte[] type1, final byte[] type2) throws GeneralSecurityException, IOException {
         final byte[] sk = this.masterKey;
@@ -561,6 +561,8 @@ public class Type3Message extends NtlmMessage {
     }
 
     /**
+     * Returns the message integrity code (MIC) for this Type-3 message.
+     *
      * @return A <code>byte[]</code> containing the message integrity code.
      */
     public byte[] getMic() {
@@ -568,6 +570,8 @@ public class Type3Message extends NtlmMessage {
     }
 
     /**
+     * Sets the message integrity code (MIC) for this Type-3 message.
+     *
      * @param mic
      *            NTLM mic to set (16 bytes)
      */
@@ -576,7 +580,9 @@ public class Type3Message extends NtlmMessage {
     }
 
     /**
-     * @return whether a MIC should be calulated
+     * Checks whether a message integrity code (MIC) should be calculated for this message.
+     *
+     * @return whether a MIC should be calculated
      */
     public boolean isMICRequired() {
         return this.micRequired;
@@ -700,7 +706,7 @@ public class Type3Message extends NtlmMessage {
      * @param password
      *            The password.
      * @return A <code>byte[]</code> containing the LanManager response.
-     * @throws GeneralSecurityException
+     * @throws GeneralSecurityException if a cryptographic error occurs
      */
     public static byte[] getLMResponse(final CIFSContext tc, final Type2Message type2, final String password)
             throws GeneralSecurityException {
@@ -711,15 +717,16 @@ public class Type3Message extends NtlmMessage {
     }
 
     /**
+     * Calculates the LMv2 response for NTLM authentication.
      *
-     * @param tc
-     * @param type2
-     * @param domain
-     * @param user
-     * @param password
-     * @param clientChallenge
+     * @param tc the CIFS context
+     * @param type2 the Type-2 message containing the server challenge
+     * @param domain the domain name
+     * @param user the username
+     * @param password the user's password
+     * @param clientChallenge the client challenge bytes
      * @return the calculated response
-     * @throws GeneralSecurityException
+     * @throws GeneralSecurityException if a cryptographic error occurs
      */
     public static byte[] getLMv2Response(final CIFSContext tc, final Type2Message type2, final String domain, final String user,
             final String password, final byte[] clientChallenge) throws GeneralSecurityException {
@@ -730,16 +737,17 @@ public class Type3Message extends NtlmMessage {
     }
 
     /**
+     * Calculates the LMv2 response using a pre-computed NT password hash.
      *
-     * @param tc
-     * @param type2
-     * @param domain
-     * @param user
+     * @param tc the CIFS context
+     * @param type2 the Type-2 message containing the server challenge
+     * @param domain the domain name
+     * @param user the username
      * @param passwordHash
      *            NT password hash
-     * @param clientChallenge
+     * @param clientChallenge the client challenge bytes
      * @return the calculated response
-     * @throws GeneralSecurityException
+     * @throws GeneralSecurityException if a cryptographic error occurs
      */
     public static byte[] getLMv2Response(final CIFSContext tc, final Type2Message type2, final String domain, final String user,
             final byte[] passwordHash, final byte[] clientChallenge) throws GeneralSecurityException {
@@ -750,14 +758,15 @@ public class Type3Message extends NtlmMessage {
     }
 
     /**
+     * Calculates the NTLMv2 response for authentication.
      *
      * @param tc
      *            context to use
      * @param type2
      *            The Type-2 message.
-     * @param responseKeyNT
-     * @param clientChallenge
-     * @param clientChallengeInfo
+     * @param responseKeyNT the NT response key
+     * @param clientChallenge the client challenge bytes
+     * @param clientChallengeInfo additional client challenge information
      * @param ts
      *            timestamp (nanos since 1601)
      * @return A <code>byte[]</code> containing the NTLMv2 response.
@@ -781,7 +790,7 @@ public class Type3Message extends NtlmMessage {
      * @param password
      *            The password.
      * @return A <code>byte[]</code> containing the NT response.
-     * @throws GeneralSecurityException
+     * @throws GeneralSecurityException if a cryptographic error occurs
      */
     public static byte[] getNTResponse(final CIFSContext tc, final Type2Message type2, final String password)
             throws GeneralSecurityException {
@@ -802,7 +811,7 @@ public class Type3Message extends NtlmMessage {
      * @param passwordHash
      *            The NT password hash.
      * @return A <code>byte[]</code> containing the NT response.
-     * @throws GeneralSecurityException
+     * @throws GeneralSecurityException if a cryptographic error occurs
      */
     public static byte[] getNTResponse(final CIFSContext tc, final Type2Message type2, final byte[] passwordHash)
             throws GeneralSecurityException {

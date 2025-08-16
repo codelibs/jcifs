@@ -24,12 +24,25 @@ import jcifs.dcerpc.DcerpcHandle;
 import jcifs.dcerpc.rpc;
 import jcifs.smb.SmbException;
 
-@SuppressWarnings("javadoc")
+/**
+ * Handle for Security Account Manager (SAM) domain operations.
+ * This class represents an open handle to a SAM domain and provides
+ * operations for managing domain users, groups, and aliases.
+ */
 public class SamrDomainHandle extends rpc.policy_handle implements AutoCloseable {
 
     private final DcerpcHandle handle;
     private boolean opened;
 
+    /**
+     * Creates a new SAM domain handle.
+     *
+     * @param handle the DCE/RPC handle for communication
+     * @param policyHandle the policy handle for this domain
+     * @param access the desired access rights
+     * @param sid the security identifier of the domain
+     * @throws IOException if an I/O error occurs during handle creation
+     */
     public SamrDomainHandle(final DcerpcHandle handle, final SamrPolicyHandle policyHandle, final int access, final rpc.sid_t sid)
             throws IOException {
         this.handle = handle;

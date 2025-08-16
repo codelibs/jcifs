@@ -26,11 +26,12 @@ package jcifs;
 public interface ResourceNameFilter {
 
     /**
+     * Tests whether the specified resource name should be included.
      *
-     * @param parent
-     * @param name
+     * @param parent the parent SMB resource
+     * @param name the resource name to test
      * @return whether the given filename should be included
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs while accessing the resource
      */
     boolean accept(SmbResource parent, String name) throws CIFSException;
 

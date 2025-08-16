@@ -22,52 +22,61 @@ import jcifs.SmbSession;
 import jcifs.SmbTreeHandle;
 
 /**
- * @author mbechler
+ * Internal interface for SMB tree handle operations.
  *
+ * This interface provides internal methods for managing
+ * SMB tree connections and their lifecycle.
+ *
+ * @author mbechler
  */
 public interface SmbTreeHandleInternal extends SmbTreeHandle {
 
     /**
-     *
+     * Releases this tree handle back to the pool for reuse
      */
     void release();
 
     /**
-     *
-     * @throws SmbException
-     * @throws CIFSException
+     * Ensures that DFS referrals have been resolved for this tree
+     * @throws SmbException if an SMB-specific error occurs
+     * @throws CIFSException if a general CIFS error occurs
      */
     void ensureDFSResolved() throws CIFSException;
 
     /**
-     * @param cap
-     * @return whether the capabiltiy is present
-     * @throws CIFSException
+     * Checks if the server has the specified capability
+     * @param cap the capability flag to check
+     * @return whether the capability is present
+     * @throws CIFSException if an error occurs checking capabilities
      */
     boolean hasCapability(int cap) throws CIFSException;
 
     /**
+     * Gets the send buffer size of the underlying SMB connection
      * @return the send buffer size of the underlying connection
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs retrieving the buffer size
      */
     int getSendBufferSize() throws CIFSException;
 
     /**
+     * Gets the receive buffer size of the underlying SMB connection
      * @return the receive buffer size of the underlying connection
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs retrieving the buffer size
      */
     int getReceiveBufferSize() throws CIFSException;
 
     /**
+     * Gets the maximum buffer size supported by the server
      * @return the maximum buffer size reported by the server
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs retrieving the buffer size
      */
     int getMaximumBufferSize() throws CIFSException;
 
     /**
+     * Checks if SMB message signing is active for this session
      * @return whether the session uses SMB signing
-     * @throws CIFSException
-     * @throws SmbException
+     * @throws CIFSException if a general CIFS error occurs
+     * @throws SmbException if an SMB-specific error occurs
      */
     boolean areSignaturesActive() throws CIFSException;
 

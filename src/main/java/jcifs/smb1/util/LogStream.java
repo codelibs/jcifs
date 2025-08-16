@@ -32,24 +32,44 @@ public class LogStream extends PrintStream {
 
     private static LogStream inst;
 
+    /**
+     * The current logging level.
+     */
     public static int level = 1;
 
+    /**
+     * Constructs a LogStream with the specified output stream.
+     *
+     * @param stream the output stream for logging
+     */
     public LogStream(final PrintStream stream) {
         super(stream);
     }
 
+    /**
+     * Sets the logging level.
+     *
+     * @param level the logging level to set
+     */
     public static void setLevel(final int level) {
         LogStream.level = level;
     }
 
     /**
-     * This must be called before <tt>getInstance</tt> is called or
+     * This must be called before <code>getInstance</code> is called or
      * it will have no effect.
+     *
+     * @param stream the PrintStream to use for logging
      */
     public static void setInstance(final PrintStream stream) {
         inst = new LogStream(stream);
     }
 
+    /**
+     * Returns the singleton LogStream instance.
+     *
+     * @return the LogStream instance
+     */
     public static LogStream getInstance() {
         if (inst == null) {
             setInstance(System.err);

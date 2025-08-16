@@ -18,7 +18,11 @@
 
 package jcifs.smb;
 
-@SuppressWarnings("javadoc")
+/**
+ * Interface defining NT status codes used in SMB protocol operations.
+ * These status codes are returned by SMB servers to indicate the result
+ * of requested operations. The codes follow the Windows NT status code format.
+ */
 public interface NtStatus {
 
     /*
@@ -26,80 +30,154 @@ public interface NtStatus {
      * block is automatically generated from the ntstatus package.
      */
 
+    /** @deprecated Use NT_STATUS_SUCCESS instead */
     int NT_STATUS_OK = 0x00000000; // TODO: Remove this constant, use NT_STATUS_SUCCESS instead.
+    /** The operation completed successfully */
     int NT_STATUS_SUCCESS = 0x00000000;
+    /** The request is pending */
     int NT_STATUS_PENDING = 0x00000103;
+    /** A notify change request is being completed and information is being returned */
     int NT_STATUS_NOTIFY_ENUM_DIR = 0x0000010C;
+    /** The data was too large to fit into the specified buffer */
     int NT_STATUS_BUFFER_OVERFLOW = 0x80000005;
+    /** The requested operation was unsuccessful */
     int NT_STATUS_UNSUCCESSFUL = 0xC0000001;
+    /** The requested operation is not implemented */
     int NT_STATUS_NOT_IMPLEMENTED = 0xC0000002;
+    /** The specified information class is invalid */
     int NT_STATUS_INVALID_INFO_CLASS = 0xC0000003;
+    /** Invalid access to memory location */
     int NT_STATUS_ACCESS_VIOLATION = 0xC0000005;
+    /** The handle is invalid */
     int NT_STATUS_INVALID_HANDLE = 0xC0000008;
+    /** The parameter is incorrect */
     int NT_STATUS_INVALID_PARAMETER = 0xC000000d;
+    /** The system cannot find the device specified */
     int NT_STATUS_NO_SUCH_DEVICE = 0xC000000e;
+    /** The system cannot find the file specified */
     int NT_STATUS_NO_SUCH_FILE = 0xC000000f;
+    /** End of file reached */
     int NT_STATUS_END_OF_FILE = 0xC0000011;
+    /** More processing is required to complete this request */
     int NT_STATUS_MORE_PROCESSING_REQUIRED = 0xC0000016;
+    /** Access is denied */
     int NT_STATUS_ACCESS_DENIED = 0xC0000022;
+    /** The data area passed to a system call is too small */
     int NT_STATUS_BUFFER_TOO_SMALL = 0xC0000023;
+    /** The object name is invalid */
     int NT_STATUS_OBJECT_NAME_INVALID = 0xC0000033;
+    /** The object was not found */
     int NT_STATUS_OBJECT_NAME_NOT_FOUND = 0xC0000034;
+    /** The object name already exists */
     int NT_STATUS_OBJECT_NAME_COLLISION = 0xC0000035;
+    /** The port is disconnected */
     int NT_STATUS_PORT_DISCONNECTED = 0xC0000037;
+    /** The object path is invalid */
     int NT_STATUS_OBJECT_PATH_INVALID = 0xC0000039;
+    /** The object path was not found */
     int NT_STATUS_OBJECT_PATH_NOT_FOUND = 0xC000003a;
+    /** The object path syntax is bad */
     int NT_STATUS_OBJECT_PATH_SYNTAX_BAD = 0xC000003b;
+    /** The process cannot access the file because it is being used by another process */
     int NT_STATUS_SHARING_VIOLATION = 0xC0000043;
+    /** The file is pending deletion */
     int NT_STATUS_DELETE_PENDING = 0xC0000056;
+    /** There are currently no logon servers available to service the logon request */
     int NT_STATUS_NO_LOGON_SERVERS = 0xC000005e;
+    /** The specified user already exists */
     int NT_STATUS_USER_EXISTS = 0xC0000063;
+    /** The specified user does not exist */
     int NT_STATUS_NO_SUCH_USER = 0xC0000064;
+    /** The specified network password is not correct */
     int NT_STATUS_WRONG_PASSWORD = 0xC000006a;
+    /** Logon failure: unknown user name or bad password */
     int NT_STATUS_LOGON_FAILURE = 0xC000006d;
+    /** Logon failure: user account restriction */
     int NT_STATUS_ACCOUNT_RESTRICTION = 0xC000006e;
+    /** Logon failure: account logon time restriction violation */
     int NT_STATUS_INVALID_LOGON_HOURS = 0xC000006f;
+    /** Logon failure: user not allowed to log on to this computer */
     int NT_STATUS_INVALID_WORKSTATION = 0xC0000070;
+    /** The user's password has expired */
     int NT_STATUS_PASSWORD_EXPIRED = 0xC0000071;
+    /** The referenced account is currently disabled */
     int NT_STATUS_ACCOUNT_DISABLED = 0xC0000072;
+    /** No mapping between account names and security IDs was done */
     int NT_STATUS_NONE_MAPPED = 0xC0000073;
+    /** The security ID structure is invalid */
     int NT_STATUS_INVALID_SID = 0xC0000078;
+    /** The disk is full */
     int NT_STATUS_DISK_FULL = 0xC000007f;
+    /** Insufficient resources are available to complete the request */
     int NT_STATUS_INSUFFICIENT_RESOURCES = 0xC000009a;
+    /** The requested pipe instance is not available */
     int NT_STATUS_INSTANCE_NOT_AVAILABLE = 0xC00000ab;
+    /** The pipe is not available */
     int NT_STATUS_PIPE_NOT_AVAILABLE = 0xC00000ac;
+    /** The pipe state is invalid for the requested operation */
     int NT_STATUS_INVALID_PIPE_STATE = 0xC00000ad;
+    /** All pipe instances are busy */
     int NT_STATUS_PIPE_BUSY = 0xC00000ae;
+    /** No process is on the other end of the pipe */
     int NT_STATUS_PIPE_DISCONNECTED = 0xC00000b0;
+    /** The pipe is being closed */
     int NT_STATUS_PIPE_CLOSING = 0xC00000b1;
+    /** Waiting for a process to open the other end of the pipe */
     int NT_STATUS_PIPE_LISTENING = 0xC00000b3;
+    /** The file that was specified is a directory */
     int NT_STATUS_FILE_IS_A_DIRECTORY = 0xC00000ba;
+    /** A duplicate name exists on the network */
     int NT_STATUS_DUPLICATE_NAME = 0xC00000bd;
+    /** The specified network name is no longer available */
     int NT_STATUS_NETWORK_NAME_DELETED = 0xC00000c9;
+    /** Network access is denied */
     int NT_STATUS_NETWORK_ACCESS_DENIED = 0xC00000ca;
+    /** The network resource type is not correct */
     int NT_STATUS_BAD_DEVICE_TYPE = 0xC00000cb;
+    /** The network name cannot be found */
     int NT_STATUS_BAD_NETWORK_NAME = 0xC00000cc;
+    /** No more connections can be made to this remote computer */
     int NT_STATUS_REQUEST_NOT_ACCEPTED = 0xC00000d0;
+    /** Indicates a domain controller could not be contacted or objects are protected */
     int NT_STATUS_CANT_ACCESS_DOMAIN_INFO = 0xC00000da;
+    /** The specified domain does not exist */
     int NT_STATUS_NO_SUCH_DOMAIN = 0xC00000df;
+    /** The directory name is invalid */
     int NT_STATUS_NOT_A_DIRECTORY = 0xC0000103;
+    /** The file cannot be deleted */
     int NT_STATUS_CANNOT_DELETE = 0xC0000121;
+    /** The format of the specified computer name is invalid */
     int NT_STATUS_INVALID_COMPUTER_NAME = 0xC0000122;
+    /** The pipe operation has failed because the other end of the pipe has been closed */
     int NT_STATUS_PIPE_BROKEN = 0xC000014b;
+    /** The specified local group does not exist */
     int NT_STATUS_NO_SUCH_ALIAS = 0xC0000151;
+    /** The user has not been granted the requested logon type at this computer */
     int NT_STATUS_LOGON_TYPE_NOT_GRANTED = 0xC000015b;
+    /** The SAM database does not have a computer account for this workstation trust relationship */
     int NT_STATUS_NO_TRUST_SAM_ACCOUNT = 0xC000018b;
+    /** The trust relationship between the primary domain and the trusted domain failed */
     int NT_STATUS_TRUSTED_DOMAIN_FAILURE = 0xC000018c;
+    /** The trust relationship between this workstation and the primary domain failed */
     int NT_STATUS_TRUSTED_RELATIONSHIP_FAILURE = 0xC000018d;
+    /** The account used is a computer account */
     int NT_STATUS_NOLOGON_WORKSTATION_TRUST_ACCOUNT = 0xC0000199;
+    /** The user must change the password before first logon */
     int NT_STATUS_PASSWORD_MUST_CHANGE = 0xC0000224;
+    /** The object was not found */
     int NT_STATUS_NOT_FOUND = 0xC0000225;
+    /** The referenced account is currently locked out */
     int NT_STATUS_ACCOUNT_LOCKED_OUT = 0xC0000234;
+    /** The remote system refused the network connection */
     int NT_STATUS_CONNECTION_REFUSED = 0xC0000236;
+    /** The pathname does not traverse a DFS junction */
     int NT_STATUS_PATH_NOT_COVERED = 0xC0000257;
+    /** The IO operation on the reparse point failed */
     int NT_STATUS_IO_REPARSE_TAG_NOT_HANDLED = 0xC0000279;
+    /** No more files were found matching the file specification */
     int NT_STATUS_NO_MORE_FILES = 0x80000006;
 
+    /** Array of all NT status codes defined in this interface */
     int[] NT_STATUS_CODES = { NT_STATUS_SUCCESS, NT_STATUS_PENDING, NT_STATUS_NOTIFY_ENUM_DIR, NT_STATUS_BUFFER_OVERFLOW,
             NT_STATUS_UNSUCCESSFUL, NT_STATUS_NOT_IMPLEMENTED, NT_STATUS_INVALID_INFO_CLASS, NT_STATUS_ACCESS_VIOLATION,
             NT_STATUS_INVALID_HANDLE, NT_STATUS_INVALID_PARAMETER, NT_STATUS_NO_SUCH_DEVICE, NT_STATUS_NO_SUCH_FILE, NT_STATUS_END_OF_FILE,
@@ -119,6 +197,7 @@ public interface NtStatus {
             NT_STATUS_NOT_FOUND, NT_STATUS_ACCOUNT_LOCKED_OUT, NT_STATUS_CONNECTION_REFUSED, NT_STATUS_PATH_NOT_COVERED,
             NT_STATUS_IO_REPARSE_TAG_NOT_HANDLED, NT_STATUS_NO_MORE_FILES, };
 
+    /** Array of human-readable messages corresponding to NT_STATUS_CODES */
     String[] NT_STATUS_MESSAGES = { "The operation completed successfully.", "Request is pending",
             "A notify change request is being completed.", "The data was too large to fit into the specified buffer.",
             "A device attached to the system is not functioning.", "Incorrect function.", "The parameter is incorrect.",

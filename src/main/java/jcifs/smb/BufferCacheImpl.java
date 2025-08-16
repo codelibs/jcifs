@@ -26,7 +26,8 @@ import jcifs.Configuration;
 /**
  * Cache for reusable byte buffers
  *
- * @internal
+ *
+ * <p>This class is intended for internal use.</p>
  */
 public class BufferCacheImpl implements BufferCache {
 
@@ -35,16 +36,19 @@ public class BufferCacheImpl implements BufferCache {
     private int freeBuffers = 0;
 
     /**
+     * Constructs a buffer cache using configuration settings.
      *
-     * @param cfg
+     * @param cfg the configuration to use for buffer cache settings
      */
     public BufferCacheImpl(final Configuration cfg) {
         this(cfg.getBufferCacheSize(), cfg.getMaximumBufferSize());
     }
 
     /**
-     * @param maxBuffers
-     * @param maxSize
+     * Constructs a buffer cache with specified parameters.
+     *
+     * @param maxBuffers the maximum number of buffers to cache
+     * @param maxSize the size of each buffer in bytes
      *
      */
     public BufferCacheImpl(final int maxBuffers, final int maxSize) {

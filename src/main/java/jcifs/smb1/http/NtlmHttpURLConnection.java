@@ -81,6 +81,11 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
         DEFAULT_DOMAIN = domain;
     }
 
+    /**
+     * Creates a new NTLM HTTP URL connection that wraps an existing HTTP connection.
+     *
+     * @param connection the HTTP connection to wrap for NTLM authentication
+     */
     public NtlmHttpURLConnection(final HttpURLConnection connection) {
         super(connection.getURL());
         this.connection = connection;

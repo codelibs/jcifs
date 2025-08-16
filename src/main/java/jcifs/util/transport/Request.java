@@ -18,32 +18,42 @@
 package jcifs.util.transport;
 
 /**
- *
- *
+ * Interface for transport request messages.
+ * This interface represents requests sent to network transports.
  */
 public interface Request extends Message {
 
     /**
+     * Gets the number of credits this request requires.
+     *
      * @return number of credits this request requires
      */
     int getCreditCost();
 
     /**
-     * @param credits
+     * Sets the number of request credits.
+     *
+     * @param credits the number of credits to set
      */
     void setRequestCredits(int credits);
 
     /**
+     * Checks if this is a cancel request.
+     *
      * @return whether this is a cancel request
      */
     boolean isCancel();
 
     /**
+     * Gets the next request in the chain.
+     *
      * @return chained request
      */
     Request getNext();
 
     /**
+     * Gets the response for this request.
+     *
      * @return the response for this request
      */
     Response getResponse();

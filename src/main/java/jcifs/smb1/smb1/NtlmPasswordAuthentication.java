@@ -36,8 +36,8 @@ import jcifs.smb1.util.MD4;
 
 /**
  * This class stores and encrypts NTLM user credentials. The default
- * credentials are retrieved from the <tt>jcifs.smb1.smb1.client.domain</tt>,
- * <tt>jcifs.smb1.smb1.client.username</tt>, and <tt>jcifs.smb1.smb1.client.password</tt>
+ * credentials are retrieved from the {@code jcifs.smb1.smb1.client.domain},
+ * {@code jcifs.smb1.smb1.client.username}, and {@code jcifs.smb1.smb1.client.password}
  * properties.
  * <p>
  * Read <a href="../../../authhandler.html">jCIFS Exceptions and
@@ -77,6 +77,9 @@ public final class NtlmPasswordAuthentication implements Principal, Serializable
     static String DEFAULT_PASSWORD;
     static final String BLANK = "";
 
+    /**
+     * Anonymous credentials instance with empty domain, username, and password.
+     */
     public static final NtlmPasswordAuthentication ANONYMOUS = new NtlmPasswordAuthentication("", "", "");
 
     static void initDefaults() {
@@ -90,6 +93,10 @@ public final class NtlmPasswordAuthentication implements Principal, Serializable
 
     /**
      * Generate the ANSI DES hash for the password associated with these credentials.
+     *
+     * @param password the password to hash
+     * @param challenge the server challenge bytes
+     * @return the ANSI DES hash response
      */
     static public byte[] getPreNTLMResponse(final String password, final byte[] challenge) {
         final byte[] p14 = new byte[14];
@@ -115,6 +122,10 @@ public final class NtlmPasswordAuthentication implements Principal, Serializable
 
     /**
      * Generate the Unicode MD4 hash for the password associated with these credentials.
+     *
+     * @param password the password to hash
+     * @param challenge the server challenge bytes
+     * @return the Unicode MD4 hash response
      */
     static public byte[] getNTLMResponse(final String password, final byte[] challenge) {
         byte[] uni = null;
@@ -149,6 +160,7 @@ public final class NtlmPasswordAuthentication implements Principal, Serializable
      * @param password The user's password.
      * @param challenge The server challenge.
      * @param clientChallenge The client challenge (nonce).
+     * @return the LMv2 response bytes
      */
     public static byte[] getLMv2Response(final String domain, final String user, final String password, final byte[] challenge,
             final byte[] clientChallenge) {
@@ -175,6 +187,14 @@ public final class NtlmPasswordAuthentication implements Principal, Serializable
         }
     }
 
+    /**
+     * Creates the NTLM2 response for the supplied information.
+     *
+     * @param nTOWFv1 the NTOWFv1 hash
+     * @param serverChallenge the server challenge bytes
+     * @param clientChallenge the client challenge bytes
+     * @return the NTLM2 response bytes
+     */
     public static byte[] getNTLM2Response(final byte[] nTOWFv1, final byte[] serverChallenge, final byte[] clientChallenge) {
         final byte[] sessionHash = new byte[8];
 
@@ -199,6 +219,12 @@ public final class NtlmPasswordAuthentication implements Principal, Serializable
         return ntResponse;
     }
 
+    /**
+     * Generates the NTOWFv1 hash for the given password.
+     *
+     * @param password the password to hash
+     * @return the NTOWFv1 hash bytes
+     */
     public static byte[] nTOWFv1(final String password) {
         if (password == null) {
             throw new RuntimeException("Password parameter is required");
@@ -212,6 +238,14 @@ public final class NtlmPasswordAuthentication implements Principal, Serializable
         }
     }
 
+    /**
+     * Generates the NTOWFv2 hash for the given domain, username, and password.
+     *
+     * @param domain the authentication domain
+     * @param username the username
+     * @param password the password
+     * @return the NTOWFv2 hash bytes
+     */
     public static byte[] nTOWFv2(final String domain, final String username, final String password) {
         try {
             final MD4 md4 = new MD4();
@@ -237,10 +271,28 @@ public final class NtlmPasswordAuthentication implements Principal, Serializable
         return ret;
     }
 
+    /**
+     * Creates the LMv2 response for the supplied keys and challenges.
+     *
+     * @param responseKeyLM the LM response key
+     * @param serverChallenge the server challenge bytes
+     * @param clientChallenge the client challenge bytes
+     * @return the LMv2 response bytes
+     */
     public static byte[] getLMv2Response(final byte[] responseKeyLM, final byte[] serverChallenge, final byte[] clientChallenge) {
         return NtlmPasswordAuthentication.computeResponse(responseKeyLM, serverChallenge, clientChallenge, 0, clientChallenge.length);
     }
 
+    /**
+     * Creates the NTLMv2 response for the supplied information.
+     *
+     * @param responseKeyNT the NT response key
+     * @param serverChallenge the server challenge bytes
+     * @param clientChallenge the client challenge bytes
+     * @param nanos1601 the timestamp in nanoseconds since 1601
+     * @param targetInfo the target information from the Type 2 message
+     * @return the NTLMv2 response bytes
+     */
     public static byte[] getNTLMv2Response(final byte[] responseKeyNT, final byte[] serverChallenge, final byte[] clientChallenge,
             final long nanos1601, final byte[] targetInfo) {
         final int targetInfoLength = targetInfo != null ? targetInfo.length : 0;
@@ -263,21 +315,34 @@ public final class NtlmPasswordAuthentication implements Principal, Serializable
     static final NtlmPasswordAuthentication GUEST = new NtlmPasswordAuthentication("?", "GUEST", "");
     static final NtlmPasswordAuthentication DEFAULT = new NtlmPasswordAuthentication(null);
 
+    /** The authentication domain */
     String domain;
+    /** The username for authentication */
     String username;
+    /** The password for authentication */
     String password;
+    /** The ANSI password hash */
     byte[] ansiHash;
+    /** The Unicode password hash */
     byte[] unicodeHash;
+    /** Flag indicating if hashes are externally provided */
     boolean hashesExternal = false;
+    /** The client challenge for NTLM authentication */
     byte[] clientChallenge = null;
+    /** The server challenge for NTLM authentication */
     byte[] challenge = null;
 
     /**
-     * Create an <tt>NtlmPasswordAuthentication</tt> object from the userinfo
-     * component of an SMB URL like "<tt>domain;user:pass</tt>". This constructor
+     * Create an {@code NtlmPasswordAuthentication} object from the userinfo
+     * component of an SMB URL like "{@code domain;user:pass}". This constructor
      * is used internally be jCIFS when parsing SMB URLs.
      */
 
+    /**
+     * Create an NtlmPasswordAuthentication object from a userinfo string.
+     *
+     * @param userInfo the user information string in the format "domain;user:pass"
+     */
     public NtlmPasswordAuthentication(String userInfo) {
         domain = username = password = null;
 
@@ -316,11 +381,18 @@ public final class NtlmPasswordAuthentication implements Principal, Serializable
     }
 
     /**
-     * Create an <tt>NtlmPasswordAuthentication</tt> object from a
-     * domain, username, and password. Parameters that are <tt>null</tt>
-     * will be substituted with <tt>jcifs.smb1.smb1.client.domain</tt>,
-     * <tt>jcifs.smb1.smb1.client.username</tt>, <tt>jcifs.smb1.smb1.client.password</tt>
+     * Create an {@code NtlmPasswordAuthentication} object from a
+     * domain, username, and password. Parameters that are {@code null}
+     * will be substituted with {@code jcifs.smb1.smb1.client.domain},
+     * {@code jcifs.smb1.smb1.client.username}, {@code jcifs.smb1.smb1.client.password}
      * property values.
+     */
+    /**
+     * Create an NtlmPasswordAuthentication object from domain, username, and password.
+     *
+     * @param domain the authentication domain
+     * @param username the username to authenticate with
+     * @param password the password to authenticate with
      */
     public NtlmPasswordAuthentication(String domain, String username, final String password) {
         int ci;
@@ -357,9 +429,18 @@ public final class NtlmPasswordAuthentication implements Principal, Serializable
     }
 
     /**
-     * Create an <tt>NtlmPasswordAuthentication</tt> object with raw password
-     * hashes. This is used exclusively by the <tt>jcifs.smb1.http.NtlmSsp</tt>
+     * Create an {@code NtlmPasswordAuthentication} object with raw password
+     * hashes. This is used exclusively by the {@code jcifs.smb1.http.NtlmSsp}
      * class which is in turn used by NTLM HTTP authentication functionality.
+     */
+    /**
+     * Create an NtlmPasswordAuthentication object with raw password hashes.
+     *
+     * @param domain the authentication domain
+     * @param username the username to authenticate with
+     * @param challenge the server challenge bytes
+     * @param ansiHash the ANSI password hash
+     * @param unicodeHash the Unicode password hash
      */
     public NtlmPasswordAuthentication(final String domain, final String username, final byte[] challenge, final byte[] ansiHash,
             final byte[] unicodeHash) {
@@ -377,6 +458,8 @@ public final class NtlmPasswordAuthentication implements Principal, Serializable
 
     /**
      * Returns the domain.
+     *
+     * @return the authentication domain
      */
     public String getDomain() {
         return domain;
@@ -384,17 +467,28 @@ public final class NtlmPasswordAuthentication implements Principal, Serializable
 
     /**
      * Returns the username.
+     *
+     * @return the username
      */
     public String getUsername() {
         return username;
     }
 
     /**
-     * Returns the password in plain text or <tt>null</tt> if the raw password
-     * hashes were used to construct this <tt>NtlmPasswordAuthentication</tt>
+     * Returns the password in plain text or {@code null} if the raw password
+     * hashes were used to construct this {@code NtlmPasswordAuthentication}
      * object which will be the case when NTLM HTTP Authentication is
      * used. There is no way to retrieve a users password in plain text unless
      * it is supplied by the user at runtime.
+     */
+    /**
+     * Returns the password in plain text or {@code null} if the raw password
+     * hashes were used to construct this {@code NtlmPasswordAuthentication}
+     * object which will be the case when NTLM HTTP Authentication is
+     * used. There is no way to retrieve a users password in plain text unless
+     * it is supplied by the user at runtime.
+     *
+     * @return the password or null if using raw hashes
      */
     public String getPassword() {
         return password;
@@ -402,7 +496,7 @@ public final class NtlmPasswordAuthentication implements Principal, Serializable
 
     /**
      * Return the domain and username in the format:
-     * <tt>domain\\username</tt>. This is equivalent to <tt>toString()</tt>.
+     * {@code domain\\username}. This is equivalent to {@code toString()}.
      */
     @Override
     public String getName() {
@@ -412,6 +506,9 @@ public final class NtlmPasswordAuthentication implements Principal, Serializable
 
     /**
      * Computes the 24 byte ANSI password hash given the 8 byte server challenge.
+     *
+     * @param challenge the server challenge bytes
+     * @return the ANSI password hash
      */
     public byte[] getAnsiHash(final byte[] challenge) {
         if (hashesExternal) {
@@ -438,6 +535,9 @@ public final class NtlmPasswordAuthentication implements Principal, Serializable
 
     /**
      * Computes the 24 byte Unicode password hash given the 8 byte server challenge.
+     *
+     * @param challenge the server challenge bytes
+     * @return the Unicode password hash
      */
     public byte[] getUnicodeHash(final byte[] challenge) {
         if (hashesExternal) {
@@ -457,6 +557,13 @@ public final class NtlmPasswordAuthentication implements Principal, Serializable
         };
     }
 
+    /**
+     * Returns the signing key for SMB signing.
+     *
+     * @param challenge the server challenge bytes
+     * @return the signing key
+     * @throws SmbException if an error occurs generating the signing key
+     */
     public byte[] getSigningKey(final byte[] challenge) throws SmbException {
         switch (LM_COMPATIBILITY) {
         case 0:
@@ -553,9 +660,9 @@ public final class NtlmPasswordAuthentication implements Principal, Serializable
     }
 
     /**
-     * Compares two <tt>NtlmPasswordAuthentication</tt> objects for
-     * equality. Two <tt>NtlmPasswordAuthentication</tt> objects are equal if
-     * their caseless domain and username fields are equal and either both hashes are external and they are equal or both internally supplied passwords are equal. If one <tt>NtlmPasswordAuthentication</tt> object has external hashes (meaning negotiated via NTLM HTTP Authentication) and the other does not they will not be equal. This is technically not correct however the server 8 byte challage would be required to compute and compare the password hashes but that it not available with this method.
+     * Compares two {@code NtlmPasswordAuthentication} objects for
+     * equality. Two {@code NtlmPasswordAuthentication} objects are equal if
+     * their caseless domain and username fields are equal and either both hashes are external and they are equal or both internally supplied passwords are equal. If one {@code NtlmPasswordAuthentication} object has external hashes (meaning negotiated via NTLM HTTP Authentication) and the other does not they will not be equal. This is technically not correct however the server 8 byte challage would be required to compute and compare the password hashes but that it not available with this method.
      */
     @Override
     public boolean equals(final Object obj) {
@@ -586,7 +693,7 @@ public final class NtlmPasswordAuthentication implements Principal, Serializable
 
     /**
      * Return the domain and username in the format:
-     * <tt>domain\\username</tt>. This is equivalent to <tt>getName()</tt>.
+     * {@code domain\\username}. This is equivalent to {@code getName()}.
      */
     @Override
     public String toString() {

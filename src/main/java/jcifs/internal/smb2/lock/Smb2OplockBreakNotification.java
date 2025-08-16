@@ -24,6 +24,9 @@ import jcifs.internal.util.SMBUtil;
 import jcifs.util.Hexdump;
 
 /**
+ * SMB2 Oplock Break notification message. This server-initiated message notifies the client
+ * that an opportunistic lock must be broken due to conflicting access from another client.
+ *
  * @author mbechler
  *
  */
@@ -33,7 +36,9 @@ public class Smb2OplockBreakNotification extends ServerMessageBlock2Response {
     private byte[] fileId;
 
     /**
-     * @param config
+     * Constructs an SMB2 oplock break notification with the given configuration.
+     *
+     * @param config the configuration for this notification
      */
     public Smb2OplockBreakNotification(final Configuration config) {
         super(config);

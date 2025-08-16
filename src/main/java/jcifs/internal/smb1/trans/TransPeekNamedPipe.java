@@ -22,17 +22,22 @@ import jcifs.Configuration;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * SMB1 transaction subcommand for peeking at data in a named pipe.
  *
+ * This class implements the TRANS_PEEK_NAMED_PIPE transaction which allows
+ * reading data from a pipe without removing it, useful for checking if data
+ * is available before performing a blocking read.
  */
 public class TransPeekNamedPipe extends SmbComTransaction {
 
     private final int fid;
 
     /**
+     * Constructs a TransPeekNamedPipe request to check the status of a named pipe.
      *
-     * @param config
-     * @param pipeName
-     * @param fid
+     * @param config the SMB configuration
+     * @param pipeName the name of the pipe to peek
+     * @param fid the file identifier for the pipe
      */
     public TransPeekNamedPipe(final Configuration config, final String pipeName, final int fid) {
         super(config, SMB_COM_TRANSACTION, TRANS_PEEK_NAMED_PIPE);

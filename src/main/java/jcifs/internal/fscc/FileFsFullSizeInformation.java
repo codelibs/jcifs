@@ -23,7 +23,9 @@ import jcifs.internal.SMBProtocolDecodingException;
 import jcifs.internal.util.SMBUtil;
 
 /**
- *
+ * Represents the FILE_FS_FULL_SIZE_INFORMATION structure used to query comprehensive file system size information.
+ * This structure provides complete allocation details including total allocation units, caller-available free units,
+ * actual free allocation units, sectors per allocation unit, and bytes per sector.
  */
 public class FileFsFullSizeInformation implements AllocInfo, FileSystemInformation, Decodable {
 
@@ -31,6 +33,12 @@ public class FileFsFullSizeInformation implements AllocInfo, FileSystemInformati
     private long free;
     private int sectPerAlloc;
     private int bytesPerSect;
+
+    /**
+     * Default constructor for decoding file system full size information.
+     */
+    public FileFsFullSizeInformation() {
+    }
 
     /**
      * {@inheritDoc}

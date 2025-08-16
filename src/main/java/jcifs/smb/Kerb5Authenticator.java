@@ -57,13 +57,21 @@ public class Kerb5Authenticator extends NtlmPasswordAuthenticator {
 
     private static final Set<ASN1ObjectIdentifier> PREFERRED_MECHS = new HashSet<>();
 
+    /** The Kerberos subject for authentication */
     private Subject subject = null;
+    /** The user principal name */
     private String user = null;
+    /** The Kerberos realm */
     private String realm = null;
+    /** The service principal name */
     private String service = DEFAULT_SERVICE;
+    /** The user credential lifetime */
     private int userLifetime = GSSCredential.DEFAULT_LIFETIME;
+    /** The security context lifetime */
     private int contextLifetime = GSSContext.DEFAULT_LIFETIME;
+    /** Flag indicating if fallback authentication is allowed */
     private boolean canFallback = false;
+    /** Flag to force fallback authentication */
     private boolean forceFallback;
 
     static {
@@ -164,6 +172,8 @@ public class Kerb5Authenticator extends NtlmPasswordAuthenticator {
     }
 
     /**
+     * Set the Kerberos subject
+     *
      * @param subject
      *            the subject to set
      */
@@ -187,8 +197,8 @@ public class Kerb5Authenticator extends NtlmPasswordAuthenticator {
     /**
      * Clone the context
      *
-     * @param to
-     * @param from
+     * @param to the target authenticator
+     * @param from the source authenticator
      */
     public static void cloneInternal(Kerb5Authenticator to, Kerb5Authenticator from) {
         NtlmPasswordAuthenticator.cloneInternal(to, from);
@@ -215,6 +225,8 @@ public class Kerb5Authenticator extends NtlmPasswordAuthenticator {
     }
 
     /**
+     * Set the Kerberos realm
+     *
      * @param realm
      *            the realm to set
      */
@@ -223,6 +235,7 @@ public class Kerb5Authenticator extends NtlmPasswordAuthenticator {
     }
 
     /**
+     * Get the Kerberos realm
      *
      * @return the kerberos realm
      */

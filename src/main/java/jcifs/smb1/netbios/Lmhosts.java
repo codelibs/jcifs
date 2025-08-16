@@ -31,7 +31,17 @@ import jcifs.smb1.Config;
 import jcifs.smb1.smb1.SmbFileInputStream;
 import jcifs.smb1.util.LogStream;
 
+/**
+ * Lmhosts file handling for NetBIOS name resolution.
+ */
 public class Lmhosts {
+
+    /**
+     * Default constructor for Lmhosts.
+     */
+    public Lmhosts() {
+        // Default constructor
+    }
 
     private static final String FILENAME = Config.getProperty("jcifs.smb1.netbios.lmhosts");
     private static final Hashtable TAB = new Hashtable();
@@ -44,6 +54,9 @@ public class Lmhosts {
      * not throw an {@link java.net.UnknownHostException} because this
      * is queried frequently and exceptions would be rather costly to
      * throw on a regular basis here.
+     *
+     * @param host the hostname to resolve
+     * @return the resolved NbtAddress or null if not found
      */
 
     public synchronized static NbtAddress getByName(final String host) {

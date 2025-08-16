@@ -33,6 +33,12 @@ public class Handler extends jcifs.smb1.http.Handler {
     public static final int DEFAULT_HTTPS_PORT = 443;
 
     /**
+     * Default constructor for SMB1 HTTPS URL handler.
+     */
+    public Handler() {
+    }
+
+    /**
      * Returns the default HTTPS port.
      *
      * @return An <code>int</code> containing the default HTTPS port.

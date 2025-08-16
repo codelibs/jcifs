@@ -20,13 +20,17 @@ package jcifs.internal.smb2.create;
 import jcifs.Decodable;
 
 /**
+ * SMB2 Create Context response interface. This interface defines the contract for
+ * context data returned in SMB2 Create responses.
+ *
  * @author mbechler
  *
  */
 public interface CreateContextResponse extends Decodable {
 
     /**
-     * @return context name
+     * Get the name of this create context.
+     * @return context name as byte array
      */
     byte[] getName();
 }

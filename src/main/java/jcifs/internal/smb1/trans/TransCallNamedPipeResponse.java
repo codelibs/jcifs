@@ -22,15 +22,20 @@ import jcifs.Configuration;
 import jcifs.internal.SMBProtocolDecodingException;
 
 /**
+ * Response for SMB1 TRANS_CALL_NAMED_PIPE transaction.
  *
+ * This response contains the data returned from the named pipe
+ * after a call transaction has been processed by the server.
  */
 public class TransCallNamedPipeResponse extends SmbComTransactionResponse {
 
     private final byte[] outputBuffer;
 
     /**
-     * @param config
-     * @param inB
+     * Constructs a TransCallNamedPipeResponse with the specified configuration and output buffer.
+     *
+     * @param config the SMB configuration
+     * @param inB the buffer to receive response data from the named pipe
      */
     public TransCallNamedPipeResponse(final Configuration config, final byte[] inB) {
         super(config);
@@ -77,6 +82,7 @@ public class TransCallNamedPipeResponse extends SmbComTransactionResponse {
     }
 
     /**
+     * Gets the length of the response data received from the named pipe.
      *
      * @return response data length
      */

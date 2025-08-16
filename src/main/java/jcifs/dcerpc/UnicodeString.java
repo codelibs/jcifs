@@ -28,6 +28,7 @@ public class UnicodeString extends rpc.unicode_string {
     boolean zterm;
 
     /**
+     * Constructs a UnicodeString with zero termination option.
      *
      * @param zterm
      *            whether the string should be zero terminated
@@ -37,6 +38,7 @@ public class UnicodeString extends rpc.unicode_string {
     }
 
     /**
+     * Constructs a UnicodeString by wrapping an existing unicode_string.
      *
      * @param rus
      *            wrapped string
@@ -51,6 +53,7 @@ public class UnicodeString extends rpc.unicode_string {
     }
 
     /**
+     * Constructs a UnicodeString from a Java String.
      *
      * @param str
      *            wrapped string

@@ -20,19 +20,50 @@ package jcifs.smb1.smb1;
 
 import java.io.IOException;
 
+/**
+ * Represents a Windows security descriptor containing access control information.
+ * This class encodes and decodes security descriptors that define ownership
+ * and access permissions for SMB resources.
+ */
 public class SecurityDescriptor {
 
     SID owner_user, owner_group;
+    /**
+     * The type flags indicating security descriptor control flags.
+     */
     public int type;
+    /**
+     * The array of access control entries (ACEs) in this security descriptor.
+     */
     public ACE[] aces;
 
+    /**
+     * Creates an empty security descriptor.
+     */
     public SecurityDescriptor() {
     }
 
+    /**
+     * Creates a security descriptor by decoding from a byte buffer.
+     *
+     * @param buffer the byte buffer containing the security descriptor data
+     * @param bufferIndex the starting offset in the buffer
+     * @param len the length of data to decode
+     * @throws IOException if an I/O error occurs during decoding
+     */
     public SecurityDescriptor(final byte[] buffer, final int bufferIndex, final int len) throws IOException {
         this.decode(buffer, bufferIndex, len);
     }
 
+    /**
+     * Decodes a security descriptor from a byte buffer.
+     *
+     * @param buffer the byte buffer containing the security descriptor data
+     * @param bufferIndex the starting offset in the buffer
+     * @param len the length of data to decode
+     * @return the number of bytes decoded
+     * @throws IOException if an I/O error occurs during decoding
+     */
     public int decode(final byte[] buffer, int bufferIndex, final int len) throws IOException {
         final int start = bufferIndex;
 

@@ -24,6 +24,9 @@ import jcifs.internal.smb2.Smb2Constants;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * SMB2 Session Setup request message. This command is used to establish a security session
+ * and authenticate a user to the server.
+ *
  * @author mbechler
  *
  */
@@ -36,11 +39,18 @@ public class Smb2SessionSetupRequest extends ServerMessageBlock2Request<Smb2Sess
     private final int securityMode;
 
     /**
+     * Constructs a SMB2 session setup request with the specified parameters
+     *
      * @param context
+     *            the CIFS context for this request
      * @param securityMode
+     *            the security mode flags for the session
      * @param capabilities
+     *            the client capabilities
      * @param previousSessionid
+     *            the previous session ID for reconnection (or 0 for new session)
      * @param token
+     *            the security token for authentication
      */
     public Smb2SessionSetupRequest(final CIFSContext context, final int securityMode, final int capabilities, final long previousSessionid,
             final byte[] token) {
@@ -58,6 +68,8 @@ public class Smb2SessionSetupRequest extends ServerMessageBlock2Request<Smb2Sess
     }
 
     /**
+     * Sets whether this request is for session binding
+     *
      * @param sessionBinding
      *            the sessionBinding to set
      */

@@ -18,8 +18,20 @@
 
 package jcifs.smb1.dcerpc.msrpc;
 
+/**
+ * MSRPC implementation for enumerating aliases within a domain.
+ * This class provides functionality to enumerate security aliases (local groups)
+ * within a SAM domain using the SAMR RPC interface.
+ */
 public class MsrpcEnumerateAliasesInDomain extends samr.SamrEnumerateAliasesInDomain {
 
+    /**
+     * Creates a new request to enumerate aliases in a domain.
+     *
+     * @param domainHandle the handle to the SAM domain
+     * @param acct_flags account flags to filter the enumeration
+     * @param sam the SAM array to store the enumeration results
+     */
     public MsrpcEnumerateAliasesInDomain(final SamrDomainHandle domainHandle, final int acct_flags, final samr.SamrSamArray sam) {
         super(domainHandle, 0, acct_flags, null, 0);
         this.sam = sam;

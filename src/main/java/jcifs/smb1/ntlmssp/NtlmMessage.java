@@ -27,12 +27,22 @@ import jcifs.smb1.Config;
 public abstract class NtlmMessage implements NtlmFlags {
 
     /**
+     * Default constructor.
+     */
+    protected NtlmMessage() {
+        // Protected constructor for abstract class
+    }
+
+    /**
      * The NTLMSSP "preamble".
      */
     protected static final byte[] NTLMSSP_SIGNATURE =
             { (byte) 'N', (byte) 'T', (byte) 'L', (byte) 'M', (byte) 'S', (byte) 'S', (byte) 'P', (byte) 0 };
 
     private static final String OEM_ENCODING = Config.DEFAULT_OEM_ENCODING;
+    /**
+     * Unicode encoding used for NTLM messages.
+     */
     protected static final String UNI_ENCODING = "UTF-16LE";
 
     private int flags;

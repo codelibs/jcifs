@@ -18,27 +18,34 @@
 package jcifs.smb;
 
 /**
+ * Exception thrown when SMB message signature validation fails.
+ * Indicates that the integrity of an SMB message could not be verified.
+ *
  * @author mbechler
  *
  */
 public class SMBSignatureValidationException extends SmbException {
 
     /**
-     *
+     * Default constructor for SMB signature validation exception.
      */
     public SMBSignatureValidationException() {
     }
 
     /**
-     * @param msg
-     * @param rootCause
+     * Constructs an SMB signature validation exception with message and cause.
+     *
+     * @param msg the detail message describing the validation failure
+     * @param rootCause the underlying cause of the validation failure
      */
     public SMBSignatureValidationException(final String msg, final Throwable rootCause) {
         super(msg, rootCause);
     }
 
     /**
-     * @param msg
+     * Constructs an SMB signature validation exception with a detail message.
+     *
+     * @param msg the detail message describing the validation failure
      */
     public SMBSignatureValidationException(final String msg) {
         super(msg);

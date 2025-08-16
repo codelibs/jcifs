@@ -21,13 +21,21 @@ import jcifs.internal.SMBProtocolDecodingException;
 import jcifs.internal.util.SMBUtil;
 
 /**
+ * File System Control Code (FSCC) structure for File Internal Information.
+ * Provides access to the file's internal index number, which is a unique identifier
+ * assigned by the file system for internal tracking and reference purposes.
  *
  * @author mbechler
- *
  */
 public class FileInternalInfo implements FileInformation {
 
     private long indexNumber;
+
+    /**
+     * Default constructor for decoding file internal information.
+     */
+    public FileInternalInfo() {
+    }
 
     /**
      * {@inheritDoc}
@@ -40,7 +48,9 @@ public class FileInternalInfo implements FileInformation {
     }
 
     /**
-     * @return the indexNumber
+     * Gets the file index number.
+     *
+     * @return the index number assigned by the file system
      */
     public long getIndexNumber() {
         return this.indexNumber;

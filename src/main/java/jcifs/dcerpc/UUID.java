@@ -91,9 +91,10 @@ public class UUID extends rpc.uuid_t {
     }
 
     /**
+     * Constructs a UUID from an existing rpc.uuid_t object
      *
      * @param uuid
-     *            wrapped uuid
+     *            wrapped uuid object to copy values from
      */
     public UUID(final rpc.uuid_t uuid) {
         this.time_low = uuid.time_low;
@@ -114,6 +115,7 @@ public class UUID extends rpc.uuid_t {
      * Construct a UUID from string
      *
      * @param str
+     *            the string representation of the UUID to parse
      */
     public UUID(final String str) {
         final char[] arr = str.toCharArray();

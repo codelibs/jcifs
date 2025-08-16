@@ -24,32 +24,35 @@ import jcifs.internal.smb1.trans.SmbComTransaction;
 import jcifs.internal.smb1.trans.SmbComTransactionResponse;
 
 /**
- *
+ * Trans2 GetDfsReferral response message for DFS referral queries.
+ * This class handles the response from a TRANS2_GET_DFS_REFERRAL request, which returns
+ * DFS referral information for redirecting clients to distributed file system targets.
  */
 public class Trans2GetDfsReferralResponse extends SmbComTransactionResponse {
 
     /**
-     *
+     * Indicates that the referral contains a name list.
      */
     public static final int FLAGS_NAME_LIST_REFERRAL = 0x0002;
     /**
-     *
+     * Indicates a target set boundary in the referral response.
      */
     public static final int FLAGS_TARGET_SET_BOUNDARY = 0x0004;
     /**
-     *
+     * Indicates root targets in the DFS referral.
      */
     public static final int TYPE_ROOT_TARGETS = 0x0;
     /**
-     *
+     * Indicates non-root targets in the DFS referral.
      */
     public static final int TYPE_NON_ROOT_TARGETS = 0x1;
 
     private final DfsReferralResponseBuffer dfsResponse = new DfsReferralResponseBuffer();
 
     /**
+     * Constructs a Trans2GetDfsReferralResponse with the specified configuration.
      *
-     * @param config
+     * @param config the SMB configuration
      */
     public Trans2GetDfsReferralResponse(final Configuration config) {
         super(config);
@@ -57,6 +60,8 @@ public class Trans2GetDfsReferralResponse extends SmbComTransactionResponse {
     }
 
     /**
+     * Gets the DFS referral response buffer containing the referral data.
+     *
      * @return the buffer
      */
     public DfsReferralResponseBuffer getDfsResponse() {

@@ -22,14 +22,17 @@ import jcifs.Configuration;
 import jcifs.internal.smb1.ServerMessageBlock;
 
 /**
+ * SMB1 COM_CREATE_DIRECTORY command implementation.
  *
+ * This command creates a new directory on the server.
  */
 public class SmbComCreateDirectory extends ServerMessageBlock {
 
     /**
+     * Creates a new SMB1 create directory request.
      *
-     * @param config
-     * @param directoryName
+     * @param config the CIFS configuration
+     * @param directoryName the name of the directory to create
      */
     public SmbComCreateDirectory(final Configuration config, final String directoryName) {
         super(config, SMB_COM_CREATE_DIRECTORY, directoryName);

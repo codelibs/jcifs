@@ -20,14 +20,19 @@ package jcifs.internal.smb2.nego;
 import jcifs.Encodable;
 
 /**
- * @author mbechler
+ * SMB2 Negotiate Context request data structure.
  *
+ * This class represents negotiate contexts used in SMB 3.1.1
+ * for capability negotiation and security enhancements.
+ *
+ * @author mbechler
  */
 public interface NegotiateContextRequest extends Encodable {
 
     /**
+     * Gets the negotiate context type.
      *
-     * @return context type
+     * @return the SMB2 negotiate context type
      */
     int getContextType();
 }

@@ -40,13 +40,15 @@ public class Handler extends URLStreamHandler {
     private CIFSContext transportContext;
 
     /**
-     *
+     * Default constructor for SMB URL handler.
      */
     public Handler() {
     }
 
     /**
-     * @param tc
+     * Constructs an SMB URL handler with the specified CIFS context.
+     *
+     * @param tc the CIFS context to use
      */
     public Handler(final CIFSContext tc) {
         this.transportContext = tc;

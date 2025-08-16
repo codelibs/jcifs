@@ -41,6 +41,9 @@ import jcifs.internal.smb2.ioctl.SrvCopychunkCopy;
 import jcifs.internal.smb2.ioctl.SrvRequestResumeKeyResponse;
 
 /**
+ * Utility class for SMB file copy operations.
+ * Provides methods for efficient server-side copying using SMB2 IOCTL operations.
+ *
  * @author mbechler
  *
  */
@@ -49,7 +52,7 @@ public final class SmbCopyUtil {
     private static final Logger log = LoggerFactory.getLogger(SmbCopyUtil.class);
 
     /**
-     *
+     * Private constructor to prevent instantiation of utility class.
      */
     private SmbCopyUtil() {
     }

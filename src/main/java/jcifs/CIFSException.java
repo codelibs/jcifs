@@ -33,31 +33,34 @@ public class CIFSException extends IOException {
     private static final long serialVersionUID = 7806460518865806784L;
 
     /**
-     *
+     * Constructs a CIFS exception with no detail message.
      */
     public CIFSException() {
     }
 
     /**
+     * Constructs a CIFS exception with the specified detail message and cause.
      *
-     * @param message
-     * @param cause
+     * @param message the detail message
+     * @param cause the cause of this exception
      */
     public CIFSException(final String message, final Throwable cause) {
         super(message, cause);
     }
 
     /**
+     * Constructs a CIFS exception with the specified detail message.
      *
-     * @param message
+     * @param message the detail message
      */
     public CIFSException(final String message) {
         super(message);
     }
 
     /**
+     * Constructs a CIFS exception with the specified cause.
      *
-     * @param cause
+     * @param cause the cause of this exception
      */
     public CIFSException(final Throwable cause) {
         super(cause);

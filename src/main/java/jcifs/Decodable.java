@@ -20,17 +20,21 @@ package jcifs;
 import jcifs.internal.SMBProtocolDecodingException;
 
 /**
- * @author mbechler
+ * Interface for objects that can be decoded from a byte buffer.
+ * This interface provides methods for deserializing data from SMB protocol messages.
  *
+ * @author mbechler
  */
 public interface Decodable {
 
     /**
-     * @param buffer
-     * @param bufferIndex
-     * @param len
+     * Decode data from a byte buffer
+     *
+     * @param buffer the byte buffer containing the data to decode
+     * @param bufferIndex the starting index in the buffer
+     * @param len the maximum length of data to decode
      * @return decoded length
-     * @throws SMBProtocolDecodingException
+     * @throws SMBProtocolDecodingException if decoding fails
      */
     int decode(byte[] buffer, int bufferIndex, int len) throws SMBProtocolDecodingException;
 

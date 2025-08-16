@@ -37,7 +37,10 @@ import jcifs.util.Strings;
 import jcifs.util.transport.Response;
 
 /**
+ * SMB1 Negotiate Protocol Response message.
  *
+ * This response contains information about the server's capabilities,
+ * security mode, and supported protocol version.
  */
 public class SmbComNegotiateResponse extends ServerMessageBlock implements SmbNegotiationResponse {
 
@@ -58,8 +61,9 @@ public class SmbComNegotiateResponse extends ServerMessageBlock implements SmbNe
     private boolean useUnicode;
 
     /**
+     * Creates a new SMB1 negotiate response.
      *
-     * @param ctx
+     * @param ctx the CIFS context
      */
     public SmbComNegotiateResponse(final CIFSContext ctx) {
         super(ctx.getConfig());
@@ -114,6 +118,8 @@ public class SmbComNegotiateResponse extends ServerMessageBlock implements SmbNe
     }
 
     /**
+     * Returns the index of the selected SMB dialect from the negotiation.
+     *
      * @return the dialectIndex
      */
     public int getDialectIndex() {
@@ -121,13 +127,16 @@ public class SmbComNegotiateResponse extends ServerMessageBlock implements SmbNe
     }
 
     /**
-     * @return the negotiated capbilities
+     * Returns the server capabilities negotiated during the SMB handshake.
+     *
+     * @return the negotiated capabilities
      */
     public int getNegotiatedCapabilities() {
         return this.capabilities;
     }
 
     /**
+     * Gets the negotiated send buffer size.
      *
      * @return negotiated send buffer size
      */
@@ -136,6 +145,7 @@ public class SmbComNegotiateResponse extends ServerMessageBlock implements SmbNe
     }
 
     /**
+     * Gets the negotiated multiplex count.
      *
      * @return negotiated multiplex count
      */
@@ -144,6 +154,7 @@ public class SmbComNegotiateResponse extends ServerMessageBlock implements SmbNe
     }
 
     /**
+     * Gets the negotiated session key.
      *
      * @return negotiated session key
      */
@@ -172,6 +183,8 @@ public class SmbComNegotiateResponse extends ServerMessageBlock implements SmbNe
     }
 
     /**
+     * Gets the negotiated flags2 value.
+     *
      * @return negotiated flags2
      */
     public int getNegotiatedFlags2() {
@@ -332,6 +345,8 @@ public class SmbComNegotiateResponse extends ServerMessageBlock implements SmbNe
     }
 
     /**
+     * Gets the server data containing negotiated server capabilities and properties.
+     *
      * @return the server
      */
     public ServerData getServerData() {

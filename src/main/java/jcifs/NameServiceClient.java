@@ -25,21 +25,26 @@ import java.net.UnknownHostException;
  * This is an internal API for resolving names
  *
  * @author mbechler
- * @internal
  */
 public interface NameServiceClient {
 
     /**
+     * Gets the local host NetBIOS address.
+     *
      * @return local host address
      */
     NetbiosAddress getLocalHost();
 
     /**
+     * Gets the local host NetBIOS name.
+     *
      * @return the local host name
      */
     NetbiosName getLocalName();
 
     /**
+     * Gets the unknown NetBIOS name instance.
+     *
      * @return the unknown name
      */
     NetbiosName getUnknownName();
@@ -105,7 +110,7 @@ public interface NameServiceClient {
      *            server to query
      *
      * @return the resolved addresses
-     * @throws UnknownHostException
+     * @throws UnknownHostException if the host cannot be resolved
      */
     NetbiosAddress[] getNbtAllByName(String host, int type, String scope, InetAddress svr) throws UnknownHostException;
 
@@ -174,32 +179,34 @@ public interface NameServiceClient {
     NetbiosAddress getNbtByName(String host) throws UnknownHostException;
 
     /**
-     * @param nbtAddress
+     * Retrieves the node status information for the specified NetBIOS address.
+     *
+     * @param nbtAddress the NetBIOS address to query
      * @return the node status responses
-     * @throws UnknownHostException
+     * @throws UnknownHostException if the node status cannot be retrieved
      */
     NetbiosAddress[] getNodeStatus(NetbiosAddress nbtAddress) throws UnknownHostException;
 
     /**
-     * Lookup addresses for the given <tt>hostname</tt>.
+     * Lookup addresses for the given <code>hostname</code>.
      *
-     * @param hostname
-     * @param possibleNTDomainOrWorkgroup
+     * @param hostname the hostname to resolve
+     * @param possibleNTDomainOrWorkgroup if true, perform additional master browser lookup
      * @return found addresses
-     * @throws UnknownHostException
+     * @throws UnknownHostException if the hostname cannot be resolved
      */
     Address[] getAllByName(String hostname, boolean possibleNTDomainOrWorkgroup) throws UnknownHostException;
 
     /**
-     * Lookup <tt>hostname</tt> and return it's <tt>UniAddress</tt>. If the
-     * <tt>possibleNTDomainOrWorkgroup</tt> parameter is <tt>true</tt> an
+     * Lookup <code>hostname</code> and return it's <code>UniAddress</code>. If the
+     * <code>possibleNTDomainOrWorkgroup</code> parameter is <code>true</code> an
      * additional name query will be performed to locate a master browser.
      *
-     * @param hostname
-     * @param possibleNTDomainOrWorkgroup
+     * @param hostname the hostname to resolve
+     * @param possibleNTDomainOrWorkgroup if true, perform additional master browser lookup
      *
      * @return the first resolved address
-     * @throws UnknownHostException
+     * @throws UnknownHostException if the hostname cannot be resolved
      */
     Address getByName(String hostname, boolean possibleNTDomainOrWorkgroup) throws UnknownHostException;
 

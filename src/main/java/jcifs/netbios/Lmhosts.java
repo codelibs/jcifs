@@ -34,10 +34,17 @@ import jcifs.CIFSContext;
 import jcifs.smb.SmbFileInputStream;
 
 /**
- *
- *
+ * LMHOSTS file parser and NetBIOS name resolver.
+ * This class provides functionality for resolving NetBIOS names using LMHOSTS files.
  */
 public class Lmhosts {
+
+    /**
+     * Default constructor for Lmhosts.
+     */
+    public Lmhosts() {
+        // Default constructor
+    }
 
     private static final Logger log = LoggerFactory.getLogger(Lmhosts.class);
 
@@ -51,8 +58,8 @@ public class Lmhosts {
      * is queried frequently and exceptions would be rather costly to
      * throw on a regular basis here.
      *
-     * @param host
-     * @param tc
+     * @param host the hostname to resolve
+     * @param tc the CIFS context
      * @return resolved name, null if not found
      */
     public synchronized NbtAddress getByName(final String host, final CIFSContext tc) {

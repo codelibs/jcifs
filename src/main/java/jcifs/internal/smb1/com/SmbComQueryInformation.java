@@ -22,14 +22,18 @@ import jcifs.Configuration;
 import jcifs.internal.smb1.ServerMessageBlock;
 
 /**
+ * SMB1 Query Information request message.
  *
+ * This command is used to retrieve basic file information
+ * such as attributes, size, and timestamps.
  */
 public class SmbComQueryInformation extends ServerMessageBlock {
 
     /**
+     * Constructs a query information request.
      *
-     * @param config
-     * @param filename
+     * @param config the configuration
+     * @param filename the file name to query
      */
     public SmbComQueryInformation(final Configuration config, final String filename) {
         super(config, SMB_COM_QUERY_INFORMATION, filename);

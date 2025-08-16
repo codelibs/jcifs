@@ -20,18 +20,20 @@ package jcifs.internal;
 import jcifs.CIFSContext;
 
 /**
- * @author mbechler
- * @param <T>
- *            response type
+ * Generic interface for typed SMB request messages.
+ * Extends the common request interface with type-safe response handling,
+ * allowing requests to specify their expected response type.
  *
+ * @author mbechler
+ * @param <T> response type
  */
 public interface Request<T extends CommonServerMessageBlockResponse> extends CommonServerMessageBlockRequest {
 
     /**
+     * Initializes and returns a response object for this request.
      *
-     * @param tc
+     * @param tc the CIFS context
      * @return the initialized response
-     * @internal
      */
     T initResponse(CIFSContext tc);
 
@@ -43,6 +45,8 @@ public interface Request<T extends CommonServerMessageBlockResponse> extends Com
     T getResponse();
 
     /**
+     * Marks this request to ignore disconnection errors.
+     *
      * @return this request
      *
      */
