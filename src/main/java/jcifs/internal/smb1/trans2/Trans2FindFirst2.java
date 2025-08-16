@@ -58,13 +58,14 @@ public class Trans2FindFirst2 extends SmbComTransaction {
     static final int SMB_FILE_BOTH_DIRECTORY_INFO = 0x104;
 
     /**
+     * Constructs a Trans2FindFirst2 request for finding files.
      *
-     * @param config
-     * @param filename
-     * @param wildcard
-     * @param searchAttributes
-     * @param batchCount
-     * @param batchSize
+     * @param config the configuration to use
+     * @param filename the path to search in
+     * @param wildcard the wildcard pattern to match
+     * @param searchAttributes the file attributes to search for
+     * @param batchCount the number of entries to return
+     * @param batchSize the maximum size of the response buffer
      */
     public Trans2FindFirst2(final Configuration config, final String filename, final String wildcard, final int searchAttributes,
             final int batchCount, final int batchSize) {

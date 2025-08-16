@@ -19,14 +19,29 @@
 
 package jcifs.spnego;
 
+/**
+ * Constants for SPNEGO authentication mechanism OIDs used in GSS-API negotiations
+ */
 public interface SpnegoConstants {
 
+    /**
+     * OID for the SPNEGO mechanism
+     */
     String SPNEGO_MECHANISM = "1.3.6.1.5.5.2";
 
+    /**
+     * OID for the Kerberos v5 mechanism
+     */
     String KERBEROS_MECHANISM = "1.2.840.113554.1.2.2";
 
+    /**
+     * OID for the legacy Kerberos v5 mechanism
+     */
     String LEGACY_KERBEROS_MECHANISM = "1.2.840.48018.1.2.2";
 
+    /**
+     * OID for the NTLMSSP mechanism
+     */
     String NTLMSSP_MECHANISM = "1.3.6.1.4.1.311.2.2.10";
 
 }

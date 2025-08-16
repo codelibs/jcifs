@@ -39,12 +39,13 @@ public class TransTransactNamedPipe extends SmbComTransaction {
     private final int pipeFid, pipeDataOff, pipeDataLen;
 
     /**
+     * Constructs a transaction request for a named pipe operation.
      *
-     * @param config
-     * @param fid
-     * @param data
-     * @param off
-     * @param len
+     * @param config the configuration to use
+     * @param fid the file ID of the named pipe
+     * @param data the data buffer to send
+     * @param off the offset in the data buffer
+     * @param len the length of data to send
      */
     public TransTransactNamedPipe(final Configuration config, final int fid, final byte[] data, final int off, final int len) {
         super(config, SMB_COM_TRANSACTION, TRANS_TRANSACT_NAMED_PIPE);

@@ -21,6 +21,10 @@ package jcifs.smb1.netbios;
 import java.io.IOException;
 import java.io.InputStream;
 
+/**
+ * NetBIOS session request packet for establishing sessions.
+ * This packet is sent to request a NetBIOS session with a remote host.
+ */
 public class SessionRequestPacket extends SessionServicePacket {
 
     private final Name calledName, callingName;
@@ -30,6 +34,12 @@ public class SessionRequestPacket extends SessionServicePacket {
         callingName = new Name();
     }
 
+    /**
+     * Constructs a NetBIOS session request packet.
+     *
+     * @param calledName the NetBIOS name of the called (destination) host
+     * @param callingName the NetBIOS name of the calling (source) host
+     */
     public SessionRequestPacket(final Name calledName, final Name callingName) {
         type = SESSION_REQUEST;
         this.calledName = calledName;

@@ -32,80 +32,91 @@ import jcifs.CIFSException;
 public interface SSPContext {
 
     /**
+     * Gets the signing key for the session.
      * @return the signing key for the session
-     *
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs retrieving the signing key
      */
     byte[] getSigningKey() throws CIFSException;
 
     /**
+     * Checks whether the security context is established.
      * @return whether the context is established
      */
     boolean isEstablished();
 
     /**
-     * @param token
-     * @param off
-     * @param len
+     * Initializes the security context with the given token.
+     * @param token the input token bytes
+     * @param off offset into the token array
+     * @param len length of token data
      * @return result token
-     * @throws SmbException
-     * @throws CIFSException
+     * @throws SmbException if an SMB protocol error occurs
+     * @throws CIFSException if a general CIFS error occurs
      */
     byte[] initSecContext(byte[] token, int off, int len) throws CIFSException;
 
     /**
+     * Gets the NetBIOS name of the remote endpoint.
      * @return the name of the remote endpoint
      */
     String getNetbiosName();
 
     /**
-     * @throws CIFSException
+     * Disposes of the security context and releases any associated resources.
+     * @throws CIFSException if an error occurs during disposal
      */
     void dispose() throws CIFSException;
 
     /**
-     * @param mechanism
+     * Checks whether the specified security mechanism is supported.
+     * @param mechanism the security mechanism OID to check
      * @return whether the specified mechanism is supported
      */
     boolean isSupported(ASN1ObjectIdentifier mechanism);
 
     /**
-     * @param selectedMech
+     * Checks whether the specified mechanism is the preferred mechanism.
+     * @param selectedMech the selected mechanism OID
      * @return whether the specified mechanism is preferred
      */
     boolean isPreferredMech(ASN1ObjectIdentifier selectedMech);
 
     /**
+     * Gets the negotiated context flags.
      * @return context flags
      */
     int getFlags();
 
     /**
+     * Gets the array of supported security mechanism OIDs.
      * @return array of supported mechanism OIDs
      */
     ASN1ObjectIdentifier[] getSupportedMechs();
 
     /**
-     *
+     * Checks whether this mechanism supports message integrity.
      * @return whether this mechanisms supports integrity
      */
     boolean supportsIntegrity();
 
     /**
-     * @param data
+     * Calculates a Message Integrity Code (MIC) for the given data.
+     * @param data the data to calculate MIC for
      * @return MIC
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs calculating the MIC
      */
     byte[] calculateMIC(byte[] data) throws CIFSException;
 
     /**
-     * @param data
-     * @param mic
-     * @throws CIFSException
+     * Verifies a Message Integrity Code (MIC) for the given data.
+     * @param data the data to verify
+     * @param mic the MIC to verify against
+     * @throws CIFSException if the MIC verification fails or an error occurs
      */
     void verifyMIC(byte[] data, byte[] mic) throws CIFSException;
 
     /**
+     * Checks whether Message Integrity Code (MIC) is available for use.
      * @return whether MIC can be used
      */
     boolean isMICAvailable();

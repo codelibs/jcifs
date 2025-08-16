@@ -36,83 +36,106 @@ import jcifs.SmbTransport;
 public interface SmbTransportInternal extends SmbTransport {
 
     /**
-     * @param cap
+     * Checks if the transport supports the specified capability.
+     *
+     * @param cap the capability flag to check
      * @return whether the transport has the given capability
-     * @throws SmbException
+     * @throws SmbException if an error occurs checking capabilities
      */
     boolean hasCapability(int cap) throws SmbException;
 
     /**
+     * Checks if the transport has been disconnected.
+     *
      * @return whether the transport has been disconnected
      */
     boolean isDisconnected();
 
     /**
-     * @param hard
-     * @param inuse
+     * Disconnects the transport from the remote server.
+     *
+     * @param hard if true, force immediate disconnection
+     * @param inuse whether the connection is currently in use
      * @return whether the connection was in use
-     * @throws IOException
+     * @throws IOException if an I/O error occurs during disconnection
      */
     boolean disconnect(boolean hard, boolean inuse) throws IOException;
 
     /**
-     * @return whether the transport was connected
-     * @throws SmbException
-     * @throws IOException
+     * Ensures the transport is connected to the remote server.
      *
+     * @return whether the transport was connected
+     * @throws SmbException if an SMB error occurs
+     * @throws IOException if an I/O error occurs
      */
     boolean ensureConnected() throws IOException;
 
     /**
-     * @param ctx
-     * @param name
-     * @param targetHost
-     * @param targetDomain
-     * @param rn
+     * Gets DFS referrals for the specified path.
+     *
+     * @param ctx the CIFS context
+     * @param name the DFS path to resolve
+     * @param targetHost the target host name
+     * @param targetDomain the target domain
+     * @param rn the referral number
      * @return dfs referral
-     * @throws SmbException
-     * @throws CIFSException
+     * @throws SmbException if an SMB error occurs
+     * @throws CIFSException if a CIFS error occurs
      */
     DfsReferralData getDfsReferrals(CIFSContext ctx, String name, String targetHost, String targetDomain, int rn) throws CIFSException;
 
     /**
+     * Checks if message signing is supported but not mandatory.
+     *
      * @return whether signatures are supported but not required
-     * @throws SmbException
+     * @throws SmbException if an error occurs checking signing status
      */
     boolean isSigningOptional() throws SmbException;
 
     /**
+     * Checks if message signing is mandatory for this connection.
+     *
      * @return whether signatures are enforced from either side
-     * @throws SmbException
+     * @throws SmbException if an error occurs checking signing status
      */
     boolean isSigningEnforced() throws SmbException;
 
     /**
+     * Gets the server's encryption key for authentication.
+     *
      * @return the encryption key used by the server
      */
     byte[] getServerEncryptionKey();
 
     /**
-     * @param ctx
+     * Gets or creates an SMB session for the given context.
+     *
+     * @param ctx the CIFS context
      * @return session
      */
     SmbSession getSmbSession(CIFSContext ctx);
 
     /**
-     * @param tf
-     * @param targetHost
-     * @param targetDomain
+     * Gets or creates an SMB session for the specified target.
+     *
+     * @param tf the CIFS context
+     * @param targetHost the target host name
+     * @param targetDomain the target domain
      * @return session
      */
     SmbSession getSmbSession(CIFSContext tf, String targetHost, String targetDomain);
 
     /**
+     * Checks if this transport uses the SMB2 protocol.
+     *
      * @return whether this is a SMB2 connection
-     * @throws SmbException
+     * @throws SmbException if an error occurs checking protocol version
      */
     boolean isSMB2() throws SmbException;
 
     /**
+     * Gets the number of currently pending requests.
+     *
      * @return number of inflight requests
      */
     int getInflightRequests();

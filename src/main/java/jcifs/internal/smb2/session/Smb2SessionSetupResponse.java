@@ -34,17 +34,17 @@ import jcifs.smb.NtStatus;
 public class Smb2SessionSetupResponse extends ServerMessageBlock2Response {
 
     /**
-     *
+     * Session flag indicating this is a guest session
      */
     public static final int SMB2_SESSION_FLAGS_IS_GUEST = 0x1;
 
     /**
-     *
+     * Session flag indicating this is a null/anonymous session
      */
     public static final int SMB2_SESSION_FLAGS_IS_NULL = 0x2;
 
     /**
-     *
+     * Session flag indicating data encryption is required for this session
      */
     public static final int SMB2_SESSION_FLAG_ENCRYPT_DATA = 0x4;
 
@@ -52,7 +52,10 @@ public class Smb2SessionSetupResponse extends ServerMessageBlock2Response {
     private byte[] blob;
 
     /**
+     * Constructs a SMB2 session setup response with the specified configuration
+     *
      * @param config
+     *            the configuration to use for this response
      */
     public Smb2SessionSetupResponse(final Configuration config) {
         super(config);
@@ -95,6 +98,7 @@ public class Smb2SessionSetupResponse extends ServerMessageBlock2Response {
      * {@inheritDoc}
      *
      * @throws SMBProtocolDecodingException
+     *             if the response data is malformed
      *
      * @see jcifs.internal.smb2.ServerMessageBlock2#readBytesWireFormat(byte[], int)
      */
@@ -124,6 +128,8 @@ public class Smb2SessionSetupResponse extends ServerMessageBlock2Response {
     }
 
     /**
+     * Checks whether the session is either anonymous or a guest session
+     *
      * @return whether the session is either anonymous or a guest session
      */
     public boolean isLoggedInAsGuest() {
@@ -131,6 +137,8 @@ public class Smb2SessionSetupResponse extends ServerMessageBlock2Response {
     }
 
     /**
+     * Gets the session flags from the response
+     *
      * @return the sessionFlags
      */
     public int getSessionFlags() {
@@ -138,6 +146,8 @@ public class Smb2SessionSetupResponse extends ServerMessageBlock2Response {
     }
 
     /**
+     * Gets the security blob from the session setup response
+     *
      * @return security blob
      */
     public byte[] getBlob() {

@@ -38,51 +38,52 @@ package jcifs;
 public interface SID {
 
     /**
-     *
+     * SID type indicating no type information.
      */
     int SID_TYPE_USE_NONE = 0;
 
     /**
-     *
+     * SID type indicating a user account.
      */
     int SID_TYPE_USER = 1;
 
     /**
-     *
+     * SID type indicating a domain group.
      */
     int SID_TYPE_DOM_GRP = 2;
 
     /**
-     *
+     * SID type indicating a domain.
      */
     int SID_TYPE_DOMAIN = 3;
 
     /**
-     *
+     * SID type indicating a local group or alias.
      */
     int SID_TYPE_ALIAS = 4;
 
     /**
-     *
+     * SID type indicating a well-known group.
      */
     int SID_TYPE_WKN_GRP = 5;
 
     /**
-     *
+     * SID type indicating a deleted account.
      */
     int SID_TYPE_DELETED = 6;
 
     /**
-     *
+     * SID type indicating an invalid SID.
      */
     int SID_TYPE_INVALID = 7;
 
     /**
-     *
+     * SID type indicating an unknown account type.
      */
     int SID_TYPE_UNKNOWN = 8;
 
     /**
+     * Gets the domain SID for this SID.
      *
      * @return domain SID
      */
@@ -195,8 +196,10 @@ public interface SID {
     int getType();
 
     /**
+     * Unwraps this SID to the specified type.
      *
-     * @param type
+     * @param <T> the type to unwrap to
+     * @param type the class of the type to unwrap to
      * @return unwrapped instance
      */
     <T> T unwrap(Class<T> type);

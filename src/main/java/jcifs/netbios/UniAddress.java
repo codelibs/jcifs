@@ -49,7 +49,7 @@ public class UniAddress implements Address {
     /**
      * Check whether a hostname is actually an ip address
      *
-     * @param hostname
+     * @param hostname the hostname to check
      * @return whether this is an IP address
      */
     public static boolean isDotQuadIP(final String hostname) {
@@ -233,7 +233,7 @@ public class UniAddress implements Address {
     /**
      * {@inheritDoc}
      *
-     * @throws UnknownHostException
+     * @throws UnknownHostException if the host cannot be resolved
      *
      * @see jcifs.Address#toInetAddress()
      */

@@ -29,8 +29,9 @@ import jcifs.Configuration;
 public class TransWaitNamedPipeResponse extends SmbComTransactionResponse {
 
     /**
+     * Constructs a response for a wait named pipe request.
      *
-     * @param config
+     * @param config the configuration to use
      */
     public TransWaitNamedPipeResponse(final Configuration config) {
         super(config);

@@ -52,10 +52,16 @@ public class Smb2SigningDigest implements SMBSigningDigest {
     private final Mac digest;
 
     /**
+     * Constructs a SMB2 signing digest with the specified session key and dialect
+     *
      * @param sessionKey
+     *            the session key for signing
      * @param dialect
+     *            the SMB2 dialect version
      * @param preauthIntegrityHash
+     *            the pre-authentication integrity hash (for SMB 3.1.1)
      * @throws GeneralSecurityException
+     *             if the signing algorithm cannot be initialized
      *
      */
     public Smb2SigningDigest(final byte[] sessionKey, final int dialect, final byte[] preauthIntegrityHash)

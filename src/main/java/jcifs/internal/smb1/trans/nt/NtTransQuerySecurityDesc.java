@@ -34,10 +34,10 @@ public class NtTransQuerySecurityDesc extends SmbComNtTransaction {
     int securityInformation;
 
     /**
-     *
-     * @param config
-     * @param fid
-     * @param securityInformation
+     * Constructs an NT transaction to query security descriptor information.
+     * @param config the configuration context
+     * @param fid the file identifier to query
+     * @param securityInformation bitmask specifying which security information to retrieve
      */
     public NtTransQuerySecurityDesc(final Configuration config, final int fid, final int securityInformation) {
         super(config, NT_TRANSACT_QUERY_SECURITY_DESC);

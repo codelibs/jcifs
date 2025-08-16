@@ -30,7 +30,10 @@ import jcifs.internal.smb1.ServerMessageBlock;
 public class SmbComNtCancel extends ServerMessageBlock {
 
     /**
-     * @param config
+     * Constructs an NT cancel command.
+     *
+     * @param config the configuration
+     * @param mid the message ID to cancel
      */
     protected SmbComNtCancel(final Configuration config, final int mid) {
         super(config, SMB_COM_NT_CANCEL);

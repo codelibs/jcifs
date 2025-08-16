@@ -27,11 +27,12 @@ package jcifs.smb;
 public interface SmbFilenameFilter {
 
     /**
+     * Tests whether the specified filename should be included in a file list.
      *
-     * @param dir
-     * @param name
+     * @param dir the directory containing the file
+     * @param name the name of the file
      * @return whether the given filename should be included
-     * @throws SmbException
+     * @throws SmbException if an SMB error occurs during evaluation
      */
     boolean accept(SmbFile dir, String name) throws SmbException;
 }

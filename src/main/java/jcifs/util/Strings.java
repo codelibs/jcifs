@@ -50,10 +50,11 @@ public final class Strings {
     }
 
     /**
+     * Encodes a string into bytes using the specified encoding.
      *
-     * @param str
-     * @param encoding
-     * @return encoded
+     * @param str the string to encode
+     * @param encoding the character encoding to use
+     * @return encoded byte array, or empty array if str is null
      */
     public static byte[] getBytes(final String str, final Charset encoding) {
         if (str == null) {
@@ -63,8 +64,9 @@ public final class Strings {
     }
 
     /**
+     * Encodes a string into UTF-16LE (Unicode Little Endian) bytes.
      *
-     * @param str
+     * @param str the string to encode
      * @return the string as bytes (UTF16-LE)
      */
     public static byte[] getUNIBytes(final String str) {
@@ -72,8 +74,9 @@ public final class Strings {
     }
 
     /**
+     * Encodes a string into ASCII bytes.
      *
-     * @param str
+     * @param str the string to encode
      * @return the string as bytes (ASCII)
      */
     public static byte[] getASCIIBytes(final String str) {
@@ -81,8 +84,10 @@ public final class Strings {
     }
 
     /**
-     * @param str
-     * @param config
+     * Encodes a string into bytes using the OEM encoding from the configuration.
+     *
+     * @param str the string to encode
+     * @param config the configuration providing the OEM encoding
      * @return the string as bytes
      */
     public static byte[] getOEMBytes(final String str, final Configuration config) {
@@ -97,9 +102,11 @@ public final class Strings {
     }
 
     /**
-     * @param src
-     * @param srcIndex
-     * @param len
+     * Decodes a string from UTF-16LE (Unicode Little Endian) bytes.
+     *
+     * @param src the byte array containing the encoded string
+     * @param srcIndex the starting offset in the byte array
+     * @param len the number of bytes to decode
      * @return decoded string
      */
     public static String fromUNIBytes(final byte[] src, final int srcIndex, final int len) {
@@ -107,9 +114,11 @@ public final class Strings {
     }
 
     /**
-     * @param buffer
-     * @param bufferIndex
-     * @param maxLen
+     * Finds the null termination in a UTF-16LE encoded string buffer.
+     *
+     * @param buffer the byte buffer to search
+     * @param bufferIndex the starting position in the buffer
+     * @param maxLen the maximum length to search
      * @return position of terminating null bytes
      */
     public static int findUNITermination(final byte[] buffer, final int bufferIndex, final int maxLen) {
@@ -128,10 +137,12 @@ public final class Strings {
     }
 
     /**
-     * @param src
-     * @param srcIndex
-     * @param len
-     * @param config
+     * Decodes a string from OEM-encoded bytes.
+     *
+     * @param src the byte array containing the encoded string
+     * @param srcIndex the starting offset in the byte array
+     * @param len the number of bytes to decode
+     * @param config the configuration providing the OEM encoding
      * @return decoded string
      */
     public static String fromOEMBytes(final byte[] src, final int srcIndex, final int len, final Configuration config) {
@@ -143,9 +154,11 @@ public final class Strings {
     }
 
     /**
-     * @param buffer
-     * @param bufferIndex
-     * @param maxLen
+     * Finds the null termination in a single-byte encoded string buffer.
+     *
+     * @param buffer the byte buffer to search
+     * @param bufferIndex the starting position in the buffer
+     * @param maxLen the maximum length to search
      * @return position of terminating null byte
      */
     public static int findTermination(final byte[] buffer, final int bufferIndex, final int maxLen) {
@@ -159,6 +172,12 @@ public final class Strings {
         return len;
     }
 
+    /**
+     * Masks sensitive values in a string for security purposes.
+     *
+     * @param value the string potentially containing sensitive information
+     * @return the string with sensitive parts masked, or the original string if masking is disabled
+     */
     public static String maskSecretValue(final String value) {
         if (MASK_SECRET_VALUE && value != null) {
             return value.replaceFirst(SECRET_PATTERN, SECRET_MASK_REPLACE);

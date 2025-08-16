@@ -51,12 +51,19 @@ public class Smb2EncryptionContext {
     private final AtomicLong nonceCounter = new AtomicLong(0);
     private final SecureRandom secureRandom = new SecureRandom();
 
-    // Encryption algorithms
+    /**
+     * AES-128-CCM cipher identifier for SMB3 encryption
+     */
     public static final int CIPHER_AES_128_CCM = EncryptionNegotiateContext.CIPHER_AES128_CCM;
+    /**
+     * AES-128-GCM cipher identifier for SMB3.1.1 encryption
+     */
     public static final int CIPHER_AES_128_GCM = EncryptionNegotiateContext.CIPHER_AES128_GCM;
     // Note: AES-256 variants are not currently defined in the negotiate context
 
-    // Transform header flags
+    /**
+     * Transform header flag indicating the message is encrypted
+     */
     public static final int TRANSFORM_FLAG_ENCRYPTED = 0x0001;
 
     /**
@@ -79,6 +86,7 @@ public class Smb2EncryptionContext {
     }
 
     /**
+     * Get the negotiated cipher identifier
      * @return the negotiated cipher ID
      */
     public int getCipherId() {
@@ -86,6 +94,7 @@ public class Smb2EncryptionContext {
     }
 
     /**
+     * Get the SMB dialect version
      * @return the SMB dialect version
      */
     public DialectVersion getDialect() {

@@ -29,6 +29,10 @@ import jcifs.smb1.UniAddress;
 import jcifs.smb1.netbios.NbtAddress;
 import jcifs.smb1.util.LogStream;
 
+/**
+ * The SmbSession class represents an SMB session established with a server.
+ * It provides methods for authentication and session management.
+ */
 public final class SmbSession {
 
     private static final String LOGON_SHARE = Config.getProperty("jcifs.smb1.smb.client.logonShare", null);
@@ -59,6 +63,13 @@ public final class SmbSession {
         return new NtlmChallenge(trans.server.encryptionKey, dc);
     }
 
+    /**
+     * Retrieves an NTLM challenge from a domain controller for the configured domain.
+     *
+     * @return the NTLM challenge from the domain controller
+     * @throws SmbException if an SMB error occurs
+     * @throws UnknownHostException if the domain controller cannot be resolved
+     */
     public static NtlmChallenge getChallengeForDomain() throws SmbException, UnknownHostException {
         if (DOMAIN == null) {
             throw new SmbException("A domain was not specified");
@@ -110,10 +121,27 @@ public final class SmbSession {
         throw new UnknownHostException("Failed to negotiate with a suitable domain controller for " + DOMAIN);
     }
 
+    /**
+     * Retrieves the NTLM challenge from the specified domain controller.
+     *
+     * @param dc the domain controller address
+     * @return the NTLM challenge bytes
+     * @throws SmbException if an SMB error occurs
+     * @throws UnknownHostException if the host cannot be resolved
+     */
     public static byte[] getChallenge(final UniAddress dc) throws SmbException, UnknownHostException {
         return getChallenge(dc, 0);
     }
 
+    /**
+     * Retrieves the NTLM challenge from the specified domain controller using the specified port.
+     *
+     * @param dc the domain controller address
+     * @param port the port to connect to
+     * @return the NTLM challenge bytes
+     * @throws SmbException if an SMB error occurs
+     * @throws UnknownHostException if the host cannot be resolved
+     */
     public static byte[] getChallenge(final UniAddress dc, final int port) throws SmbException, UnknownHostException {
         final SmbTransport trans = SmbTransport.getSmbTransport(dc, port);
         trans.connect();
@@ -130,11 +158,23 @@ public final class SmbSession {
      * last <a href="../../../faq.html">FAQ</a> question.
      * <p>
      * See also the <code>jcifs.smb1.smb1.client.logonShare</code> property.
+     *
+     * @param dc the domain controller to authenticate against
+     * @param auth the authentication credentials
+     * @throws SmbException if authentication fails or an SMB error occurs
      */
     public static void logon(final UniAddress dc, final NtlmPasswordAuthentication auth) throws SmbException {
         logon(dc, 0, auth);
     }
 
+    /**
+     * Authenticate arbitrary credentials against the specified domain controller using the specified port.
+     *
+     * @param dc the domain controller to authenticate against
+     * @param port the port to connect to
+     * @param auth the authentication credentials
+     * @throws SmbException if authentication fails or an SMB error occurs
+     */
     public static void logon(final UniAddress dc, final int port, final NtlmPasswordAuthentication auth) throws SmbException {
         final SmbTree tree = SmbTransport.getSmbTransport(dc, port).getSmbSession(auth).getSmbTree(LOGON_SHARE, null);
         if (LOGON_SHARE == null) {

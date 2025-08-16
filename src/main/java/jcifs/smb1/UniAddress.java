@@ -200,6 +200,13 @@ public class UniAddress {
      * @throws java.net.UnknownHostException if there is an error resolving the name
      */
 
+    /**
+     * Determines the address of a host given its host name.
+     *
+     * @param hostname the hostname to resolve
+     * @return the resolved UniAddress
+     * @throws UnknownHostException if the host cannot be resolved
+     */
     public static UniAddress getByName(final String hostname) throws UnknownHostException {
         return getByName(hostname, false);
     }
@@ -240,6 +247,11 @@ public class UniAddress {
      * Lookup <code>hostname</code> and return it's <code>UniAddress</code>. If the
      * <code>possibleNTDomainOrWorkgroup</code> parameter is <code>true</code> an
      * addtional name query will be performed to locate a master browser.
+     *
+     * @param hostname the hostname to resolve
+     * @param possibleNTDomainOrWorkgroup whether to perform additional name query for master browser
+     * @return the resolved UniAddress
+     * @throws UnknownHostException if the host cannot be resolved
      */
 
     public static UniAddress getByName(final String hostname, final boolean possibleNTDomainOrWorkgroup) throws UnknownHostException {
@@ -247,6 +259,14 @@ public class UniAddress {
         return addrs[0];
     }
 
+    /**
+     * Resolves all addresses for the given hostname.
+     *
+     * @param hostname the hostname to resolve
+     * @param possibleNTDomainOrWorkgroup whether to perform additional name query for master browser
+     * @return array of resolved UniAddress instances
+     * @throws UnknownHostException if the host cannot be resolved
+     */
     public static UniAddress[] getAllByName(final String hostname, final boolean possibleNTDomainOrWorkgroup) throws UnknownHostException {
         Object addr;
         int i;
@@ -356,6 +376,8 @@ public class UniAddress {
     /**
      * Create a <code>UniAddress</code> by wrapping an {@code InetAddress} or
      * <code>NbtAddress</code>.
+     *
+     * @param addr the address to wrap
      */
 
     public UniAddress(final Object addr) {
@@ -391,6 +413,8 @@ public class UniAddress {
     /**
      * Guess first called name to try for session establishment. This
      * method is used exclusively by the <code>jcifs.smb1.smb1</code> package.
+     *
+     * @return the first called name to try
      */
 
     public String firstCalledName() {
@@ -417,6 +441,8 @@ public class UniAddress {
     /**
      * Guess next called name to try for session establishment. This
      * method is used exclusively by the <code>jcifs.smb1.smb1</code> package.
+     *
+     * @return the next called name to try
      */
 
     public String nextCalledName() {
@@ -432,6 +458,8 @@ public class UniAddress {
 
     /**
      * Return the underlying <code>NbtAddress</code> or {@code InetAddress}.
+     *
+     * @return the underlying address object
      */
 
     public Object getAddress() {
@@ -440,6 +468,8 @@ public class UniAddress {
 
     /**
      * Return the hostname of this address such as "MYCOMPUTER".
+     *
+     * @return the hostname of this address
      */
 
     public String getHostName() {
@@ -451,6 +481,8 @@ public class UniAddress {
 
     /**
      * Return the IP address as text such as "192.168.1.15".
+     *
+     * @return the IP address as a string
      */
 
     public String getHostAddress() {

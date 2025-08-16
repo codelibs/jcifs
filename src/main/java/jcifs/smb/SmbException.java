@@ -117,6 +117,7 @@ public class SmbException extends CIFSException implements NtStatus, DosError, W
         return message;
     }
 
+    /** The SMB error status code */
     private int status;
 
     /**

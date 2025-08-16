@@ -76,6 +76,8 @@ public class Smb2TransformHeader implements Encodable {
     }
 
     /**
+     * Gets the signature or authentication tag for the encrypted message
+     *
      * @return the signature/authentication tag
      */
     public byte[] getSignature() {
@@ -83,6 +85,8 @@ public class Smb2TransformHeader implements Encodable {
     }
 
     /**
+     * Sets the signature or authentication tag for the encrypted message
+     *
      * @param signature
      *            the signature/authentication tag to set
      */
@@ -94,6 +98,8 @@ public class Smb2TransformHeader implements Encodable {
     }
 
     /**
+     * Gets the nonce used for encryption
+     *
      * @return the nonce
      */
     public byte[] getNonce() {
@@ -101,6 +107,8 @@ public class Smb2TransformHeader implements Encodable {
     }
 
     /**
+     * Sets the nonce for encryption
+     *
      * @param nonce
      *            the nonce to set
      */
@@ -112,6 +120,8 @@ public class Smb2TransformHeader implements Encodable {
     }
 
     /**
+     * Gets the size of the original unencrypted message
+     *
      * @return the original message size
      */
     public int getOriginalMessageSize() {
@@ -119,6 +129,8 @@ public class Smb2TransformHeader implements Encodable {
     }
 
     /**
+     * Sets the size of the original unencrypted message
+     *
      * @param originalMessageSize
      *            the original message size to set
      */
@@ -127,6 +139,8 @@ public class Smb2TransformHeader implements Encodable {
     }
 
     /**
+     * Gets the flags field which contains flags in SMB 3.1.1 or encryption algorithm ID in SMB 3.0/3.0.2
+     *
      * @return the flags (SMB 3.1.1) or encryption algorithm (SMB 3.0/3.0.2)
      */
     public int getFlags() {
@@ -134,6 +148,8 @@ public class Smb2TransformHeader implements Encodable {
     }
 
     /**
+     * Sets the flags field which contains flags in SMB 3.1.1 or encryption algorithm ID in SMB 3.0/3.0.2
+     *
      * @param flags
      *            the flags to set
      */
@@ -142,6 +158,8 @@ public class Smb2TransformHeader implements Encodable {
     }
 
     /**
+     * Gets the session ID associated with this encrypted message
+     *
      * @return the session ID
      */
     public long getSessionId() {
@@ -149,6 +167,8 @@ public class Smb2TransformHeader implements Encodable {
     }
 
     /**
+     * Sets the session ID for this encrypted message
+     *
      * @param sessionId
      *            the session ID to set
      */

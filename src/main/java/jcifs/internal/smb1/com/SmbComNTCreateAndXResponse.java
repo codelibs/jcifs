@@ -45,14 +45,17 @@ public class SmbComNTCreateAndXResponse extends AndXServerMessageBlock implement
     private boolean isExtended;
 
     /**
+     * Constructs an NT Create AndX response.
      *
-     * @param config
+     * @param config the configuration
      */
     public SmbComNTCreateAndXResponse(final Configuration config) {
         super(config);
     }
 
     /**
+     * Gets the file type.
+     *
      * @return the fileType
      */
     public final int getFileType() {
@@ -60,6 +63,8 @@ public class SmbComNTCreateAndXResponse extends AndXServerMessageBlock implement
     }
 
     /**
+     * Checks if the response is extended.
+     *
      * @return the isExtended
      */
     public final boolean isExtended() {
@@ -67,6 +72,8 @@ public class SmbComNTCreateAndXResponse extends AndXServerMessageBlock implement
     }
 
     /**
+     * Sets whether the response is extended.
+     *
      * @param isExtended
      *            the isExtended to set
      */
@@ -75,6 +82,8 @@ public class SmbComNTCreateAndXResponse extends AndXServerMessageBlock implement
     }
 
     /**
+     * Gets the oplock level granted.
+     *
      * @return the oplockLevel
      */
     public final byte getOplockLevel() {
@@ -82,6 +91,8 @@ public class SmbComNTCreateAndXResponse extends AndXServerMessageBlock implement
     }
 
     /**
+     * Gets the file identifier.
+     *
      * @return the fid
      */
     public final int getFid() {
@@ -89,6 +100,8 @@ public class SmbComNTCreateAndXResponse extends AndXServerMessageBlock implement
     }
 
     /**
+     * Gets the create action taken.
+     *
      * @return the createAction
      */
     public final int getCreateAction() {
@@ -96,6 +109,8 @@ public class SmbComNTCreateAndXResponse extends AndXServerMessageBlock implement
     }
 
     /**
+     * Gets the extended file attributes.
+     *
      * @return the extFileAttributes
      */
     public final int getExtFileAttributes() {
@@ -113,6 +128,8 @@ public class SmbComNTCreateAndXResponse extends AndXServerMessageBlock implement
     }
 
     /**
+     * Gets the device state.
+     *
      * @return the deviceState
      */
     public final int getDeviceState() {
@@ -120,6 +137,8 @@ public class SmbComNTCreateAndXResponse extends AndXServerMessageBlock implement
     }
 
     /**
+     * Gets the creation time.
+     *
      * @return the creationTime
      */
     public final long getCreationTime() {
@@ -153,6 +172,8 @@ public class SmbComNTCreateAndXResponse extends AndXServerMessageBlock implement
     }
 
     /**
+     * Gets the allocation size.
+     *
      * @return the allocationSize
      */
     public final long getAllocationSize() {
@@ -160,6 +181,8 @@ public class SmbComNTCreateAndXResponse extends AndXServerMessageBlock implement
     }
 
     /**
+     * Gets the end of file position.
+     *
      * @return the endOfFile
      */
     public final long getEndOfFile() {

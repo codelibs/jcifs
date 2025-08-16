@@ -53,6 +53,7 @@ public class DcerpcException extends CIFSException implements DcerpcError, WinEr
         return "0x" + Hexdump.toHexString(errcode, 8);
     }
 
+    /** The DCERPC error code */
     private int error;
 
     DcerpcException(final int error) {

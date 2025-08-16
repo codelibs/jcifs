@@ -60,22 +60,36 @@ import jcifs.smb.SmbAuthException;
 public abstract class NtlmServlet extends HttpServlet {
 
     /**
+     * Default constructor.
+     */
+    protected NtlmServlet() {
+        super();
+    }
+
+    /**
      *
      */
     private static final long serialVersionUID = -4686770199446333333L;
 
+    /** The default domain for NTLM authentication */
     private String defaultDomain;
 
+    /** The domain controller for authentication */
     private String domainController;
 
+    /** Flag to enable load balancing across domain controllers */
     private boolean loadBalance;
 
+    /** Flag to enable basic authentication */
     private boolean enableBasic;
 
+    /** Flag to allow insecure basic authentication */
     private boolean insecureBasic;
 
+    /** The authentication realm */
     private String realm;
 
+    /** The CIFS context for transport operations */
     private CIFSContext transportContext;
 
     @Override

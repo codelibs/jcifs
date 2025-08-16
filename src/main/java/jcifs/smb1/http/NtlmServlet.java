@@ -51,16 +51,29 @@ import jcifs.smb1.util.Base64;
 
 public abstract class NtlmServlet extends HttpServlet {
 
+    /**
+     * Default constructor.
+     */
+    protected NtlmServlet() {
+        super();
+    }
+
+    /** The default domain for NTLM authentication */
     private String defaultDomain;
 
+    /** The domain controller for authentication */
     private String domainController;
 
+    /** Flag to enable load balancing across domain controllers */
     private boolean loadBalance;
 
+    /** Flag to enable basic authentication */
     private boolean enableBasic;
 
+    /** Flag to allow insecure basic authentication */
     private boolean insecureBasic;
 
+    /** The authentication realm */
     private String realm;
 
     @Override

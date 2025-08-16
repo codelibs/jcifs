@@ -32,6 +32,13 @@ import jcifs.util.Strings;
  */
 public class Referral implements Decodable {
 
+    /**
+     * Default constructor for Referral.
+     */
+    public Referral() {
+        // Default constructor
+    }
+
     int version;
     int size;
     int serverType;
@@ -47,6 +54,8 @@ public class Referral implements Decodable {
     String[] expandedNames = {};
 
     /**
+     * Gets the DFS referral version number.
+     *
      * @return the version
      */
     public final int getVersion() {
@@ -54,6 +63,8 @@ public class Referral implements Decodable {
     }
 
     /**
+     * Gets the size of this referral entry in bytes.
+     *
      * @return the size
      */
     public final int getSize() {
@@ -61,6 +72,8 @@ public class Referral implements Decodable {
     }
 
     /**
+     * Gets the server type of this referral.
+     *
      * @return the serverType
      */
     public final int getServerType() {
@@ -68,6 +81,8 @@ public class Referral implements Decodable {
     }
 
     /**
+     * Gets the referral flags.
+     *
      * @return the rflags
      */
     public final int getRFlags() {
@@ -75,6 +90,8 @@ public class Referral implements Decodable {
     }
 
     /**
+     * Gets the proximity value indicating the distance to the target.
+     *
      * @return the proximity
      */
     public final int getProximity() {
@@ -82,6 +99,8 @@ public class Referral implements Decodable {
     }
 
     /**
+     * Gets the alternate path for this referral.
+     *
      * @return the altPath
      */
     public final String getAltPath() {
@@ -89,6 +108,8 @@ public class Referral implements Decodable {
     }
 
     /**
+     * Gets the time-to-live value for this referral in seconds.
+     *
      * @return the ttl
      */
     public final int getTtl() {
@@ -96,6 +117,8 @@ public class Referral implements Decodable {
     }
 
     /**
+     * Gets the referral path.
+     *
      * @return the rpath
      */
     public final String getRpath() {
@@ -103,6 +126,8 @@ public class Referral implements Decodable {
     }
 
     /**
+     * Gets the node name for this referral.
+     *
      * @return the node
      */
     public final String getNode() {
@@ -110,6 +135,8 @@ public class Referral implements Decodable {
     }
 
     /**
+     * Gets the special name for this referral.
+     *
      * @return the specialName
      */
     public final String getSpecialName() {
@@ -117,6 +144,8 @@ public class Referral implements Decodable {
     }
 
     /**
+     * Gets the expanded names array for this referral.
+     *
      * @return the expandedNames
      */
     public final String[] getExpandedNames() {

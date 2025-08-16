@@ -36,52 +36,52 @@ import jcifs.internal.util.SMBUtil;
 public class Smb2QueryDirectoryRequest extends ServerMessageBlock2Request<Smb2QueryDirectoryResponse> implements RequestWithFileId {
 
     /**
-     *
+     * File information class for basic directory information.
      */
     public static final byte FILE_DIRECTORY_INFO = 0x1;
 
     /**
-     *
+     * File information class for full directory information.
      */
     public static final byte FILE_FULL_DIRECTORY_INFO = 0x2;
 
     /**
-     *
+     * File information class for both names directory information.
      */
     public static final byte FILE_BOTH_DIRECTORY_INFO = 0x03;
 
     /**
-     *
+     * File information class for file names only.
      */
     public static final byte FILE_NAMES_INFO = 0x0C;
 
     /**
-     *
+     * File information class for both names with file IDs.
      */
     public static final byte FILE_ID_BOTH_DIRECTORY_INFO = 0x24;
 
     /**
-     *
+     * File information class for full directory information with file IDs.
      */
     public static final byte FILE_ID_FULL_DIRECTORY_INFO = 0x26;
 
     /**
-     *
+     * Flag to restart the directory enumeration from the beginning.
      */
     public static final byte SMB2_RESTART_SCANS = 0x1;
 
     /**
-     *
+     * Flag to return only a single directory entry.
      */
     public static final byte SMB2_RETURN_SINGLE_ENTRY = 0x2;
 
     /**
-     *
+     * Flag indicating that the file index field contains a valid index.
      */
     public static final byte SMB2_INDEX_SPECIFIED = 0x4;
 
     /**
-     *
+     * Flag to reopen the directory enumeration.
      */
     public static final byte SMB2_REOPEN = 0x10;
 
@@ -93,16 +93,21 @@ public class Smb2QueryDirectoryRequest extends ServerMessageBlock2Request<Smb2Qu
     private String fileName;
 
     /**
+     * Constructs an SMB2 query directory request with the given configuration.
      *
-     * @param config
+     * @param config the configuration for this request
      */
     public Smb2QueryDirectoryRequest(final Configuration config) {
         this(config, Smb2Constants.UNSPECIFIED_FILEID);
     }
 
     /**
+     * Constructs a SMB2 query directory request with the specified configuration and file ID
+     *
      * @param config
+     *            the configuration to use for this request
      * @param fileId
+     *            the file ID of the directory to query
      */
     public Smb2QueryDirectoryRequest(final Configuration config, final byte[] fileId) {
         super(config, SMB2_QUERY_DIRECTORY);
@@ -122,6 +127,8 @@ public class Smb2QueryDirectoryRequest extends ServerMessageBlock2Request<Smb2Qu
     }
 
     /**
+     * Sets the file information class for the directory query
+     *
      * @param fileInformationClass
      *            the fileInformationClass to set
      */
@@ -130,6 +137,8 @@ public class Smb2QueryDirectoryRequest extends ServerMessageBlock2Request<Smb2Qu
     }
 
     /**
+     * Sets the query flags for the directory enumeration
+     *
      * @param queryFlags
      *            the queryFlags to set
      */
@@ -138,6 +147,8 @@ public class Smb2QueryDirectoryRequest extends ServerMessageBlock2Request<Smb2Qu
     }
 
     /**
+     * Sets the file index from which to start the directory enumeration
+     *
      * @param fileIndex
      *            the fileIndex to set
      */
@@ -146,6 +157,8 @@ public class Smb2QueryDirectoryRequest extends ServerMessageBlock2Request<Smb2Qu
     }
 
     /**
+     * Sets the file name pattern for filtering directory results
+     *
      * @param fileName
      *            the fileName to set
      */

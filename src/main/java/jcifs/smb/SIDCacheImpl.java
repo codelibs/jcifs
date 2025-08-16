@@ -54,7 +54,9 @@ public class SIDCacheImpl implements SidResolver {
     private final Map<SID, SID> sidCache = new HashMap<>();
 
     /**
-     * @param baseContext
+     * Constructs a SID cache implementation.
+     *
+     * @param baseContext the CIFS context for this cache
      */
     public SIDCacheImpl(final CIFSContext baseContext) {
     }

@@ -27,7 +27,7 @@ package jcifs.smb;
 public enum RequestParam {
 
     /**
-     *
+     * No special request parameters.
      */
     NONE,
 

@@ -27,13 +27,14 @@ import org.bouncycastle.util.encoders.Hex;
 public class NtlmNtHashAuthenticator extends NtlmPasswordAuthenticator {
 
     private static final long serialVersionUID = 4328214169536360351L;
+    /** The NT hash for authentication */
     private final byte[] ntHash;
 
     /**
      * Create username/password credentials with specified domain
      *
-     * @param domain
-     * @param username
+     * @param domain the authentication domain
+     * @param username the username
      * @param passwordHash
      *            NT password hash
      */
@@ -48,8 +49,8 @@ public class NtlmNtHashAuthenticator extends NtlmPasswordAuthenticator {
     /**
      * Create username/password credentials with specified domain
      *
-     * @param domain
-     * @param username
+     * @param domain the authentication domain
+     * @param username the username
      * @param passwordHashHex
      *            NT password hash, hex encoded
      */

@@ -46,8 +46,9 @@ public final class NtlmChallenge implements Serializable {
     public UniAddress dc;
 
     /**
-     * @param challenge
-     * @param dc
+     * Creates a new NTLM challenge with the specified parameters.
+     * @param challenge the NTLM challenge bytes
+     * @param dc the domain controller address
      */
     public NtlmChallenge(final byte[] challenge, final UniAddress dc) {
         this.challenge = challenge;

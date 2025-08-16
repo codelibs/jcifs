@@ -33,9 +33,9 @@ public class SrvCopychunkCopy implements Encodable {
     private final SrvCopychunk[] chunks;
 
     /**
-     * @param sourceKey
-     * @param chunks
-     *
+     * Constructs a server copy chunk operation request
+     * @param sourceKey the resume key identifying the source file
+     * @param chunks the array of copy chunk descriptors
      */
     public SrvCopychunkCopy(final byte[] sourceKey, final SrvCopychunk... chunks) {
         this.sourceKey = sourceKey;

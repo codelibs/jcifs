@@ -19,14 +19,29 @@
 
 package jcifs.smb1.dcerpc;
 
+/**
+ * A Unicode string representation for DCE/RPC operations in JCIFS.
+ * This class wraps strings for use in RPC calls with optional zero termination.
+ */
 public class UnicodeString extends rpc.unicode_string {
 
     boolean zterm;
 
+    /**
+     * Constructs a UnicodeString with zero termination option.
+     *
+     * @param zterm whether the string should be zero terminated
+     */
     public UnicodeString(final boolean zterm) {
         this.zterm = zterm;
     }
 
+    /**
+     * Constructs a UnicodeString by wrapping an existing unicode_string.
+     *
+     * @param rus wrapped string
+     * @param zterm whether the string should be zero terminated
+     */
     public UnicodeString(final rpc.unicode_string rus, final boolean zterm) {
         this.length = rus.length;
         this.maximum_length = rus.maximum_length;
@@ -34,6 +49,12 @@ public class UnicodeString extends rpc.unicode_string {
         this.zterm = zterm;
     }
 
+    /**
+     * Constructs a UnicodeString from a Java String.
+     *
+     * @param str wrapped string
+     * @param zterm whether the string should be zero terminated
+     */
     public UnicodeString(final String str, final boolean zterm) {
         this.zterm = zterm;
 

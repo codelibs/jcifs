@@ -41,7 +41,18 @@ import jcifs.smb.RequestParam;
  * concurrently.
  */
 
+/**
+ * Abstract base class for network transport implementations in JCIFS.
+ * This class handles the low-level transport protocol for SMB communication.
+ */
 public abstract class Transport implements Runnable, AutoCloseable {
+
+    /**
+     * Default constructor for Transport
+     */
+    protected Transport() {
+        // Default constructor
+    }
 
     private static int id = 0;
     private static final Logger log = LoggerFactory.getLogger(Transport.class);
@@ -49,12 +60,12 @@ public abstract class Transport implements Runnable, AutoCloseable {
     /**
      * Read bytes from the input stream into a buffer
      *
-     * @param in
-     * @param b
-     * @param off
-     * @param len
+     * @param in the input stream to read from
+     * @param b the buffer to read into
+     * @param off the offset in the buffer to start writing
+     * @param len the number of bytes to read
      * @return number of bytes read
-     * @throws IOException
+     * @throws IOException if an I/O error occurs
      */
     public static int readn(final InputStream in, final byte[] b, final int off, final int len) throws IOException {
         int i = 0, n = -5;
@@ -84,19 +95,36 @@ public abstract class Transport implements Runnable, AutoCloseable {
      * 5 - disconnecting
      * 6 - disconnected/invalid
      */
+    /**
+     * Current state of the transport connection
+     */
     protected volatile int state = 0;
 
+    /**
+     * Name identifier for this transport instance
+     */
     protected String name = "Transport" + id++;
     private volatile Thread thread;
     private volatile TransportException te;
 
+    /**
+     * Lock object for synchronizing input operations
+     */
     protected final Object inLock = new Object();
+    /**
+     * Lock object for synchronizing output operations
+     */
     protected final Object outLock = new Object();
 
+    /**
+     * Map for tracking pending responses by their key
+     */
     protected final Map<Long, Response> response_map = new ConcurrentHashMap<>(10);
     private final AtomicLong usageCount = new AtomicLong(1);
 
     /**
+     * Acquires a reference to this transport, incrementing the usage count.
+     *
      * @return session increased usage count
      */
     public Transport acquire() {
@@ -118,7 +146,7 @@ public abstract class Transport implements Runnable, AutoCloseable {
     }
 
     /**
-     *
+     * Releases a reference to this transport, decrementing the usage count.
      */
     public void release() {
         final long usage = this.usageCount.decrementAndGet();
@@ -148,23 +176,57 @@ public abstract class Transport implements Runnable, AutoCloseable {
     }
 
     /**
+     * Gets the current usage count for this transport.
+     *
      * @return the number of known usages
      */
     protected long getUsageCount() {
         return this.usageCount.get();
     }
 
+    /**
+     * Generate a unique key for the given request
+     *
+     * @param request the request to generate a key for
+     * @return the generated key
+     * @throws IOException if an I/O error occurs
+     */
     protected abstract long makeKey(Request request) throws IOException;
 
+    /**
+     * Peek at the next key without removing it from the input stream
+     *
+     * @return the next key or null if none available
+     * @throws IOException if an I/O error occurs
+     */
     protected abstract Long peekKey() throws IOException;
 
+    /**
+     * Send a request over the transport
+     *
+     * @param request the request to send
+     * @throws IOException if an I/O error occurs
+     */
     protected abstract void doSend(Request request) throws IOException;
 
+    /**
+     * Receive a response from the transport
+     *
+     * @param response the response object to populate
+     * @throws IOException if an I/O error occurs
+     */
     protected abstract void doRecv(Response response) throws IOException;
 
+    /**
+     * Skip a response with the given key
+     *
+     * @param key the key of the response to skip
+     * @throws IOException if an I/O error occurs
+     */
     protected abstract void doSkip(Long key) throws IOException;
 
     /**
+     * Checks if the transport is disconnected.
      *
      * @return whether the transport is disconnected
      */
@@ -173,6 +235,8 @@ public abstract class Transport implements Runnable, AutoCloseable {
     }
 
     /**
+     * Checks if the transport is in a failed state.
+     *
      * @return whether the transport is marked failed
      */
     public boolean isFailed() {
@@ -182,11 +246,12 @@ public abstract class Transport implements Runnable, AutoCloseable {
     /**
      * Send a request message and recieve response
      *
-     * @param request
-     * @param response
-     * @param params
+     * @param <T> the response type
+     * @param request the request to send
+     * @param response the response object to populate
+     * @param params additional parameters for the request
      * @return the response
-     * @throws IOException
+     * @throws IOException if an I/O error occurs
      */
     public <T extends Response> T sendrecv(final Request request, final T response, final Set<RequestParam> params) throws IOException {
         if (isDisconnected() && this.state != 5) {
@@ -240,12 +305,15 @@ public abstract class Transport implements Runnable, AutoCloseable {
     }
 
     /**
-     * @param request
-     * @param response
-     * @param params
-     * @param timeout
-     * @return
-     * @throws IOException
+     * Sends a request and manages the response handling.
+     *
+     * @param <T> the response type
+     * @param request the request to send
+     * @param response the response object to populate
+     * @param params additional parameters for the request
+     * @param timeout the maximum time to wait for the response in milliseconds
+     * @return the key associated with the request
+     * @throws IOException if an I/O error occurs
      */
     protected <T extends Response> long doSend(final Request request, final T response, final Set<RequestParam> params, final long timeout)
             throws IOException {
@@ -364,17 +432,22 @@ public abstract class Transport implements Runnable, AutoCloseable {
     }
 
     /**
-     * @param request
-     * @param response
-     * @return
+     * Handles intermediate responses during request processing.
+     *
+     * @param <T> the response type
+     * @param request the request being processed
+     * @param response the intermediate response
+     * @return true if more responses are expected, false otherwise
      */
     protected <T extends Response> boolean handleIntermediate(final Request request, final T response) {
         return false;
     }
 
     /**
-     * @param request
-     * @return
+     * Gets the response timeout for a specific request.
+     *
+     * @param request the request to get timeout for
+     * @return the timeout in milliseconds
      */
     protected abstract int getResponseTimeout(Request request);
 
@@ -475,6 +548,11 @@ public abstract class Transport implements Runnable, AutoCloseable {
      * and the transport will be in error.
      */
 
+    /**
+     * Establish the transport connection
+     *
+     * @throws Exception if the connection fails
+     */
     protected abstract void doConnect() throws Exception;
 
     /*
@@ -483,14 +561,22 @@ public abstract class Transport implements Runnable, AutoCloseable {
      * this transport.
      */
 
+    /**
+     * Disconnect the transport connection
+     *
+     * @param hard if true, force immediate disconnection without waiting for pending requests
+     * @param inUse whether the transport is currently in use
+     * @return true if the disconnection was successful
+     * @throws IOException if an I/O error occurs
+     */
     protected abstract boolean doDisconnect(boolean hard, boolean inUse) throws IOException;
 
     /**
      * Connect the transport
      *
-     * @param timeout
+     * @param timeout the maximum time to wait for the connection in milliseconds
      * @return whether the transport was connected
-     * @throws TransportException
+     * @throws TransportException if the connection fails
      */
     public synchronized boolean connect(final long timeout) throws TransportException {
         int st = this.state;
@@ -590,9 +676,10 @@ public abstract class Transport implements Runnable, AutoCloseable {
     }
 
     /**
-     * @param timeout
-     * @throws TransportException
+     * Cleans up the transport thread.
      *
+     * @param timeout the maximum time to wait for thread cleanup in milliseconds
+     * @throws TransportException if thread cleanup fails
      */
     private synchronized void cleanupThread(final long timeout) throws TransportException {
         final Thread t = this.thread;
@@ -615,9 +702,9 @@ public abstract class Transport implements Runnable, AutoCloseable {
     /**
      * Disconnect the transport
      *
-     * @param hard
-     * @return whether conenction was in use
-     * @throws IOException
+     * @param hard if true, disconnect immediately without waiting for outstanding requests
+     * @return whether connection was in use
+     * @throws IOException if an I/O error occurs during disconnection
      */
     public synchronized boolean disconnect(final boolean hard) throws IOException {
         return disconnect(hard, true);
@@ -626,11 +713,10 @@ public abstract class Transport implements Runnable, AutoCloseable {
     /**
      * Disconnect the transport
      *
-     * @param hard
-     * @param inUse
-     *            whether the caller is holding a usage reference on the transport
-     * @return whether conenction was in use
-     * @throws IOException
+     * @param hard if true, disconnect immediately without waiting for outstanding requests
+     * @param inUse whether the caller is holding a usage reference on the transport
+     * @return whether connection was in use
+     * @throws IOException if an I/O error occurs during disconnection
      */
     public synchronized boolean disconnect(boolean hard, final boolean inUse) throws IOException {
         IOException ioe = null;

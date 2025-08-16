@@ -60,14 +60,15 @@ public class SmbComOpenAndX extends AndXServerMessageBlock {
     // flags is NOT the same as flags member
 
     /**
+     * Constructs an Open AndX request.
      *
-     * @param config
-     * @param fileName
-     * @param access
-     * @param shareAccess
-     * @param flags
-     * @param fileAttributes
-     * @param andx
+     * @param config the configuration
+     * @param fileName the name of the file to open
+     * @param access the desired access mode
+     * @param shareAccess the share access mode
+     * @param flags the open flags
+     * @param fileAttributes the file attributes
+     * @param andx the next command in the chain
      */
     public SmbComOpenAndX(final Configuration config, final String fileName, final int access, final int shareAccess, final int flags,
             final int fileAttributes, final ServerMessageBlock andx) {

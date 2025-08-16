@@ -36,13 +36,17 @@ public class Smb2WriteResponse extends ServerMessageBlock2Response {
     private int remaining;
 
     /**
-     * @param config
+     * Creates a new SMB2 write response.
+     *
+     * @param config the CIFS configuration
      */
     public Smb2WriteResponse(final Configuration config) {
         super(config);
     }
 
     /**
+     * Returns the number of bytes written.
+     *
      * @return the count
      */
     public final int getCount() {
@@ -50,6 +54,8 @@ public class Smb2WriteResponse extends ServerMessageBlock2Response {
     }
 
     /**
+     * Returns the number of bytes remaining to be written.
+     *
      * @return the remaining
      */
     public final int getRemaining() {

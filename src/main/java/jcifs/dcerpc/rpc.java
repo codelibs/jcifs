@@ -4,16 +4,45 @@ import jcifs.dcerpc.ndr.NdrBuffer;
 import jcifs.dcerpc.ndr.NdrException;
 import jcifs.dcerpc.ndr.NdrObject;
 
+/**
+ * RPC data structure definitions for DCE/RPC protocol support.
+ * This class contains NDR (Network Data Representation) encodable/decodable structures
+ * used in DCE/RPC communications including UUID, policy handles, unicode strings, and SIDs.
+ */
 @SuppressWarnings("all")
 public class rpc {
 
+    /**
+     * Private constructor to prevent instantiation of utility class.
+     */
+    private rpc() {
+        // Utility class
+    }
+
+    /**
+     * UUID (Universally Unique Identifier) structure for DCE/RPC.
+     * Represents a 128-bit UUID as defined by DCE/RPC specification.
+     */
     public static class uuid_t extends NdrObject {
 
+        /**
+         * Default constructor for uuid_t.
+         */
+        public uuid_t() {
+            // Default constructor
+        }
+
+        /** The low field of the timestamp */
         public int time_low;
+        /** The middle field of the timestamp */
         public short time_mid;
+        /** The high field of the timestamp multiplexed with the version number */
         public short time_hi_and_version;
+        /** The high field of the clock sequence multiplexed with the variant */
         public byte clock_seq_hi_and_reserved;
+        /** The low field of the clock sequence */
         public byte clock_seq_low;
+        /** The spatially unique node identifier */
         public byte[] node;
 
         @Override
@@ -59,9 +88,22 @@ public class rpc {
         }
     }
 
+    /**
+     * Policy handle structure for DCE/RPC operations.
+     * Represents an opaque handle used to reference server-side resources.
+     */
     public static class policy_handle extends NdrObject {
 
+        /**
+         * Default constructor for policy_handle.
+         */
+        public policy_handle() {
+            // Default constructor
+        }
+
+        /** The type of the policy handle */
         public int type;
+        /** The UUID associated with the policy handle */
         public uuid_t uuid;
 
         @Override
@@ -116,10 +158,24 @@ public class rpc {
         }
     }
 
+    /**
+     * Unicode string structure for DCE/RPC operations.
+     * Represents a Unicode string with length information.
+     */
     public static class unicode_string extends NdrObject {
 
+        /**
+         * Default constructor for unicode_string.
+         */
+        public unicode_string() {
+            // Default constructor
+        }
+
+        /** The length of the string in bytes */
         public short length;
+        /** The maximum length of the string buffer in bytes */
         public short maximum_length;
+        /** The Unicode character buffer */
         public short[] buffer;
 
         @Override
@@ -175,11 +231,26 @@ public class rpc {
         }
     }
 
+    /**
+     * Security Identifier (SID) structure for DCE/RPC operations.
+     * Represents a Windows security identifier used for access control.
+     */
     public static class sid_t extends NdrObject {
 
+        /**
+         * Default constructor for sid_t.
+         */
+        public sid_t() {
+            // Default constructor
+        }
+
+        /** The revision level of the SID structure */
         public byte revision;
+        /** The number of sub-authorities in the SID */
         public byte sub_authority_count;
+        /** The identifier authority value (6 bytes) */
         public byte[] identifier_authority;
+        /** The array of sub-authority values */
         public int[] sub_authority;
 
         @Override

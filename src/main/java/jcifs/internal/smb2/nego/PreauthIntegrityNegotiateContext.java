@@ -45,10 +45,11 @@ public class PreauthIntegrityNegotiateContext implements NegotiateContextRequest
     private byte[] salt;
 
     /**
+     * Constructs a preauth integrity negotiate context with the specified parameters.
      *
-     * @param config
-     * @param hashAlgos
-     * @param salt
+     * @param config the SMB configuration
+     * @param hashAlgos the supported hash algorithms
+     * @param salt the salt value for preauth integrity
      */
     public PreauthIntegrityNegotiateContext(final Configuration config, final int[] hashAlgos, final byte[] salt) {
         this.hashAlgos = hashAlgos;
@@ -56,12 +57,14 @@ public class PreauthIntegrityNegotiateContext implements NegotiateContextRequest
     }
 
     /**
-     *
+     * Default constructor for deserialization.
      */
     public PreauthIntegrityNegotiateContext() {
     }
 
     /**
+     * Gets the salt value used for preauth integrity.
+     *
      * @return the salt
      */
     public byte[] getSalt() {
@@ -69,6 +72,8 @@ public class PreauthIntegrityNegotiateContext implements NegotiateContextRequest
     }
 
     /**
+     * Gets the supported hash algorithms for preauth integrity.
+     *
      * @return the hashAlgos
      */
     public int[] getHashAlgos() {

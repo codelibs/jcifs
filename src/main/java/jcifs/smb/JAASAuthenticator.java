@@ -58,8 +58,11 @@ public class JAASAuthenticator extends Kerb5Authenticator implements CallbackHan
      */
     private static final long serialVersionUID = -1648420815038372844L;
 
+    /** The JAAS service name for authentication */
     private String serviceName;
+    /** The cached JAAS subject */
     private Subject cachedSubject;
+    /** The JAAS configuration */
     private Configuration configuration;
 
     /**

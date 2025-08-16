@@ -32,8 +32,9 @@ import jcifs.internal.smb1.trans.SmbComTransactionResponse;
 public class Trans2SetFileInformationResponse extends SmbComTransactionResponse {
 
     /**
+     * Constructs a Trans2SetFileInformationResponse with the specified configuration.
      *
-     * @param config
+     * @param config the SMB configuration
      */
     public Trans2SetFileInformationResponse(final Configuration config) {
         super(config);

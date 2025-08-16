@@ -33,7 +33,8 @@ import jcifs.internal.util.SMBUtil;
 public class Smb2FlushResponse extends ServerMessageBlock2Response {
 
     /**
-     * @param config
+     * Constructs an SMB2 flush response
+     * @param config the client configuration
      */
     public Smb2FlushResponse(final Configuration config) {
         super(config);

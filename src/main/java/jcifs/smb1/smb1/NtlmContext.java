@@ -42,6 +42,11 @@ public class NtlmContext {
     int state = 1;
     LogStream log;
 
+    /**
+     * Creates a new NTLM context for SMB1 authentication.
+     * @param auth the NTLM authentication credentials
+     * @param doSigning whether to enable message signing
+     */
     public NtlmContext(final NtlmPasswordAuthentication auth, final boolean doSigning) {
         this.auth = auth;
         this.ntlmsspFlags =
@@ -81,18 +86,34 @@ public class NtlmContext {
         return ret.toString();
     }
 
+    /**
+     * Checks whether the security context is established.
+     * @return true if the context is established, false otherwise
+     */
     public boolean isEstablished() {
         return isEstablished;
     }
 
+    /**
+     * Gets the server's NTLM challenge bytes.
+     * @return the server challenge bytes
+     */
     public byte[] getServerChallenge() {
         return serverChallenge;
     }
 
+    /**
+     * Gets the signing key for message authentication.
+     * @return the signing key bytes
+     */
     public byte[] getSigningKey() {
         return signingKey;
     }
 
+    /**
+     * Gets the NetBIOS name of the remote server.
+     * @return the NetBIOS name
+     */
     public String getNetbiosName() {
         return netbiosName;
     }
@@ -120,6 +141,14 @@ public class NtlmContext {
         return null;
     }
 
+    /**
+     * Initializes the security context with the given token.
+     * @param token the input token bytes
+     * @param offset offset into the token array
+     * @param len length of token data
+     * @return the output token bytes
+     * @throws SmbException if an error occurs during context initialization
+     */
     public byte[] initSecContext(byte[] token, final int offset, final int len) throws SmbException {
         switch (state) {
         case 1:

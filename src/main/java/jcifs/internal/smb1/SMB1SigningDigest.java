@@ -51,19 +51,26 @@ public class SMB1SigningDigest implements SMBSigningDigest {
     private int signSequence;
 
     /**
+     * Constructs a signing digest with bypass option
      *
      * @param macSigningKey
+     *            The MAC signing key used for generating signatures
      * @param bypass
+     *            Whether to bypass signature verification
      */
     public SMB1SigningDigest(final byte[] macSigningKey, final boolean bypass) {
         this(macSigningKey, bypass, 0);
     }
 
     /**
+     * Constructs a signing digest with bypass option and initial sequence number
      *
      * @param macSigningKey
+     *            The MAC signing key used for generating signatures
      * @param bypass
+     *            Whether to bypass signature verification
      * @param initialSequence
+     *            The initial sequence number for signing
      */
     public SMB1SigningDigest(final byte[] macSigningKey, final boolean bypass, final int initialSequence) {
         this.digest = Crypto.getMD5();
@@ -96,7 +103,9 @@ public class SMB1SigningDigest implements SMBSigningDigest {
      * Construct a digest with a non-zero starting sequence number
      *
      * @param macSigningKey
+     *            The MAC signing key used for generating signatures
      * @param initialSequence
+     *            The initial sequence number for signing
      */
     public SMB1SigningDigest(final byte[] macSigningKey, final int initialSequence) {
         this.digest = Crypto.getMD5();
@@ -105,10 +114,14 @@ public class SMB1SigningDigest implements SMBSigningDigest {
     }
 
     /**
+     * Constructs a signing digest from transport and authentication information
      *
      * @param transport
+     *            The SMB transport containing server encryption key
      * @param auth
+     *            The NTLM password authenticator containing user credentials
      * @throws SmbException
+     *             If there is an error setting up the signing digest
      */
     public SMB1SigningDigest(final SmbTransportInternal transport, final NtlmPasswordAuthenticator auth) throws SmbException {
         this.digest = Crypto.getMD5();
@@ -147,8 +160,11 @@ public class SMB1SigningDigest implements SMBSigningDigest {
      * Update digest with data
      *
      * @param input
+     *            The input data to update the digest with
      * @param offset
+     *            The starting offset in the input data
      * @param len
+     *            The length of data to process
      */
     public void update(final byte[] input, final int offset, final int len) {
         if (log.isTraceEnabled()) {
@@ -163,6 +179,8 @@ public class SMB1SigningDigest implements SMBSigningDigest {
     }
 
     /**
+     * Finalize and return the calculated message digest
+     *
      * @return calculated digest
      */
     public byte[] digest() {
@@ -276,11 +294,16 @@ public class SMB1SigningDigest implements SMBSigningDigest {
     }
 
     /**
+     * Copies the given text data into the destination array
      *
      * @param cfg
+     *            The configuration to use for text encoding
      * @param t
+     *            The text data to copy
      * @param dst
+     *            The destination byte array
      * @param dstIndex
+     *            The starting index in the destination array
      */
     public static void writeUTime(final Configuration cfg, long t, final byte[] dst, final int dstIndex) {
         if (t == 0L || t == 0xFFFFFFFFFFFFFFFFL) {

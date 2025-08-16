@@ -31,7 +31,8 @@ import jcifs.FileNotifyInformation;
 public interface NotifyResponse extends CommonServerMessageBlockResponse {
 
     /**
-     * @return notify information
+     * Gets the file notification information from the response.
+     * @return notify information containing file change notifications
      */
     List<FileNotifyInformation> getNotifyInformation();
 

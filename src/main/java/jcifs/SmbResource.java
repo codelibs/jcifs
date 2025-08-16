@@ -68,7 +68,7 @@ public interface SmbResource extends AutoCloseable {
      *
      * @return <code>TYPE_FILESYSTEM, TYPE_WORKGROUP, TYPE_SERVER, TYPE_SHARE,
      * TYPE_PRINTER, TYPE_NAMED_PIPE</code>, or <code>TYPE_COMM</code>.
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs accessing the resource
      */
     int getType() throws CIFSException;
 
@@ -84,16 +84,16 @@ public interface SmbResource extends AutoCloseable {
      *
      * @return <code>true</code> if the resource exists or is alive or
      *         <code>false</code> otherwise
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs accessing the resource
      */
     boolean exists() throws CIFSException;
 
     /**
      * Fetch a child resource
      *
-     * @param name
+     * @param name the name of the child resource to resolve
      * @return the child resource
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs accessing the resource
      */
     SmbResource resolve(String name) throws CIFSException;
 
@@ -101,7 +101,7 @@ public interface SmbResource extends AutoCloseable {
      * Get the file index
      *
      * @return server side file index, 0 if unavailable
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs accessing the resource
      */
     long fileIndex() throws CIFSException;
 
@@ -112,7 +112,7 @@ public interface SmbResource extends AutoCloseable {
      * the <code>setAttributes()</code> method.
      *
      * @return the <code>ATTR_*</code> attributes associated with this file
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs accessing the resource
      */
     int getAttributes() throws CIFSException;
 
@@ -122,7 +122,7 @@ public interface SmbResource extends AutoCloseable {
      * end with '$' such as <code>IPC$</code> or <code>C$</code>.
      *
      * @return <code>true</code> if the <code>SmbResource</code> is marked as being hidden
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs accessing the resource
      */
     boolean isHidden() throws CIFSException;
 
@@ -130,7 +130,7 @@ public interface SmbResource extends AutoCloseable {
      * Tests to see if the file this <code>SmbResource</code> represents is not a directory.
      *
      * @return <code>true</code> if this <code>SmbResource</code> is not a directory
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs accessing the resource
      */
     boolean isFile() throws CIFSException;
 
@@ -138,7 +138,7 @@ public interface SmbResource extends AutoCloseable {
      * Tests to see if the file this <code>SmbResource</code> represents is a directory.
      *
      * @return <code>true</code> if this <code>SmbResource</code> is a directory
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs accessing the resource
      */
     boolean isDirectory() throws CIFSException;
 
@@ -151,7 +151,7 @@ public interface SmbResource extends AutoCloseable {
      *
      * @return <code>true</code> if the resource exists is not marked
      *         read-only
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs accessing the resource
      */
     boolean canWrite() throws CIFSException;
 
@@ -161,7 +161,7 @@ public interface SmbResource extends AutoCloseable {
      * exists, this method simply calls the <code>exists</code> method.
      *
      * @return <code>true</code> if the file is read-only
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs accessing the resource
      */
     boolean canRead() throws CIFSException;
 
@@ -169,7 +169,7 @@ public interface SmbResource extends AutoCloseable {
      * Turn off the read-only attribute of this file. This is shorthand for
      * <code>setAttributes( getAttributes() &amp; ~ATTR_READONLY )</code>.
      *
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs modifying the resource
      */
     void setReadWrite() throws CIFSException;
 
@@ -177,7 +177,7 @@ public interface SmbResource extends AutoCloseable {
      * Make this file read-only. This is shorthand for <code>setAttributes(
      * getAttributes() | ATTR_READ_ONLY )</code>.
      *
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs modifying the resource
      */
     void setReadOnly() throws CIFSException;
 
@@ -190,7 +190,7 @@ public interface SmbResource extends AutoCloseable {
      * @param attrs
      *            attribute flags
      *
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs modifying the resource
      */
     void setAttributes(int attrs) throws CIFSException;
 
@@ -211,7 +211,7 @@ public interface SmbResource extends AutoCloseable {
      *            the last modified time as milliseconds since Jan 1, 1970
      * @param lastAccess
      *            the last access time as milliseconds since Jan 1, 1970
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs modifying the resource
      * @throws jcifs.smb.SmbUnsupportedOperationException
      *             if CAP_NT_SMBS is unavailable
      */
@@ -226,7 +226,7 @@ public interface SmbResource extends AutoCloseable {
      *
      * @param time
      *            the last access time as milliseconds since Jan 1, 1970
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs modifying the resource
      * @throws jcifs.smb.SmbUnsupportedOperationException
      *             if CAP_NT_SMBS is unavailable
      */
@@ -241,7 +241,7 @@ public interface SmbResource extends AutoCloseable {
      *
      * @param time
      *            the last modified time as milliseconds since Jan 1, 1970
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs modifying the resource
      */
     void setLastModified(long time) throws CIFSException;
 
@@ -254,7 +254,7 @@ public interface SmbResource extends AutoCloseable {
      *
      * @param time
      *            the create time as milliseconds since Jan 1, 1970
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs modifying the resource
      * @throws jcifs.smb.SmbUnsupportedOperationException
      *             if CAP_NT_SMBS is unavailable
      */
@@ -265,7 +265,7 @@ public interface SmbResource extends AutoCloseable {
      *
      * @return The number of milliseconds since the 00:00:00 GMT, January 1,
      *         1970 as a <code>long</code> value
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs accessing the resource
      */
     long lastAccess() throws CIFSException;
 
@@ -278,7 +278,7 @@ public interface SmbResource extends AutoCloseable {
      *
      * @return The number of milliseconds since the 00:00:00 GMT, January 1,
      *         1970 as a <code>long</code> value
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs accessing the resource
      */
     long lastModified() throws CIFSException;
 
@@ -293,7 +293,7 @@ public interface SmbResource extends AutoCloseable {
      *
      * @return The number of milliseconds since the 00:00:00 GMT, January 1,
      *         1970 as a <code>long</code> value
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs accessing the resource
      */
     long createTime() throws CIFSException;
 
@@ -302,7 +302,7 @@ public interface SmbResource extends AutoCloseable {
      * existence of the file and it's creation are an atomic operation with
      * respect to other filesystem activities.
      *
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs creating the file
      */
     void createNewFile() throws CIFSException;
 
@@ -314,7 +314,7 @@ public interface SmbResource extends AutoCloseable {
      * because workgroups, servers, and shares cannot be dynamically created
      * (although in the future it may be possible to create shares).
      *
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs creating the directories
      */
     void mkdirs() throws CIFSException;
 
@@ -327,7 +327,7 @@ public interface SmbResource extends AutoCloseable {
      * because workgroups, servers, and shares cannot be dynamically created
      * (although in the future it may be possible to create shares).
      *
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs creating the directory
      */
     void mkdir() throws CIFSException;
 
@@ -339,7 +339,7 @@ public interface SmbResource extends AutoCloseable {
      *
      * @return the free disk space in bytes of the drive on which this file or
      *         directory resides
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs accessing the resource
      */
     long getDiskFreeSpace() throws CIFSException;
 
@@ -351,7 +351,7 @@ public interface SmbResource extends AutoCloseable {
      *
      * @return The length of the file in bytes or 0 if this
      *         <code>SmbResource</code> is not a file.
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs accessing the resource
      */
     long length() throws CIFSException;
 
@@ -364,7 +364,7 @@ public interface SmbResource extends AutoCloseable {
      *
      * If the file has been opened before, it will be closed.
      *
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs accessing the resource
      */
     void delete() throws CIFSException;
 
@@ -383,7 +383,7 @@ public interface SmbResource extends AutoCloseable {
      *
      * @param dest
      *            the destination file or directory
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs accessing the resource
      */
     void copyTo(SmbResource dest) throws CIFSException;
 
@@ -398,7 +398,7 @@ public interface SmbResource extends AutoCloseable {
      *
      * @param dest
      *            An <code>SmbResource</code> that represents the new pathname
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs renaming the resource
      * @throws NullPointerException
      *             If the <code>dest</code> argument is <code>null</code>
      */
@@ -417,7 +417,7 @@ public interface SmbResource extends AutoCloseable {
      *            An <code>SmbResource</code> that represents the new pathname
      * @param replace
      *            Whether an existing destination file should be replaced (only supported with SMB2)
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs renaming the resource
      * @throws NullPointerException
      *             If the <code>dest</code> argument is <code>null</code>
      */
@@ -433,7 +433,7 @@ public interface SmbResource extends AutoCloseable {
      * @param recursive
      *            whether to also watch subdirectories
      * @return watch context, needs to be closed when finished
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs accessing the resource
      */
     SmbWatchHandle watch(int filter, boolean recursive) throws CIFSException;
 
@@ -441,7 +441,7 @@ public interface SmbResource extends AutoCloseable {
      * Return the resolved owner group SID for this file or directory
      *
      * @return the owner group SID, <code>null</code> if not present
-     * @throws IOException
+     * @throws IOException if an I/O error occurs
      */
     SID getOwnerGroup() throws IOException;
 
@@ -451,7 +451,7 @@ public interface SmbResource extends AutoCloseable {
      * @param resolve
      *            whether to resolve the group name
      * @return the owner group SID, <code>null</code> if not present
-     * @throws IOException
+     * @throws IOException if an I/O error occurs
      */
     SID getOwnerGroup(boolean resolve) throws IOException;
 
@@ -459,7 +459,7 @@ public interface SmbResource extends AutoCloseable {
      * Return the resolved owner user SID for this file or directory
      *
      * @return the owner user SID, <code>null</code> if not present
-     * @throws IOException
+     * @throws IOException if an I/O error occurs
      */
     SID getOwnerUser() throws IOException;
 
@@ -469,7 +469,7 @@ public interface SmbResource extends AutoCloseable {
      * @param resolve
      *            whether to resolve the user name
      * @return the owner user SID, <code>null</code> if not present
-     * @throws IOException
+     * @throws IOException if an I/O error occurs
      */
     SID getOwnerUser(boolean resolve) throws IOException;
 
@@ -488,7 +488,7 @@ public interface SmbResource extends AutoCloseable {
      * SIDs together and detect network failures.
      *
      * @return array of ACEs
-     * @throws IOException
+     * @throws IOException if an I/O error occurs
      */
     ACE[] getSecurity() throws IOException;
 
@@ -501,7 +501,7 @@ public interface SmbResource extends AutoCloseable {
      *            Attempt to resolve the SIDs within each ACE form
      *            their numeric representation to their corresponding account names.
      * @return array of ACEs
-     * @throws IOException
+     * @throws IOException if an I/O error occurs
      */
     ACE[] getSecurity(boolean resolveSids) throws IOException;
 
@@ -524,7 +524,7 @@ public interface SmbResource extends AutoCloseable {
      *            Attempt to resolve the SIDs within each ACE form
      *            their numeric representation to their corresponding account names.
      * @return array of ACEs
-     * @throws IOException
+     * @throws IOException if an I/O error occurs
      */
     ACE[] getShareSecurity(boolean resolveSids) throws IOException;
 
@@ -536,7 +536,7 @@ public interface SmbResource extends AutoCloseable {
      * @param sharing
      *            flags indicating for which operations others may concurrently open the file
      * @return random access file, needs to be closed when finished
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs accessing the resource
      *
      */
     SmbRandomAccess openRandomAccess(String mode, int sharing) throws CIFSException;
@@ -547,7 +547,7 @@ public interface SmbResource extends AutoCloseable {
      * @param mode
      *            access mode (r|rw)
      * @return random access file, needs to be closed when finished
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs accessing the resource
      */
     SmbRandomAccess openRandomAccess(String mode) throws CIFSException;
 
@@ -563,7 +563,7 @@ public interface SmbResource extends AutoCloseable {
      * @param sharing
      *            flags indicating for which operations others may open the file
      * @return output stream, needs to be closed when finished
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs accessing the resource
      */
     OutputStream openOutputStream(boolean append, int openFlags, int access, int sharing) throws CIFSException;
 
@@ -575,7 +575,7 @@ public interface SmbResource extends AutoCloseable {
      * @param sharing
      *            flags indicating for which operations others may open the file (FILE_SHARING_*)
      * @return output stream, needs to be closed when finished
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs accessing the resource
      */
     OutputStream openOutputStream(boolean append, int sharing) throws CIFSException;
 
@@ -585,7 +585,7 @@ public interface SmbResource extends AutoCloseable {
      * @param append
      *            whether to append to or truncate the input
      * @return output stream, needs to be closed when finished
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs accessing the resource
      */
     OutputStream openOutputStream(boolean append) throws CIFSException;
 
@@ -593,7 +593,7 @@ public interface SmbResource extends AutoCloseable {
      * Opens an output stream writing to the file (truncating, write only, sharable)
      *
      * @return output stream, needs to be closed when finished
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs accessing the resource
      */
     OutputStream openOutputStream() throws CIFSException;
 
@@ -607,7 +607,7 @@ public interface SmbResource extends AutoCloseable {
      * @param sharing
      *            flags indicating for which operations others may open the file (FILE_SHARING_*)
      * @return input stream, needs to be closed when finished
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs accessing the resource
      */
     InputStream openInputStream(int flags, int access, int sharing) throws CIFSException;
 
@@ -618,7 +618,7 @@ public interface SmbResource extends AutoCloseable {
      *            flags indicating for which operations others may open the file (FILE_SHARING_*)
      *
      * @return input stream, needs to be closed when finished
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs accessing the resource
      */
     InputStream openInputStream(int sharing) throws CIFSException;
 
@@ -626,7 +626,7 @@ public interface SmbResource extends AutoCloseable {
      * Opens an input stream reading the file (read only, sharable)
      *
      * @return input stream, needs to be closed when finished
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs accessing the resource
      */
     InputStream openInputStream() throws CIFSException;
 
@@ -644,7 +644,7 @@ public interface SmbResource extends AutoCloseable {
      * Fetch all children
      *
      * @return an iterator over the child resources
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs accessing the resource
      */
     CloseableIterator<SmbResource> children() throws CIFSException;
 
@@ -661,29 +661,33 @@ public interface SmbResource extends AutoCloseable {
      * <p>
      * Wildcard expressions will not filter workgroup names or server names.
      *
-     * @param wildcard
+     * @param wildcard the wildcard pattern to match
      * @return an iterator over the child resources
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs accessing the resource
      */
     CloseableIterator<SmbResource> children(String wildcard) throws CIFSException;
 
     /**
+     * Fetch children matching the given filter.
+     *
      * @param filter
      *            filter acting on file names
      * @return an iterator over the child resources
      * @see SmbResource#children(String) for a more efficient way to do this when a pattern on the filename is
      *      sufficient for filtering
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs accessing the resource
      */
     CloseableIterator<SmbResource> children(ResourceNameFilter filter) throws CIFSException;
 
     /**
+     * Fetch children matching the given filter.
+     *
      * @param filter
      *            filter acting on SmbResource instances
      * @return an iterator over the child resources
      * @see SmbResource#children(String) for a more efficient way to do this when a pattern on the filename is
      *      sufficient for filtering
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs accessing the resource
      */
     CloseableIterator<SmbResource> children(ResourceFilter filter) throws CIFSException;
 

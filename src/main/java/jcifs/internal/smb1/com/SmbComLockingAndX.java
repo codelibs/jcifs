@@ -41,7 +41,9 @@ public class SmbComLockingAndX extends AndXServerMessageBlock {
     private boolean largeFile;
 
     /**
-     * @param config
+     * Creates a new SMB1 locking request for file byte-range locking operations.
+     *
+     * @param config the CIFS configuration
      */
     public SmbComLockingAndX(final Configuration config) {
         super(config);

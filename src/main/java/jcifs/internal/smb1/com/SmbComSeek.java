@@ -33,8 +33,10 @@ import jcifs.internal.util.SMBUtil;
 public class SmbComSeek extends ServerMessageBlock {
 
     /**
-     * @param config
-     * @param fid
+     * Constructs a seek command.
+     *
+     * @param config the configuration
+     * @param fid the file identifier
      */
     public SmbComSeek(final Configuration config, final int fid) {
         super(config, SMB_COM_SEEK);
@@ -46,6 +48,8 @@ public class SmbComSeek extends ServerMessageBlock {
     private long offset;
 
     /**
+     * Sets the file identifier.
+     *
      * @param fid
      *            the fid to set
      */
@@ -54,6 +58,8 @@ public class SmbComSeek extends ServerMessageBlock {
     }
 
     /**
+     * Sets the seek mode.
+     *
      * @param mode
      *            the mode to set
      */
@@ -62,6 +68,8 @@ public class SmbComSeek extends ServerMessageBlock {
     }
 
     /**
+     * Sets the seek offset.
+     *
      * @param offset
      *            the offset to set
      */

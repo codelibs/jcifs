@@ -45,6 +45,10 @@ import jcifs.smb1.util.transport.Response;
 import jcifs.smb1.util.transport.Transport;
 import jcifs.smb1.util.transport.TransportException;
 
+/**
+ * Legacy SMB transport implementation for SMB1 protocol communication.
+ * Handles the low-level transport layer for SMB1 protocol messages.
+ */
 public class SmbTransport extends Transport implements SmbConstants {
 
     static final byte[] BUF = new byte[0xFFFF];
@@ -323,6 +327,11 @@ public class SmbTransport extends Transport implements SmbConstants {
         }
     }
 
+    /**
+     * Establishes a connection to the SMB server.
+     *
+     * @throws SmbException if the connection fails
+     */
     public void connect() throws SmbException {
         try {
             super.connect(RESPONSE_TIMEOUT);
@@ -487,6 +496,12 @@ public class SmbTransport extends Transport implements SmbConstants {
         }
     }
 
+    /**
+     * Internal method to send a request to the server.
+     *
+     * @param request the request to send
+     * @throws IOException if an I/O error occurs
+     */
     protected void doSend0(final Request request) throws IOException {
         try {
             doSend(request);

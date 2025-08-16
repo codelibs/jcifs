@@ -40,6 +40,9 @@ import jcifs.internal.util.SMBUtil;
  */
 public class Smb2QueryInfoResponse extends ServerMessageBlock2Response {
 
+    /**
+     * Protocol overhead size for SMB2 query info response
+     */
     public static final int OVERHEAD = Smb2Constants.SMB2_HEADER_LENGTH + 8;
 
     private final byte expectInfoType;
@@ -47,9 +50,14 @@ public class Smb2QueryInfoResponse extends ServerMessageBlock2Response {
     private Decodable info;
 
     /**
+     * Constructs a SMB2 query info response with the specified configuration and expected information types
+     *
      * @param config
+     *            the configuration to use for this response
      * @param expectInfoType
+     *            the expected information type in the response
      * @param expectInfoClass
+     *            the expected information class in the response
      */
     public Smb2QueryInfoResponse(final Configuration config, final byte expectInfoType, final byte expectInfoClass) {
         super(config);
@@ -58,6 +66,8 @@ public class Smb2QueryInfoResponse extends ServerMessageBlock2Response {
     }
 
     /**
+     * Gets the information returned by the query
+     *
      * @return the information
      */
     public Decodable getInfo() {
@@ -65,9 +75,15 @@ public class Smb2QueryInfoResponse extends ServerMessageBlock2Response {
     }
 
     /**
+     * Gets the information returned by the query, cast to the specified class type
+     *
+     * @param <T>
+     *            the type of information to return
      * @param clazz
+     *            the class type to cast the information to
      * @return the information
      * @throws CIFSException
+     *             if the information cannot be cast to the specified type
      */
     @SuppressWarnings("unchecked")
     public <T extends Decodable> T getInfo(final Class<T> clazz) throws CIFSException {

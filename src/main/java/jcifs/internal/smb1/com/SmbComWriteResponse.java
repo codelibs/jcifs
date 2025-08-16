@@ -33,15 +33,18 @@ public class SmbComWriteResponse extends ServerMessageBlock {
     private long count;
 
     /**
+     * Constructs a write response for SMB1 protocol.
      *
-     * @param config
+     * @param config the configuration for this SMB session
      */
     public SmbComWriteResponse(final Configuration config) {
         super(config);
     }
 
     /**
-     * @return the count
+     * Gets the number of bytes written.
+     *
+     * @return the count of bytes written
      */
     public long getCount() {
         return this.count;

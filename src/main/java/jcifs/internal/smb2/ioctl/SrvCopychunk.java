@@ -34,9 +34,10 @@ public class SrvCopychunk implements Encodable {
     private final int length;
 
     /**
-     * @param soff
-     * @param toff
-     * @param len
+     * Constructs a server copy chunk descriptor
+     * @param soff the source file offset
+     * @param toff the target file offset
+     * @param len the length of data to copy
      */
     public SrvCopychunk(final long soff, final long toff, final int len) {
         this.sourceOffset = soff;

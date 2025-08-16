@@ -61,6 +61,8 @@ public class SmbPipeOutputStream extends SmbFileOutputStream {
     }
 
     /**
+     * Gets the pipe handle implementation for this output stream.
+     *
      * @return the handle
      */
     protected SmbPipeHandleImpl getHandle() {

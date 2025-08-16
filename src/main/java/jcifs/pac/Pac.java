@@ -29,6 +29,11 @@ import org.slf4j.LoggerFactory;
 
 import jcifs.util.Hexdump;
 
+/**
+ * Privilege Attribute Certificate (PAC) decoder for Kerberos tickets.
+ * Parses and validates PAC data structures containing user authorization information
+ * from Active Directory Kerberos tickets.
+ */
 public class Pac {
 
     private static final Logger log = LoggerFactory.getLogger(Pac.class);
@@ -38,6 +43,12 @@ public class Pac {
     private PacSignature serverSignature;
     private PacSignature kdcSignature;
 
+    /**
+     * Constructs and validates a PAC from raw data using provided Kerberos keys.
+     * @param data the raw PAC data bytes
+     * @param keys map of Kerberos keys for signature validation
+     * @throws PACDecodingException if the PAC data is malformed or signature validation fails
+     */
     public Pac(byte[] data, Map<Integer, KerberosKey> keys) throws PACDecodingException {
         byte[] checksumData = data.clone();
         try {
@@ -138,18 +149,34 @@ public class Pac {
         }
     }
 
+    /**
+     * Returns the PAC logon information containing user authorization data.
+     * @return the PAC logon information
+     */
     public PacLogonInfo getLogonInfo() {
         return this.logonInfo;
     }
 
+    /**
+     * Returns the PAC credential type information.
+     * @return the PAC credential type
+     */
     public PacCredentialType getCredentialType() {
         return this.credentialType;
     }
 
+    /**
+     * Returns the server signature used to validate PAC integrity.
+     * @return the server signature
+     */
     public PacSignature getServerSignature() {
         return this.serverSignature;
     }
 
+    /**
+     * Returns the KDC signature used to validate PAC authenticity.
+     * @return the KDC signature
+     */
     public PacSignature getKdcSignature() {
         return this.kdcSignature;
     }

@@ -52,11 +52,18 @@ import jcifs.smb.NtlmPasswordAuthentication;
 public class NtlmSsp implements NtlmFlags {
 
     /**
+     * Default constructor.
+     */
+    public NtlmSsp() {
+        // Default constructor
+    }
+
+    /**
      * Calls the static {@link #authenticate(CIFSContext, HttpServletRequest,
      * HttpServletResponse, byte[])} method to perform NTLM authentication
      * for the specified servlet request.
      *
-     * @param tc
+     * @param tc the CIFS context to use
      *
      * @param req
      *            The request being serviced.

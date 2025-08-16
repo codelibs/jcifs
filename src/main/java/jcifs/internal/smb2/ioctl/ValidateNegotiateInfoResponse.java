@@ -30,34 +30,49 @@ import jcifs.internal.util.SMBUtil;
  */
 public class ValidateNegotiateInfoResponse implements Decodable {
 
+    /**
+     * Default constructor for ValidateNegotiateInfoResponse
+     */
+    public ValidateNegotiateInfoResponse() {
+        // Default constructor
+    }
+
     private int capabilities;
     private final byte[] serverGuid = new byte[16];
     private int securityMode;
     private int dialect;
 
     /**
-     * @return the capabilities
+     * Gets the server capabilities
+     *
+     * @return the capabilities flags from the server
      */
     public int getCapabilities() {
         return this.capabilities;
     }
 
     /**
-     * @return the serverGuid
+     * Gets the server GUID
+     *
+     * @return the server's unique identifier
      */
     public byte[] getServerGuid() {
         return this.serverGuid;
     }
 
     /**
-     * @return the securityMode
+     * Gets the security mode
+     *
+     * @return the security mode flags from the server
      */
     public int getSecurityMode() {
         return this.securityMode;
     }
 
     /**
-     * @return the dialect
+     * Gets the negotiated SMB dialect
+     *
+     * @return the SMB dialect negotiated with the server
      */
     public int getDialect() {
         return this.dialect;

@@ -30,9 +30,10 @@ import jcifs.internal.smb1.ServerMessageBlock;
 public class SmbComDeleteDirectory extends ServerMessageBlock {
 
     /**
+     * Creates a new SMB1 delete directory request.
      *
-     * @param config
-     * @param path
+     * @param config the CIFS configuration
+     * @param path the path of the directory to delete
      */
     public SmbComDeleteDirectory(final Configuration config, final String path) {
         super(config, SMB_COM_DELETE_DIRECTORY, path);

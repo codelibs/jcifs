@@ -38,23 +38,25 @@ public class SmbComWriteAndX extends AndXServerMessageBlock {
     private int writeMode;
 
     /**
+     * Constructs an empty write AndX request.
      *
-     * @param config
+     * @param config the configuration to use
      */
     public SmbComWriteAndX(final Configuration config) {
         super(config, SMB_COM_WRITE_ANDX, null);
     }
 
     /**
+     * Constructs a write AndX request to write data to a file.
      *
-     * @param config
-     * @param fid
-     * @param offset
-     * @param remaining
-     * @param b
-     * @param off
-     * @param len
-     * @param andx
+     * @param config the configuration to use
+     * @param fid the file identifier
+     * @param offset the file offset at which to write
+     * @param remaining the number of bytes remaining to be written
+     * @param b the data buffer containing bytes to write
+     * @param off the offset in the buffer where data starts
+     * @param len the number of bytes to write
+     * @param andx the next command in the AndX chain, or null
      */
     public SmbComWriteAndX(final Configuration config, final int fid, final long offset, final int remaining, final byte[] b, final int off,
             final int len, final ServerMessageBlock andx) {
@@ -68,13 +70,14 @@ public class SmbComWriteAndX extends AndXServerMessageBlock {
     }
 
     /**
+     * Sets the parameters for this write AndX request.
      *
-     * @param fid
-     * @param offset
-     * @param remaining
-     * @param b
-     * @param off
-     * @param len
+     * @param fid the file identifier
+     * @param offset the file offset at which to write
+     * @param remaining the number of bytes remaining to be written
+     * @param b the data buffer containing bytes to write
+     * @param off the offset in the buffer where data starts
+     * @param len the number of bytes to write
      */
     public final void setParam(final int fid, final long offset, final int remaining, final byte[] b, final int off, final int len) {
         this.fid = fid;
@@ -91,6 +94,8 @@ public class SmbComWriteAndX extends AndXServerMessageBlock {
     }
 
     /**
+     * Sets the write mode flags for this request.
+     *
      * @param writeMode
      *            the writeMode to set
      */

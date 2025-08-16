@@ -33,9 +33,10 @@ public class SmbComFindClose2 extends ServerMessageBlock {
     private final int sid;
 
     /**
+     * Creates a new SMB1 find close request to close a search handle.
      *
-     * @param config
-     * @param sid
+     * @param config the CIFS configuration
+     * @param sid the search identifier to close
      */
     public SmbComFindClose2(final Configuration config, final int sid) {
         super(config, SMB_COM_FIND_CLOSE2);

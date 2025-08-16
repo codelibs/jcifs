@@ -35,22 +35,27 @@ public class SmbComOpenAndXResponse extends AndXServerMessageBlock implements Sm
     private long lastWriteTime;
 
     /**
+     * Constructs an Open AndX response.
      *
-     * @param config
+     * @param config the configuration
      */
     public SmbComOpenAndXResponse(final Configuration config) {
         super(config);
     }
 
     /**
-     * @param config
-     * @param andxResp
+     * Constructs an Open AndX response with a chained response.
+     *
+     * @param config the configuration
+     * @param andxResp the chained seek response
      */
     public SmbComOpenAndXResponse(final Configuration config, final SmbComSeekResponse andxResp) {
         super(config, andxResp);
     }
 
     /**
+     * Gets the file identifier.
+     *
      * @return the fid
      */
     public final int getFid() {
@@ -58,6 +63,8 @@ public class SmbComOpenAndXResponse extends AndXServerMessageBlock implements Sm
     }
 
     /**
+     * Gets the file data size.
+     *
      * @return the dataSize
      */
     public final int getDataSize() {
@@ -75,6 +82,8 @@ public class SmbComOpenAndXResponse extends AndXServerMessageBlock implements Sm
     }
 
     /**
+     * Gets the granted access rights.
+     *
      * @return the grantedAccess
      */
     public final int getGrantedAccess() {
@@ -82,6 +91,8 @@ public class SmbComOpenAndXResponse extends AndXServerMessageBlock implements Sm
     }
 
     /**
+     * Gets the file attributes.
+     *
      * @return the fileAttributes
      */
     public final int getFileAttributes() {
@@ -99,6 +110,8 @@ public class SmbComOpenAndXResponse extends AndXServerMessageBlock implements Sm
     }
 
     /**
+     * Gets the file type.
+     *
      * @return the fileType
      */
     public final int getFileType() {
@@ -106,6 +119,8 @@ public class SmbComOpenAndXResponse extends AndXServerMessageBlock implements Sm
     }
 
     /**
+     * Gets the device state.
+     *
      * @return the deviceState
      */
     public final int getDeviceState() {
@@ -113,6 +128,8 @@ public class SmbComOpenAndXResponse extends AndXServerMessageBlock implements Sm
     }
 
     /**
+     * Gets the action taken.
+     *
      * @return the action
      */
     public final int getAction() {
@@ -120,6 +137,8 @@ public class SmbComOpenAndXResponse extends AndXServerMessageBlock implements Sm
     }
 
     /**
+     * Gets the server file identifier.
+     *
      * @return the serverFid
      */
     public final int getServerFid() {

@@ -30,9 +30,17 @@ import jcifs.internal.util.SMBUtil;
  */
 public class SrvRequestResumeKeyResponse implements Decodable {
 
+    /**
+     * Constructs a new SrvRequestResumeKeyResponse.
+     * This response contains the resume key used for server-side copy operations.
+     */
+    public SrvRequestResumeKeyResponse() {
+    }
+
     private byte[] resumeKey;
 
     /**
+     * Gets the resume key for server-side copy operations
      * @return the resumeKey
      */
     public byte[] getResumeKey() {

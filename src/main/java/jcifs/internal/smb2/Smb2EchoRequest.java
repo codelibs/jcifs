@@ -32,7 +32,8 @@ import jcifs.internal.util.SMBUtil;
 public class Smb2EchoRequest extends ServerMessageBlock2Request<Smb2EchoResponse> {
 
     /**
-     * @param config
+     * Constructs an SMB2 echo request
+     * @param config the client configuration
      */
     public Smb2EchoRequest(final Configuration config) {
         super(config, SMB2_ECHO);

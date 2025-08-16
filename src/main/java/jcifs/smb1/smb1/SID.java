@@ -60,23 +60,62 @@ import jcifs.smb1.util.Hexdump;
 
 public class SID extends rpc.sid_t {
 
+    /**
+     * SID type indicating no type information.
+     */
     public static final int SID_TYPE_USE_NONE = lsarpc.SID_NAME_USE_NONE;
+    /**
+     * SID type indicating a user account.
+     */
     public static final int SID_TYPE_USER = lsarpc.SID_NAME_USER;
+    /**
+     * SID type indicating a domain group.
+     */
     public static final int SID_TYPE_DOM_GRP = lsarpc.SID_NAME_DOM_GRP;
+    /**
+     * SID type indicating a domain.
+     */
     public static final int SID_TYPE_DOMAIN = lsarpc.SID_NAME_DOMAIN;
+    /**
+     * SID type indicating a local group or alias.
+     */
     public static final int SID_TYPE_ALIAS = lsarpc.SID_NAME_ALIAS;
+    /**
+     * SID type indicating a well-known group.
+     */
     public static final int SID_TYPE_WKN_GRP = lsarpc.SID_NAME_WKN_GRP;
+    /**
+     * SID type indicating a deleted account.
+     */
     public static final int SID_TYPE_DELETED = lsarpc.SID_NAME_DELETED;
+    /**
+     * SID type indicating an invalid SID.
+     */
     public static final int SID_TYPE_INVALID = lsarpc.SID_NAME_INVALID;
+    /**
+     * SID type indicating an unknown account type.
+     */
     public static final int SID_TYPE_UNKNOWN = lsarpc.SID_NAME_UNKNOWN;
 
     static final String[] SID_TYPE_NAMES =
             { "0", "User", "Domain group", "Domain", "Local group", "Builtin group", "Deleted", "Invalid", "Unknown" };
 
+    /**
+     * Flag indicating that SIDs should be resolved to names.
+     */
     public static final int SID_FLAG_RESOLVE_SIDS = 0x0001;
 
+    /**
+     * Well known SID: EVERYONE (S-1-1-0).
+     */
     public static SID EVERYONE = null;
+    /**
+     * Well known SID: CREATOR_OWNER (S-1-3-0).
+     */
     public static SID CREATOR_OWNER = null;
+    /**
+     * Well known SID: SYSTEM (S-1-5-18).
+     */
     public static SID SYSTEM = null;
 
     static {
@@ -148,6 +187,16 @@ public class SID extends rpc.sid_t {
         }
     }
 
+    /**
+     * Resolves an array of SIDs to obtain their account and domain names.
+     *
+     * @param authorityServerName the server to use for SID resolution
+     * @param auth the authentication credentials to use
+     * @param sids the array of SIDs to resolve
+     * @param offset the starting offset in the array
+     * @param length the number of SIDs to resolve
+     * @throws IOException if there is an error resolving the SIDs
+     */
     static public void resolveSids(final String authorityServerName, final NtlmPasswordAuthentication auth, SID[] sids, final int offset,
             final int length) throws IOException {
         final ArrayList list = new ArrayList(sids.length);
@@ -187,6 +236,14 @@ public class SID extends rpc.sid_t {
      * @param auth The credentials that should be used to communicate with the named server. As usual, {@code null} indicates that default credentials should be used.
      * @param sids The SIDs that should be resolved. After this function is called, the names associated with the SIDs may be queried with the {@code toDisplayString}, {@code getDomainName}, and {@code getAccountName} methods.
      */
+    /**
+     * Resolves an array of SIDs to obtain their account and domain names.
+     *
+     * @param authorityServerName the server to use for SID resolution
+     * @param auth the authentication credentials to use
+     * @param sids the array of SIDs to resolve
+     * @throws IOException if there is an error resolving the SIDs
+     */
     static public void resolveSids(final String authorityServerName, final NtlmPasswordAuthentication auth, SID[] sids) throws IOException {
         final ArrayList list = new ArrayList(sids.length);
         int si;
@@ -213,6 +270,14 @@ public class SID extends rpc.sid_t {
         }
     }
 
+    /**
+     * Gets the domain SID for the specified server.
+     *
+     * @param server the server name
+     * @param auth the authentication credentials to use
+     * @return the domain SID for the server
+     * @throws IOException if there is an error retrieving the server SID
+     */
     public static SID getServerSid(final String server, final NtlmPasswordAuthentication auth) throws IOException {
         DcerpcHandle handle = null;
         LsaPolicyHandle policyHandle = null;
@@ -242,6 +307,12 @@ public class SID extends rpc.sid_t {
         }
     }
 
+    /**
+     * Converts an RPC sid_t structure to a byte array.
+     *
+     * @param sid the RPC sid_t structure to convert
+     * @return byte array representation of the SID
+     */
     public static byte[] toByteArray(final rpc.sid_t sid) {
         final byte[] dst = new byte[1 + 1 + 6 + sid.sub_authority_count * 4];
         int di = 0;
@@ -263,8 +334,11 @@ public class SID extends rpc.sid_t {
     String origin_server = null;
     NtlmPasswordAuthentication origin_auth = null;
 
-    /*
+    /**
      * Construct a SID from it's binary representation.
+     *
+     * @param src the byte array containing the SID
+     * @param si the starting index in the array
      */
     public SID(final byte[] src, int si) {
         revision = src[si];
@@ -286,6 +360,9 @@ public class SID extends rpc.sid_t {
     /**
      * Construct a SID from it's textual representation such as
      * {@code S-1-5-21-1496946806-2192648263-3843101252-1029}.
+     *
+     * @param textual the textual representation of the SID
+     * @throws SmbException if the textual format is invalid
      */
     public SID(final String textual) throws SmbException {
         final StringTokenizer st = new StringTokenizer(textual, "-");
@@ -324,6 +401,12 @@ public class SID extends rpc.sid_t {
      * {@code S-1-5-21-1496946806-2192648263-3843101252} and RID {@code 1029} would
      * yield the SID {@code S-1-5-21-1496946806-2192648263-3843101252-1029}.
      */
+    /**
+     * Construct a SID from a domain SID and an RID (relative identifier).
+     *
+     * @param domsid the domain SID
+     * @param rid the relative identifier
+     */
     public SID(final SID domsid, final int rid) {
         this.revision = domsid.revision;
         this.identifier_authority = domsid.identifier_authority;
@@ -336,6 +419,15 @@ public class SID extends rpc.sid_t {
         this.sub_authority[i] = rid;
     }
 
+    /**
+     * Constructs a SID from an RPC sid_t structure.
+     *
+     * @param sid the RPC sid_t structure
+     * @param type the SID type
+     * @param domainName the domain name for this SID
+     * @param acctName the account name for this SID
+     * @param decrementAuthority whether to decrement the authority count
+     */
     public SID(final rpc.sid_t sid, final int type, final String domainName, final String acctName, final boolean decrementAuthority) {
         this.revision = sid.revision;
         this.sub_authority_count = sid.sub_authority_count;
@@ -354,10 +446,20 @@ public class SID extends rpc.sid_t {
         }
     }
 
+    /**
+     * Gets the domain SID for this SID.
+     *
+     * @return domain SID
+     */
     public SID getDomainSid() {
         return new SID(this, SID_TYPE_DOMAIN, this.domainName, null, getType() != SID_TYPE_DOMAIN);
     }
 
+    /**
+     * Gets the RID (relative identifier) of this SID.
+     *
+     * @return the RID
+     */
     public int getRid() {
         if (getType() == SID_TYPE_DOMAIN) {
             throw new IllegalArgumentException("This SID is a domain sid");
@@ -384,6 +486,11 @@ public class SID extends rpc.sid_t {
      * </table>
      * }
      */
+    /**
+     * Gets the type of this SID.
+     *
+     * @return the SID type code
+     */
     public int getType() {
         if (origin_server != null) {
             resolveWeak();
@@ -395,6 +502,11 @@ public class SID extends rpc.sid_t {
      * Return text represeting the SID type suitable for display to
      * users. Text includes 'User', 'Domain group', 'Local group', etc.
      */
+    /**
+     * Gets a textual representation of the SID type.
+     *
+     * @return textual representation of the SID type
+     */
     public String getTypeText() {
         if (origin_server != null) {
             resolveWeak();
@@ -405,6 +517,11 @@ public class SID extends rpc.sid_t {
     /**
      * Return the domain name of this SID unless it could not be
      * resolved in which case the numeric representation is returned.
+     */
+    /**
+     * Gets the domain name for this SID.
+     *
+     * @return the domain name
      */
     public String getDomainName() {
         if (origin_server != null) {
@@ -421,6 +538,11 @@ public class SID extends rpc.sid_t {
      * Return the sAMAccountName of this SID unless it could not
      * be resolved in which case the numeric RID is returned. If this
      * SID is a domain SID, this method will return an empty String.
+     */
+    /**
+     * Gets the account name for this SID.
+     *
+     * @return the account name
      */
     public String getAccountName() {
         if (origin_server != null) {
@@ -513,6 +635,11 @@ public class SID extends rpc.sid_t {
      * If the sid cannot be resolved the numeric representation from
      * toString() is returned.
      */
+    /**
+     * Returns a string representation of this SID suitable for display to users.
+     *
+     * @return display string representation of the SID
+     */
     public String toDisplayString() {
         if (origin_server != null) {
             resolveWeak();
@@ -546,6 +673,13 @@ public class SID extends rpc.sid_t {
      *
      * @param authorityServerName The FQDN of the server that is an authority for the SID.
      * @param auth Credentials suitable for accessing the SID's information.
+     */
+    /**
+     * Resolves this SID to obtain its account and domain names.
+     *
+     * @param authorityServerName the server to use for SID resolution
+     * @param auth the authentication credentials to use
+     * @throws IOException if there is an error resolving the SID
      */
     public void resolve(final String authorityServerName, final NtlmPasswordAuthentication auth) throws IOException {
         final SID[] sids = new SID[1];
@@ -598,6 +732,15 @@ public class SID extends rpc.sid_t {
         }
     }
 
+    /**
+     * Gets the members of the group represented by this SID.
+     *
+     * @param authorityServerName the server to use for resolution
+     * @param auth the authentication credentials to use
+     * @param flags resolution flags
+     * @return array of SIDs representing group members
+     * @throws IOException if there is an error retrieving group members
+     */
     public SID[] getGroupMemberSids(final String authorityServerName, final NtlmPasswordAuthentication auth, final int flags)
             throws IOException {
         if (type != SID_TYPE_DOM_GRP && type != SID_TYPE_ALIAS) {

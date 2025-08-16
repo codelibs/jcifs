@@ -19,8 +19,20 @@
 
 package jcifs.smb1.dcerpc;
 
+/**
+ * Represents a DCE/RPC UUID (Universally Unique Identifier).
+ * This class provides methods for UUID string parsing and binary conversion.
+ */
 public class UUID extends rpc.uuid_t {
 
+    /**
+     * Convert hexadecimal characters to binary integer
+     *
+     * @param arr the character array containing hex digits
+     * @param offset the starting position in the array
+     * @param length the number of hex digits to convert
+     * @return the integer value of the hex digits
+     */
     public static int hex_to_bin(final char[] arr, final int offset, final int length) {
         int value = 0;
         int ai, count;
@@ -68,6 +80,13 @@ public class UUID extends rpc.uuid_t {
 
     static final char[] HEXCHARS = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
 
+    /**
+     * Convert binary integer to hexadecimal string
+     *
+     * @param value the integer value to convert
+     * @param length the desired length of the hex string
+     * @return the hexadecimal string representation
+     */
     public static String bin_to_hex(int value, final int length) {
         final char[] arr = new char[length];
         int ai = arr.length;
@@ -86,6 +105,11 @@ public class UUID extends rpc.uuid_t {
         return (short) (i & 0xFFFF);
     }
 
+    /**
+     * Constructs a UUID from an existing rpc.uuid_t object
+     *
+     * @param uuid the wrapped uuid object to copy values from
+     */
     public UUID(final rpc.uuid_t uuid) {
         time_low = uuid.time_low;
         time_mid = uuid.time_mid;
@@ -101,6 +125,11 @@ public class UUID extends rpc.uuid_t {
         node[5] = uuid.node[5];
     }
 
+    /**
+     * Constructs a UUID from a string representation
+     *
+     * @param str the string representation of the UUID to parse
+     */
     public UUID(final String str) {
         final char[] arr = str.toCharArray();
         time_low = hex_to_bin(arr, 0, 8);

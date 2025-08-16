@@ -50,6 +50,14 @@ public class SmbFileInputStream extends InputStream {
      * @param url An smb URL string representing the file to read from
      */
 
+    /**
+     * Creates an input stream for reading from the specified SMB URL
+     *
+     * @param url the SMB URL to read from
+     * @throws SmbException if an SMB error occurs
+     * @throws MalformedURLException if the URL is malformed
+     * @throws UnknownHostException if the server cannot be resolved
+     */
     public SmbFileInputStream(final String url) throws SmbException, MalformedURLException, UnknownHostException {
         this(new SmbFile(url));
     }
@@ -61,6 +69,9 @@ public class SmbFileInputStream extends InputStream {
      * the smb URL syntax.
      *
      * @param file An <code>SmbFile</code> specifying the file to read from
+     * @throws SmbException if an SMB error occurs
+     * @throws MalformedURLException if the URL is malformed
+     * @throws UnknownHostException if the server cannot be resolved
      */
 
     public SmbFileInputStream(final SmbFile file) throws SmbException, MalformedURLException, UnknownHostException {
@@ -80,6 +91,12 @@ public class SmbFileInputStream extends InputStream {
         readSize = Math.min(file.tree.session.transport.rcv_buf_size - 70, file.tree.session.transport.server.maxBufferSize - 70);
     }
 
+    /**
+     * Converts an SmbException to an IOException.
+     *
+     * @param se the SmbException to convert
+     * @return the resulting IOException
+     */
     protected IOException seToIoe(final SmbException se) {
         IOException ioe = se;
         Throwable root = se.getRootCause();
@@ -147,6 +164,15 @@ public class SmbFileInputStream extends InputStream {
         return readDirect(b, off, len);
     }
 
+    /**
+     * Reads up to len bytes of data from this input stream into an array of bytes.
+     *
+     * @param b the buffer into which the data is read
+     * @param off the start offset in the array b at which the data is written
+     * @param len the maximum number of bytes to read
+     * @return the total number of bytes read into the buffer, or -1 if there is no more data
+     * @throws IOException if an I/O error occurs
+     */
     public int readDirect(final byte[] b, final int off, int len) throws IOException {
         if (len <= 0) {
             return 0;

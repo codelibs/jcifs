@@ -39,7 +39,7 @@ public class Smb2CloseResponse extends ServerMessageBlock2Response implements Sm
     private static final Logger log = LoggerFactory.getLogger(Smb2CloseResponse.class);
 
     /**
-     *
+     * Flag to query attributes after close
      */
     public static final int SMB2_CLOSE_FLAG_POSTQUERY_ATTIB = 0x1;
 
@@ -55,9 +55,14 @@ public class Smb2CloseResponse extends ServerMessageBlock2Response implements Sm
     private int fileAttributes;
 
     /**
+     * Constructs a close response
+     *
      * @param config
+     *            The configuration to use
      * @param fileId
+     *            The file ID that was closed
      * @param fileName
+     *            The name of the file that was closed
      */
     public Smb2CloseResponse(final Configuration config, final byte[] fileId, final String fileName) {
         super(config);
@@ -66,6 +71,8 @@ public class Smb2CloseResponse extends ServerMessageBlock2Response implements Sm
     }
 
     /**
+     * Get the close flags
+     *
      * @return the closeFlags
      */
     public final int getCloseFlags() {
@@ -73,6 +80,8 @@ public class Smb2CloseResponse extends ServerMessageBlock2Response implements Sm
     }
 
     /**
+     * Get the file creation time
+     *
      * @return the creationTime
      */
     public final long getCreationTime() {
@@ -106,6 +115,8 @@ public class Smb2CloseResponse extends ServerMessageBlock2Response implements Sm
     }
 
     /**
+     * Get the file change time
+     *
      * @return the changeTime
      */
     public final long getChangeTime() {
@@ -113,6 +124,8 @@ public class Smb2CloseResponse extends ServerMessageBlock2Response implements Sm
     }
 
     /**
+     * Get the file allocation size
+     *
      * @return the allocationSize
      */
     public final long getAllocationSize() {
@@ -120,6 +133,8 @@ public class Smb2CloseResponse extends ServerMessageBlock2Response implements Sm
     }
 
     /**
+     * Get the end of file position
+     *
      * @return the endOfFile
      */
     public final long getEndOfFile() {
@@ -127,6 +142,8 @@ public class Smb2CloseResponse extends ServerMessageBlock2Response implements Sm
     }
 
     /**
+     * Get the file ID
+     *
      * @return the fileId
      */
     public byte[] getFileId() {
@@ -134,6 +151,8 @@ public class Smb2CloseResponse extends ServerMessageBlock2Response implements Sm
     }
 
     /**
+     * Get the file name
+     *
      * @return the fileName
      */
     public String getFileName() {
@@ -151,6 +170,8 @@ public class Smb2CloseResponse extends ServerMessageBlock2Response implements Sm
     }
 
     /**
+     * Get the file attributes
+     *
      * @return the fileAttributes
      */
     public int getFileAttributes() {

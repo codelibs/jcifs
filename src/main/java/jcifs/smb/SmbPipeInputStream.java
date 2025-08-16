@@ -48,6 +48,12 @@ public class SmbPipeInputStream extends SmbFileInputStream {
         this.handle = handle;
     }
 
+    /**
+     * Ensures that the tree connection is established.
+     *
+     * @return the tree handle implementation
+     * @throws CIFSException if a connection error occurs
+     */
     protected synchronized SmbTreeHandleImpl ensureTreeConnected() throws CIFSException {
         return this.handle.ensureTreeConnected();
     }

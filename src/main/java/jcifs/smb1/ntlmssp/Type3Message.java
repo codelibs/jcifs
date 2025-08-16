@@ -141,6 +141,16 @@ public class Type3Message extends NtlmMessage {
      * @param workstation The workstation from which authentication is
      * taking place.
      */
+    /**
+     * Creates a Type-3 message in response to the given Type-2 message.
+     *
+     * @param type2 the Type-2 message to respond to
+     * @param password the user's password
+     * @param domain the domain name
+     * @param user the username
+     * @param workstation the workstation name
+     * @param flags the flags to use for the Type-3 message
+     */
     public Type3Message(final Type2Message type2, final String password, final String domain, final String user, String workstation,
             final int flags) {
         setFlags(flags | getDefaultFlags(type2));
@@ -496,6 +506,7 @@ public class Type3Message extends NtlmMessage {
      * Returns the default flags for a Type-3 message created in response
      * to the given Type-2 message in the current environment.
      *
+     * @param type2 the Type-2 message to respond to
      * @return An <code>int</code> containing the default flags.
      */
     public static int getDefaultFlags(final Type2Message type2) {
@@ -522,6 +533,16 @@ public class Type3Message extends NtlmMessage {
         return NtlmPasswordAuthentication.getPreNTLMResponse(password, type2.getChallenge());
     }
 
+    /**
+     * Calculates the LMv2 response for NTLM authentication.
+     *
+     * @param type2 the Type-2 message containing the server challenge
+     * @param domain the domain name
+     * @param user the username
+     * @param password the user's password
+     * @param clientChallenge the client challenge bytes
+     * @return the calculated LMv2 response
+     */
     public static byte[] getLMv2Response(final Type2Message type2, final String domain, final String user, final String password,
             final byte[] clientChallenge) {
         if (type2 == null || domain == null || user == null || password == null || clientChallenge == null) {
@@ -530,6 +551,14 @@ public class Type3Message extends NtlmMessage {
         return NtlmPasswordAuthentication.getLMv2Response(domain, user, password, type2.getChallenge(), clientChallenge);
     }
 
+    /**
+     * Calculates the NTLMv2 response for authentication.
+     *
+     * @param type2 the Type-2 message containing the server challenge
+     * @param responseKeyNT the NT response key
+     * @param clientChallenge the client challenge bytes
+     * @return the calculated NTLMv2 response
+     */
     public static byte[] getNTLMv2Response(final Type2Message type2, final byte[] responseKeyNT, final byte[] clientChallenge) {
         if (type2 == null || responseKeyNT == null || clientChallenge == null) {
             return null;

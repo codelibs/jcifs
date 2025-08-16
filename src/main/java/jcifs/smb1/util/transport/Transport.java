@@ -17,9 +17,26 @@ import jcifs.smb1.util.LogStream;
 
 public abstract class Transport implements Runnable {
 
+    /**
+     * Default constructor for Transport.
+     */
+    public Transport() {
+        // Default constructor
+    }
+
     static int id = 0;
     static LogStream log = LogStream.getInstance();
 
+    /**
+     * Reads exactly len bytes from the input stream into the buffer.
+     *
+     * @param in the input stream to read from
+     * @param b the buffer to read into
+     * @param off the offset in the buffer to start writing
+     * @param len the number of bytes to read
+     * @return the number of bytes actually read
+     * @throws IOException if an I/O error occurs
+     */
     public static int readn(final InputStream in, final byte[] b, final int off, final int len) throws IOException {
         int i = 0, n = -5;
 
@@ -47,18 +64,58 @@ public abstract class Transport implements Runnable {
     Thread thread;
     TransportException te;
 
+    /**
+     * Map of pending requests to their corresponding responses.
+     */
     protected HashMap response_map = new HashMap(4);
 
+    /**
+     * Creates a key for the specified request for response matching.
+     *
+     * @param request the request to create a key for
+     * @throws IOException if an I/O error occurs
+     */
     protected abstract void makeKey(Request request) throws IOException;
 
+    /**
+     * Reads and returns the key of the next message without consuming it.
+     *
+     * @return the request key of the next message
+     * @throws IOException if an I/O error occurs
+     */
     protected abstract Request peekKey() throws IOException;
 
+    /**
+     * Sends a request to the remote endpoint.
+     *
+     * @param request the request to send
+     * @throws IOException if an I/O error occurs
+     */
     protected abstract void doSend(Request request) throws IOException;
 
+    /**
+     * Receives a response from the remote endpoint.
+     *
+     * @param response the response object to populate
+     * @throws IOException if an I/O error occurs
+     */
     protected abstract void doRecv(Response response) throws IOException;
 
+    /**
+     * Skips an unexpected or unrecognized message.
+     *
+     * @throws IOException if an I/O error occurs
+     */
     protected abstract void doSkip() throws IOException;
 
+    /**
+     * Sends a request and waits for the corresponding response.
+     *
+     * @param request the request to send
+     * @param response the response object to populate
+     * @param timeout the maximum time to wait for the response in milliseconds
+     * @throws IOException if an I/O error occurs during communication
+     */
     public synchronized void sendrecv(final Request request, final Response response, long timeout) throws IOException {
         makeKey(request);
         response.isReceived = false;
@@ -136,6 +193,11 @@ public abstract class Transport implements Runnable {
      * and the transport will be in error.
      */
 
+    /**
+     * Establishes a connection to the remote endpoint.
+     *
+     * @throws Exception if the connection fails
+     */
     protected abstract void doConnect() throws Exception;
 
     /* Tear down a connection. If the hard parameter is true, the diconnection
@@ -143,8 +205,20 @@ public abstract class Transport implements Runnable {
      * this transport.
      */
 
+    /**
+     * Tears down the connection to the remote endpoint.
+     *
+     * @param hard if true, disconnect immediately without waiting for outstanding requests
+     * @throws IOException if an I/O error occurs
+     */
     protected abstract void doDisconnect(boolean hard) throws IOException;
 
+    /**
+     * Establishes a connection to the remote endpoint.
+     *
+     * @param timeout the maximum time to wait for the connection in milliseconds
+     * @throws TransportException if the connection fails or times out
+     */
     public synchronized void connect(final long timeout) throws TransportException {
         try {
             switch (state) {
@@ -201,6 +275,12 @@ public abstract class Transport implements Runnable {
         }
     }
 
+    /**
+     * Disconnects from the remote endpoint.
+     *
+     * @param hard if true, disconnect immediately without waiting for outstanding requests
+     * @throws IOException if an I/O error occurs during disconnection
+     */
     public synchronized void disconnect(boolean hard) throws IOException {
         IOException ioe = null;
 

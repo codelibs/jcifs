@@ -39,9 +39,10 @@ public class Trans2QueryPathInformationResponse extends SmbComTransactionRespons
     private FileInformation info;
 
     /**
+     * Constructs a Trans2QueryPathInformationResponse with the specified configuration and information level.
      *
-     * @param config
-     * @param informationLevel
+     * @param config the SMB configuration
+     * @param informationLevel the file information level being queried
      */
     public Trans2QueryPathInformationResponse(final Configuration config, final int informationLevel) {
         super(config);
@@ -50,6 +51,8 @@ public class Trans2QueryPathInformationResponse extends SmbComTransactionRespons
     }
 
     /**
+     * Gets the file information from the response.
+     *
      * @return the info
      */
     public final FileInformation getInfo() {
@@ -57,10 +60,12 @@ public class Trans2QueryPathInformationResponse extends SmbComTransactionRespons
     }
 
     /**
+     * Gets the file information from the response cast to the specified type.
      *
-     * @param type
-     * @return the info
-     * @throws CIFSException
+     * @param <T> the type of file information to return
+     * @param type the class of the file information to return
+     * @return the info cast to the specified type
+     * @throws CIFSException if the information cannot be cast to the specified type
      */
     @SuppressWarnings("unchecked")
     public <T extends FileInformation> T getInfo(final Class<T> type) throws CIFSException {

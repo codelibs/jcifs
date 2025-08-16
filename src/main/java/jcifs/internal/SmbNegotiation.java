@@ -32,10 +32,12 @@ public final class SmbNegotiation {
     private final byte[] negoRespBuffer;
 
     /**
-     * @param request
-     * @param response
-     * @param negoRespBuffer
-     * @param negoReqBuffer
+     * Constructs an SMB negotiation result.
+     *
+     * @param request the negotiation request
+     * @param response the negotiation response
+     * @param negoReqBuffer the raw request buffer
+     * @param negoRespBuffer the raw response buffer
      *
      */
     public SmbNegotiation(final SmbNegotiationRequest request, final SmbNegotiationResponse response, final byte[] negoReqBuffer,
@@ -47,6 +49,8 @@ public final class SmbNegotiation {
     }
 
     /**
+     * Gets the negotiation request.
+     *
      * @return the request
      */
     public SmbNegotiationRequest getRequest() {
@@ -54,6 +58,8 @@ public final class SmbNegotiation {
     }
 
     /**
+     * Gets the negotiation response.
+     *
      * @return the response
      */
     public SmbNegotiationResponse getResponse() {
@@ -61,6 +67,8 @@ public final class SmbNegotiation {
     }
 
     /**
+     * Gets the raw negotiation request buffer.
+     *
      * @return the negoReqBuffer
      */
     public byte[] getRequestRaw() {
@@ -68,6 +76,8 @@ public final class SmbNegotiation {
     }
 
     /**
+     * Gets the raw negotiation response buffer.
+     *
      * @return the negoRespBuffer
      */
     public byte[] getResponseRaw() {

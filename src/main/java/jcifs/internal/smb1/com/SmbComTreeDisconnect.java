@@ -30,8 +30,9 @@ import jcifs.internal.smb1.ServerMessageBlock;
 public class SmbComTreeDisconnect extends ServerMessageBlock {
 
     /**
+     * Constructs a tree disconnect request to close a connection to a shared resource.
      *
-     * @param config
+     * @param config the configuration to use
      */
     public SmbComTreeDisconnect(final Configuration config) {
         super(config, SMB_COM_TREE_DISCONNECT);

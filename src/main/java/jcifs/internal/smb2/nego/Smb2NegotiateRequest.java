@@ -47,8 +47,10 @@ public class Smb2NegotiateRequest extends ServerMessageBlock2Request<Smb2Negotia
     private byte[] preauthSalt;
 
     /**
-     * @param config
-     * @param securityMode
+     * Constructs an SMB2 negotiate request with the specified configuration and security mode.
+     *
+     * @param config the configuration for this request
+     * @param securityMode the security mode flags for negotiation
      */
     public Smb2NegotiateRequest(final Configuration config, final int securityMode) {
         super(config, SMB2_NEGOTIATE);
@@ -95,6 +97,8 @@ public class Smb2NegotiateRequest extends ServerMessageBlock2Request<Smb2Negotia
     }
 
     /**
+     * Gets the security mode flags for this negotiation request.
+     *
      * @return the securityMode
      */
     public int getSecurityMode() {
@@ -107,6 +111,8 @@ public class Smb2NegotiateRequest extends ServerMessageBlock2Request<Smb2Negotia
     }
 
     /**
+     * Gets the client capabilities flags.
+     *
      * @return the capabilities
      */
     public int getCapabilities() {
@@ -114,6 +120,8 @@ public class Smb2NegotiateRequest extends ServerMessageBlock2Request<Smb2Negotia
     }
 
     /**
+     * Gets the array of SMB dialect versions supported by the client.
+     *
      * @return the dialects
      */
     public int[] getDialects() {
@@ -121,6 +129,8 @@ public class Smb2NegotiateRequest extends ServerMessageBlock2Request<Smb2Negotia
     }
 
     /**
+     * Gets the client GUID used for identification.
+     *
      * @return the clientGuid
      */
     public byte[] getClientGuid() {
@@ -128,6 +138,8 @@ public class Smb2NegotiateRequest extends ServerMessageBlock2Request<Smb2Negotia
     }
 
     /**
+     * Gets the negotiate contexts for SMB 3.1.1 negotiation.
+     *
      * @return the negotiateContexts
      */
     public NegotiateContextRequest[] getNegotiateContexts() {
@@ -135,6 +147,8 @@ public class Smb2NegotiateRequest extends ServerMessageBlock2Request<Smb2Negotia
     }
 
     /**
+     * Gets the pre-authentication integrity salt for SMB 3.1.1.
+     *
      * @return the preauthSalt
      */
     public byte[] getPreauthSalt() {

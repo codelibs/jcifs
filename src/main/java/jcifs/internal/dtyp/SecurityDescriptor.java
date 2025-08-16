@@ -44,56 +44,67 @@ public class SecurityDescriptor implements SecurityInfo {
     private SID ownerUserSid, ownerGroupSid;
 
     /**
-     *
+     * Creates an empty security descriptor.
      */
     public SecurityDescriptor() {
     }
 
     /**
-     * @param buffer
-     * @param bufferIndex
-     * @param len
-     * @throws IOException
+     * Creates a security descriptor by decoding from a byte buffer.
+     *
+     * @param buffer the byte buffer containing the security descriptor data
+     * @param bufferIndex the starting offset in the buffer
+     * @param len the length of data to decode
+     * @throws IOException if an I/O error occurs during decoding
      */
     public SecurityDescriptor(final byte[] buffer, final int bufferIndex, final int len) throws IOException {
         this.decode(buffer, bufferIndex, len);
     }
 
     /**
-     * @return the type
+     * Gets the type flags of this security descriptor.
+     *
+     * @return the type flags indicating security descriptor control flags
      */
     public final int getType() {
         return this.type;
     }
 
     /**
-     * @return the aces
+     * Gets the access control entries (ACEs) from this security descriptor.
+     *
+     * @return the array of access control entries
      */
     public final ACE[] getAces() {
         return this.aces;
     }
 
     /**
-     * @return the ownerGroupSid
+     * Gets the owner group SID of this security descriptor.
+     *
+     * @return the security identifier of the owner group
      */
     public final SID getOwnerGroupSid() {
         return this.ownerGroupSid;
     }
 
     /**
-     * @return the ownerUserSid
+     * Gets the owner user SID of this security descriptor.
+     *
+     * @return the security identifier of the owner user
      */
     public final SID getOwnerUserSid() {
         return this.ownerUserSid;
     }
 
     /**
+     * Decodes a security descriptor from a byte buffer.
      *
-     * @param buffer
-     * @param bufferIndex
-     * @param len
-     * @return decoded data length
-     * @throws SMBProtocolDecodingException
+     * @param buffer the byte buffer containing the security descriptor data
+     * @param bufferIndex the starting offset in the buffer
+     * @param len the length of data to decode
+     * @return the number of bytes decoded
+     * @throws SMBProtocolDecodingException if the data cannot be properly decoded
      */
     @Override
     public int decode(final byte[] buffer, int bufferIndex, final int len) throws SMBProtocolDecodingException {

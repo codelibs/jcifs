@@ -425,6 +425,9 @@ public class SmbFile extends URLConnection implements SmbConstants {
     private SmbComBlankResponse blank_resp = null;
     private DfsReferral dfsReferral = null; // For getDfsPath() and getServerWithDfs()
 
+    /**
+     * DFS resolver instance
+     */
     protected static Dfs dfs;
 
     NtlmPasswordAuthentication auth; // Cannot be null
@@ -583,6 +586,7 @@ public class SmbFile extends URLConnection implements SmbConstants {
      * @throws  MalformedURLException
      *          If the <code>context</code> and <code>name</code> parameters
      *          do not follow the prescribed syntax
+     * @throws  UnknownHostException if the server cannot be resolved
      */
     public SmbFile(final SmbFile context, final String name, final int shareAccess) throws MalformedURLException, UnknownHostException {
         this(context.isWorkgroup0() ? new URL(null, "smb1://" + name, Handler.SMB_HANDLER)
@@ -1058,6 +1062,11 @@ public class SmbFile extends URLConnection implements SmbConstants {
      * credentials were used (e.g. some IPC$ services).
      */
 
+    /**
+     * Returns the principal used for authentication
+     *
+     * @return the authentication principal
+     */
     public Principal getPrincipal() {
         return auth;
     }
@@ -1291,6 +1300,7 @@ public class SmbFile extends URLConnection implements SmbConstants {
      * Returns type of of object this {@code SmbFile} represents.
      * @return {@code TYPE_FILESYSTEM, TYPE_WORKGROUP, TYPE_SERVER, TYPE_SHARE,
      * TYPE_PRINTER, TYPE_NAMED_PIPE}, or {@code TYPE_COMM}.
+     * @throws SmbException if an error occurs while determining the type
      */
     public int getType() throws SmbException {
         if (type == 0) {
@@ -1401,6 +1411,7 @@ public class SmbFile extends URLConnection implements SmbConstants {
      *
      * @return <code>true</code> if the resource exists or is alive or
      *         <code>false</code> otherwise
+     * @throws SmbException if an error occurs while checking existence
      */
 
     public boolean exists() throws SmbException {
@@ -1458,6 +1469,7 @@ public class SmbFile extends URLConnection implements SmbConstants {
      * exists, this method simply calls the <code>exists</code> method.
      *
      * @return <code>true</code> if the file is read-only
+     * @throws SmbException if an error occurs while checking read permissions
      */
 
     public boolean canRead() throws SmbException {
@@ -1476,6 +1488,7 @@ public class SmbFile extends URLConnection implements SmbConstants {
      *
      * @return  <code>true</code> if the resource exists is not marked
      *          read-only
+     * @throws SmbException if an error occurs while checking write permissions
      */
 
     public boolean canWrite() throws SmbException {
@@ -1489,6 +1502,7 @@ public class SmbFile extends URLConnection implements SmbConstants {
      * Tests to see if the file this <code>SmbFile</code> represents is a directory.
      *
      * @return <code>true</code> if this <code>SmbFile</code> is a directory
+     * @throws SmbException if an error occurs while checking if this is a directory
      */
 
     public boolean isDirectory() throws SmbException {
@@ -1505,6 +1519,7 @@ public class SmbFile extends URLConnection implements SmbConstants {
      * Tests to see if the file this <code>SmbFile</code> represents is not a directory.
      *
      * @return <code>true</code> if this <code>SmbFile</code> is not a directory
+     * @throws SmbException if an error occurs while checking if this is a file
      */
 
     public boolean isFile() throws SmbException {
@@ -1521,6 +1536,7 @@ public class SmbFile extends URLConnection implements SmbConstants {
      * end with '$' such as <code>IPC$</code> or <code>C$</code>.
      *
      * @return <code>true</code> if the <code>SmbFile</code> is marked as being hidden
+     * @throws SmbException if an error occurs while checking if this is hidden
      */
 
     public boolean isHidden() throws SmbException {
@@ -1543,6 +1559,12 @@ public class SmbFile extends URLConnection implements SmbConstants {
      * <code>null</code> is returned.
      */
 
+    /**
+     * Returns the DFS path for this file if it resides in a DFS share
+     *
+     * @return the DFS path or null if not in DFS
+     * @throws SmbException if an error occurs while resolving the DFS path
+     */
     public String getDfsPath() throws SmbException {
         resolveDfs(null);
         if (dfsReferral == null) {
@@ -1567,6 +1589,7 @@ public class SmbFile extends URLConnection implements SmbConstants {
      *
      * @return The number of milliseconds since the 00:00:00 GMT, January 1,
      *         1970 as a <code>long</code> value
+     * @throws SmbException if an error occurs while retrieving the creation time
      */
     public long createTime() throws SmbException {
         if (getUncPath0().length() > 1) {
@@ -1585,6 +1608,7 @@ public class SmbFile extends URLConnection implements SmbConstants {
      *
      * @return The number of milliseconds since the 00:00:00 GMT, January 1,
      *         1970 as a <code>long</code> value
+     * @throws SmbException if an error occurs while retrieving the last modified time
      */
     public long lastModified() throws SmbException {
         if (getUncPath0().length() > 1) {
@@ -1614,6 +1638,7 @@ public class SmbFile extends URLConnection implements SmbConstants {
      * @return A <code>String[]</code> array of files and directories,
      * workgroups, servers, or shares depending on the context of the
      * resource URL
+     * @throws SmbException if an error occurs while listing the contents
      */
     public String[] list() throws SmbException {
         return list("*", ATTR_DIRECTORY | ATTR_HIDDEN | ATTR_SYSTEM, null, null);
@@ -1625,8 +1650,8 @@ public class SmbFile extends URLConnection implements SmbConstants {
      * method minus filenames filtered by the specified filter.
      *
      * @param filter a filename filter to exclude filenames from the results
-     * @throws SmbException
-     # @return An array of filenames
+     * @return An array of filenames
+     * @throws SmbException if an error occurs while listing the contents
      */
     public String[] list(final SmbFilenameFilter filter) throws SmbException {
         return list("*", ATTR_DIRECTORY | ATTR_HIDDEN | ATTR_SYSTEM, filter, null);
@@ -1656,6 +1681,7 @@ public class SmbFile extends URLConnection implements SmbConstants {
      * @return An array of <code>SmbFile</code> objects representing file
      * and directories, workgroups, servers, or shares depending on the context
      * of the resource URL
+     * @throws SmbException if an error occurs while listing the files
      */
     public SmbFile[] listFiles() throws SmbException {
         return listFiles("*", ATTR_DIRECTORY | ATTR_HIDDEN | ATTR_SYSTEM, null, null);
@@ -1684,7 +1710,7 @@ public class SmbFile extends URLConnection implements SmbConstants {
      * </pre></blockquote>
      *
      * @param wildcard a wildcard expression
-     * @throws SmbException
+     * @throws SmbException if an error occurs while listing the files
      * @return An array of <code>SmbFile</code> objects representing file
      * and directories, workgroups, servers, or shares depending on the context
      * of the resource URL
@@ -1701,7 +1727,7 @@ public class SmbFile extends URLConnection implements SmbConstants {
      *
      * @param filter a filter to exclude files from the results
      * @return An array of {@code SmbFile} objects
-     * @throws SmbException
+     * @throws SmbException if an error occurs while listing the files
      */
     public SmbFile[] listFiles(final SmbFilenameFilter filter) throws SmbException {
         return listFiles("*", ATTR_DIRECTORY | ATTR_HIDDEN | ATTR_SYSTEM, filter, null);
@@ -1714,6 +1740,7 @@ public class SmbFile extends URLConnection implements SmbConstants {
      *
      * @param filter a file filter to exclude files from the results
      * @return An array of {@code SmbFile} objects
+     * @throws SmbException if an error occurs while listing the files
      */
     public SmbFile[] listFiles(final SmbFileFilter filter) throws SmbException {
         return listFiles("*", ATTR_DIRECTORY | ATTR_HIDDEN | ATTR_SYSTEM, null, filter);
@@ -2060,6 +2087,7 @@ public class SmbFile extends URLConnection implements SmbConstants {
      * @param  dest  An <code>SmbFile</code> that represents the new pathname
      * @throws NullPointerException
      *         If the <code>dest</code> argument is <code>null</code>
+     * @throws SmbException if an error occurs during the rename operation
      */
     public void renameTo(final SmbFile dest) throws SmbException {
         if (getUncPath0().length() == 1 || dest.getUncPath0().length() == 1) {
@@ -2281,7 +2309,7 @@ public class SmbFile extends URLConnection implements SmbConstants {
      * servers.
      *
      * @param dest the destination file or directory
-     * @throws SmbException
+     * @throws SmbException if an error occurs during the copy operation
      */
     public void copyTo(final SmbFile dest) throws SmbException {
         SmbComReadAndX req;
@@ -2357,7 +2385,7 @@ public class SmbFile extends URLConnection implements SmbConstants {
      * it's sub-directories is marked read-only, the read-only status will
      * be removed and the file will be deleted.
      *
-     * @throws SmbException
+     * @throws SmbException if an error occurs while deleting the file or directory
      */
     public void delete() throws SmbException {
         exists();
@@ -2433,7 +2461,7 @@ public class SmbFile extends URLConnection implements SmbConstants {
      *
      * @return The length of the file in bytes or 0 if this
      * <code>SmbFile</code> is not a file.
-     * @throws SmbException
+     * @throws SmbException if an error occurs while retrieving the file length
      */
 
     public long length() throws SmbException {
@@ -2467,6 +2495,7 @@ public class SmbFile extends URLConnection implements SmbConstants {
      *
      * @return the free disk space in bytes of the drive on which this file or
      * directory resides
+     * @throws SmbException if an error occurs while retrieving disk space information
      */
     public long getDiskFreeSpace() throws SmbException {
         if (getType() == TYPE_SHARE || type == TYPE_FILESYSTEM) {
@@ -2508,7 +2537,7 @@ public class SmbFile extends URLConnection implements SmbConstants {
      * because workgroups, servers, and shares cannot be dynamically created
      * (although in the future it may be possible to create shares).
      *
-     * @throws SmbException
+     * @throws SmbException if an error occurs while creating the directory
      */
     public void mkdir() throws SmbException {
         final String path = getUncPath0();
@@ -2538,7 +2567,7 @@ public class SmbFile extends URLConnection implements SmbConstants {
      * because workgroups, servers, and shares cannot be dynamically created
      * (although in the future it may be possible to create shares).
      *
-     * @throws SmbException
+     * @throws SmbException if an error occurs while creating the directories
      */
     public void mkdirs() throws SmbException {
         SmbFile parent;
@@ -2558,6 +2587,7 @@ public class SmbFile extends URLConnection implements SmbConstants {
      * Create a new file but fail if it already exists. The check for
      * existance of the file and it's creation are an atomic operation with
      * respect to other filesystem activities.
+     * @throws SmbException if an error occurs while creating the file
      */
     public void createNewFile() throws SmbException {
         if (getUncPath0().length() == 1) {
@@ -2587,6 +2617,7 @@ public class SmbFile extends URLConnection implements SmbConstants {
      * This method does not apply to workgroups, servers, or shares.
      *
      * @param time the create time as milliseconds since Jan 1, 1970
+     * @throws SmbException if an error occurs while setting the create time
      */
     public void setCreateTime(final long time) throws SmbException {
         if (getUncPath0().length() == 1) {
@@ -2604,6 +2635,7 @@ public class SmbFile extends URLConnection implements SmbConstants {
      * This method does not apply to workgroups, servers, or shares.
      *
      * @param time the last modified time as milliseconds since Jan 1, 1970
+     * @throws SmbException if an error occurs while setting the last modified time
      */
     public void setLastModified(final long time) throws SmbException {
         if (getUncPath0().length() == 1) {
@@ -2620,7 +2652,7 @@ public class SmbFile extends URLConnection implements SmbConstants {
      * the {@code setAttributes()} method.
      *
      * @return the {@code ATTR_*} attributes associated with this file
-     * @throws SmbException
+     * @throws SmbException if an error occurs while retrieving attributes
      */
     public int getAttributes() throws SmbException {
         if (getUncPath0().length() == 1) {
@@ -2635,7 +2667,8 @@ public class SmbFile extends URLConnection implements SmbConstants {
      * bitset by bitwise ORing the {@code ATTR_*} constants. Setting the
      * value returned by {@code getAttributes} will result in both files
      * having the same attributes.
-     * @throws SmbException
+     * @param attrs the attributes to set
+     * @throws SmbException if an error occurs while setting attributes
      */
     public void setAttributes(final int attrs) throws SmbException {
         if (getUncPath0().length() == 1) {
@@ -2648,7 +2681,7 @@ public class SmbFile extends URLConnection implements SmbConstants {
      * Make this file read-only. This is shorthand for {@code setAttributes(
      * getAttributes() | ATTR_READ_ONLY )}.
      *
-     * @throws SmbException
+     * @throws SmbException if an error occurs while setting the read-only flag
      */
     public void setReadOnly() throws SmbException {
         setAttributes(getAttributes() | ATTR_READONLY);
@@ -2658,7 +2691,7 @@ public class SmbFile extends URLConnection implements SmbConstants {
      * Turn off the read-only attribute of this file. This is shorthand for
      * {@code setAttributes( getAttributes() &amp; ~ATTR_READONLY )}.
      *
-     * @throws SmbException
+     * @throws SmbException if an error occurs while clearing the read-only flag
      */
     public void setReadWrite() throws SmbException {
         setAttributes(getAttributes() & ~ATTR_READONLY);
@@ -2672,7 +2705,7 @@ public class SmbFile extends URLConnection implements SmbConstants {
      *
      * @deprecated Use getURL() instead
      * @return A new <code>{@link java.net.URL}</code> for this <code>SmbFile</code>
-     * @throws MalformedURLException
+     * @throws MalformedURLException if the URL is malformed
      */
     @Deprecated
     public URL toURL() throws MalformedURLException {
@@ -2703,6 +2736,13 @@ public class SmbFile extends URLConnection implements SmbConstants {
         return hash + canon.toUpperCase().hashCode();
     }
 
+    /**
+     * Checks if two path names could possibly be equal
+     *
+     * @param path1 the first path
+     * @param path2 the second path
+     * @return true if the paths could be equal
+     */
     protected boolean pathNamesPossiblyEqual(final String path1, final String path2) {
         int p1, p2, l1, l2;
 
@@ -2733,7 +2773,7 @@ public class SmbFile extends URLConnection implements SmbConstants {
      * <code>192.168.1.15</code> IP address, the below URLs would result in
      * <code>SmbFile</code>s that are equal.
      *
-     * <p><blockquote><pre>
+     * <blockquote><pre>
      * smb1://192.168.1.15/share/DIR/foo.txt
      * smb1://angus/share/data/../dir/foo.txt
      * </pre></blockquote>
@@ -2885,8 +2925,10 @@ public class SmbFile extends URLConnection implements SmbConstants {
      * Return an array of Access Control Entry (ACE) objects representing
      * the security descriptor associated with this file or directory.
      * If no DACL is present, null is returned. If the DACL is empty, an array with 0 elements is returned.
-     * @param resolveSids Attempt to resolve the SIDs within each ACE form
+     * @param resolveSids Attempt to resolve the SIDs within each ACE from
      * their numeric representation to their corresponding account names.
+     * @return an array of ACE entries for this file
+     * @throws IOException if an I/O error occurs
      */
     public ACE[] getSecurity(final boolean resolveSids) throws IOException {
         int f;
@@ -2937,6 +2979,13 @@ public class SmbFile extends URLConnection implements SmbConstants {
      * @param resolveSids Attempt to resolve the SIDs within each ACE form
      * their numeric representation to their corresponding account names.
      */
+    /**
+     * Returns the share security information for this share
+     *
+     * @param resolveSids whether to resolve SIDs to names
+     * @return an array of ACE entries for this share
+     * @throws IOException if an I/O error occurs
+     */
     public ACE[] getShareSecurity(final boolean resolveSids) throws IOException {
         final String p = url.getPath();
         MsrpcShareGetInfo rpc;
@@ -2985,10 +3034,22 @@ public class SmbFile extends URLConnection implements SmbConstants {
      * Alternatively {@code getSecurity(true)} may be used to resolve all
      * SIDs together and detect network failures.
      */
+    /**
+     * Returns the security information for this file
+     *
+     * @return an array of ACE entries for this file
+     * @throws IOException if an I/O error occurs
+     */
     public ACE[] getSecurity() throws IOException {
         return getSecurity(false);
     }
 
+    /**
+     * Returns the owner user SID for this file
+     *
+     * @return the owner user SID
+     * @throws IOException if an I/O error occurs
+     */
     public SID getOwnerUser() throws IOException {
 
         final int f = open0(O_RDONLY, READ_CONTROL, 0, isDirectory() ? 1 : 0);
@@ -3006,6 +3067,12 @@ public class SmbFile extends URLConnection implements SmbConstants {
         return response.securityDescriptor.owner_user;
     }
 
+    /**
+     * Returns the owner group SID for this file
+     *
+     * @return the owner group SID
+     * @throws IOException if an I/O error occurs
+     */
     public SID getOwnerGroup() throws IOException {
 
         final int f = open0(O_RDONLY, READ_CONTROL, 0, isDirectory() ? 1 : 0);

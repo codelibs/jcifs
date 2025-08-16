@@ -39,9 +39,10 @@ public class SmbComNegotiate extends ServerMessageBlock implements SmbNegotiatio
     private String[] dialects;
 
     /**
+     * Creates a new SMB1 negotiate request to establish protocol parameters.
      *
-     * @param config
-     * @param signingEnforced
+     * @param config the CIFS configuration
+     * @param signingEnforced whether SMB signing is enforced
      */
     public SmbComNegotiate(final Configuration config, final boolean signingEnforced) {
         super(config, SMB_COM_NEGOTIATE);

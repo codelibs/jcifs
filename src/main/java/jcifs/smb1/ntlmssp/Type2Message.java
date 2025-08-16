@@ -296,6 +296,7 @@ public class Type2Message extends NtlmMessage {
      * Returns the default flags for a Type-2 message created in response
      * to the given Type-1 message in the current environment.
      *
+     * @param type1 the Type-1 message to respond to
      * @return An <code>int</code> containing the default flags.
      */
     public static int getDefaultFlags(final Type1Message type1) {
@@ -323,6 +324,11 @@ public class Type2Message extends NtlmMessage {
         return DEFAULT_DOMAIN;
     }
 
+    /**
+     * Returns the default target information for Type-2 messages.
+     *
+     * @return the default target information as a byte array
+     */
     public static byte[] getDefaultTargetInformation() {
         return DEFAULT_TARGET_INFORMATION;
     }

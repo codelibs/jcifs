@@ -66,8 +66,19 @@ import jcifs.smb.SmbTransportInternal;
  *
  * @deprecated NTLMv1 only
  */
+/**
+ * An HTTP servlet filter that provides NTLM authentication support.
+ * This filter allows web applications to authenticate users via NTLM/Windows authentication.
+ */
 @Deprecated
 public class NtlmHttpFilter implements Filter {
+
+    /**
+     * Default constructor.
+     */
+    public NtlmHttpFilter() {
+        // Default constructor
+    }
 
     private static final Logger log = LoggerFactory.getLogger(NtlmHttpFilter.class);
 
@@ -173,7 +184,8 @@ public class NtlmHttpFilter implements Filter {
      *            the client will be forced to send an authentication (server sends
      *            HttpServletResponse.SC_UNAUTHORIZED).
      * @return True if the negotiation is complete, otherwise false
-     * @throws ServletException
+     * @throws IOException if an I/O error occurs
+     * @throws ServletException if a servlet error occurs
      */
     protected NtlmPasswordAuthentication negotiate(final HttpServletRequest req, final HttpServletResponse resp,
             final boolean skipAuthentication) throws IOException, ServletException {
@@ -341,7 +353,8 @@ public class NtlmHttpFilter implements Filter {
 
     // Added by cgross to work with weblogic 6.1.
     /**
-     * @param f
+     * Sets the filter configuration for WebLogic compatibility.
+     * @param f the filter configuration to set
      */
     public void setFilterConfig(final FilterConfig f) {
         try {
@@ -352,6 +365,7 @@ public class NtlmHttpFilter implements Filter {
     }
 
     /**
+     * Gets the filter configuration.
      * @return filter config
      */
     public FilterConfig getFilterConfig() {

@@ -110,28 +110,52 @@ public abstract class SmbComTransaction extends ServerMessageBlock implements En
      */
     public static final byte TRANS_TRANSACT_NAMED_PIPE = (byte) 0x26;
 
+    /** Offset to the setup words in the primary request */
     protected int primarySetupOffset;
+    /** Offset to the parameters in secondary requests */
     protected int secondaryParameterOffset;
+    /** Number of parameter bytes being sent in this request */
     protected int parameterCount;
+    /** Offset from the start of the SMB header to the parameter bytes */
     protected int parameterOffset;
+    /** Displacement of these parameter bytes from the start of the total parameter block */
     protected int parameterDisplacement;
+    /** Number of data bytes being sent in this request */
     protected int dataCount;
+    /** Offset from the start of the SMB header to the data bytes */
     protected int dataOffset;
+    /** Displacement of these data bytes from the start of the total data block */
     protected int dataDisplacement;
 
+    /** Total number of parameter bytes to be sent */
     protected int totalParameterCount;
+    /** Total number of data bytes to be sent */
     protected int totalDataCount;
+    /** Maximum number of parameter bytes the server should return */
     protected int maxParameterCount;
+    /** Maximum number of data bytes the server should return */
     protected int maxDataCount;
+    /** Maximum number of setup words the server should return */
     protected byte maxSetupCount;
+    /** Timeout in milliseconds to wait for the transaction to complete */
     protected int timeout = 0;
+    /** Number of setup words in this request */
     protected int setupCount = 1;
     private byte subCommand;
+    /** The transaction name for named pipe transactions */
     protected String name = "";
+    /** Maximum buffer size set in SmbTransport.sendTransaction() before nextElement called */
     protected int maxBufferSize; // set in SmbTransport.sendTransaction() before nextElement called
 
     private byte[] txn_buf;
 
+    /**
+     * Constructs a transaction request.
+     *
+     * @param config the configuration to use
+     * @param command the SMB command code
+     * @param subCommand the transaction subcommand code
+     */
     protected SmbComTransaction(final Configuration config, final byte command, final byte subCommand) {
         super(config, command);
         this.subCommand = subCommand;

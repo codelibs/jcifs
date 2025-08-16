@@ -30,8 +30,9 @@ import jcifs.internal.smb1.ServerMessageBlock;
 public class SmbComBlankResponse extends ServerMessageBlock {
 
     /**
+     * Creates a new blank SMB1 response.
      *
-     * @param config
+     * @param config the CIFS configuration
      */
     public SmbComBlankResponse(final Configuration config) {
         super(config);

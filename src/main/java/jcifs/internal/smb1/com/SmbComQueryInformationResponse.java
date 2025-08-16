@@ -40,9 +40,10 @@ public class SmbComQueryInformationResponse extends ServerMessageBlock implement
     private int fileSize = 0;
 
     /**
+     * Constructs a query information response.
      *
-     * @param config
-     * @param serverTimeZoneOffset
+     * @param config the configuration
+     * @param serverTimeZoneOffset the server time zone offset
      */
     public SmbComQueryInformationResponse(final Configuration config, final long serverTimeZoneOffset) {
         super(config, SMB_COM_QUERY_INFORMATION);

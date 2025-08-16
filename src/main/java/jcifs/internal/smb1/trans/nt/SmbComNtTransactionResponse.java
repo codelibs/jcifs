@@ -36,8 +36,8 @@ public abstract class SmbComNtTransactionResponse extends SmbComTransactionRespo
     private static final Logger log = LoggerFactory.getLogger(SmbComNtTransactionResponse.class);
 
     /**
-     *
-     * @param config
+     * Constructs an NT transaction response.
+     * @param config the configuration context for this response
      */
     protected SmbComNtTransactionResponse(final Configuration config) {
         super(config);

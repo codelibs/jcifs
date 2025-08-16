@@ -36,15 +36,16 @@ public class NtTransQuerySecurityDescResponse extends SmbComNtTransactionRespons
     private SecurityDescriptor securityDescriptor;
 
     /**
-     *
-     * @param config
+     * Constructs an NT transaction query security descriptor response.
+     * @param config the configuration context for this response
      */
     public NtTransQuerySecurityDescResponse(final Configuration config) {
         super(config);
     }
 
     /**
-     * @return the securityDescriptor
+     * Returns the security descriptor retrieved from the server.
+     * @return the securityDescriptor containing access control information
      */
     public final SecurityDescriptor getSecurityDescriptor() {
         return this.securityDescriptor;

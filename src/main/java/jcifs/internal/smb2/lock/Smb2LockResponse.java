@@ -32,7 +32,9 @@ import jcifs.internal.util.SMBUtil;
 public class Smb2LockResponse extends ServerMessageBlock2Response {
 
     /**
-     * @param config
+     * Constructs an SMB2 lock response with the given configuration.
+     *
+     * @param config the configuration for this response
      */
     public Smb2LockResponse(final Configuration config) {
         super(config);

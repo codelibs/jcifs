@@ -36,6 +36,7 @@ public class DfsReferral extends SmbException {
      */
     private static final long serialVersionUID = 1486630733410281686L;
 
+    /** The underlying DFS referral data */
     private final DfsReferralData data;
 
     /**

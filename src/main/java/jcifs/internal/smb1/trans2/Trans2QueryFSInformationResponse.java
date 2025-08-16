@@ -40,9 +40,10 @@ public class Trans2QueryFSInformationResponse extends SmbComTransactionResponse 
     private FileSystemInformation info;
 
     /**
+     * Constructs a Trans2QueryFSInformationResponse with the specified configuration and information level.
      *
-     * @param config
-     * @param informationLevel
+     * @param config the SMB configuration
+     * @param informationLevel the file system information level being queried
      */
     public Trans2QueryFSInformationResponse(final Configuration config, final int informationLevel) {
         super(config);
@@ -52,6 +53,8 @@ public class Trans2QueryFSInformationResponse extends SmbComTransactionResponse 
     }
 
     /**
+     * Gets the information level that was queried.
+     *
      * @return the informationLevel
      */
     public int getInformationLevel() {
@@ -59,6 +62,8 @@ public class Trans2QueryFSInformationResponse extends SmbComTransactionResponse 
     }
 
     /**
+     * Gets the file system information from the response.
+     *
      * @return the filesystem info
      */
     public FileSystemInformation getInfo() {
@@ -66,9 +71,12 @@ public class Trans2QueryFSInformationResponse extends SmbComTransactionResponse 
     }
 
     /**
-     * @param clazz
-     * @return the filesystem info
-     * @throws CIFSException
+     * Gets the file system information from the response cast to the specified type.
+     *
+     * @param <T> the type of file system information to return
+     * @param clazz the class of the file system information to return
+     * @return the filesystem info cast to the specified type
+     * @throws CIFSException if the information cannot be cast to the specified type
      */
     @SuppressWarnings("unchecked")
     public <T extends FileSystemInformation> T getInfo(final Class<T> clazz) throws CIFSException {

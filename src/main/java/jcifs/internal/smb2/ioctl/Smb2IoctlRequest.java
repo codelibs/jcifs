@@ -35,68 +35,68 @@ import jcifs.internal.util.SMBUtil;
 public class Smb2IoctlRequest extends ServerMessageBlock2Request<Smb2IoctlResponse> implements RequestWithFileId {
 
     /**
-     *
+     * Function code to retrieve DFS referrals
      */
     public static final int FSCTL_DFS_GET_REFERRALS = 0x0060194;
     /**
-     *
+     * Function code to peek at named pipe data without removing it
      */
     public static final int FSCTL_PIPE_PEEK = 0x0011400C;
     /**
-     *
+     * Function code to wait for a named pipe to become available
      */
     public static final int FSCTL_PIPE_WAIT = 0x00110018;
     /**
-     *
+     * Function code to transceive data on a named pipe
      */
     public static final int FSCTL_PIPE_TRANSCEIVE = 0x0011C017;
     /**
-     *
+     * Function code for server-side copy chunk operation
      */
     public static final int FSCTL_SRV_COPYCHUNK = 0x001440F2;
     /**
-     *
+     * Function code to enumerate volume shadow copy snapshots
      */
     public static final int FSCTL_SRV_ENUMERATE_SNAPSHOTS = 0x00144064;
     /**
-     *
+     * Function code to request a resume key for server-side copy
      */
     public static final int FSCTL_SRV_REQUEST_RESUME_KEY = 0x00140078;
     /**
-     *
+     * Function code to read hash data from server
      */
     public static final int FSCTL_SRV_READ_HASH = 0x001441bb;
     /**
-     *
+     * Function code for server-side copy chunk write operation
      */
     public static final int FSCTL_SRV_COPYCHUNK_WRITE = 0x001480F2;
     /**
-     *
+     * Function code to request resilient handle for network failures
      */
     public static final int FSCTL_LRM_REQUEST_RESILENCY = 0x001401D4;
     /**
-     *
+     * Function code to query network interface information
      */
     public static final int FSCTL_QUERY_NETWORK_INTERFACE_INFO = 0x001401FC;
     /**
-     *
+     * Function code to set a reparse point on a file
      */
     public static final int FSCTL_SET_REPARSE_POINT = 0x000900A4;
     /**
-     *
+     * Function code to retrieve extended DFS referrals
      */
     public static final int FSCTL_DFS_GET_REFERRALS_EX = 0x000601B0;
     /**
-     *
+     * Function code to trim file level storage
      */
     public static final int FSCTL_FILE_LEVEL_TRIM = 0x00098208;
     /**
-     *
+     * Function code to validate SMB2 negotiate information
      */
     public static final int FSCTL_VALIDATE_NEGOTIATE_INFO = 0x000140204;
 
     /**
-     *
+     * Flag indicating this IOCTL is a file system control operation
      */
     public static final int SMB2_O_IOCTL_IS_FSCTL = 0x1;
 
@@ -110,18 +110,19 @@ public class Smb2IoctlRequest extends ServerMessageBlock2Request<Smb2IoctlRespon
     private Encodable outputData;
 
     /**
-     * @param config
-     * @param controlCode
-     *
+     * Constructs an SMB2 IOCTL request with an unspecified file ID
+     * @param config the client configuration
+     * @param controlCode the IOCTL control code
      */
     public Smb2IoctlRequest(final Configuration config, final int controlCode) {
         this(config, controlCode, Smb2Constants.UNSPECIFIED_FILEID);
     }
 
     /**
-     * @param config
-     * @param controlCode
-     * @param fileId
+     * Constructs an SMB2 IOCTL request with a specified file ID
+     * @param config the client configuration
+     * @param controlCode the IOCTL control code
+     * @param fileId the file identifier
      */
     public Smb2IoctlRequest(final Configuration config, final int controlCode, final byte[] fileId) {
         super(config, SMB2_IOCTL);
@@ -142,11 +143,11 @@ public class Smb2IoctlRequest extends ServerMessageBlock2Request<Smb2IoctlRespon
     }
 
     /**
-     *
-     * @param config
-     * @param controlCode
-     * @param fileId
-     * @param outputBuffer
+     * Constructs an SMB2 IOCTL request with output buffer
+     * @param config the client configuration
+     * @param controlCode the IOCTL control code
+     * @param fileId the file identifier
+     * @param outputBuffer the output buffer for the IOCTL operation
      */
     public Smb2IoctlRequest(final Configuration config, final int controlCode, final byte[] fileId, final byte[] outputBuffer) {
         super(config, SMB2_IOCTL);
@@ -162,40 +163,40 @@ public class Smb2IoctlRequest extends ServerMessageBlock2Request<Smb2IoctlRespon
     }
 
     /**
-     * @param flags
-     *            the flags to set
+     * Set the IOCTL flags
+     * @param flags the flags to set
      */
     public void setFlags(final int flags) {
         this.flags = flags;
     }
 
     /**
-     * @param maxInputResponse
-     *            the maxInputResponse to set
+     * Set the maximum input response size
+     * @param maxInputResponse the maxInputResponse to set
      */
     public void setMaxInputResponse(final int maxInputResponse) {
         this.maxInputResponse = maxInputResponse;
     }
 
     /**
-     * @param maxOutputResponse
-     *            the maxOutputResponse to set
+     * Set the maximum output response size
+     * @param maxOutputResponse the maxOutputResponse to set
      */
     public void setMaxOutputResponse(final int maxOutputResponse) {
         this.maxOutputResponse = maxOutputResponse;
     }
 
     /**
-     * @param inputData
-     *            the inputData to set
+     * Set the input data for the IOCTL request
+     * @param inputData the inputData to set
      */
     public void setInputData(final Encodable inputData) {
         this.inputData = inputData;
     }
 
     /**
-     * @param outputData
-     *            the outputData to set
+     * Set the output data for the IOCTL request
+     * @param outputData the outputData to set
      */
     public void setOutputData(final Encodable outputData) {
         this.outputData = outputData;

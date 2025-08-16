@@ -31,22 +31,22 @@ import jcifs.internal.util.SMBUtil;
 public class Smb2Lock implements Encodable {
 
     /**
-     *
+     * Flag indicating a shared lock that allows concurrent read access.
      */
     public static final int SMB2_LOCKFLAG_SHARED_LOCK = 0x1;
 
     /**
-     *
+     * Flag indicating an exclusive lock that prevents any other access.
      */
     public static final int SMB2_LOCKFLAG_EXCLUSIVE_LOCK = 0x2;
 
     /**
-     *
+     * Flag indicating an unlock operation to release a previously held lock.
      */
     public static final int SMB2_LOCKFLAG_UNLOCK = 0x4;
 
     /**
-     *
+     * Flag indicating the lock should fail immediately if it cannot be granted.
      */
     public static final int SMB2_LOCKFLAG_FAIL_IMMEDIATELY = 0x10;
 
@@ -55,9 +55,11 @@ public class Smb2Lock implements Encodable {
     private final int flags;
 
     /**
-     * @param offset
-     * @param length
-     * @param flags
+     * Constructs an SMB2 lock element with the specified parameters.
+     *
+     * @param offset the byte offset in the file where the lock begins
+     * @param length the number of bytes to lock
+     * @param flags the lock flags (combination of SMB2_LOCKFLAG_* constants)
      */
     public Smb2Lock(final long offset, final long length, final int flags) {
         this.offset = offset;

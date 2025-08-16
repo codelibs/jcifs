@@ -58,10 +58,15 @@ public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal
 
     private static final Logger log = LoggerFactory.getLogger(NtlmPasswordAuthenticator.class);
 
+    /** The authentication type */
     private AuthenticationType type;
+    /** The authentication domain */
     private String domain;
+    /** The username for authentication */
     private String username;
+    /** The password for authentication */
     private String password;
+    /** The client challenge for NTLM authentication */
     private byte[] clientChallenge = null;
 
     /**
@@ -71,6 +76,11 @@ public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal
         this(AuthenticationType.NULL);
     }
 
+    /**
+     * Create an NtlmPasswordAuthenticator with the specified authentication type.
+     *
+     * @param type the authentication type to use
+     */
     public NtlmPasswordAuthenticator(AuthenticationType type) {
         this.domain = "";
         this.username = "";
@@ -133,6 +143,14 @@ public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal
         }
     }
 
+    /**
+     * Create an NtlmPasswordAuthenticator from user info with defaults.
+     *
+     * @param userInfo the user information string
+     * @param defDomain the default domain if not specified
+     * @param defUser the default username if not specified
+     * @param defPassword the default password if not specified
+     */
     protected NtlmPasswordAuthenticator(String userInfo, String defDomain, String defUser, String defPassword) {
         this(userInfo, defDomain, defUser, defPassword, null);
     }
@@ -263,6 +281,12 @@ public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal
         return cloned;
     }
 
+    /**
+     * Clone internal fields from one authenticator to another.
+     *
+     * @param cloned the target authenticator to copy to
+     * @param toClone the source authenticator to copy from
+     */
     protected static void cloneInternal(NtlmPasswordAuthenticator cloned, NtlmPasswordAuthenticator toClone) {
         cloned.domain = toClone.domain;
         cloned.username = toClone.username;

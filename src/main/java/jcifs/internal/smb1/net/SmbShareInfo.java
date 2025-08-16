@@ -32,21 +32,31 @@ import jcifs.util.Hexdump;
  */
 public class SmbShareInfo implements FileEntry {
 
+    /**
+     * The network name of the share.
+     */
     protected String netName;
+    /**
+     * The type of the share (e.g., disk, printer, IPC).
+     */
     protected int type;
+    /**
+     * The optional comment or description for the share.
+     */
     protected String remark;
 
     /**
-     *
+     * Default constructor for SmbShareInfo.
      */
     public SmbShareInfo() {
     }
 
     /**
+     * Constructs an SmbShareInfo with the specified properties.
      *
-     * @param netName
-     * @param type
-     * @param remark
+     * @param netName the network name of the share
+     * @param type the type of the share
+     * @param remark the optional comment or description for the share
      */
     public SmbShareInfo(final String netName, final int type, final String remark) {
         this.netName = netName;

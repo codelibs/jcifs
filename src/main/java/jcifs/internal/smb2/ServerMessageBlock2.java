@@ -46,52 +46,71 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
      * implementation.
      */
 
+    /** SMB2 negotiate protocol command */
     protected static final short SMB2_NEGOTIATE = 0x00;
+    /** SMB2 session setup command */
     protected static final short SMB2_SESSION_SETUP = 0x01;
+    /** SMB2 logoff command */
     protected static final short SMB2_LOGOFF = 0x02;
+    /** SMB2 tree connect command */
     protected static final short SMB2_TREE_CONNECT = 0x0003;
+    /** SMB2 tree disconnect command */
     protected static final short SMB2_TREE_DISCONNECT = 0x0004;
+    /** SMB2 create/open file command */
     protected static final short SMB2_CREATE = 0x0005;
+    /** SMB2 close file command */
     protected static final short SMB2_CLOSE = 0x0006;
+    /** SMB2 flush file command */
     protected static final short SMB2_FLUSH = 0x0007;
+    /** SMB2 read file command */
     protected static final short SMB2_READ = 0x0008;
+    /** SMB2 write file command */
     protected static final short SMB2_WRITE = 0x0009;
+    /** SMB2 lock file command */
     protected static final short SMB2_LOCK = 0x000A;
+    /** SMB2 IO control command */
     protected static final short SMB2_IOCTL = 0x000B;
+    /** SMB2 cancel command */
     protected static final short SMB2_CANCEL = 0x000C;
+    /** SMB2 echo/keepalive command */
     protected static final short SMB2_ECHO = 0x000D;
+    /** SMB2 query directory command */
     protected static final short SMB2_QUERY_DIRECTORY = 0x000E;
+    /** SMB2 change notify command */
     protected static final short SMB2_CHANGE_NOTIFY = 0x000F;
+    /** SMB2 query info command */
     protected static final short SMB2_QUERY_INFO = 0x0010;
+    /** SMB2 set info command */
     protected static final short SMB2_SET_INFO = 0x0011;
+    /** SMB2 opportunistic lock break notification */
     protected static final short SMB2_OPLOCK_BREAK = 0x0012;
 
     /**
-     *
+     * Flag indicating the message is a response from server to client.
      */
     public static final int SMB2_FLAGS_SERVER_TO_REDIR = 0x00000001;
     /**
-     *
+     * Flag indicating this is an asynchronous command.
      */
     public static final int SMB2_FLAGS_ASYNC_COMMAND = 0x00000002;
     /**
-     *
+     * Flag indicating this operation is related to the previous operation in a compound request.
      */
     public static final int SMB2_FLAGS_RELATED_OPERATIONS = 0x00000004;
     /**
-     *
+     * Flag indicating the message is signed.
      */
     public static final int SMB2_FLAGS_SIGNED = 0x00000008;
     /**
-     *
+     * Mask for message priority bits.
      */
     public static final int SMB2_FLAGS_PRIORITY_MASK = 0x00000070;
     /**
-     *
+     * Flag indicating the operation is a DFS operation.
      */
     public static final int SMB2_FLAGS_DFS_OPERATIONS = 0x10000000;
     /**
-     *
+     * Flag indicating this is a replay operation.
      */
     public static final int SMB2_FLAGS_REPLAY_OPERATION = 0x20000000;
 
@@ -120,17 +139,30 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
 
     private ServerMessageBlock2 next;
 
+    /**
+     * Constructor for SMB2 message block with configuration.
+     *
+     * @param config the configuration object
+     */
     protected ServerMessageBlock2(final Configuration config) {
         this.config = config;
     }
 
+    /**
+     * Constructor for SMB2 message block with configuration and command.
+     *
+     * @param config the configuration object
+     * @param command the SMB2 command code
+     */
     protected ServerMessageBlock2(final Configuration config, final int command) {
         this.config = config;
         this.command = command;
     }
 
     /**
-     * @return the config
+     * Gets the configuration object for this message.
+     *
+     * @return the configuration object
      */
     protected Configuration getConfig() {
         return this.config;
@@ -153,6 +185,8 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
     }
 
     /**
+     * Gets the offset to the next compound command in the message chain.
+     *
      * @return offset to next compound command
      */
     public final int getNextCommandOffset() {
@@ -160,6 +194,8 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
     }
 
     /**
+     * Sets the read size for this message.
+     *
      * @param readSize
      *            the readSize to set
      */
@@ -168,6 +204,8 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
     }
 
     /**
+     * Checks whether this message is an asynchronous message.
+     *
      * @return the async
      */
     public boolean isAsync() {
@@ -184,6 +222,8 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
     }
 
     /**
+     * Gets the tree identifier for this message.
+     *
      * @return the treeId
      */
     public final int getTreeId() {
@@ -191,6 +231,8 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
     }
 
     /**
+     * Sets the tree identifier for this message.
+     *
      * @param treeId
      *            the treeId to set
      */
@@ -202,6 +244,8 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
     }
 
     /**
+     * Gets the asynchronous identifier for this message.
+     *
      * @return the asyncId
      */
     public final long getAsyncId() {
@@ -209,6 +253,8 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
     }
 
     /**
+     * Sets the asynchronous identifier for this message.
+     *
      * @param asyncId
      *            the asyncId to set
      */
@@ -217,6 +263,8 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
     }
 
     /**
+     * Gets the credit count for this message.
+     *
      * @return the credit
      */
     public final int getCredit() {
@@ -224,6 +272,8 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
     }
 
     /**
+     * Sets the credit count for this message.
+     *
      * @param credit
      *            the credit to set
      */
@@ -232,6 +282,8 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
     }
 
     /**
+     * Gets the credit charge for this message.
+     *
      * @return the creditCharge
      */
     public final int getCreditCharge() {
@@ -283,6 +335,8 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
     }
 
     /**
+     * Gets the status code for this message.
+     *
      * @return the status
      */
     public final int getStatus() {
@@ -290,6 +344,8 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
     }
 
     /**
+     * Gets the session identifier for this message.
+     *
      * @return the sessionId
      */
     public long getSessionId() {
@@ -329,6 +385,8 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
     }
 
     /**
+     * Gets the flags for this message.
+     *
      * @return the flags
      */
     public final int getFlags() {
@@ -336,16 +394,18 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
     }
 
     /**
+     * Adds the specified flags to this message.
      *
-     * @param flag
+     * @param flag the flags to add
      */
     public final void addFlags(final int flag) {
         this.flags |= flag;
     }
 
     /**
+     * Clears the specified flags from this message.
      *
-     * @param flag
+     * @param flag the flags to clear
      */
     public final void clearFlags(final int flag) {
         this.flags &= ~flag;
@@ -369,7 +429,9 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
     }
 
     /**
-     * @param n
+     * Chains another message to this message for compound operations.
+     *
+     * @param n the message to chain
      * @return whether chaining was successful
      */
     public boolean chain(final ServerMessageBlock2 n) {
@@ -382,10 +444,20 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
         return true;
     }
 
+    /**
+     * Gets the next message in the compound chain.
+     *
+     * @return the next message or null if this is the last message
+     */
     protected ServerMessageBlock2 getNext() {
         return this.next;
     }
 
+    /**
+     * Sets the next message in the compound chain.
+     *
+     * @param n the next message
+     */
     protected void setNext(final ServerMessageBlock2 n) {
         this.next = n;
     }
@@ -410,6 +482,8 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
     }
 
     /**
+     * Gets the error data associated with this message.
+     *
      * @return the errorData
      */
     public final byte[] getErrorData() {
@@ -417,6 +491,8 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
     }
 
     /**
+     * Gets the error context count for this message.
+     *
      * @return the errorContextCount
      */
     public final byte getErrorContextCount() {
@@ -424,6 +500,8 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
     }
 
     /**
+     * Gets the header start position for this message.
+     *
      * @return the headerStart
      */
     public final int getHeaderStart() {
@@ -431,6 +509,8 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
     }
 
     /**
+     * Gets the total length of this message.
+     *
      * @return the length
      */
     public final int getLength() {
@@ -470,10 +550,23 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
         return len;
     }
 
+    /**
+     * Rounds up the size to 8-byte alignment.
+     *
+     * @param size the size to align
+     * @return the aligned size
+     */
     protected static final int size8(final int size) {
         return size8(size, 0);
     }
 
+    /**
+     * Rounds up the size to the specified alignment.
+     *
+     * @param size the size to align
+     * @param align the alignment boundary
+     * @return the aligned size
+     */
     protected static final int size8(final int size, final int align) {
 
         int rem = size % 8 - align;
@@ -487,8 +580,10 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
     }
 
     /**
-     * @param dstIndex
-     * @return
+     * Calculates padding needed to align to 8-byte boundary from header start.
+     *
+     * @param dstIndex the current destination index
+     * @return number of padding bytes needed
      */
     protected final int pad8(final int dstIndex) {
         final int fromHdr = dstIndex - this.headerStart;
@@ -505,11 +600,13 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
     }
 
     /**
-     * @param buffer
-     * @param bufferIndex
-     * @param compound
+     * Decodes the SMB2 message from the buffer.
+     *
+     * @param buffer the buffer containing the message
+     * @param bufferIndex the starting position in the buffer
+     * @param compound whether this is part of a compound chain
      * @return decoded length
-     * @throws SMBProtocolDecodingException
+     * @throws SMBProtocolDecodingException if decoding fails
      */
     public int decode(final byte[] buffer, int bufferIndex, final boolean compound) throws SMBProtocolDecodingException {
         final int start = this.headerStart = bufferIndex;
@@ -544,15 +641,22 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
         return len;
     }
 
+    /**
+     * Checks if this message has an error status.
+     *
+     * @return true if the message has an error status
+     */
     protected boolean isErrorResponseStatus() {
         return getStatus() != 0;
     }
 
     /**
-     * @param buffer
-     * @param start
-     * @param len
-     * @throws SMBProtocolDecodingException
+     * Called when a response has been received and decoded.
+     *
+     * @param buffer the buffer containing the response
+     * @param start the starting position in the buffer
+     * @param len the length of the response
+     * @throws SMBProtocolDecodingException if processing fails
      */
     protected void haveResponse(final byte[] buffer, final int start, final int len) throws SMBProtocolDecodingException {
     }
@@ -585,6 +689,13 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
         return bufferIndex - start;
     }
 
+    /**
+     * Writes the SMB2 header to the wire format.
+     *
+     * @param dst the destination buffer
+     * @param dstIndex the starting position in the buffer
+     * @return number of bytes written
+     */
     protected int writeHeaderWireFormat(final byte[] dst, final int dstIndex) {
         System.arraycopy(SMBUtil.SMB2_HEADER, 0, dst, dstIndex, SMBUtil.SMB2_HEADER.length);
 
@@ -606,6 +717,13 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
         return Smb2Constants.SMB2_HEADER_LENGTH;
     }
 
+    /**
+     * Reads the SMB2 header from the wire format.
+     *
+     * @param buffer the buffer to read from
+     * @param bufferIndex the starting position in the buffer
+     * @return number of bytes read
+     */
     protected int readHeaderWireFormat(final byte[] buffer, int bufferIndex) {
         // these are common between SYNC/ASYNC
         SMBUtil.readInt4(buffer, bufferIndex);
@@ -650,8 +768,23 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
         return (this.flags & SMB2_FLAGS_SERVER_TO_REDIR) == SMB2_FLAGS_SERVER_TO_REDIR;
     }
 
+    /**
+     * Writes the message body to the wire format.
+     *
+     * @param dst the destination buffer
+     * @param dstIndex the starting position in the buffer
+     * @return number of bytes written
+     */
     protected abstract int writeBytesWireFormat(byte[] dst, int dstIndex);
 
+    /**
+     * Reads the message body from the wire format.
+     *
+     * @param buffer the buffer to read from
+     * @param bufferIndex the starting position in the buffer
+     * @return number of bytes read
+     * @throws SMBProtocolDecodingException if decoding fails
+     */
     protected abstract int readBytesWireFormat(byte[] buffer, int bufferIndex) throws SMBProtocolDecodingException;
 
     @Override

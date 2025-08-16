@@ -158,7 +158,7 @@ public interface NtlmFlags {
     int NTLMSSP_NEGOTIATE_TARGET_INFO = 0x00800000;
 
     /**
-     *
+     * Indicates that the NTLM version is included in the message.
      */
     int NTLMSSP_NEGOTIATE_VERSION = 0x2000000;
 

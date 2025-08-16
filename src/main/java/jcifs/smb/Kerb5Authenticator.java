@@ -57,13 +57,21 @@ public class Kerb5Authenticator extends NtlmPasswordAuthenticator {
 
     private static final Set<ASN1ObjectIdentifier> PREFERRED_MECHS = new HashSet<>();
 
+    /** The Kerberos subject for authentication */
     private Subject subject = null;
+    /** The user principal name */
     private String user = null;
+    /** The Kerberos realm */
     private String realm = null;
+    /** The service principal name */
     private String service = DEFAULT_SERVICE;
+    /** The user credential lifetime */
     private int userLifetime = GSSCredential.DEFAULT_LIFETIME;
+    /** The security context lifetime */
     private int contextLifetime = GSSContext.DEFAULT_LIFETIME;
+    /** Flag indicating if fallback authentication is allowed */
     private boolean canFallback = false;
+    /** Flag to force fallback authentication */
     private boolean forceFallback;
 
     static {

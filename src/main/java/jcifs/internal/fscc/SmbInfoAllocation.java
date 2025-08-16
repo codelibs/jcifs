@@ -28,6 +28,13 @@ import jcifs.internal.util.SMBUtil;
  */
 public class SmbInfoAllocation implements AllocInfo {
 
+    /**
+     * Default constructor for SMB allocation information.
+     */
+    public SmbInfoAllocation() {
+        // Default constructor
+    }
+
     private long alloc; // Also handles SmbQueryFSSizeInfo
     private long free;
     private int sectPerAlloc;

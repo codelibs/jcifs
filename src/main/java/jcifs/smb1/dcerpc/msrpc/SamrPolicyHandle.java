@@ -26,10 +26,23 @@ import jcifs.smb1.dcerpc.DcerpcHandle;
 import jcifs.smb1.dcerpc.rpc;
 import jcifs.smb1.smb1.SmbException;
 
+/**
+ * Handle for Security Account Manager (SAM) policy operations.
+ * This class represents an open handle to a SAM server and provides
+ * high-level access to SAM database operations.
+ */
 public class SamrPolicyHandle extends rpc.policy_handle {
 
     DcerpcHandle handle;
 
+    /**
+     * Creates a new SAM policy handle.
+     *
+     * @param handle the DCE/RPC handle for communication
+     * @param server the server name (null defaults to local server)
+     * @param access the desired access rights
+     * @throws IOException if an I/O error occurs during handle creation
+     */
     public SamrPolicyHandle(final DcerpcHandle handle, String server, final int access) throws IOException {
         this.handle = handle;
         if (server == null) {
@@ -48,6 +61,11 @@ public class SamrPolicyHandle extends rpc.policy_handle {
         }
     }
 
+    /**
+     * Closes this SAM policy handle.
+     *
+     * @throws IOException if an I/O error occurs during handle closure
+     */
     public void close() throws IOException {
         final MsrpcSamrCloseHandle rpc = new MsrpcSamrCloseHandle(this);
         handle.sendrecv(rpc);

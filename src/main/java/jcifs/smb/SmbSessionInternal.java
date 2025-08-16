@@ -33,17 +33,22 @@ import jcifs.SmbTree;
 public interface SmbSessionInternal extends SmbSession {
 
     /**
+     * Determines whether this session is currently in use.
+     *
      * @return whether the session is in use
      */
     boolean isInUse();
 
     /**
+     * Returns the current session key used for signing and encryption.
+     *
      * @return the current session key
-     * @throws CIFSException
+     * @throws CIFSException if the session key cannot be retrieved
      */
     byte[] getSessionKey() throws CIFSException;
 
     /**
+     * Returns the SMB transport associated with this session.
      *
      * @return the transport for this session
      */
@@ -52,13 +57,15 @@ public interface SmbSessionInternal extends SmbSession {
     /**
      * Connect to the logon share
      *
-     * @throws SmbException
+     * @throws SmbException if the connection fails
      */
     void treeConnectLogon() throws SmbException;
 
     /**
-     * @param share
-     * @param service
+     * Gets or creates an SMB tree connection for the specified share and service.
+     *
+     * @param share the share name to connect to
+     * @param service the service type for the connection
      * @return tree instance
      */
     SmbTree getSmbTree(String share, String service);
@@ -66,7 +73,7 @@ public interface SmbSessionInternal extends SmbSession {
     /**
      * Initiate reauthentication
      *
-     * @throws CIFSException
+     * @throws CIFSException if reauthentication fails
      */
     void reauthenticate() throws CIFSException;
 }

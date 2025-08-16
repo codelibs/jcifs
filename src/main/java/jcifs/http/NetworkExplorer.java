@@ -69,9 +69,17 @@ import jcifs.smb.SmbFileInputStream;
  */
 @Deprecated
 /**
- * A servlet that provides network browsing capabilities for SMB shares
+ * A servlet that provides network browsing capabilities for SMB shares.
+ * This servlet allows users to browse SMB network resources through a web interface.
  */
 public class NetworkExplorer extends HttpServlet {
+
+    /**
+     * Default constructor.
+     */
+    public NetworkExplorer() {
+        super();
+    }
 
     /**
      *
@@ -80,12 +88,20 @@ public class NetworkExplorer extends HttpServlet {
 
     private static final Logger log = LoggerFactory.getLogger(NetworkExplorer.class);
 
+    /** The CSS style for HTML rendering */
     private String style;
+    /** Flag indicating if credentials were supplied */
     private boolean credentialsSupplied;
+    /** Flag to enable basic authentication */
     private boolean enableBasic;
+    /** Flag to allow insecure basic authentication */
     private boolean insecureBasic;
-    private String realm, defaultDomain;
+    /** The authentication realm */
+    private String realm;
+    /** The default domain for authentication */
+    private String defaultDomain;
 
+    /** The CIFS context for transport operations */
     private CIFSContext transportContext;
 
     @Override
@@ -140,6 +156,13 @@ public class NetworkExplorer extends HttpServlet {
         }
     }
 
+    /**
+     * Handles file download requests for SMB files.
+     * @param req the HTTP servlet request
+     * @param resp the HTTP servlet response
+     * @param file the SMB file to download
+     * @throws IOException if an I/O error occurs
+     */
     protected void doFile(final HttpServletRequest req, final HttpServletResponse resp, final SmbFile file) throws IOException {
         final byte[] buf = new byte[8192];
 
@@ -199,6 +222,14 @@ public class NetworkExplorer extends HttpServlet {
         return diff > 0 ? -1 : 1;
     }
 
+    /**
+     * Compares two SMB files by file type/extension.
+     * @param f1 first file to compare
+     * @param f1name name of first file
+     * @param f2 second file to compare
+     * @return comparison result for sorting
+     * @throws IOException if an I/O error occurs
+     */
     protected int compareTypes(final SmbFile f1, final String f1name, final SmbFile f2) throws IOException {
         String f2name, t1, t2;
         int i;
@@ -222,6 +253,14 @@ public class NetworkExplorer extends HttpServlet {
         return i;
     }
 
+    /**
+     * Compares two SMB files by modification date.
+     * @param f1 first file to compare
+     * @param f1name name of first file
+     * @param f2 second file to compare
+     * @return comparison result for sorting
+     * @throws IOException if an I/O error occurs
+     */
     protected int compareDates(final SmbFile f1, final String f1name, final SmbFile f2) throws IOException {
         if (f1.isDirectory() != f2.isDirectory()) {
             return f1.isDirectory() ? -1 : 1;
@@ -232,6 +271,13 @@ public class NetworkExplorer extends HttpServlet {
         return f1.lastModified() > f2.lastModified() ? -1 : 1;
     }
 
+    /**
+     * Handles directory listing requests for SMB directories.
+     * @param req the HTTP servlet request
+     * @param resp the HTTP servlet response
+     * @param dir the SMB directory to list
+     * @throws IOException if an I/O error occurs
+     */
     @SuppressWarnings("resource")
     protected void doDirectory(final HttpServletRequest req, final HttpServletResponse resp, final SmbFile dir) throws IOException {
         final PrintWriter out = resp.getWriter();

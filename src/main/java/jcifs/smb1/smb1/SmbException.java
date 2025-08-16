@@ -126,7 +126,9 @@ public class SmbException extends IOException implements NtStatus, DosError, Win
         return errcode + "";
     }
 
+    /** The SMB error status code */
     private int status;
+    /** The root cause exception */
     private Throwable rootCause;
 
     SmbException() {
@@ -149,15 +151,31 @@ public class SmbException extends IOException implements NtStatus, DosError, Win
         status = NT_STATUS_UNSUCCESSFUL;
     }
 
+    /**
+     * Constructs an SmbException with an error code.
+     *
+     * @param errcode the error code
+     * @param winerr true if this is a Windows error code, false for DOS error code
+     */
     public SmbException(final int errcode, final boolean winerr) {
         super(winerr ? getMessageByWinerrCode(errcode) : getMessageByCode(errcode));
         status = winerr ? errcode : getStatusByCode(errcode);
     }
 
+    /**
+     * Returns the NT status code for this exception.
+     *
+     * @return the NT status code
+     */
     public int getNtStatus() {
         return status;
     }
 
+    /**
+     * Returns the root cause of this exception if one exists
+     *
+     * @return the root cause throwable, or null if none exists
+     */
     public Throwable getRootCause() {
         return rootCause;
     }

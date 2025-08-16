@@ -18,20 +18,37 @@ package jcifs.pac;
 
 import jcifs.smb.SID;
 
+/**
+ * Represents a group membership entry in PAC logon information.
+ * Contains a group SID and associated attributes.
+ */
 public class PacGroup {
 
     private final SID id;
     private final int attributes;
 
+    /**
+     * Constructs a PAC group entry.
+     * @param id the group's Security Identifier (SID)
+     * @param attributes the group membership attributes
+     */
     public PacGroup(final SID id, final int attributes) {
         this.id = id;
         this.attributes = attributes;
     }
 
+    /**
+     * Returns the group's Security Identifier.
+     * @return the group SID
+     */
     public SID getId() {
         return this.id;
     }
 
+    /**
+     * Returns the group membership attributes.
+     * @return the attributes value
+     */
     public int getAttributes() {
         return this.attributes;
     }

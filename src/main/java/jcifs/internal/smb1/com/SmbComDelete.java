@@ -35,9 +35,10 @@ public class SmbComDelete extends ServerMessageBlock {
     private final int searchAttributes;
 
     /**
+     * Creates a new SMB1 delete file request.
      *
-     * @param config
-     * @param path
+     * @param config the CIFS configuration
+     * @param path the path of the file to delete
      */
     public SmbComDelete(final Configuration config, final String path) {
         super(config, SMB_COM_DELETE, path);

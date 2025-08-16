@@ -18,6 +18,19 @@
 
 package jcifs.smb1.smb1;
 
+/**
+ * Filter interface for SMB filename filtering.
+ * This interface allows selective filtering of filenames
+ * when listing directory contents in SMB shares.
+ */
 public interface SmbFilenameFilter {
+    /**
+     * Tests whether the specified filename should be included in a file list.
+     *
+     * @param dir the directory containing the file
+     * @param name the name of the file
+     * @return true if the file should be included, false otherwise
+     * @throws SmbException if an SMB error occurs during evaluation
+     */
     boolean accept(SmbFile dir, String name) throws SmbException;
 }

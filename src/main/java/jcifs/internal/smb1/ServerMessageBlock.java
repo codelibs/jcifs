@@ -213,13 +213,61 @@ public abstract class ServerMessageBlock implements CommonServerMessageBlockRequ
      */
 
     private byte command, flags;
-    protected int headerStart, length, batchLevel, errorCode, flags2, pid, uid, mid, wordCount, byteCount;
+    /**
+     * Starting position of the SMB header in the buffer.
+     */
+    protected int headerStart;
+    /**
+     * Total length of the SMB message.
+     */
+    protected int length;
+    /**
+     * Batch level for batched requests.
+     */
+    protected int batchLevel;
+    /**
+     * Error code returned by the server.
+     */
+    protected int errorCode;
+    /**
+     * Additional flags for the SMB message.
+     */
+    protected int flags2;
+    /**
+     * Process identifier.
+     */
+    protected int pid;
+    /**
+     * User identifier for the authenticated session.
+     */
+    protected int uid;
+    /**
+     * Multiplex identifier for correlating requests and responses.
+     */
+    protected int mid;
+    /**
+     * Count of parameter words in the SMB message.
+     */
+    protected int wordCount;
+    /**
+     * Count of data bytes in the SMB message.
+     */
+    protected int byteCount;
+    /**
+     * Tree identifier for the connected share.
+     */
     protected int tid = 0xFFFF;
     private boolean useUnicode, forceUnicode, extendedSecurity;
     private volatile boolean received;
     private int signSeq;
     private boolean verifyFailed;
+    /**
+     * Path associated with this SMB message.
+     */
     protected String path;
+    /**
+     * Message signing digest for SMB1 security.
+     */
     protected SMB1SigningDigest digest = null;
     private ServerMessageBlock response;
 
@@ -241,14 +289,32 @@ public abstract class ServerMessageBlock implements CommonServerMessageBlockRequ
 
     private Integer overrideTimeout;
 
+    /**
+     * Creates a new SMB message with default command.
+     *
+     * @param config the configuration to use
+     */
     protected ServerMessageBlock(final Configuration config) {
         this(config, (byte) 0);
     }
 
+    /**
+     * Creates a new SMB message with the specified command.
+     *
+     * @param config the configuration to use
+     * @param command the SMB command code
+     */
     protected ServerMessageBlock(final Configuration config, final byte command) {
         this(config, command, null);
     }
 
+    /**
+     * Creates a new SMB message with the specified command and path.
+     *
+     * @param config the configuration to use
+     * @param command the SMB command code
+     * @param path the path for this SMB operation
+     */
     protected ServerMessageBlock(final Configuration config, final byte command, final String path) {
         this.config = config;
         this.command = command;
@@ -965,10 +1031,27 @@ public abstract class ServerMessageBlock implements CommonServerMessageBlockRequ
         return true;
     }
 
+    /**
+     * Writes a string to the destination buffer using the current encoding.
+     *
+     * @param str the string to write
+     * @param dst the destination buffer
+     * @param dstIndex the starting offset in the buffer
+     * @return the number of bytes written
+     */
     protected int writeString(final String str, final byte[] dst, final int dstIndex) {
         return writeString(str, dst, dstIndex, this.useUnicode);
     }
 
+    /**
+     * Writes a string to the destination buffer with specified encoding.
+     *
+     * @param str the string to write
+     * @param dst the destination buffer
+     * @param dstIndex the starting offset in the buffer
+     * @param unicode true to use Unicode encoding, false for OEM encoding
+     * @return the number of bytes written
+     */
     protected int writeString(final String str, final byte[] dst, int dstIndex, final boolean unicode) {
         final int start = dstIndex;
         if (unicode) {
@@ -1057,6 +1140,14 @@ public abstract class ServerMessageBlock implements CommonServerMessageBlockRequ
         return len;
     }
 
+    /**
+     * Calculates the length of a null-terminated string in the buffer.
+     *
+     * @param src the source buffer
+     * @param srcIndex the starting offset in the buffer
+     * @param max the maximum number of bytes to scan
+     * @return the length of the string in bytes
+     */
     protected int readStringLength(final byte[] src, final int srcIndex, final int max) {
         int len = 0;
         while (src[srcIndex + len] != (byte) 0x00) {
@@ -1137,6 +1228,13 @@ public abstract class ServerMessageBlock implements CommonServerMessageBlockRequ
         return len;
     }
 
+    /**
+     * Writes the SMB header to the wire format.
+     *
+     * @param dst the destination buffer
+     * @param dstIndex the starting offset in the buffer
+     * @return the number of bytes written
+     */
     protected int writeHeaderWireFormat(final byte[] dst, int dstIndex) {
         System.arraycopy(SMBUtil.SMB_HEADER, 0, dst, dstIndex, SMBUtil.SMB_HEADER.length);
         dst[dstIndex + SmbConstants.CMD_OFFSET] = this.command;
@@ -1150,6 +1248,13 @@ public abstract class ServerMessageBlock implements CommonServerMessageBlockRequ
         return SmbConstants.SMB1_HEADER_LENGTH;
     }
 
+    /**
+     * Reads the SMB header from the wire format.
+     *
+     * @param buffer the buffer containing the message data
+     * @param bufferIndex the starting offset in the buffer
+     * @return the number of bytes read
+     */
     protected int readHeaderWireFormat(final byte[] buffer, final int bufferIndex) {
         this.command = buffer[bufferIndex + SmbConstants.CMD_OFFSET];
         this.errorCode = SMBUtil.readInt4(buffer, bufferIndex + SmbConstants.ERROR_CODE_OFFSET);
@@ -1162,6 +1267,11 @@ public abstract class ServerMessageBlock implements CommonServerMessageBlockRequ
         return SmbConstants.SMB1_HEADER_LENGTH;
     }
 
+    /**
+     * Checks if this message is a response.
+     *
+     * @return true if this is a response message, false if it's a request
+     */
     protected boolean isResponse() {
         return (this.flags & SmbConstants.FLAGS_RESPONSE) == SmbConstants.FLAGS_RESPONSE;
     }
@@ -1187,12 +1297,41 @@ public abstract class ServerMessageBlock implements CommonServerMessageBlockRequ
      * information in it's andxCommand, andxOffset, ...etc.
      */
 
+    /**
+     * Writes the parameter words portion of the SMB message to the wire format.
+     *
+     * @param dst the destination buffer
+     * @param dstIndex the starting offset in the buffer
+     * @return the number of bytes written
+     */
     protected abstract int writeParameterWordsWireFormat(byte[] dst, int dstIndex);
 
+    /**
+     * Writes the data bytes portion of the SMB message to the wire format.
+     *
+     * @param dst the destination buffer
+     * @param dstIndex the starting offset in the buffer
+     * @return the number of bytes written
+     */
     protected abstract int writeBytesWireFormat(byte[] dst, int dstIndex);
 
+    /**
+     * Reads the parameter words portion of the SMB message from the wire format.
+     *
+     * @param buffer the buffer containing the message data
+     * @param bufferIndex the starting offset in the buffer
+     * @return the number of bytes read
+     */
     protected abstract int readParameterWordsWireFormat(byte[] buffer, int bufferIndex);
 
+    /**
+     * Reads the data bytes portion of the SMB message from the wire format.
+     *
+     * @param buffer the buffer containing the message data
+     * @param bufferIndex the starting offset in the buffer
+     * @return the number of bytes read
+     * @throws SMBProtocolDecodingException if the data cannot be decoded
+     */
     protected abstract int readBytesWireFormat(byte[] buffer, int bufferIndex) throws SMBProtocolDecodingException;
 
     @Override

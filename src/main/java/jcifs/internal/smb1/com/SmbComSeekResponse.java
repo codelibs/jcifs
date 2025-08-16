@@ -34,13 +34,17 @@ public class SmbComSeekResponse extends ServerMessageBlock {
     private long offset;
 
     /**
-     * @param config
+     * Constructs a seek response.
+     *
+     * @param config the configuration
      */
     public SmbComSeekResponse(final Configuration config) {
         super(config);
     }
 
     /**
+     * Gets the current file offset after the seek operation.
+     *
      * @return the offset
      */
     public long getOffset() {

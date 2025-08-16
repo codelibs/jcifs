@@ -75,7 +75,7 @@ public class SmbFileOutputStream extends OutputStream {
      *
      * @param file
      *            An <code>SmbFile</code> specifying the file to write to
-     * @throws SmbException
+     * @throws SmbException if an SMB error occurs
      */
     public SmbFileOutputStream(final SmbFile file) throws SmbException {
         this(file, false);
@@ -92,7 +92,7 @@ public class SmbFileOutputStream extends OutputStream {
      *            An <code>SmbFile</code> representing the file to write to
      * @param append
      *            Append to the end of file
-     * @throws SmbException
+     * @throws SmbException if an SMB error occurs
      */
 
     public SmbFileOutputStream(final SmbFile file, final boolean append) throws SmbException {
@@ -140,8 +140,10 @@ public class SmbFileOutputStream extends OutputStream {
     }
 
     /**
-     * @param th
-     * @throws SmbException
+     * Initialize the output stream with the tree handle configuration.
+     *
+     * @param th the tree handle to use for configuration
+     * @throws CIFSException if an error occurs during initialization
      */
     protected final void init(final SmbTreeHandleImpl th) throws CIFSException {
         final int sendBufferSize = th.getSendBufferSize();
@@ -184,7 +186,7 @@ public class SmbFileOutputStream extends OutputStream {
     /**
      * Ensures that the file descriptor is openend
      *
-     * @throws CIFSException
+     * @throws CIFSException if an error occurs opening the file
      */
     public void open() throws CIFSException {
         try (SmbFileHandleImpl fh = ensureOpen()) {}
@@ -237,12 +239,20 @@ public class SmbFileOutputStream extends OutputStream {
     }
 
     /**
+     * Tests whether the output stream is currently open.
+     *
      * @return whether the stream is open
      */
     public boolean isOpen() {
         return this.handle != null && this.handle.isValid();
     }
 
+    /**
+     * Ensures that the file handle is open and returns it.
+     *
+     * @return the open file handle
+     * @throws CIFSException if an error occurs opening the file
+     */
     protected synchronized SmbFileHandleImpl ensureOpen() throws CIFSException {
         if (!isOpen()) {
             // one extra acquire to keep this open till the stream is released
@@ -260,6 +270,12 @@ public class SmbFileOutputStream extends OutputStream {
         return this.handle.acquire();
     }
 
+    /**
+     * Ensures that the tree connection is established.
+     *
+     * @return the tree handle
+     * @throws CIFSException if an error occurs connecting to the tree
+     */
     protected SmbTreeHandleImpl ensureTreeConnected() throws CIFSException {
         return this.file.ensureTreeConnected();
     }
@@ -270,6 +286,8 @@ public class SmbFileOutputStream extends OutputStream {
      *
      * @param b
      *            The array
+     * @param off the start offset in the data
+     * @param len the number of bytes to write
      * @throws IOException
      *             if a network error occurs
      */
@@ -282,11 +300,11 @@ public class SmbFileOutputStream extends OutputStream {
     /**
      * Just bypasses TransWaitNamedPipe - used by DCERPC bind.
      *
-     * @param b
-     * @param off
-     * @param len
-     * @param flags
-     * @throws IOException
+     * @param b the byte array containing the data to write
+     * @param off the start offset in the data
+     * @param len the number of bytes to write
+     * @param flags write operation flags
+     * @throws IOException if an I/O error occurs
      */
     public void writeDirect(final byte[] b, int off, int len, final int flags) throws IOException {
         if (len <= 0) {

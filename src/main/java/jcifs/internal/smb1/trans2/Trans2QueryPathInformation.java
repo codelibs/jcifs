@@ -34,10 +34,11 @@ public class Trans2QueryPathInformation extends SmbComTransaction {
     private final int informationLevel;
 
     /**
+     * Constructs a Trans2QueryPathInformation request.
      *
-     * @param config
-     * @param filename
-     * @param informationLevel
+     * @param config the SMB configuration
+     * @param filename the path to query information for
+     * @param informationLevel the information level to query
      */
     public Trans2QueryPathInformation(final Configuration config, final String filename, final int informationLevel) {
         super(config, SMB_COM_TRANSACTION2, TRANS2_QUERY_PATH_INFORMATION);

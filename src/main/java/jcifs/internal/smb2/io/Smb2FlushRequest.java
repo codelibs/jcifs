@@ -37,8 +37,9 @@ public class Smb2FlushRequest extends ServerMessageBlock2Request<Smb2FlushRespon
     private byte[] fileId;
 
     /**
-     * @param config
-     * @param fileId
+     * Constructs an SMB2 flush request
+     * @param config the client configuration
+     * @param fileId the file identifier to flush
      */
     public Smb2FlushRequest(final Configuration config, final byte[] fileId) {
         super(config, SMB2_FLUSH);

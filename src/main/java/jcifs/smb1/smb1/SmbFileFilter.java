@@ -18,6 +18,9 @@
 
 package jcifs.smb1.smb1;
 
+/**
+ * Filter interface for SMB file listings
+ */
 public interface SmbFileFilter {
     /**
      * Tests whether the specified SMB file should be included in a file list.

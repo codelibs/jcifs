@@ -40,15 +40,19 @@ public abstract class ServerMessageBlock2Request<T extends ServerMessageBlock2Re
     private Integer overrideTimeout;
 
     /**
-     * @param config
+     * Constructor for SMB2 request with configuration.
+     *
+     * @param config the configuration object
      */
     protected ServerMessageBlock2Request(final Configuration config) {
         super(config);
     }
 
     /**
-     * @param config
-     * @param command
+     * Constructor for SMB2 request with configuration and command.
+     *
+     * @param config the configuration object
+     * @param command the SMB2 command code
      */
     public ServerMessageBlock2Request(final Configuration config, final int command) {
         super(config, command);
@@ -120,8 +124,9 @@ public abstract class ServerMessageBlock2Request<T extends ServerMessageBlock2Re
     }
 
     /**
+     * Sets the next request in the compound chain.
      *
-     * @param next
+     * @param next the next request
      */
     public void setNext(final ServerMessageBlock2Request<?> next) {
         super.setNext(next);
@@ -158,6 +163,8 @@ public abstract class ServerMessageBlock2Request<T extends ServerMessageBlock2Re
     }
 
     /**
+     * Sets an override timeout for this request.
+     *
      * @param overrideTimeout
      *            the overrideTimeout to set
      */

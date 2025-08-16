@@ -32,8 +32,9 @@ import jcifs.internal.smb1.ServerMessageBlock;
 public class SmbComSetInformationResponse extends ServerMessageBlock {
 
     /**
+     * Constructs a set information response.
      *
-     * @param config
+     * @param config the configuration to use
      */
     public SmbComSetInformationResponse(final Configuration config) {
         super(config);

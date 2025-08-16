@@ -36,7 +36,9 @@ public class Smb2OplockBreakNotification extends ServerMessageBlock2Response {
     private byte[] fileId;
 
     /**
-     * @param config
+     * Constructs an SMB2 oplock break notification with the given configuration.
+     *
+     * @param config the configuration for this notification
      */
     public Smb2OplockBreakNotification(final Configuration config) {
         super(config);

@@ -34,7 +34,9 @@ import jcifs.internal.util.SMBUtil;
 public class Smb2TreeDisconnectRequest extends ServerMessageBlock2Request<Smb2TreeDisconnectResponse> {
 
     /**
-     * @param config
+     * Creates a new SMB2 tree disconnect request to close a tree connection.
+     *
+     * @param config the CIFS configuration
      */
     public Smb2TreeDisconnectRequest(final Configuration config) {
         super(config, SMB2_TREE_DISCONNECT);

@@ -37,17 +37,25 @@ public abstract class SmbComNtTransaction extends SmbComTransaction {
     private static final int NTT_SECONDARY_PARAMETER_OFFSET = 51;
 
     /**
-     *
+     * NT transaction function code for querying security descriptors.
+     * Used to retrieve security information about a file or directory.
      */
     public static final int NT_TRANSACT_QUERY_SECURITY_DESC = 0x6;
 
     /**
-     *
+     * NT transaction function code for change notification.
+     * Used to monitor changes to a directory or file.
      */
     public static final int NT_TRANSACT_NOTIFY_CHANGE = 0x4;
 
     private final int function;
 
+    /**
+     * Constructs an NT transaction command.
+     *
+     * @param config the configuration
+     * @param function the NT transaction function code
+     */
     protected SmbComNtTransaction(final Configuration config, final int function) {
         super(config, SMB_COM_NT_TRANSACT, (byte) 0);
         this.function = function;

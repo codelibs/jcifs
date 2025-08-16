@@ -39,15 +39,18 @@ public class SmbComSessionSetupAndXResponse extends AndXServerMessageBlock {
     private byte[] blob = null;
 
     /**
+     * Constructs a session setup AndX response.
      *
-     * @param config
-     * @param andx
+     * @param config the configuration to use
+     * @param andx the next command in the AndX chain, or null
      */
     public SmbComSessionSetupAndXResponse(final Configuration config, final ServerMessageBlock andx) {
         super(config, andx);
     }
 
     /**
+     * Returns the native LAN Manager string reported by the server.
+     *
      * @return the nativeLanMan
      */
     public final String getNativeLanMan() {
@@ -55,6 +58,8 @@ public class SmbComSessionSetupAndXResponse extends AndXServerMessageBlock {
     }
 
     /**
+     * Returns the native operating system string reported by the server.
+     *
      * @return the nativeOs
      */
     public final String getNativeOs() {
@@ -62,6 +67,8 @@ public class SmbComSessionSetupAndXResponse extends AndXServerMessageBlock {
     }
 
     /**
+     * Returns the primary domain name of the server.
+     *
      * @return the primaryDomain
      */
     public final String getPrimaryDomain() {
@@ -69,6 +76,8 @@ public class SmbComSessionSetupAndXResponse extends AndXServerMessageBlock {
     }
 
     /**
+     * Indicates whether the session was established as a guest.
+     *
      * @return the isLoggedInAsGuest
      */
     public final boolean isLoggedInAsGuest() {
@@ -76,6 +85,8 @@ public class SmbComSessionSetupAndXResponse extends AndXServerMessageBlock {
     }
 
     /**
+     * Returns the security blob received from the server during extended security negotiation.
+     *
      * @return the blob
      */
     public final byte[] getBlob() {

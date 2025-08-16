@@ -37,8 +37,8 @@ public class NtTransNotifyChangeResponse extends SmbComNtTransactionResponse imp
     private final List<FileNotifyInformation> notifyInformation = new ArrayList<>();
 
     /**
-     *
-     * @param config
+     * Constructs an NT transaction notify change response.
+     * @param config the configuration context for this response
      */
     public NtTransNotifyChangeResponse(final Configuration config) {
         super(config);

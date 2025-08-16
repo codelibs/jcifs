@@ -30,10 +30,10 @@ import jcifs.CIFSContext;
 public interface Request<T extends CommonServerMessageBlockResponse> extends CommonServerMessageBlockRequest {
 
     /**
+     * Initializes and returns a response object for this request.
      *
-     * @param tc
+     * @param tc the CIFS context
      * @return the initialized response
-
      */
     T initResponse(CIFSContext tc);
 
@@ -45,6 +45,8 @@ public interface Request<T extends CommonServerMessageBlockResponse> extends Com
     T getResponse();
 
     /**
+     * Marks this request to ignore disconnection errors.
+     *
      * @return this request
      *
      */

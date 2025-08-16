@@ -57,7 +57,7 @@ public class NtlmContext implements SSPContext {
     private static final Logger log = LoggerFactory.getLogger(NtlmContext.class);
 
     /**
-     *
+     * The NTLMSSP OID (1.3.6.1.4.1.311.2.2.10) used in SPNEGO negotiation.
      */
     public static ASN1ObjectIdentifier NTLMSSP_OID;
 
@@ -96,6 +96,7 @@ public class NtlmContext implements SSPContext {
     private Cipher sealServerHandle;
 
     /**
+     * Creates a new NTLM security context with the specified parameters.
      * @param tc
      *            context to use
      * @param auth
@@ -194,6 +195,7 @@ public class NtlmContext implements SSPContext {
     }
 
     /**
+     * Gets the server's NTLM challenge bytes.
      * @return the server's challenge
      */
     public byte[] getServerChallenge() {
@@ -211,6 +213,7 @@ public class NtlmContext implements SSPContext {
     }
 
     /**
+     * Sets the target server's Service Principal Name (SPN).
      * @param targetName
      *            the target's SPN
      */
@@ -227,6 +230,12 @@ public class NtlmContext implements SSPContext {
         };
     }
 
+    /**
+     * Creates a Type 3 (authentication) message in response to a Type 2 (challenge) message.
+     * @param token the Type 2 message bytes
+     * @return the Type 3 message bytes
+     * @throws SmbException if an error occurs during message creation
+     */
     protected byte[] makeAuthenticate(final byte[] token) throws SmbException {
         try {
             final Type2Message msg2 = new Type2Message(token);
@@ -277,10 +286,11 @@ public class NtlmContext implements SSPContext {
     }
 
     /**
-     * @param msg2
-     * @return
-     * @throws GeneralSecurityException
-     * @throws CIFSException
+     * Creates a Type 3 message based on the received Type 2 message.
+     * @param msg2 the Type 2 message received from the server
+     * @return the Type 3 message to send to the server
+     * @throws GeneralSecurityException if a cryptographic error occurs
+     * @throws CIFSException if a CIFS protocol error occurs
      */
     protected Type3Message createType3Message(final Type2Message msg2) throws GeneralSecurityException, CIFSException {
         if (this.auth instanceof NtlmNtHashAuthenticator) {
@@ -295,6 +305,11 @@ public class NtlmContext implements SSPContext {
                 this.ntlmsspFlags, this.auth.isGuest() || !this.auth.isAnonymous());
     }
 
+    /**
+     * Creates a Type 1 (negotiation) message to initiate NTLM authentication.
+     * @param token unused in this implementation
+     * @return the Type 1 message bytes
+     */
     protected byte[] makeNegotiate(final byte[] token) {
         final Type1Message msg1 = new Type1Message(this.transportContext, this.ntlmsspFlags, this.auth.getUserDomain(), this.workstation);
         final byte[] out = msg1.toByteArray();
@@ -309,6 +324,10 @@ public class NtlmContext implements SSPContext {
         return out;
     }
 
+    /**
+     * Initializes session security keys for signing and sealing.
+     * @param mk the master key to derive session keys from
+     */
     protected void initSessionSecurity(final byte[] mk) {
         this.signKey = deriveKey(mk, C2S_SIGN_CONSTANT);
         this.verifyKey = deriveKey(mk, S2C_SIGN_CONSTANT);

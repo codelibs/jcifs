@@ -37,10 +37,11 @@ public class SmbComRename extends ServerMessageBlock {
     private final String newFileName;
 
     /**
+     * Constructs a rename request.
      *
-     * @param config
-     * @param oldFileName
-     * @param newFileName
+     * @param config the configuration
+     * @param oldFileName the current file name
+     * @param newFileName the new file name
      */
     public SmbComRename(final Configuration config, final String oldFileName, final String newFileName) {
         super(config, SMB_COM_RENAME);

@@ -35,11 +35,12 @@ public class SmbComSetInformation extends ServerMessageBlock {
     private final long lastWriteTime;
 
     /**
+     * Constructs a set information request to modify file attributes and modification time.
      *
-     * @param config
-     * @param filename
-     * @param attrs
-     * @param mtime
+     * @param config the configuration to use
+     * @param filename the name of the file to modify
+     * @param attrs the file attributes to set
+     * @param mtime the modification time to set in milliseconds since epoch
      */
     public SmbComSetInformation(final Configuration config, final String filename, final int attrs, final long mtime) {
         super(config, SMB_COM_SET_INFORMATION, filename);

@@ -43,9 +43,13 @@ public class NtlmPasswordAuthentication extends NtlmPasswordAuthenticator {
      */
     private static final long serialVersionUID = -2832037191318016836L;
 
+    /** The ANSI password hash */
     private byte[] ansiHash;
+    /** The Unicode password hash */
     private byte[] unicodeHash;
+    /** Flag indicating if hashes are externally provided */
     private boolean hashesExternal = false;
+    /** The CIFS context for this authentication */
     private CIFSContext context;
 
     /**
@@ -57,7 +61,7 @@ public class NtlmPasswordAuthentication extends NtlmPasswordAuthenticator {
     /**
      * Construct anonymous credentials
      *
-     * @param tc
+     * @param tc the CIFS context to use
      */
     public NtlmPasswordAuthentication(final CIFSContext tc) {
         this(tc, "", "", "");
@@ -68,8 +72,8 @@ public class NtlmPasswordAuthentication extends NtlmPasswordAuthenticator {
      * component of an SMB URL like "{@code domain;user:pass}". This constructor
      * is used internally be jCIFS when parsing SMB URLs.
      *
-     * @param tc
-     * @param userInfo
+     * @param tc the CIFS context to use
+     * @param userInfo the user information string in the format "domain;user:pass"
      */
     public NtlmPasswordAuthentication(final CIFSContext tc, final String userInfo) {
         super(userInfo, tc.getConfig().getDefaultDomain(),
@@ -87,9 +91,9 @@ public class NtlmPasswordAuthentication extends NtlmPasswordAuthenticator {
      *
      * @param tc
      *            context to use
-     * @param domain
-     * @param username
-     * @param password
+     * @param domain the authentication domain
+     * @param username the username to authenticate with
+     * @param password the password to authenticate with
      */
     public NtlmPasswordAuthentication(final CIFSContext tc, final String domain, final String username, final String password) {
         super(domain != null ? domain : tc.getConfig().getDefaultDomain(),
@@ -104,11 +108,11 @@ public class NtlmPasswordAuthentication extends NtlmPasswordAuthenticator {
      * hashes. This is used exclusively by the {@code jcifs.http.NtlmSsp}
      * class which is in turn used by NTLM HTTP authentication functionality.
      *
-     * @param domain
-     * @param username
-     * @param challenge
-     * @param ansiHash
-     * @param unicodeHash
+     * @param domain the authentication domain
+     * @param username the username to authenticate with
+     * @param challenge the server challenge bytes
+     * @param ansiHash the ANSI password hash
+     * @param unicodeHash the Unicode password hash
      */
     public NtlmPasswordAuthentication(final String domain, final String username, final byte[] challenge, final byte[] ansiHash,
             final byte[] unicodeHash) {
@@ -121,6 +125,11 @@ public class NtlmPasswordAuthentication extends NtlmPasswordAuthenticator {
         this.hashesExternal = true;
     }
 
+    /**
+     * Get the CIFS context associated with this authentication.
+     *
+     * @return the CIFS context
+     */
     protected CIFSContext getContext() {
         return this.context;
     }
@@ -133,8 +142,10 @@ public class NtlmPasswordAuthentication extends NtlmPasswordAuthenticator {
     }
 
     /**
-     * @param to
-     * @param from
+     * Clone internal fields from one NtlmPasswordAuthentication to another.
+     *
+     * @param to the target authentication object to copy to
+     * @param from the source authentication object to copy from
      */
     protected static void cloneInternal(final NtlmPasswordAuthentication to, final NtlmPasswordAuthentication from) {
         to.context = from.context;
@@ -176,6 +187,8 @@ public class NtlmPasswordAuthentication extends NtlmPasswordAuthenticator {
     }
 
     /**
+     * Check whether the password hashes are externally supplied.
+     *
      * @return whether the hashes are externally supplied
      */
     public boolean areHashesExternal() {

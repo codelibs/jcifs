@@ -37,13 +37,14 @@ public class Trans2FindNext2 extends SmbComTransaction {
     private final long maxItems;
 
     /**
+     * Constructs a Trans2FindNext2 request for continuing a file search.
      *
-     * @param config
-     * @param sid
-     * @param resumeKey
-     * @param filename
-     * @param batchCount
-     * @param batchSize
+     * @param config the configuration to use
+     * @param sid the search ID from a previous FindFirst2 response
+     * @param resumeKey the resume key for continuing the search
+     * @param filename the last filename from the previous response
+     * @param batchCount the number of entries to return
+     * @param batchSize the maximum size of the response buffer
      */
     public Trans2FindNext2(final Configuration config, final int sid, final int resumeKey, final String filename, final int batchCount,
             final int batchSize) {

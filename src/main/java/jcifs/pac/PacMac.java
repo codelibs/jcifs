@@ -30,7 +30,19 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.security.auth.kerberos.KerberosKey;
 
+/**
+ * Utility class for calculating and verifying PAC (Privilege Attribute Certificate) message authentication codes.
+ * This class provides methods for computing MACs using various Kerberos encryption types including
+ * ARCFOUR-HMAC-MD5 and AES-based HMAC algorithms.
+ */
 public class PacMac {
+
+    /**
+     * Private constructor to prevent instantiation of utility class.
+     */
+    private PacMac() {
+        // Utility class
+    }
 
     /**
      *
@@ -39,6 +51,16 @@ public class PacMac {
     private static final byte[] MD5_CONSTANT = "signaturekey\0".getBytes(StandardCharsets.US_ASCII);
     private static final byte[] ZERO_IV = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
+    /**
+     * Calculates a MAC using the ARCFOUR-HMAC-MD5 algorithm.
+     * This method implements the Microsoft variant of the Kerberos ARCFOUR-HMAC-MD5 checksum.
+     *
+     * @param keyusage the Kerberos key usage number for this operation
+     * @param key the encryption key to use for MAC calculation
+     * @param data the data to calculate the MAC for
+     * @return the calculated MAC bytes
+     * @throws GeneralSecurityException if cryptographic operations fail
+     */
     public static byte[] calculateMacArcfourHMACMD5(int keyusage, Key key, byte[] data) throws GeneralSecurityException {
         int ms_usage = mapArcfourMD5KeyUsage(keyusage);
         Mac mac = Mac.getInstance("HmacMD5");
@@ -73,6 +95,16 @@ public class PacMac {
         return ms_usage;
     }
 
+    /**
+     * Calculates a MAC using HMAC-SHA1 with AES key derivation.
+     * This method supports both AES-128 and AES-256 encryption types.
+     *
+     * @param usage the Kerberos key usage number for this operation
+     * @param baseKey the base Kerberos key for key derivation
+     * @param input the data to calculate the MAC for
+     * @return the calculated MAC bytes (truncated to 12 bytes)
+     * @throws GeneralSecurityException if cryptographic operations fail
+     */
     public static byte[] calculateMacHMACAES(int usage, KerberosKey baseKey, byte[] input) throws GeneralSecurityException {
         byte[] cst = { (byte) (usage >> 24 & 0xFF), (byte) (usage >> 16 & 0xFF), (byte) (usage >> 8 & 0xFF), (byte) (usage & 0xFF),
                 (byte) 0x99 };
@@ -89,6 +121,15 @@ public class PacMac {
         }
     }
 
+    /**
+     * Derives an AES key using the Kerberos key derivation function.
+     * This method implements the simplified key derivation for AES encryption types.
+     *
+     * @param key the base Kerberos key
+     * @param constant the key derivation constant
+     * @return the derived key bytes
+     * @throws GeneralSecurityException if cryptographic operations fail
+     */
     public static byte[] deriveKeyAES(KerberosKey key, byte[] constant) throws GeneralSecurityException {
         byte[] keybytes = key.getEncoded();
         Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");
@@ -109,6 +150,15 @@ public class PacMac {
         return dk;
     }
 
+    /**
+     * Performs n-fold expansion of data as specified in RFC 3961.
+     * This operation is used in Kerberos key derivation to expand or compress
+     * input data to a specific output length.
+     *
+     * @param data the input data to expand
+     * @param outlen the desired output length in bytes
+     * @return the n-folded data of the specified length
+     */
     public static byte[] expandNFold(byte[] data, int outlen) {
         int lcm = lcm(outlen, data.length);
         byte[] buf = new byte[outlen];
@@ -148,10 +198,12 @@ public class PacMac {
     }
 
     /**
-     * @param type
-     * @param keys
-     * @return the calculated mac
-     * @throws PACDecodingException
+     * Calculates a MAC (Message Authentication Code) for PAC data validation.
+     * @param type the checksum type to use
+     * @param keys map of available Kerberos keys indexed by encryption type
+     * @param data the data to calculate the MAC for
+     * @return the calculated mac bytes
+     * @throws PACDecodingException if the MAC calculation fails or required keys are missing
      */
     public static byte[] calculateMac(int type, Map<Integer, KerberosKey> keys, byte[] data) throws PACDecodingException {
         try {

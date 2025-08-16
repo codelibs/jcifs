@@ -32,9 +32,14 @@ import jcifs.internal.util.SMBUtil;
 public class Smb2CancelRequest extends ServerMessageBlock2 implements CommonServerMessageBlockRequest {
 
     /**
+     * Constructs a SMB2 cancel request
+     *
      * @param config
+     *            The configuration to use
      * @param mid
+     *            The message ID of the request to cancel
      * @param asyncId
+     *            The async ID for asynchronous operations (0 for synchronous)
      */
     public Smb2CancelRequest(final Configuration config, final long mid, final long asyncId) {
         super(config, SMB2_CANCEL);

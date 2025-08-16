@@ -35,11 +35,16 @@ public class ValidateNegotiateInfoRequest implements Encodable {
     private final int dialects[];
 
     /**
-     * @param capabilities
-     * @param clientGuid
-     * @param securityMode
-     * @param dialects
+     * Constructs a ValidateNegotiateInfo request
      *
+     * @param capabilities
+     *            the client capabilities flags
+     * @param clientGuid
+     *            the client GUID
+     * @param securityMode
+     *            the security mode flags
+     * @param dialects
+     *            the SMB dialects supported by the client
      */
     public ValidateNegotiateInfoRequest(final int capabilities, final byte[] clientGuid, final int securityMode, final int[] dialects) {
         this.capabilities = capabilities;

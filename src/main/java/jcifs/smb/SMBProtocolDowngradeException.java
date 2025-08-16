@@ -40,22 +40,28 @@ public class SMBProtocolDowngradeException extends CIFSException {
     }
 
     /**
-     * @param message
-     * @param cause
+     * Creates a new SMBProtocolDowngradeException with the specified detail message and cause.
+     *
+     * @param message the detail message
+     * @param cause the cause of the exception
      */
     public SMBProtocolDowngradeException(final String message, final Throwable cause) {
         super(message, cause);
     }
 
     /**
-     * @param message
+     * Creates a new SMBProtocolDowngradeException with the specified detail message.
+     *
+     * @param message the detail message
      */
     public SMBProtocolDowngradeException(final String message) {
         super(message);
     }
 
     /**
-     * @param cause
+     * Creates a new SMBProtocolDowngradeException with the specified cause.
+     *
+     * @param cause the cause of the exception
      */
     public SMBProtocolDowngradeException(final Throwable cause) {
         super(cause);

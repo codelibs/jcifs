@@ -45,6 +45,7 @@ public interface SmbResourceLocator {
     String getName();
 
     /**
+     * Returns the DFS referral data associated with this resource if it has been resolved through DFS.
      *
      * @return dfs referral data
      */
@@ -82,11 +83,15 @@ public interface SmbResourceLocator {
     String getCanonicalURL();
 
     /**
+     * Returns the canonicalized UNC path of this SMB resource relative to its share.
+     *
      * @return The canonicalized UNC path of this SMB resource (relative to it's share)
      */
     String getUNCPath();
 
     /**
+     * Returns the canonicalized URL path relative to the server or domain.
+     *
      * @return The canonicalized URL path (relative to the server/domain)
      */
     String getURLPath();
@@ -130,22 +135,30 @@ public interface SmbResourceLocator {
     String getDfsPath();
 
     /**
+     * Returns the transport port number for this SMB resource connection.
+     *
      * @return the transport port, if specified
      */
     int getPort();
 
     /**
+     * Returns the original URL object used to create this SMB resource.
+     *
      * @return the original URL
      */
     URL getURL();
 
     /**
+     * Returns the resolved network address of the server hosting this SMB resource.
+     *
      * @return resolved server address
-     * @throws CIFSException
+     * @throws CIFSException if the address cannot be resolved
      */
     Address getAddress() throws CIFSException;
 
     /**
+     * Determines whether this resource represents an IPC (Inter-Process Communication) connection.
+     *
      * @return whether this is a IPC connection
      */
     boolean isIPC();
@@ -156,17 +169,20 @@ public interface SmbResourceLocator {
      * @return <code>TYPE_FILESYSTEM, TYPE_WORKGROUP, TYPE_SERVER,
      * TYPE_NAMED_PIPE</code>, or <code>TYPE_SHARE</code> in which case it may be either <code>TYPE_SHARE</code>,
      *         <code>TYPE_PRINTER</code> or <code>TYPE_COMM</code>.
-     * @throws CIFSException
+     * @throws CIFSException if the type cannot be determined
      */
     int getType() throws CIFSException;
 
     /**
+     * Determines whether this resource represents a workgroup reference.
+     *
      * @return whether this is a workgroup reference
-     * @throws CIFSException
+     * @throws CIFSException if the determination cannot be made
      */
     boolean isWorkgroup() throws CIFSException;
 
     /**
+     * Determines whether this resource represents the root of the SMB hierarchy.
      *
      * @return whether this is a root resource
      */

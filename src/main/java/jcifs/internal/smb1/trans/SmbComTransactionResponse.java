@@ -43,15 +43,25 @@ public abstract class SmbComTransactionResponse extends ServerMessageBlock imple
     private int pad1;
     private boolean parametersDone, dataDone;
 
+    /** Total number of parameter bytes the server is returning */
     protected int totalParameterCount;
+    /** Total number of data bytes the server is returning */
     protected int totalDataCount;
+    /** Number of parameter bytes in this response */
     protected int parameterCount;
+    /** Offset from the start of the SMB header to the parameter bytes */
     protected int parameterOffset;
+    /** Displacement of these parameter bytes from the start of the total parameter block */
     protected int parameterDisplacement;
+    /** Offset from the start of the SMB header to the data bytes */
     protected int dataOffset;
+    /** Displacement of these data bytes from the start of the total data block */
     protected int dataDisplacement;
+    /** Number of setup words in this response */
     protected int setupCount;
+    /** Start position of parameter data in the buffer */
     protected int bufParameterStart;
+    /** Start position of data bytes in the buffer */
     protected int bufDataStart;
 
     int dataCount;
@@ -65,10 +75,22 @@ public abstract class SmbComTransactionResponse extends ServerMessageBlock imple
     private int numEntries;
     private FileEntry[] results;
 
+    /**
+     * Constructs a transaction response.
+     *
+     * @param config the configuration to use
+     */
     protected SmbComTransactionResponse(final Configuration config) {
         super(config);
     }
 
+    /**
+     * Constructs a transaction response with specified command.
+     *
+     * @param config the configuration to use
+     * @param command the SMB command code
+     * @param subcommand the transaction subcommand code
+     */
     protected SmbComTransactionResponse(final Configuration config, final byte command, final byte subcommand) {
         super(config, command);
         this.subCommand = subcommand;

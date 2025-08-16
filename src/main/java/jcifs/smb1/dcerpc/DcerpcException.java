@@ -50,7 +50,9 @@ public class DcerpcException extends IOException implements DcerpcError, WinErro
         return "0x" + Hexdump.toHexString(errcode, 8);
     }
 
+    /** The DCERPC error code */
     private int error;
+    /** The root cause exception */
     private Throwable rootCause;
 
     DcerpcException(final int error) {

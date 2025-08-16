@@ -35,7 +35,7 @@ import jcifs.smb.NtStatus;
 public class Smb2ReadResponse extends ServerMessageBlock2Response {
 
     /**
-     *
+     * Protocol overhead size for SMB2 read response
      */
     public static final int OVERHEAD = Smb2Constants.SMB2_HEADER_LENGTH + 16;
 
@@ -45,9 +45,14 @@ public class Smb2ReadResponse extends ServerMessageBlock2Response {
     private final int outputBufferOffset;
 
     /**
+     * Constructs a SMB2 read response with the specified configuration and output buffer
+     *
      * @param config
-     * @param outputBufferOffset
+     *            the configuration to use for this response
      * @param outputBuffer
+     *            the buffer to receive the read data
+     * @param outputBufferOffset
+     *            the offset in the output buffer to start writing data
      */
     public Smb2ReadResponse(final Configuration config, final byte[] outputBuffer, final int outputBufferOffset) {
         super(config);
@@ -56,6 +61,8 @@ public class Smb2ReadResponse extends ServerMessageBlock2Response {
     }
 
     /**
+     * Gets the number of bytes actually read
+     *
      * @return the dataLength
      */
     public int getDataLength() {
@@ -63,6 +70,8 @@ public class Smb2ReadResponse extends ServerMessageBlock2Response {
     }
 
     /**
+     * Gets the number of bytes remaining to be read
+     *
      * @return the dataRemaining
      */
     public int getDataRemaining() {

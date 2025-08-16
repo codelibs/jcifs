@@ -27,7 +27,9 @@ package jcifs.internal;
 public interface SmbNegotiationRequest {
 
     /**
-     * @return whether SMB singing is enforced
+     * Checks whether SMB message signing is enforced by the client.
+     *
+     * @return whether SMB signing is enforced
      */
     boolean isSigningEnforced();
 

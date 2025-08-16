@@ -40,74 +40,95 @@ public interface SmbNegotiationResponse extends CommonServerMessageBlock, Respon
     boolean isValid(CIFSContext cifsContext, SmbNegotiationRequest request);
 
     /**
+     * Gets the SMB dialect version selected by the server.
      *
      * @return selected dialect
      */
     DialectVersion getSelectedDialect();
 
     /**
+     * Checks whether the server has SMB message signing enabled.
      *
-     * @return whether the server has singing enabled
+     * @return whether the server has signing enabled
      */
     boolean isSigningEnabled();
 
     /**
+     * Checks whether the server requires SMB message signing.
      *
      * @return whether the server requires signing
      */
     boolean isSigningRequired();
 
     /**
+     * Checks whether the server supports Distributed File System (DFS).
+     *
      * @return whether the server supports DFS
      */
     boolean isDFSSupported();
 
     /**
-     * @param request
+     * Sets up the given request with negotiated parameters.
+     *
+     * @param request the request to configure
      */
     void setupRequest(CommonServerMessageBlock request);
 
     /**
-     * @param resp
+     * Sets up the given response with negotiated parameters.
+     *
+     * @param resp the response to configure
      */
     void setupResponse(Response resp);
 
     /**
+     * Checks whether SMB message signing has been successfully negotiated.
+     *
      * @return whether signing has been negotiated
      */
     boolean isSigningNegotiated();
 
     /**
-     * @param cap
+     * Checks whether a specific capability has been negotiated.
+     *
+     * @param cap the capability flag to check
      * @return whether capability is negotiated
      */
     boolean haveCapabilitiy(int cap);
 
     /**
+     * Gets the negotiated send buffer size.
+     *
      * @return the send buffer size
      */
     int getSendBufferSize();
 
     /**
+     * Gets the negotiated receive buffer size.
+     *
      * @return the receive buffer size
      */
     int getReceiveBufferSize();
 
     /**
+     * Gets the negotiated maximum transaction buffer size.
      *
      * @return the transaction buffer size
      */
     int getTransactionBufferSize();
 
     /**
+     * Gets the number of initial credits granted by the server for SMB2.
      *
      * @return number of initial credits the server grants
      */
     int getInitialCredits();
 
     /**
-     * @param tc
-     * @param forceSigning
+     * Checks whether a connection can be reused for the given configuration.
+     *
+     * @param tc the CIFS context to check compatibility with
+     * @param forceSigning whether signing is being forced
      * @return whether a connection can be reused for this config
      */
     boolean canReuse(CIFSContext tc, boolean forceSigning);

@@ -30,9 +30,10 @@ import jcifs.internal.smb1.ServerMessageBlock;
 public class SmbComQueryInformation extends ServerMessageBlock {
 
     /**
+     * Constructs a query information request.
      *
-     * @param config
-     * @param filename
+     * @param config the configuration
+     * @param filename the file name to query
      */
     public SmbComQueryInformation(final Configuration config, final String filename) {
         super(config, SMB_COM_QUERY_INFORMATION, filename);

@@ -54,6 +54,7 @@ public interface SMBSigningDigest {
      * @param offset
      *            The starting offset at which the SMB header begins.
      * @param length
+     *            The length of the data to verify
      * @param extraPad
      *            extra padding to include in signature
      * @param msg

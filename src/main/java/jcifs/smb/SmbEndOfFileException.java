@@ -33,7 +33,7 @@ public class SmbEndOfFileException extends SmbException {
     private static final long serialVersionUID = 298752101881244000L;
 
     /**
-     *
+     * Constructs an end-of-file exception.
      */
     public SmbEndOfFileException() {
         super("Unexpectedly reached end of file");

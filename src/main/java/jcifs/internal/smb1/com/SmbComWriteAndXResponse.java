@@ -33,15 +33,18 @@ public class SmbComWriteAndXResponse extends AndXServerMessageBlock {
     private long count;
 
     /**
+     * Constructs a write response for SMB1 protocol.
      *
-     * @param config
+     * @param config the configuration for this SMB session
      */
     public SmbComWriteAndXResponse(final Configuration config) {
         super(config);
     }
 
     /**
-     * @return the count
+     * Gets the number of bytes written.
+     *
+     * @return the count of bytes written
      */
     public final long getCount() {
         return this.count;

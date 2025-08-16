@@ -28,8 +28,9 @@ package jcifs.internal.smb2;
 public interface RequestWithFileId {
 
     /**
+     * Sets the file ID for this request.
      *
-     * @param fileId
+     * @param fileId the file ID to set
      */
     void setFileId(byte[] fileId);
 }

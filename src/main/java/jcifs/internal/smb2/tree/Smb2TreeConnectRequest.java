@@ -40,8 +40,10 @@ public class Smb2TreeConnectRequest extends ServerMessageBlock2Request<Smb2TreeC
     private final String path;
 
     /**
-     * @param config
-     * @param path
+     * Creates a new SMB2 tree connect request to establish a connection to a network share.
+     *
+     * @param config the CIFS configuration
+     * @param path the UNC path to the share to connect to
      */
     public Smb2TreeConnectRequest(final Configuration config, final String path) {
         super(config, SMB2_TREE_CONNECT);

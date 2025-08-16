@@ -20,6 +20,13 @@ public class SigningDigest implements SmbConstants {
     private int updates;
     private int signSequence;
 
+    /**
+     * Constructs a new signing digest with the specified MAC signing key.
+     *
+     * @param macSigningKey the MAC signing key for message authentication
+     * @param bypass whether to bypass MAC signing
+     * @throws SmbException if MD5 algorithm is not available
+     */
     public SigningDigest(final byte[] macSigningKey, final boolean bypass) throws SmbException {
         try {
             digest = MessageDigest.getInstance("MD5");
@@ -41,6 +48,13 @@ public class SigningDigest implements SmbConstants {
         }
     }
 
+    /**
+     * Constructs a new signing digest using transport and authentication credentials.
+     *
+     * @param transport the SMB transport for this signing context
+     * @param auth the NTLM password authentication credentials
+     * @throws SmbException if MD5 algorithm is not available or key generation fails
+     */
     public SigningDigest(final SmbTransport transport, final NtlmPasswordAuthentication auth) throws SmbException {
         try {
             digest = MessageDigest.getInstance("MD5");
@@ -81,6 +95,13 @@ public class SigningDigest implements SmbConstants {
         }
     }
 
+    /**
+     * Updates the digest with the specified data.
+     *
+     * @param input the input buffer containing data to digest
+     * @param offset the offset in the buffer where data starts
+     * @param len the length of data to digest
+     */
     public void update(final byte[] input, final int offset, final int len) {
         if (LogStream.level >= 5) {
             log.println("update: " + updates + " " + offset + ":" + len);
@@ -94,6 +115,11 @@ public class SigningDigest implements SmbConstants {
         updates++;
     }
 
+    /**
+     * Computes and returns the message digest.
+     *
+     * @return the computed digest bytes
+     */
     public byte[] digest() {
         byte[] b = digest.digest();
 

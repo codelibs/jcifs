@@ -42,15 +42,19 @@ public abstract class ServerMessageBlock2Response extends ServerMessageBlock2 im
     private boolean asyncHandled;
 
     /**
-     * @param config
-     * @param command
+     * Constructor for SMB2 response with configuration and command.
+     *
+     * @param config the configuration object
+     * @param command the SMB2 command code
      */
     public ServerMessageBlock2Response(final Configuration config, final int command) {
         super(config, command);
     }
 
     /**
-     * @param config
+     * Constructor for SMB2 response with configuration.
+     *
+     * @param config the configuration object
      */
     public ServerMessageBlock2Response(final Configuration config) {
         super(config);
@@ -168,6 +172,8 @@ public abstract class ServerMessageBlock2Response extends ServerMessageBlock2 im
     }
 
     /**
+     * Checks whether this SMB2 response packet has been signed.
+     *
      * @return whether the packet has been signed.
      */
     public boolean isSigned() {
@@ -195,6 +201,8 @@ public abstract class ServerMessageBlock2Response extends ServerMessageBlock2 im
     }
 
     /**
+     * Checks whether the asynchronous interim response has been handled.
+     *
      * @return whether the interim response has been handled
      */
     public boolean isAsyncHandled() {
@@ -202,6 +210,8 @@ public abstract class ServerMessageBlock2Response extends ServerMessageBlock2 im
     }
 
     /**
+     * Sets whether the asynchronous interim response has been handled.
+     *
      * @param asyncHandled
      *            the asyncHandled to set
      */
@@ -250,7 +260,7 @@ public abstract class ServerMessageBlock2Response extends ServerMessageBlock2 im
     /**
      * {@inheritDoc}
      *
-     * @throws SMBProtocolDecodingException
+     * @throws SMBProtocolDecodingException if there is an error decoding the response
      *
      * @see jcifs.internal.smb2.ServerMessageBlock2#haveResponse(byte[], int, int)
      */

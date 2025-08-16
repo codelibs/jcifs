@@ -43,8 +43,11 @@ public class DfsReferral extends SmbException {
     /** Expiration time for this referral entry */
     public long expiration;
 
+    /** The next DFS referral in the chain */
     DfsReferral next;
+    /** Map containing DFS referral entries */
     Map map;
+    /** The cache key for this referral */
     String key = null;
 
     /**

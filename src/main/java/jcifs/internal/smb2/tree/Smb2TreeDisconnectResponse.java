@@ -33,7 +33,9 @@ import jcifs.internal.util.SMBUtil;
 public class Smb2TreeDisconnectResponse extends ServerMessageBlock2Response {
 
     /**
-     * @param config
+     * Creates a new SMB2 tree disconnect response.
+     *
+     * @param config the CIFS configuration
      */
     public Smb2TreeDisconnectResponse(final Configuration config) {
         super(config);
@@ -52,7 +54,7 @@ public class Smb2TreeDisconnectResponse extends ServerMessageBlock2Response {
     /**
      * {@inheritDoc}
      *
-     * @throws SMBProtocolDecodingException
+     * @throws SMBProtocolDecodingException if an error occurs during decoding
      *
      * @see jcifs.internal.smb2.ServerMessageBlock2#readBytesWireFormat(byte[], int)
      */
