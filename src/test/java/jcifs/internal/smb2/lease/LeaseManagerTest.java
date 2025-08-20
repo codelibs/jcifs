@@ -23,12 +23,15 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import jcifs.CIFSContext;
+import jcifs.Configuration;
 import jcifs.internal.smb2.lease.LeaseManager.LeaseEntry;
 
 @DisplayName("LeaseManager Tests")
@@ -36,11 +39,24 @@ class LeaseManagerTest {
 
     private LeaseManager leaseManager;
     private CIFSContext mockContext;
+    private Configuration mockConfig;
 
     @BeforeEach
     void setUp() {
         mockContext = mock(CIFSContext.class);
+        mockConfig = mock(Configuration.class);
+        when(mockContext.getConfig()).thenReturn(mockConfig);
+        when(mockConfig.getLeaseTimeout()).thenReturn(30000);
+        when(mockConfig.getMaxLeases()).thenReturn(1000);
+        when(mockConfig.getLeaseBreakTimeout()).thenReturn(60);
         leaseManager = new LeaseManager(mockContext);
+    }
+
+    @AfterEach
+    void tearDown() {
+        if (leaseManager != null) {
+            leaseManager.shutdown();
+        }
     }
 
     @Test
@@ -236,5 +252,98 @@ class LeaseManagerTest {
             assertEquals(newState, entry.getLeaseState());
         }
         // If entry doesn't exist, it was cleaned up due to timeout
+    }
+
+    @Test
+    @DisplayName("Should use default lease break timeout when not specified")
+    void testDefaultLeaseBreakTimeout() {
+        String path = "/share/default-timeout.txt";
+        int initialState = Smb2LeaseState.SMB2_LEASE_FULL;
+        int newState = Smb2LeaseState.SMB2_LEASE_READ_HANDLE;
+
+        Smb2LeaseKey key = leaseManager.requestLease(path, initialState);
+        leaseManager.updateLease(key, initialState);
+
+        // Call with default timeout (should use 60 seconds from config)
+        leaseManager.handleLeaseBreakWithTimeout(key, newState);
+
+        LeaseEntry entry = leaseManager.getLease(key);
+        assertNotNull(entry);
+        assertEquals(newState, entry.getLeaseState());
+    }
+
+    @Test
+    @DisplayName("Should clean up expired leases with custom timeout")
+    void testCleanupExpiredLeasesWithCustomTimeout() throws InterruptedException {
+        String path1 = "/share/expired1.txt";
+        String path2 = "/share/expired2.txt";
+
+        Smb2LeaseKey key1 = leaseManager.requestLease(path1, Smb2LeaseState.SMB2_LEASE_READ_CACHING);
+        Thread.sleep(10); // Small delay to ensure different timestamps
+        Smb2LeaseKey key2 = leaseManager.requestLease(path2, Smb2LeaseState.SMB2_LEASE_WRITE_CACHING);
+
+        // Clean up leases older than 5ms
+        int cleaned = leaseManager.cleanupExpiredLeases(5);
+
+        // At least the first lease should be cleaned
+        assertTrue(cleaned >= 1);
+
+        // Check if old lease was removed
+        LeaseEntry entry1 = leaseManager.getLease(key1);
+        if (cleaned == 2) {
+            assertNull(entry1);
+            assertNull(leaseManager.getLease(key2));
+        }
+    }
+
+    @Test
+    @DisplayName("Should evict oldest leases when max limit reached")
+    void testMaxLeaseEviction() throws InterruptedException {
+        // Create a context with low max lease limit
+        Configuration limitedConfig = mock(Configuration.class);
+        CIFSContext limitedContext = mock(CIFSContext.class);
+        when(limitedContext.getConfig()).thenReturn(limitedConfig);
+        when(limitedConfig.getLeaseTimeout()).thenReturn(30000);
+        when(limitedConfig.getMaxLeases()).thenReturn(2); // Only allow 2 leases
+        when(limitedConfig.getLeaseBreakTimeout()).thenReturn(60);
+
+        LeaseManager limitedManager = new LeaseManager(limitedContext);
+
+        try {
+            // Request 3 leases (should evict the oldest when requesting the 3rd)
+            Smb2LeaseKey key1 = limitedManager.requestLease("/share/file1.txt", Smb2LeaseState.SMB2_LEASE_READ_CACHING);
+            Thread.sleep(5); // Small delay to ensure different timestamps
+            Smb2LeaseKey key2 = limitedManager.requestLease("/share/file2.txt", Smb2LeaseState.SMB2_LEASE_READ_CACHING);
+            Thread.sleep(5); // Small delay to ensure different timestamps
+            Smb2LeaseKey key3 = limitedManager.requestLease("/share/file3.txt", Smb2LeaseState.SMB2_LEASE_READ_CACHING);
+
+            // key3 should definitely exist (just created)
+            assertNotNull(limitedManager.getLease(key3));
+
+            // key1 should have been evicted (oldest)
+            assertNull(limitedManager.getLease(key1));
+
+            // key2 should still exist (not the oldest)
+            assertNotNull(limitedManager.getLease(key2));
+        } finally {
+            limitedManager.shutdown();
+        }
+    }
+
+    @Test
+    @DisplayName("Should register and manage file cache")
+    void testFileCache() {
+        String path = "/share/cached.txt";
+        Smb2LeaseKey key = leaseManager.requestLease(path, Smb2LeaseState.SMB2_LEASE_FULL);
+
+        // Register a mock file with cache
+        leaseManager.registerFileCache(path, null); // Using null for simplicity in test
+
+        // Handle lease break which should trigger cache operations
+        leaseManager.handleLeaseBreak(key, Smb2LeaseState.SMB2_LEASE_NONE);
+
+        LeaseEntry entry = leaseManager.getLease(key);
+        assertNotNull(entry);
+        assertEquals(Smb2LeaseState.SMB2_LEASE_NONE, entry.getLeaseState());
     }
 }

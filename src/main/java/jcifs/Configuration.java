@@ -527,6 +527,14 @@ public interface Configuration {
     int getLeaseVersion();
 
     /**
+     * Property {@code jcifs.smb.client.leaseBreakTimeout} (int, default 60)
+     *
+     * @return lease break timeout in seconds (per MS-SMB2 spec)
+     * @since 2.2
+     */
+    int getLeaseBreakTimeout();
+
+    /**
      *
      *
      * Property {@code jcifs.netbios.lmhosts} (string)

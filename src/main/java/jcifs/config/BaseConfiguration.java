@@ -85,6 +85,8 @@ public class BaseConfiguration implements Configuration {
     protected int maxLeases = 1000;
     /** Preferred lease version (1 or 2) */
     protected int leaseVersion = 2;
+    /** Lease break timeout in seconds (per MS-SMB2 spec) */
+    protected int leaseBreakTimeout = 60;
     /** Whether to use NT status codes instead of DOS error codes */
     protected boolean useNtStatus = true;
     /** Whether to use extended security negotiation */
@@ -577,6 +579,11 @@ public class BaseConfiguration implements Configuration {
     @Override
     public int getLeaseVersion() {
         return this.leaseVersion;
+    }
+
+    @Override
+    public int getLeaseBreakTimeout() {
+        return this.leaseBreakTimeout;
     }
 
     @Override

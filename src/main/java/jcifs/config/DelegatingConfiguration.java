@@ -406,6 +406,11 @@ public class DelegatingConfiguration implements Configuration {
         return this.delegate.getLeaseVersion();
     }
 
+    @Override
+    public int getLeaseBreakTimeout() {
+        return this.delegate.getLeaseBreakTimeout();
+    }
+
     /**
      * {@inheritDoc}
      *

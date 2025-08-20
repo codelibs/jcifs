@@ -458,6 +458,54 @@ public class Smb2CreateRequest extends ServerMessageBlock2Request<Smb2CreateResp
     }
 
     /**
+     * Remove lease contexts and fall back to oplock
+     * @param oplockLevel the oplock level to fall back to
+     */
+    public void fallbackToOplock(byte oplockLevel) {
+        // Remove any lease contexts
+        if (this.createContexts != null) {
+            CreateContextRequest[] filteredContexts = null;
+            int count = 0;
+
+            for (CreateContextRequest ctx : this.createContexts) {
+                // Filter out lease contexts
+                if (!(ctx instanceof LeaseV1CreateContextRequest) && !(ctx instanceof LeaseV2CreateContextRequest)) {
+                    if (filteredContexts == null) {
+                        filteredContexts = new CreateContextRequest[this.createContexts.length];
+                    }
+                    filteredContexts[count++] = ctx;
+                }
+            }
+
+            if (count > 0) {
+                CreateContextRequest[] newContexts = new CreateContextRequest[count];
+                System.arraycopy(filteredContexts, 0, newContexts, 0, count);
+                this.createContexts = newContexts;
+            } else {
+                this.createContexts = null;
+            }
+        }
+
+        // Set oplock level
+        setRequestedOplockLevel(oplockLevel);
+    }
+
+    /**
+     * Check if this request has lease contexts
+     * @return true if lease contexts are present
+     */
+    public boolean hasLeaseContext() {
+        if (this.createContexts != null) {
+            for (CreateContextRequest ctx : this.createContexts) {
+                if (ctx instanceof LeaseV1CreateContextRequest || ctx instanceof LeaseV2CreateContextRequest) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
      * {@inheritDoc}
      *
      * @see jcifs.internal.CommonServerMessageBlockRequest#size()
