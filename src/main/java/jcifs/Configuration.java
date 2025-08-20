@@ -495,6 +495,38 @@ public interface Configuration {
     boolean isForceExtendedSecurity();
 
     /**
+     * Property {@code jcifs.smb.client.useLease} (boolean, default true)
+     *
+     * @return whether to use SMB2/SMB3 leases for caching
+     * @since 2.2
+     */
+    boolean isUseLease();
+
+    /**
+     * Property {@code jcifs.smb.client.leaseTimeout} (int, default 30000)
+     *
+     * @return lease timeout in milliseconds
+     * @since 2.2
+     */
+    int getLeaseTimeout();
+
+    /**
+     * Property {@code jcifs.smb.client.maxLeases} (int, default 1000)
+     *
+     * @return maximum number of concurrent leases
+     * @since 2.2
+     */
+    int getMaxLeases();
+
+    /**
+     * Property {@code jcifs.smb.client.leaseVersion} (int, default 2)
+     *
+     * @return preferred lease version (1 or 2)
+     * @since 2.2
+     */
+    int getLeaseVersion();
+
+    /**
      *
      *
      * Property {@code jcifs.netbios.lmhosts} (string)

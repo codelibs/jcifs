@@ -77,6 +77,14 @@ public class BaseConfiguration implements Configuration {
     protected boolean ipcSigningEnforced = true;
     /** Whether SMB3 encryption is enabled */
     protected boolean encryptionEnabled = false;
+    /** Whether to use SMB2/SMB3 leases for caching */
+    protected boolean useLease = true;
+    /** Lease timeout in milliseconds */
+    protected int leaseTimeout = 30000;
+    /** Maximum number of concurrent leases */
+    protected int maxLeases = 1000;
+    /** Preferred lease version (1 or 2) */
+    protected int leaseVersion = 2;
     /** Whether to use NT status codes instead of DOS error codes */
     protected boolean useNtStatus = true;
     /** Whether to use extended security negotiation */
@@ -549,6 +557,26 @@ public class BaseConfiguration implements Configuration {
     @Override
     public boolean isEncryptionEnabled() {
         return this.encryptionEnabled;
+    }
+
+    @Override
+    public boolean isUseLease() {
+        return this.useLease;
+    }
+
+    @Override
+    public int getLeaseTimeout() {
+        return this.leaseTimeout;
+    }
+
+    @Override
+    public int getMaxLeases() {
+        return this.maxLeases;
+    }
+
+    @Override
+    public int getLeaseVersion() {
+        return this.leaseVersion;
     }
 
     @Override

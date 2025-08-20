@@ -27,6 +27,8 @@ import jcifs.Configuration;
 import jcifs.internal.RequestWithPath;
 import jcifs.internal.smb2.ServerMessageBlock2Request;
 import jcifs.internal.smb2.Smb2Constants;
+import jcifs.internal.smb2.lease.Smb2LeaseKey;
+import jcifs.internal.smb2.lease.Smb2LeaseState;
 import jcifs.internal.util.SMBUtil;
 import jcifs.util.Hexdump;
 
@@ -403,6 +405,56 @@ public class Smb2CreateRequest extends ServerMessageBlock2Request<Smb2CreateResp
      */
     public void setCreateOptions(final int createOptions) {
         this.createOptions = createOptions;
+    }
+
+    /**
+     * Set the create contexts for this request
+     * @param contexts the create contexts to set
+     */
+    public void setCreateContexts(CreateContextRequest[] contexts) {
+        this.createContexts = contexts;
+    }
+
+    /**
+     * Add a create context to this request
+     * @param context the create context to add
+     */
+    public void addCreateContext(CreateContextRequest context) {
+        if (context == null) {
+            return;
+        }
+        if (this.createContexts == null) {
+            this.createContexts = new CreateContextRequest[] { context };
+        } else {
+            CreateContextRequest[] newContexts = new CreateContextRequest[this.createContexts.length + 1];
+            System.arraycopy(this.createContexts, 0, newContexts, 0, this.createContexts.length);
+            newContexts[this.createContexts.length] = context;
+            this.createContexts = newContexts;
+        }
+    }
+
+    /**
+     * Add a lease V1 context to this request
+     * @param leaseKey the lease key
+     * @param requestedState the requested lease state
+     */
+    public void addLeaseV1Context(Smb2LeaseKey leaseKey, int requestedState) {
+        LeaseV1CreateContextRequest leaseContext = new LeaseV1CreateContextRequest(leaseKey, requestedState);
+        addCreateContext(leaseContext);
+        setRequestedOplockLevel(SMB2_OPLOCK_LEVEL_LEASE);
+    }
+
+    /**
+     * Add a lease V2 context to this request
+     * @param leaseKey the lease key
+     * @param requestedState the requested lease state
+     * @param parentLeaseKey the parent lease key (can be null)
+     * @param epoch the lease epoch
+     */
+    public void addLeaseV2Context(Smb2LeaseKey leaseKey, int requestedState, Smb2LeaseKey parentLeaseKey, int epoch) {
+        LeaseV2CreateContextRequest leaseContext = new LeaseV2CreateContextRequest(leaseKey, requestedState, parentLeaseKey, epoch);
+        addCreateContext(leaseContext);
+        setRequestedOplockLevel(SMB2_OPLOCK_LEVEL_LEASE);
     }
 
     /**

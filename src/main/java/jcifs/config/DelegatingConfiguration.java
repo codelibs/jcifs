@@ -386,6 +386,26 @@ public class DelegatingConfiguration implements Configuration {
         return this.delegate.isForceExtendedSecurity();
     }
 
+    @Override
+    public boolean isUseLease() {
+        return this.delegate.isUseLease();
+    }
+
+    @Override
+    public int getLeaseTimeout() {
+        return this.delegate.getLeaseTimeout();
+    }
+
+    @Override
+    public int getMaxLeases() {
+        return this.delegate.getMaxLeases();
+    }
+
+    @Override
+    public int getLeaseVersion() {
+        return this.delegate.getLeaseVersion();
+    }
+
     /**
      * {@inheritDoc}
      *
