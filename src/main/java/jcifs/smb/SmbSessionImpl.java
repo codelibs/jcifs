@@ -62,13 +62,13 @@ import jcifs.internal.smb2.ServerMessageBlock2Request;
 import jcifs.internal.smb2.Smb2Constants;
 import jcifs.internal.smb2.Smb2EncryptionContext;
 import jcifs.internal.smb2.Smb2SigningDigest;
+import jcifs.internal.smb2.multichannel.ChannelInfo;
+import jcifs.internal.smb2.multichannel.ChannelManager;
 import jcifs.internal.smb2.nego.Smb2NegotiateResponse;
 import jcifs.internal.smb2.session.Smb2LogoffRequest;
 import jcifs.internal.smb2.session.Smb2SessionSetupRequest;
 import jcifs.internal.smb2.session.Smb2SessionSetupResponse;
 import jcifs.util.Hexdump;
-import jcifs.internal.smb2.multichannel.ChannelManager;
-import jcifs.internal.smb2.multichannel.ChannelInfo;
 
 /**
  *

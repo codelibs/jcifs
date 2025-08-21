@@ -17,9 +17,12 @@
  */
 package jcifs.internal.smb2.multichannel;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-import jcifs.internal.smb2.io.Smb2ReadRequest;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -34,9 +37,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import jcifs.SmbTransport;
 import jcifs.internal.CommonServerMessageBlock;
-import jcifs.internal.smb2.io.Smb2ReadRequest;
-import jcifs.internal.smb2.io.Smb2WriteRequest;
 import jcifs.internal.smb2.info.Smb2QueryInfoRequest;
+import jcifs.internal.smb2.io.Smb2ReadRequest;
 
 /**
  * Unit tests for ChannelLoadBalancer

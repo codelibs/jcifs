@@ -186,10 +186,12 @@ public class NetworkInterfaceInfo {
      * @return encoded bytes
      */
     public byte[] encode() {
+        // NETWORK_INTERFACE_INFO structure per MS-SMB2 2.2.32.5.1
+        // Total size: 152 bytes
         byte[] buffer = new byte[Smb2ChannelCapabilities.NETWORK_INTERFACE_INFO_SIZE];
         ByteBuffer bb = ByteBuffer.wrap(buffer).order(ByteOrder.LITTLE_ENDIAN);
 
-        // Next field (4 bytes) - 0 for single entry
+        // Next field (4 bytes) - offset to next entry (0 for last entry)
         bb.putInt(0);
 
         // InterfaceIndex (4 bytes)
@@ -198,13 +200,13 @@ public class NetworkInterfaceInfo {
         // Capability (4 bytes)
         bb.putInt(capability);
 
-        // Reserved (4 bytes)
+        // Reserved (4 bytes) - must be 0
         bb.putInt(0);
 
-        // LinkSpeed (8 bytes) - convert Mbps to bps
+        // LinkSpeed (8 bytes) - in bits per second
         bb.putLong((long) linkSpeed * 1000000L);
 
-        // SockaddrStorage (128 bytes)
+        // SockAddr_Storage (128 bytes)
         encodeSockaddr(buffer, 24);
 
         return buffer;
@@ -218,23 +220,36 @@ public class NetworkInterfaceInfo {
      * @return parsed NetworkInterfaceInfo
      */
     public static NetworkInterfaceInfo decode(byte[] data, int offset) {
+        // Ensure we have enough data for the full structure
+        if (data.length < offset + Smb2ChannelCapabilities.NETWORK_INTERFACE_INFO_SIZE) {
+            return null;
+        }
+
         ByteBuffer bb = ByteBuffer.wrap(data, offset, Smb2ChannelCapabilities.NETWORK_INTERFACE_INFO_SIZE).order(ByteOrder.LITTLE_ENDIAN);
 
-        // Skip Next field (4 bytes)
+        // Next field (4 bytes) - offset to next entry
+        int next = bb.getInt();
+
+        // InterfaceIndex (4 bytes)
+        int ifIndex = bb.getInt();
+
+        // Capability (4 bytes)
+        int capability = bb.getInt();
+
+        // Reserved (4 bytes) - skip
         bb.getInt();
 
-        int ifIndex = bb.getInt();
-        int capability = bb.getInt();
-        bb.getInt(); // Reserved
+        // LinkSpeed (8 bytes) - in bits per second
         long linkSpeedBps = bb.getLong();
 
-        // Parse sockaddr (starts at offset 24: Next(4) + InterfaceIndex(4) + Capability(4) + Reserved(4) + LinkSpeed(8) = 24)
+        // Parse sockaddr structure (starts at offset + 24)
         InetAddress addr = parseSockaddr(data, offset + 24);
 
         if (addr == null) {
             return null;
         }
 
+        // Convert bits per second to Mbps for internal use
         NetworkInterfaceInfo info = new NetworkInterfaceInfo(addr, (int) (linkSpeedBps / 1000000L));
         info.setInterfaceIndex(ifIndex);
         info.setCapability(capability);
@@ -243,18 +258,25 @@ public class NetworkInterfaceInfo {
     }
 
     private void encodeSockaddr(byte[] buffer, int offset) {
+        // MS-SMB2: SockAddr_Storage field is 128 bytes
+        // Clear the entire field first
+        for (int i = 0; i < 128; i++) {
+            buffer[offset + i] = 0;
+        }
+
         if (ipv6) {
-            // IPv6 sockaddr_in6 structure
-            SMBUtil.writeInt2(23, buffer, offset); // AF_INET6
-            SMBUtil.writeInt2(445, buffer, offset + 2); // Port
-            SMBUtil.writeInt4(0, buffer, offset + 4); // Flow info
-            System.arraycopy(address.getAddress(), 0, buffer, offset + 8, 16);
-            SMBUtil.writeInt4(0, buffer, offset + 24); // Scope ID
+            // IPv6 sockaddr_in6 structure (Windows AF_INET6 = 23)
+            SMBUtil.writeInt2(23, buffer, offset); // sa_family: AF_INET6
+            SMBUtil.writeInt2(445, buffer, offset + 2); // sin6_port
+            SMBUtil.writeInt4(0, buffer, offset + 4); // sin6_flowinfo
+            System.arraycopy(address.getAddress(), 0, buffer, offset + 8, 16); // sin6_addr
+            SMBUtil.writeInt4(0, buffer, offset + 24); // sin6_scope_id
         } else {
-            // IPv4 sockaddr_in structure
-            SMBUtil.writeInt2(2, buffer, offset); // AF_INET
-            SMBUtil.writeInt2(445, buffer, offset + 2); // Port
-            System.arraycopy(address.getAddress(), 0, buffer, offset + 4, 4);
+            // IPv4 sockaddr_in structure (Windows AF_INET = 2)
+            SMBUtil.writeInt2(2, buffer, offset); // sa_family: AF_INET
+            SMBUtil.writeInt2(445, buffer, offset + 2); // sin_port
+            System.arraycopy(address.getAddress(), 0, buffer, offset + 4, 4); // sin_addr
+            // Remaining bytes stay zero-filled
         }
     }
 

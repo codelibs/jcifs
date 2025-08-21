@@ -22,7 +22,6 @@ import java.util.List;
 
 import jcifs.Decodable;
 import jcifs.internal.smb2.multichannel.NetworkInterfaceInfo;
-import jcifs.internal.smb2.multichannel.Smb2ChannelCapabilities;
 import jcifs.internal.util.SMBUtil;
 
 /**
@@ -65,9 +64,10 @@ public class QueryNetworkInterfaceInfoResponse implements Decodable {
     @Override
     public int decode(byte[] buffer, int bufferIndex, int len) {
         int start = bufferIndex;
+        int end = start + len;
         interfaces.clear();
 
-        while (bufferIndex < start + len) {
+        while (bufferIndex < end && (bufferIndex + 152) <= end) {
             // Read Next field to determine if there are more entries
             int next = SMBUtil.readInt4(buffer, bufferIndex);
 
@@ -77,11 +77,12 @@ public class QueryNetworkInterfaceInfoResponse implements Decodable {
             }
 
             if (next == 0) {
-                // Last entry
+                // Last entry - advance by the full structure size
+                bufferIndex += 152;
                 break;
             }
 
-            // Move to next entry
+            // Move to next entry based on Next offset
             bufferIndex += next;
         }
 

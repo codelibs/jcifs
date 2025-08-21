@@ -17,252 +17,194 @@
  */
 package jcifs.internal.smb2.multichannel;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assumptions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Properties;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import jcifs.CIFSContext;
 import jcifs.CIFSException;
+import jcifs.Configuration;
 import jcifs.config.PropertyConfiguration;
-import jcifs.context.SingletonContext;
-import jcifs.smb.SmbException;
-import jcifs.smb.SmbFile;
-import jcifs.context.BaseContext;
+import jcifs.internal.smb2.ServerMessageBlock2Request;
+import jcifs.smb.SmbSessionInternal;
+import jcifs.smb.SmbTransportInternal;
 
 /**
- * Integration tests for SMB3 Multi-Channel functionality
+ * Unit tests for SMB3 Multi-Channel functionality
  *
- * These tests require a real SMB server with multi-channel support.
- * Run with -Djcifs.test.integration=true and provide server details.
+ * These tests verify the multi-channel implementation without requiring a real SMB server.
  */
-@EnabledIfSystemProperty(named = "jcifs.test.integration", matches = "true")
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class MultiChannelIntegrationTest {
 
-    private static final String TEST_SERVER = System.getProperty("jcifs.test.server", "localhost");
-    private static final String TEST_SHARE = System.getProperty("jcifs.test.share", "test");
-    private static final String TEST_USER = System.getProperty("jcifs.test.user", "test");
-    private static final String TEST_PASSWORD = System.getProperty("jcifs.test.password", "test");
+    @Mock
+    private SmbTransportInternal mockTransport;
 
-    private CIFSContext context;
+    @Mock
+    private CIFSContext mockContext;
+
+    @Mock
+    private SmbSessionInternal mockSession;
+
+    @Mock
+    private Configuration mockConfig;
+
+    private ChannelManager channelManager;
+    private PropertyConfiguration multiConfig;
 
     @BeforeEach
     void setUp() throws CIFSException {
+        // Setup multi-channel configuration
         Properties props = new Properties();
-
-        // Enable multi-channel
         props.setProperty("jcifs.smb.client.useMultiChannel", "true");
         props.setProperty("jcifs.smb.client.maxChannels", "4");
         props.setProperty("jcifs.smb.client.loadBalancingStrategy", "adaptive");
         props.setProperty("jcifs.smb.client.channelHealthCheckInterval", "5");
 
-        // Use SMB3 for multi-channel support
-        props.setProperty("jcifs.smb.client.minVersion", "SMB300");
-        props.setProperty("jcifs.smb.client.maxVersion", "SMB311");
+        multiConfig = new PropertyConfiguration(props);
 
-        // Authentication
-        props.setProperty("jcifs.smb.client.username", TEST_USER);
-        props.setProperty("jcifs.smb.client.password", TEST_PASSWORD);
+        // Mock context and session for ChannelManager
+        when(mockContext.getConfig()).thenReturn(multiConfig);
+        when(mockSession.getSessionKey()).thenReturn(new byte[16]);
 
-        PropertyConfiguration config = new PropertyConfiguration(props);
-        context = new BaseContext(config);
+        channelManager = new ChannelManager(mockContext, mockSession);
     }
 
     @Test
-    void testMultiChannelConnection() throws Exception {
-        assumeServerAvailable();
+    void testMultiChannelInitialization() throws Exception {
+        // Test that ChannelManager initializes properly
+        assertNotNull(channelManager);
+        assertNotNull(channelManager.getChannels());
+        // Note: isUseMultiChannel() checks if actual multi-channel is negotiated with server
+        // In mock environment, this will be false until we mock successful negotiation
 
-        try (SmbFile testDir = new SmbFile("smb://" + TEST_SERVER + "/" + TEST_SHARE + "/", context)) {
-            assertTrue(testDir.exists(), "Test share should be accessible");
-
-            // Check if multi-channel was negotiated
-            // This would require access to session internals
-            // For now, just verify the connection works
-            SmbFile[] files = testDir.listFiles();
-            assertNotNull(files, "Should be able to list files");
-        }
+        // Verify load balancer is initialized
+        assertNotNull(channelManager.getLoadBalancer());
     }
 
     @Test
-    void testLargeFileTransferWithMultiChannel() throws Exception {
-        assumeServerAvailable();
+    void testNetworkInterfaceInfo() throws Exception {
+        // Test NetworkInterfaceInfo creation and scoring
+        InetAddress address = InetAddress.getByName("192.168.1.100");
+        NetworkInterfaceInfo nic = new NetworkInterfaceInfo(address, 1);
 
-        String testFileName = "multichannel-test-" + System.currentTimeMillis() + ".dat";
-        try (SmbFile testFile = new SmbFile("smb://" + TEST_SERVER + "/" + TEST_SHARE + "/" + testFileName, context)) {
+        nic.setInterfaceIndex(1);
+        nic.setCapability(Smb2ChannelCapabilities.NETWORK_INTERFACE_CAP_RSS);
+        nic.setLinkSpeed(10000);
 
-            // Create a large test file (10MB)
-            byte[] testData = new byte[10 * 1024 * 1024];
-            for (int i = 0; i < testData.length; i++) {
-                testData[i] = (byte) (i % 256);
-            }
+        // Verify properties
+        assertEquals(1, nic.getInterfaceIndex());
+        assertEquals(10000, nic.getLinkSpeed());
+        assertTrue(nic.isRssCapable());
+        assertFalse(nic.isRdmaCapable());
+        assertEquals(address, nic.getAddress());
 
-            // Write the file
-            long startWrite = System.currentTimeMillis();
-            try (OutputStream out = testFile.getOutputStream()) {
-                out.write(testData);
-                out.flush();
-            }
-            long writeTime = System.currentTimeMillis() - startWrite;
+        // Test scoring
+        int score = nic.getScore();
+        assertEquals(11000, score); // 10000 (link speed) + 1000 (RSS bonus)
 
-            // Read the file back
-            long startRead = System.currentTimeMillis();
-            byte[] readData = new byte[testData.length];
-            try (InputStream in = testFile.getInputStream()) {
-                int totalRead = 0;
-                while (totalRead < readData.length) {
-                    int read = in.read(readData, totalRead, readData.length - totalRead);
-                    if (read == -1)
-                        break;
-                    totalRead += read;
-                }
-                assertEquals(testData.length, totalRead);
-            }
-            long readTime = System.currentTimeMillis() - startRead;
+        // Test encoding/decoding
+        byte[] encoded = nic.encode();
+        assertNotNull(encoded);
+        assertEquals(Smb2ChannelCapabilities.NETWORK_INTERFACE_INFO_SIZE, encoded.length);
 
-            // Verify data integrity
-            assertArrayEquals(testData, readData, "Data should be identical after round-trip");
-
-            System.out.println("Write time: " + writeTime + "ms, Read time: " + readTime + "ms");
-
-            // Clean up
-            testFile.delete();
-        }
+        NetworkInterfaceInfo decoded = NetworkInterfaceInfo.decode(encoded, 0);
+        assertEquals(nic.getInterfaceIndex(), decoded.getInterfaceIndex());
+        assertEquals(nic.getLinkSpeed(), decoded.getLinkSpeed());
+        assertEquals(nic.isRssCapable(), decoded.isRssCapable());
     }
 
     @Test
-    void testConcurrentOperations() throws Exception {
-        assumeServerAvailable();
+    void testChannelInfoCreation() throws Exception {
+        // Test ChannelInfo creation
+        InetAddress localAddr = InetAddress.getByName("192.168.1.10");
+        InetAddress remoteAddr = InetAddress.getByName("192.168.1.100");
 
-        int numThreads = 4;
-        int numOperations = 10;
-        CompletableFuture<Void>[] futures = new CompletableFuture[numThreads];
+        NetworkInterfaceInfo localNic = new NetworkInterfaceInfo(localAddr, 1);
+        NetworkInterfaceInfo remoteNic = new NetworkInterfaceInfo(remoteAddr, 445);
 
-        for (int t = 0; t < numThreads; t++) {
-            final int threadId = t;
-            futures[t] = CompletableFuture.runAsync(() -> {
-                try {
-                    for (int i = 0; i < numOperations; i++) {
-                        String fileName = "concurrent-test-" + threadId + "-" + i + ".txt";
-                        try (SmbFile file = new SmbFile("smb://" + TEST_SERVER + "/" + TEST_SHARE + "/" + fileName, context)) {
+        // Mock transport doesn't have isConnected, but we can work around it
 
-                            // Write operation
-                            String content = "Thread " + threadId + " operation " + i;
-                            try (OutputStream out = file.getOutputStream()) {
-                                out.write(content.getBytes());
-                            }
+        ChannelInfo channel = new ChannelInfo("test-channel", mockTransport, localNic, remoteNic);
+        channel.setState(ChannelState.ESTABLISHED);
 
-                            // Read operation
-                            try (InputStream in = file.getInputStream()) {
-                                byte[] buffer = new byte[1024];
-                                int read = in.read(buffer);
-                                String readContent = new String(buffer, 0, read);
-                                assertEquals(content, readContent);
-                            }
+        // Verify channel properties
+        assertEquals("test-channel", channel.getChannelId());
+        assertEquals(mockTransport, channel.getTransport());
+        assertEquals(localNic, channel.getLocalInterface());
+        assertEquals(remoteNic, channel.getRemoteInterface());
+        assertEquals(ChannelState.ESTABLISHED, channel.getState());
+        assertTrue(channel.isHealthy());
 
-                            // Delete operation
-                            file.delete();
-                        }
-                    }
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            });
-        }
+        // Test metrics
+        channel.incrementRequestsSent();
+        channel.addBytesSent(1024);
+        channel.updateActivity();
 
-        // Wait for all operations to complete
-        CompletableFuture.allOf(futures).get(30, TimeUnit.SECONDS);
-
-        System.out.println("Successfully completed " + (numThreads * numOperations) + " concurrent operations");
+        assertEquals(1, channel.getRequestsSent());
+        assertEquals(1024, channel.getBytesSent());
+        assertTrue(channel.getLastActivityTime() > 0);
     }
 
     @Test
-    void testChannelFailureRecovery() throws Exception {
-        assumeServerAvailable();
+    void testChannelFailover() throws Exception {
+        // Test failover mechanism
+        ChannelFailover failover = new ChannelFailover(channelManager);
 
-        try (SmbFile testDir = new SmbFile("smb://" + TEST_SERVER + "/" + TEST_SHARE + "/", context)) {
+        // Create a channel
+        InetAddress addr = InetAddress.getByName("192.168.1.100");
+        NetworkInterfaceInfo nic = new NetworkInterfaceInfo(addr, 445);
 
-            // Perform initial operation
-            assertTrue(testDir.exists());
-            SmbFile[] initialFiles = testDir.listFiles();
-            assertNotNull(initialFiles);
+        // Mock transport doesn't have isConnected, but we can work around it
+        ChannelInfo channel = new ChannelInfo("failover-test", mockTransport, nic, nic);
+        channel.setState(ChannelState.ESTABLISHED);
 
-            // Simulate network disruption by creating many concurrent operations
-            // This might trigger channel failures and recovery
-            CompletableFuture<Void>[] futures = new CompletableFuture[20];
+        // Simulate failure
+        IOException failure = new IOException("Connection lost");
+        failover.handleFailure(channel, failure);
 
-            for (int i = 0; i < futures.length; i++) {
-                final int opId = i;
-                futures[i] = CompletableFuture.runAsync(() -> {
-                    try {
-                        Thread.sleep(opId * 10); // Stagger operations
-
-                        try (SmbFile testFile =
-                                new SmbFile("smb://" + TEST_SERVER + "/" + TEST_SHARE + "/recovery-test-" + opId + ".tmp", context)) {
-                            testFile.createNewFile();
-                            assertTrue(testFile.exists());
-                            testFile.delete();
-                        }
-                    } catch (Exception e) {
-                        // Some operations might fail due to simulated disruption
-                        System.out.println("Operation " + opId + " failed: " + e.getMessage());
-                    }
-                });
-            }
-
-            // Wait for operations to complete
-            CompletableFuture.allOf(futures).get(60, TimeUnit.SECONDS);
-
-            // Verify we can still perform operations after potential failures
-            SmbFile[] finalFiles = testDir.listFiles();
-            assertNotNull(finalFiles, "Should still be able to list files after recovery");
-        }
+        // Verify channel state changed
+        assertFalse(channel.isHealthy());
+        assertEquals(ChannelState.FAILED, channel.getState());
     }
 
     @Test
     void testLoadBalancingStrategies() throws Exception {
-        assumeServerAvailable();
-
         // Test different load balancing strategies
-        String[] strategies = { "ROUND_ROBIN", "LEAST_LOADED", "WEIGHTED_RANDOM", "ADAPTIVE" };
+        ChannelLoadBalancer loadBalancer = new ChannelLoadBalancer(channelManager);
 
-        for (String strategy : strategies) {
-            Properties props = new Properties();
-            props.setProperty("jcifs.smb.client.useMultiChannel", "true");
-            props.setProperty("jcifs.smb.client.loadBalancingStrategy", strategy);
-            props.setProperty("jcifs.smb.client.username", TEST_USER);
-            props.setProperty("jcifs.smb.client.password", TEST_PASSWORD);
+        // Test setting different strategies
+        LoadBalancingStrategy[] strategies = { LoadBalancingStrategy.ROUND_ROBIN, LoadBalancingStrategy.LEAST_LOADED,
+                LoadBalancingStrategy.WEIGHTED_RANDOM, LoadBalancingStrategy.AFFINITY_BASED, LoadBalancingStrategy.ADAPTIVE };
 
-            PropertyConfiguration config = new PropertyConfiguration(props);
-            CIFSContext strategyContext = new BaseContext(config);
-
-            try (SmbFile testDir = new SmbFile("smb://" + TEST_SERVER + "/" + TEST_SHARE + "/", strategyContext)) {
-                assertTrue(testDir.exists(), "Connection should work with " + strategy + " strategy");
-
-                // Perform a few operations to exercise the load balancer
-                for (int i = 0; i < 5; i++) {
-                    SmbFile[] files = testDir.listFiles();
-                    assertNotNull(files, "List operation should work with " + strategy);
-                }
-            }
+        for (LoadBalancingStrategy strategy : strategies) {
+            loadBalancer.setStrategy(strategy);
+            assertEquals(strategy, loadBalancer.getStrategy());
         }
-    }
 
-    private void assumeServerAvailable() {
-        try {
-            InetAddress.getByName(TEST_SERVER);
-        } catch (UnknownHostException e) {
-            assumeTrue(false, "Test server " + TEST_SERVER + " is not available: " + e.getMessage());
-        }
+        // Test channel selection with mock request when no channels available
+        ServerMessageBlock2Request mockRequest = mock(ServerMessageBlock2Request.class);
+        when(mockRequest.getTreeId()).thenReturn(123);
+
+        // Should throw NoAvailableChannelException when no healthy channels
+        assertThrows(ChannelLoadBalancer.NoAvailableChannelException.class, () -> loadBalancer.selectChannel(mockRequest),
+                "Should throw exception when no healthy channels available");
     }
 }

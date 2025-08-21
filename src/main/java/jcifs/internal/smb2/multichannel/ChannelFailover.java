@@ -19,13 +19,16 @@ package jcifs.internal.smb2.multichannel;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import jcifs.SmbTransport;
-
 import jcifs.internal.CommonServerMessageBlock;
 
 /**

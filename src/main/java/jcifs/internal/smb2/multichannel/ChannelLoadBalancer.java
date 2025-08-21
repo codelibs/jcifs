@@ -17,17 +17,20 @@
  */
 package jcifs.internal.smb2.multichannel;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import jcifs.internal.CommonServerMessageBlock;
 import jcifs.internal.smb2.ServerMessageBlock2Request;
-import jcifs.internal.smb2.io.Smb2ReadRequest;
-import jcifs.internal.smb2.io.Smb2WriteRequest;
+import jcifs.internal.smb2.info.Smb2QueryDirectoryRequest;
 import jcifs.internal.smb2.info.Smb2QueryInfoRequest;
 import jcifs.internal.smb2.info.Smb2SetInfoRequest;
-import jcifs.internal.smb2.info.Smb2QueryDirectoryRequest;
+import jcifs.internal.smb2.io.Smb2ReadRequest;
+import jcifs.internal.smb2.io.Smb2WriteRequest;
 
 /**
  * Load balancer for SMB3 Multi-Channel connections

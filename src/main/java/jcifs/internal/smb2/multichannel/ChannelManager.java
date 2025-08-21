@@ -19,12 +19,22 @@ package jcifs.internal.smb2.multichannel;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.net.*;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
@@ -34,14 +44,10 @@ import jcifs.CIFSContext;
 import jcifs.Configuration;
 import jcifs.SmbSession;
 import jcifs.SmbTransport;
-
 import jcifs.internal.CommonServerMessageBlock;
-import jcifs.internal.smb2.Smb2Constants;
-import jcifs.internal.smb2.ioctl.Smb2IoctlRequest;
-import jcifs.internal.smb2.ioctl.Smb2IoctlResponse;
 import jcifs.internal.smb2.ioctl.QueryNetworkInterfaceInfoResponse;
+import jcifs.internal.smb2.ioctl.Smb2IoctlRequest;
 import jcifs.internal.smb2.session.Smb2SessionSetupRequest;
-import jcifs.internal.smb2.session.Smb2SessionSetupResponse;
 
 /**
  * Manages SMB3 Multi-Channel connections
@@ -244,20 +250,31 @@ public class ChannelManager {
      * @throws IOException if binding fails
      */
     public void performChannelBinding(ChannelInfo channel) throws IOException {
-        // Calculate channel binding hash
+        // MS-SMB2 3.2.4.1.6: Alternative Channel Creation
+        // Channel binding requires SMB2_SESSION_FLAG_BINDING (0x01) in session setup
+
+        // Calculate channel binding hash per MS-SMB2 3.2.5.3.1
         byte[] bindingInfo = calculateBindingInfo(channel);
         byte[] bindingHash = calculateBindingHash(bindingInfo);
         channel.setBindingHash(bindingHash);
 
-        // Send session setup with channel binding
-        Smb2SessionSetupRequest request = new Smb2SessionSetupRequest(context, 0, 0, 0L, new byte[0]);
+        // Create session setup request with binding flag
+        Smb2SessionSetupRequest request = new Smb2SessionSetupRequest(context, 0x03, // SMB2_NEGOTIATE_SIGNING_ENABLED | SMB2_NEGOTIATE_SIGNING_REQUIRED
+                0, // Capabilities
+                0L, // Previous session ID (0 for binding)
+                bindingHash // Security buffer contains the binding information
+        );
+
+        // Set the session ID of the existing session
         request.setSessionId(getSessionId());
+
+        // CRITICAL: Set the binding flag per MS-SMB2
         request.setSessionBinding(true);
 
-        // Channel binding would be handled through proper transport interface
-        // For now, skip actual binding implementation
+        // The actual transport send would need proper integration
+        // This would be sent on the NEW channel's transport, not the existing one
 
-        // Binding success assumed for now
+        log.debug("Channel binding prepared for channel {} with session 0x{}", channel.getChannelId(), Long.toHexString(getSessionId()));
     }
 
     /**
@@ -284,23 +301,36 @@ public class ChannelManager {
             return false;
         }
 
-        // This would need to check server capabilities from negotiation
-        // For now, assume server supports it if client enables it
-        return true;
+        // MS-SMB2: Check if server advertised SMB2_GLOBAL_CAP_MULTI_CHANNEL (0x00000008)
+        // This capability should be checked from the negotiate response
+        // The server capabilities are typically stored in the session or transport
+
+        // TODO: Integration point - check server capabilities
+        // Example: return (session.getServerCapabilities() & Smb2ChannelCapabilities.SMB2_GLOBAL_CAP_MULTI_CHANNEL) != 0;
+
+        log.debug("Multi-channel support check requires server capability verification");
+        return false; // Conservative default until proper integration
     }
 
     private void queryRemoteInterfaces() throws IOException {
-        // Send FSCTL_QUERY_NETWORK_INTERFACE_INFO
+        // Send FSCTL_QUERY_NETWORK_INTERFACE_INFO per MS-SMB2 3.2.4.23
         Smb2IoctlRequest request =
-                new Smb2IoctlRequest(context.getConfig(), Smb2IoctlRequest.FSCTL_QUERY_NETWORK_INTERFACE_INFO, new byte[16] // Use session ID as file ID
+                new Smb2IoctlRequest(context.getConfig(), Smb2IoctlRequest.FSCTL_QUERY_NETWORK_INTERFACE_INFO, new byte[16] // Reserved/Unused file ID
                 );
         request.setMaxOutputResponse(65536);
         request.setFlags(Smb2IoctlRequest.SMB2_O_IOCTL_IS_FSCTL);
 
-        // Network interface discovery would use proper session interface
-        // For now, skip actual IOCTL implementation
+        // Note: This IOCTL must be sent on an existing session
+        // The actual sending would need integration with the session's transport
+        // For now, we're preparing the request structure correctly
 
-        // Interface parsing would happen here
+        // TODO: Integration point - send request through session.send()
+        // Smb2IoctlResponse response = (Smb2IoctlResponse) session.send(request);
+        // if (response.isSuccess()) {
+        //     parseNetworkInterfaces(response.getOutputData());
+        // }
+
+        log.debug("FSCTL_QUERY_NETWORK_INTERFACE_INFO prepared but needs session integration");
     }
 
     private void parseNetworkInterfaces(byte[] data) {
@@ -525,9 +555,7 @@ public class ChannelManager {
     }
 
     private int getMaxChannelsFromConfig(Configuration config) {
-        // This would read from configuration
-        // For now, return default
-        return Smb2ChannelCapabilities.DEFAULT_MAX_CHANNELS;
+        return Math.max(1, Math.min(config.getMaxChannels(), Smb2ChannelCapabilities.ABSOLUTE_MAX_CHANNELS));
     }
 
     private long getSessionId() {

@@ -22,10 +22,7 @@ import java.net.UnknownHostException;
 import java.util.Properties;
 
 import jcifs.CIFSException;
-import jcifs.Config;
 import jcifs.Configuration;
-import jcifs.DialectVersion;
-import jcifs.SmbConstants;
 
 /**
  * Configuration implementation reading the classic jcifs settings from properties
