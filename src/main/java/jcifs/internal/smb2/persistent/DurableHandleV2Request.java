@@ -84,15 +84,15 @@ public class DurableHandleV2Request implements CreateContextRequest {
      * Get the timeout value in 100-nanosecond intervals as required by MS-SMB2
      * @return the timeout in 100-nanosecond intervals
      */
-    public int getTimeoutFor100Ns() {
+    public long getTimeoutFor100Ns() {
         if (timeoutMs == 0) {
-            return 0; // Persistent handles use 0
+            return 0L; // Persistent handles use 0
         }
         // Convert milliseconds to 100-nanosecond intervals
         // 1 ms = 10,000 * 100ns intervals
         long intervals = timeoutMs * 10000L;
         // MS-SMB2 timeout field is 4 bytes (uint32), so clamp to max value
-        return intervals > 0xFFFFFFFFL ? (int) 0xFFFFFFFFL : (int) intervals;
+        return Math.min(intervals, 0xFFFFFFFFL);
     }
 
     /**
@@ -149,7 +149,7 @@ public class DurableHandleV2Request implements CreateContextRequest {
 
         // Write durable handle V2 request data (32 bytes total)
         // MS-SMB2 2.2.13.2.4 structure:
-        SMBUtil.writeInt4(getTimeoutFor100Ns(), dst, dstIndex); // Timeout (4 bytes in 100-ns intervals)
+        SMBUtil.writeInt4((int) getTimeoutFor100Ns(), dst, dstIndex); // Timeout (4 bytes in 100-ns intervals)
         dstIndex += 4;
 
         SMBUtil.writeInt4(flags, dst, dstIndex); // Flags (4 bytes)

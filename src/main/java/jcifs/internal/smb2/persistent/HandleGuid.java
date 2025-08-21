@@ -80,7 +80,8 @@ public class HandleGuid implements Serializable {
      * @return 16-byte array representing the GUID in SMB wire format
      */
     public byte[] toBytes() {
-        ByteBuffer bb = ByteBuffer.allocate(16).order(java.nio.ByteOrder.LITTLE_ENDIAN);
+        byte[] result = new byte[16];
+        ByteBuffer bb = ByteBuffer.wrap(result).order(java.nio.ByteOrder.LITTLE_ENDIAN);
 
         long mostSig = guid.getMostSignificantBits();
         long leastSig = guid.getLeastSignificantBits();
@@ -95,11 +96,13 @@ public class HandleGuid implements Serializable {
         bb.putShort(data2); // data2 (2 bytes, little-endian)
         bb.putShort(data3); // data3 (2 bytes, little-endian)
 
-        // Last 8 bytes (data4) written as big-endian
-        bb.order(java.nio.ByteOrder.BIG_ENDIAN);
-        bb.putLong(leastSig);
+        // Last 8 bytes (data4) written directly as big-endian bytes
+        // Extract individual bytes from leastSig and write them directly
+        for (int i = 0; i < 8; i++) {
+            result[8 + i] = (byte) (leastSig >>> (56 - i * 8));
+        }
 
-        return bb.array();
+        return result;
     }
 
     /**

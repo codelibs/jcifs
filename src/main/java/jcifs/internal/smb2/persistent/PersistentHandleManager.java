@@ -120,7 +120,7 @@ public class PersistentHandleManager {
      * @param fileId the 16-byte file ID
      */
     public void updateHandleFileId(HandleGuid guid, byte[] fileId) {
-        lock.readLock().lock();
+        lock.writeLock().lock();
         try {
             HandleInfo info = guidToHandle.get(guid);
             if (info != null) {
@@ -131,7 +131,7 @@ public class PersistentHandleManager {
                 log.debug("Updated file ID for handle: {}", guid);
             }
         } finally {
-            lock.readLock().unlock();
+            lock.writeLock().unlock();
         }
     }
 
@@ -169,13 +169,13 @@ public class PersistentHandleManager {
                 if (success) {
                     info.updateAccessTime();
                     info.setReconnecting(false);
-                    log.debug("Reconnection successful for: {}", path);
+                    log.info("Reconnection successful for: {}", path);
                 } else {
                     // Remove failed handle
                     handles.remove(path);
                     guidToHandle.remove(info.getCreateGuid());
                     removePersistedHandle(info);
-                    log.debug("Reconnection failed, removed handle for: {}", path);
+                    log.warn("Reconnection failed, removed handle for: {}", path);
                 }
             }
         } finally {
@@ -310,7 +310,7 @@ public class PersistentHandleManager {
                     if (!info.isExpired()) {
                         handles.put(info.getPath(), info);
                         guidToHandle.put(info.getCreateGuid(), info);
-                        log.debug("Loaded persisted handle: {}", info.getPath());
+                        log.info("Loaded persisted handle: {}", info.getPath());
                     } else {
                         Files.delete(handleFile);
                         log.debug("Deleted expired persisted handle: {}", handleFile);
