@@ -17,6 +17,7 @@
  */
 package jcifs.internal.smb2.create;
 
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -215,6 +216,36 @@ public class Smb2CreateResponse extends ServerMessageBlock2Response implements S
     }
 
     /**
+     * Get the lease V1 context response if present
+     * @return the lease V1 context or null if not present
+     */
+    public LeaseV1CreateContextResponse getLeaseV1Context() {
+        if (this.createContexts != null) {
+            for (CreateContextResponse ctx : this.createContexts) {
+                if (ctx instanceof LeaseV1CreateContextResponse) {
+                    return (LeaseV1CreateContextResponse) ctx;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Get the lease V2 context response if present
+     * @return the lease V2 context or null if not present
+     */
+    public LeaseV2CreateContextResponse getLeaseV2Context() {
+        if (this.createContexts != null) {
+            for (CreateContextResponse ctx : this.createContexts) {
+                if (ctx instanceof LeaseV2CreateContextResponse) {
+                    return (LeaseV2CreateContextResponse) ctx;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
      * {@inheritDoc}
      *
      * @see jcifs.internal.smb2.ServerMessageBlock2#writeBytesWireFormat(byte[], int)
@@ -319,11 +350,29 @@ public class Smb2CreateResponse extends ServerMessageBlock2Response implements S
     }
 
     /**
-     * @param nameBytes
-     * @return
+     * Factory method to create appropriate context response based on context name
+     * @param nameBytes context name bytes
+     * @return appropriate CreateContextResponse implementation or null if unknown
      */
     private static CreateContextResponse createContext(final byte[] nameBytes) {
-        return null;
+        if (nameBytes == null || nameBytes.length != 4) {
+            return null;
+        }
+
+        String contextName = new String(nameBytes, StandardCharsets.US_ASCII);
+
+        switch (contextName) {
+        case LeaseV1CreateContextRequest.CONTEXT_NAME: // "RqLs"
+            return new LeaseV1CreateContextResponse();
+        case LeaseV2CreateContextRequest.CONTEXT_NAME: // "RqL2"
+            return new LeaseV2CreateContextResponse();
+        default:
+            // Unknown context type - log and return null
+            if (log.isDebugEnabled()) {
+                log.debug("Unknown create context: " + contextName);
+            }
+            return null;
+        }
     }
 
 }
