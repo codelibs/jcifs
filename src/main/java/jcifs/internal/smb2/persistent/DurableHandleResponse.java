@@ -20,8 +20,6 @@ import jcifs.internal.SMBProtocolDecodingException;
  * SMB2 Durable Handle Response Create Context
  *
  * MS-SMB2 Section 2.2.14.2.3
- *
- * @author jcifs team
  */
 public class DurableHandleResponse implements CreateContextResponse {
 

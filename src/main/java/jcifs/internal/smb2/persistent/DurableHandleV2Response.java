@@ -21,8 +21,6 @@ import jcifs.internal.util.SMBUtil;
  * SMB2 Durable Handle V2 Response Create Context
  *
  * MS-SMB2 Section 2.2.14.2.4
- *
- * @author jcifs team
  */
 public class DurableHandleV2Response implements CreateContextResponse {
 

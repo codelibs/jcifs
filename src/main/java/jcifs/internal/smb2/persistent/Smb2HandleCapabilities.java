@@ -15,8 +15,6 @@ package jcifs.internal.smb2.persistent;
 
 /**
  * Constants for SMB2/3 durable and persistent handle capabilities.
- *
- * @author jcifs team
  */
 public final class Smb2HandleCapabilities {
 

@@ -21,8 +21,6 @@ import java.io.Serializable;
  * Handle GUID structure for SMB2/3 durable and persistent handles.
  * Provides a unique identifier for each handle that can be used
  * for reconnection after network failures or server reboots.
- *
- * @author jcifs team
  */
 public class HandleGuid implements Serializable {
 

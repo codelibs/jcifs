@@ -31,8 +31,6 @@ import java.io.IOException;
  *
  * This class provides retry logic with exponential backoff for handle
  * reconnection after network failures or server issues.
- *
- * @author jcifs team
  */
 public class HandleReconnector {
 

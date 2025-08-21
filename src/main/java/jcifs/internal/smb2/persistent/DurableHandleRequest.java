@@ -20,8 +20,6 @@ import jcifs.internal.util.SMBUtil;
  * SMB2 Durable Handle Request Create Context (DHnQ)
  *
  * MS-SMB2 Section 2.2.13.2.3
- *
- * @author jcifs team
  */
 public class DurableHandleRequest implements CreateContextRequest {
 

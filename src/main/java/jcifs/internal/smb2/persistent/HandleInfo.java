@@ -21,8 +21,6 @@ import java.util.Arrays;
  * Information about a durable or persistent SMB handle.
  * This class holds all the necessary information to reconnect
  * a handle after network failures or server reboots.
- *
- * @author jcifs team
  */
 public class HandleInfo implements Serializable {
 

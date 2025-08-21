@@ -15,8 +15,6 @@ package jcifs.internal.smb2.persistent;
 
 /**
  * Enumeration of SMB2/3 handle types supporting durability and persistence.
- *
- * @author jcifs team
  */
 public enum HandleType {
     /**

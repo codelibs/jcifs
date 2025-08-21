@@ -21,8 +21,6 @@ import java.util.Arrays;
  * SMB2 Durable Handle Reconnect Create Context (DHnC)
  *
  * MS-SMB2 Section 2.2.13.2.5
- *
- * @author jcifs team
  */
 public class DurableHandleReconnect implements CreateContextRequest {
 

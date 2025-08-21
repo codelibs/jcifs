@@ -34,8 +34,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * - Persistent storage for persistent handles
  * - Expiration tracking for durable handles
  * - Thread-safe access to handle information
- *
- * @author jcifs team
  */
 public class PersistentHandleManager {
 
