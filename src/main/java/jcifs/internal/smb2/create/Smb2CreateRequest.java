@@ -506,6 +506,63 @@ public class Smb2CreateRequest extends ServerMessageBlock2Request<Smb2CreateResp
     }
 
     /**
+     * Add a durable handle V1 context to this request
+     */
+    public void addDurableHandleV1Context() {
+        addCreateContext(new jcifs.internal.smb2.persistent.DurableHandleRequest());
+    }
+
+    /**
+     * Add a durable handle V2 context to this request
+     * @param timeout the timeout in milliseconds (0 for persistent handles)
+     * @param persistent true if this should be a persistent handle
+     * @return the create GUID for this handle
+     */
+    public jcifs.internal.smb2.persistent.HandleGuid addDurableHandleV2Context(long timeout, boolean persistent) {
+        jcifs.internal.smb2.persistent.DurableHandleV2Request context =
+                new jcifs.internal.smb2.persistent.DurableHandleV2Request(timeout, persistent);
+        addCreateContext(context);
+        return context.getCreateGuid();
+    }
+
+    /**
+     * Add a durable handle V2 context with specific GUID
+     * @param timeout the timeout in milliseconds
+     * @param persistent true if this should be a persistent handle
+     * @param createGuid the create GUID to use
+     */
+    public void addDurableHandleV2Context(long timeout, boolean persistent, jcifs.internal.smb2.persistent.HandleGuid createGuid) {
+        jcifs.internal.smb2.persistent.DurableHandleV2Request context =
+                new jcifs.internal.smb2.persistent.DurableHandleV2Request(timeout, persistent, createGuid);
+        addCreateContext(context);
+    }
+
+    /**
+     * Add a durable handle reconnect context to this request
+     * @param fileId the 16-byte file ID from the previous open
+     */
+    public void addDurableHandleReconnectContext(byte[] fileId) {
+        addCreateContext(new jcifs.internal.smb2.persistent.DurableHandleReconnect(fileId));
+    }
+
+    /**
+     * Check if this request has durable handle contexts
+     * @return true if durable handle contexts are present
+     */
+    public boolean hasDurableHandleContext() {
+        if (this.createContexts != null) {
+            for (CreateContextRequest ctx : this.createContexts) {
+                if (ctx instanceof jcifs.internal.smb2.persistent.DurableHandleRequest
+                        || ctx instanceof jcifs.internal.smb2.persistent.DurableHandleV2Request
+                        || ctx instanceof jcifs.internal.smb2.persistent.DurableHandleReconnect) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
      * {@inheritDoc}
      *
      * @see jcifs.internal.CommonServerMessageBlockRequest#size()
