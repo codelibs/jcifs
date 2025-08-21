@@ -31,7 +31,7 @@ public class DurableHandleV2Response implements CreateContextResponse {
 
     private static final byte[] CONTEXT_NAME_BYTES = CONTEXT_NAME.getBytes();
 
-    private long timeout;
+    private int timeout100Ns; // timeout in 100-nanosecond intervals (wire format)
     private int flags;
 
     /**
@@ -52,17 +52,30 @@ public class DurableHandleV2Response implements CreateContextResponse {
             throw new SMBProtocolDecodingException("Invalid durable handle V2 response length: " + len);
         }
 
-        this.timeout = SMBUtil.readInt4(buffer, bufferIndex); // Timeout (4 bytes)
+        this.timeout100Ns = SMBUtil.readInt4(buffer, bufferIndex); // Timeout (4 bytes, 100-ns intervals)
         this.flags = SMBUtil.readInt4(buffer, bufferIndex + 4); // Flags (4 bytes)
         return 8;
     }
 
     /**
-     * Get the timeout value
+     * Get the timeout value in 100-nanosecond intervals (raw wire format)
+     * @return the timeout in 100-nanosecond intervals
+     */
+    public int getTimeout100Ns() {
+        return timeout100Ns;
+    }
+
+    /**
+     * Get the timeout value converted to milliseconds
      * @return the timeout in milliseconds
      */
-    public long getTimeout() {
-        return timeout;
+    public long getTimeoutMs() {
+        if (timeout100Ns == 0) {
+            return 0; // Persistent handles
+        }
+        // Convert from 100-nanosecond intervals to milliseconds
+        // 1 ms = 10,000 * 100ns intervals
+        return (timeout100Ns & 0xFFFFFFFFL) / 10000L;
     }
 
     /**

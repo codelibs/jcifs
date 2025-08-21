@@ -860,4 +860,54 @@ public class DelegatingConfiguration implements Configuration {
     public boolean isAllowGuestFallback() {
         return this.delegate.isAllowGuestFallback();
     }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see jcifs.Configuration#isUseDurableHandles()
+     */
+    @Override
+    public boolean isUseDurableHandles() {
+        return this.delegate.isUseDurableHandles();
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see jcifs.Configuration#isUsePersistentHandles()
+     */
+    @Override
+    public boolean isUsePersistentHandles() {
+        return this.delegate.isUsePersistentHandles();
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see jcifs.Configuration#getDurableHandleTimeout()
+     */
+    @Override
+    public long getDurableHandleTimeout() {
+        return this.delegate.getDurableHandleTimeout();
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see jcifs.Configuration#getHandleReconnectRetries()
+     */
+    @Override
+    public int getHandleReconnectRetries() {
+        return this.delegate.getHandleReconnectRetries();
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see jcifs.Configuration#getHandleStateDirectory()
+     */
+    @Override
+    public String getHandleStateDirectory() {
+        return this.delegate.getHandleStateDirectory();
+    }
 }

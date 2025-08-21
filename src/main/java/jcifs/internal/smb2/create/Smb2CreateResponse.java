@@ -419,6 +419,12 @@ public class Smb2CreateResponse extends ServerMessageBlock2Response implements S
             return new LeaseV1CreateContextResponse();
         case LeaseV2CreateContextRequest.CONTEXT_NAME: // "RqL2"
             return new LeaseV2CreateContextResponse();
+        case "DHnQ": // Durable Handle Request/Response
+            return new jcifs.internal.smb2.persistent.DurableHandleResponse();
+        case "DH2Q": // Durable Handle V2 Request/Response
+            return new jcifs.internal.smb2.persistent.DurableHandleV2Response();
+        case "DHnC": // Durable Handle Reconnect Request/Response
+            return new jcifs.internal.smb2.persistent.DurableHandleReconnectResponse();
         default:
             // Unknown context type - log and return null
             if (log.isDebugEnabled()) {

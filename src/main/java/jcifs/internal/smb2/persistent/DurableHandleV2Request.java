@@ -29,31 +29,32 @@ public class DurableHandleV2Request implements CreateContextRequest {
     public static final String CONTEXT_NAME = "DH2Q";
 
     private static final byte[] CONTEXT_NAME_BYTES = CONTEXT_NAME.getBytes();
-    private static final int STRUCTURE_SIZE = 36;
+    private static final int STRUCTURE_SIZE = 32; // Corrected to 32 bytes as per MS-SMB2
 
-    private long timeout;
+    // MS-SMB2: Timeout is specified in 100-nanosecond intervals, but we store in milliseconds
+    private long timeoutMs; // timeout in milliseconds (for application use)
     private int flags;
     private HandleGuid createGuid;
 
     /**
      * Create a new durable handle V2 request
-     * @param timeout the timeout in milliseconds (0 for persistent handles)
+     * @param timeoutMs the timeout in milliseconds (0 for persistent handles)
      * @param persistent true if this should be a persistent handle
      */
-    public DurableHandleV2Request(long timeout, boolean persistent) {
-        this.timeout = timeout;
+    public DurableHandleV2Request(long timeoutMs, boolean persistent) {
+        this.timeoutMs = timeoutMs;
         this.flags = persistent ? Smb2HandleCapabilities.SMB2_DHANDLE_FLAG_PERSISTENT : 0;
         this.createGuid = new HandleGuid();
     }
 
     /**
      * Create a new durable handle V2 request with specific GUID
-     * @param timeout the timeout in milliseconds
+     * @param timeoutMs the timeout in milliseconds
      * @param persistent true if this should be a persistent handle
      * @param createGuid the create GUID to use
      */
-    public DurableHandleV2Request(long timeout, boolean persistent, HandleGuid createGuid) {
-        this.timeout = timeout;
+    public DurableHandleV2Request(long timeoutMs, boolean persistent, HandleGuid createGuid) {
+        this.timeoutMs = timeoutMs;
         this.flags = persistent ? Smb2HandleCapabilities.SMB2_DHANDLE_FLAG_PERSISTENT : 0;
         this.createGuid = createGuid;
     }
@@ -72,11 +73,26 @@ public class DurableHandleV2Request implements CreateContextRequest {
     }
 
     /**
-     * Get the timeout value
+     * Get the timeout value in milliseconds
      * @return the timeout in milliseconds
      */
-    public long getTimeout() {
-        return timeout;
+    public long getTimeoutMs() {
+        return timeoutMs;
+    }
+
+    /**
+     * Get the timeout value in 100-nanosecond intervals as required by MS-SMB2
+     * @return the timeout in 100-nanosecond intervals
+     */
+    public int getTimeoutFor100Ns() {
+        if (timeoutMs == 0) {
+            return 0; // Persistent handles use 0
+        }
+        // Convert milliseconds to 100-nanosecond intervals
+        // 1 ms = 10,000 * 100ns intervals
+        long intervals = timeoutMs * 10000L;
+        // MS-SMB2 timeout field is 4 bytes (uint32), so clamp to max value
+        return intervals > 0xFFFFFFFFL ? (int) 0xFFFFFFFFL : (int) intervals;
     }
 
     /**
@@ -97,7 +113,7 @@ public class DurableHandleV2Request implements CreateContextRequest {
 
     @Override
     public int size() {
-        // Context header (16) + name length (4) + padding to 8-byte alignment (4) + data (36)
+        // Context header (16) + name length (4) + padding to 8-byte alignment (4) + data (32)
         return 16 + 4 + 4 + STRUCTURE_SIZE;
     }
 
@@ -131,9 +147,10 @@ public class DurableHandleV2Request implements CreateContextRequest {
         // Padding to align data to 8-byte boundary
         dstIndex += 4;
 
-        // Write durable handle V2 request data (36 bytes total)
-        SMBUtil.writeInt8(timeout, dst, dstIndex); // Timeout (8 bytes)
-        dstIndex += 8;
+        // Write durable handle V2 request data (32 bytes total)
+        // MS-SMB2 2.2.13.2.4 structure:
+        SMBUtil.writeInt4(getTimeoutFor100Ns(), dst, dstIndex); // Timeout (4 bytes in 100-ns intervals)
+        dstIndex += 4;
 
         SMBUtil.writeInt4(flags, dst, dstIndex); // Flags (4 bytes)
         dstIndex += 4;

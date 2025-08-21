@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 import java.io.*;
 import java.nio.file.*;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Manager for persistent and durable SMB handles.
@@ -237,19 +238,95 @@ public class PersistentHandleManager {
     }
 
     private void periodicMaintenance() {
-        // Maintenance logic
+        if (shutdown) {
+            return;
+        }
+
+        lock.writeLock().lock();
+        try {
+            // Clean up expired handles
+            handles.entrySet().removeIf(entry -> {
+                HandleInfo info = entry.getValue();
+                if (info.isExpired() && !info.isReconnecting()) {
+                    guidToHandle.remove(info.getCreateGuid());
+                    removePersistedHandle(info);
+                    log.debug("Removed expired handle: {}", info.getPath());
+                    return true;
+                }
+                return false;
+            });
+
+            // Persist all persistent handles
+            for (HandleInfo info : handles.values()) {
+                if (info.getType() == HandleType.PERSISTENT && !info.isReconnecting()) {
+                    persistHandle(info);
+                }
+            }
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     private void persistHandle(HandleInfo info) {
-        // Persist logic
+        if (info.getType() != HandleType.PERSISTENT) {
+            return;
+        }
+
+        Path handleFile = stateDirectory.resolve(info.getCreateGuid().toString() + ".handle");
+        try (ObjectOutputStream oos = new ObjectOutputStream(Files.newOutputStream(handleFile, StandardOpenOption.CREATE,
+                StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING))) {
+            oos.writeObject(info);
+            log.debug("Persisted handle: {}", info.getPath());
+        } catch (IOException e) {
+            log.error("Failed to persist handle: " + info.getPath(), e);
+        }
     }
 
     private void removePersistedHandle(HandleInfo info) {
-        // Remove logic
+        if (info.getType() != HandleType.PERSISTENT) {
+            return;
+        }
+
+        Path handleFile = stateDirectory.resolve(info.getCreateGuid().toString() + ".handle");
+        try {
+            Files.deleteIfExists(handleFile);
+            log.debug("Removed persisted handle file: {}", handleFile);
+        } catch (IOException e) {
+            log.error("Failed to remove persisted handle file: " + handleFile, e);
+        }
     }
 
     private void loadPersistedHandles() {
-        // Load logic
+        if (!Files.exists(stateDirectory)) {
+            return;
+        }
+
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(stateDirectory, "*.handle")) {
+            for (Path handleFile : stream) {
+                try (ObjectInputStream ois = new ObjectInputStream(Files.newInputStream(handleFile))) {
+                    HandleInfo info = (HandleInfo) ois.readObject();
+
+                    // Only load if not expired
+                    if (!info.isExpired()) {
+                        handles.put(info.getPath(), info);
+                        guidToHandle.put(info.getCreateGuid(), info);
+                        log.debug("Loaded persisted handle: {}", info.getPath());
+                    } else {
+                        Files.delete(handleFile);
+                        log.debug("Deleted expired persisted handle: {}", handleFile);
+                    }
+                } catch (Exception e) {
+                    log.error("Failed to load handle file: " + handleFile, e);
+                    try {
+                        Files.deleteIfExists(handleFile);
+                    } catch (IOException deleteEx) {
+                        log.error("Failed to delete corrupted handle file: " + handleFile, deleteEx);
+                    }
+                }
+            }
+        } catch (IOException e) {
+            log.error("Failed to load persisted handles from directory: " + stateDirectory, e);
+        }
     }
 
     public void shutdown() {

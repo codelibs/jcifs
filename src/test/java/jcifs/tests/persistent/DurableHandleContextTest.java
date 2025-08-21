@@ -32,7 +32,7 @@ public class DurableHandleContextTest {
 
         assertEquals("DH2Q", new String(request.getName()));
         assertTrue(request.size() > 0);
-        assertEquals(120000, request.getTimeout());
+        assertEquals(120000, request.getTimeoutMs());
         assertFalse(request.isPersistent());
         assertNotNull(request.getCreateGuid());
 
@@ -46,7 +46,7 @@ public class DurableHandleContextTest {
     public void testDurableHandleV2RequestPersistent() {
         DurableHandleV2Request request = new DurableHandleV2Request(0, true);
 
-        assertEquals(0, request.getTimeout());
+        assertEquals(0, request.getTimeoutMs());
         assertTrue(request.isPersistent());
         assertEquals(Smb2HandleCapabilities.SMB2_DHANDLE_FLAG_PERSISTENT,
                 request.getFlags() & Smb2HandleCapabilities.SMB2_DHANDLE_FLAG_PERSISTENT);
@@ -58,7 +58,7 @@ public class DurableHandleContextTest {
         DurableHandleV2Request request = new DurableHandleV2Request(60000, false, guid);
 
         assertEquals(guid, request.getCreateGuid());
-        assertEquals(60000, request.getTimeout());
+        assertEquals(60000, request.getTimeoutMs());
         assertFalse(request.isPersistent());
     }
 

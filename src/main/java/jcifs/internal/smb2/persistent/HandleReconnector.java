@@ -15,10 +15,6 @@ package jcifs.internal.smb2.persistent;
 
 import jcifs.internal.smb2.create.Smb2CreateRequest;
 import jcifs.internal.smb2.create.Smb2CreateResponse;
-import jcifs.internal.smb2.create.LeaseV1CreateContextRequest;
-import jcifs.internal.smb2.create.LeaseV2CreateContextRequest;
-import jcifs.internal.smb2.lease.Smb2LeaseState;
-import jcifs.smb.SmbException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

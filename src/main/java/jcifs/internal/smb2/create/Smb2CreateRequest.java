@@ -518,9 +518,9 @@ public class Smb2CreateRequest extends ServerMessageBlock2Request<Smb2CreateResp
      * @param persistent true if this should be a persistent handle
      * @return the create GUID for this handle
      */
-    public jcifs.internal.smb2.persistent.HandleGuid addDurableHandleV2Context(long timeout, boolean persistent) {
+    public jcifs.internal.smb2.persistent.HandleGuid addDurableHandleV2Context(long timeoutMs, boolean persistent) {
         jcifs.internal.smb2.persistent.DurableHandleV2Request context =
-                new jcifs.internal.smb2.persistent.DurableHandleV2Request(timeout, persistent);
+                new jcifs.internal.smb2.persistent.DurableHandleV2Request(timeoutMs, persistent);
         addCreateContext(context);
         return context.getCreateGuid();
     }
@@ -531,9 +531,9 @@ public class Smb2CreateRequest extends ServerMessageBlock2Request<Smb2CreateResp
      * @param persistent true if this should be a persistent handle
      * @param createGuid the create GUID to use
      */
-    public void addDurableHandleV2Context(long timeout, boolean persistent, jcifs.internal.smb2.persistent.HandleGuid createGuid) {
+    public void addDurableHandleV2Context(long timeoutMs, boolean persistent, jcifs.internal.smb2.persistent.HandleGuid createGuid) {
         jcifs.internal.smb2.persistent.DurableHandleV2Request context =
-                new jcifs.internal.smb2.persistent.DurableHandleV2Request(timeout, persistent, createGuid);
+                new jcifs.internal.smb2.persistent.DurableHandleV2Request(timeoutMs, persistent, createGuid);
         addCreateContext(context);
     }
 

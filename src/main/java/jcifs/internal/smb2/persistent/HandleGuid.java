@@ -21,6 +21,9 @@ import java.io.Serializable;
  * Handle GUID structure for SMB2/3 durable and persistent handles.
  * Provides a unique identifier for each handle that can be used
  * for reconnection after network failures or server reboots.
+ *
+ * According to MS-SMB2, the GUID is a 16-byte structure with little-endian
+ * byte ordering for the individual components.
  */
 public class HandleGuid implements Serializable {
 
@@ -37,15 +40,30 @@ public class HandleGuid implements Serializable {
 
     /**
      * Create a handle GUID from existing bytes
-     * @param bytes the 16-byte GUID data
+     * @param bytes the 16-byte GUID data in little-endian format (SMB wire format)
      */
     public HandleGuid(byte[] bytes) {
         if (bytes.length != 16) {
             throw new IllegalArgumentException("GUID must be 16 bytes");
         }
-        ByteBuffer bb = ByteBuffer.wrap(bytes);
-        long mostSig = bb.getLong();
-        long leastSig = bb.getLong();
+
+        // MS-SMB2 specifies little-endian byte ordering for GUID components
+        // Convert from little-endian wire format to Java UUID
+        ByteBuffer bb = ByteBuffer.wrap(bytes).order(java.nio.ByteOrder.LITTLE_ENDIAN);
+
+        // Read GUID components in little-endian order
+        int data1 = bb.getInt(); // first 4 bytes (little-endian)
+        short data2 = bb.getShort(); // next 2 bytes (little-endian)
+        short data3 = bb.getShort(); // next 2 bytes (little-endian)
+
+        // The last 8 bytes are read as big-endian (network byte order for the high/low parts)
+        ByteBuffer bb2 = ByteBuffer.wrap(bytes, 8, 8).order(java.nio.ByteOrder.BIG_ENDIAN);
+        long data4 = bb2.getLong();
+
+        // Construct UUID from components - Java UUID expects big-endian representation
+        long mostSig = ((long) data1 << 32) | ((long) (data2 & 0xFFFF) << 16) | (data3 & 0xFFFF);
+        long leastSig = data4;
+
         this.guid = new UUID(mostSig, leastSig);
     }
 
@@ -58,13 +76,29 @@ public class HandleGuid implements Serializable {
     }
 
     /**
-     * Convert the GUID to byte array for wire format
-     * @return 16-byte array representing the GUID
+     * Convert the GUID to byte array for wire format (little-endian as per MS-SMB2)
+     * @return 16-byte array representing the GUID in SMB wire format
      */
     public byte[] toBytes() {
-        ByteBuffer bb = ByteBuffer.allocate(16);
-        bb.putLong(guid.getMostSignificantBits());
-        bb.putLong(guid.getLeastSignificantBits());
+        ByteBuffer bb = ByteBuffer.allocate(16).order(java.nio.ByteOrder.LITTLE_ENDIAN);
+
+        long mostSig = guid.getMostSignificantBits();
+        long leastSig = guid.getLeastSignificantBits();
+
+        // Extract GUID components from UUID
+        int data1 = (int) (mostSig >>> 32); // first 4 bytes
+        short data2 = (short) (mostSig >>> 16); // next 2 bytes
+        short data3 = (short) mostSig; // next 2 bytes
+
+        // Write in little-endian format as specified by MS-SMB2
+        bb.putInt(data1); // data1 (4 bytes, little-endian)
+        bb.putShort(data2); // data2 (2 bytes, little-endian)
+        bb.putShort(data3); // data3 (2 bytes, little-endian)
+
+        // Last 8 bytes (data4) written as big-endian
+        bb.order(java.nio.ByteOrder.BIG_ENDIAN);
+        bb.putLong(leastSig);
+
         return bb.array();
     }
 

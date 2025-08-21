@@ -676,6 +676,31 @@ public class BaseConfiguration implements Configuration {
         return this.machineId;
     }
 
+    @Override
+    public boolean isUseDurableHandles() {
+        return this.useDurableHandles;
+    }
+
+    @Override
+    public boolean isUsePersistentHandles() {
+        return this.usePersistentHandles;
+    }
+
+    @Override
+    public long getDurableHandleTimeout() {
+        return this.durableHandleTimeout;
+    }
+
+    @Override
+    public int getHandleReconnectRetries() {
+        return this.handleReconnectRetries;
+    }
+
+    @Override
+    public String getHandleStateDirectory() {
+        return this.handleStateDirectory;
+    }
+
     /**
      * {@inheritDoc}
      *
