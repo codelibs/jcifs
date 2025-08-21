@@ -1,5 +1,5 @@
 /*
- * © 2017 AgNO3 Gmbh & Co. KG
+ * © 2025 CodeLibs, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
