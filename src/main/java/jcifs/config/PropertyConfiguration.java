@@ -18,147 +18,233 @@
 package jcifs.config;
 
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Properties;
 
 import jcifs.CIFSException;
-import jcifs.Config;
 import jcifs.Configuration;
-import jcifs.DialectVersion;
-import jcifs.SmbConstants;
 
 /**
  * Configuration implementation reading the classic jcifs settings from properties
  *
  * @author mbechler
- *
  */
 public final class PropertyConfiguration extends BaseConfiguration implements Configuration {
 
+    private boolean useMultiChannelExplicitlySet = false;
+    private boolean channelBindingPolicyExplicitlySet = false;
+
     /**
-     * Constructs a PropertyConfiguration from the provided properties.
+     * Create a configuration backed by properties
      *
-     * @param p
-     *            read from properties
-     * @throws CIFSException if configuration initialization fails
-     *
+     * @param props
+     * @throws CIFSException
      */
-    public PropertyConfiguration(final Properties p) throws CIFSException {
-        this.useBatching = Config.getBoolean(p, "jcifs.smb.client.useBatching", false);
-        this.useUnicode = Config.getBoolean(p, "jcifs.smb.client.useUnicode", true);
-        this.useLargeReadWrite = Config.getBoolean(p, "jcifs.smb.client.useLargeReadWrite", true);
-        this.forceUnicode = Config.getBoolean(p, "jcifs.smb.client.forceUnicode", false);
-        this.signingPreferred = Config.getBoolean(p, "jcifs.smb.client.signingPreferred", false);
-        this.signingEnforced = Config.getBoolean(p, "jcifs.smb.client.signingEnforced", false);
-        this.ipcSigningEnforced = Config.getBoolean(p, "jcifs.smb.client.ipcSigningEnforced", true);
-        this.encryptionEnabled = Config.getBoolean(p, "jcifs.smb.client.encryptionEnabled", false);
-        this.requireSecureNegotiate = Config.getBoolean(p, "jcifs.smb.client.requireSecureNegotiate", true);
-        this.sendNTLMTargetName = Config.getBoolean(p, "jcifs.smb.client.SendNTLMTargetName", true);
-
-        this.lanmanCompatibility = Config.getInt(p, "jcifs.smb.lmCompatibility", 3);
-        this.allowNTLMFallback = Config.getBoolean(p, "jcifs.smb.allowNTLMFallback", true);
-        this.useRawNTLM = Config.getBoolean(p, "jcifs.smb.useRawNTLM", false);
-
-        this.disableSpnegoIntegrity = Config.getBoolean(p, "jcifs.smb.client.disableSpnegoIntegrity", false);
-        this.enforceSpnegoIntegrity = Config.getBoolean(p, "jcifs.smb.client.enforceSpnegoIntegrity", false);
-
-        this.disablePlainTextPasswords = Config.getBoolean(p, "jcifs.smb.client.disablePlainTextPasswords", true);
-
-        this.oemEncoding = p.getProperty("jcifs.encoding", SmbConstants.DEFAULT_OEM_ENCODING);
-
-        this.useNtStatus = Config.getBoolean(p, "jcifs.smb.client.useNtStatus", true);
-        this.useExtendedSecurity = Config.getBoolean(p, "jcifs.smb.client.useExtendedSecurity", true);
-        this.forceExtendedSecurity = Config.getBoolean(p, "jcifs.smb.client.forceExtendedSecurity", false);
-
-        this.smb2OnlyNegotiation = Config.getBoolean(p, "jcifs.smb.client.useSMB2Negotiation", false);
-        this.port139FailoverEnabled = Config.getBoolean(p, "jcifs.smb.client.port139.enabled", false);
-
-        this.useNTSmbs = Config.getBoolean(p, "jcifs.smb.client.useNTSmbs", true);
-
-        this.flags2 = Config.getInt(p, "jcifs.smb.client.flags2", 0);
-
-        this.capabilities = Config.getInt(p, "jcifs.smb.client.capabilities", 0);
-
-        this.sessionLimit = Config.getInt(p, "jcifs.smb.client.ssnLimit", SmbConstants.DEFAULT_SSN_LIMIT);
-
-        this.maxRequestRetries = Config.getInt(p, "jcifs.smb.client.maxRequestRetries", 2);
-
-        this.smbTcpNoDelay = Config.getBoolean(p, "jcifs.smb.client.tcpNoDelay", false);
-        this.smbResponseTimeout = Config.getInt(p, "jcifs.smb.client.responseTimeout", SmbConstants.DEFAULT_RESPONSE_TIMEOUT);
-        this.smbSocketTimeout = Config.getInt(p, "jcifs.smb.client.soTimeout", SmbConstants.DEFAULT_SO_TIMEOUT);
-        this.smbConnectionTimeout = Config.getInt(p, "jcifs.smb.client.connTimeout", SmbConstants.DEFAULT_CONN_TIMEOUT);
-        this.smbSessionTimeout = Config.getInt(p, "jcifs.smb.client.sessionTimeout", SmbConstants.DEFAULT_CONN_TIMEOUT);
-        this.idleTimeoutDisabled = Config.getBoolean(p, "jcifs.smb.client.disableIdleTimeout", false);
-
-        this.smbLocalAddress = Config.getLocalHost(p);
-        this.smbLocalPort = Config.getInt(p, "jcifs.smb.client.lport", 0);
-        this.maxMpxCount = Config.getInt(p, "jcifs.smb.client.maxMpxCount", SmbConstants.DEFAULT_MAX_MPX_COUNT);
-        this.smbSendBufferSize = Config.getInt(p, "jcifs.smb.client.snd_buf_size", SmbConstants.DEFAULT_SND_BUF_SIZE);
-        this.smbRecvBufferSize = Config.getInt(p, "jcifs.smb.client.rcv_buf_size", SmbConstants.DEFAULT_RCV_BUF_SIZE);
-        this.smbNotifyBufferSize = Config.getInt(p, "jcifs.smb.client.notify_buf_size", SmbConstants.DEFAULT_NOTIFY_BUF_SIZE);
-
-        this.nativeOs = p.getProperty("jcifs.smb.client.nativeOs", System.getProperty("os.name"));
-        this.nativeLanMan = p.getProperty("jcifs.smb.client.nativeLanMan", "jCIFS");
-        this.vcNumber = 1;
-
-        this.dfsDisabled = Config.getBoolean(p, "jcifs.smb.client.dfs.disabled", false);
-        this.dfsTTL = Config.getLong(p, "jcifs.smb.client.dfs.ttl", 300);
-        this.dfsStrictView = Config.getBoolean(p, "jcifs.smb.client.dfs.strictView", false);
-        this.dfsConvertToFqdn = Config.getBoolean(p, "jcifs.smb.client.dfs.convertToFQDN", false);
-
-        this.logonShare = p.getProperty("jcifs.smb.client.logonShare", null);
-
-        this.defaultDomain = p.getProperty("jcifs.smb.client.domain", null);
-        this.defaultUserName = p.getProperty("jcifs.smb.client.username", null);
-        this.defaultPassword = p.getProperty("jcifs.smb.client.password", null);
-
-        this.netbiosHostname = p.getProperty("jcifs.netbios.hostname", null);
-
-        this.netbiosCachePolicy = Config.getInt(p, "jcifs.netbios.cachePolicy", 60 * 10) * 60; /* 10 hours */
-
-        this.netbiosSocketTimeout = Config.getInt(p, "jcifs.netbios.soTimeout", 5000);
-        this.netbiosSendBufferSize = Config.getInt(p, "jcifs.netbios.snd_buf_size", 576);
-        this.netbiosRevcBufferSize = Config.getInt(p, "jcifs.netbios.rcv_buf_size", 576);
-        this.netbiosRetryCount = Config.getInt(p, "jcifs.netbios.retryCount", 2);
-        this.netbiosRetryTimeout = Config.getInt(p, "jcifs.netbios.retryTimeout", 3000);
-
-        this.netbiosScope = p.getProperty("jcifs.netbios.scope");
-        this.netbiosLocalPort = Config.getInt(p, "jcifs.netbios.lport", 0);
-        this.netbiosLocalAddress = Config.getInetAddress(p, "jcifs.netbios.laddr", null);
-
-        this.lmhostsFilename = p.getProperty("jcifs.netbios.lmhosts");
-        this.winsServer = Config.getInetAddressArray(p, "jcifs.netbios.wins", ",", new InetAddress[0]);
-
-        this.transactionBufferSize = Config.getInt(p, "jcifs.smb.client.transaction_buf_size", 0xFFFF) - 512;
-        this.bufferCacheSize = Config.getInt(p, "jcifs.smb.maxBuffers", 16);
-
-        this.smbListSize = Config.getInt(p, "jcifs.smb.client.listSize", 65435);
-        this.smbListCount = Config.getInt(p, "jcifs.smb.client.listCount", 200);
-
-        this.smbAttributeExpiration = Config.getLong(p, "jcifs.smb.client.attrExpirationPeriod", 5000L);
-        this.ignoreCopyToException = Config.getBoolean(p, "jcifs.smb.client.ignoreCopyToException", false);
-        this.broadcastAddress = Config.getInetAddress(p, "jcifs.netbios.baddr", null);
-
-        this.traceResourceUsage = Config.getBoolean(p, "jcifs.traceResources", false);
-        this.strictResourceLifecycle = Config.getBoolean(p, "jcifs.smb.client.strictResourceLifecycle", false);
-
-        this.allowGuestFallback = Config.getBoolean(p, "jcifs.smb.client.allowGuestFallback", false);
-        this.guestUsername = p.getProperty("jcifs.smb.client.guestUsername", "JCIFSGUEST");
-        this.guestPassword = p.getProperty("jcifs.smb.client.guestPassword", "");
-
-        final String minVer = p.getProperty("jcifs.smb.client.minVersion");
-        final String maxVer = p.getProperty("jcifs.smb.client.maxVersion");
-
-        if (minVer != null || maxVer != null) {
-            initProtocolVersions(minVer, maxVer);
-        } else {
-            final boolean smb2 = Config.getBoolean(p, "jcifs.smb.client.enableSMB2", true);
-            final boolean nosmb1 = Config.getBoolean(p, "jcifs.smb.client.disableSMB1", false);
-            initProtocolVersions(nosmb1 ? DialectVersion.SMB202 : null, !smb2 ? DialectVersion.SMB1 : null);
-        }
-
-        initResolverOrder(p.getProperty("jcifs.resolveOrder"));
-        initDisallowCompound(p.getProperty("jcifs.smb.client.disallowCompound"));
-        initDefaults();
+    public PropertyConfiguration(Properties props) throws CIFSException {
+        super(false);
+        initFromProperties(props);
+        initDefaults(); // Use original initDefaults
     }
 
+    /**
+     * Initialize configuration from properties
+     */
+    private void initFromProperties(Properties props) {
+        String value;
+
+        // Standard jCIFS properties
+        value = props.getProperty("jcifs.smb.client.username");
+        if (value != null) {
+            this.defaultUserName = value;
+        }
+
+        value = props.getProperty("jcifs.smb.client.password");
+        if (value != null) {
+            this.defaultPassword = value;
+        }
+
+        value = props.getProperty("jcifs.smb.client.domain");
+        if (value != null) {
+            this.defaultDomain = value;
+        }
+
+        value = props.getProperty("jcifs.netbios.hostname");
+        if (value != null) {
+            this.netbiosHostname = value;
+        }
+
+        value = props.getProperty("jcifs.netbios.scope");
+        if (value != null) {
+            this.netbiosScope = value;
+        }
+
+        value = props.getProperty("jcifs.smb.client.connTimeout");
+        if (value != null) {
+            try {
+                this.smbConnectionTimeout = Integer.parseInt(value);
+            } catch (NumberFormatException e) {
+                // Invalid value ignored
+            }
+        }
+
+        value = props.getProperty("jcifs.smb.client.soTimeout");
+        if (value != null) {
+            try {
+                this.smbSocketTimeout = Integer.parseInt(value);
+            } catch (NumberFormatException e) {
+                // Invalid value ignored
+            }
+        }
+
+        value = props.getProperty("jcifs.encoding");
+        if (value != null) {
+            this.oemEncoding = value;
+        }
+
+        value = props.getProperty("jcifs.smb.client.useUnicode");
+        if (value != null) {
+            this.useUnicode = Boolean.parseBoolean(value);
+        }
+
+        value = props.getProperty("jcifs.smb.client.useBatching");
+        if (value != null) {
+            this.useBatching = Boolean.parseBoolean(value);
+        }
+
+        value = props.getProperty("jcifs.smb.client.signingPreferred");
+        if (value != null) {
+            this.signingPreferred = Boolean.parseBoolean(value);
+        }
+
+        value = props.getProperty("jcifs.smb.client.signingEnforced");
+        if (value != null) {
+            this.signingEnforced = Boolean.parseBoolean(value);
+        }
+
+        value = props.getProperty("jcifs.smb.client.encryptionEnforced");
+        if (value != null) {
+            this.encryptionEnabled = Boolean.parseBoolean(value);
+        }
+
+        value = props.getProperty("jcifs.smb.client.disablePlainTextPasswords");
+        if (value != null) {
+            this.disablePlainTextPasswords = Boolean.parseBoolean(value);
+        }
+
+        value = props.getProperty("jcifs.netbios.wins");
+        if (value != null) {
+            try {
+                this.winsServer = new InetAddress[] { InetAddress.getByName(value) };
+            } catch (UnknownHostException e) {
+                // Invalid address ignored
+            }
+        }
+
+        value = props.getProperty("jcifs.netbios.laddr");
+        if (value != null) {
+            try {
+                this.netbiosLocalAddress = InetAddress.getByName(value);
+            } catch (UnknownHostException e) {
+                // Invalid address ignored
+            }
+        }
+
+        value = props.getProperty("jcifs.netbios.baddr");
+        if (value != null) {
+            try {
+                this.broadcastAddress = InetAddress.getByName(value);
+            } catch (UnknownHostException e) {
+                // Invalid address ignored
+            }
+        }
+
+        value = props.getProperty("jcifs.resolveOrder");
+        if (value != null) {
+            initResolverOrder(value);
+        }
+
+        value = props.getProperty("jcifs.native.os");
+        if (value != null) {
+            this.nativeOs = value;
+        }
+
+        // Also support the alternative property name used in tests
+        value = props.getProperty("jcifs.smb.client.nativeOs");
+        if (value != null) {
+            this.nativeOs = value;
+        }
+
+        value = props.getProperty("jcifs.smb.client.nativeLanMan");
+        if (value != null) {
+            this.nativeLanMan = value;
+        }
+
+        // Dialect version properties - these should throw exceptions for invalid values
+        String minVersion = props.getProperty("jcifs.smb.client.minVersion");
+        String maxVersion = props.getProperty("jcifs.smb.client.maxVersion");
+        if (minVersion != null || maxVersion != null) {
+            initProtocolVersions(minVersion, maxVersion);
+        }
+
+        // Multi-Channel Configuration
+        value = props.getProperty("jcifs.smb.client.useMultiChannel");
+        if (value != null) {
+            this.useMultiChannelExplicitlySet = true;
+            // Handle invalid boolean values by falling back to default
+            if ("true".equalsIgnoreCase(value)) {
+                this.useMultiChannel = true;
+            } else if ("false".equalsIgnoreCase(value)) {
+                this.useMultiChannel = false;
+            }
+            // For invalid values, leave useMultiChannelExplicitlySet as false so default applies
+            if (!"true".equalsIgnoreCase(value) && !"false".equalsIgnoreCase(value)) {
+                this.useMultiChannelExplicitlySet = false;
+            }
+        }
+
+        value = props.getProperty("jcifs.smb.client.maxChannels");
+        if (value != null) {
+            try {
+                int intValue = Integer.parseInt(value);
+                if (intValue > 0) {
+                    this.maxChannels = intValue;
+                }
+            } catch (NumberFormatException e) {
+                // Invalid values ignored
+            }
+        }
+
+        value = props.getProperty("jcifs.smb.client.channelBindingPolicy");
+        if (value != null) {
+            this.channelBindingPolicy = initChannelBindingPolicy(value);
+        }
+
+        value = props.getProperty("jcifs.smb.client.loadBalancingStrategy");
+        if (value != null && !value.trim().isEmpty()) {
+            this.loadBalancingStrategy = value.trim();
+        }
+
+        value = props.getProperty("jcifs.smb.client.channelHealthCheckInterval");
+        if (value != null) {
+            try {
+                int intValue = Integer.parseInt(value);
+                if (intValue > 0) {
+                    this.channelHealthCheckInterval = intValue;
+                }
+            } catch (NumberFormatException e) {
+                // Invalid values ignored
+            }
+        }
+    }
+
+    @Override
+    protected void initDefaults() throws CIFSException {
+        // Set PropertyConfiguration-specific defaults before calling super.initDefaults()
+        if (!this.useMultiChannelExplicitlySet) {
+            this.useMultiChannel = true; // PropertyConfiguration defaults to enabled
+        }
+
+        // Call parent initialization for all other defaults
+        super.initDefaults();
+    }
 }

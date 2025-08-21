@@ -904,6 +904,56 @@ public class DelegatingConfiguration implements Configuration {
     /**
      * {@inheritDoc}
      *
+     * @see jcifs.Configuration#isUseMultiChannel()
+     */
+    @Override
+    public boolean isUseMultiChannel() {
+        return this.delegate.isUseMultiChannel();
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see jcifs.Configuration#getMaxChannels()
+     */
+    @Override
+    public int getMaxChannels() {
+        return this.delegate.getMaxChannels();
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see jcifs.Configuration#getChannelBindingPolicy()
+     */
+    @Override
+    public int getChannelBindingPolicy() {
+        return this.delegate.getChannelBindingPolicy();
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see jcifs.Configuration#getLoadBalancingStrategy()
+     */
+    @Override
+    public String getLoadBalancingStrategy() {
+        return this.delegate.getLoadBalancingStrategy();
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see jcifs.Configuration#getChannelHealthCheckInterval()
+     */
+    @Override
+    public int getChannelHealthCheckInterval() {
+        return this.delegate.getChannelHealthCheckInterval();
+    }
+
+    /**
+     * {@inheritDoc}
+     *
      * @see jcifs.Configuration#getHandleStateDirectory()
      */
     @Override

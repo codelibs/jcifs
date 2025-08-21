@@ -62,6 +62,8 @@ import jcifs.internal.smb2.ServerMessageBlock2Request;
 import jcifs.internal.smb2.Smb2Constants;
 import jcifs.internal.smb2.Smb2EncryptionContext;
 import jcifs.internal.smb2.Smb2SigningDigest;
+import jcifs.internal.smb2.multichannel.ChannelInfo;
+import jcifs.internal.smb2.multichannel.ChannelManager;
 import jcifs.internal.smb2.nego.Smb2NegotiateResponse;
 import jcifs.internal.smb2.session.Smb2LogoffRequest;
 import jcifs.internal.smb2.session.Smb2SessionSetupRequest;
@@ -108,6 +110,9 @@ final class SmbSessionImpl implements SmbSessionInternal {
 
     private byte[] preauthIntegrityHash;
 
+    // Multi-channel support
+    private ChannelManager channelManager;
+
     SmbSessionImpl(CIFSContext tf, String targetHost, String targetDomain, SmbTransportImpl transport) {
         this.transportContext = tf;
         this.targetDomain = targetDomain;
@@ -115,6 +120,9 @@ final class SmbSessionImpl implements SmbSessionInternal {
         this.transport = transport.acquire();
         this.trees = new ArrayList<>();
         this.credentials = tf.getCredentials().unwrap(CredentialsInternal.class).clone();
+
+        // Initialize multi-channel support
+        this.channelManager = new ChannelManager(tf, this);
     }
 
     /**
@@ -220,6 +228,10 @@ final class SmbSessionImpl implements SmbSessionInternal {
             synchronized (this) {
                 if (this.transportAcquired.compareAndSet(true, false)) {
                     this.transport.release();
+                }
+                // Shutdown channel manager
+                if (this.channelManager != null) {
+                    this.channelManager.shutdown();
                 }
             }
         } else if (usage < 0) {
@@ -328,7 +340,8 @@ final class SmbSessionImpl implements SmbSessionInternal {
 
     <T extends CommonServerMessageBlockResponse> T send(CommonServerMessageBlockRequest request, T response, Set<RequestParam> params)
             throws CIFSException {
-        try (SmbTransportImpl trans = getTransport()) {
+        // Select appropriate transport (multi-channel if available)
+        try (SmbTransportImpl trans = selectTransport(request)) {
             if (response != null) {
                 response.clearReceived();
                 response.setExtendedSecurity(this.extendedSecurity);
@@ -380,21 +393,33 @@ final class SmbSessionImpl implements SmbSessionInternal {
                         log.trace("Request " + request);
                     }
                     try {
-                        response = this.transport.send(request, response, params);
+                        response = trans.send(request, response, params);
                     } catch (SmbException e) {
-                        if (e.getNtStatus() != 0xC000035C && e.getNtStatus() != 0xC0000203 || !trans.isSMB2()) {
-                            throw e;
-                        }
-                        if (e.getNtStatus() == 0xC0000203) { // USER_SESSION_DELETED
-                            try {
-                                log.warn("Got NT_STATUS_USER_SESSION_DELETED, disconnecting transport");
-                                this.transport.disconnect(true);
-                            } catch (IOException e1) {
-                                log.warn("Got NT_STATUS_USER_SESSION_DELETED, disconnected transport with error", e1);
+                        // Handle potential multi-channel failure
+                        if (isUseMultiChannel() && trans != this.transport) {
+                            ChannelInfo channel = channelManager.getChannelForTransport(trans);
+                            if (channel != null) {
+                                channelManager.handleChannelFailure(channel, e);
+                                // Retry with primary transport
+                                response = this.transport.send(request, response, params);
+                            } else {
+                                throw e;
                             }
+                        } else {
+                            if (e.getNtStatus() != 0xC000035C && e.getNtStatus() != 0xC0000203 || !trans.isSMB2()) {
+                                throw e;
+                            }
+                            if (e.getNtStatus() == 0xC0000203) { // USER_SESSION_DELETED
+                                try {
+                                    log.warn("Got NT_STATUS_USER_SESSION_DELETED, disconnecting transport");
+                                    this.transport.disconnect(true);
+                                } catch (IOException e1) {
+                                    log.warn("Got NT_STATUS_USER_SESSION_DELETED, disconnected transport with error", e1);
+                                }
+                            }
+                            log.debug("Session expired, trying reauth", e);
+                            return reauthenticate(trans, this.targetDomain, request, response, params);
                         }
-                        log.debug("Session expired, trying reauth", e);
-                        return reauthenticate(trans, this.targetDomain, request, response, params);
                     }
                     if (log.isTraceEnabled()) {
                         log.trace("Response " + response);
@@ -617,6 +642,10 @@ final class SmbSessionImpl implements SmbSessionInternal {
                     log.debug("No digest setup " + anonymous + " B " + isSignatureSetupRequired());
                 }
                 setSessionSetup(response);
+
+                // Initialize multi-channel after successful session setup
+                initializeMultiChannel();
+
                 if (ex != null) {
                     throw ex;
                 }
@@ -1121,6 +1150,55 @@ final class SmbSessionImpl implements SmbSessionInternal {
             this.transport.notifyAll();
         }
         return wasInUse;
+    }
+
+    /**
+     * Initialize multi-channel support
+     */
+    private void initializeMultiChannel() {
+        try {
+            if (channelManager != null) {
+                channelManager.initializeMultiChannel();
+            }
+        } catch (Exception e) {
+            log.warn("Failed to initialize multi-channel", e);
+        }
+    }
+
+    /**
+     * Check if multi-channel is enabled
+     *
+     * @return true if multi-channel is enabled
+     */
+    public boolean isUseMultiChannel() {
+        return channelManager != null && channelManager.isUseMultiChannel();
+    }
+
+    /**
+     * Get the channel manager
+     *
+     * @return channel manager instance
+     */
+    public ChannelManager getChannelManager() {
+        return channelManager;
+    }
+
+    /**
+     * Select transport for the given message using multi-channel load balancing
+     *
+     * @param message message to send
+     * @return selected transport
+     */
+    public SmbTransportImpl selectTransport(CommonServerMessageBlockRequest message) {
+        if (isUseMultiChannel()) {
+            try {
+                ChannelInfo channel = channelManager.selectChannel(message);
+                return (SmbTransportImpl) channel.getTransport();
+            } catch (Exception e) {
+                log.debug("Multi-channel selection failed, using primary transport", e);
+            }
+        }
+        return getTransport();
     }
 
     @Override
