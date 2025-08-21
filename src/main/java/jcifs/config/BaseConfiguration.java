@@ -243,6 +243,13 @@ public class BaseConfiguration implements Configuration {
     /** Directory to store persistent handle state */
     protected String handleStateDirectory;
 
+    // Multi-channel configuration fields
+    protected boolean useMultiChannel;
+    protected int maxChannels;
+    protected int channelBindingPolicy = -1; // -1=not set, 0=disabled, 1=preferred, 2=required
+    protected String loadBalancingStrategy;
+    protected int channelHealthCheckInterval;
+
     /**
      * Constructs a BaseConfiguration with default settings
      *
@@ -704,6 +711,56 @@ public class BaseConfiguration implements Configuration {
     /**
      * {@inheritDoc}
      *
+     * @see jcifs.Configuration#isUseMultiChannel()
+     */
+    @Override
+    public boolean isUseMultiChannel() {
+        return this.useMultiChannel;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see jcifs.Configuration#getMaxChannels()
+     */
+    @Override
+    public int getMaxChannels() {
+        return this.maxChannels;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see jcifs.Configuration#getChannelBindingPolicy()
+     */
+    @Override
+    public int getChannelBindingPolicy() {
+        return this.channelBindingPolicy;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see jcifs.Configuration#getLoadBalancingStrategy()
+     */
+    @Override
+    public String getLoadBalancingStrategy() {
+        return this.loadBalancingStrategy;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see jcifs.Configuration#getChannelHealthCheckInterval()
+     */
+    @Override
+    public int getChannelHealthCheckInterval() {
+        return this.channelHealthCheckInterval;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
      * @see jcifs.Configuration#getBatchLimit(java.lang.String)
      */
     @Override
@@ -904,6 +961,42 @@ public class BaseConfiguration implements Configuration {
             // Smb2SessionSetupRequest + X -> INTERNAL_ERROR
             // Smb2TreeConnectRequest + IoCtl -> NETWORK_NAME_DELETED
             this.disallowCompound = new HashSet<>(Arrays.asList("Smb2SessionSetupRequest", "Smb2TreeConnectRequest"));
+        }
+
+        // Initialize multi-channel defaults if not set
+        // Note: useMultiChannel defaults are handled by PropertyConfiguration
+        // Base configuration leaves it as false by default
+        if (this.maxChannels == 0) {
+            this.maxChannels = 4;
+        }
+        // channelBindingPolicy: 0=disabled, 1=preferred, 2=required, -1=not set
+        if (this.channelBindingPolicy == -1) {
+            this.channelBindingPolicy = 1; // Default to preferred
+        }
+        if (this.channelHealthCheckInterval == 0) {
+            this.channelHealthCheckInterval = 10;
+        }
+        if (this.loadBalancingStrategy == null) {
+            this.loadBalancingStrategy = "adaptive";
+        }
+    }
+
+    /**
+     * Parse channel binding policy from string
+     *
+     * @param policy policy string
+     * @return policy constant
+     */
+    protected final int initChannelBindingPolicy(String policy) {
+        if (policy == null)
+            return 1; // preferred
+        switch (policy.toLowerCase()) {
+        case "disabled":
+            return 0;
+        case "required":
+            return 2;
+        default:
+            return 1; // preferred
         }
     }
 

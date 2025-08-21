@@ -788,6 +788,53 @@ public interface Configuration {
     int getHandleReconnectRetries();
 
     /**
+     * Enable SMB3 Multi-Channel support
+     *
+     * Property {@code jcifs.smb.client.useMultiChannel} (boolean, default true)
+     *
+     * @return whether multi-channel is enabled
+     */
+    boolean isUseMultiChannel();
+
+    /**
+     * Maximum number of channels per session
+     *
+     * Property {@code jcifs.smb.client.maxChannels} (int, default 4)
+     *
+     * @return maximum channels per session
+     */
+    int getMaxChannels();
+
+    /**
+     * Channel binding policy
+     *
+     * Property {@code jcifs.smb.client.channelBindingPolicy} (String, default "preferred")
+     * Values: "disabled", "preferred", "required"
+     *
+     * @return channel binding policy
+     */
+    int getChannelBindingPolicy();
+
+    /**
+     * Load balancing strategy for multi-channel
+     *
+     * Property {@code jcifs.smb.client.loadBalancingStrategy} (String, default "adaptive")
+     * Values: "round_robin", "least_loaded", "weighted_random", "affinity_based", "adaptive"
+     *
+     * @return load balancing strategy
+     */
+    String getLoadBalancingStrategy();
+
+    /**
+     * Channel health check interval in seconds
+     *
+     * Property {@code jcifs.smb.client.channelHealthCheckInterval} (int, default 10)
+     *
+     * @return health check interval in seconds
+     */
+    int getChannelHealthCheckInterval();
+
+    /**
      * Property {@code jcifs.smb.client.handleStateDirectory}
      *
      * @return directory to store persistent handle state
