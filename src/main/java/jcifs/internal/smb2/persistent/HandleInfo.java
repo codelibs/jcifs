@@ -13,9 +13,10 @@
  */
 package jcifs.internal.smb2.persistent;
 
-import jcifs.internal.smb2.lease.Smb2LeaseKey;
 import java.io.Serializable;
 import java.util.Arrays;
+
+import jcifs.internal.smb2.lease.Smb2LeaseKey;
 
 /**
  * Information about a durable or persistent SMB handle.

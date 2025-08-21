@@ -3,14 +3,20 @@
  */
 package jcifs.tests.persistent;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import jcifs.internal.smb2.lease.Smb2LeaseKey;
 import jcifs.internal.smb2.persistent.HandleGuid;
 import jcifs.internal.smb2.persistent.HandleInfo;
 import jcifs.internal.smb2.persistent.HandleType;
-import jcifs.internal.smb2.lease.Smb2LeaseKey;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.BeforeEach;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Test class for HandleInfo functionality

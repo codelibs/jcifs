@@ -28,7 +28,6 @@ import jcifs.internal.RequestWithPath;
 import jcifs.internal.smb2.ServerMessageBlock2Request;
 import jcifs.internal.smb2.Smb2Constants;
 import jcifs.internal.smb2.lease.Smb2LeaseKey;
-import jcifs.internal.smb2.lease.Smb2LeaseState;
 import jcifs.internal.util.SMBUtil;
 import jcifs.util.Hexdump;
 

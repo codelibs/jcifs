@@ -3,10 +3,21 @@
  */
 package jcifs.tests.persistent;
 
-import jcifs.internal.smb2.persistent.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import jcifs.internal.smb2.persistent.DurableHandleReconnect;
+import jcifs.internal.smb2.persistent.DurableHandleRequest;
+import jcifs.internal.smb2.persistent.DurableHandleV2Request;
+import jcifs.internal.smb2.persistent.HandleGuid;
+import jcifs.internal.smb2.persistent.HandleType;
+import jcifs.internal.smb2.persistent.Smb2HandleCapabilities;
 
 /**
  * Test class for durable handle create context implementations

@@ -13,8 +13,8 @@
  */
 package jcifs.internal.smb2.persistent;
 
-import jcifs.internal.smb2.create.CreateContextResponse;
 import jcifs.internal.SMBProtocolDecodingException;
+import jcifs.internal.smb2.create.CreateContextResponse;
 import jcifs.internal.util.SMBUtil;
 
 /**

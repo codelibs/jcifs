@@ -13,9 +13,10 @@
  */
 package jcifs.internal.smb2.persistent;
 
+import java.util.Arrays;
+
 import jcifs.internal.smb2.create.CreateContextRequest;
 import jcifs.internal.util.SMBUtil;
-import java.util.Arrays;
 
 /**
  * SMB2 Durable Handle Reconnect Create Context (DHnC)

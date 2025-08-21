@@ -3,26 +3,31 @@
  */
 package jcifs.tests.persistent;
 
-import jcifs.CIFSContext;
-import jcifs.internal.smb2.persistent.HandleGuid;
-import jcifs.internal.smb2.persistent.HandleInfo;
-import jcifs.internal.smb2.persistent.HandleType;
-import jcifs.internal.smb2.persistent.PersistentHandleManager;
-import jcifs.internal.smb2.lease.Smb2LeaseKey;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.AfterEach;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Properties;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+import jcifs.CIFSContext;
+import jcifs.internal.smb2.lease.Smb2LeaseKey;
+import jcifs.internal.smb2.persistent.HandleGuid;
+import jcifs.internal.smb2.persistent.HandleInfo;
+import jcifs.internal.smb2.persistent.HandleType;
+import jcifs.internal.smb2.persistent.PersistentHandleManager;
 
 /**
  * Test class for PersistentHandleManager functionality

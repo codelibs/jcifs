@@ -13,9 +13,9 @@
  */
 package jcifs.internal.smb2.persistent;
 
-import java.util.UUID;
-import java.nio.ByteBuffer;
 import java.io.Serializable;
+import java.nio.ByteBuffer;
+import java.util.UUID;
 
 /**
  * Handle GUID structure for SMB2/3 durable and persistent handles.

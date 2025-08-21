@@ -13,14 +13,13 @@
  */
 package jcifs.internal.smb2.persistent;
 
-import jcifs.internal.smb2.create.Smb2CreateRequest;
-import jcifs.internal.smb2.create.Smb2CreateResponse;
+import java.io.IOException;
+import java.util.concurrent.CompletableFuture;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-import java.io.IOException;
+import jcifs.internal.smb2.create.Smb2CreateRequest;
 
 /**
  * Handles automatic reconnection of durable and persistent SMB handles.

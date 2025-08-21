@@ -3,18 +3,29 @@
  */
 package jcifs.tests.persistent;
 
-import jcifs.internal.smb2.persistent.*;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.BeforeEach;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+import jcifs.internal.smb2.persistent.HandleGuid;
+import jcifs.internal.smb2.persistent.HandleInfo;
+import jcifs.internal.smb2.persistent.HandleReconnector;
+import jcifs.internal.smb2.persistent.HandleType;
+import jcifs.internal.smb2.persistent.PersistentHandleManager;
 
 /**
  * Test class for HandleReconnector functionality

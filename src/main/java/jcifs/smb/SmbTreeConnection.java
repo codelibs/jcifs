@@ -18,7 +18,6 @@
 package jcifs.smb;
 
 import java.io.IOException;
-import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Locale;
