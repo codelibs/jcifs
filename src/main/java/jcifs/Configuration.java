@@ -758,4 +758,39 @@ public interface Configuration {
      * @return whether to permit guest logins when user authentication is requested
      */
     boolean isAllowGuestFallback();
+
+    /**
+     * Property {@code jcifs.smb.client.useDurableHandles}, defaults to true
+     *
+     * @return whether to use durable handles for improved reliability
+     */
+    boolean isUseDurableHandles();
+
+    /**
+     * Property {@code jcifs.smb.client.usePersistentHandles}, defaults to false
+     *
+     * @return whether to use persistent handles for maximum reliability
+     */
+    boolean isUsePersistentHandles();
+
+    /**
+     * Property {@code jcifs.smb.client.durableHandleTimeout}, defaults to 120000
+     *
+     * @return timeout for durable handles in milliseconds
+     */
+    long getDurableHandleTimeout();
+
+    /**
+     * Property {@code jcifs.smb.client.handleReconnectRetries}, defaults to 3
+     *
+     * @return maximum number of retry attempts for handle reconnection
+     */
+    int getHandleReconnectRetries();
+
+    /**
+     * Property {@code jcifs.smb.client.handleStateDirectory}
+     *
+     * @return directory to store persistent handle state
+     */
+    String getHandleStateDirectory();
 }

@@ -246,6 +246,59 @@ public class Smb2CreateResponse extends ServerMessageBlock2Response implements S
     }
 
     /**
+     * Get the durable handle response if present
+     * @return the durable handle response or null if not present
+     */
+    public jcifs.internal.smb2.persistent.DurableHandleResponse getDurableHandleResponse() {
+        if (this.createContexts != null) {
+            for (CreateContextResponse ctx : this.createContexts) {
+                if (ctx instanceof jcifs.internal.smb2.persistent.DurableHandleResponse) {
+                    return (jcifs.internal.smb2.persistent.DurableHandleResponse) ctx;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Get the durable handle V2 response if present
+     * @return the durable handle V2 response or null if not present
+     */
+    public jcifs.internal.smb2.persistent.DurableHandleV2Response getDurableHandleV2Response() {
+        if (this.createContexts != null) {
+            for (CreateContextResponse ctx : this.createContexts) {
+                if (ctx instanceof jcifs.internal.smb2.persistent.DurableHandleV2Response) {
+                    return (jcifs.internal.smb2.persistent.DurableHandleV2Response) ctx;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Get the durable handle reconnect response if present
+     * @return the durable handle reconnect response or null if not present
+     */
+    public jcifs.internal.smb2.persistent.DurableHandleReconnectResponse getDurableHandleReconnectResponse() {
+        if (this.createContexts != null) {
+            for (CreateContextResponse ctx : this.createContexts) {
+                if (ctx instanceof jcifs.internal.smb2.persistent.DurableHandleReconnectResponse) {
+                    return (jcifs.internal.smb2.persistent.DurableHandleReconnectResponse) ctx;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Check if the response contains any durable handle context
+     * @return true if durable handle context is present
+     */
+    public boolean hasDurableHandleResponse() {
+        return getDurableHandleResponse() != null || getDurableHandleV2Response() != null || getDurableHandleReconnectResponse() != null;
+    }
+
+    /**
      * {@inheritDoc}
      *
      * @see jcifs.internal.smb2.ServerMessageBlock2#writeBytesWireFormat(byte[], int)
@@ -366,6 +419,12 @@ public class Smb2CreateResponse extends ServerMessageBlock2Response implements S
             return new LeaseV1CreateContextResponse();
         case LeaseV2CreateContextRequest.CONTEXT_NAME: // "RqL2"
             return new LeaseV2CreateContextResponse();
+        case "DHnQ": // Durable Handle Request/Response
+            return new jcifs.internal.smb2.persistent.DurableHandleResponse();
+        case "DH2Q": // Durable Handle V2 Request/Response
+            return new jcifs.internal.smb2.persistent.DurableHandleV2Response();
+        case "DHnC": // Durable Handle Reconnect Request/Response
+            return new jcifs.internal.smb2.persistent.DurableHandleReconnectResponse();
         default:
             // Unknown context type - log and return null
             if (log.isDebugEnabled()) {

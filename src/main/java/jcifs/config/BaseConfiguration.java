@@ -232,6 +232,16 @@ public class BaseConfiguration implements Configuration {
     protected String guestPassword = "";
     /** Whether to allow fallback to guest authentication */
     protected boolean allowGuestFallback = false;
+    /** Whether to use durable handles for improved reliability */
+    protected boolean useDurableHandles = true;
+    /** Whether to use persistent handles for maximum reliability */
+    protected boolean usePersistentHandles = false;
+    /** Timeout for durable handles in milliseconds */
+    protected long durableHandleTimeout = 120000; // 2 minutes
+    /** Maximum number of retry attempts for handle reconnection */
+    protected int handleReconnectRetries = 3;
+    /** Directory to store persistent handle state */
+    protected String handleStateDirectory;
 
     /**
      * Constructs a BaseConfiguration with default settings
@@ -664,6 +674,31 @@ public class BaseConfiguration implements Configuration {
     @Override
     public byte[] getMachineId() {
         return this.machineId;
+    }
+
+    @Override
+    public boolean isUseDurableHandles() {
+        return this.useDurableHandles;
+    }
+
+    @Override
+    public boolean isUsePersistentHandles() {
+        return this.usePersistentHandles;
+    }
+
+    @Override
+    public long getDurableHandleTimeout() {
+        return this.durableHandleTimeout;
+    }
+
+    @Override
+    public int getHandleReconnectRetries() {
+        return this.handleReconnectRetries;
+    }
+
+    @Override
+    public String getHandleStateDirectory() {
+        return this.handleStateDirectory;
     }
 
     /**
