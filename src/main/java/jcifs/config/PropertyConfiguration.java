@@ -235,6 +235,40 @@ public final class PropertyConfiguration extends BaseConfiguration implements Co
                 // Invalid values ignored
             }
         }
+
+        // Directory leasing configuration
+        value = props.getProperty("jcifs.smb.client.useDirectoryLeasing");
+        if (value != null) {
+            this.useDirectoryLeasing = Boolean.parseBoolean(value);
+        }
+
+        value = props.getProperty("jcifs.smb.client.directoryCacheScope");
+        if (value != null) {
+            this.directoryCacheScope = value;
+        }
+
+        value = props.getProperty("jcifs.smb.client.directoryCacheTimeout");
+        if (value != null) {
+            try {
+                this.directoryCacheTimeout = Long.parseLong(value);
+            } catch (NumberFormatException e) {
+                // Invalid value ignored
+            }
+        }
+
+        value = props.getProperty("jcifs.smb.client.directoryNotificationsEnabled");
+        if (value != null) {
+            this.directoryNotificationsEnabled = Boolean.parseBoolean(value);
+        }
+
+        value = props.getProperty("jcifs.smb.client.maxDirectoryCacheEntries");
+        if (value != null) {
+            try {
+                this.maxDirectoryCacheEntries = Integer.parseInt(value);
+            } catch (NumberFormatException e) {
+                // Invalid value ignored
+            }
+        }
     }
 
     @Override

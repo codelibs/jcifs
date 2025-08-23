@@ -243,6 +243,13 @@ public class BaseConfiguration implements Configuration {
     /** Directory to store persistent handle state */
     protected String handleStateDirectory;
 
+    // Directory leasing configuration fields
+    protected boolean useDirectoryLeasing = true;
+    protected String directoryCacheScope = "IMMEDIATE_CHILDREN";
+    protected long directoryCacheTimeout = 30000L;
+    protected boolean directoryNotificationsEnabled = true;
+    protected int maxDirectoryCacheEntries = 1000;
+
     // Multi-channel configuration fields
     protected boolean useMultiChannel;
     protected int maxChannels;
@@ -998,6 +1005,31 @@ public class BaseConfiguration implements Configuration {
         default:
             return 1; // preferred
         }
+    }
+
+    @Override
+    public boolean isUseDirectoryLeasing() {
+        return this.useDirectoryLeasing;
+    }
+
+    @Override
+    public String getDirectoryCacheScope() {
+        return this.directoryCacheScope;
+    }
+
+    @Override
+    public long getDirectoryCacheTimeout() {
+        return this.directoryCacheTimeout;
+    }
+
+    @Override
+    public boolean isDirectoryNotificationsEnabled() {
+        return this.directoryNotificationsEnabled;
+    }
+
+    @Override
+    public int getMaxDirectoryCacheEntries() {
+        return this.maxDirectoryCacheEntries;
     }
 
 }
