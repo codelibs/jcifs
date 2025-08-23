@@ -149,4 +149,21 @@ public final class Smb2Constants {
      * Unspecified session ID value
      */
     public static final long UNSPECIFIED_SESSIONID = 0xFFFFFFFFFFFFFFFFL;
+
+    /**
+     * SMB2 Channel constant for RDMA V1
+     * Used in SMB2 READ and WRITE requests to indicate RDMA channel
+     */
+    public static final int SMB2_CHANNEL_RDMA_V1 = 0x00000001;
+
+    /**
+     * SMB2 Channel constant for RDMA V1 invalidate
+     * Used to indicate RDMA with invalidation
+     */
+    public static final int SMB2_CHANNEL_RDMA_V1_INVALIDATE = 0x00000002;
+
+    /**
+     * SMB2 RDMA Transform Capabilities negotiate context ID
+     */
+    public static final int SMB2_RDMA_TRANSFORM_CAPABILITIES = 0x0001;
 }

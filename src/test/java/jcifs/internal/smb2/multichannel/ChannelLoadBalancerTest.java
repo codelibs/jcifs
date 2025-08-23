@@ -140,7 +140,7 @@ class ChannelLoadBalancerTest {
         loadBalancer.setStrategy(LoadBalancingStrategy.ADAPTIVE);
 
         Smb2ReadRequest largeRead = mock(Smb2ReadRequest.class);
-        when(largeRead.getLength()).thenReturn(2 * 1024 * 1024); // 2MB
+        when(largeRead.getReadLength()).thenReturn(2 * 1024 * 1024); // 2MB
 
         when(mockChannelManager.getHealthyChannels()).thenReturn(Arrays.asList(channel1, channel2));
 

@@ -875,4 +875,65 @@ public interface Configuration {
      * @return maximum number of directory cache entries
      */
     int getMaxDirectoryCacheEntries();
+
+    /**
+     * Get whether RDMA (SMB Direct) should be used
+     *
+     * @return true if RDMA should be used, false otherwise
+     */
+    boolean isUseRDMA();
+
+    /**
+     * Get RDMA provider preference
+     *
+     * @return RDMA provider name ("auto", "disni", "tcp", etc.)
+     */
+    String getRdmaProvider();
+
+    /**
+     * Get RDMA read/write threshold
+     *
+     * Operations larger than this size will use RDMA read/write
+     * instead of send/receive.
+     *
+     * @return threshold in bytes
+     */
+    int getRdmaReadWriteThreshold();
+
+    /**
+     * Get maximum RDMA send size
+     *
+     * @return max send size in bytes
+     */
+    int getRdmaMaxSendSize();
+
+    /**
+     * Get maximum RDMA receive size
+     *
+     * @return max receive size in bytes
+     */
+    int getRdmaMaxReceiveSize();
+
+    /**
+     * Get RDMA credits
+     *
+     * Number of receive credits to advertise to the server.
+     *
+     * @return number of credits
+     */
+    int getRdmaCredits();
+
+    /**
+     * Get whether RDMA is enabled
+     *
+     * @return true if RDMA is enabled, false otherwise
+     */
+    boolean isRdmaEnabled();
+
+    /**
+     * Get RDMA port number
+     *
+     * @return RDMA port number (default 5445)
+     */
+    int getRdmaPort();
 }

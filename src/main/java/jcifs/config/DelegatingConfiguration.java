@@ -985,4 +985,84 @@ public class DelegatingConfiguration implements Configuration {
     public int getMaxDirectoryCacheEntries() {
         return this.delegate.getMaxDirectoryCacheEntries();
     }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see jcifs.Configuration#isUseRDMA()
+     */
+    @Override
+    public boolean isUseRDMA() {
+        return this.delegate.isUseRDMA();
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see jcifs.Configuration#getRdmaProvider()
+     */
+    @Override
+    public String getRdmaProvider() {
+        return this.delegate.getRdmaProvider();
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see jcifs.Configuration#getRdmaReadWriteThreshold()
+     */
+    @Override
+    public int getRdmaReadWriteThreshold() {
+        return this.delegate.getRdmaReadWriteThreshold();
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see jcifs.Configuration#getRdmaMaxSendSize()
+     */
+    @Override
+    public int getRdmaMaxSendSize() {
+        return this.delegate.getRdmaMaxSendSize();
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see jcifs.Configuration#getRdmaMaxReceiveSize()
+     */
+    @Override
+    public int getRdmaMaxReceiveSize() {
+        return this.delegate.getRdmaMaxReceiveSize();
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see jcifs.Configuration#getRdmaCredits()
+     */
+    @Override
+    public int getRdmaCredits() {
+        return this.delegate.getRdmaCredits();
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see jcifs.Configuration#isRdmaEnabled()
+     */
+    @Override
+    public boolean isRdmaEnabled() {
+        return this.delegate.isRdmaEnabled();
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see jcifs.Configuration#getRdmaPort()
+     */
+    @Override
+    public int getRdmaPort() {
+        return this.delegate.getRdmaPort();
+    }
 }

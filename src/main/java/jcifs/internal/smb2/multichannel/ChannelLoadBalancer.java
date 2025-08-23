@@ -182,7 +182,7 @@ public class ChannelLoadBalancer {
 
     private boolean isLargeTransfer(CommonServerMessageBlock message) {
         if (message instanceof Smb2ReadRequest) {
-            return ((Smb2ReadRequest) message).getLength() > 1048576; // 1MB
+            return ((Smb2ReadRequest) message).getReadLength() > 1048576; // 1MB
         }
         if (message instanceof Smb2WriteRequest) {
             // Data length not accessible, assume large writes for now
