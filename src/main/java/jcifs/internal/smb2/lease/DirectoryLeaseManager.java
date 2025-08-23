@@ -74,6 +74,10 @@ public class DirectoryLeaseManager {
      * @return lease key
      */
     public Smb2LeaseKey requestDirectoryLease(String directoryPath, int requestedState, DirectoryCacheScope scope) {
+        // Directory leasing requires SMB 3.0 or higher
+        // MS-SMB2: Level 2 leasing (which includes directory leasing) is only supported in SMB 3.0+
+        // We'll validate this when we actually need to use the session
+
         // Request base lease
         Smb2LeaseKey leaseKey = baseLeaseManager.requestLease(directoryPath, requestedState);
 
@@ -236,8 +240,14 @@ public class DirectoryLeaseManager {
             return;
 
         // Handle lease break by updating cache behavior
-        if ((newState & Smb2LeaseState.SMB2_LEASE_READ_CACHING) == 0) {
-            // Lost read cache - invalidate directory cache
+        // Only process if newState is not NONE (0) - a valid lease state
+        if (newState != 0) {
+            if ((newState & Smb2LeaseState.SMB2_LEASE_READ_CACHING) == 0) {
+                // Lost read cache - invalidate directory cache
+                entry.invalidate();
+            }
+        } else {
+            // Lease completely broken - invalidate cache
             entry.invalidate();
         }
 
