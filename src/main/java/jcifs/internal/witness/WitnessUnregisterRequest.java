@@ -23,6 +23,7 @@ package jcifs.internal.witness;
  */
 public class WitnessUnregisterRequest {
     private String registrationId;
+    private byte[] contextHandle;
 
     /**
      * Gets the registration ID to unregister.
@@ -40,5 +41,23 @@ public class WitnessUnregisterRequest {
      */
     public void setRegistrationId(String registrationId) {
         this.registrationId = registrationId;
+    }
+
+    /**
+     * Gets the context handle.
+     *
+     * @return the context handle
+     */
+    public byte[] getContextHandle() {
+        return contextHandle;
+    }
+
+    /**
+     * Sets the context handle.
+     *
+     * @param contextHandle the context handle
+     */
+    public void setContextHandle(byte[] contextHandle) {
+        this.contextHandle = contextHandle;
     }
 }

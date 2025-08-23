@@ -26,18 +26,29 @@ import java.util.List;
  * Contains event information, resource details, and IP address changes.
  */
 public class WitnessNotification {
-    private final WitnessEventType eventType;
-    private final long timestamp;
-    private final String resourceName;
+    private WitnessEventType eventType;
+    private long timestamp;
+    private String resourceName;
     private final List<WitnessIPAddress> newIPAddresses;
     private final List<WitnessIPAddress> oldIPAddresses;
-    private final String clientAccessPoint;
-    private final int flags;
+    private String clientAccessPoint;
+    private int flags;
+    private String newNodeAddress;
 
     // Notification flags
     public static final int WITNESS_RESOURCE_STATE_UNKNOWN = 0x00000000;
     public static final int WITNESS_RESOURCE_STATE_AVAILABLE = 0x00000001;
     public static final int WITNESS_RESOURCE_STATE_UNAVAILABLE = 0x000000FF;
+
+    /**
+     * Creates a new empty witness notification.
+     */
+    public WitnessNotification() {
+        this.timestamp = System.currentTimeMillis();
+        this.newIPAddresses = new ArrayList<>();
+        this.oldIPAddresses = new ArrayList<>();
+        this.flags = WITNESS_RESOURCE_STATE_UNKNOWN;
+    }
 
     /**
      * Creates a new witness notification.
@@ -130,7 +141,7 @@ public class WitnessNotification {
         oldIPAddresses.add(new WitnessIPAddress(address));
     }
 
-    // Getters
+    // Getters and Setters
 
     /**
      * Gets the event type.
@@ -139,6 +150,15 @@ public class WitnessNotification {
      */
     public WitnessEventType getEventType() {
         return eventType;
+    }
+
+    /**
+     * Sets the event type.
+     *
+     * @param eventType the event type
+     */
+    public void setEventType(WitnessEventType eventType) {
+        this.eventType = eventType;
     }
 
     /**
@@ -151,12 +171,30 @@ public class WitnessNotification {
     }
 
     /**
+     * Sets the resource name.
+     *
+     * @param resourceName the resource name
+     */
+    public void setResourceName(String resourceName) {
+        this.resourceName = resourceName;
+    }
+
+    /**
      * Gets the notification timestamp.
      *
      * @return the timestamp
      */
     public long getTimestamp() {
         return timestamp;
+    }
+
+    /**
+     * Sets the timestamp.
+     *
+     * @param timestamp the timestamp
+     */
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
     }
 
     /**
@@ -184,5 +222,23 @@ public class WitnessNotification {
      */
     public int getFlags() {
         return flags;
+    }
+
+    /**
+     * Gets the new node address.
+     *
+     * @return the new node address
+     */
+    public String getNewNodeAddress() {
+        return newNodeAddress;
+    }
+
+    /**
+     * Sets the new node address.
+     *
+     * @param newNodeAddress the new node address
+     */
+    public void setNewNodeAddress(String newNodeAddress) {
+        this.newNodeAddress = newNodeAddress;
     }
 }

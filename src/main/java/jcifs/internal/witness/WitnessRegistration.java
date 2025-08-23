@@ -33,6 +33,7 @@ public class WitnessRegistration {
     private final WitnessVersion version;
     private final long registrationTime;
     private final AtomicLong sequenceNumber;
+    private byte[] contextHandle;
 
     // Registration flags
     public static final int WITNESS_REGISTER_NONE = 0x00000000;
@@ -68,6 +69,7 @@ public class WitnessRegistration {
         this.state = WitnessRegistrationState.REGISTERING;
         this.lastHeartbeat = registrationTime;
         this.flags = WITNESS_REGISTER_IP_NOTIFICATION;
+        this.contextHandle = new byte[20]; // MS-SWN context handle size
     }
 
     /**
@@ -195,5 +197,23 @@ public class WitnessRegistration {
      */
     public void setFlags(int flags) {
         this.flags = flags;
+    }
+
+    /**
+     * Gets the context handle.
+     *
+     * @return the context handle
+     */
+    public byte[] getContextHandle() {
+        return contextHandle;
+    }
+
+    /**
+     * Sets the context handle.
+     *
+     * @param contextHandle the context handle
+     */
+    public void setContextHandle(byte[] contextHandle) {
+        this.contextHandle = contextHandle;
     }
 }

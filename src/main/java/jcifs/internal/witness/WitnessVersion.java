@@ -51,4 +51,22 @@ public enum WitnessVersion {
     public int getValue() {
         return version;
     }
+
+    /**
+     * Gets the major version number.
+     *
+     * @return the major version
+     */
+    public int getMajorVersion() {
+        return (version >> 16) & 0xFFFF;
+    }
+
+    /**
+     * Gets the minor version number.
+     *
+     * @return the minor version
+     */
+    public int getMinorVersion() {
+        return version & 0xFFFF;
+    }
 }

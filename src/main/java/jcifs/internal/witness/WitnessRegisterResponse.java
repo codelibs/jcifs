@@ -24,6 +24,8 @@ package jcifs.internal.witness;
 public class WitnessRegisterResponse {
     private String registrationId;
     private int returnCode;
+    private byte[] contextHandle;
+    private String error;
 
     /**
      * Checks if the registration was successful.
@@ -40,7 +42,16 @@ public class WitnessRegisterResponse {
      * @return the error description
      */
     public String getError() {
-        return "Error code: " + returnCode;
+        return error != null ? error : "Error code: " + returnCode;
+    }
+
+    /**
+     * Sets the error message.
+     *
+     * @param error the error message
+     */
+    public void setError(String error) {
+        this.error = error;
     }
 
     /**
@@ -77,5 +88,23 @@ public class WitnessRegisterResponse {
      */
     public void setReturnCode(int returnCode) {
         this.returnCode = returnCode;
+    }
+
+    /**
+     * Gets the context handle.
+     *
+     * @return the context handle
+     */
+    public byte[] getContextHandle() {
+        return contextHandle;
+    }
+
+    /**
+     * Sets the context handle.
+     *
+     * @param contextHandle the context handle
+     */
+    public void setContextHandle(byte[] contextHandle) {
+        this.contextHandle = contextHandle;
     }
 }

@@ -1257,8 +1257,12 @@ final class SmbSessionImpl implements SmbSessionInternal {
      * @return true if witness service is available
      */
     private boolean isWitnessServiceAvailable(InetAddress address) {
+        // RPC endpoint mapper port and connection timeout
+        final int RPC_ENDPOINT_PORT = 135;
+        final int RPC_CONNECT_TIMEOUT_MS = 5000;
+
         try (Socket socket = new Socket()) {
-            socket.connect(new InetSocketAddress(address, 135), 5000); // RPC endpoint
+            socket.connect(new InetSocketAddress(address, RPC_ENDPOINT_PORT), RPC_CONNECT_TIMEOUT_MS);
             return true;
         } catch (IOException e) {
             return false;

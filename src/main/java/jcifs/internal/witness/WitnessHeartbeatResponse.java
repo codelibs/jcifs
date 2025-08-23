@@ -24,6 +24,8 @@ package jcifs.internal.witness;
 public class WitnessHeartbeatResponse {
     private long sequenceNumber;
     private int returnCode;
+    private long recommendedHeartbeatInterval;
+    private String error;
 
     /**
      * Checks if the heartbeat was successful.
@@ -68,5 +70,41 @@ public class WitnessHeartbeatResponse {
      */
     public void setReturnCode(int returnCode) {
         this.returnCode = returnCode;
+    }
+
+    /**
+     * Gets the recommended heartbeat interval.
+     *
+     * @return the recommended heartbeat interval in milliseconds
+     */
+    public long getRecommendedHeartbeatInterval() {
+        return recommendedHeartbeatInterval;
+    }
+
+    /**
+     * Sets the recommended heartbeat interval.
+     *
+     * @param recommendedHeartbeatInterval the recommended heartbeat interval in milliseconds
+     */
+    public void setRecommendedHeartbeatInterval(long recommendedHeartbeatInterval) {
+        this.recommendedHeartbeatInterval = recommendedHeartbeatInterval;
+    }
+
+    /**
+     * Gets the error message.
+     *
+     * @return the error message
+     */
+    public String getError() {
+        return error;
+    }
+
+    /**
+     * Sets the error message.
+     *
+     * @param error the error message
+     */
+    public void setError(String error) {
+        this.error = error;
     }
 }

@@ -77,4 +77,20 @@ public enum WitnessEventType {
     public int getValue() {
         return value;
     }
+
+    /**
+     * Gets a WitnessEventType from its numeric value.
+     *
+     * @param value the numeric value
+     * @return the corresponding WitnessEventType
+     * @throws IllegalArgumentException if value is not recognized
+     */
+    public static WitnessEventType fromValue(int value) {
+        for (WitnessEventType type : values()) {
+            if (type.value == value) {
+                return type;
+            }
+        }
+        throw new IllegalArgumentException("Unknown witness event type: " + value);
+    }
 }

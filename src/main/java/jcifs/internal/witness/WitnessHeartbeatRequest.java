@@ -24,6 +24,7 @@ package jcifs.internal.witness;
 public class WitnessHeartbeatRequest {
     private String registrationId;
     private long sequenceNumber;
+    private byte[] contextHandle;
 
     /**
      * Gets the registration ID.
@@ -59,5 +60,23 @@ public class WitnessHeartbeatRequest {
      */
     public void setSequenceNumber(long sequenceNumber) {
         this.sequenceNumber = sequenceNumber;
+    }
+
+    /**
+     * Gets the context handle.
+     *
+     * @return the context handle
+     */
+    public byte[] getContextHandle() {
+        return contextHandle;
+    }
+
+    /**
+     * Sets the context handle.
+     *
+     * @param contextHandle the context handle
+     */
+    public void setContextHandle(byte[] contextHandle) {
+        this.contextHandle = contextHandle;
     }
 }

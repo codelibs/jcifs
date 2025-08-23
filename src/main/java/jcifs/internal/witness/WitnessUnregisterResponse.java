@@ -23,6 +23,7 @@ package jcifs.internal.witness;
  */
 public class WitnessUnregisterResponse {
     private int returnCode;
+    private String error;
 
     /**
      * Checks if the unregistration was successful.
@@ -39,7 +40,16 @@ public class WitnessUnregisterResponse {
      * @return the error description
      */
     public String getError() {
-        return "Error code: " + returnCode;
+        return error != null ? error : "Error code: " + returnCode;
+    }
+
+    /**
+     * Sets the error message.
+     *
+     * @param error the error message
+     */
+    public void setError(String error) {
+        this.error = error;
     }
 
     /**

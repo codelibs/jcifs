@@ -46,6 +46,7 @@ public class WitnessClient implements AutoCloseable {
     private final CIFSContext context;
     private final ConcurrentHashMap<String, WitnessRegistration> registrations;
     private final ConcurrentHashMap<String, WitnessNotificationListener> listeners;
+    private final ConcurrentHashMap<String, CompletableFuture<Void>> asyncNotifyTasks;
     private final ScheduledExecutorService scheduler;
     private final WitnessRpcClient rpcClient;
 
@@ -104,7 +105,8 @@ public class WitnessClient implements AutoCloseable {
         this.context = context;
         this.registrations = new ConcurrentHashMap<>();
         this.listeners = new ConcurrentHashMap<>();
-        this.scheduler = Executors.newScheduledThreadPool(2);
+        this.asyncNotifyTasks = new ConcurrentHashMap<>();
+        this.scheduler = Executors.newScheduledThreadPool(3); // Increased for async notifications
         this.rpcClient = rpcClient;
 
         // Schedule periodic tasks
@@ -150,8 +152,12 @@ public class WitnessClient implements AutoCloseable {
 
                 if (response != null && response.isSuccess()) {
                     registration.setState(WitnessRegistrationState.REGISTERED);
+                    registration.setContextHandle(response.getContextHandle());
                     registrations.put(registration.getRegistrationId(), registration);
                     listeners.put(registration.getRegistrationId(), listener);
+
+                    // Start async notification monitoring for this registration
+                    startAsyncNotificationMonitoring(registration);
 
                     log.info("Successfully registered for witness notifications: {}", registration.getRegistrationId());
 
@@ -185,6 +191,9 @@ public class WitnessClient implements AutoCloseable {
                 WitnessUnregisterResponse response = rpcClient.unregister(request);
 
                 if (response != null && response.isSuccess()) {
+                    // Stop async notification monitoring
+                    stopAsyncNotificationMonitoring(registration.getRegistrationId());
+
                     registrations.remove(registration.getRegistrationId());
                     listeners.remove(registration.getRegistrationId());
 
@@ -237,8 +246,13 @@ public class WitnessClient implements AutoCloseable {
         String resourceName = notification.getResourceName();
         String shareName = registration.getShareName();
 
-        // Match by share name or server address
-        return resourceName.equalsIgnoreCase(shareName) || resourceName.equals(registration.getServerAddress().getHostAddress());
+        // Match by share name or server address, safely handling nulls
+        boolean shareMatch = resourceName != null && shareName != null && resourceName.equalsIgnoreCase(shareName);
+
+        String serverAddress = registration.getServerAddress() != null ? registration.getServerAddress().getHostAddress() : null;
+        boolean addressMatch = java.util.Objects.equals(resourceName, serverAddress);
+
+        return shareMatch || addressMatch;
     }
 
     /**
@@ -259,6 +273,7 @@ public class WitnessClient implements AutoCloseable {
                 }
 
                 // Clean up expired registration
+                stopAsyncNotificationMonitoring(registration.getRegistrationId());
                 registrations.remove(registration.getRegistrationId());
                 listeners.remove(registration.getRegistrationId());
             }
@@ -321,6 +336,13 @@ public class WitnessClient implements AutoCloseable {
 
     @Override
     public void close() {
+        // Stop all async notification tasks first
+        List<CompletableFuture<Void>> taskFutures = new ArrayList<>(asyncNotifyTasks.values());
+        for (CompletableFuture<Void> task : taskFutures) {
+            task.cancel(true);
+        }
+        asyncNotifyTasks.clear();
+
         // Unregister all active registrations
         List<CompletableFuture<Void>> unregisterFutures = new ArrayList<>();
 
@@ -341,6 +363,142 @@ public class WitnessClient implements AutoCloseable {
         // Close RPC client
         if (rpcClient != null) {
             rpcClient.close();
+        }
+    }
+
+    /**
+     * Starts asynchronous notification monitoring for a registration.
+     *
+     * @param registration the witness registration
+     */
+    private void startAsyncNotificationMonitoring(WitnessRegistration registration) {
+        String registrationId = registration.getRegistrationId();
+
+        CompletableFuture<Void> asyncTask = CompletableFuture.runAsync(() -> {
+            byte[] contextHandle = registration.getContextHandle();
+
+            while (!Thread.currentThread().isInterrupted() && registrations.containsKey(registrationId)
+                    && registration.getState() == WitnessRegistrationState.REGISTERED) {
+
+                try {
+                    // Request async notifications from server
+                    WitnessAsyncNotifyMessage.WitnessNotificationResponse response = rpcClient.getAsyncNotifications(contextHandle);
+
+                    if (response != null) {
+                        // Process each notification message
+                        for (WitnessAsyncNotifyMessage.WitnessNotificationMessage message : response.getMessages()) {
+                            processAsyncNotificationMessage(registration, message);
+                        }
+                    }
+
+                    // Wait before next request to avoid overwhelming the server
+                    Thread.sleep(1000);
+
+                } catch (InterruptedException e) {
+                    log.debug("Async notification monitoring interrupted for {}", registrationId);
+                    Thread.currentThread().interrupt();
+                    break;
+                } catch (Exception e) {
+                    log.debug("Error in async notification monitoring for {}: {}", registrationId, e.getMessage());
+
+                    // Exponential backoff on errors
+                    try {
+                        Thread.sleep(Math.min(30000, 1000 * (int) Math.pow(2, 3))); // Max 30 seconds
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                }
+            }
+        }, scheduler);
+
+        asyncNotifyTasks.put(registrationId, asyncTask);
+        log.debug("Started async notification monitoring for {}", registrationId);
+    }
+
+    /**
+     * Stops asynchronous notification monitoring for a registration.
+     *
+     * @param registrationId the registration ID
+     */
+    private void stopAsyncNotificationMonitoring(String registrationId) {
+        CompletableFuture<Void> task = asyncNotifyTasks.remove(registrationId);
+        if (task != null) {
+            task.cancel(true);
+            log.debug("Stopped async notification monitoring for {}", registrationId);
+        }
+    }
+
+    /**
+     * Processes an async notification message and converts it to a WitnessNotification.
+     *
+     * @param registration the witness registration
+     * @param message the notification message
+     */
+    private void processAsyncNotificationMessage(WitnessRegistration registration,
+            WitnessAsyncNotifyMessage.WitnessNotificationMessage message) {
+
+        try {
+            // Convert RPC message to WitnessNotification
+            WitnessNotification notification = new WitnessNotification();
+
+            // Set event type based on message type
+            WitnessEventType eventType = convertMessageTypeToEventType(message.getType());
+            notification.setEventType(eventType);
+            notification.setTimestamp(message.getTimestamp());
+
+            // Set resource name based on message content
+            if (message.getResourceName() != null) {
+                notification.setResourceName(message.getResourceName());
+            } else if (message.getDestinationNode() != null) {
+                notification.setResourceName(message.getDestinationNode());
+            } else {
+                notification.setResourceName(registration.getShareName());
+            }
+
+            // Set additional fields based on message type
+            switch (message.getType()) {
+            case WitnessAsyncNotifyMessage.WitnessNotificationMessage.WITNESS_CLIENT_MOVE:
+            case WitnessAsyncNotifyMessage.WitnessNotificationMessage.WITNESS_SHARE_MOVE:
+                if (message.getDestinationNode() != null) {
+                    notification.setNewNodeAddress(message.getDestinationNode());
+                }
+                break;
+            case WitnessAsyncNotifyMessage.WitnessNotificationMessage.WITNESS_IP_CHANGE:
+                if (message.getIpAddresses() != null && !message.getIpAddresses().isEmpty()) {
+                    notification.setNewNodeAddress(message.getIpAddresses().get(0));
+                }
+                break;
+            }
+
+            log.info("Processing async notification: {} for {}", eventType, notification.getResourceName());
+
+            // Process the notification through the standard path
+            processNotification(notification);
+
+        } catch (Exception e) {
+            log.error("Error processing async notification message", e);
+        }
+    }
+
+    /**
+     * Converts RPC message type to WitnessEventType.
+     *
+     * @param messageType the RPC message type
+     * @return the corresponding WitnessEventType
+     */
+    private WitnessEventType convertMessageTypeToEventType(int messageType) {
+        switch (messageType) {
+        case WitnessAsyncNotifyMessage.WitnessNotificationMessage.WITNESS_RESOURCE_CHANGE:
+            return WitnessEventType.RESOURCE_CHANGE;
+        case WitnessAsyncNotifyMessage.WitnessNotificationMessage.WITNESS_CLIENT_MOVE:
+            return WitnessEventType.CLIENT_MOVE;
+        case WitnessAsyncNotifyMessage.WitnessNotificationMessage.WITNESS_SHARE_MOVE:
+            return WitnessEventType.SHARE_MOVE;
+        case WitnessAsyncNotifyMessage.WitnessNotificationMessage.WITNESS_IP_CHANGE:
+            return WitnessEventType.IP_CHANGE;
+        default:
+            return WitnessEventType.RESOURCE_CHANGE; // Default fallback
         }
     }
 }
