@@ -326,6 +326,44 @@ public final class PropertyConfiguration extends BaseConfiguration implements Co
                 // Invalid value ignored
             }
         }
+
+        // Witness protocol configuration
+        value = props.getProperty("jcifs.smb.client.useWitness");
+        if (value != null) {
+            this.useWitness = Boolean.parseBoolean(value);
+        }
+
+        value = props.getProperty("jcifs.smb.client.witnessHeartbeatTimeout");
+        if (value != null) {
+            try {
+                this.witnessHeartbeatTimeout = Long.parseLong(value);
+            } catch (NumberFormatException e) {
+                // Invalid value ignored
+            }
+        }
+
+        value = props.getProperty("jcifs.smb.client.witnessRegistrationTimeout");
+        if (value != null) {
+            try {
+                this.witnessRegistrationTimeout = Long.parseLong(value);
+            } catch (NumberFormatException e) {
+                // Invalid value ignored
+            }
+        }
+
+        value = props.getProperty("jcifs.smb.client.witnessReconnectDelay");
+        if (value != null) {
+            try {
+                this.witnessReconnectDelay = Long.parseLong(value);
+            } catch (NumberFormatException e) {
+                // Invalid value ignored
+            }
+        }
+
+        value = props.getProperty("jcifs.smb.client.witnessServiceDiscovery");
+        if (value != null) {
+            this.witnessServiceDiscovery = Boolean.parseBoolean(value);
+        }
     }
 
     @Override

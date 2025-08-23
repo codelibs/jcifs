@@ -1065,4 +1065,54 @@ public class DelegatingConfiguration implements Configuration {
     public int getRdmaPort() {
         return this.delegate.getRdmaPort();
     }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see jcifs.Configuration#isUseWitness()
+     */
+    @Override
+    public boolean isUseWitness() {
+        return this.delegate.isUseWitness();
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see jcifs.Configuration#getWitnessHeartbeatTimeout()
+     */
+    @Override
+    public long getWitnessHeartbeatTimeout() {
+        return this.delegate.getWitnessHeartbeatTimeout();
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see jcifs.Configuration#getWitnessRegistrationTimeout()
+     */
+    @Override
+    public long getWitnessRegistrationTimeout() {
+        return this.delegate.getWitnessRegistrationTimeout();
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see jcifs.Configuration#getWitnessReconnectDelay()
+     */
+    @Override
+    public long getWitnessReconnectDelay() {
+        return this.delegate.getWitnessReconnectDelay();
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see jcifs.Configuration#isWitnessServiceDiscovery()
+     */
+    @Override
+    public boolean isWitnessServiceDiscovery() {
+        return this.delegate.isWitnessServiceDiscovery();
+    }
 }
