@@ -513,7 +513,7 @@ public class Smb2CreateRequest extends ServerMessageBlock2Request<Smb2CreateResp
 
     /**
      * Add a durable handle V2 context to this request
-     * @param timeout the timeout in milliseconds (0 for persistent handles)
+     * @param timeoutMs the timeout in milliseconds (0 for persistent handles)
      * @param persistent true if this should be a persistent handle
      * @return the create GUID for this handle
      */
@@ -526,7 +526,7 @@ public class Smb2CreateRequest extends ServerMessageBlock2Request<Smb2CreateResp
 
     /**
      * Add a durable handle V2 context with specific GUID
-     * @param timeout the timeout in milliseconds
+     * @param timeoutMs the timeout in milliseconds
      * @param persistent true if this should be a persistent handle
      * @param createGuid the create GUID to use
      */

@@ -73,6 +73,7 @@ public class LeaseV2CreateContextRequest implements CreateContextRequest {
     }
 
     /**
+     * Gets the lease key for this V2 lease request
      * @return the lease key
      */
     public Smb2LeaseKey getLeaseKey() {
@@ -80,6 +81,7 @@ public class LeaseV2CreateContextRequest implements CreateContextRequest {
     }
 
     /**
+     * Sets the lease key for this V2 lease request
      * @param leaseKey the lease key to set
      */
     public void setLeaseKey(Smb2LeaseKey leaseKey) {
@@ -87,6 +89,7 @@ public class LeaseV2CreateContextRequest implements CreateContextRequest {
     }
 
     /**
+     * Gets the requested lease state flags for V2
      * @return the requested lease state
      */
     public int getLeaseState() {
@@ -94,6 +97,7 @@ public class LeaseV2CreateContextRequest implements CreateContextRequest {
     }
 
     /**
+     * Sets the requested lease state flags for V2
      * @param leaseState the lease state to set
      */
     public void setLeaseState(int leaseState) {
@@ -101,6 +105,7 @@ public class LeaseV2CreateContextRequest implements CreateContextRequest {
     }
 
     /**
+     * Gets the lease flags for this V2 request
      * @return the lease flags
      */
     public int getLeaseFlags() {
@@ -108,6 +113,7 @@ public class LeaseV2CreateContextRequest implements CreateContextRequest {
     }
 
     /**
+     * Sets the lease flags for this V2 request
      * @param leaseFlags the lease flags to set
      */
     public void setLeaseFlags(int leaseFlags) {
@@ -115,6 +121,7 @@ public class LeaseV2CreateContextRequest implements CreateContextRequest {
     }
 
     /**
+     * Gets the parent lease key for directory hierarchies
      * @return the parent lease key
      */
     public Smb2LeaseKey getParentLeaseKey() {
@@ -122,6 +129,7 @@ public class LeaseV2CreateContextRequest implements CreateContextRequest {
     }
 
     /**
+     * Sets the parent lease key for directory hierarchies
      * @param parentLeaseKey the parent lease key to set
      */
     public void setParentLeaseKey(Smb2LeaseKey parentLeaseKey) {
@@ -129,6 +137,7 @@ public class LeaseV2CreateContextRequest implements CreateContextRequest {
     }
 
     /**
+     * Gets the lease epoch for V2 lease versioning
      * @return the epoch
      */
     public int getEpoch() {
@@ -136,6 +145,7 @@ public class LeaseV2CreateContextRequest implements CreateContextRequest {
     }
 
     /**
+     * Sets the lease epoch for V2 lease versioning
      * @param epoch the epoch to set
      */
     public void setEpoch(int epoch) {

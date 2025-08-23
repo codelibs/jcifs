@@ -156,6 +156,7 @@ public class LeaseManager {
         }
 
         /**
+         * Gets the unique lease key identifier for this lease entry
          * @return the lease key
          */
         public Smb2LeaseKey getLeaseKey() {
@@ -163,6 +164,7 @@ public class LeaseManager {
         }
 
         /**
+         * Gets the current lease state flags for this entry
          * @return the current lease state
          */
         public int getLeaseState() {
@@ -170,6 +172,7 @@ public class LeaseManager {
         }
 
         /**
+         * Gets the current lease epoch value for versioning
          * @return the current epoch
          */
         public int getEpoch() {
@@ -177,6 +180,7 @@ public class LeaseManager {
         }
 
         /**
+         * Gets the file path associated with this lease
          * @return the file path
          */
         public String getPath() {
@@ -184,6 +188,7 @@ public class LeaseManager {
         }
 
         /**
+         * Checks if this lease is currently in a breaking state
          * @return true if lease is currently breaking
          */
         public boolean isBreaking() {
@@ -191,6 +196,7 @@ public class LeaseManager {
         }
 
         /**
+         * Sets the breaking state for this lease
          * @param breaking set breaking state
          */
         public void setBreaking(boolean breaking) {
@@ -198,6 +204,7 @@ public class LeaseManager {
         }
 
         /**
+         * Gets the timestamp of the last lease access
          * @return last access time in milliseconds
          */
         public long getLastAccessTime() {

@@ -18,14 +18,20 @@
 package jcifs.internal.smb2.lease;
 
 /**
- * Directory-specific lease state definitions for SMB3 directory leasing
+ * Defines directory lease state constants for SMB2/SMB3 directory leasing.
  *
- * Standard lease states apply with directory-specific semantics:
- * - READ_CACHING: Can cache directory enumeration results, file existence queries, and basic file attributes
- * - HANDLE_CACHING: Can keep directory handle open and cache subdirectory handles
- * - WRITE_CACHING: Can cache file creation/deletion notifications and perform optimistic file operations
+ * This class provides constants and utility methods for managing directory lease states
+ * in SMB2/SMB3 protocol implementations. Directory leases enable clients to cache
+ * directory metadata and reduce network round-trips for directory operations.
  */
 public class DirectoryLeaseState {
+
+    /**
+     * Private constructor to prevent instantiation of this utility class
+     */
+    private DirectoryLeaseState() {
+        // Utility class - prevent instantiation
+    }
 
     /**
      * Directory Read and Handle caching (RH) - recommended for directory operations

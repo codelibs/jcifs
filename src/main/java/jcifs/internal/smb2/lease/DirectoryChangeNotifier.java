@@ -41,7 +41,26 @@ public class DirectoryChangeNotifier {
      * Directory change types
      */
     public enum DirectoryChangeType {
-        FILE_ADDED, FILE_REMOVED, FILE_MODIFIED, DIRECTORY_RENAMED, ATTRIBUTES_CHANGED
+        /**
+         * File was added to the directory
+         */
+        FILE_ADDED,
+        /**
+         * File was removed from the directory
+         */
+        FILE_REMOVED,
+        /**
+         * File was modified in the directory
+         */
+        FILE_MODIFIED,
+        /**
+         * Directory was renamed
+         */
+        DIRECTORY_RENAMED,
+        /**
+         * File or directory attributes were changed
+         */
+        ATTRIBUTES_CHANGED
     }
 
     /**
@@ -87,6 +106,7 @@ public class DirectoryChangeNotifier {
         }
 
         /**
+         * Gets the path of the directory being monitored
          * @return the directory path
          */
         public String getDirectoryPath() {
@@ -94,6 +114,7 @@ public class DirectoryChangeNotifier {
         }
 
         /**
+         * Gets the lease key associated with this notification handle
          * @return the lease key
          */
         public Smb2LeaseKey getLeaseKey() {
@@ -101,6 +122,7 @@ public class DirectoryChangeNotifier {
         }
 
         /**
+         * Gets the SMB file handle for the monitored directory
          * @return the directory file
          */
         public SmbFile getDirectoryFile() {
@@ -108,6 +130,7 @@ public class DirectoryChangeNotifier {
         }
 
         /**
+         * Checks if directory change monitoring is currently active
          * @return true if watching is active
          */
         public boolean isActive() {
@@ -124,6 +147,7 @@ public class DirectoryChangeNotifier {
         }
 
         /**
+         * Gets the future for asynchronous notification completion
          * @return the notification future
          */
         public CompletableFuture<Void> getNotificationFuture() {
@@ -131,6 +155,7 @@ public class DirectoryChangeNotifier {
         }
 
         /**
+         * Sets the future for asynchronous notification completion
          * @param future the notification future to set
          */
         public void setNotificationFuture(CompletableFuture<Void> future) {

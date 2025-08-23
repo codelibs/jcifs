@@ -29,6 +29,9 @@ public class HandleGuid implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    /**
+     * The underlying UUID representing this handle GUID
+     */
     private final UUID guid;
 
     /**

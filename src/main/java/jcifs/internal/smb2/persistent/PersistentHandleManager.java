@@ -336,6 +336,9 @@ public class PersistentHandleManager {
         }
     }
 
+    /**
+     * Shuts down the persistent handle manager and its background tasks
+     */
     public void shutdown() {
         shutdown = true;
         scheduler.shutdown();

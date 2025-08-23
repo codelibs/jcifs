@@ -27,14 +27,49 @@ public class HandleInfo implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    /**
+     * The full path to the file or directory associated with this handle
+     */
     private final String path;
+
+    /**
+     * The create GUID used to uniquely identify this handle for reconnection
+     */
     private final HandleGuid createGuid;
+
+    /**
+     * The 16-byte file ID returned by the server for this handle
+     */
     private final byte[] fileId;
+
+    /**
+     * The type of handle (DURABLE_V1, DURABLE_V2, or PERSISTENT)
+     */
     private final HandleType type;
+
+    /**
+     * The timeout in milliseconds for durable handles (not applicable for persistent handles)
+     */
     private final long timeout;
+
+    /**
+     * The timestamp when this handle was created
+     */
     private final long createTime;
+
+    /**
+     * The timestamp of the last access to this handle
+     */
     private volatile long lastAccessTime;
-    private final Smb2LeaseKey leaseKey; // Associated lease if any
+
+    /**
+     * The associated lease key if this handle has an SMB2 lease
+     */
+    private final Smb2LeaseKey leaseKey;
+
+    /**
+     * Flag indicating whether this handle is currently being reconnected
+     */
     private volatile boolean reconnecting;
 
     // Not serialized - will be null after deserialization

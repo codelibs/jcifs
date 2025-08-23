@@ -244,17 +244,47 @@ public class BaseConfiguration implements Configuration {
     protected String handleStateDirectory;
 
     // Directory leasing configuration fields
+    /**
+     * Whether to use directory leasing for cached directory listings
+     */
     protected boolean useDirectoryLeasing = true;
+    /**
+     * The scope of directory caching: ALL (entire subtree) or IMMEDIATE_CHILDREN (direct children only)
+     */
     protected String directoryCacheScope = "IMMEDIATE_CHILDREN";
+    /**
+     * Directory cache timeout in milliseconds
+     */
     protected long directoryCacheTimeout = 30000L;
+    /**
+     * Whether directory change notifications are enabled for cache invalidation
+     */
     protected boolean directoryNotificationsEnabled = true;
+    /**
+     * Maximum number of cached directory entries
+     */
     protected int maxDirectoryCacheEntries = 1000;
 
     // Multi-channel configuration fields
+    /**
+     * Whether to use SMB3 multi-channel support for improved performance and redundancy
+     */
     protected boolean useMultiChannel;
+    /**
+     * Maximum number of SMB3 channels to establish per session
+     */
     protected int maxChannels;
+    /**
+     * Channel binding policy: -1=not set, 0=disabled, 1=preferred, 2=required
+     */
     protected int channelBindingPolicy = -1; // -1=not set, 0=disabled, 1=preferred, 2=required
+    /**
+     * Load balancing strategy for distributing operations across channels
+     */
     protected String loadBalancingStrategy;
+    /**
+     * Interval in milliseconds for checking channel health
+     */
     protected int channelHealthCheckInterval;
 
     /**
