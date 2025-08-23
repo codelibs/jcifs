@@ -97,7 +97,7 @@ public abstract class RdmaMemoryRegion implements AutoCloseable {
      * @return size in bytes
      */
     public int getSize() {
-        return buffer.remaining();
+        return buffer.limit();
     }
 
     /**

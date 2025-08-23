@@ -317,12 +317,6 @@ public final class PropertyConfiguration extends BaseConfiguration implements Co
             }
         }
 
-        // RDMA enabled flag
-        value = props.getProperty("jcifs.smb.client.useRDMA");
-        if (value != null) {
-            this.rdmaEnabled = Boolean.parseBoolean(value);
-        }
-
         // RDMA port
         value = props.getProperty("jcifs.smb.client.rdmaPort");
         if (value != null) {

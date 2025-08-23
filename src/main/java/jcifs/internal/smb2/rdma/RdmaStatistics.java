@@ -323,8 +323,8 @@ public class RdmaStatistics {
      * @param bytes number of bytes being requested
      */
     public void recordReadRequest(int bytes) {
-        // Statistics can be enhanced to track request vs completion separately
-        // For now, we'll just track that a read was requested
+        // Track that a read was requested
+        rdmaReads.incrementAndGet();
     }
 
     /**
@@ -350,8 +350,8 @@ public class RdmaStatistics {
      * @param bytes number of bytes being written
      */
     public void recordWriteRequest(int bytes) {
-        // Statistics can be enhanced to track request vs completion separately
-        // For now, we'll just track that a write was requested
+        // Track that a write was requested
+        rdmaWrites.incrementAndGet();
     }
 
     /**

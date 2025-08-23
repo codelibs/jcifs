@@ -19,7 +19,10 @@ package jcifs.internal.smb2.rdma.disni;
 
 import java.nio.ByteBuffer;
 import java.util.EnumSet;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +43,8 @@ public class DisniMemoryRegion extends RdmaMemoryRegion {
 
     private static final Logger log = LoggerFactory.getLogger(DisniMemoryRegion.class);
     private static final AtomicInteger keyGenerator = new AtomicInteger(2000);
+    private static final AtomicLong addressCounter = new AtomicLong(0x10000000L);
+    private static final Map<ByteBuffer, Long> bufferAddresses = new ConcurrentHashMap<>();
 
     // DiSNI objects - would be actual DiSNI types in real implementation
     private final Object endpoint; // RdmaActiveEndpoint
@@ -107,9 +112,8 @@ public class DisniMemoryRegion extends RdmaMemoryRegion {
         // or DiSNI-specific methods
 
         if (buffer.isDirect()) {
-            // This would need proper implementation to get the native address
-            // For now, return a placeholder based on buffer properties
-            return System.identityHashCode(buffer) + buffer.capacity();
+            // Assign a unique address to each buffer instance
+            return bufferAddresses.computeIfAbsent(buffer, b -> addressCounter.getAndIncrement());
         } else {
             throw new IllegalArgumentException("Only direct ByteBuffers are supported for RDMA");
         }
