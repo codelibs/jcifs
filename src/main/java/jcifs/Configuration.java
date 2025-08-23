@@ -840,4 +840,39 @@ public interface Configuration {
      * @return directory to store persistent handle state
      */
     String getHandleStateDirectory();
+
+    /**
+     * Property {@code jcifs.smb.client.useDirectoryLeasing} (boolean, default true)
+     *
+     * @return whether to use directory leasing for caching
+     */
+    boolean isUseDirectoryLeasing();
+
+    /**
+     * Property {@code jcifs.smb.client.directoryCacheScope} (String, default "IMMEDIATE_CHILDREN")
+     *
+     * @return directory cache scope (IMMEDIATE_CHILDREN, RECURSIVE_TREE, METADATA_ONLY, FULL_ENUMERATION)
+     */
+    String getDirectoryCacheScope();
+
+    /**
+     * Property {@code jcifs.smb.client.directoryCacheTimeout} (long, default 30000)
+     *
+     * @return directory cache timeout in milliseconds
+     */
+    long getDirectoryCacheTimeout();
+
+    /**
+     * Property {@code jcifs.smb.client.directoryNotificationsEnabled} (boolean, default true)
+     *
+     * @return whether directory change notifications are enabled
+     */
+    boolean isDirectoryNotificationsEnabled();
+
+    /**
+     * Property {@code jcifs.smb.client.maxDirectoryCacheEntries} (int, default 1000)
+     *
+     * @return maximum number of directory cache entries
+     */
+    int getMaxDirectoryCacheEntries();
 }

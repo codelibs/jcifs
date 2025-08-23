@@ -960,4 +960,29 @@ public class DelegatingConfiguration implements Configuration {
     public String getHandleStateDirectory() {
         return this.delegate.getHandleStateDirectory();
     }
+
+    @Override
+    public boolean isUseDirectoryLeasing() {
+        return this.delegate.isUseDirectoryLeasing();
+    }
+
+    @Override
+    public String getDirectoryCacheScope() {
+        return this.delegate.getDirectoryCacheScope();
+    }
+
+    @Override
+    public long getDirectoryCacheTimeout() {
+        return this.delegate.getDirectoryCacheTimeout();
+    }
+
+    @Override
+    public boolean isDirectoryNotificationsEnabled() {
+        return this.delegate.isDirectoryNotificationsEnabled();
+    }
+
+    @Override
+    public int getMaxDirectoryCacheEntries() {
+        return this.delegate.getMaxDirectoryCacheEntries();
+    }
 }
