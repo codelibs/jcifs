@@ -19,6 +19,9 @@
 package jcifs.smb;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.security.GeneralSecurityException;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
@@ -28,6 +31,8 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -68,6 +73,9 @@ import jcifs.internal.smb2.nego.Smb2NegotiateResponse;
 import jcifs.internal.smb2.session.Smb2LogoffRequest;
 import jcifs.internal.smb2.session.Smb2SessionSetupRequest;
 import jcifs.internal.smb2.session.Smb2SessionSetupResponse;
+import jcifs.internal.witness.WitnessClient;
+import jcifs.internal.witness.WitnessNotification;
+import jcifs.internal.witness.WitnessRegistration;
 import jcifs.util.Hexdump;
 
 /**
@@ -112,6 +120,10 @@ final class SmbSessionImpl implements SmbSessionInternal {
 
     // Multi-channel support
     private ChannelManager channelManager;
+
+    // Witness protocol support fields
+    private WitnessClient witnessClient;
+    private boolean witnessEnabled;
 
     SmbSessionImpl(CIFSContext tf, String targetHost, String targetDomain, SmbTransportImpl transport) {
         this.transportContext = tf;
@@ -232,6 +244,13 @@ final class SmbSessionImpl implements SmbSessionInternal {
                 // Shutdown channel manager
                 if (this.channelManager != null) {
                     this.channelManager.shutdown();
+                }
+
+                // Shutdown witness client
+                if (this.witnessClient != null) {
+                    this.witnessClient.close();
+                    this.witnessClient = null;
+                    this.witnessEnabled = false;
                 }
             }
         } else if (usage < 0) {
@@ -645,6 +664,9 @@ final class SmbSessionImpl implements SmbSessionInternal {
 
                 // Initialize multi-channel after successful session setup
                 initializeMultiChannel();
+
+                // Initialize witness support for fast failover
+                initializeWitnessSupport();
 
                 if (ex != null) {
                     throw ex;
@@ -1116,6 +1138,18 @@ final class SmbSessionImpl implements SmbSessionInternal {
                     }
                 }
 
+                // Cleanup witness client before protocol logoff
+                if (witnessClient != null) {
+                    try {
+                        witnessClient.close();
+                        witnessClient = null;
+                        witnessEnabled = false;
+                        log.debug("Witness client closed on session logoff");
+                    } catch (Exception e) {
+                        log.warn("Error closing witness client during logoff", e);
+                    }
+                }
+
                 if (!inError && trans.isSMB2()) {
                     Smb2LogoffRequest request = new Smb2LogoffRequest(getConfig());
                     request.setDigest(getDigest());
@@ -1163,6 +1197,292 @@ final class SmbSessionImpl implements SmbSessionInternal {
         } catch (Exception e) {
             log.warn("Failed to initialize multi-channel", e);
         }
+    }
+
+    /**
+     * Initialize witness support for fast failover
+     */
+    private void initializeWitnessSupport() {
+        Configuration config = getContext().getConfig();
+
+        if (!config.isUseWitness()) {
+            return;
+        }
+
+        try {
+            // Discover witness service
+            InetAddress witnessServer = discoverWitnessService();
+            if (witnessServer != null) {
+                witnessClient = new WitnessClient(witnessServer, getContext());
+                witnessEnabled = true;
+
+                log.info("Initialized witness support with server: {}", witnessServer);
+            }
+        } catch (Exception e) {
+            log.warn("Failed to initialize witness support", e);
+        }
+    }
+
+    /**
+     * Discover witness service for the current server
+     *
+     * @return witness server address or null if not found
+     * @throws IOException if discovery fails
+     */
+    private InetAddress discoverWitnessService() throws IOException {
+        // Try the same server first
+        InetAddress serverAddress = transport.getRemoteAddress().toInetAddress();
+
+        if (isWitnessServiceAvailable(serverAddress)) {
+            return serverAddress;
+        }
+
+        // Query for cluster witness service via DNS
+        try {
+            String clusterName = getClusterName(serverAddress);
+            if (clusterName != null) {
+                return InetAddress.getByName(clusterName + "-witness");
+            }
+        } catch (Exception e) {
+            log.debug("Failed to discover cluster witness via DNS", e);
+        }
+
+        return null; // No witness service found
+    }
+
+    /**
+     * Check if witness service is available on the given address
+     *
+     * @param address the address to check
+     * @return true if witness service is available
+     */
+    private boolean isWitnessServiceAvailable(InetAddress address) {
+        // RPC endpoint mapper port and connection timeout
+        final int RPC_ENDPOINT_PORT = 135;
+        final int RPC_CONNECT_TIMEOUT_MS = 5000;
+
+        try (Socket socket = new Socket()) {
+            socket.connect(new InetSocketAddress(address, RPC_ENDPOINT_PORT), RPC_CONNECT_TIMEOUT_MS);
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    /**
+     * Get cluster name for witness discovery
+     *
+     * @param serverAddress the server address
+     * @return cluster name or null
+     */
+    private String getClusterName(InetAddress serverAddress) {
+        // Simple implementation - could be enhanced with proper cluster discovery
+        String hostname = serverAddress.getHostName();
+        if (hostname != null && hostname.contains(".")) {
+            // Extract potential cluster name from hostname
+            String[] parts = hostname.split("\\.");
+            if (parts.length > 1) {
+                return parts[0]; // Use first part as cluster name
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Register for witness notifications for a share
+     *
+     * @param shareName the share name to monitor
+     */
+    public void registerForWitnessNotifications(String shareName) {
+        if (!witnessEnabled || witnessClient == null) {
+            return;
+        }
+
+        try {
+            InetAddress serverAddress = transport.getRemoteAddress().toInetAddress();
+
+            witnessClient.registerForNotifications(shareName, serverAddress, new WitnessNotificationHandler()).thenAccept(registration -> {
+                log.info("Registered for witness notifications: share={}, id={}", shareName, registration.getRegistrationId());
+            }).exceptionally(error -> {
+                log.error("Failed to register for witness notifications", error);
+                return null;
+            });
+
+        } catch (Exception e) {
+            log.error("Error registering for witness notifications", e);
+        }
+    }
+
+    /**
+     * Check if witness support is enabled
+     *
+     * @return true if witness is enabled
+     */
+    public boolean isWitnessEnabled() {
+        return witnessEnabled;
+    }
+
+    /**
+     * Handle witness notifications
+     */
+    private class WitnessNotificationHandler implements WitnessClient.WitnessNotificationListener {
+        @Override
+        public void onWitnessNotification(WitnessNotification notification) {
+            handleWitnessEvent(notification);
+        }
+
+        @Override
+        public void onRegistrationFailed(WitnessRegistration registration, Exception error) {
+            log.error("Witness registration failed: {}", registration.getRegistrationId(), error);
+        }
+
+        @Override
+        public void onRegistrationExpired(WitnessRegistration registration) {
+            log.warn("Witness registration expired: {}", registration.getRegistrationId());
+            // Could attempt re-registration here
+        }
+    }
+
+    /**
+     * Handle a witness event
+     *
+     * @param notification the witness notification
+     */
+    private void handleWitnessEvent(WitnessNotification notification) {
+        log.info("Handling witness event: {} for resource: {}", notification.getEventType(), notification.getResourceName());
+
+        switch (notification.getEventType()) {
+        case RESOURCE_CHANGE:
+            handleResourceChange(notification);
+            break;
+
+        case CLIENT_MOVE:
+            handleClientMove(notification);
+            break;
+
+        case SHARE_MOVE:
+            handleShareMove(notification);
+            break;
+
+        case IP_CHANGE:
+            handleIPChange(notification);
+            break;
+
+        case NODE_UNAVAILABLE:
+            handleNodeUnavailable(notification);
+            break;
+
+        case NODE_AVAILABLE:
+            handleNodeAvailable(notification);
+            break;
+
+        default:
+            log.debug("Unhandled witness event type: {}", notification.getEventType());
+        }
+    }
+
+    /**
+     * Handle resource change events
+     */
+    private void handleResourceChange(WitnessNotification notification) {
+        // Resource state changed - may need to reconnect
+        log.info("Resource change detected for: {}", notification.getResourceName());
+
+        // Schedule reconnection attempt
+        scheduleReconnection(getContext().getConfig().getWitnessReconnectDelay());
+    }
+
+    /**
+     * Handle client move events
+     */
+    private void handleClientMove(WitnessNotification notification) {
+        // Server is asking client to move to different node
+        log.info("Client move requested for resource: {}", notification.getResourceName());
+
+        List<WitnessNotification.WitnessIPAddress> newAddresses = notification.getNewIPAddresses();
+        if (!newAddresses.isEmpty()) {
+            // Attempt to connect to new address
+            InetAddress newAddress = newAddresses.get(0).getAddress();
+            scheduleAddressChange(newAddress);
+        }
+    }
+
+    /**
+     * Handle share move events
+     */
+    private void handleShareMove(WitnessNotification notification) {
+        // Share moved to different server node
+        log.info("Share move detected for: {}", notification.getResourceName());
+
+        // Similar to client move - try new addresses
+        handleClientMove(notification);
+    }
+
+    /**
+     * Handle IP change events
+     */
+    private void handleIPChange(WitnessNotification notification) {
+        // Server IP address changed
+        log.info("IP change detected for resource: {}", notification.getResourceName());
+
+        List<WitnessNotification.WitnessIPAddress> newAddresses = notification.getNewIPAddresses();
+        if (!newAddresses.isEmpty()) {
+            InetAddress newAddress = newAddresses.get(0).getAddress();
+            scheduleAddressChange(newAddress);
+        }
+    }
+
+    /**
+     * Handle node unavailable events
+     */
+    private void handleNodeUnavailable(WitnessNotification notification) {
+        log.warn("Node unavailable: {}", notification.getResourceName());
+        // Could trigger failover logic here
+    }
+
+    /**
+     * Handle node available events
+     */
+    private void handleNodeAvailable(WitnessNotification notification) {
+        log.info("Node available: {}", notification.getResourceName());
+        // Node is back online - could rebalance connections
+    }
+
+    /**
+     * Schedule a reconnection attempt
+     *
+     * @param delayMs delay in milliseconds
+     */
+    private void scheduleReconnection(long delayMs) {
+        CompletableFuture.delayedExecutor(delayMs, TimeUnit.MILLISECONDS).execute(() -> {
+            try {
+                transport.disconnect(true);
+                transport.connect(getConfig().getConnTimeout()); // Reconnect
+                log.info("Successfully reconnected after witness notification");
+            } catch (Exception e) {
+                log.error("Failed to reconnect after witness notification", e);
+            }
+        });
+    }
+
+    /**
+     * Schedule an address change
+     *
+     * @param newAddress the new server address
+     */
+    private void scheduleAddressChange(InetAddress newAddress) {
+        CompletableFuture.runAsync(() -> {
+            try {
+                // This would require transport architecture changes to support address switching
+                // For now, log the event
+                log.info("Address change requested to: {} (not implemented)", newAddress);
+
+                // Could implement transport recreation here in the future
+
+            } catch (Exception e) {
+                log.error("Failed to handle address change to: {}", newAddress, e);
+            }
+        });
     }
 
     /**

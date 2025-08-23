@@ -296,6 +296,12 @@ public class BaseConfiguration implements Configuration {
     protected int rdmaCredits;
     protected boolean rdmaEnabled = false;
     protected int rdmaPort = 5445;
+    // Witness protocol configuration fields
+    protected boolean useWitness = false; // Disabled by default
+    protected long witnessHeartbeatTimeout = 120000; // 2 minutes
+    protected long witnessRegistrationTimeout = 300000; // 5 minutes
+    protected long witnessReconnectDelay = 1000; // 1 second
+    protected boolean witnessServiceDiscovery = true;
 
     /**
      * Constructs a BaseConfiguration with default settings
@@ -1127,6 +1133,31 @@ public class BaseConfiguration implements Configuration {
     @Override
     public int getRdmaPort() {
         return this.rdmaPort;
+    }
+
+    @Override
+    public boolean isUseWitness() {
+        return this.useWitness;
+    }
+
+    @Override
+    public long getWitnessHeartbeatTimeout() {
+        return this.witnessHeartbeatTimeout;
+    }
+
+    @Override
+    public long getWitnessRegistrationTimeout() {
+        return this.witnessRegistrationTimeout;
+    }
+
+    @Override
+    public long getWitnessReconnectDelay() {
+        return this.witnessReconnectDelay;
+    }
+
+    @Override
+    public boolean isWitnessServiceDiscovery() {
+        return this.witnessServiceDiscovery;
     }
 
 }

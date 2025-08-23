@@ -931,6 +931,41 @@ public interface Configuration {
     boolean isRdmaEnabled();
 
     /**
+     * Gets whether witness protocol support is enabled.
+     *
+     * @return true if witness is enabled
+     */
+    boolean isUseWitness();
+
+    /**
+     * Gets the witness heartbeat timeout in milliseconds.
+     *
+     * @return the heartbeat timeout
+     */
+    long getWitnessHeartbeatTimeout();
+
+    /**
+     * Gets the witness registration timeout in milliseconds.
+     *
+     * @return the registration timeout
+     */
+    long getWitnessRegistrationTimeout();
+
+    /**
+     * Gets the witness reconnect delay in milliseconds.
+     *
+     * @return the reconnect delay
+     */
+    long getWitnessReconnectDelay();
+
+    /**
+     * Gets whether witness service discovery is enabled.
+     *
+     * @return true if discovery is enabled
+     */
+    boolean isWitnessServiceDiscovery();
+
+    /**
      * Get RDMA port number
      *
      * @return RDMA port number (default 5445)
