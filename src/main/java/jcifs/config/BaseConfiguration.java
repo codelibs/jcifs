@@ -287,6 +287,16 @@ public class BaseConfiguration implements Configuration {
      */
     protected int channelHealthCheckInterval;
 
+    // RDMA configuration
+    protected boolean useRDMA;
+    protected String rdmaProvider;
+    protected int rdmaReadWriteThreshold;
+    protected int rdmaMaxSendSize;
+    protected int rdmaMaxReceiveSize;
+    protected int rdmaCredits;
+    protected boolean rdmaEnabled = false;
+    protected int rdmaPort = 5445;
+
     /**
      * Constructs a BaseConfiguration with default settings
      *
@@ -1016,6 +1026,23 @@ public class BaseConfiguration implements Configuration {
         if (this.loadBalancingStrategy == null) {
             this.loadBalancingStrategy = "adaptive";
         }
+
+        // Initialize RDMA defaults
+        if (this.rdmaProvider == null) {
+            this.rdmaProvider = "auto";
+        }
+        if (this.rdmaReadWriteThreshold == 0) {
+            this.rdmaReadWriteThreshold = 8192; // 8KB
+        }
+        if (this.rdmaMaxSendSize == 0) {
+            this.rdmaMaxSendSize = 65536; // 64KB
+        }
+        if (this.rdmaMaxReceiveSize == 0) {
+            this.rdmaMaxReceiveSize = 65536; // 64KB
+        }
+        if (this.rdmaCredits == 0) {
+            this.rdmaCredits = 255;
+        }
     }
 
     /**
@@ -1060,6 +1087,46 @@ public class BaseConfiguration implements Configuration {
     @Override
     public int getMaxDirectoryCacheEntries() {
         return this.maxDirectoryCacheEntries;
+    }
+
+    @Override
+    public boolean isUseRDMA() {
+        return this.useRDMA;
+    }
+
+    @Override
+    public String getRdmaProvider() {
+        return this.rdmaProvider;
+    }
+
+    @Override
+    public int getRdmaReadWriteThreshold() {
+        return this.rdmaReadWriteThreshold;
+    }
+
+    @Override
+    public int getRdmaMaxSendSize() {
+        return this.rdmaMaxSendSize;
+    }
+
+    @Override
+    public int getRdmaMaxReceiveSize() {
+        return this.rdmaMaxReceiveSize;
+    }
+
+    @Override
+    public int getRdmaCredits() {
+        return this.rdmaCredits;
+    }
+
+    @Override
+    public boolean isRdmaEnabled() {
+        return this.rdmaEnabled;
+    }
+
+    @Override
+    public int getRdmaPort() {
+        return this.rdmaPort;
     }
 
 }

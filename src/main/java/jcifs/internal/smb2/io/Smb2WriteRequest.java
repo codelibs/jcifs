@@ -22,6 +22,7 @@ import jcifs.Configuration;
 import jcifs.internal.smb2.RequestWithFileId;
 import jcifs.internal.smb2.ServerMessageBlock2Request;
 import jcifs.internal.smb2.Smb2Constants;
+import jcifs.internal.smb2.rdma.RdmaChannelInfo;
 import jcifs.internal.util.SMBUtil;
 
 /**
@@ -48,6 +49,7 @@ public class Smb2WriteRequest extends ServerMessageBlock2Request<Smb2WriteRespon
     private int channel;
     private int remainingBytes;
     private int writeFlags;
+    private RdmaChannelInfo rdmaChannelInfo;
 
     /**
      * Creates a new SMB2 write request for writing data to a file.
@@ -116,6 +118,36 @@ public class Smb2WriteRequest extends ServerMessageBlock2Request<Smb2WriteRespon
     }
 
     /**
+     * Add RDMA channel information for direct memory access
+     *
+     * @param remoteKey remote memory key
+     * @param address remote memory address
+     * @param length length of memory region
+     */
+    public void addRdmaChannelInfo(int remoteKey, long address, int length) {
+        this.rdmaChannelInfo = new RdmaChannelInfo(remoteKey, address, length);
+        this.channel = Smb2Constants.SMB2_CHANNEL_RDMA_V1;
+    }
+
+    /**
+     * Get RDMA channel information
+     *
+     * @return RDMA channel info, or null if not using RDMA
+     */
+    public RdmaChannelInfo getRdmaChannelInfo() {
+        return rdmaChannelInfo;
+    }
+
+    /**
+     * Get write data
+     *
+     * @return data to write
+     */
+    public byte[] getData() {
+        return data;
+    }
+
+    /**
      * {@inheritDoc}
      *
      * @see jcifs.internal.CommonServerMessageBlockRequest#size()
@@ -147,8 +179,16 @@ public class Smb2WriteRequest extends ServerMessageBlock2Request<Smb2WriteRespon
         SMBUtil.writeInt4(this.remainingBytes, dst, dstIndex);
         dstIndex += 4;
 
-        SMBUtil.writeInt2(0, dst, dstIndex); // writeChannelInfoOffset
-        SMBUtil.writeInt2(0, dst, dstIndex + 2); // writeChannelInfoLength
+        // WriteChannelInfo (Offset/Length for SMB2_RDMA_TRANSFORM)
+        if (rdmaChannelInfo != null && channel == Smb2Constants.SMB2_CHANNEL_RDMA_V1) {
+            // Calculate offset for SMB2_RDMA_TRANSFORM after data
+            int transformOffset = 112 + this.dataLength; // After header (64) + write req (48) + data
+            SMBUtil.writeInt2(transformOffset, dst, dstIndex); // writeChannelInfoOffset
+            SMBUtil.writeInt2(16, dst, dstIndex + 2); // writeChannelInfoLength (size of SMB2_RDMA_TRANSFORM)
+        } else {
+            SMBUtil.writeInt2(0, dst, dstIndex); // writeChannelInfoOffset
+            SMBUtil.writeInt2(0, dst, dstIndex + 2); // writeChannelInfoLength
+        }
         dstIndex += 4;
 
         SMBUtil.writeInt4(this.writeFlags, dst, dstIndex);
@@ -163,6 +203,13 @@ public class Smb2WriteRequest extends ServerMessageBlock2Request<Smb2WriteRespon
 
         System.arraycopy(this.data, this.dataOffset, dst, dstIndex, this.dataLength);
         dstIndex += this.dataLength;
+
+        // Write SMB2_RDMA_TRANSFORM if using RDMA channel
+        if (rdmaChannelInfo != null && channel == Smb2Constants.SMB2_CHANNEL_RDMA_V1) {
+            rdmaChannelInfo.encode(dst, dstIndex);
+            dstIndex += 16;
+        }
+
         return dstIndex - start;
     }
 

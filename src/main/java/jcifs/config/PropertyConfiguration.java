@@ -269,6 +269,63 @@ public final class PropertyConfiguration extends BaseConfiguration implements Co
                 // Invalid value ignored
             }
         }
+
+        // RDMA Configuration
+        value = props.getProperty("jcifs.smb.client.useRDMA");
+        if (value != null) {
+            this.useRDMA = Boolean.parseBoolean(value);
+        }
+
+        value = props.getProperty("jcifs.smb.client.rdmaProvider");
+        if (value != null) {
+            this.rdmaProvider = value;
+        }
+
+        value = props.getProperty("jcifs.smb.client.rdmaReadWriteThreshold");
+        if (value != null) {
+            try {
+                this.rdmaReadWriteThreshold = Integer.parseInt(value);
+            } catch (NumberFormatException e) {
+                // Invalid value ignored
+            }
+        }
+
+        value = props.getProperty("jcifs.smb.client.rdmaMaxSendSize");
+        if (value != null) {
+            try {
+                this.rdmaMaxSendSize = Integer.parseInt(value);
+            } catch (NumberFormatException e) {
+                // Invalid value ignored
+            }
+        }
+
+        value = props.getProperty("jcifs.smb.client.rdmaMaxReceiveSize");
+        if (value != null) {
+            try {
+                this.rdmaMaxReceiveSize = Integer.parseInt(value);
+            } catch (NumberFormatException e) {
+                // Invalid value ignored
+            }
+        }
+
+        value = props.getProperty("jcifs.smb.client.rdmaCredits");
+        if (value != null) {
+            try {
+                this.rdmaCredits = Integer.parseInt(value);
+            } catch (NumberFormatException e) {
+                // Invalid value ignored
+            }
+        }
+
+        // RDMA port
+        value = props.getProperty("jcifs.smb.client.rdmaPort");
+        if (value != null) {
+            try {
+                this.rdmaPort = Integer.parseInt(value);
+            } catch (NumberFormatException e) {
+                // Invalid value ignored
+            }
+        }
     }
 
     @Override
