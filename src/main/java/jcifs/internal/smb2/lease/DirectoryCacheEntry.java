@@ -114,6 +114,7 @@ public class DirectoryCacheEntry {
         }
 
         /**
+         * Gets the name of this cached file or directory
          * @return the file name
          */
         public String getName() {
@@ -121,6 +122,7 @@ public class DirectoryCacheEntry {
         }
 
         /**
+         * Gets the size of this cached file in bytes
          * @return the file size
          */
         public long getSize() {
@@ -128,6 +130,7 @@ public class DirectoryCacheEntry {
         }
 
         /**
+         * Gets the last modification timestamp of this cached item
          * @return the last modified time
          */
         public long getLastModified() {
@@ -135,6 +138,7 @@ public class DirectoryCacheEntry {
         }
 
         /**
+         * Checks if this cached item represents a directory
          * @return true if this is a directory
          */
         public boolean isDirectory() {
@@ -142,6 +146,7 @@ public class DirectoryCacheEntry {
         }
 
         /**
+         * Gets the SMB file attributes for this cached item
          * @return the file attributes
          */
         public long getAttributes() {
@@ -149,6 +154,7 @@ public class DirectoryCacheEntry {
         }
 
         /**
+         * Gets the creation timestamp of this cached item
          * @return the creation time
          */
         public long getCreationTime() {
@@ -156,6 +162,7 @@ public class DirectoryCacheEntry {
         }
 
         /**
+         * Gets the last access timestamp of this cached item
          * @return the last access time
          */
         public long getLastAccessTime() {
@@ -302,6 +309,7 @@ public class DirectoryCacheEntry {
     }
 
     /**
+     * Gets the directory path for this cache entry
      * @return the directory path
      */
     public String getDirectoryPath() {
@@ -309,6 +317,7 @@ public class DirectoryCacheEntry {
     }
 
     /**
+     * Gets the lease key associated with this directory cache
      * @return the lease key
      */
     public Smb2LeaseKey getLeaseKey() {
@@ -316,6 +325,7 @@ public class DirectoryCacheEntry {
     }
 
     /**
+     * Checks if the complete directory enumeration has been cached
      * @return true if full enumeration is cached
      */
     public boolean isComplete() {
@@ -323,6 +333,7 @@ public class DirectoryCacheEntry {
     }
 
     /**
+     * Gets the cache scope (ALL or IMMEDIATE_CHILDREN)
      * @return the cache scope
      */
     public DirectoryCacheScope getScope() {
@@ -330,6 +341,7 @@ public class DirectoryCacheEntry {
     }
 
     /**
+     * Sets the cache scope for this directory cache
      * @param scope the cache scope to set
      */
     public void setScope(DirectoryCacheScope scope) {
@@ -337,6 +349,7 @@ public class DirectoryCacheEntry {
     }
 
     /**
+     * Gets the maximum age for cached data before requiring refresh
      * @return the maximum cache age in milliseconds
      */
     public long getMaxAge() {
@@ -344,6 +357,7 @@ public class DirectoryCacheEntry {
     }
 
     /**
+     * Sets the maximum age for cached data
      * @param maxAge the maximum cache age in milliseconds
      */
     public void setMaxAge(long maxAge) {
@@ -351,6 +365,7 @@ public class DirectoryCacheEntry {
     }
 
     /**
+     * Gets the timestamp when this cache entry was created
      * @return the create time
      */
     public long getCreateTime() {
@@ -358,6 +373,7 @@ public class DirectoryCacheEntry {
     }
 
     /**
+     * Gets the timestamp of the last cache update
      * @return the last update time
      */
     public long getLastUpdateTime() {
@@ -365,6 +381,7 @@ public class DirectoryCacheEntry {
     }
 
     /**
+     * Gets the timestamp of the last cache access
      * @return the last access time
      */
     public long getLastAccessTime() {
@@ -372,6 +389,7 @@ public class DirectoryCacheEntry {
     }
 
     /**
+     * Checks if the cache has pending changes
      * @return true if cache has changes
      */
     public boolean hasChanges() {

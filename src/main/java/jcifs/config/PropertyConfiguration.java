@@ -37,8 +37,8 @@ public final class PropertyConfiguration extends BaseConfiguration implements Co
     /**
      * Create a configuration backed by properties
      *
-     * @param props
-     * @throws CIFSException
+     * @param props properties object containing JCIFS configuration settings
+     * @throws CIFSException if configuration initialization fails
      */
     public PropertyConfiguration(Properties props) throws CIFSException {
         super(false);

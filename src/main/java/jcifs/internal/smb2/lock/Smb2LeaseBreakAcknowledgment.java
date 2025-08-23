@@ -63,6 +63,7 @@ public class Smb2LeaseBreakAcknowledgment extends ServerMessageBlock2Request<Smb
     }
 
     /**
+     * Gets the lease key for this acknowledgment
      * @return the lease key
      */
     public Smb2LeaseKey getLeaseKey() {
@@ -70,6 +71,7 @@ public class Smb2LeaseBreakAcknowledgment extends ServerMessageBlock2Request<Smb
     }
 
     /**
+     * Gets the lease state being acknowledged
      * @return the lease state
      */
     public int getLeaseState() {
@@ -77,6 +79,7 @@ public class Smb2LeaseBreakAcknowledgment extends ServerMessageBlock2Request<Smb
     }
 
     /**
+     * Gets the lease flags for this acknowledgment
      * @return the lease flags
      */
     public int getLeaseFlags() {
@@ -84,6 +87,7 @@ public class Smb2LeaseBreakAcknowledgment extends ServerMessageBlock2Request<Smb
     }
 
     /**
+     * Sets the lease flags for this acknowledgment
      * @param flags the lease flags to set
      */
     public void setLeaseFlags(int flags) {

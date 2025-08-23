@@ -53,6 +53,7 @@ public class LeaseV2CreateContextResponse implements CreateContextResponse {
     }
 
     /**
+     * Gets the lease key from the V2 server response
      * @return the lease key
      */
     public Smb2LeaseKey getLeaseKey() {
@@ -60,6 +61,7 @@ public class LeaseV2CreateContextResponse implements CreateContextResponse {
     }
 
     /**
+     * Gets the lease state granted by the server for V2
      * @return the granted lease state
      */
     public int getLeaseState() {
@@ -67,6 +69,7 @@ public class LeaseV2CreateContextResponse implements CreateContextResponse {
     }
 
     /**
+     * Gets the lease flags from the V2 server response
      * @return the lease flags
      */
     public int getLeaseFlags() {
@@ -74,6 +77,7 @@ public class LeaseV2CreateContextResponse implements CreateContextResponse {
     }
 
     /**
+     * Gets the parent lease key from the V2 response
      * @return the parent lease key
      */
     public Smb2LeaseKey getParentLeaseKey() {
@@ -81,6 +85,7 @@ public class LeaseV2CreateContextResponse implements CreateContextResponse {
     }
 
     /**
+     * Gets the lease epoch from the V2 response
      * @return the epoch
      */
     public int getEpoch() {

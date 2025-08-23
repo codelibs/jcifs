@@ -49,6 +49,7 @@ public class Smb2LeaseBreakNotification extends ServerMessageBlock2Response {
     }
 
     /**
+     * Gets the lease key that is being broken
      * @return the lease key
      */
     public Smb2LeaseKey getLeaseKey() {
@@ -56,6 +57,7 @@ public class Smb2LeaseBreakNotification extends ServerMessageBlock2Response {
     }
 
     /**
+     * Gets the current lease state before the break
      * @return the current lease state
      */
     public int getCurrentLeaseState() {
@@ -63,6 +65,7 @@ public class Smb2LeaseBreakNotification extends ServerMessageBlock2Response {
     }
 
     /**
+     * Gets the new lease state after the break
      * @return the new lease state
      */
     public int getNewLeaseState() {
@@ -70,6 +73,7 @@ public class Smb2LeaseBreakNotification extends ServerMessageBlock2Response {
     }
 
     /**
+     * Gets the reason for the lease break
      * @return the break reason
      */
     public int getBreakReason() {
@@ -77,6 +81,7 @@ public class Smb2LeaseBreakNotification extends ServerMessageBlock2Response {
     }
 
     /**
+     * Gets the lease flags from the notification
      * @return the lease flags
      */
     public int getLeaseFlags() {
@@ -84,6 +89,7 @@ public class Smb2LeaseBreakNotification extends ServerMessageBlock2Response {
     }
 
     /**
+     * Gets the access mask hint for optimizing lease handling
      * @return the access mask hint
      */
     public int getAccessMaskHint() {
@@ -91,6 +97,7 @@ public class Smb2LeaseBreakNotification extends ServerMessageBlock2Response {
     }
 
     /**
+     * Gets the share access hint for optimizing lease handling
      * @return the share access hint
      */
     public int getShareAccessHint() {

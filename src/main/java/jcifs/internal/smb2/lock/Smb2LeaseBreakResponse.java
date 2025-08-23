@@ -46,6 +46,7 @@ public class Smb2LeaseBreakResponse extends ServerMessageBlock2Response {
     }
 
     /**
+     * Gets the lease key from the break response
      * @return the lease key
      */
     public Smb2LeaseKey getLeaseKey() {
@@ -53,6 +54,7 @@ public class Smb2LeaseBreakResponse extends ServerMessageBlock2Response {
     }
 
     /**
+     * Gets the granted lease state from the break response
      * @return the lease state
      */
     public int getLeaseState() {
@@ -60,6 +62,7 @@ public class Smb2LeaseBreakResponse extends ServerMessageBlock2Response {
     }
 
     /**
+     * Gets the lease flags from the break response
      * @return the lease flags
      */
     public int getLeaseFlags() {
@@ -67,6 +70,7 @@ public class Smb2LeaseBreakResponse extends ServerMessageBlock2Response {
     }
 
     /**
+     * Gets the lease duration from the break response
      * @return the lease duration
      */
     public long getLeaseDuration() {

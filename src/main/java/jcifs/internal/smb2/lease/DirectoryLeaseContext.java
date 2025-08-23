@@ -79,6 +79,7 @@ public class DirectoryLeaseContext implements CreateContextRequest {
     }
 
     /**
+     * Gets the lease key for this directory lease context
      * @return the lease key
      */
     public Smb2LeaseKey getLeaseKey() {
@@ -86,6 +87,7 @@ public class DirectoryLeaseContext implements CreateContextRequest {
     }
 
     /**
+     * Sets the lease key for this directory lease context
      * @param leaseKey the lease key to set
      */
     public void setLeaseKey(Smb2LeaseKey leaseKey) {
@@ -93,6 +95,7 @@ public class DirectoryLeaseContext implements CreateContextRequest {
     }
 
     /**
+     * Gets the current lease state flags for this directory
      * @return the lease state
      */
     public int getLeaseState() {
@@ -100,6 +103,7 @@ public class DirectoryLeaseContext implements CreateContextRequest {
     }
 
     /**
+     * Sets the lease state flags for this directory
      * @param leaseState the lease state to set
      */
     public void setLeaseState(int leaseState) {
@@ -107,6 +111,7 @@ public class DirectoryLeaseContext implements CreateContextRequest {
     }
 
     /**
+     * Gets the cache scope for directory enumeration caching
      * @return the cache scope
      */
     public DirectoryCacheScope getCacheScope() {
@@ -114,6 +119,7 @@ public class DirectoryLeaseContext implements CreateContextRequest {
     }
 
     /**
+     * Sets the cache scope for directory enumeration caching
      * @param cacheScope the cache scope to set
      */
     public void setCacheScope(DirectoryCacheScope cacheScope) {
@@ -121,6 +127,7 @@ public class DirectoryLeaseContext implements CreateContextRequest {
     }
 
     /**
+     * Gets the maximum age for cached directory data before requiring refresh
      * @return the maximum cache age in milliseconds
      */
     public long getMaxCacheAge() {
@@ -128,6 +135,7 @@ public class DirectoryLeaseContext implements CreateContextRequest {
     }
 
     /**
+     * Sets the maximum age for cached directory data
      * @param maxCacheAge the maximum cache age in milliseconds
      */
     public void setMaxCacheAge(long maxCacheAge) {
@@ -135,6 +143,7 @@ public class DirectoryLeaseContext implements CreateContextRequest {
     }
 
     /**
+     * Checks if directory change notifications are enabled for cache invalidation
      * @return true if change notifications are enabled
      */
     public boolean isNotificationEnabled() {
@@ -142,6 +151,7 @@ public class DirectoryLeaseContext implements CreateContextRequest {
     }
 
     /**
+     * Enables or disables directory change notifications
      * @param notificationEnabled true to enable change notifications
      */
     public void setNotificationEnabled(boolean notificationEnabled) {
@@ -149,6 +159,7 @@ public class DirectoryLeaseContext implements CreateContextRequest {
     }
 
     /**
+     * Gets the notification filter flags that specify which changes to monitor
      * @return the notification filter flags
      */
     public int getNotificationFilter() {
@@ -156,6 +167,7 @@ public class DirectoryLeaseContext implements CreateContextRequest {
     }
 
     /**
+     * Sets the notification filter flags that specify which changes to monitor
      * @param notificationFilter the notification filter flags
      */
     public void setNotificationFilter(int notificationFilter) {

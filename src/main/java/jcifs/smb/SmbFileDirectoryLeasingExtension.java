@@ -30,9 +30,20 @@ import jcifs.internal.smb2.lease.Smb2LeaseKey;
 import jcifs.internal.smb2.lease.Smb2LeaseState;
 
 /**
- * Extension methods for SmbFile to support directory leasing functionality
+ * Extension methods for SmbFile to support directory leasing functionality.
+ *
+ * This utility class provides static methods that enhance SmbFile operations with
+ * directory leasing capabilities for improved performance through caching when
+ * SMB3 directory leasing is available and enabled.
  */
 public class SmbFileDirectoryLeasingExtension {
+
+    /**
+     * Private constructor to prevent instantiation of this utility class
+     */
+    private SmbFileDirectoryLeasingExtension() {
+        // Utility class - prevent instantiation
+    }
 
     private static final Logger log = LoggerFactory.getLogger(SmbFileDirectoryLeasingExtension.class);
 
