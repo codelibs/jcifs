@@ -36,8 +36,11 @@ public class WitnessNotification {
     private String newNodeAddress;
 
     // Notification flags
+    /** Resource state is unknown */
     public static final int WITNESS_RESOURCE_STATE_UNKNOWN = 0x00000000;
+    /** Resource is available for use */
     public static final int WITNESS_RESOURCE_STATE_AVAILABLE = 0x00000001;
+    /** Resource is unavailable */
     public static final int WITNESS_RESOURCE_STATE_UNAVAILABLE = 0x000000FF;
 
     /**
@@ -73,7 +76,9 @@ public class WitnessNotification {
         private final InetAddress address;
         private final int flags;
 
+        /** Flag indicating IPv4 address type */
         public static final int IPV4 = 0x01;
+        /** Flag indicating IPv6 address type */
         public static final int IPV6 = 0x02;
 
         /**

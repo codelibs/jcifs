@@ -27,6 +27,13 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class RdmaStatistics {
 
+    /**
+     * Creates a new RDMA statistics tracker
+     */
+    public RdmaStatistics() {
+        // Default constructor
+    }
+
     private final AtomicLong rdmaReads = new AtomicLong();
     private final AtomicLong rdmaWrites = new AtomicLong();
     private final AtomicLong rdmaSends = new AtomicLong();

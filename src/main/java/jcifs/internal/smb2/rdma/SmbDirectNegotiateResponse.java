@@ -28,9 +28,13 @@ import jcifs.internal.util.SMBUtil;
 public class SmbDirectNegotiateResponse {
 
     // Protocol constants
+    /** SMB Direct negotiate response message type */
     public static final int NEGOTIATE_RESPONSE = 0x02;
+    /** Status indicating successful negotiation */
     public static final int STATUS_SUCCESS = 0x00000000;
+    /** Status indicating SMB Direct is not supported */
     public static final int STATUS_NOT_SUPPORTED = 0x00000001;
+    /** Status indicating insufficient resources for SMB Direct */
     public static final int STATUS_INSUFFICIENT_RESOURCES = 0x00000002;
 
     // Message fields
@@ -148,82 +152,182 @@ public class SmbDirectNegotiateResponse {
 
     // Getters and setters
 
+    /**
+     * Get the minimum SMB Direct protocol version
+     *
+     * @return minimum protocol version
+     */
     public int getMinVersion() {
         return minVersion;
     }
 
+    /**
+     * Set the minimum SMB Direct protocol version
+     *
+     * @param minVersion minimum protocol version
+     */
     public void setMinVersion(int minVersion) {
         this.minVersion = minVersion;
     }
 
+    /**
+     * Get the maximum SMB Direct protocol version
+     *
+     * @return maximum protocol version
+     */
     public int getMaxVersion() {
         return maxVersion;
     }
 
+    /**
+     * Set the maximum SMB Direct protocol version
+     *
+     * @param maxVersion maximum protocol version
+     */
     public void setMaxVersion(int maxVersion) {
         this.maxVersion = maxVersion;
     }
 
+    /**
+     * Get the negotiated SMB Direct protocol version
+     *
+     * @return negotiated protocol version
+     */
     public int getNegotiatedVersion() {
         return negotiatedVersion;
     }
 
+    /**
+     * Set the negotiated SMB Direct protocol version
+     *
+     * @param negotiatedVersion negotiated protocol version
+     */
     public void setNegotiatedVersion(int negotiatedVersion) {
         this.negotiatedVersion = negotiatedVersion;
     }
 
+    /**
+     * Get the number of send credits granted
+     *
+     * @return credits granted
+     */
     public int getCreditsGranted() {
         return creditsGranted;
     }
 
+    /**
+     * Set the number of send credits granted
+     *
+     * @param creditsGranted credits to grant
+     */
     public void setCreditsGranted(int creditsGranted) {
         this.creditsGranted = creditsGranted;
     }
 
+    /**
+     * Get the number of send credits requested
+     *
+     * @return credits requested
+     */
     public int getCreditsRequested() {
         return creditsRequested;
     }
 
+    /**
+     * Set the number of send credits requested
+     *
+     * @param creditsRequested credits to request
+     */
     public void setCreditsRequested(int creditsRequested) {
         this.creditsRequested = creditsRequested;
     }
 
+    /**
+     * Get the negotiation status
+     *
+     * @return status code
+     */
     public int getStatus() {
         return status;
     }
 
+    /**
+     * Set the negotiation status
+     *
+     * @param status status code
+     */
     public void setStatus(int status) {
         this.status = status;
     }
 
+    /**
+     * Get the maximum size for RDMA read/write operations
+     *
+     * @return maximum read/write size in bytes
+     */
     public int getMaxReadWriteSize() {
         return maxReadWriteSize;
     }
 
+    /**
+     * Set the maximum size for RDMA read/write operations
+     *
+     * @param maxReadWriteSize maximum read/write size in bytes
+     */
     public void setMaxReadWriteSize(int maxReadWriteSize) {
         this.maxReadWriteSize = maxReadWriteSize;
     }
 
+    /**
+     * Get the preferred size for send operations
+     *
+     * @return preferred send size in bytes
+     */
     public int getPreferredSendSize() {
         return preferredSendSize;
     }
 
+    /**
+     * Set the preferred size for send operations
+     *
+     * @param preferredSendSize preferred send size in bytes
+     */
     public void setPreferredSendSize(int preferredSendSize) {
         this.preferredSendSize = preferredSendSize;
     }
 
+    /**
+     * Get the maximum size for receive operations
+     *
+     * @return maximum receive size in bytes
+     */
     public int getMaxReceiveSize() {
         return maxReceiveSize;
     }
 
+    /**
+     * Set the maximum size for receive operations
+     *
+     * @param maxReceiveSize maximum receive size in bytes
+     */
     public void setMaxReceiveSize(int maxReceiveSize) {
         this.maxReceiveSize = maxReceiveSize;
     }
 
+    /**
+     * Get the maximum size for fragmented operations
+     *
+     * @return maximum fragmented size in bytes
+     */
     public int getMaxFragmentedSize() {
         return maxFragmentedSize;
     }
 
+    /**
+     * Set the maximum size for fragmented operations
+     *
+     * @param maxFragmentedSize maximum fragmented size in bytes
+     */
     public void setMaxFragmentedSize(int maxFragmentedSize) {
         this.maxFragmentedSize = maxFragmentedSize;
     }

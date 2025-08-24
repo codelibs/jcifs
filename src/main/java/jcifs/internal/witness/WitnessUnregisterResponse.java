@@ -22,6 +22,13 @@ package jcifs.internal.witness;
  * Contains the result of a witness unregistration request.
  */
 public class WitnessUnregisterResponse {
+    /**
+     * Creates a new witness unregister response.
+     */
+    public WitnessUnregisterResponse() {
+        // Default constructor
+    }
+
     private int returnCode;
     private String error;
 

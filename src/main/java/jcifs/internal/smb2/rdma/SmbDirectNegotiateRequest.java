@@ -28,8 +28,11 @@ import jcifs.internal.util.SMBUtil;
 public class SmbDirectNegotiateRequest {
 
     // Protocol constants
+    /** Minimum supported SMB Direct protocol version (1.0) */
     public static final int MIN_VERSION = 0x0100; // SMB Direct 1.0
+    /** Maximum supported SMB Direct protocol version (1.0) */
     public static final int MAX_VERSION = 0x0100; // SMB Direct 1.0
+    /** SMB Direct negotiate request message type */
     public static final int NEGOTIATE_REQUEST = 0x01;
 
     // Message fields
@@ -88,50 +91,110 @@ public class SmbDirectNegotiateRequest {
 
     // Getters and setters
 
+    /**
+     * Get the minimum SMB Direct protocol version
+     *
+     * @return minimum protocol version
+     */
     public int getMinVersion() {
         return minVersion;
     }
 
+    /**
+     * Set the minimum SMB Direct protocol version
+     *
+     * @param minVersion minimum protocol version
+     */
     public void setMinVersion(int minVersion) {
         this.minVersion = minVersion;
     }
 
+    /**
+     * Get the maximum SMB Direct protocol version
+     *
+     * @return maximum protocol version
+     */
     public int getMaxVersion() {
         return maxVersion;
     }
 
+    /**
+     * Set the maximum SMB Direct protocol version
+     *
+     * @param maxVersion maximum protocol version
+     */
     public void setMaxVersion(int maxVersion) {
         this.maxVersion = maxVersion;
     }
 
+    /**
+     * Get the number of send credits requested
+     *
+     * @return credits requested
+     */
     public int getCreditsRequested() {
         return creditsRequested;
     }
 
+    /**
+     * Set the number of send credits requested
+     *
+     * @param creditsRequested credits to request
+     */
     public void setCreditsRequested(int creditsRequested) {
         this.creditsRequested = creditsRequested;
     }
 
+    /**
+     * Get the preferred size for send operations
+     *
+     * @return preferred send size in bytes
+     */
     public int getPreferredSendSize() {
         return preferredSendSize;
     }
 
+    /**
+     * Set the preferred size for send operations
+     *
+     * @param preferredSendSize preferred send size in bytes
+     */
     public void setPreferredSendSize(int preferredSendSize) {
         this.preferredSendSize = preferredSendSize;
     }
 
+    /**
+     * Get the maximum size for receive operations
+     *
+     * @return maximum receive size in bytes
+     */
     public int getMaxReceiveSize() {
         return maxReceiveSize;
     }
 
+    /**
+     * Set the maximum size for receive operations
+     *
+     * @param maxReceiveSize maximum receive size in bytes
+     */
     public void setMaxReceiveSize(int maxReceiveSize) {
         this.maxReceiveSize = maxReceiveSize;
     }
 
+    /**
+     * Get the maximum size for fragmented operations
+     *
+     * @return maximum fragmented size in bytes
+     */
     public int getMaxFragmentedSize() {
         return maxFragmentedSize;
     }
 
+    /**
+     * Set the maximum size for fragmented operations
+     *
+     * @param maxFragmentedSize maximum fragmented size in bytes
+     */
     public void setMaxFragmentedSize(int maxFragmentedSize) {
         this.maxFragmentedSize = maxFragmentedSize;
     }

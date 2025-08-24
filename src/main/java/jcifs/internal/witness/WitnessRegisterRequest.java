@@ -22,6 +22,13 @@ package jcifs.internal.witness;
  * Used to register for witness notifications from the witness service.
  */
 public class WitnessRegisterRequest {
+    /**
+     * Creates a new witness register request.
+     */
+    public WitnessRegisterRequest() {
+        // Default constructor
+    }
+
     private int version;
     private String shareName;
     private String serverAddress;

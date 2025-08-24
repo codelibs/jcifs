@@ -190,6 +190,7 @@ public class RdmaErrorHandler {
     /**
      * Execute an RDMA operation with automatic retry and error handling
      *
+     * @param <T> the type of result returned by the operation
      * @param operation the operation to execute
      * @param connection the RDMA connection to use
      * @return operation result
@@ -241,9 +242,17 @@ public class RdmaErrorHandler {
 
     /**
      * Functional interface for RDMA operations that can be retried
+     *
+     * @param <T> the type of result returned by the operation
      */
     @FunctionalInterface
     public interface RdmaOperation<T> {
+        /**
+         * Execute the RDMA operation
+         *
+         * @return the result of the operation
+         * @throws Exception if the operation fails
+         */
         T execute() throws Exception;
     }
 }

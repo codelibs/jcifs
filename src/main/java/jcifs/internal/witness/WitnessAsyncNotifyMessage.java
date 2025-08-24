@@ -301,32 +301,70 @@ public class WitnessAsyncNotifyMessage extends WitnessRpcMessage {
 
     /**
      * Response structure for witness notifications.
+     * Contains the notification type and associated messages from the witness service.
      */
     public static class WitnessNotificationResponse {
+        /**
+         * Creates a new witness notification response.
+         */
+        public WitnessNotificationResponse() {
+            // Default constructor
+        }
+
         private WitnessEventType notificationType;
         private int length;
         private List<WitnessNotificationMessage> messages;
 
+        /**
+         * Gets the notification type.
+         *
+         * @return the witness event type for this notification
+         */
         public WitnessEventType getNotificationType() {
             return notificationType;
         }
 
+        /**
+         * Sets the notification type.
+         *
+         * @param notificationType the witness event type for this notification
+         */
         public void setNotificationType(WitnessEventType notificationType) {
             this.notificationType = notificationType;
         }
 
+        /**
+         * Gets the total length of the notification response.
+         *
+         * @return the length in bytes of the entire notification response
+         */
         public int getLength() {
             return length;
         }
 
+        /**
+         * Sets the total length of the notification response.
+         *
+         * @param length the length in bytes of the entire notification response
+         */
         public void setLength(int length) {
             this.length = length;
         }
 
+        /**
+         * Gets the list of notification messages.
+         *
+         * @return the list of individual notification messages contained in this response
+         */
         public List<WitnessNotificationMessage> getMessages() {
             return messages;
         }
 
+        /**
+         * Sets the list of notification messages.
+         *
+         * @param messages the list of individual notification messages contained in this response
+         */
         public void setMessages(List<WitnessNotificationMessage> messages) {
             this.messages = messages;
         }
@@ -337,10 +375,21 @@ public class WitnessAsyncNotifyMessage extends WitnessRpcMessage {
      */
     public static class WitnessNotificationMessage {
 
+        /**
+         * Creates a new witness notification message
+         */
+        public WitnessNotificationMessage() {
+            // Default constructor
+        }
+
         // Message types from MS-SWN specification
+        /** Witness resource change notification type */
         public static final int WITNESS_RESOURCE_CHANGE = 1;
+        /** Witness client move notification type */
         public static final int WITNESS_CLIENT_MOVE = 2;
+        /** Witness share move notification type */
         public static final int WITNESS_SHARE_MOVE = 3;
+        /** Witness IP address change notification type */
         public static final int WITNESS_IP_CHANGE = 4;
 
         private int type;
@@ -351,58 +400,128 @@ public class WitnessAsyncNotifyMessage extends WitnessRpcMessage {
         private String destinationNode;
         private List<String> ipAddresses;
 
+        /**
+         * Get the notification message type
+         *
+         * @return message type
+         */
         public int getType() {
             return type;
         }
 
+        /**
+         * Sets the notification message type.
+         *
+         * @param type the message type (WITNESS_RESOURCE_CHANGE, WITNESS_CLIENT_MOVE, WITNESS_SHARE_MOVE, or WITNESS_IP_CHANGE)
+         */
         public void setType(int type) {
             this.type = type;
         }
 
+        /**
+         * Get the notification message length
+         *
+         * @return message length in bytes
+         */
         public int getLength() {
             return length;
         }
 
+        /**
+         * Sets the notification message length.
+         *
+         * @param length the message length in bytes
+         */
         public void setLength(int length) {
             this.length = length;
         }
 
+        /**
+         * Get the notification timestamp
+         *
+         * @return timestamp in milliseconds
+         */
         public long getTimestamp() {
             return timestamp;
         }
 
+        /**
+         * Sets the notification timestamp.
+         *
+         * @param timestamp the timestamp value in FILETIME format (100-nanosecond intervals since January 1, 1601 UTC)
+         */
         public void setTimestamp(long timestamp) {
             this.timestamp = timestamp;
         }
 
+        /**
+         * Get the resource name associated with the notification
+         *
+         * @return resource name
+         */
         public String getResourceName() {
             return resourceName;
         }
 
+        /**
+         * Sets the resource name associated with the notification.
+         *
+         * @param resourceName the name of the resource affected by the change
+         */
         public void setResourceName(String resourceName) {
             this.resourceName = resourceName;
         }
 
+        /**
+         * Get the source node for move operations
+         *
+         * @return source node name
+         */
         public String getSourceNode() {
             return sourceNode;
         }
 
+        /**
+         * Sets the source node for move operations.
+         *
+         * @param sourceNode the name of the source node in a share move operation
+         */
         public void setSourceNode(String sourceNode) {
             this.sourceNode = sourceNode;
         }
 
+        /**
+         * Get the destination node for move operations
+         *
+         * @return destination node name
+         */
         public String getDestinationNode() {
             return destinationNode;
         }
 
+        /**
+         * Sets the destination node for move operations.
+         *
+         * @param destinationNode the name of the destination node in a client or share move operation
+         */
         public void setDestinationNode(String destinationNode) {
             this.destinationNode = destinationNode;
         }
 
+        /**
+         * Get the list of IP addresses for IP change notifications
+         *
+         * @return list of IP addresses
+         */
         public List<String> getIpAddresses() {
             return ipAddresses;
         }
 
+        /**
+         * Sets the list of IP addresses for IP change notifications.
+         *
+         * @param ipAddresses the list of new IP addresses available for the witness service
+         */
         public void setIpAddresses(List<String> ipAddresses) {
             this.ipAddresses = ipAddresses;
         }

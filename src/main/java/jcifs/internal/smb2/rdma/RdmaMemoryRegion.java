@@ -29,11 +29,17 @@ import java.util.EnumSet;
  */
 public abstract class RdmaMemoryRegion implements AutoCloseable {
 
+    /** Memory buffer for RDMA operations */
     protected final ByteBuffer buffer;
+    /** Access permissions for this memory region */
     protected final EnumSet<RdmaAccess> accessFlags;
+    /** Local key for accessing this memory region */
     protected final int localKey;
+    /** Remote key for remote RDMA access */
     protected final int remoteKey;
+    /** Virtual address of the memory region */
     protected final long address;
+    /** Flag indicating if the memory region is still valid */
     protected volatile boolean valid;
 
     /**

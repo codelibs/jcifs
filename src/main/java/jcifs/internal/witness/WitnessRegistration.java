@@ -36,7 +36,9 @@ public class WitnessRegistration {
     private byte[] contextHandle;
 
     // Registration flags
+    /** No special registration flags */
     public static final int WITNESS_REGISTER_NONE = 0x00000000;
+    /** Register for IP address change notifications */
     public static final int WITNESS_REGISTER_IP_NOTIFICATION = 0x00000001;
 
     // Registration state
@@ -48,7 +50,16 @@ public class WitnessRegistration {
      * Enumeration of possible witness registration states.
      */
     public enum WitnessRegistrationState {
-        REGISTERING, REGISTERED, UNREGISTERING, FAILED, EXPIRED
+        /** Registration is in progress */
+        REGISTERING,
+        /** Registration is active and confirmed */
+        REGISTERED,
+        /** Unregistration is in progress */
+        UNREGISTERING,
+        /** Registration has failed */
+        FAILED,
+        /** Registration has expired due to timeout */
+        EXPIRED
     }
 
     /**

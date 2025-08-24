@@ -22,6 +22,13 @@ package jcifs.internal.witness;
  * Used to maintain active witness registrations.
  */
 public class WitnessHeartbeatRequest {
+    /**
+     * Creates a new witness heartbeat request.
+     */
+    public WitnessHeartbeatRequest() {
+        // Default constructor
+    }
+
     private String registrationId;
     private long sequenceNumber;
     private byte[] contextHandle;

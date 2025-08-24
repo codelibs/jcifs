@@ -22,6 +22,13 @@ package jcifs.internal.witness;
  * Used to unregister from witness notifications.
  */
 public class WitnessUnregisterRequest {
+    /**
+     * Creates a new witness unregister request.
+     */
+    public WitnessUnregisterRequest() {
+        // Default constructor
+    }
+
     private String registrationId;
     private byte[] contextHandle;
 

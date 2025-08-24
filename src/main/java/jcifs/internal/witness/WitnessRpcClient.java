@@ -27,6 +27,10 @@ import org.slf4j.LoggerFactory;
 import jcifs.CIFSContext;
 import jcifs.dcerpc.DcerpcHandle;
 
+/**
+ * Client implementation for the SMB Witness RPC protocol (MS-SWN).
+ * Provides communication with witness servers for monitoring SMB resource availability.
+ */
 public class WitnessRpcClient implements AutoCloseable {
     private static final Logger log = LoggerFactory.getLogger(WitnessRpcClient.class);
 
