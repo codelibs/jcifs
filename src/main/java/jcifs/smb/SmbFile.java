@@ -1622,7 +1622,7 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
                     req.setDesiredAccess(0x10000); // delete
                     req.setCreateOptions(Smb2CreateRequest.FILE_DELETE_ON_CLOSE | Smb2CreateRequest.FILE_DIRECTORY_FILE);
                     req.setCreateDisposition(Smb2CreateRequest.FILE_OPEN);
-                    req.chain(new Smb2CloseRequest(th.getConfig(), fileName));
+                    req.chain(new Smb2CloseRequest(th.getConfig(), Smb2Constants.UNSPECIFIED_FILEID));
                     th.send(req);
                 } else {
                     th.send(new SmbComDeleteDirectory(th.getConfig(), fileName), new SmbComBlankResponse(th.getConfig()));
@@ -1631,7 +1631,7 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
                 final Smb2CreateRequest req = new Smb2CreateRequest(th.getConfig(), fileName.substring(1));
                 req.setDesiredAccess(0x10000); // delete
                 req.setCreateOptions(Smb2CreateRequest.FILE_DELETE_ON_CLOSE);
-                req.chain(new Smb2CloseRequest(th.getConfig(), fileName));
+                req.chain(new Smb2CloseRequest(th.getConfig(), Smb2Constants.UNSPECIFIED_FILEID));
                 th.send(req);
             } else {
                 th.send(new SmbComDelete(th.getConfig(), fileName), new SmbComBlankResponse(th.getConfig()));
@@ -1747,7 +1747,7 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
                 final Smb2CreateRequest req = new Smb2CreateRequest(th.getConfig(), path);
                 req.setCreateDisposition(Smb2CreateRequest.FILE_CREATE);
                 req.setCreateOptions(Smb2CreateRequest.FILE_DIRECTORY_FILE);
-                req.chain(new Smb2CloseRequest(th.getConfig(), path));
+                req.chain(new Smb2CloseRequest(th.getConfig(), Smb2Constants.UNSPECIFIED_FILEID));
                 th.send(req);
             } else {
                 th.send(new SmbComCreateDirectory(th.getConfig(), path), new SmbComBlankResponse(th.getConfig()));
@@ -1866,7 +1866,7 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
                 }
             }
 
-            final Smb2CloseRequest closeReq = new Smb2CloseRequest(th.getConfig(), getUncPath());
+            final Smb2CloseRequest closeReq = new Smb2CloseRequest(th.getConfig(), Smb2Constants.UNSPECIFIED_FILEID);
             closeReq.setCloseFlags(Smb2CloseResponse.SMB2_CLOSE_FLAG_POSTQUERY_ATTIB);
             cur.chain(closeReq);
 
