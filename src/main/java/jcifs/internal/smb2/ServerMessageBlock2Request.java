@@ -17,13 +17,14 @@
  */
 package jcifs.internal.smb2;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import jcifs.CIFSContext;
 import jcifs.Configuration;
 import jcifs.internal.CommonServerMessageBlockRequest;
 import jcifs.internal.CommonServerMessageBlockResponse;
 import jcifs.internal.Request;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Base class for SMB2/SMB3 request messages.

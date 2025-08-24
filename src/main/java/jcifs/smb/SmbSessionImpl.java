@@ -67,17 +67,17 @@ import jcifs.internal.smb2.ServerMessageBlock2Request;
 import jcifs.internal.smb2.Smb2Constants;
 import jcifs.internal.smb2.Smb2EncryptionContext;
 import jcifs.internal.smb2.Smb2SigningDigest;
+import jcifs.internal.smb2.lease.LeaseManager;
 import jcifs.internal.smb2.multichannel.ChannelInfo;
 import jcifs.internal.smb2.multichannel.ChannelManager;
 import jcifs.internal.smb2.nego.Smb2NegotiateResponse;
+import jcifs.internal.smb2.persistent.PersistentHandleManager;
 import jcifs.internal.smb2.session.Smb2LogoffRequest;
 import jcifs.internal.smb2.session.Smb2SessionSetupRequest;
 import jcifs.internal.smb2.session.Smb2SessionSetupResponse;
 import jcifs.internal.witness.WitnessClient;
 import jcifs.internal.witness.WitnessNotification;
 import jcifs.internal.witness.WitnessRegistration;
-import jcifs.internal.smb2.lease.LeaseManager;
-import jcifs.internal.smb2.persistent.PersistentHandleManager;
 import jcifs.util.Hexdump;
 
 /**
@@ -1159,6 +1159,26 @@ final class SmbSessionImpl implements SmbSessionInternal {
                         log.debug("Witness client closed on session logoff");
                     } catch (Exception e) {
                         log.warn("Error closing witness client during logoff", e);
+                    }
+                }
+
+                // Cleanup lease manager
+                if (leaseManager != null) {
+                    try {
+                        leaseManager.shutdown();
+                        log.debug("Lease manager shutdown on session logoff");
+                    } catch (Exception e) {
+                        log.warn("Error shutting down lease manager during logoff", e);
+                    }
+                }
+
+                // Cleanup persistent handle manager
+                if (persistentHandleManager != null) {
+                    try {
+                        persistentHandleManager.shutdown();
+                        log.debug("Persistent handle manager shutdown on session logoff");
+                    } catch (Exception e) {
+                        log.warn("Error shutting down persistent handle manager during logoff", e);
                     }
                 }
 
