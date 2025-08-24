@@ -434,4 +434,62 @@ public class Smb2CreateResponse extends ServerMessageBlock2Response implements S
         }
     }
 
+    /**
+     * Check if a lease was granted in this response
+     * @return true if a lease was granted
+     */
+    public boolean isLeaseGranted() {
+        return getLeaseV1Context() != null || getLeaseV2Context() != null;
+    }
+
+    /**
+     * Check if a durable handle was granted in this response
+     * @return true if a durable handle was granted
+     */
+    public boolean isDurableHandleGranted() {
+        return hasDurableHandleResponse();
+    }
+
+    /**
+     * Get the lease key from the response
+     * @return the lease key or null if no lease was granted
+     */
+    public jcifs.internal.smb2.lease.Smb2LeaseKey getLeaseKey() {
+        LeaseV2CreateContextResponse v2 = getLeaseV2Context();
+        if (v2 != null) {
+            return v2.getLeaseKey();
+        }
+        LeaseV1CreateContextResponse v1 = getLeaseV1Context();
+        if (v1 != null) {
+            return v1.getLeaseKey();
+        }
+        return null;
+    }
+
+    /**
+     * Get the lease state from the response
+     * @return the lease state or 0 if no lease was granted
+     */
+    public int getLeaseState() {
+        LeaseV2CreateContextResponse v2 = getLeaseV2Context();
+        if (v2 != null) {
+            return v2.getLeaseState();
+        }
+        LeaseV1CreateContextResponse v1 = getLeaseV1Context();
+        if (v1 != null) {
+            return v1.getLeaseState();
+        }
+        return 0;
+    }
+
+    /**
+     * Get the durable handle GUID from the response
+     * @return the durable handle GUID or null if no durable handle was granted
+     */
+    public jcifs.internal.smb2.persistent.HandleGuid getDurableHandleGuid() {
+        // For now, return null as the GUID is typically provided in the request context
+        // and the response doesn't necessarily contain the GUID in a standard format
+        return null;
+    }
+
 }

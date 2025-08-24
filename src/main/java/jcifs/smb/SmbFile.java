@@ -87,6 +87,11 @@ import jcifs.internal.smb2.create.Smb2CloseRequest;
 import jcifs.internal.smb2.create.Smb2CloseResponse;
 import jcifs.internal.smb2.create.Smb2CreateRequest;
 import jcifs.internal.smb2.create.Smb2CreateResponse;
+import jcifs.internal.smb2.lease.LeaseManager;
+import jcifs.internal.smb2.lease.Smb2LeaseKey;
+import jcifs.internal.smb2.lease.Smb2LeaseState;
+import jcifs.internal.smb2.persistent.PersistentHandleManager;
+import jcifs.internal.smb2.persistent.HandleGuid;
 import jcifs.internal.smb2.info.Smb2QueryInfoRequest;
 import jcifs.internal.smb2.info.Smb2QueryInfoResponse;
 import jcifs.internal.smb2.info.Smb2SetInfoRequest;
@@ -683,9 +688,68 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
 
                 req.setShareAccess(sharing);
                 req.setFileAttributes(attrs);
+
+                // Add SMB3 features support
+                SmbSessionImpl session = h.getSession();
+
+                // Enable lease support if available
+                if (config.isUseLeases() && h.isSMB3()) {
+                    LeaseManager leaseManager = session.getLeaseManager();
+                    if (leaseManager != null) {
+                        // Request appropriate lease state based on file type
+                        int requestedState = isDirectory() ? Smb2LeaseState.SMB2_LEASE_READ_HANDLE : Smb2LeaseState.SMB2_LEASE_FULL;
+
+                        Smb2LeaseKey leaseKey = leaseManager.requestLease(uncPath, requestedState);
+
+                        // Add lease context to create request
+                        if (h.isSMB30()) {
+                            // Use Lease V2 for SMB 3.0.2+
+                            req.addLeaseV2Context(leaseKey, requestedState, null, 0);
+                        } else {
+                            // Use Lease V1 for SMB 3.0
+                            req.addLeaseV1Context(leaseKey, requestedState);
+                        }
+                    }
+                }
+
+                // Enable persistent handles if available
+                if (config.isUsePersistentHandles() && h.isSMB3()) {
+                    PersistentHandleManager persistentManager = session.getPersistentHandleManager();
+                    if (persistentManager != null) {
+                        // Check if we can reconnect an existing handle
+                        byte[] existingHandle = persistentManager.getExistingHandle(uncPath);
+                        if (existingHandle != null) {
+                            // Try to reconnect durable handle
+                            req.addDurableHandleReconnectContext(existingHandle);
+                        } else {
+                            // Request new durable handle
+                            long timeout = config.getPersistentHandleTimeout();
+                            boolean persistent = config.isUsePersistentHandles() && h.hasCapability(SmbConstants.CAP_PERSISTENT_HANDLES);
+                            req.addDurableHandleV2Context(timeout, persistent);
+                        }
+                    }
+                }
+
                 final Smb2CreateResponse resp = h.send(req);
                 info = resp;
                 fileSize = resp.getEndOfFile();
+
+                // Store persistent handle information if granted
+                if (config.isUsePersistentHandles() && resp.isDurableHandleGranted()) {
+                    PersistentHandleManager persistentManager = session.getPersistentHandleManager();
+                    if (persistentManager != null) {
+                        persistentManager.storeHandle(uncPath, resp.getFileId(), resp.getDurableHandleGuid());
+                    }
+                }
+
+                // Update lease state if granted
+                if (config.isUseLeases() && resp.isLeaseGranted()) {
+                    LeaseManager leaseManager = session.getLeaseManager();
+                    if (leaseManager != null) {
+                        leaseManager.updateLease(resp.getLeaseKey(), resp.getLeaseState());
+                    }
+                }
+
                 fh = new SmbFileHandleImpl(config, resp.getFileId(), h, uncPath, flags, access, 0, 0, resp.getEndOfFile());
             } else if (h.hasCapability(SmbConstants.CAP_NT_SMBS)) {
                 final SmbComNTCreateAndXResponse resp = new SmbComNTCreateAndXResponse(config);

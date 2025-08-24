@@ -163,6 +163,7 @@ public interface SmbConstants {
      * NT SMBs are supported capability.
      */
     int CAP_NT_SMBS = 0x0010;
+    int CAP_PERSISTENT_HANDLES = 0x0002;
     /**
      * RPC remote APIs are supported capability.
      */

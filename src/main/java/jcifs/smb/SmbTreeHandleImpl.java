@@ -298,4 +298,29 @@ class SmbTreeHandleImpl implements SmbTreeHandleInternal {
         }
     }
 
+    /**
+     * @return whether this tree handle uses SMB3
+     */
+    public boolean isSMB3() {
+        try (SmbSessionImpl session = this.treeConnection.getSession(); SmbTransportImpl transport = session.getTransport()) {
+            return transport.isSMB2() && transport.getNegotiateResponse().getSelectedDialect().atLeast(jcifs.DialectVersion.SMB300);
+        } catch (final SmbException e) {
+            log.debug("Failed to connect for determining SMB3 support", e);
+            return false;
+        }
+    }
+
+    /**
+     * @return whether this tree handle uses SMB 3.0.x
+     */
+    public boolean isSMB30() {
+        try (SmbSessionImpl session = this.treeConnection.getSession(); SmbTransportImpl transport = session.getTransport()) {
+            jcifs.DialectVersion dialect = transport.getNegotiateResponse().getSelectedDialect();
+            return transport.isSMB2() && dialect.atLeast(jcifs.DialectVersion.SMB300) && !dialect.atLeast(jcifs.DialectVersion.SMB311);
+        } catch (final SmbException e) {
+            log.debug("Failed to connect for determining SMB 3.0 support", e);
+            return false;
+        }
+    }
+
 }
