@@ -35,6 +35,13 @@ import jcifs.internal.smb2.rdma.tcp.TcpRdmaProvider;
  */
 public class RdmaProviderFactory {
 
+    /**
+     * Private constructor to prevent instantiation
+     */
+    private RdmaProviderFactory() {
+        // Factory class - not instantiable
+    }
+
     private static final Logger log = LoggerFactory.getLogger(RdmaProviderFactory.class);
 
     /**

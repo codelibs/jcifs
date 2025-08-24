@@ -22,6 +22,13 @@ package jcifs.internal.witness;
  * Contains the result of a witness registration request.
  */
 public class WitnessRegisterResponse {
+    /**
+     * Creates a new witness register response.
+     */
+    public WitnessRegisterResponse() {
+        // Default constructor
+    }
+
     private String registrationId;
     private int returnCode;
     private byte[] contextHandle;

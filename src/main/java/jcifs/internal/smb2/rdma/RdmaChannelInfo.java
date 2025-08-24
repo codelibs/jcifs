@@ -17,6 +17,12 @@
  */
 package jcifs.internal.smb2.rdma;
 
+/**
+ * RDMA channel information for SMB Direct operations.
+ *
+ * This class encapsulates RDMA channel metadata including remote memory keys,
+ * addresses, and lengths for direct memory access operations.
+ */
 public class RdmaChannelInfo {
 
     private final Smb2RdmaTransform transform;

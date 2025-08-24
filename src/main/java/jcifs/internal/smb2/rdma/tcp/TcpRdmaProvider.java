@@ -38,6 +38,13 @@ import jcifs.internal.smb2.rdma.RdmaProvider;
  */
 public class TcpRdmaProvider implements RdmaProvider {
 
+    /**
+     * Creates a new TCP RDMA provider instance
+     */
+    public TcpRdmaProvider() {
+        // Default constructor
+    }
+
     @Override
     public boolean isAvailable() {
         return true; // TCP is always available

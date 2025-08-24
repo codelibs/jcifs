@@ -288,19 +288,58 @@ public class BaseConfiguration implements Configuration {
     protected int channelHealthCheckInterval;
 
     // RDMA configuration
+    /**
+     * Flag indicating whether RDMA transport should be used when available
+     */
     protected boolean useRDMA;
+    /**
+     * RDMA provider implementation to use (e.g. "disni" or "tcp")
+     */
     protected String rdmaProvider;
+    /**
+     * Minimum size in bytes for using RDMA read/write operations
+     */
     protected int rdmaReadWriteThreshold;
+    /**
+     * Maximum size in bytes for RDMA send operations
+     */
     protected int rdmaMaxSendSize;
+    /**
+     * Maximum size in bytes for RDMA receive operations
+     */
     protected int rdmaMaxReceiveSize;
+    /**
+     * Number of RDMA credits to request during negotiation
+     */
     protected int rdmaCredits;
+    /**
+     * Flag indicating whether RDMA is currently enabled and available
+     */
     protected boolean rdmaEnabled = false;
+    /**
+     * Port number for RDMA connections (default: 5445)
+     */
     protected int rdmaPort = 5445;
     // Witness protocol configuration fields
+    /**
+     * Flag indicating whether SMB Witness protocol should be used for failover
+     */
     protected boolean useWitness = false; // Disabled by default
+    /**
+     * Timeout in milliseconds for witness heartbeat messages
+     */
     protected long witnessHeartbeatTimeout = 120000; // 2 minutes
+    /**
+     * Timeout in milliseconds for witness registration
+     */
     protected long witnessRegistrationTimeout = 300000; // 5 minutes
+    /**
+     * Delay in milliseconds before attempting witness reconnection
+     */
     protected long witnessReconnectDelay = 1000; // 1 second
+    /**
+     * Flag indicating whether automatic witness service discovery is enabled
+     */
     protected boolean witnessServiceDiscovery = true;
 
     /**

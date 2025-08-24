@@ -28,24 +28,38 @@ import jcifs.dcerpc.ndr.NdrException;
 public abstract class WitnessRpcMessage extends DcerpcMessage {
 
     // MS-SWN Witness Protocol Interface UUID and Version
+    /** Witness Protocol Interface UUID from MS-SWN specification */
     public static final String WITNESS_INTERFACE_UUID = "ccd8c074-d0e5-4a40-92b4-d074faa6ba28";
+    /** Witness Protocol major version number */
     public static final int WITNESS_INTERFACE_VERSION_MAJOR = 1;
+    /** Witness Protocol minor version number */
     public static final int WITNESS_INTERFACE_VERSION_MINOR = 0;
 
     // MS-SWN RPC Operation Numbers
+    /** WitnessRegister operation number */
     public static final int WITNESS_REGISTER = 0;
+    /** WitnessUnregister operation number */
     public static final int WITNESS_UNREGISTER = 1;
+    /** WitnessAsyncNotify operation number */
     public static final int WITNESS_ASYNC_NOTIFY = 2;
+    /** Witness heartbeat operation number */
     public static final int WITNESS_HEARTBEAT = 3;
 
     // Common return codes from MS-SWN specification
+    /** Operation completed successfully */
     public static final int ERROR_SUCCESS = 0x00000000;
+    /** Invalid parameter was passed to the operation */
     public static final int ERROR_INVALID_PARAMETER = 0x00000057;
+    /** Buffer provided is insufficient */
     public static final int ERROR_INSUFFICIENT_BUFFER = 0x0000007A;
+    /** Operation is not supported */
     public static final int ERROR_NOT_SUPPORTED = 0x00000032;
+    /** Access denied to perform the operation */
     public static final int ERROR_ACCESS_DENIED = 0x00000005;
+    /** Invalid state for the operation */
     public static final int ERROR_INVALID_STATE = 0x0000139F;
 
+    /** Return code from the RPC operation */
     protected int returnCode = ERROR_SUCCESS;
     private int opnum;
 

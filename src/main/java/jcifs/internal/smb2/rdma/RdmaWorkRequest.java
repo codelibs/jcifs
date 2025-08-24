@@ -29,7 +29,14 @@ public class RdmaWorkRequest {
      * Type of RDMA work request
      */
     public enum RequestType {
-        SEND, RECEIVE, READ, WRITE
+        /** Send operation */
+        SEND,
+        /** Receive operation */
+        RECEIVE,
+        /** RDMA read operation */
+        READ,
+        /** RDMA write operation */
+        WRITE
     }
 
     private final long requestId;

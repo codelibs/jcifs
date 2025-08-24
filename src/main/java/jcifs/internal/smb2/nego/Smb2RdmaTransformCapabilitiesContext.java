@@ -21,9 +21,16 @@ import jcifs.internal.SMBProtocolDecodingException;
 import jcifs.internal.smb2.Smb2Constants;
 import jcifs.internal.util.SMBUtil;
 
+/**
+ * SMB2 RDMA Transform Capabilities negotiate context.
+ *
+ * This context is used during SMB2 negotiation to indicate RDMA transform
+ * capabilities when SMB Direct is supported by the client and server.
+ */
 public class Smb2RdmaTransformCapabilitiesContext implements NegotiateContextRequest, NegotiateContextResponse {
 
     // Context type
+    /** Context ID for RDMA transform capabilities */
     public static final int CONTEXT_ID = Smb2Constants.SMB2_RDMA_TRANSFORM_CAPABILITIES;
 
     // Transform count and reserved fields

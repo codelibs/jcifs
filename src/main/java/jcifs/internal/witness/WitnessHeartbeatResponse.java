@@ -22,6 +22,13 @@ package jcifs.internal.witness;
  * Contains the result of a witness heartbeat request.
  */
 public class WitnessHeartbeatResponse {
+    /**
+     * Creates a new witness heartbeat response.
+     */
+    public WitnessHeartbeatResponse() {
+        // Default constructor
+    }
+
     private long sequenceNumber;
     private int returnCode;
     private long recommendedHeartbeatInterval;

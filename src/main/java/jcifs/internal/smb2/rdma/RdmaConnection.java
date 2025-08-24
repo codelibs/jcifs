@@ -37,19 +37,41 @@ public abstract class RdmaConnection implements AutoCloseable {
      * RDMA connection state enumeration
      */
     public enum RdmaConnectionState {
-        DISCONNECTED, CONNECTING, CONNECTED, ESTABLISHED, ERROR, CLOSING, CLOSED
+        /** Connection is not established */
+        DISCONNECTED,
+        /** Connection is being established */
+        CONNECTING,
+        /** Connection is established but not ready for RDMA operations */
+        CONNECTED,
+        /** Connection is fully established and ready for RDMA operations */
+        ESTABLISHED,
+        /** Connection encountered an error */
+        ERROR,
+        /** Connection is being closed */
+        CLOSING,
+        /** Connection is closed */
+        CLOSED
     }
 
+    /** Remote endpoint address */
     protected final InetSocketAddress remoteAddress;
+    /** Local endpoint address */
     protected final InetSocketAddress localAddress;
+    /** Available send credits for flow control */
     protected final AtomicInteger sendCredits;
+    /** Available receive credits for flow control */
     protected final AtomicInteger receiveCredits;
+    /** Queue of pending RDMA work requests */
     protected final BlockingQueue<RdmaWorkRequest> pendingRequests;
 
     // Connection state
+    /** Current connection state */
     protected volatile RdmaConnectionState state;
+    /** Credit management for SMB Direct */
     protected RdmaCredits credits;
+    /** Maximum size for fragmented operations */
     protected int maxFragmentedSize;
+    /** Maximum size for RDMA read/write operations */
     protected int maxReadWriteSize;
 
     /**

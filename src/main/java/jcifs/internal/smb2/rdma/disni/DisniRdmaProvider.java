@@ -41,6 +41,13 @@ import jcifs.internal.smb2.rdma.RdmaProvider;
  */
 public class DisniRdmaProvider implements RdmaProvider {
 
+    /**
+     * Creates a new DiSNI RDMA provider instance
+     */
+    public DisniRdmaProvider() {
+        // Default constructor
+    }
+
     private static final Logger log = LoggerFactory.getLogger(DisniRdmaProvider.class);
 
     // DiSNI components - these would be actual DiSNI objects in a real implementation
