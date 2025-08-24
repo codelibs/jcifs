@@ -76,6 +76,8 @@ import jcifs.internal.smb2.session.Smb2SessionSetupResponse;
 import jcifs.internal.witness.WitnessClient;
 import jcifs.internal.witness.WitnessNotification;
 import jcifs.internal.witness.WitnessRegistration;
+import jcifs.internal.smb2.lease.LeaseManager;
+import jcifs.internal.smb2.persistent.PersistentHandleManager;
 import jcifs.util.Hexdump;
 
 /**
@@ -125,6 +127,12 @@ final class SmbSessionImpl implements SmbSessionInternal {
     private WitnessClient witnessClient;
     private boolean witnessEnabled;
 
+    // SMB3 lease support
+    private LeaseManager leaseManager;
+
+    // SMB3 persistent handle support
+    private PersistentHandleManager persistentHandleManager;
+
     SmbSessionImpl(CIFSContext tf, String targetHost, String targetDomain, SmbTransportImpl transport) {
         this.transportContext = tf;
         this.targetDomain = targetDomain;
@@ -135,6 +143,10 @@ final class SmbSessionImpl implements SmbSessionInternal {
 
         // Initialize multi-channel support
         this.channelManager = new ChannelManager(tf, this);
+
+        // Initialize SMB3 feature managers
+        this.leaseManager = new LeaseManager(tf);
+        this.persistentHandleManager = new PersistentHandleManager(tf);
     }
 
     /**
@@ -1501,6 +1513,24 @@ final class SmbSessionImpl implements SmbSessionInternal {
      */
     public ChannelManager getChannelManager() {
         return channelManager;
+    }
+
+    /**
+     * Get the lease manager for SMB3 lease support
+     *
+     * @return lease manager instance
+     */
+    public LeaseManager getLeaseManager() {
+        return leaseManager;
+    }
+
+    /**
+     * Get the persistent handle manager for SMB3 durable handles
+     *
+     * @return persistent handle manager instance
+     */
+    public PersistentHandleManager getPersistentHandleManager() {
+        return persistentHandleManager;
     }
 
     /**

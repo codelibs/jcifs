@@ -342,6 +342,12 @@ public class BaseConfiguration implements Configuration {
      */
     protected boolean witnessServiceDiscovery = true;
 
+    // SMB3 Lease support
+    protected boolean useLeases = true;
+
+    // SMB3 Persistent handle support
+    protected long persistentHandleTimeout = 120000; // 2 minutes default
+
     /**
      * Constructs a BaseConfiguration with default settings
      *
@@ -1197,6 +1203,16 @@ public class BaseConfiguration implements Configuration {
     @Override
     public boolean isWitnessServiceDiscovery() {
         return this.witnessServiceDiscovery;
+    }
+
+    @Override
+    public boolean isUseLeases() {
+        return this.useLeases;
+    }
+
+    @Override
+    public long getPersistentHandleTimeout() {
+        return this.persistentHandleTimeout;
     }
 
 }

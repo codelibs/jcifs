@@ -938,6 +938,16 @@ public interface Configuration {
     boolean isUseWitness();
 
     /**
+     * @return whether to use SMB3 leases for client-side caching
+     */
+    boolean isUseLeases();
+
+    /**
+     * @return timeout for persistent handles in milliseconds
+     */
+    long getPersistentHandleTimeout();
+
+    /**
      * Gets the witness heartbeat timeout in milliseconds.
      *
      * @return the heartbeat timeout

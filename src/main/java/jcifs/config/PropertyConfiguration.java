@@ -364,6 +364,25 @@ public final class PropertyConfiguration extends BaseConfiguration implements Co
         if (value != null) {
             this.witnessServiceDiscovery = Boolean.parseBoolean(value);
         }
+
+        value = props.getProperty("jcifs.smb.client.useLeases");
+        if (value != null) {
+            this.useLeases = Boolean.parseBoolean(value);
+        }
+
+        value = props.getProperty("jcifs.smb.client.usePersistentHandles");
+        if (value != null) {
+            this.usePersistentHandles = Boolean.parseBoolean(value);
+        }
+
+        value = props.getProperty("jcifs.smb.client.persistentHandleTimeout");
+        if (value != null) {
+            try {
+                this.persistentHandleTimeout = Long.parseLong(value);
+            } catch (NumberFormatException e) {
+                // Invalid value ignored
+            }
+        }
     }
 
     @Override

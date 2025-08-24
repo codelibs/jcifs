@@ -1115,4 +1115,14 @@ public class DelegatingConfiguration implements Configuration {
     public boolean isWitnessServiceDiscovery() {
         return this.delegate.isWitnessServiceDiscovery();
     }
+
+    @Override
+    public boolean isUseLeases() {
+        return this.delegate.isUseLeases();
+    }
+
+    @Override
+    public long getPersistentHandleTimeout() {
+        return this.delegate.getPersistentHandleTimeout();
+    }
 }

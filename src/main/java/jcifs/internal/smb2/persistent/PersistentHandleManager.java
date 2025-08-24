@@ -337,6 +337,46 @@ public class PersistentHandleManager {
     }
 
     /**
+     * Get existing handle data for reconnection
+     * @param path the file path
+     * @return the file ID if available, null otherwise
+     */
+    public byte[] getExistingHandle(String path) {
+        HandleInfo info = getHandleForReconnect(path);
+        return info != null ? info.getFileId() : null;
+    }
+
+    /**
+     * Store handle information after successful create
+     * @param path the file path
+     * @param fileId the 16-byte file ID
+     * @param guid the handle GUID
+     */
+    public void storeHandle(String path, byte[] fileId, HandleGuid guid) {
+        lock.writeLock().lock();
+        try {
+            HandleInfo info = guidToHandle.get(guid);
+            if (info != null) {
+                info.updateFileId(fileId);
+                if (info.getType() == HandleType.PERSISTENT) {
+                    persistHandle(info);
+                }
+                log.debug("Stored handle for path: {}", path);
+            } else {
+                // Create new handle info if not found
+                HandleInfo newInfo =
+                        new HandleInfo(path, guid, fileId, HandleType.PERSISTENT, context.getConfig().getPersistentHandleTimeout(), null);
+                handles.put(path, newInfo);
+                guidToHandle.put(guid, newInfo);
+                persistHandle(newInfo);
+                log.debug("Created and stored new handle for path: {}", path);
+            }
+        } finally {
+            lock.writeLock().unlock();
+        }
+    }
+
+    /**
      * Shuts down the persistent handle manager and its background tasks
      */
     public void shutdown() {
