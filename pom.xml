@@ -183,24 +183,6 @@
 				</dependencies>
 			</plugin>
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-failsafe-plugin</artifactId>
-				<version>3.5.0</version>
-				<executions>
-					<execution>
-						<goals>
-							<goal>integration-test</goal>
-							<goal>verify</goal>
-						</goals>
-						<configuration>
-							<includes>
-								<include>**/*Test.java</include>
-							</includes>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
 				<version>0.8.13</version>
@@ -238,6 +220,7 @@
 						<exclude>breaking-changes.xml</exclude>
 						<exclude>README.md</exclude>
 						<exclude>build.properties</exclude>
+						<exclude>docs/**</exclude>
 						<exclude>src/test/resources/**</exclude>
 						<exclude>**/*.idl</exclude>
 						<exclude>**/*.css</exclude>
