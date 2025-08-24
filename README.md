@@ -10,6 +10,8 @@ Version 3.x introduces SMB3 encryption and enhanced security features, while mai
 
 [Versions in Maven Repository](https://repo1.maven.org/maven2/org/codelibs/jcifs/)
 
+**Current Version: 3.0.0-SNAPSHOT** - SMB2/SMB3 implementation with advanced capabilities
+
 ## Requirements
 
 - Java 17 or higher (upgraded from Java 8)
@@ -25,7 +27,7 @@ Version 3.x introduces SMB3 encryption and enhanced security features, while mai
 </dependency>
 ```
 
-For the latest version with SMB3 support (coming soon):
+For the latest version with full SMB3 support:
 ```xml
 <dependency>
     <groupId>org.codelibs</groupId>
@@ -39,12 +41,20 @@ For the latest version with SMB3 support (coming soon):
 ### Protocol Support
  * **SMB1/CIFS**: Legacy protocol support for older devices
  * **SMB2**: Full SMB 2.0.2, 2.1 support
- * **SMB3**: SMB 3.0, 3.0.2, 3.1.1 security features with:
+ * **SMB3**: Complete SMB 3.0, 3.0.2, 3.1.1 implementation with:
    - AES-128-CCM encryption (SMB 3.0/3.0.2)
    - AES-128-GCM encryption (SMB 3.1.1)
    - Pre-Authentication Integrity (SMB 3.1.1)
    - Automatic protocol negotiation
    - Transparent encryption when required by server
+
+### SMB3 Features
+ * **SMB3 Leases**: Client-side caching with lease support
+ * **Persistent Handles**: Network resilience and reconnection
+ * **Multi-Channel**: Multiple network connection support  
+ * **Directory Leasing**: Directory metadata caching
+ * **RDMA Support**: High-performance data transfer (experimental)
+ * **Witness Protocol**: Failover notifications (experimental)
 
 ### Core Features
  * Per-context configuration (no global state)
@@ -59,18 +69,9 @@ For the latest version with SMB3 support (coming soon):
 ### Recent Improvements (v3.x)
  * Java 17 minimum requirement
  * Jakarta Servlet namespace migration
- * SMB3 encryption (AES-CCM/GCM) and signing (AES-CMAC) implementation
+ * SMB3 encryption and signing support (AES-CCM/GCM, AES-CMAC)
  * Enhanced protocol negotiation
- * Improved thread safety
- * Better resource management with AutoCloseable patterns
-
-### Known Limitations
- * SMB3 advanced features not yet implemented:
-   - Multi-channel support
-   - Persistent handles
-   - Directory leasing
-   - RDMA transport
- * Uses traditional oplocks instead of SMB3 leases
+ * Improved thread safety and resource management
 
 ## Quick Start
 
@@ -112,20 +113,105 @@ try (SmbFile file = new SmbFile("smb://server/share/", authContext)) {
 }
 ```
 
+## Configuration
+
+### Basic Configuration Properties
+
+```properties
+# Connection settings
+jcifs.smb.client.connTimeout=35000
+jcifs.smb.client.soTimeout=180000
+jcifs.smb.client.responseTimeout=30000
+
+# Authentication
+jcifs.smb.client.domain=WORKGROUP
+jcifs.smb.client.username=guest
+jcifs.smb.client.password=
+
+# Protocol versions
+jcifs.smb.client.minVersion=SMB1
+jcifs.smb.client.maxVersion=SMB311
+
+# Security
+jcifs.smb.client.signingPreferred=false
+jcifs.smb.client.signingEnforced=false
+jcifs.smb.client.encryptionEnforced=false
+jcifs.smb.client.disablePlainTextPasswords=true
+
+# Performance
+jcifs.smb.client.useBatching=true
+jcifs.smb.client.useUnicode=true
+jcifs.smb.client.maxMpxCount=10
+```
+
+### SMB3 Feature Configuration
+
+```properties
+# SMB3 Leases
+jcifs.smb.client.useLeases=true
+
+# Persistent Handles
+jcifs.smb.client.usePersistentHandles=true
+jcifs.smb.client.persistentHandleTimeout=120000
+
+# Multi-Channel (experimental)
+jcifs.smb.client.useMultiChannel=false
+jcifs.smb.client.maxChannels=4
+
+# Directory Leasing (experimental)
+jcifs.smb.client.useDirectoryLeasing=false
+
+# RDMA Support (experimental, requires compatible hardware)
+jcifs.smb.client.useRDMA=false
+jcifs.smb.client.rdmaProvider=disni
+
+# Witness Protocol (experimental)
+jcifs.smb.client.useWitness=false
+```
+
+### Usage with Properties
+
+```java
+Properties props = new Properties();
+props.setProperty("jcifs.smb.client.domain", "MYDOMAIN");
+props.setProperty("jcifs.smb.client.useLeases", "true");
+
+Configuration config = new PropertyConfiguration(props);
+CIFSContext context = new BaseContext(config);
+```
+
 ## Others
 
 ### Choosing Between This JCIFS and jcifs-ng
 
 **Use CodeLibs JCIFS when:**
-- You need maximum compatibility with legacy SMB devices
-- You require SMB3 encryption and security features (AES-CCM/GCM, AES-CMAC)
-- You need to support a wide variety of SMB implementations
-- Your application (like [Fess](https://github.com/codelibs/fess)) needs to connect to many different SMB devices
+- You need SMB2/SMB3 support with modern security features
+- You require compatibility with both legacy and modern SMB devices
+- You need SMB3 encryption and signing support
+- Your application (like [Fess](https://github.com/codelibs/fess)) needs to connect to diverse SMB environments
 
 **Use jcifs-ng when:**
-- You only need to connect to modern SMB servers
-- You don't require SMB3 encryption features
+- You only need basic SMB2/SMB3 connectivity
+- You don't require advanced enterprise features
 - You have a controlled environment with specific SMB devices
+- Minimal dependency footprint is preferred
+
+### Documentation
+
+Technical documentation for SMB3 features is available in the `docs/smb3-features/` directory.
+
+### Testing
+
+```bash
+# Build the project
+mvn clean compile
+
+# Run all tests
+mvn test
+
+# Run specific test classes
+mvn test -Dtest=SmbFileTest
+```
 
 ### Contributing
 
