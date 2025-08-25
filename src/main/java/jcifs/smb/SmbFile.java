@@ -87,14 +87,13 @@ import jcifs.internal.smb2.create.Smb2CloseRequest;
 import jcifs.internal.smb2.create.Smb2CloseResponse;
 import jcifs.internal.smb2.create.Smb2CreateRequest;
 import jcifs.internal.smb2.create.Smb2CreateResponse;
+import jcifs.internal.smb2.info.Smb2QueryInfoRequest;
+import jcifs.internal.smb2.info.Smb2QueryInfoResponse;
+import jcifs.internal.smb2.info.Smb2SetInfoRequest;
 import jcifs.internal.smb2.lease.LeaseManager;
 import jcifs.internal.smb2.lease.Smb2LeaseKey;
 import jcifs.internal.smb2.lease.Smb2LeaseState;
 import jcifs.internal.smb2.persistent.PersistentHandleManager;
-import jcifs.internal.smb2.persistent.HandleGuid;
-import jcifs.internal.smb2.info.Smb2QueryInfoRequest;
-import jcifs.internal.smb2.info.Smb2QueryInfoResponse;
-import jcifs.internal.smb2.info.Smb2SetInfoRequest;
 import jcifs.util.Strings;
 
 /**
@@ -574,11 +573,16 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
      */
     synchronized SmbTreeHandleImpl ensureTreeConnected() throws CIFSException {
         if (this.treeHandle == null || !this.treeHandle.isConnected()) {
-            if (this.treeHandle != null && this.transportContext.getConfig().isStrictResourceLifecycle()) {
-                this.treeHandle.release();
+            // Clean up old handle if needed
+            final SmbTreeHandleImpl oldHandle = this.treeHandle;
+            if (oldHandle != null && this.transportContext.getConfig().isStrictResourceLifecycle()) {
+                oldHandle.release();
             }
+
+            // Create new connection
             this.treeHandle = this.treeConnection.connectWrapException(this.fileLocator);
             this.treeHandle.ensureDFSResolved();
+
             if (this.transportContext.getConfig().isStrictResourceLifecycle()) {
                 // one extra share to keep the tree alive
                 return this.treeHandle.acquire();
@@ -673,64 +677,94 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
             if (h.isSMB2()) {
                 final Smb2CreateRequest req = new Smb2CreateRequest(config, uncPath);
                 req.setDesiredAccess(access);
-
-                if ((flags & SmbConstants.O_TRUNC) == O_TRUNC && (flags & SmbConstants.O_CREAT) == O_CREAT) {
-                    req.setCreateDisposition(Smb2CreateRequest.FILE_OVERWRITE_IF);
-                } else if ((flags & SmbConstants.O_TRUNC) == O_TRUNC) {
-                    req.setCreateDisposition(Smb2CreateRequest.FILE_OVERWRITE);
-                } else if ((flags & SmbConstants.O_EXCL) == O_EXCL) {
-                    req.setCreateDisposition(Smb2CreateRequest.FILE_CREATE);
-                } else if ((flags & SmbConstants.O_CREAT) == O_CREAT) {
-                    req.setCreateDisposition(Smb2CreateRequest.FILE_OPEN_IF);
-                } else {
-                    req.setCreateDisposition(Smb2CreateRequest.FILE_OPEN);
-                }
-
+                setCreateDisposition(req, flags);
                 req.setShareAccess(sharing);
                 req.setFileAttributes(attrs);
 
-                // Add SMB3 features support
+                // Add SMB3 features support with error handling for compatibility
                 SmbSessionImpl session = h.getSession();
 
-                // Enable lease support if available
+                // Enable lease support if available, with fallback for compatibility
+                boolean leasesAdded = false;
                 if (config.isUseLeases() && h.isSMB3()) {
-                    LeaseManager leaseManager = session.getLeaseManager();
-                    if (leaseManager != null) {
-                        // Request appropriate lease state based on file type
-                        int requestedState = isDirectory() ? Smb2LeaseState.SMB2_LEASE_READ_HANDLE : Smb2LeaseState.SMB2_LEASE_FULL;
+                    try {
+                        LeaseManager leaseManager = session.getLeaseManager();
+                        if (leaseManager != null) {
+                            // Request appropriate lease state based on file type and access
+                            int requestedState = determineLeaseState(access);
 
-                        Smb2LeaseKey leaseKey = leaseManager.requestLease(uncPath, requestedState);
-
-                        // Add lease context to create request
-                        if (h.isSMB30()) {
-                            // Use Lease V2 for SMB 3.0.2+
-                            req.addLeaseV2Context(leaseKey, requestedState, null, 0);
-                        } else {
-                            // Use Lease V1 for SMB 3.0
-                            req.addLeaseV1Context(leaseKey, requestedState);
+                            Smb2LeaseKey leaseKey = leaseManager.requestLease(uncPath, requestedState);
+                            if (leaseKey != null) {
+                                // Add lease context to create request
+                                if (h.isSMB30()) {
+                                    // Use Lease V2 for SMB 3.0.2+
+                                    req.addLeaseV2Context(leaseKey, requestedState, null, 0);
+                                } else {
+                                    // Use Lease V1 for SMB 3.0
+                                    req.addLeaseV1Context(leaseKey, requestedState);
+                                }
+                                leasesAdded = true;
+                                if (log.isTraceEnabled()) {
+                                    log.trace("Added lease context for path: {} with state: 0x{}", uncPath,
+                                            Integer.toHexString(requestedState));
+                                }
+                            }
+                        }
+                    } catch (Exception e) {
+                        if (log.isDebugEnabled()) {
+                            log.debug("Failed to add lease context for {}, continuing without leases: {}", uncPath, e.getMessage());
                         }
                     }
                 }
 
-                // Enable persistent handles if available
+                // Enable persistent handles if available, with fallback for compatibility
+                boolean persistentHandlesAdded = false;
                 if (config.isUsePersistentHandles() && h.isSMB3()) {
-                    PersistentHandleManager persistentManager = session.getPersistentHandleManager();
-                    if (persistentManager != null) {
-                        // Check if we can reconnect an existing handle
-                        byte[] existingHandle = persistentManager.getExistingHandle(uncPath);
-                        if (existingHandle != null) {
-                            // Try to reconnect durable handle
-                            req.addDurableHandleReconnectContext(existingHandle);
-                        } else {
-                            // Request new durable handle
-                            long timeout = config.getPersistentHandleTimeout();
-                            boolean persistent = config.isUsePersistentHandles() && h.hasCapability(SmbConstants.CAP_PERSISTENT_HANDLES);
-                            req.addDurableHandleV2Context(timeout, persistent);
+                    try {
+                        PersistentHandleManager persistentManager = session.getPersistentHandleManager();
+                        if (persistentManager != null) {
+                            // Check if we can reconnect an existing handle
+                            byte[] existingHandle = persistentManager.getExistingHandle(uncPath);
+                            if (existingHandle != null) {
+                                // Try to reconnect durable handle
+                                req.addDurableHandleReconnectContext(existingHandle);
+                            } else {
+                                // Request new durable handle
+                                long timeout = config.getPersistentHandleTimeout();
+                                boolean persistent =
+                                        config.isUsePersistentHandles() && h.hasCapability(SmbConstants.CAP_PERSISTENT_HANDLES);
+                                req.addDurableHandleV2Context(timeout, persistent);
+                            }
+                            persistentHandlesAdded = true;
                         }
+                    } catch (Exception e) {
+                        log.debug("Failed to add persistent handle context, continuing without persistent handles: " + e.getMessage());
                     }
                 }
 
-                final Smb2CreateResponse resp = h.send(req);
+                Smb2CreateResponse resp;
+                try {
+                    resp = h.send(req);
+                } catch (CIFSException e) {
+                    // If request failed and we added advanced features, retry with a basic request
+                    if ((leasesAdded || persistentHandlesAdded) && shouldRetryWithBasicRequest(e)) {
+                        if (log.isDebugEnabled()) {
+                            log.debug("CREATE request with advanced features failed ({}), retrying with basic request",
+                                    e.getClass().getSimpleName() + ": " + e.getMessage());
+                        }
+
+                        // Create a new basic request without advanced features
+                        final Smb2CreateRequest basicReq = new Smb2CreateRequest(config, uncPath);
+                        basicReq.setDesiredAccess(access);
+                        setCreateDisposition(basicReq, flags);
+                        basicReq.setShareAccess(sharing);
+                        basicReq.setFileAttributes(attrs);
+
+                        resp = h.send(basicReq);
+                    } else {
+                        throw e;
+                    }
+                }
                 info = resp;
                 fileSize = resp.getEndOfFile();
 
@@ -809,6 +843,66 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
 
             this.isExists = true;
             return fh;
+        }
+    }
+
+    /**
+     * Determines the appropriate lease state based on the requested access
+     *
+     * @param access the desired access flags
+     * @return the appropriate lease state
+     */
+    private int determineLeaseState(final int access) {
+        try {
+            if (isDirectory()) {
+                return Smb2LeaseState.SMB2_LEASE_READ_HANDLE;
+            }
+        } catch (SmbException e) {
+            // If we can't determine directory status, assume file
+        }
+
+        // Determine lease level based on access requirements
+        if ((access & (GENERIC_WRITE | FILE_WRITE_DATA)) != 0) {
+            return Smb2LeaseState.SMB2_LEASE_FULL; // Read + Write + Handle
+        } else if ((access & (GENERIC_READ | FILE_READ_DATA)) != 0) {
+            return Smb2LeaseState.SMB2_LEASE_READ_HANDLE; // Read + Handle
+        } else {
+            return Smb2LeaseState.SMB2_LEASE_READ_HANDLE; // Default to read + handle
+        }
+    }
+
+    /**
+     * Determines if a failed SMB2 CREATE request should be retried with basic parameters
+     *
+     * @param e the exception that occurred
+     * @return true if the request should be retried without advanced features
+     */
+    private static boolean shouldRetryWithBasicRequest(final CIFSException e) {
+        if (e instanceof SmbException) {
+            final int ntStatus = ((SmbException) e).getNtStatus();
+            return ntStatus == NtStatus.NT_STATUS_INVALID_PARAMETER || ntStatus == 0xC00000BB
+                    || ntStatus == NtStatus.NT_STATUS_INVALID_INFO_CLASS;
+        }
+        return false;
+    }
+
+    /**
+     * Sets the create disposition on an SMB2 create request based on flags
+     *
+     * @param req the SMB2 create request
+     * @param flags the file open flags
+     */
+    private static void setCreateDisposition(final Smb2CreateRequest req, final int flags) {
+        if ((flags & SmbConstants.O_TRUNC) == O_TRUNC && (flags & SmbConstants.O_CREAT) == O_CREAT) {
+            req.setCreateDisposition(Smb2CreateRequest.FILE_OVERWRITE_IF);
+        } else if ((flags & SmbConstants.O_TRUNC) == O_TRUNC) {
+            req.setCreateDisposition(Smb2CreateRequest.FILE_OVERWRITE);
+        } else if ((flags & SmbConstants.O_EXCL) == O_EXCL) {
+            req.setCreateDisposition(Smb2CreateRequest.FILE_CREATE);
+        } else if ((flags & SmbConstants.O_CREAT) == O_CREAT) {
+            req.setCreateDisposition(Smb2CreateRequest.FILE_OPEN_IF);
+        } else {
+            req.setCreateDisposition(Smb2CreateRequest.FILE_OPEN);
         }
     }
 
@@ -918,8 +1012,8 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
                 // referrals.
                 try (SmbTreeHandleImpl th = ensureTreeConnected()) {
                     if (this.fileLocator.getType() == TYPE_SHARE) {
-                        // treeConnect is good enough, but we need to do this after resolving DFS
-                        try (SmbTreeHandleImpl th2 = ensureTreeConnected()) {}
+                        // treeConnect is good enough for share existence check
+                        // DFS resolution is already handled in ensureTreeConnected()
                     } else {
                         queryPath(th, this.fileLocator.getUNCPath(), FileInformation.FILE_BASIC_INFO);
                     }
@@ -1378,9 +1472,34 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
              * Rename Request / Response
              */
             if (sh.isSMB2()) {
-                final Smb2SetInfoRequest req = new Smb2SetInfoRequest(sh.getConfig());
-                req.setFileInformation(new FileRenameInformation2(dest.getUncPath().substring(1), replace));
-                withOpen(sh, Smb2CreateRequest.FILE_OPEN, FILE_WRITE_ATTRIBUTES | DELETE, FILE_SHARE_READ | FILE_SHARE_WRITE, req);
+                // For SMB2, we need to open the file, send the rename request, then close
+                // The destination path should be relative to the share
+                String destPath = dest.getUncPath();
+                // Remove leading backslash if present
+                if (destPath.startsWith("\\")) {
+                    destPath = destPath.substring(1);
+                }
+
+                // Open the source file for renaming
+                final Smb2CreateRequest createReq = new Smb2CreateRequest(sh.getConfig(), getUncPath());
+                createReq.setCreateDisposition(Smb2CreateRequest.FILE_OPEN);
+                createReq.setDesiredAccess(FILE_WRITE_ATTRIBUTES | DELETE);
+                createReq.setShareAccess(FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE);
+
+                // Send the create request
+                final Smb2CreateResponse createResp = sh.send(createReq);
+
+                try {
+                    // Send the rename information
+                    final Smb2SetInfoRequest setInfoReq = new Smb2SetInfoRequest(sh.getConfig());
+                    setInfoReq.setFileId(createResp.getFileId());
+                    setInfoReq.setFileInformation(new FileRenameInformation2(destPath, replace));
+                    sh.send(setInfoReq);
+                } finally {
+                    // Always close the file handle
+                    final Smb2CloseRequest closeReq = new Smb2CloseRequest(sh.getConfig(), createResp.getFileId());
+                    sh.send(closeReq);
+                }
             } else {
                 if (replace) {
                     // TRANS2_SET_FILE_INFORMATION does not seem to support the SMB1 RENAME_INFO
@@ -1528,7 +1647,7 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
                     req.setDesiredAccess(0x10000); // delete
                     req.setCreateOptions(Smb2CreateRequest.FILE_DELETE_ON_CLOSE | Smb2CreateRequest.FILE_DIRECTORY_FILE);
                     req.setCreateDisposition(Smb2CreateRequest.FILE_OPEN);
-                    req.chain(new Smb2CloseRequest(th.getConfig(), fileName));
+                    req.chain(new Smb2CloseRequest(th.getConfig(), Smb2Constants.UNSPECIFIED_FILEID));
                     th.send(req);
                 } else {
                     th.send(new SmbComDeleteDirectory(th.getConfig(), fileName), new SmbComBlankResponse(th.getConfig()));
@@ -1537,7 +1656,7 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
                 final Smb2CreateRequest req = new Smb2CreateRequest(th.getConfig(), fileName.substring(1));
                 req.setDesiredAccess(0x10000); // delete
                 req.setCreateOptions(Smb2CreateRequest.FILE_DELETE_ON_CLOSE);
-                req.chain(new Smb2CloseRequest(th.getConfig(), fileName));
+                req.chain(new Smb2CloseRequest(th.getConfig(), Smb2Constants.UNSPECIFIED_FILEID));
                 th.send(req);
             } else {
                 th.send(new SmbComDelete(th.getConfig(), fileName), new SmbComBlankResponse(th.getConfig()));
@@ -1653,7 +1772,7 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
                 final Smb2CreateRequest req = new Smb2CreateRequest(th.getConfig(), path);
                 req.setCreateDisposition(Smb2CreateRequest.FILE_CREATE);
                 req.setCreateOptions(Smb2CreateRequest.FILE_DIRECTORY_FILE);
-                req.chain(new Smb2CloseRequest(th.getConfig(), path));
+                req.chain(new Smb2CloseRequest(th.getConfig(), Smb2Constants.UNSPECIFIED_FILEID));
                 th.send(req);
             } else {
                 th.send(new SmbComCreateDirectory(th.getConfig(), path), new SmbComBlankResponse(th.getConfig()));
@@ -1772,7 +1891,7 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
                 }
             }
 
-            final Smb2CloseRequest closeReq = new Smb2CloseRequest(th.getConfig(), getUncPath());
+            final Smb2CloseRequest closeReq = new Smb2CloseRequest(th.getConfig(), Smb2Constants.UNSPECIFIED_FILEID);
             closeReq.setCloseFlags(Smb2CloseResponse.SMB2_CLOSE_FLAG_POSTQUERY_ATTIB);
             cur.chain(closeReq);
 

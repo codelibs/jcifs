@@ -23,6 +23,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import jcifs.CIFSContext;
 import jcifs.CIFSException;
 import jcifs.SidResolver;
@@ -50,6 +53,8 @@ import jcifs.dcerpc.msrpc.samr;
  * <p>This class is intended for internal use.</p>
  */
 public class SIDCacheImpl implements SidResolver {
+
+    private static Logger log = LoggerFactory.getLogger(SIDCacheImpl.class);
 
     private final Map<SID, SID> sidCache = new HashMap<>();
 
@@ -107,6 +112,15 @@ public class SIDCacheImpl implements SidResolver {
                 try (LsaPolicyHandle policyHandle = new LsaPolicyHandle(handle, "\\\\" + server, 0x00000800)) {
                     resolveSids(handle, policyHandle, sids);
                 }
+            } catch (final SmbException e) {
+                if (e.getNtStatus() == NtStatus.NT_STATUS_INVALID_PARAMETER) {
+                    // Silently ignore invalid parameter errors - these may occur with certain server configurations
+                    if (log.isDebugEnabled()) {
+                        log.debug("Invalid parameter error.", e);
+                    }
+                    return;
+                }
+                throw new CIFSException("Failed to resolve SIDs", e);
             } catch (final IOException e) {
                 throw new CIFSException("Failed to resolve SIDs", e);
             }
