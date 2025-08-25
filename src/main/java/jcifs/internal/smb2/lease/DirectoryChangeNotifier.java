@@ -36,6 +36,7 @@ public class DirectoryChangeNotifier {
 
     private final DirectoryLeaseManager leaseManager;
     private final ConcurrentHashMap<String, ChangeNotificationHandle> activeWatchers;
+    private final ConcurrentHashMap<String, Integer> failureCounts;
 
     /**
      * Directory change types
@@ -171,6 +172,7 @@ public class DirectoryChangeNotifier {
     public DirectoryChangeNotifier(DirectoryLeaseManager manager) {
         this.leaseManager = manager;
         this.activeWatchers = new ConcurrentHashMap<>();
+        this.failureCounts = new ConcurrentHashMap<>();
     }
 
     /**
@@ -230,8 +232,9 @@ public class DirectoryChangeNotifier {
                     // 3. Process changes
                     // 4. Notify the lease manager
 
-                    // Simulate waiting for changes
-                    Thread.sleep(5000);
+                    // Use adaptive polling interval based on activity
+                    long pollInterval = determinePollInterval(handle);
+                    Thread.sleep(pollInterval);
 
                     // Check if still active
                     if (!handle.isActive()) {
@@ -246,9 +249,11 @@ public class DirectoryChangeNotifier {
                 } catch (Exception e) {
                     if (handle.isActive()) {
                         log.debug("Change notification failed for: " + handle.getDirectoryPath(), e);
-                        // Retry after delay
+                        incrementFailureCount(handle);
+                        // Retry after adaptive delay based on consecutive failures
                         try {
-                            Thread.sleep(5000);
+                            long retryDelay = Math.min(30000, 1000 * (1L << Math.min(3, getFailureCount(handle))));
+                            Thread.sleep(retryDelay);
                         } catch (InterruptedException ie) {
                             Thread.currentThread().interrupt();
                             break;
@@ -259,6 +264,48 @@ public class DirectoryChangeNotifier {
         });
 
         handle.setNotificationFuture(future);
+    }
+
+    /**
+     * Determine optimal polling interval based on directory activity
+     *
+     * @param handle notification handle
+     * @return polling interval in milliseconds
+     */
+    private long determinePollInterval(ChangeNotificationHandle handle) {
+        int failures = getFailureCount(handle);
+
+        // Base interval starts at 1 second, increases with failures
+        // Max interval is 30 seconds for inactive directories
+        return Math.min(30000, 1000 + (failures * 2000));
+    }
+
+    /**
+     * Get failure count for a handle
+     *
+     * @param handle notification handle
+     * @return number of consecutive failures
+     */
+    private int getFailureCount(ChangeNotificationHandle handle) {
+        return failureCounts.getOrDefault(handle.getDirectoryPath(), 0);
+    }
+
+    /**
+     * Increment failure count for a handle
+     *
+     * @param handle notification handle
+     */
+    private void incrementFailureCount(ChangeNotificationHandle handle) {
+        failureCounts.compute(handle.getDirectoryPath(), (path, count) -> count == null ? 1 : count + 1);
+    }
+
+    /**
+     * Reset failure count for a handle
+     *
+     * @param handle notification handle
+     */
+    private void resetFailureCount(ChangeNotificationHandle handle) {
+        failureCounts.remove(handle.getDirectoryPath());
     }
 
     /**
@@ -287,6 +334,9 @@ public class DirectoryChangeNotifier {
 
             // Convert action to our enum
             DirectoryChangeType changeType = convertAction(action);
+
+            // Reset failure count on successful notification
+            resetFailureCount(handle);
 
             // Notify lease manager
             leaseManager.handleDirectoryChange(handle.getDirectoryPath(), fileName, changeType);

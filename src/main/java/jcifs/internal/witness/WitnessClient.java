@@ -309,10 +309,12 @@ public class WitnessClient implements AutoCloseable {
                 registration.updateHeartbeat();
             } else {
                 log.warn("Witness heartbeat failed for: {}", registration.getRegistrationId());
+                registration.incrementHeartbeatFailures();
             }
 
         } catch (Exception e) {
             log.debug("Heartbeat error for registration: {}", registration.getRegistrationId(), e);
+            registration.incrementHeartbeatFailures();
         }
     }
 
@@ -391,8 +393,9 @@ public class WitnessClient implements AutoCloseable {
                         }
                     }
 
-                    // Wait before next request to avoid overwhelming the server
-                    Thread.sleep(1000);
+                    // Use exponential backoff for polling interval
+                    long pollInterval = Math.min(5000, 1000 + (registration.getHeartbeatFailures() * 500));
+                    Thread.sleep(pollInterval);
 
                 } catch (InterruptedException e) {
                     log.debug("Async notification monitoring interrupted for {}", registrationId);
@@ -401,9 +404,11 @@ public class WitnessClient implements AutoCloseable {
                 } catch (Exception e) {
                     log.debug("Error in async notification monitoring for {}: {}", registrationId, e.getMessage());
 
-                    // Exponential backoff on errors
+                    // Exponential backoff on errors based on consecutive failures
                     try {
-                        Thread.sleep(Math.min(30000, 1000 * (int) Math.pow(2, 3))); // Max 30 seconds
+                        int failures = Math.min(registration.getHeartbeatFailures(), 5);
+                        long backoffDelay = Math.min(30000, 1000 * (1L << failures));
+                        Thread.sleep(backoffDelay);
                     } catch (InterruptedException ie) {
                         Thread.currentThread().interrupt();
                         break;

@@ -94,9 +94,10 @@ public class RdmaErrorHandler {
             log.info("Attempting RDMA connection recovery (attempt {} of {})", retryCount, maxRetries);
 
             try {
-                // Wait before retry
+                // Exponential backoff based on retry count
                 if (retryDelayMs > 0) {
-                    Thread.sleep(retryDelayMs);
+                    long delay = retryDelayMs * (1L << (retryCount - 1));
+                    Thread.sleep(Math.min(delay, 10000)); // Cap at 10 seconds
                 }
 
                 // Attempt to reset the connection
@@ -220,10 +221,11 @@ public class RdmaErrorHandler {
 
                 retryCount++;
 
-                // Wait before retry
+                // Exponential backoff based on retry count
                 if (retryDelayMs > 0) {
                     try {
-                        Thread.sleep(retryDelayMs);
+                        long delay = retryDelayMs * (1L << retryCount);
+                        Thread.sleep(Math.min(delay, 10000)); // Cap at 10 seconds
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
                         throw new IOException("Interrupted during retry delay", e);

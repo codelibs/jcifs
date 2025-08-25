@@ -44,6 +44,7 @@ public class WitnessRegistration {
     // Registration state
     private volatile WitnessRegistrationState state;
     private volatile long lastHeartbeat;
+    private volatile int heartbeatFailures;
     private int flags;
 
     /**
@@ -79,6 +80,7 @@ public class WitnessRegistration {
         this.sequenceNumber = new AtomicLong(0);
         this.state = WitnessRegistrationState.REGISTERING;
         this.lastHeartbeat = registrationTime;
+        this.heartbeatFailures = 0;
         this.flags = WITNESS_REGISTER_IP_NOTIFICATION;
         this.contextHandle = new byte[20]; // MS-SWN context handle size
     }
@@ -102,10 +104,27 @@ public class WitnessRegistration {
     }
 
     /**
-     * Updates the heartbeat timestamp to current time.
+     * Updates the heartbeat timestamp to current time and resets failure count.
      */
     public void updateHeartbeat() {
         this.lastHeartbeat = System.currentTimeMillis();
+        this.heartbeatFailures = 0;
+    }
+
+    /**
+     * Increments the heartbeat failure count.
+     */
+    public void incrementHeartbeatFailures() {
+        this.heartbeatFailures++;
+    }
+
+    /**
+     * Gets the number of consecutive heartbeat failures.
+     *
+     * @return the number of consecutive heartbeat failures
+     */
+    public int getHeartbeatFailures() {
+        return heartbeatFailures;
     }
 
     /**

@@ -1472,9 +1472,34 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
              * Rename Request / Response
              */
             if (sh.isSMB2()) {
-                final Smb2SetInfoRequest req = new Smb2SetInfoRequest(sh.getConfig());
-                req.setFileInformation(new FileRenameInformation2(dest.getUncPath().substring(1), replace));
-                withOpen(sh, Smb2CreateRequest.FILE_OPEN, FILE_WRITE_ATTRIBUTES | DELETE, FILE_SHARE_READ | FILE_SHARE_WRITE, req);
+                // For SMB2, we need to open the file, send the rename request, then close
+                // The destination path should be relative to the share
+                String destPath = dest.getUncPath();
+                // Remove leading backslash if present
+                if (destPath.startsWith("\\")) {
+                    destPath = destPath.substring(1);
+                }
+
+                // Open the source file for renaming
+                final Smb2CreateRequest createReq = new Smb2CreateRequest(sh.getConfig(), getUncPath());
+                createReq.setCreateDisposition(Smb2CreateRequest.FILE_OPEN);
+                createReq.setDesiredAccess(FILE_WRITE_ATTRIBUTES | DELETE);
+                createReq.setShareAccess(FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE);
+
+                // Send the create request
+                final Smb2CreateResponse createResp = sh.send(createReq);
+
+                try {
+                    // Send the rename information
+                    final Smb2SetInfoRequest setInfoReq = new Smb2SetInfoRequest(sh.getConfig());
+                    setInfoReq.setFileId(createResp.getFileId());
+                    setInfoReq.setFileInformation(new FileRenameInformation2(destPath, replace));
+                    sh.send(setInfoReq);
+                } finally {
+                    // Always close the file handle
+                    final Smb2CloseRequest closeReq = new Smb2CloseRequest(sh.getConfig(), createResp.getFileId());
+                    sh.send(closeReq);
+                }
             } else {
                 if (replace) {
                     // TRANS2_SET_FILE_INFORMATION does not seem to support the SMB1 RENAME_INFO

@@ -321,16 +321,6 @@ class SmbTreeConnection {
                 break;
             }
 
-            try {
-                if (retries != 1) {
-                    // backoff, but don't delay the first attempt as there are various reasons that can be fixed
-                    // immediately
-                    Thread.sleep(500 + RAND.nextInt(1000));
-                }
-            } catch (final InterruptedException e) {
-                log.debug("interrupted sleep in send", e);
-            }
-
             if (request != null) {
                 log.debug("Restting request");
                 request.reset();
@@ -639,11 +629,6 @@ class SmbTreeConnection {
             }
             log.debug("Disconnecting tree on DFS retry");
             disconnect(true);
-            try {
-                Thread.sleep(500 + RAND.nextInt(5000));
-            } catch (final InterruptedException e) {
-                log.debug("resolveDfs", e);
-            }
 
             try (SmbTreeHandle th = connectWrapException(loc)) {}
         }
