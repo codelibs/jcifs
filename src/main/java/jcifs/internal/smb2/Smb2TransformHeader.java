@@ -57,7 +57,7 @@ public class Smb2TransformHeader implements Encodable {
      * Create a new SMB2 Transform Header with specified parameters
      *
      * @param nonce
-     *            16-byte nonce for encryption
+     *            nonce for encryption (12 bytes for CCM, 16 bytes for GCM)
      * @param originalMessageSize
      *            size of the original unencrypted message
      * @param flags
@@ -66,10 +66,16 @@ public class Smb2TransformHeader implements Encodable {
      *            session identifier
      */
     public Smb2TransformHeader(final byte[] nonce, final int originalMessageSize, final int flags, final long sessionId) {
-        if (nonce.length != 16) {
-            throw new IllegalArgumentException("Nonce must be 16 bytes");
+        if (nonce.length == 12) {
+            // For CCM cipher, pad nonce to 16 bytes with zeros
+            System.arraycopy(nonce, 0, this.nonce, 0, 12);
+            // Last 4 bytes remain zero-initialized
+        } else if (nonce.length == 16) {
+            // For GCM cipher, use full 16-byte nonce
+            System.arraycopy(nonce, 0, this.nonce, 0, 16);
+        } else {
+            throw new IllegalArgumentException("Nonce must be 12 bytes (CCM) or 16 bytes (GCM)");
         }
-        System.arraycopy(nonce, 0, this.nonce, 0, 16);
         this.originalMessageSize = originalMessageSize;
         this.flags = flags;
         this.sessionId = sessionId;
@@ -110,13 +116,19 @@ public class Smb2TransformHeader implements Encodable {
      * Sets the nonce for encryption
      *
      * @param nonce
-     *            the nonce to set
+     *            the nonce to set (12 bytes for CCM, 16 bytes for GCM)
      */
     public void setNonce(final byte[] nonce) {
-        if (nonce.length != 16) {
-            throw new IllegalArgumentException("Nonce must be 16 bytes");
+        if (nonce.length == 12) {
+            // For CCM cipher, pad nonce to 16 bytes with zeros
+            java.util.Arrays.fill(this.nonce, (byte) 0);
+            System.arraycopy(nonce, 0, this.nonce, 0, 12);
+        } else if (nonce.length == 16) {
+            // For GCM cipher, use full 16-byte nonce
+            System.arraycopy(nonce, 0, this.nonce, 0, 16);
+        } else {
+            throw new IllegalArgumentException("Nonce must be 12 bytes (CCM) or 16 bytes (GCM)");
         }
-        System.arraycopy(nonce, 0, this.nonce, 0, 16);
     }
 
     /**

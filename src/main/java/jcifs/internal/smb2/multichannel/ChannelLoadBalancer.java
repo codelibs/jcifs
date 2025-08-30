@@ -19,7 +19,6 @@ package jcifs.internal.smb2.multichannel;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -114,12 +113,24 @@ public class ChannelLoadBalancer {
     }
 
     private ChannelInfo selectLeastLoaded(Collection<ChannelInfo> channels) {
-        return channels.stream().min(Comparator.comparingLong(ChannelInfo::getRequestsPending)).orElseThrow();
+        ChannelInfo leastLoadedChannel = null;
+        long minPending = Long.MAX_VALUE;
+        for (ChannelInfo channel : channels) {
+            long pending = channel.getRequestsPending();
+            if (pending < minPending) {
+                minPending = pending;
+                leastLoadedChannel = channel;
+            }
+        }
+        return leastLoadedChannel != null ? leastLoadedChannel : channels.iterator().next();
     }
 
     private ChannelInfo selectWeightedRandom(Collection<ChannelInfo> channels) {
         // Calculate total weight
-        int totalWeight = channels.stream().mapToInt(ChannelInfo::getScore).sum();
+        int totalWeight = 0;
+        for (ChannelInfo channel : channels) {
+            totalWeight += channel.getScore();
+        }
 
         if (totalWeight == 0) {
             // All channels have zero score, pick randomly
@@ -168,7 +179,16 @@ public class ChannelLoadBalancer {
 
         if (isLargeTransfer(message)) {
             // For large transfers, prefer high-bandwidth channels
-            return channels.stream().max(Comparator.comparingInt(c -> c.getRemoteInterface().getLinkSpeed())).orElseThrow();
+            ChannelInfo maxBandwidthChannel = null;
+            int maxBandwidth = 0;
+            for (ChannelInfo channel : channels) {
+                int linkSpeed = channel.getRemoteInterface().getLinkSpeed();
+                if (linkSpeed > maxBandwidth) {
+                    maxBandwidth = linkSpeed;
+                    maxBandwidthChannel = channel;
+                }
+            }
+            return maxBandwidthChannel != null ? maxBandwidthChannel : channels.iterator().next();
         }
 
         if (isMetadataOperation(message)) {

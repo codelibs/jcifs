@@ -249,12 +249,12 @@ public class Smb2NegotiateResponse extends ServerMessageBlock2Response implement
         }
 
         if (req.isSigningEnforced() && !isSigningEnabled()) {
-            log.error("Signing is enforced but server does not allow it");
+            log.debug("Signing is enforced but server does not allow it");
             return false;
         }
 
         if (getDialectRevision() == Smb2Constants.SMB2_DIALECT_ANY) {
-            log.error("Server returned ANY dialect");
+            log.debug("Server returned ANY dialect");
             return false;
         }
 
@@ -271,13 +271,13 @@ public class Smb2NegotiateResponse extends ServerMessageBlock2Response implement
         }
 
         if (selected == null) {
-            log.error("Server returned an unknown dialect");
+            log.debug("Server returned an unknown dialect");
             return false;
         }
 
         if (!selected.atLeast(getConfig().getMinimumVersion()) || !selected.atMost(getConfig().getMaximumVersion())) {
-            log.error(String.format("Server selected an disallowed dialect version %s (min: %s max: %s)", selected,
-                    getConfig().getMinimumVersion(), getConfig().getMaximumVersion()));
+            log.debug("Server selected an disallowed dialect version {} (min: {} max: {})", selected, getConfig().getMinimumVersion(),
+                    getConfig().getMaximumVersion());
             return false;
         }
         this.selectedDialect = selected;
@@ -306,7 +306,7 @@ public class Smb2NegotiateResponse extends ServerMessageBlock2Response implement
 
     private boolean checkNegotiateContexts(final Smb2NegotiateRequest req, final int caps) {
         if (this.negotiateContexts == null || this.negotiateContexts.length == 0) {
-            log.error("Response lacks negotiate contexts");
+            log.debug("Response lacks negotiate contexts");
             return false;
         }
 
@@ -324,7 +324,7 @@ public class Smb2NegotiateResponse extends ServerMessageBlock2Response implement
                 this.selectedCipher = enc.getCiphers()[0];
                 this.supportsEncryption = true;
             } else if (ncr.getContextType() == EncryptionNegotiateContext.NEGO_CTX_ENC_TYPE) {
-                log.error("Multiple encryption negotiate contexts");
+                log.debug("Multiple encryption negotiate contexts");
                 return false;
             } else if (!foundPreauth && ncr.getContextType() == PreauthIntegrityNegotiateContext.NEGO_CTX_PREAUTH_TYPE) {
                 foundPreauth = true;
@@ -334,7 +334,7 @@ public class Smb2NegotiateResponse extends ServerMessageBlock2Response implement
                 }
                 this.selectedPreauthHash = pi.getHashAlgos()[0];
             } else if (ncr.getContextType() == PreauthIntegrityNegotiateContext.NEGO_CTX_PREAUTH_TYPE) {
-                log.error("Multiple preauth negotiate contexts");
+                log.debug("Multiple preauth negotiate contexts");
                 return false;
             }
         }

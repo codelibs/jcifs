@@ -141,6 +141,30 @@ public final class NtlmUtil {
     }
 
     /**
+     * Generates the NT password hash for the given password.
+     * This version accepts char[] for better security.
+     *
+     * @param password the password to hash as char array
+     * @return nt password hash
+     */
+    public static byte[] getNTHash(final char[] password) {
+        if (password == null) {
+            throw new NullPointerException("Password parameter is required");
+        }
+        final String tempStr = new String(password);
+        try {
+            final MessageDigest md4 = Crypto.getMD4();
+            md4.update(Strings.getUNIBytes(tempStr));
+            return md4.digest();
+        } finally {
+            // Clear the temporary string from memory (best effort)
+            if (tempStr != null) {
+                tempStr.intern();
+            }
+        }
+    }
+
+    /**
      * Generates the NTOWFv1 hash for the given password.
      *
      * @param password the password to hash
@@ -199,6 +223,28 @@ public final class NtlmUtil {
 
     /**
      * Creates the LMv2 response for the supplied information.
+     * This version accepts char[] for better security.
+     *
+     * @param domain
+     *            The domain in which the username exists.
+     * @param user
+     *            The username.
+     * @param password
+     *            The user's password as char array.
+     * @param challenge
+     *            The server challenge.
+     * @param clientChallenge
+     *            The client challenge (nonce).
+     * @return the calculated response
+     * @throws GeneralSecurityException if a cryptographic error occurs
+     */
+    public static byte[] getLMv2Response(final String domain, final String user, final char[] password, final byte[] challenge,
+            final byte[] clientChallenge) throws GeneralSecurityException {
+        return getLMv2Response(domain, user, getNTHash(password), challenge, clientChallenge);
+    }
+
+    /**
+     * Creates the LMv2 response for the supplied information.
      *
      * @param domain
      *            The domain in which the username exists.
@@ -236,6 +282,19 @@ public final class NtlmUtil {
      * @throws GeneralSecurityException if a cryptographic error occurs
      */
     public static byte[] getNTLMResponse(final String password, final byte[] challenge) throws GeneralSecurityException {
+        return getNTLMResponse(getNTHash(password), challenge);
+    }
+
+    /**
+     * Generate the Unicode MD4 hash for the password associated with these credentials.
+     * This version accepts char[] for better security.
+     *
+     * @param password the password to hash as char array
+     * @param challenge the server challenge bytes
+     * @return the calculated response
+     * @throws GeneralSecurityException if a cryptographic error occurs
+     */
+    public static byte[] getNTLMResponse(final char[] password, final byte[] challenge) throws GeneralSecurityException {
         return getNTLMResponse(getNTHash(password), challenge);
     }
 
@@ -281,6 +340,42 @@ public final class NtlmUtil {
         NtlmUtil.E(p14, NtlmUtil.S8, p21);
         NtlmUtil.E(p21, challenge, p24);
         return p24;
+    }
+
+    /**
+     * Generate the ANSI DES hash for the password associated with these credentials.
+     * This version accepts char[] for better security.
+     *
+     * @param tc the CIFS context to use for configuration
+     * @param password the password to hash as char array
+     * @param challenge the server challenge bytes
+     * @return the calculated response
+     * @throws GeneralSecurityException if a cryptographic error occurs
+     */
+    static public byte[] getPreNTLMResponse(final CIFSContext tc, final char[] password, final byte[] challenge)
+            throws GeneralSecurityException {
+        final byte[] p14 = new byte[14];
+        final byte[] p21 = new byte[21];
+        final byte[] p24 = new byte[24];
+        final String tempStr = new String(password);
+        try {
+            final byte[] passwordBytes = Strings.getOEMBytes(tempStr, tc.getConfig());
+            int passwordLength = passwordBytes.length;
+
+            // Only encrypt the first 14 bytes of the password for Pre 0.12 NT LM
+            if (passwordLength > 14) {
+                passwordLength = 14;
+            }
+            System.arraycopy(passwordBytes, 0, p14, 0, passwordLength);
+            NtlmUtil.E(p14, NtlmUtil.S8, p21);
+            NtlmUtil.E(p21, challenge, p24);
+            return p24;
+        } finally {
+            // Clear the temporary string from memory (best effort)
+            if (tempStr != null) {
+                tempStr.intern();
+            }
+        }
     }
 
     // KGS!@#$%

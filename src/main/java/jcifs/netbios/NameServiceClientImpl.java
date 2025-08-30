@@ -867,7 +867,7 @@ public class NameServiceClientImpl implements Runnable, NameServiceClient {
         try {
             thread.interrupt();
         } catch (final SecurityException e) {
-            e.printStackTrace();
+            log.error("Security exception interrupting thread", e);
         }
     }
 
@@ -875,7 +875,9 @@ public class NameServiceClientImpl implements Runnable, NameServiceClient {
         try {
             thread.join();
         } catch (final InterruptedException e) {
-            e.printStackTrace();
+            log.warn("Thread join interrupted", e);
+            // Restore interrupted status
+            Thread.currentThread().interrupt();
         }
     }
 

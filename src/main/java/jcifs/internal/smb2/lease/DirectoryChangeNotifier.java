@@ -34,6 +34,13 @@ public class DirectoryChangeNotifier {
 
     private static final Logger log = LoggerFactory.getLogger(DirectoryChangeNotifier.class);
 
+    // Backoff and timing constants (in ms)
+    private static final long BASE_POLL_INTERVAL = 1000;
+    private static final long MAX_POLL_INTERVAL = 30000;
+    private static final long BASE_RETRY_DELAY = 1000;
+    private static final long MAX_RETRY_DELAY = 30000;
+    private static final int MAX_BACKOFF_SHIFT = 3; // Maximum 8 seconds (2^3 * 1000ms)
+
     private final DirectoryLeaseManager leaseManager;
     private final ConcurrentHashMap<String, ChangeNotificationHandle> activeWatchers;
     private final ConcurrentHashMap<String, Integer> failureCounts;
@@ -211,6 +218,8 @@ public class DirectoryChangeNotifier {
             handle.setActive(false);
             // Cancel any pending notifications
             cancelNotification(handle);
+            // Clean up failure count to prevent memory leak
+            failureCounts.remove(directoryPath);
         }
     }
 
@@ -250,9 +259,10 @@ public class DirectoryChangeNotifier {
                     if (handle.isActive()) {
                         log.debug("Change notification failed for: " + handle.getDirectoryPath(), e);
                         incrementFailureCount(handle);
-                        // Retry after adaptive delay based on consecutive failures
+                        // Exponential backoff with max 8 seconds delay (up to MAX_RETRY_DELAY)
                         try {
-                            long retryDelay = Math.min(30000, 1000 * (1L << Math.min(3, getFailureCount(handle))));
+                            long retryDelay = Math.min(MAX_RETRY_DELAY,
+                                    BASE_RETRY_DELAY * (1L << Math.min(MAX_BACKOFF_SHIFT, getFailureCount(handle))));
                             Thread.sleep(retryDelay);
                         } catch (InterruptedException ie) {
                             Thread.currentThread().interrupt();
@@ -267,7 +277,12 @@ public class DirectoryChangeNotifier {
     }
 
     /**
-     * Determine optimal polling interval based on directory activity
+     * Determine optimal polling interval based on directory activity and failure count
+     *
+     * Current strategy is based on failure count. In the future, this could be enhanced to consider:
+     * - Recent event frequency (successful notifications)
+     * - Time since last successful notification
+     * - Events per unit time for more adaptive behavior
      *
      * @param handle notification handle
      * @return polling interval in milliseconds
@@ -277,7 +292,7 @@ public class DirectoryChangeNotifier {
 
         // Base interval starts at 1 second, increases with failures
         // Max interval is 30 seconds for inactive directories
-        return Math.min(30000, 1000 + (failures * 2000));
+        return Math.min(MAX_POLL_INTERVAL, BASE_POLL_INTERVAL + (failures * 2000));
     }
 
     /**
@@ -300,7 +315,7 @@ public class DirectoryChangeNotifier {
     }
 
     /**
-     * Reset failure count for a handle
+     * Reset failure count for a handle (called on successful operations)
      *
      * @param handle notification handle
      */

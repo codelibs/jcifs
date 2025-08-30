@@ -50,6 +50,7 @@ import jcifs.DfsReferralData;
 import jcifs.DialectVersion;
 import jcifs.SmbConstants;
 import jcifs.SmbTransport;
+import jcifs.audit.SecurityAuditLogger;
 import jcifs.internal.CommonServerMessageBlock;
 import jcifs.internal.CommonServerMessageBlockRequest;
 import jcifs.internal.CommonServerMessageBlockResponse;
@@ -93,6 +94,7 @@ import jcifs.netbios.SessionServicePacket;
 import jcifs.util.Crypto;
 import jcifs.util.Encdec;
 import jcifs.util.Hexdump;
+import jcifs.util.SimpleCircuitBreaker;
 import jcifs.util.transport.Request;
 import jcifs.util.transport.Response;
 import jcifs.util.transport.Transport;
@@ -104,6 +106,8 @@ import jcifs.util.transport.TransportException;
 class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbConstants {
 
     private static Logger log = LoggerFactory.getLogger(SmbTransportImpl.class);
+    private static final SecurityAuditLogger auditLogger = SecurityAuditLogger.getInstance();
+    private final SimpleCircuitBreaker circuitBreaker;
 
     private boolean smb2 = false;
     private final InetAddress localAddr;
@@ -132,6 +136,7 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
     private final int desiredCredits = 512;
 
     private byte[] preauthIntegrityHash = new byte[64];
+    private final Object preauthHashLock = new Object();
 
     SmbTransportImpl(final CIFSContext tc, final Address address, final int port, final InetAddress localAddr, final int localPort,
             final boolean forceSigning) {
@@ -144,6 +149,10 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
         this.port = port;
         this.localAddr = localAddr;
         this.localPort = localPort;
+
+        // Initialize circuit breaker with connection-specific name
+        String circuitBreakerName = String.format("SMB-%s:%d", address.getHostAddress(), port);
+        this.circuitBreaker = new SimpleCircuitBreaker(circuitBreakerName, 3, 2, 30000L);
 
     }
 
@@ -653,6 +662,34 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
 
     @Override
     protected void doConnect() throws IOException {
+        try {
+            // Use circuit breaker for connection attempts
+            circuitBreaker.call(() -> {
+                try {
+                    doConnectInternal();
+                    return null;
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+        } catch (SimpleCircuitBreaker.CircuitBreakerOpenException e) {
+            // Log circuit breaker rejection
+            auditLogger.logSecurityViolation("Circuit breaker open for SMB connection",
+                    java.util.Map.of("address", address.getHostAddress(), "port", String.valueOf(port)));
+            throw new IOException("Connection rejected by circuit breaker: " + e.getMessage(), e);
+        } catch (RuntimeException e) {
+            // Unwrap IOException from RuntimeException
+            if (e.getCause() instanceof IOException) {
+                throw (IOException) e.getCause();
+            }
+            throw new IOException("Connection failed", e);
+        } catch (Exception e) {
+            // Handle any other exceptions from circuit breaker
+            throw new IOException("Connection failed", e);
+        }
+    }
+
+    private void doConnectInternal() throws IOException {
         /*
          * Negotiate Protocol Request / Response
          */
@@ -1683,12 +1720,32 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
     }
 
     byte[] getPreauthIntegrityHash() {
-        return this.preauthIntegrityHash;
+        synchronized (this.preauthHashLock) {
+            return this.preauthIntegrityHash != null ? this.preauthIntegrityHash.clone() : null;
+        }
     }
 
     private void updatePreauthHash(final byte[] input) throws CIFSException {
-        synchronized (this.preauthIntegrityHash) {
-            this.preauthIntegrityHash = calculatePreauthHash(input, 0, input.length, this.preauthIntegrityHash);
+        synchronized (this.preauthHashLock) {
+            try {
+                this.preauthIntegrityHash = calculatePreauthHash(input, 0, input.length, this.preauthIntegrityHash);
+            } catch (Exception e) {
+                log.error("Failed to update pre-auth integrity hash", e);
+                // Reset hash on error to maintain integrity
+                resetPreauthHash();
+                throw new CIFSException("Pre-authentication integrity hash update failed", e);
+            }
+        }
+    }
+
+    /**
+     * Reset the pre-authentication integrity hash to initial state.
+     * This should be called on negotiation failures or security errors.
+     */
+    private void resetPreauthHash() {
+        synchronized (this.preauthHashLock) {
+            this.preauthIntegrityHash = new byte[64];
+            log.debug("Pre-authentication integrity hash reset");
         }
     }
 
@@ -1749,7 +1806,8 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
             final byte[] encryptionKey = Smb3KeyDerivation.deriveEncryptionKey(dialectInt, sessionKey, preauthHash);
             final byte[] decryptionKey = Smb3KeyDerivation.deriveDecryptionKey(dialectInt, sessionKey, preauthHash);
 
-            return new Smb2EncryptionContext(cipherId, dialect, encryptionKey, decryptionKey);
+            // Pass session key and preauthHash to enable automatic key rotation
+            return new Smb2EncryptionContext(cipherId, dialect, encryptionKey, decryptionKey, sessionKey, preauthHash);
         } catch (final Exception e) {
             throw new CIFSException("Failed to create encryption context", e);
         }

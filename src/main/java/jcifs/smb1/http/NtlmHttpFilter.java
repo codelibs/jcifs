@@ -25,6 +25,9 @@ package jcifs.smb1.http;
 import java.io.IOException;
 import java.util.Enumeration;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.FilterConfig;
@@ -65,6 +68,8 @@ public class NtlmHttpFilter implements Filter {
     public NtlmHttpFilter() {
         // Default constructor
     }
+
+    private static final Logger logger = LoggerFactory.getLogger(NtlmHttpFilter.class);
 
     private static LogStream log = LogStream.getInstance();
 
@@ -263,7 +268,7 @@ public class NtlmHttpFilter implements Filter {
         try {
             init(f);
         } catch (final Exception e) {
-            e.printStackTrace();
+            logger.error("Error setting filter config", e);
         }
     }
 

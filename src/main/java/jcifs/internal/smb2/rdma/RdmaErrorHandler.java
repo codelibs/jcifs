@@ -34,6 +34,10 @@ public class RdmaErrorHandler {
 
     private static final Logger log = LoggerFactory.getLogger(RdmaErrorHandler.class);
 
+    // Retry and timing constants (in ms)
+    private static final long MAX_RETRY_DELAY = 10000; // 10 seconds maximum delay
+    private static final int MAX_BACKOFF_SHIFT = 4; // Maximum 16x multiplier
+
     private final RdmaStatistics statistics;
     private final int maxRetries;
     private final long retryDelayMs;
@@ -94,10 +98,15 @@ public class RdmaErrorHandler {
             log.info("Attempting RDMA connection recovery (attempt {} of {})", retryCount, maxRetries);
 
             try {
-                // Exponential backoff based on retry count
+                // Exponential backoff with overflow protection - ensure safe calculation
                 if (retryDelayMs > 0) {
-                    long delay = retryDelayMs * (1L << (retryCount - 1));
-                    Thread.sleep(Math.min(delay, 10000)); // Cap at 10 seconds
+                    // Safe calculation preventing overflow: use Math.max(0, retryCount - 1) and limit shift
+                    int safeShift = Math.min(MAX_BACKOFF_SHIFT, Math.max(0, retryCount - 1));
+                    long multiplier = 1L << safeShift;
+                    // Check for potential overflow before multiplication
+                    long delay = (retryDelayMs > Long.MAX_VALUE / multiplier) ? MAX_RETRY_DELAY
+                            : Math.min(MAX_RETRY_DELAY, retryDelayMs * multiplier);
+                    Thread.sleep(delay);
                 }
 
                 // Attempt to reset the connection
@@ -109,6 +118,10 @@ public class RdmaErrorHandler {
                     return true;
                 }
 
+            } catch (InterruptedException e) {
+                log.debug("RDMA recovery interrupted");
+                Thread.currentThread().interrupt();
+                break;
             } catch (Exception recoveryError) {
                 log.warn("RDMA recovery attempt {} failed: {}", retryCount, recoveryError.getMessage());
 
@@ -221,11 +234,16 @@ public class RdmaErrorHandler {
 
                 retryCount++;
 
-                // Exponential backoff based on retry count
+                // Exponential backoff with overflow protection
                 if (retryDelayMs > 0) {
                     try {
-                        long delay = retryDelayMs * (1L << retryCount);
-                        Thread.sleep(Math.min(delay, 10000)); // Cap at 10 seconds
+                        // Safe calculation: ensure retryCount is at least 1 for proper exponential backoff
+                        int safeShift = Math.min(MAX_BACKOFF_SHIFT, Math.max(1, retryCount));
+                        long multiplier = 1L << safeShift;
+                        // Check for potential overflow before multiplication
+                        long delay = (retryDelayMs > Long.MAX_VALUE / multiplier) ? MAX_RETRY_DELAY
+                                : Math.min(MAX_RETRY_DELAY, retryDelayMs * multiplier);
+                        Thread.sleep(delay);
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
                         throw new IOException("Interrupted during retry delay", e);

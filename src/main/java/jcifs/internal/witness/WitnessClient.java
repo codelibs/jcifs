@@ -41,6 +41,13 @@ import jcifs.internal.witness.WitnessRegistration.WitnessRegistrationState;
 public class WitnessClient implements AutoCloseable {
     private static final Logger log = LoggerFactory.getLogger(WitnessClient.class);
 
+    // Polling and backoff constants (in ms)
+    private static final long MAX_POLL_INTERVAL = 5000; // Normal polling: max 5 seconds
+    private static final long MAX_ERROR_BACKOFF = 30000; // Error polling: max 30 seconds
+    private static final long BASE_POLL_INTERVAL = 1000;
+    private static final long BASE_ERROR_DELAY = 1000;
+    private static final int MAX_FAILURE_LIMIT = 5; // Limit failures for backoff calculation
+
     private final InetAddress witnessServer;
     private final int port;
     private final CIFSContext context;
@@ -393,8 +400,8 @@ public class WitnessClient implements AutoCloseable {
                         }
                     }
 
-                    // Use exponential backoff for polling interval
-                    long pollInterval = Math.min(5000, 1000 + (registration.getHeartbeatFailures() * 500));
+                    // Normal polling interval: max 5 seconds, increased based on failures
+                    long pollInterval = Math.min(MAX_POLL_INTERVAL, BASE_POLL_INTERVAL + (registration.getHeartbeatFailures() * 500));
                     Thread.sleep(pollInterval);
 
                 } catch (InterruptedException e) {
@@ -404,10 +411,10 @@ public class WitnessClient implements AutoCloseable {
                 } catch (Exception e) {
                     log.debug("Error in async notification monitoring for {}: {}", registrationId, e.getMessage());
 
-                    // Exponential backoff on errors based on consecutive failures
+                    // Exponential backoff on errors: max 30 seconds, based on consecutive failures
                     try {
-                        int failures = Math.min(registration.getHeartbeatFailures(), 5);
-                        long backoffDelay = Math.min(30000, 1000 * (1L << failures));
+                        int failures = Math.min(registration.getHeartbeatFailures(), MAX_FAILURE_LIMIT);
+                        long backoffDelay = Math.min(MAX_ERROR_BACKOFF, BASE_ERROR_DELAY * (1L << failures));
                         Thread.sleep(backoffDelay);
                     } catch (InterruptedException ie) {
                         Thread.currentThread().interrupt();

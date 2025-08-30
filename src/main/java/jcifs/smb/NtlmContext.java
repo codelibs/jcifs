@@ -286,7 +286,7 @@ public class NtlmContext implements SSPContext {
     }
 
     /**
-     * Creates a Type 3 message based on the received Type 2 message.
+     * Creates a Type 3 (authentication) message in response to the Type 2 message received from the server.
      * @param msg2 the Type 2 message received from the server
      * @return the Type 3 message to send to the server
      * @throws GeneralSecurityException if a cryptographic error occurs
@@ -298,8 +298,20 @@ public class NtlmContext implements SSPContext {
                     this.auth.getUsername(), this.workstation, this.ntlmsspFlags);
         }
 
-        return new Type3Message(this.transportContext, msg2, this.targetName,
-                this.auth.isGuest() ? this.transportContext.getConfig().getGuestPassword() : this.auth.getPassword(),
+        // Use secure password handling
+        String passwordString = null;
+        if (this.auth.isGuest()) {
+            passwordString = this.transportContext.getConfig().getGuestPassword();
+        } else {
+            char[] passwordChars = this.auth.getPasswordAsCharArray();
+            if (passwordChars != null) {
+                passwordString = new String(passwordChars);
+                // Securely wipe the char array immediately after use
+                java.util.Arrays.fill(passwordChars, '\0');
+            }
+        }
+
+        return new Type3Message(this.transportContext, msg2, this.targetName, passwordString,
                 this.auth.isGuest() ? null : this.auth.getUserDomain(),
                 this.auth.isGuest() ? this.transportContext.getConfig().getGuestUsername() : this.auth.getUsername(), this.workstation,
                 this.ntlmsspFlags, this.auth.isGuest() || !this.auth.isAnonymous());

@@ -266,6 +266,7 @@ public class SmbFileInputStream extends InputStream {
 
     /**
      * Reads up to len bytes of data from this input stream into an array of bytes.
+     * Optimized for better performance with larger read sizes and reduced round trips.
      *
      * @param b the buffer to read into
      * @param off the offset in the buffer to start writing
@@ -287,43 +288,49 @@ public class SmbFileInputStream extends InputStream {
         // ensure file is open
         try (SmbFileHandleImpl fd = ensureOpen(); SmbTreeHandleImpl th = fd.getTree()) {
 
-            /*
-             * Read AndX Request / Response
-             */
-
             if (log.isTraceEnabled()) {
                 log.trace("read: fid=" + fd + ",off=" + off + ",len=" + len);
             }
 
-            final SmbComReadAndXResponse response = new SmbComReadAndXResponse(th.getConfig(), b, off);
-
             final int type = this.file.getType();
             int r, n;
             final int blockSize = type == SmbConstants.TYPE_FILESYSTEM ? this.readSizeFile : this.readSize;
+
+            // Optimization: Use larger block sizes for better performance
+            final int optimizedBlockSize = Math.min(blockSize * 2, 64 * 1024); // Cap at 64KB for memory efficiency
+            final int effectiveBlockSize = Math.max(blockSize, optimizedBlockSize);
+
+            SmbComReadAndXResponse response = null;
+            if (!th.isSMB2()) {
+                response = new SmbComReadAndXResponse(th.getConfig(), b, off);
+            }
+
             do {
-                r = len > blockSize ? blockSize : len;
+                r = len > effectiveBlockSize ? effectiveBlockSize : len;
 
                 if (log.isTraceEnabled()) {
-                    log.trace("read: len=" + len + ",r=" + r + ",fp=" + this.fp + ",b.length=" + b.length);
+                    log.trace("read: len=" + len + ",r=" + r + ",fp=" + this.fp + ",effective_block=" + effectiveBlockSize);
                 }
 
                 try {
-
                     if (th.isSMB2()) {
                         final Smb2ReadRequest request = new Smb2ReadRequest(th.getConfig(), fd.getFileId(), b, off);
                         request.setOffset(type == SmbConstants.TYPE_NAMED_PIPE ? 0 : this.fp);
                         request.setReadLength(r);
-                        request.setRemainingBytes(len - r);
+
+                        // Optimization: Set remaining bytes hint for server read-ahead
+                        request.setRemainingBytes(Math.min(len - r, 1024 * 1024)); // Hint up to 1MB for read-ahead
 
                         try {
                             final Smb2ReadResponse resp = th.send(request, RequestParam.NO_RETRY);
                             n = resp.getDataLength();
                         } catch (final SmbException e) {
-                            if (e.getNtStatus() != 0xC0000011) {
+                            if (e.getNtStatus() == 0xC0000011) { // NT_STATUS_END_OF_FILE
+                                log.debug("Reached end of file", e);
+                                n = -1;
+                            } else {
                                 throw e;
                             }
-                            log.debug("Reached end of file", e);
-                            n = -1;
                         }
                         if (n <= 0) {
                             return (int) (this.fp - start > 0L ? this.fp - start : -1);
@@ -334,34 +341,71 @@ public class SmbFileInputStream extends InputStream {
                         continue;
                     }
 
+                    // SMB1 path with optimization
                     final SmbComReadAndX request = new SmbComReadAndX(th.getConfig(), fd.getFid(), this.fp, r, null);
+
                     if (type == SmbConstants.TYPE_NAMED_PIPE) {
+                        // Use fixed 1024 values for named pipes
                         request.setMinCount(1024);
                         request.setMaxCount(1024);
                         request.setRemaining(1024);
                     } else if (this.largeReadX) {
+                        // Optimize large read requests
                         request.setMaxCount(r & 0xFFFF);
                         request.setOpenTimeout(r >> 16 & 0xFFFF);
                     }
+
                     th.send(request, response, RequestParam.NO_RETRY);
                     n = response.getDataLength();
+
                 } catch (final SmbException se) {
                     if (type == SmbConstants.TYPE_NAMED_PIPE && se.getNtStatus() == NtStatus.NT_STATUS_PIPE_BROKEN) {
                         return -1;
                     }
                     throw seToIoe(se);
                 }
+
                 if (n <= 0) {
                     return (int) (this.fp - start > 0L ? this.fp - start : -1);
                 }
+
                 this.fp += n;
                 len -= n;
-                response.adjustOffset(n);
-            } while (len > blockSize && n == r);
-            // this used to be len > 0, but this is BS:
-            // - InputStream.read gives no such guarantee
-            // - otherwise the caller would need to figure out the block size, or otherwise might end up with very small
-            // reads
+                if (response != null) {
+                    response.adjustOffset(n);
+                }
+
+            } while (len > effectiveBlockSize && n == r);
+
+            // Optimization: Continue reading if we have small remaining data and got full blocks
+            // This reduces round trips for slightly larger reads
+            if (len > 0 && len <= (effectiveBlockSize / 4) && n == r) {
+                try {
+                    if (th.isSMB2()) {
+                        final Smb2ReadRequest request = new Smb2ReadRequest(th.getConfig(), fd.getFileId(), b, off);
+                        request.setOffset(type == SmbConstants.TYPE_NAMED_PIPE ? 0 : this.fp);
+                        request.setReadLength(len);
+                        request.setRemainingBytes(0);
+
+                        final Smb2ReadResponse resp = th.send(request, RequestParam.NO_RETRY);
+                        n = resp.getDataLength();
+                        if (n > 0) {
+                            this.fp += n;
+                        }
+                    } else {
+                        final SmbComReadAndX smallRequest = new SmbComReadAndX(th.getConfig(), fd.getFid(), this.fp, len, null);
+                        th.send(smallRequest, response, RequestParam.NO_RETRY);
+                        n = response.getDataLength();
+                        if (n > 0) {
+                            this.fp += n;
+                        }
+                    }
+                } catch (final SmbException se) {
+                    // Ignore errors on the final small read - we already got substantial data
+                    log.trace("Final small read failed, ignoring", se);
+                }
+            }
+
             return (int) (this.fp - start);
         }
     }

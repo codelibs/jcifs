@@ -55,7 +55,7 @@ import jcifs.util.transport.TransportException;
  * @author mbechler
  *
  */
-class SmbTreeConnection {
+class SmbTreeConnection implements AutoCloseable {
 
     private static final Logger log = LoggerFactory.getLogger(SmbTreeConnection.class);
 
@@ -239,6 +239,20 @@ class SmbTreeConnection {
         }
     }
 
+    /**
+     * Close the tree connection (implements AutoCloseable)
+     *
+     * This method provides a standard way to close resources using try-with-resources.
+     * It delegates to the release() method to properly clean up the connection.
+     */
+    @Override
+    public void close() {
+        if (log.isDebugEnabled()) {
+            log.debug("Closing SmbTreeConnection via AutoCloseable.close()");
+        }
+        release();
+    }
+
     protected void checkRelease() {
         if (isConnected() && this.usageCount.get() != 0) {
             log.warn("Tree connection was not properly released " + this);
@@ -322,7 +336,7 @@ class SmbTreeConnection {
             }
 
             if (request != null) {
-                log.debug("Restting request");
+                log.debug("Resetting request");
                 request.reset();
             }
             if (rpath != null) {

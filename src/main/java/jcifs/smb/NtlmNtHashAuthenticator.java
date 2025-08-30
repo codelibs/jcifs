@@ -39,7 +39,7 @@ public class NtlmNtHashAuthenticator extends NtlmPasswordAuthenticator {
      *            NT password hash
      */
     public NtlmNtHashAuthenticator(final String domain, final String username, final byte[] passwordHash) {
-        super(domain, username, null, AuthenticationType.USER);
+        super(domain, username, (String) null, AuthenticationType.USER);
         if (passwordHash == null || passwordHash.length != 16) {
             throw new IllegalArgumentException("Password hash must be provided, expected length 16 byte");
         }

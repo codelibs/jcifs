@@ -30,6 +30,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import jcifs.smb1.Config;
 import jcifs.smb1.UniAddress;
 import jcifs.smb1.dcerpc.DcerpcHandle;
@@ -361,6 +364,7 @@ public class SmbFile extends URLConnection implements SmbConstants {
     static final int HASH_DOT_DOT = "..".hashCode();
 
     static LogStream log = LogStream.getInstance();
+    private static final Logger logger = LoggerFactory.getLogger(SmbFile.class);
     static long attrExpirationPeriod;
     static boolean ignoreCopyToException;
 
@@ -369,7 +373,7 @@ public class SmbFile extends URLConnection implements SmbConstants {
         try {
             Class.forName("jcifs.smb1.Config");
         } catch (final ClassNotFoundException cnfe) {
-            cnfe.printStackTrace();
+            logger.error("Failed to load jcifs.smb1.Config class", cnfe);
         }
         attrExpirationPeriod = Config.getLong("jcifs.smb1.smb.client.attrExpirationPeriod", DEFAULT_ATTR_EXPIRATION_PERIOD);
         ignoreCopyToException = Config.getBoolean("jcifs.smb1.smb.client.ignoreCopyToException", true);

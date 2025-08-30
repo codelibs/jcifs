@@ -83,7 +83,7 @@ class NtlmUtilTest {
     @Test
     @DisplayName("getNTHash: null password throws NPE with message")
     void testGetNTHash_null() {
-        NullPointerException ex = assertThrows(NullPointerException.class, () -> NtlmUtil.getNTHash(null));
+        NullPointerException ex = assertThrows(NullPointerException.class, () -> NtlmUtil.getNTHash((String) null));
         assertEquals("Password parameter is required", ex.getMessage());
     }
 
