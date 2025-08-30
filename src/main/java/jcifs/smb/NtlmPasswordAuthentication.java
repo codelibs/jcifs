@@ -116,7 +116,7 @@ public class NtlmPasswordAuthentication extends NtlmPasswordAuthenticator {
      */
     public NtlmPasswordAuthentication(final String domain, final String username, final byte[] challenge, final byte[] ansiHash,
             final byte[] unicodeHash) {
-        super(domain, username, null);
+        super(domain, username, (String) null);
         if (domain == null || username == null || ansiHash == null || unicodeHash == null) {
             throw new IllegalArgumentException("External credentials cannot be null");
         }

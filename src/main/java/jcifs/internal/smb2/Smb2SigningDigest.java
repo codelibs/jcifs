@@ -19,6 +19,7 @@ package jcifs.internal.smb2;
 
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -40,7 +41,7 @@ import jcifs.util.Crypto;
  *
  * @author mbechler
  */
-public class Smb2SigningDigest implements SMBSigningDigest {
+public class Smb2SigningDigest implements SMBSigningDigest, AutoCloseable {
 
     private static final Logger log = LoggerFactory.getLogger(Smb2SigningDigest.class);
 
@@ -50,6 +51,11 @@ public class Smb2SigningDigest implements SMBSigningDigest {
     private static final int SIGNATURE_OFFSET = 48;
     private static final int SIGNATURE_LENGTH = 16;
     private final Mac digest;
+    private final ReentrantLock signingLock = new ReentrantLock();
+    private byte[] signingKey;
+    private final String algorithmName;
+    private final java.security.Provider provider;
+    private volatile boolean closed = false;
 
     /**
      * Constructs a SMB2 signing digest with the specified session key and dialect
@@ -66,32 +72,55 @@ public class Smb2SigningDigest implements SMBSigningDigest {
      */
     public Smb2SigningDigest(final byte[] sessionKey, final int dialect, final byte[] preauthIntegrityHash)
             throws GeneralSecurityException {
-        Mac m;
-        byte[] signingKey;
         switch (dialect) {
         case Smb2Constants.SMB2_DIALECT_0202:
         case Smb2Constants.SMB2_DIALECT_0210:
-            m = Mac.getInstance("HmacSHA256");
-            signingKey = sessionKey;
+            this.algorithmName = "HmacSHA256";
+            this.provider = null;
+            this.signingKey = sessionKey.clone();
             break;
         case Smb2Constants.SMB2_DIALECT_0300:
         case Smb2Constants.SMB2_DIALECT_0302:
-            signingKey = Smb3KeyDerivation.deriveSigningKey(dialect, sessionKey, new byte[0] /* unimplemented */);
-            m = Mac.getInstance("AESCMAC", Crypto.getProvider());
+            this.signingKey = Smb3KeyDerivation.deriveSigningKey(dialect, sessionKey, new byte[0] /* unimplemented */);
+            this.algorithmName = "AESCMAC";
+            this.provider = Crypto.getProvider();
             break;
         case Smb2Constants.SMB2_DIALECT_0311:
             if (preauthIntegrityHash == null) {
-                throw new IllegalArgumentException("Missing preauthIntegrityHash for SMB 3.1");
+                throw new IllegalArgumentException("Missing preauthIntegrityHash for SMB 3.1.1");
             }
-            signingKey = Smb3KeyDerivation.deriveSigningKey(dialect, sessionKey, preauthIntegrityHash);
-            m = Mac.getInstance("AESCMAC", Crypto.getProvider());
+            this.signingKey = Smb3KeyDerivation.deriveSigningKey(dialect, sessionKey, preauthIntegrityHash);
+            this.algorithmName = "AESCMAC";
+            this.provider = Crypto.getProvider();
             break;
         default:
             throw new IllegalArgumentException("Unknown dialect");
         }
 
-        m.init(new SecretKeySpec(signingKey, "HMAC"));
-        this.digest = m;
+        // Initialize the digest once to validate configuration
+        this.digest = createMacInstance();
+    }
+
+    /**
+     * Create a new Mac instance for thread-safe operations
+     * @return initialized Mac instance
+     * @throws GeneralSecurityException if Mac cannot be created
+     */
+    private Mac createMacInstance() throws GeneralSecurityException {
+        if (this.closed) {
+            throw new IllegalStateException("SigningDigest is closed");
+        }
+        if (this.signingKey == null) {
+            throw new IllegalStateException("Signing key has been wiped");
+        }
+        Mac m;
+        if (this.provider != null) {
+            m = Mac.getInstance(this.algorithmName, this.provider);
+        } else {
+            m = Mac.getInstance(this.algorithmName);
+        }
+        m.init(new SecretKeySpec(this.signingKey, "HMAC"));
+        return m;
     }
 
     /**
@@ -101,25 +130,55 @@ public class Smb2SigningDigest implements SMBSigningDigest {
      *      jcifs.internal.CommonServerMessageBlock)
      */
     @Override
-    public synchronized void sign(final byte[] data, final int offset, final int length, final CommonServerMessageBlock request,
+    public void sign(final byte[] data, final int offset, final int length, final CommonServerMessageBlock request,
             final CommonServerMessageBlock response) {
-        this.digest.reset();
-
-        // zero out signature field
-        final int index = offset + SIGNATURE_OFFSET;
-        for (int i = 0; i < SIGNATURE_LENGTH; i++) {
-            data[index + i] = 0;
+        // Validate input parameters
+        if (data == null) {
+            throw new IllegalArgumentException("Data buffer cannot be null");
+        }
+        if (offset < 0 || length < 0) {
+            throw new IllegalArgumentException("Offset and length must be non-negative");
+        }
+        if (offset + length > data.length) {
+            throw new IllegalArgumentException("Offset + length exceeds data buffer size");
+        }
+        if (offset + SIGNATURE_OFFSET + SIGNATURE_LENGTH > data.length) {
+            throw new IllegalArgumentException("Signature field exceeds data buffer size");
         }
 
-        // set signed flag
-        final int oldFlags = SMBUtil.readInt4(data, offset + 16);
-        final int flags = oldFlags | ServerMessageBlock2.SMB2_FLAGS_SIGNED;
-        SMBUtil.writeInt4(flags, data, offset + 16);
+        // Use fine-grained locking for better concurrency
+        this.signingLock.lock();
+        try {
+            if (this.closed) {
+                throw new IllegalStateException("SigningDigest is closed");
+            }
 
-        this.digest.update(data, offset, length);
+            // zero out signature field
+            final int index = offset + SIGNATURE_OFFSET;
+            for (int i = 0; i < SIGNATURE_LENGTH; i++) {
+                data[index + i] = 0;
+            }
 
-        final byte[] sig = this.digest.doFinal();
-        System.arraycopy(sig, 0, data, offset + SIGNATURE_OFFSET, SIGNATURE_LENGTH);
+            // set signed flag
+            final int oldFlags = SMBUtil.readInt4(data, offset + 16);
+            final int flags = oldFlags | ServerMessageBlock2.SMB2_FLAGS_SIGNED;
+            SMBUtil.writeInt4(flags, data, offset + 16);
+
+            // Create new Mac instance for thread safety without blocking other operations
+            Mac mac;
+            try {
+                mac = createMacInstance();
+            } catch (GeneralSecurityException e) {
+                log.error("Failed to create Mac instance for signing", e);
+                throw new RuntimeException("Failed to create Mac instance", e);
+            }
+
+            mac.update(data, offset, length);
+            final byte[] sig = mac.doFinal();
+            System.arraycopy(sig, 0, data, offset + SIGNATURE_OFFSET, SIGNATURE_LENGTH);
+        } finally {
+            this.signingLock.unlock();
+        }
     }
 
     /**
@@ -129,9 +188,24 @@ public class Smb2SigningDigest implements SMBSigningDigest {
      * @see jcifs.internal.SMBSigningDigest#verify(byte[], int, int, int, jcifs.internal.CommonServerMessageBlock)
      */
     @Override
-    public synchronized boolean verify(final byte[] data, final int offset, final int length, final int extraPad,
-            final CommonServerMessageBlock msg) {
-        this.digest.reset();
+    public boolean verify(final byte[] data, final int offset, final int length, final int extraPad, final CommonServerMessageBlock msg) {
+        // Validate input parameters
+        if (data == null) {
+            log.error("Data buffer is null in verify");
+            return false;
+        }
+        if (offset < 0 || length < 0) {
+            log.error("Invalid offset or length in verify: offset={}, length={}", offset, length);
+            return false;
+        }
+        if (offset + length > data.length) {
+            log.error("Offset + length exceeds data buffer size in verify");
+            return false;
+        }
+        if (offset + SIGNATURE_OFFSET + SIGNATURE_LENGTH > data.length) {
+            log.error("Signature field exceeds data buffer size in verify");
+            return false;
+        }
 
         final int flags = SMBUtil.readInt4(data, offset + 16);
         if ((flags & ServerMessageBlock2.SMB2_FLAGS_SIGNED) == 0) {
@@ -142,19 +216,63 @@ public class Smb2SigningDigest implements SMBSigningDigest {
         final byte[] sig = new byte[SIGNATURE_LENGTH];
         System.arraycopy(data, offset + SIGNATURE_OFFSET, sig, 0, SIGNATURE_LENGTH);
 
-        final int index = offset + SIGNATURE_OFFSET;
-        for (int i = 0; i < SIGNATURE_LENGTH; i++) {
-            data[index + i] = 0;
-        }
+        // Use fine-grained locking for verification
+        this.signingLock.lock();
+        try {
+            if (this.closed) {
+                throw new IllegalStateException("SigningDigest is closed");
+            }
 
-        this.digest.update(data, offset, length);
+            final int index = offset + SIGNATURE_OFFSET;
+            for (int i = 0; i < SIGNATURE_LENGTH; i++) {
+                data[index + i] = 0;
+            }
 
-        final byte[] cmp = new byte[SIGNATURE_LENGTH];
-        System.arraycopy(this.digest.doFinal(), 0, cmp, 0, SIGNATURE_LENGTH);
-        if (!MessageDigest.isEqual(sig, cmp)) {
-            return true;
+            // Create new Mac instance for thread safety
+            Mac mac;
+            try {
+                mac = createMacInstance();
+            } catch (GeneralSecurityException e) {
+                log.error("Failed to create Mac instance for verification", e);
+                return false;
+            }
+
+            mac.update(data, offset, length);
+            final byte[] cmp = new byte[SIGNATURE_LENGTH];
+            System.arraycopy(mac.doFinal(), 0, cmp, 0, SIGNATURE_LENGTH);
+
+            // Use constant-time comparison to prevent timing attacks
+            if (!MessageDigest.isEqual(sig, cmp)) {
+                return false; // Signature verification failed
+            }
+            return true; // Signature verification succeeded
+        } finally {
+            this.signingLock.unlock();
         }
-        return false;
+    }
+
+    /**
+     * Securely wipe signing key from memory
+     */
+    public void secureWipeKey() {
+        this.signingLock.lock();
+        try {
+            if (this.signingKey != null) {
+                java.util.Arrays.fill(this.signingKey, (byte) 0);
+                this.signingKey = null;
+            }
+            this.closed = true;
+        } finally {
+            this.signingLock.unlock();
+        }
+    }
+
+    /**
+     * Close the signing digest and securely wipe keys
+     */
+    @Override
+    public void close() {
+        secureWipeKey();
     }
 
 }

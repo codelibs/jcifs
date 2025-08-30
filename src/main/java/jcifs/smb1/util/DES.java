@@ -335,8 +335,8 @@ public class DES {
         final int length = clearText.length;
 
         if (length % 8 != 0) {
-            System.out.println("Array must be a multiple of 8");
-            return null;
+            // DES requires 8-byte blocks
+            throw new IllegalArgumentException("Array must be a multiple of 8 bytes for DES encryption");
         }
 
         final byte[] cipherText = new byte[length];
@@ -362,8 +362,8 @@ public class DES {
         final int length = cipherText.length;
 
         if (length % 8 != 0) {
-            System.out.println("Array must be a multiple of 8");
-            return null;
+            // DES requires 8-byte blocks
+            throw new IllegalArgumentException("Array must be a multiple of 8 bytes for DES encryption");
         }
 
         final byte[] clearText = new byte[length];

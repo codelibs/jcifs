@@ -291,7 +291,7 @@ class BaseConfigurationTest {
     void testInitProtocolVersionsWithNullStrings() {
         config.initProtocolVersions(null, "");
 
-        assertEquals(DialectVersion.SMB1, config.getMinimumVersion());
+        assertEquals(DialectVersion.SMB202, config.getMinimumVersion());
         assertEquals(DialectVersion.SMB311, config.getMaximumVersion());
     }
 
@@ -318,7 +318,7 @@ class BaseConfigurationTest {
     void testInitProtocolVersionsWithNullDialectVersions() {
         config.initProtocolVersions((DialectVersion) null, null);
 
-        assertEquals(DialectVersion.SMB1, config.getMinimumVersion());
+        assertEquals(DialectVersion.SMB202, config.getMinimumVersion());
         assertEquals(DialectVersion.SMB311, config.getMaximumVersion());
     }
 

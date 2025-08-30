@@ -360,7 +360,7 @@ public class NtlmHttpFilter implements Filter {
         try {
             init(f);
         } catch (final Exception e) {
-            e.printStackTrace();
+            log.error("Error setting filter config", e);
         }
     }
 

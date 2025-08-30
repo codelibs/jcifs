@@ -969,7 +969,8 @@ public class BaseConfiguration implements Configuration {
      * @param max maximum protocol version
      */
     protected void initProtocolVersions(final DialectVersion min, final DialectVersion max) {
-        this.minVersion = min != null ? min : DialectVersion.SMB1;
+        // Default to SMB2 minimum for security - SMB1 is deprecated and insecure
+        this.minVersion = min != null ? min : DialectVersion.SMB202;
         this.maxVersion = max != null ? max : DialectVersion.SMB311;
 
         if (this.minVersion.atLeast(this.maxVersion)) {

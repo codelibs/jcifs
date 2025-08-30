@@ -3,11 +3,16 @@ package jcifs.smb1.smb1;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Test class for SMB file locking operations.
  * This class is used to test concurrent file access and locking behavior.
  */
 public class TestLocking implements Runnable {
+
+    private static final Logger logger = LoggerFactory.getLogger(TestLocking.class);
 
     /**
      * Default constructor for TestLocking
@@ -53,13 +58,12 @@ public class TestLocking implements Runnable {
                         in.close();
                     }
                 } catch (final IOException ioe) {
-                    System.err.println(ioe.getMessage());
-                    //ioe.printStackTrace(System.err);
+                    logger.error("I/O error occurred: {}", ioe.getMessage(), ioe);
                 }
 
             }
         } catch (final Exception e) {
-            e.printStackTrace();
+            logger.error("Error in test execution", e);
         } finally {
             numComplete++;
         }
@@ -73,7 +77,7 @@ public class TestLocking implements Runnable {
      */
     public static void main(final String[] args) throws Exception {
         if (args.length < 1) {
-            System.err.println("usage: TestLocking [-t <numThreads>] [-i <numIter>] [-d <delay>] url");
+            logger.error("usage: TestLocking [-t <numThreads>] [-i <numIter>] [-d <delay>] url");
             System.exit(1);
         }
 
@@ -100,7 +104,7 @@ public class TestLocking implements Runnable {
 
         for (ti = 0; ti < t.numThreads; ti++) {
             threads[ti] = new Thread(t);
-            System.out.print(threads[ti].getName());
+            logger.info(threads[ti].getName());
             threads[ti].start();
         }
 
@@ -120,7 +124,7 @@ public class TestLocking implements Runnable {
                 }
 
                 if (delay > 2) {
-                    System.out.println("delay=" + delay);
+                    logger.debug("delay={}", delay);
                 }
                 Thread.sleep(delay);
             } while (delay > 2);
@@ -133,9 +137,9 @@ public class TestLocking implements Runnable {
 
         for (ti = 0; ti < t.numThreads; ti++) {
             threads[ti].join();
-            System.out.print(threads[ti].getName());
+            logger.info(threads[ti].getName());
         }
 
-        System.out.println();
+        logger.info("Test completed");
     }
 }

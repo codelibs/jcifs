@@ -185,11 +185,6 @@ public class JAASAuthenticator extends Kerb5Authenticator implements CallbackHan
         this.cachedSubject = null;
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * @see jcifs.smb.Kerb5Authenticator#getSubject()
-     */
     @Override
     public synchronized Subject getSubject() {
         if (this.cachedSubject != null) {
@@ -223,7 +218,8 @@ public class JAASAuthenticator extends Kerb5Authenticator implements CallbackHan
             return this.cachedSubject;
         } catch (LoginException e) {
             log.error("Failed to create login context", e);
-            this.cachedSubject = new Subject();
+            // Cache null to ensure consistent behavior across calls
+            this.cachedSubject = null;
             return null;
         }
     }
@@ -259,8 +255,9 @@ public class JAASAuthenticator extends Kerb5Authenticator implements CallbackHan
                     nc.setName(this.getUsername() + "@" + userDomain);
                 }
             } else if (cb instanceof PasswordCallback pc) {
-                if (this.getPassword() != null) {
-                    pc.setPassword(this.getPassword().toCharArray());
+                char[] passwordChars = this.getPasswordAsCharArray();
+                if (passwordChars != null) {
+                    pc.setPassword(passwordChars);
                 }
             }
         }

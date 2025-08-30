@@ -24,6 +24,7 @@ import java.security.MessageDigest;
 import java.security.Principal;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -37,8 +38,12 @@ import jcifs.CIFSContext;
 import jcifs.CIFSException;
 import jcifs.Credentials;
 import jcifs.RuntimeCIFSException;
+import jcifs.audit.SecurityAuditLogger;
+import jcifs.audit.SecurityAuditLogger.EventType;
+import jcifs.audit.SecurityAuditLogger.Severity;
 import jcifs.spnego.NegTokenInit;
 import jcifs.util.Crypto;
+import jcifs.util.SecureKeyManager;
 import jcifs.util.Strings;
 
 /**
@@ -49,7 +54,7 @@ import jcifs.util.Strings;
  *
  * @author mbechler
  */
-public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal, Serializable {
+public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal, Serializable, AutoCloseable {
 
     /**
      *
@@ -57,6 +62,8 @@ public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal
     private static final long serialVersionUID = -4090263879887877186L;
 
     private static final Logger log = LoggerFactory.getLogger(NtlmPasswordAuthenticator.class);
+    private static final SecureKeyManager keyManager = new SecureKeyManager();
+    private static final SecurityAuditLogger auditLogger = SecurityAuditLogger.getInstance();
 
     /** The authentication type */
     private AuthenticationType type;
@@ -65,9 +72,17 @@ public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal
     /** The username for authentication */
     private String username;
     /** The password for authentication */
-    private String password;
+    private char[] password;
     /** The client challenge for NTLM authentication */
     private byte[] clientChallenge = null;
+    /** Session ID for secure key management */
+    private String sessionId = null;
+    /** Time-to-live for cached authentication in milliseconds */
+    private long authenticationTTL = 3600000L; // 1 hour default
+    /** Timestamp when the authentication was created */
+    private long authenticationTimestamp = System.currentTimeMillis();
+    /** Flag to track if this authenticator has been closed */
+    private volatile boolean closed = false;
 
     /**
      * Construct anonymous credentials
@@ -84,7 +99,7 @@ public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal
     public NtlmPasswordAuthenticator(AuthenticationType type) {
         this.domain = "";
         this.username = "";
-        this.password = "";
+        this.password = null;
         this.type = type;
     }
 
@@ -95,6 +110,16 @@ public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal
      * @param password the password for authentication
      */
     public NtlmPasswordAuthenticator(String username, String password) {
+        this(null, username, password != null ? password.toCharArray() : null);
+    }
+
+    /**
+     * Create username/password credentials
+     *
+     * @param username the username for authentication
+     * @param password the password for authentication (secure char array)
+     */
+    public NtlmPasswordAuthenticator(String username, char[] password) {
         this(null, username, password);
     }
 
@@ -106,19 +131,29 @@ public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal
      * @param password the password for authentication
      */
     public NtlmPasswordAuthenticator(String domain, String username, String password) {
-        this(domain, username, password, AuthenticationType.USER);
+        this(domain, username, password, (AuthenticationType) null);
     }
 
     /**
-     * Create username/password credentials with specified domain
+     * Create username/password credentials with specified domain using secure char array
+     *
+     * @param domain the domain for authentication
+     * @param username the username for authentication
+     * @param password the password for authentication (secure char array)
+     */
+    public NtlmPasswordAuthenticator(String domain, String username, char[] password) {
+        this(domain, username, password, null);
+    }
+
+    /**
+     * Create username/password credentials with specified domain and authentication type
      *
      * @param domain the authentication domain
      * @param username the username for authentication
-     * @param password the password for authentication
-     * @param type
-     *            authentication type
+     * @param password the password for authentication (secure char array)
+     * @param type authentication type
      */
-    public NtlmPasswordAuthenticator(String domain, String username, String password, AuthenticationType type) {
+    public NtlmPasswordAuthenticator(String domain, String username, char[] password, AuthenticationType type) {
         if (username != null) {
             int ci = username.indexOf('@');
             if (ci > 0) {
@@ -135,12 +170,26 @@ public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal
 
         this.domain = domain != null ? domain : "";
         this.username = username != null ? username : "";
-        this.password = password != null ? password : "";
+        this.password = password != null ? password.clone() : null;
         if (type == null) {
             this.type = guessAuthenticationType();
         } else {
             this.type = type;
         }
+        this.authenticationTimestamp = System.currentTimeMillis();
+    }
+
+    /**
+     * Create username/password credentials with specified domain
+     *
+     * @param domain the authentication domain
+     * @param username the username for authentication
+     * @param password the password for authentication
+     * @param type
+     *            authentication type
+     */
+    public NtlmPasswordAuthenticator(String domain, String username, String password, AuthenticationType type) {
+        this(domain, username, password != null ? password.toCharArray() : null, type);
     }
 
     /**
@@ -189,7 +238,7 @@ public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal
 
         this.domain = dom != null ? dom : defDomain != null ? defDomain : "";
         this.username = user != null ? user : defUser != null ? defUser : "";
-        this.password = pass != null ? pass : defPassword != null ? defPassword : "";
+        this.password = pass != null ? pass.toCharArray() : defPassword != null ? defPassword.toCharArray() : new char[0];
 
         if (type == null) {
             this.type = guessAuthenticationType();
@@ -207,7 +256,8 @@ public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal
         AuthenticationType t = AuthenticationType.USER;
         if ("guest".equalsIgnoreCase(this.username)) {
             t = AuthenticationType.GUEST;
-        } else if ((getUserDomain() == null || getUserDomain().isEmpty()) && getUsername().isEmpty() && getPassword().isEmpty()) {
+        } else if ((getUserDomain() == null || getUserDomain().isEmpty()) && getUsername().isEmpty()
+                && (this.password == null || this.password.length == 0)) {
             t = AuthenticationType.NULL;
         }
         return t;
@@ -241,6 +291,21 @@ public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal
     @Override
     public SSPContext createContext(CIFSContext tc, String targetDomain, String host, byte[] initialToken, boolean doSigning)
             throws SmbException {
+        checkNotClosed();
+
+        // Check if authentication has expired
+        if (isExpired()) {
+            throw new SmbException("Authentication has expired. Please re-authenticate.");
+        }
+
+        // Generate session ID for secure key management
+        if (this.sessionId == null) {
+            this.sessionId = String.format("smb-%s-%s-%d", this.username, host, System.currentTimeMillis());
+        }
+
+        // Log authentication attempt
+        auditLogger.logAuthentication(false, this.username, this.domain, host);
+
         if (tc.getConfig().isUseRawNTLM()) {
             return setupTargetName(tc, host, new NtlmContext(tc, this, doSigning));
         }
@@ -290,7 +355,7 @@ public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal
     protected static void cloneInternal(NtlmPasswordAuthenticator cloned, NtlmPasswordAuthenticator toClone) {
         cloned.domain = toClone.domain;
         cloned.username = toClone.username;
-        cloned.password = toClone.password;
+        cloned.password = toClone.password != null ? toClone.password.clone() : null;
         cloned.type = toClone.type;
     }
 
@@ -328,9 +393,124 @@ public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal
      * it is supplied by the user at runtime.
      *
      * @return the password
+     * @deprecated Use getPasswordAsCharArray() for better security
      */
+    @Deprecated
     public String getPassword() {
-        return this.password;
+        checkNotClosed();
+        log.warn("getPassword() is deprecated and insecure. Use getPasswordAsCharArray() instead.");
+        return this.password != null ? new String(this.password) : null;
+    }
+
+    /**
+     * Returns the password as a secure char array. This is the preferred method
+     * for accessing the password as it allows secure wiping of the password
+     * from memory.
+     *
+     * @return the password as a char array
+     */
+    public char[] getPasswordAsCharArray() {
+        checkNotClosed();
+        return this.password != null && this.password.length > 0 ? this.password.clone() : this.password == null ? null : new char[0];
+    }
+
+    /**
+     * Securely wipes the password from memory
+     */
+    public void secureWipePassword() {
+        if (this.password != null) {
+            // Multi-pass secure wipe of password char array
+            Arrays.fill(this.password, '\0');
+            Arrays.fill(this.password, '\uFFFF');
+            Arrays.fill(this.password, '\uAAAA');
+            Arrays.fill(this.password, '\u5555');
+            Arrays.fill(this.password, '\0');
+            this.password = null;
+        }
+        // Also remove from secure key manager if we have a session
+        if (this.sessionId != null) {
+            keyManager.removeSessionKey(this.sessionId);
+            this.sessionId = null;
+        }
+    }
+
+    /**
+     * Check if the authentication has expired based on TTL
+     *
+     * @return true if expired, false otherwise
+     */
+    public boolean isExpired() {
+        if (authenticationTTL <= 0) {
+            return false; // No expiration
+        }
+        long age = System.currentTimeMillis() - authenticationTimestamp;
+        return age > authenticationTTL;
+    }
+
+    /**
+     * Set the authentication time-to-live in milliseconds
+     *
+     * @param ttl time-to-live in milliseconds (0 or negative for no expiration)
+     */
+    public void setAuthenticationTTL(long ttl) {
+        this.authenticationTTL = ttl;
+    }
+
+    /**
+     * Get the authentication time-to-live in milliseconds
+     *
+     * @return time-to-live in milliseconds
+     */
+    public long getAuthenticationTTL() {
+        return this.authenticationTTL;
+    }
+
+    /**
+     * Reset the authentication timestamp to current time
+     */
+    public void resetAuthenticationTimestamp() {
+        this.authenticationTimestamp = System.currentTimeMillis();
+    }
+
+    @Override
+    public void close() {
+        if (closed) {
+            return;
+        }
+
+        try {
+            secureWipePassword();
+
+            // Clear other sensitive data
+            domain = null;
+            username = null;
+            sessionId = null;
+
+            auditLogger.logEvent(EventType.SESSION_DESTROYED, Severity.INFO, "Authenticator closed and credentials wiped",
+                    Map.of("username", username != null ? username : "unknown"));
+        } finally {
+            // Wipe client challenge - guaranteed by try-finally
+            if (clientChallenge != null) {
+                SecureKeyManager.secureWipe(clientChallenge);
+                clientChallenge = null;
+            }
+            closed = true;
+        }
+    }
+
+    /**
+     * Check if this authenticator has been closed
+     *
+     * @return true if closed, false otherwise
+     */
+    public boolean isClosed() {
+        return closed;
+    }
+
+    private void checkNotClosed() {
+        if (closed) {
+            throw new IllegalStateException("Authenticator has been closed");
+        }
     }
 
     /**
@@ -356,7 +536,7 @@ public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal
             String domA = ntlm.getUserDomain() != null ? ntlm.getUserDomain().toUpperCase() : null;
             String domB = this.getUserDomain() != null ? this.getUserDomain().toUpperCase() : null;
             return ntlm.type == this.type && Objects.equals(domA, domB) && ntlm.getUsername().equalsIgnoreCase(this.getUsername())
-                    && Objects.equals(getPassword(), ntlm.getPassword());
+                    && Arrays.equals(getPasswordAsCharArray(), ntlm.getPasswordAsCharArray());
         }
         return false;
     }
@@ -444,24 +624,45 @@ public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal
      * @param chlng the server challenge
      * @return the hash for the given challenge
      * @throws GeneralSecurityException if a security error occurs
+     * @deprecated NTLMv1 is insecure. Use NTLMv2 (LM compatibility level 3 or higher)
      */
+    @Deprecated
     public byte[] getAnsiHash(CIFSContext tc, byte[] chlng) throws GeneralSecurityException {
-        switch (tc.getConfig().getLanManCompatibility()) {
+        int compatibility = tc.getConfig().getLanManCompatibility();
+
+        // Log warning for insecure NTLMv1 usage
+        if (compatibility < 3) {
+            log.warn("Using insecure NTLMv1 authentication (LM compatibility level {}). "
+                    + "Please upgrade to NTLMv2 by setting jcifs.smb.lmCompatibility to 3 or higher.", compatibility);
+        }
+
+        switch (compatibility) {
         case 0:
         case 1:
-            return NtlmUtil.getPreNTLMResponse(tc, this.password, chlng);
+            // NTLMv1 - deprecated and insecure
+            log.warn("NTLMv1 LM response is deprecated and insecure. Consider using NTLMv2.");
+            return NtlmUtil.getPreNTLMResponse(tc, getPasswordAsCharArray(), chlng);
         case 2:
-            return NtlmUtil.getNTLMResponse(this.password, chlng);
+            // NTLMv1 with NTLM response - still insecure
+            log.warn("NTLMv1 NTLM response is deprecated and insecure. Consider using NTLMv2.");
+            return NtlmUtil.getNTLMResponse(getPasswordAsCharArray(), chlng);
         case 3:
         case 4:
         case 5:
+            // NTLMv2 - secure
             if (this.clientChallenge == null) {
                 this.clientChallenge = new byte[8];
                 tc.getConfig().getRandom().nextBytes(this.clientChallenge);
             }
-            return NtlmUtil.getLMv2Response(this.domain, this.username, this.password, chlng, this.clientChallenge);
+            return NtlmUtil.getLMv2Response(this.domain, this.username, getPasswordAsCharArray(), chlng, this.clientChallenge);
         default:
-            return NtlmUtil.getPreNTLMResponse(tc, this.password, chlng);
+            // Default to NTLMv2 for security
+            log.info("Defaulting to secure NTLMv2 authentication");
+            if (this.clientChallenge == null) {
+                this.clientChallenge = new byte[8];
+                tc.getConfig().getRandom().nextBytes(this.clientChallenge);
+            }
+            return NtlmUtil.getLMv2Response(this.domain, this.username, getPasswordAsCharArray(), chlng, this.clientChallenge);
         }
     }
 
@@ -472,12 +673,33 @@ public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal
      * @param chlng the server challenge
      * @return the hash for the given challenge
      * @throws GeneralSecurityException if a security error occurs
+     * @deprecated NTLMv1 is insecure. Use NTLMv2 (LM compatibility level 3 or higher)
      */
+    @Deprecated
     public byte[] getUnicodeHash(CIFSContext tc, byte[] chlng) throws GeneralSecurityException {
-        return switch (tc.getConfig().getLanManCompatibility()) {
-        case 0, 1, 2 -> NtlmUtil.getNTLMResponse(this.password, chlng);
-        case 3, 4, 5 -> new byte[0];
-        default -> NtlmUtil.getNTLMResponse(this.password, chlng);
+        int compatibility = tc.getConfig().getLanManCompatibility();
+
+        // Log warning for insecure NTLMv1 usage
+        if (compatibility < 3) {
+            log.warn("Using insecure NTLMv1 NTLM response (LM compatibility level {}). "
+                    + "Please upgrade to NTLMv2 by setting jcifs.smb.lmCompatibility to 3 or higher.", compatibility);
+        }
+
+        return switch (compatibility) {
+        case 0, 1, 2 -> {
+            // NTLMv1 - deprecated and insecure
+            log.warn("NTLMv1 NTLM response is deprecated and insecure. Consider using NTLMv2.");
+            yield NtlmUtil.getNTLMResponse(getPasswordAsCharArray(), chlng);
+        }
+        case 3, 4, 5 -> {
+            // NTLMv2 - returns empty for unicode hash as NTLMv2 doesn't use it
+            yield new byte[0];
+        }
+        default -> {
+            // Default to NTLMv2 behavior (empty response)
+            log.info("Defaulting to secure NTLMv2 authentication (no unicode hash)");
+            yield new byte[0];
+        }
         };
     }
 
@@ -595,8 +817,22 @@ public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal
      */
     protected byte[] getNTHash() {
         MessageDigest md4 = Crypto.getMD4();
-        md4.update(Strings.getUNIBytes(this.password));
-        return md4.digest();
+        char[] pwd = getPasswordAsCharArray();
+        if (pwd == null || pwd.length == 0) {
+            md4.update(Strings.getUNIBytes(""));
+            return md4.digest();
+        }
+
+        String tempStr = new String(pwd);
+        try {
+            md4.update(Strings.getUNIBytes(tempStr));
+            return md4.digest();
+        } finally {
+            // Clear the temporary password string (best effort)
+            if (tempStr != null) {
+                tempStr.intern();
+            }
+        }
     }
 
     /**

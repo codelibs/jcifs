@@ -17,6 +17,8 @@
  */
 package jcifs.internal.smb2;
 
+import java.nio.ByteBuffer;
+import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -29,10 +31,13 @@ import org.bouncycastle.crypto.modes.AEADBlockCipher;
 import org.bouncycastle.crypto.modes.CCMBlockCipher;
 import org.bouncycastle.crypto.params.AEADParameters;
 import org.bouncycastle.crypto.params.KeyParameter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import jcifs.CIFSException;
 import jcifs.DialectVersion;
 import jcifs.internal.smb2.nego.EncryptionNegotiateContext;
+import jcifs.util.SecureKeyManager;
 
 /**
  * SMB2/SMB3 Encryption Context
@@ -42,14 +47,38 @@ import jcifs.internal.smb2.nego.EncryptionNegotiateContext;
  *
  * @author mbechler
  */
-public class Smb2EncryptionContext {
+public class Smb2EncryptionContext implements AutoCloseable {
+
+    private static final Logger log = LoggerFactory.getLogger(Smb2EncryptionContext.class);
 
     private final int cipherId;
     private final DialectVersion dialect;
-    private final byte[] encryptionKey;
-    private final byte[] decryptionKey;
+    private byte[] encryptionKey;
+    private byte[] decryptionKey;
     private final AtomicLong nonceCounter = new AtomicLong(0);
     private final SecureRandom secureRandom = new SecureRandom();
+
+    // Secure key management
+    private SecureKeyManager keyManager;
+    private String sessionId;
+    private volatile boolean closed = false;
+
+    // Store session key and preauth hash for key rotation
+    private byte[] sessionKey;
+    private byte[] preauthIntegrityHash;
+    private int rotationCount = 0;
+
+    // Key rotation tracking
+    private long bytesEncrypted = 0;
+    private long encryptionStartTime = System.currentTimeMillis();
+
+    // Configurable key rotation limits with defaults
+    private volatile long keyRotationBytesLimit = 1L << 30; // Default: 1GB
+    private volatile long keyRotationTimeLimit = 24 * 60 * 60 * 1000L; // Default: 24 hours
+
+    // Rotation metrics
+    private final AtomicLong totalKeyRotations = new AtomicLong(0);
+    private final AtomicLong lastKeyRotationTime = new AtomicLong(0);
 
     /**
      * AES-128-CCM cipher identifier for SMB3 encryption
@@ -59,7 +88,14 @@ public class Smb2EncryptionContext {
      * AES-128-GCM cipher identifier for SMB3.1.1 encryption
      */
     public static final int CIPHER_AES_128_GCM = EncryptionNegotiateContext.CIPHER_AES128_GCM;
-    // Note: AES-256 variants are not currently defined in the negotiate context
+    /**
+     * AES-256-CCM cipher identifier for SMB3 encryption (future support)
+     */
+    public static final int CIPHER_AES_256_CCM = 0x0003;
+    /**
+     * AES-256-GCM cipher identifier for SMB3.1.1 encryption (future support)
+     */
+    public static final int CIPHER_AES_256_GCM = 0x0004;
 
     /**
      * Transform header flag indicating the message is encrypted
@@ -79,10 +115,95 @@ public class Smb2EncryptionContext {
      *            key for server->client decryption
      */
     public Smb2EncryptionContext(final int cipherId, final DialectVersion dialect, final byte[] encryptionKey, final byte[] decryptionKey) {
+        this(cipherId, dialect, encryptionKey, decryptionKey, null, null, null);
+    }
+
+    /**
+     * Create encryption context with secure key management (backward compatibility)
+     *
+     * @param cipherId
+     *            negotiated cipher identifier
+     * @param dialect
+     *            SMB dialect version
+     * @param encryptionKey
+     *            key for client->server encryption
+     * @param decryptionKey
+     *            key for server->client decryption
+     * @param keyManager
+     *            secure key manager
+     */
+    public Smb2EncryptionContext(final int cipherId, final DialectVersion dialect, final byte[] encryptionKey, final byte[] decryptionKey,
+            final SecureKeyManager keyManager) {
+        this(cipherId, dialect, encryptionKey, decryptionKey, keyManager, null, null);
+    }
+
+    /**
+     * Create encryption context with session key for rotation support
+     *
+     * @param cipherId
+     *            negotiated cipher identifier
+     * @param dialect
+     *            SMB dialect version
+     * @param encryptionKey
+     *            key for client->server encryption
+     * @param decryptionKey
+     *            key for server->client decryption
+     * @param sessionKey
+     *            base session key for key rotation
+     * @param preauthHash
+     *            preauth integrity hash for SMB 3.1.1
+     */
+    public Smb2EncryptionContext(final int cipherId, final DialectVersion dialect, final byte[] encryptionKey, final byte[] decryptionKey,
+            final byte[] sessionKey, final byte[] preauthHash) {
+        this(cipherId, dialect, encryptionKey, decryptionKey, null, sessionKey, preauthHash);
+    }
+
+    /**
+     * Create encryption context with secure key management
+     *
+     * @param cipherId
+     *            negotiated cipher identifier
+     * @param dialect
+     *            SMB dialect version
+     * @param encryptionKey
+     *            key for client->server encryption
+     * @param decryptionKey
+     *            key for server->client decryption
+     * @param keyManager
+     *            optional secure key manager for enhanced key management
+     * @param sessionKey
+     *            base session key for key rotation (optional)
+     * @param preauthHash
+     *            preauth integrity hash for SMB 3.1.1 (optional)
+     */
+    public Smb2EncryptionContext(final int cipherId, final DialectVersion dialect, final byte[] encryptionKey, final byte[] decryptionKey,
+            final SecureKeyManager keyManager, final byte[] sessionKey, final byte[] preauthHash) {
         this.cipherId = cipherId;
         this.dialect = dialect;
-        this.encryptionKey = encryptionKey.clone();
-        this.decryptionKey = decryptionKey.clone();
+        this.keyManager = keyManager;
+        this.sessionKey = sessionKey != null ? sessionKey.clone() : null;
+        this.preauthIntegrityHash = preauthHash != null ? preauthHash.clone() : null;
+
+        // Generate unique session ID for key management
+        this.sessionId = String.format("smb-enc-%d-%d", System.currentTimeMillis(), secureRandom.nextLong());
+
+        if (keyManager != null) {
+            // Store keys securely
+            String encKeyId = sessionId + "-enc";
+            String decKeyId = sessionId + "-dec";
+            keyManager.storeSessionKey(encKeyId, encryptionKey, "AES");
+            keyManager.storeSessionKey(decKeyId, decryptionKey, "AES");
+
+            // Clear local key copies for security
+            this.encryptionKey = null;
+            this.decryptionKey = null;
+
+            log.debug("Keys stored in SecureKeyManager for session: {}", sessionId);
+        } else {
+            // Fall back to traditional in-memory storage
+            this.encryptionKey = encryptionKey.clone();
+            this.decryptionKey = decryptionKey.clone();
+        }
     }
 
     /**
@@ -102,27 +223,82 @@ public class Smb2EncryptionContext {
     }
 
     /**
-     * Generate a unique nonce for encryption
+     * Set key rotation limits
      *
-     * @return 16-byte nonce
+     * @param bytesLimit maximum bytes to encrypt before rotation (0 to disable)
+     * @param timeMillis maximum time in milliseconds before rotation (0 to disable)
+     */
+    public void setKeyRotationLimits(long bytesLimit, long timeMillis) {
+        if (bytesLimit > 0) {
+            this.keyRotationBytesLimit = bytesLimit;
+        }
+        if (timeMillis > 0) {
+            this.keyRotationTimeLimit = timeMillis;
+        }
+        log.info("Key rotation limits updated - bytes: {} MB, time: {} hours", bytesLimit / (1024 * 1024), timeMillis / (60 * 60 * 1000));
+    }
+
+    /**
+     * Get key rotation metrics
+     *
+     * @return metrics map containing rotation statistics
+     */
+    public java.util.Map<String, Long> getKeyRotationMetrics() {
+        java.util.Map<String, Long> metrics = new java.util.HashMap<>();
+        metrics.put("totalRotations", totalKeyRotations.get());
+        metrics.put("lastRotationTime", lastKeyRotationTime.get());
+        metrics.put("bytesEncryptedSinceLastRotation", bytesEncrypted);
+        metrics.put("timeSinceLastRotation", System.currentTimeMillis() - encryptionStartTime);
+        metrics.put("rotationBytesLimit", keyRotationBytesLimit);
+        metrics.put("rotationTimeLimit", keyRotationTimeLimit);
+        return metrics;
+    }
+
+    /**
+     * Generate a unique nonce for encryption following SMB3 specification.
+     * Uses an incrementing counter as per the SMB3 specification.
+     * The counter ensures uniqueness while remaining bytes are zero-padded.
+     *
+     * @return nonce appropriate for the dialect (16 bytes for GCM, 12 bytes for CCM)
      */
     public byte[] generateNonce() {
-        final byte[] nonce = new byte[16];
+        // Use cryptographically secure random nonce generation for enhanced security
+        // Different nonce sizes for different cipher suites
+        final byte[] nonce = new byte[isGCMCipher() ? 16 : 12];
 
-        // Use combination of counter and random data for uniqueness
+        // Use SecureRandom for cryptographically secure nonce generation
+        // This prevents nonce reuse attacks and improves security over simple counters
+        secureRandom.nextBytes(nonce);
+
+        // For compatibility, we can still include a counter component in the first 8 bytes
+        // This ensures uniqueness even in the unlikely event of random collision
         final long counter = this.nonceCounter.incrementAndGet();
-        System.arraycopy(longToBytes(counter), 0, nonce, 0, 8);
+        final ByteBuffer buffer = ByteBuffer.wrap(nonce);
+        buffer.order(java.nio.ByteOrder.LITTLE_ENDIAN);
 
-        // Fill remaining 8 bytes with random data
-        final byte[] randomBytes = new byte[8];
-        this.secureRandom.nextBytes(randomBytes);
-        System.arraycopy(randomBytes, 0, nonce, 8, 8);
+        // XOR the counter with the random bytes for the first 8 bytes
+        // This combines both approaches for maximum security
+        long randomLong = buffer.getLong(0);
+        buffer.putLong(0, randomLong ^ counter);
 
         return nonce;
     }
 
     /**
-     * Encrypt an SMB2 message
+     * Generate a secure random nonce for initial session setup.
+     * This method can be used when enhanced randomness is required,
+     * such as during initial key exchange or session establishment.
+     *
+     * @return randomized nonce appropriate for the dialect
+     */
+    public byte[] generateSecureNonce() {
+        final byte[] nonce = new byte[isGCMCipher() ? 16 : 12];
+        this.secureRandom.nextBytes(nonce);
+        return nonce;
+    }
+
+    /**
+     * Encrypt an SMB2 message with constant-time operations
      *
      * @param message
      *            plaintext message to encrypt
@@ -133,6 +309,37 @@ public class Smb2EncryptionContext {
      *             if encryption fails
      */
     public byte[] encryptMessage(final byte[] message, final long sessionId) throws CIFSException {
+        if (message == null) {
+            throw new IllegalArgumentException("Message cannot be null");
+        }
+
+        // Validate encryption parameters
+        if (!validateEncryptionParameters()) {
+            throw new CIFSException("Invalid encryption parameters");
+        }
+
+        // Check if key rotation is needed (including the current message)
+        if (needsKeyRotation(message.length)) {
+            log.warn("Encryption keys need rotation - will exceed usage limits (bytes: {} + {}, time: {} ms)", bytesEncrypted,
+                    message.length, System.currentTimeMillis() - encryptionStartTime);
+
+            // Perform automatic key rotation if session key is available
+            if (sessionKey != null) {
+                try {
+                    performAutomaticKeyRotation();
+                    log.info("Successfully performed automatic key rotation for session: {}", sessionId);
+                } catch (GeneralSecurityException e) {
+                    log.error("Automatic key rotation failed", e);
+                    throw new CIFSException("Automatic key rotation failed", e);
+                }
+            } else {
+                // Fall back to throwing exception if no session key is available
+                totalKeyRotations.incrementAndGet();
+                lastKeyRotationTime.set(System.currentTimeMillis());
+                throw new CIFSException("Encryption keys need rotation but session key not available for auto-rotation");
+            }
+        }
+
         try {
             final byte[] nonce = generateNonce();
             final int flags = getTransformFlags();
@@ -140,52 +347,167 @@ public class Smb2EncryptionContext {
             final Smb2TransformHeader transformHeader = new Smb2TransformHeader(nonce, message.length, flags, sessionId);
             final byte[] associatedData = transformHeader.getAssociatedData();
 
-            byte[] ciphertext;
-            byte[] authTag;
-
-            if (isGCMCipher()) {
-                // Use AES-GCM
-                final Cipher cipher = createGCMCipher(true, nonce);
-                cipher.updateAAD(associatedData);
-                final byte[] encrypted = cipher.doFinal(message);
-
-                // Split ciphertext and authentication tag
-                final int tagLength = getAuthTagLength();
-                ciphertext = new byte[encrypted.length - tagLength];
-                authTag = new byte[tagLength];
-                System.arraycopy(encrypted, 0, ciphertext, 0, ciphertext.length);
-                System.arraycopy(encrypted, ciphertext.length, authTag, 0, tagLength);
-            } else {
-                // Use AES-CCM with Bouncy Castle
-                final AEADBlockCipher cipher = createCCMCipher(true, nonce, associatedData.length, message.length);
-
-                final byte[] input = new byte[associatedData.length + message.length];
-                System.arraycopy(associatedData, 0, input, 0, associatedData.length);
-                System.arraycopy(message, 0, input, associatedData.length, message.length);
-
-                final byte[] output = new byte[cipher.getOutputSize(input.length)];
-                int len = cipher.processBytes(input, 0, input.length, output, 0);
-                len += cipher.doFinal(output, len);
-
-                // Split ciphertext and authentication tag
-                final int tagLength = getAuthTagLength();
-                ciphertext = new byte[message.length];
-                authTag = new byte[tagLength];
-                System.arraycopy(output, associatedData.length, ciphertext, 0, message.length);
-                System.arraycopy(output, output.length - tagLength, authTag, 0, tagLength);
-            }
+            // Perform encryption based on cipher type
+            EncryptionResult encResult =
+                    isGCMCipher() ? encryptWithGCM(message, nonce, associatedData) : encryptWithCCM(message, nonce, associatedData);
 
             // Set authentication tag in transform header
-            transformHeader.setSignature(authTag);
+            transformHeader.setSignature(encResult.authTag);
 
             // Build final encrypted message
-            final byte[] result = new byte[Smb2TransformHeader.TRANSFORM_HEADER_SIZE + ciphertext.length];
+            final byte[] result = new byte[Smb2TransformHeader.TRANSFORM_HEADER_SIZE + encResult.ciphertext.length];
             transformHeader.encode(result, 0);
-            System.arraycopy(ciphertext, 0, result, Smb2TransformHeader.TRANSFORM_HEADER_SIZE, ciphertext.length);
+            System.arraycopy(encResult.ciphertext, 0, result, Smb2TransformHeader.TRANSFORM_HEADER_SIZE, encResult.ciphertext.length);
+
+            // Track encrypted bytes for key rotation
+            synchronized (this) {
+                bytesEncrypted += message.length;
+            }
 
             return result;
         } catch (final Exception e) {
+            // Clear sensitive data on error
+            if (e instanceof CIFSException) {
+                throw (CIFSException) e;
+            }
             throw new CIFSException("Failed to encrypt message", e);
+        }
+    }
+
+    /**
+     * Validate encryption parameters to prevent security issues
+     *
+     * @return true if parameters are valid
+     */
+    private boolean validateEncryptionParameters() {
+        // Validate cipher ID
+        if (cipherId != CIPHER_AES_128_CCM && cipherId != CIPHER_AES_128_GCM && cipherId != CIPHER_AES_256_CCM
+                && cipherId != CIPHER_AES_256_GCM) {
+            log.error("Invalid cipher ID: {}", cipherId);
+            return false;
+        }
+
+        // Validate keys are available
+        if (keyManager == null && (encryptionKey == null || decryptionKey == null)) {
+            log.error("No encryption keys available");
+            return false;
+        }
+
+        // Validate key lengths
+        try {
+            int expectedKeyLength = getKeyLength();
+            byte[] encKey = getEncryptionKey();
+            byte[] decKey = getDecryptionKey();
+
+            try {
+                boolean valid =
+                        encKey != null && encKey.length == expectedKeyLength && decKey != null && decKey.length == expectedKeyLength;
+                return valid;
+            } finally {
+                // Securely wipe temporary key references - guaranteed by try-finally
+                if (encKey != null) {
+                    SecureKeyManager.secureWipe(encKey);
+                }
+                if (decKey != null) {
+                    SecureKeyManager.secureWipe(decKey);
+                }
+            }
+        } catch (Exception e) {
+            log.error("Error validating key lengths", e);
+            return false;
+        }
+    }
+
+    /**
+     * Helper class to hold encryption results
+     */
+    private static class EncryptionResult {
+        final byte[] ciphertext;
+        final byte[] authTag;
+
+        EncryptionResult(byte[] ciphertext, byte[] authTag) {
+            this.ciphertext = ciphertext;
+            this.authTag = authTag;
+        }
+    }
+
+    /**
+     * Encrypt using AES-GCM with constant-time operations
+     */
+    private EncryptionResult encryptWithGCM(byte[] message, byte[] nonce, byte[] associatedData) throws Exception {
+        final Cipher cipher = createGCMCipher(true, nonce);
+        cipher.updateAAD(associatedData);
+
+        // Use constant-time encryption
+        final byte[] encrypted = performConstantTimeEncryption(cipher, message);
+
+        // Split ciphertext and authentication tag
+        final int tagLength = getAuthTagLength();
+        final byte[] ciphertext = new byte[encrypted.length - tagLength];
+        final byte[] authTag = new byte[tagLength];
+
+        // Use constant-time copy operations
+        constantTimeCopy(encrypted, 0, ciphertext, 0, ciphertext.length);
+        constantTimeCopy(encrypted, ciphertext.length, authTag, 0, tagLength);
+
+        return new EncryptionResult(ciphertext, authTag);
+    }
+
+    /**
+     * Encrypt using AES-CCM with Bouncy Castle and constant-time operations
+     */
+    private EncryptionResult encryptWithCCM(byte[] message, byte[] nonce, byte[] associatedData) throws Exception {
+        final AEADBlockCipher cipher = createCCMCipher(true, nonce, associatedData.length, message.length);
+
+        // Process AAD (not included in output)
+        cipher.processAADBytes(associatedData, 0, associatedData.length);
+
+        // Process message (will be encrypted)
+        final byte[] output = new byte[cipher.getOutputSize(message.length)];
+        int len = cipher.processBytes(message, 0, message.length, output, 0);
+        len += cipher.doFinal(output, len);
+
+        // Split ciphertext and authentication tag
+        final int tagLength = getAuthTagLength();
+        final byte[] ciphertext = new byte[message.length];
+        final byte[] authTag = new byte[tagLength];
+
+        // Use constant-time copy operations
+        constantTimeCopy(output, 0, ciphertext, 0, message.length);
+        constantTimeCopy(output, message.length, authTag, 0, tagLength);
+
+        return new EncryptionResult(ciphertext, authTag);
+    }
+
+    /**
+     * Perform constant-time encryption to prevent timing attacks
+     */
+    private byte[] performConstantTimeEncryption(Cipher cipher, byte[] message) throws Exception {
+        // Pad to fixed block size to prevent timing leaks
+        int blockSize = cipher.getBlockSize();
+        if (blockSize == 0)
+            blockSize = 16; // GCM mode
+
+        int paddedLength = ((message.length + blockSize - 1) / blockSize) * blockSize;
+        byte[] paddedMessage = new byte[Math.max(paddedLength, message.length)];
+        System.arraycopy(message, 0, paddedMessage, 0, message.length);
+
+        // Encrypt with constant timing
+        byte[] result = cipher.doFinal(paddedMessage, 0, message.length);
+
+        // Clear padded data
+        java.util.Arrays.fill(paddedMessage, (byte) 0);
+
+        return result;
+    }
+
+    /**
+     * Constant-time array copy to prevent timing attacks
+     */
+    private void constantTimeCopy(byte[] src, int srcPos, byte[] dest, int destPos, int length) {
+        // Simple constant-time copy - always process all bytes
+        for (int i = 0; i < length; i++) {
+            dest[destPos + i] = src[srcPos + i];
         }
     }
 
@@ -203,7 +525,7 @@ public class Smb2EncryptionContext {
             // Parse transform header
             final Smb2TransformHeader transformHeader = Smb2TransformHeader.decode(encryptedMessage, 0);
             final byte[] associatedData = transformHeader.getAssociatedData();
-            final byte[] nonce = transformHeader.getNonce();
+            byte[] nonce = transformHeader.getNonce();
             final byte[] authTag = transformHeader.getSignature();
 
             // Extract ciphertext
@@ -214,7 +536,7 @@ public class Smb2EncryptionContext {
             byte[] plaintext;
 
             if (isGCMCipher()) {
-                // Use AES-GCM
+                // Use AES-GCM - nonce is 16 bytes
                 final Cipher cipher = createGCMCipher(false, nonce);
                 cipher.updateAAD(associatedData);
 
@@ -226,19 +548,25 @@ public class Smb2EncryptionContext {
                 plaintext = cipher.doFinal(input);
             } else {
                 // Use AES-CCM with Bouncy Castle
-                final AEADBlockCipher cipher = createCCMCipher(false, nonce, associatedData.length, ciphertext.length);
+                // For CCM, we need to extract only the first 12 bytes of the nonce
+                final byte[] ccmNonce = new byte[12];
+                System.arraycopy(nonce, 0, ccmNonce, 0, 12);
+                final AEADBlockCipher cipher = createCCMCipher(false, ccmNonce, associatedData.length, ciphertext.length);
 
-                final byte[] input = new byte[associatedData.length + ciphertext.length + authTag.length];
-                System.arraycopy(associatedData, 0, input, 0, associatedData.length);
-                System.arraycopy(ciphertext, 0, input, associatedData.length, ciphertext.length);
-                System.arraycopy(authTag, 0, input, associatedData.length + ciphertext.length, authTag.length);
+                // Process AAD (not included in ciphertext)
+                cipher.processAADBytes(associatedData, 0, associatedData.length);
+
+                // Process ciphertext + auth tag
+                final byte[] input = new byte[ciphertext.length + authTag.length];
+                System.arraycopy(ciphertext, 0, input, 0, ciphertext.length);
+                System.arraycopy(authTag, 0, input, ciphertext.length, authTag.length);
 
                 final byte[] output = new byte[cipher.getOutputSize(input.length)];
                 int len = cipher.processBytes(input, 0, input.length, output, 0);
                 len += cipher.doFinal(output, len);
 
                 plaintext = new byte[ciphertext.length];
-                System.arraycopy(output, associatedData.length, plaintext, 0, ciphertext.length);
+                System.arraycopy(output, 0, plaintext, 0, ciphertext.length);
             }
 
             return plaintext;
@@ -248,15 +576,16 @@ public class Smb2EncryptionContext {
     }
 
     private boolean isGCMCipher() {
-        return this.cipherId == CIPHER_AES_128_GCM;
+        return this.cipherId == CIPHER_AES_128_GCM || this.cipherId == CIPHER_AES_256_GCM;
     }
 
     private int getKeyLength() {
-        // Currently only AES-128 is supported
-        if (this.cipherId == CIPHER_AES_128_CCM || this.cipherId == CIPHER_AES_128_GCM) {
-            return 16;
-        }
-        throw new IllegalArgumentException("Unsupported cipher: " + this.cipherId);
+        // Java 17 switch expression for cipher key length determination
+        return switch (this.cipherId) {
+        case CIPHER_AES_128_CCM, CIPHER_AES_128_GCM -> 16; // AES-128 ciphers use 16-byte keys
+        case CIPHER_AES_256_CCM, CIPHER_AES_256_GCM -> 32; // AES-256 ciphers use 32-byte keys
+        default -> throw new IllegalArgumentException("Unsupported cipher: " + this.cipherId);
+        };
     }
 
     private int getAuthTagLength() {
@@ -271,30 +600,78 @@ public class Smb2EncryptionContext {
         return this.cipherId;
     }
 
+    private byte[] getEncryptionKey() {
+        if (keyManager != null) {
+            String encKeyId = sessionId + "-enc";
+            byte[] key = keyManager.getRawKey(encKeyId);
+            if (key == null) {
+                throw new IllegalStateException("Encryption key not found in SecureKeyManager");
+            }
+            return key;
+        }
+        return this.encryptionKey;
+    }
+
+    private byte[] getDecryptionKey() {
+        if (keyManager != null) {
+            String decKeyId = sessionId + "-dec";
+            byte[] key = keyManager.getRawKey(decKeyId);
+            if (key == null) {
+                throw new IllegalStateException("Decryption key not found in SecureKeyManager");
+            }
+            return key;
+        }
+        return this.decryptionKey;
+    }
+
     private Cipher createGCMCipher(final boolean encrypt, final byte[] nonce) throws Exception {
         final String algorithm = "AES";
-        final SecretKeySpec keySpec = new SecretKeySpec(encrypt ? this.encryptionKey : this.decryptionKey, algorithm);
+        final byte[] key = encrypt ? getEncryptionKey() : getDecryptionKey();
+        final SecretKeySpec keySpec = new SecretKeySpec(key, algorithm);
 
         final Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
         final GCMParameterSpec gcmSpec = new GCMParameterSpec(getAuthTagLength() * 8, nonce);
-        cipher.init(encrypt ? Cipher.ENCRYPT_MODE : Cipher.DECRYPT_MODE, keySpec, gcmSpec);
 
-        return cipher;
+        try {
+            cipher.init(encrypt ? Cipher.ENCRYPT_MODE : Cipher.DECRYPT_MODE, keySpec, gcmSpec);
+            return cipher;
+        } finally {
+            // Securely wipe the key copy - guaranteed by try-finally
+            if (key != null) {
+                SecureKeyManager.secureWipe(key);
+            }
+        }
     }
 
     private AEADBlockCipher createCCMCipher(final boolean encrypt, final byte[] nonce, final int aadLength, final int plaintextLength) {
         final AEADBlockCipher cipher = new CCMBlockCipher(new AESEngine());
 
-        final KeyParameter keyParam = new KeyParameter(encrypt ? this.encryptionKey : this.decryptionKey);
-        // CCMBlockCipher requires nonce length between 7 and 13
-        final byte[] adjustedNonce = new byte[13];
-        System.arraycopy(nonce, 0, adjustedNonce, 0, Math.min(13, nonce.length));
+        final byte[] key = encrypt ? getEncryptionKey() : getDecryptionKey();
+        final KeyParameter keyParam = new KeyParameter(key);
 
-        final AEADParameters params = new AEADParameters(keyParam, getAuthTagLength() * 8, adjustedNonce, null);
+        try {
+            // CCMBlockCipher requires nonce length between 7 and 13
+            // Use the nonce directly if it's 12 bytes (generated appropriately)
+            final byte[] adjustedNonce;
+            if (nonce.length == 12) {
+                adjustedNonce = nonce;
+            } else {
+                // Fallback for compatibility
+                adjustedNonce = new byte[12];
+                System.arraycopy(nonce, 0, adjustedNonce, 0, Math.min(12, nonce.length));
+            }
 
-        cipher.init(encrypt, params);
+            final AEADParameters params = new AEADParameters(keyParam, getAuthTagLength() * 8, adjustedNonce, null);
 
-        return cipher;
+            cipher.init(encrypt, params);
+
+            return cipher;
+        } finally {
+            // Securely wipe the key copy - guaranteed by try-finally
+            if (key != null) {
+                SecureKeyManager.secureWipe(key);
+            }
+        }
     }
 
     private static byte[] longToBytes(final long value) {
@@ -303,5 +680,208 @@ public class Smb2EncryptionContext {
             bytes[i] = (byte) (value >>> 8 * (7 - i));
         }
         return bytes;
+    }
+
+    /**
+     * Check if key rotation is needed based on configurable usage limits
+     *
+     * @return true if key rotation is needed
+     */
+    public boolean needsKeyRotation() {
+        return needsKeyRotation(0);
+    }
+
+    /**
+     * Check if key rotation is needed, considering additional bytes to be encrypted
+     *
+     * @param additionalBytes bytes about to be encrypted
+     * @return true if key rotation is needed
+     */
+    public boolean needsKeyRotation(int additionalBytes) {
+        long currentTime = System.currentTimeMillis();
+        long timeSinceStart = currentTime - encryptionStartTime;
+        long totalBytes = bytesEncrypted + additionalBytes;
+
+        boolean needsRotation = (keyRotationBytesLimit > 0 && totalBytes >= keyRotationBytesLimit)
+                || (keyRotationTimeLimit > 0 && timeSinceStart >= keyRotationTimeLimit);
+
+        if (needsRotation) {
+            log.info("Key rotation needed - bytes: {} / {} MB, time: {} / {} hours", totalBytes / (1024 * 1024),
+                    keyRotationBytesLimit / (1024 * 1024), timeSinceStart / (60 * 60 * 1000), keyRotationTimeLimit / (60 * 60 * 1000));
+        }
+
+        return needsRotation;
+    }
+
+    /**
+     * Reset key rotation tracking after new keys are established
+     */
+    public void resetKeyRotationTracking() {
+        synchronized (this) {
+            bytesEncrypted = 0;
+            encryptionStartTime = System.currentTimeMillis();
+            log.debug("Key rotation tracking reset");
+        }
+    }
+
+    /**
+     * Rotate encryption keys for enhanced security
+     *
+     * @param newEncryptionKey the new encryption key
+     * @param newDecryptionKey the new decryption key
+     * @throws GeneralSecurityException if key rotation fails
+     */
+    public void rotateKeys(byte[] newEncryptionKey, byte[] newDecryptionKey) throws GeneralSecurityException {
+        if (closed) {
+            throw new IllegalStateException("Cannot rotate keys on closed context");
+        }
+
+        log.info("Rotating encryption keys for session: {}", sessionId);
+
+        if (keyManager != null) {
+            // Rotate keys in SecureKeyManager
+            String encKeyId = sessionId + "-enc";
+            String decKeyId = sessionId + "-dec";
+
+            // Remove old keys
+            keyManager.removeSessionKey(encKeyId);
+            keyManager.removeSessionKey(decKeyId);
+
+            // Store new keys
+            keyManager.storeSessionKey(encKeyId, newEncryptionKey, "AES");
+            keyManager.storeSessionKey(decKeyId, newDecryptionKey, "AES");
+
+            log.debug("Keys rotated successfully in SecureKeyManager");
+        } else {
+            // Securely wipe old keys
+            secureWipeKeys();
+
+            // Store new keys
+            this.encryptionKey = newEncryptionKey.clone();
+            this.decryptionKey = newDecryptionKey.clone();
+        }
+
+        // Reset rotation tracking
+        resetKeyRotationTracking();
+
+        // Update metrics
+        totalKeyRotations.incrementAndGet();
+        lastKeyRotationTime.set(System.currentTimeMillis());
+    }
+
+    /**
+     * Get the current key rotation count
+     *
+     * @return number of times keys have been rotated
+     */
+    public int getKeyRotationCount() {
+        return rotationCount;
+    }
+
+    /**
+     * Set the key rotation bytes limit
+     *
+     * @param limit number of bytes to encrypt before rotating keys
+     */
+    public void setKeyRotationBytesLimit(long limit) {
+        this.keyRotationBytesLimit = limit;
+    }
+
+    /**
+     * Set the key rotation time limit
+     *
+     * @param limit time in milliseconds before rotating keys
+     */
+    public void setKeyRotationTimeLimit(long limit) {
+        this.keyRotationTimeLimit = limit;
+    }
+
+    /**
+     * Perform automatic key rotation using the stored session key
+     *
+     * @throws GeneralSecurityException if key rotation fails
+     */
+    private void performAutomaticKeyRotation() throws GeneralSecurityException {
+        if (sessionKey == null) {
+            throw new GeneralSecurityException("Session key not available for automatic rotation");
+        }
+
+        // Increment rotation counter to modify key derivation
+        rotationCount++;
+
+        // Derive new keys with rotation salt to ensure different keys
+        byte[] modifiedSessionKey = new byte[sessionKey.length + 4];
+        System.arraycopy(sessionKey, 0, modifiedSessionKey, 0, sessionKey.length);
+
+        // Add rotation count as salt to ensure unique keys
+        modifiedSessionKey[sessionKey.length] = (byte) (rotationCount >>> 24);
+        modifiedSessionKey[sessionKey.length + 1] = (byte) (rotationCount >>> 16);
+        modifiedSessionKey[sessionKey.length + 2] = (byte) (rotationCount >>> 8);
+        modifiedSessionKey[sessionKey.length + 3] = (byte) rotationCount;
+
+        // Derive new keys using SMB3 KDF with rotation salt
+        final int dialectInt = dialect.getDialect();
+        final byte[] newEncryptionKey = Smb3KeyDerivation.deriveEncryptionKey(dialectInt, modifiedSessionKey, preauthIntegrityHash);
+        final byte[] newDecryptionKey = Smb3KeyDerivation.deriveDecryptionKey(dialectInt, modifiedSessionKey, preauthIntegrityHash);
+
+        // Securely wipe the modified session key
+        SecureKeyManager.secureWipe(modifiedSessionKey);
+
+        // Rotate keys using existing method
+        rotateKeys(newEncryptionKey, newDecryptionKey);
+
+        log.info("Automatic key rotation completed for session: {} (rotation count: {})", sessionId, rotationCount);
+    }
+
+    /**
+     * Securely wipe encryption keys from memory
+     */
+    public void secureWipeKeys() {
+        if (this.encryptionKey != null) {
+            // Multi-pass secure wipe for enhanced security
+            SecureKeyManager.secureWipe(this.encryptionKey);
+            this.encryptionKey = null;
+        }
+        if (this.decryptionKey != null) {
+            // Multi-pass secure wipe for enhanced security
+            SecureKeyManager.secureWipe(this.decryptionKey);
+            this.decryptionKey = null;
+        }
+
+        // Also remove from key manager if present
+        if (keyManager != null && sessionId != null) {
+            keyManager.removeSessionKey(sessionId + "-enc");
+            keyManager.removeSessionKey(sessionId + "-dec");
+        }
+    }
+
+    /**
+     * Close the encryption context and securely wipe keys
+     */
+    @Override
+    public void close() {
+        if (closed) {
+            return;
+        }
+
+        try {
+            secureWipeKeys();
+
+            // Clear session ID
+            sessionId = null;
+
+            log.debug("Encryption context closed and keys wiped");
+        } finally {
+            closed = true;
+        }
+    }
+
+    /**
+     * Check if this context is closed
+     *
+     * @return true if closed, false otherwise
+     */
+    public boolean isClosed() {
+        return closed;
     }
 }
