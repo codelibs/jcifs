@@ -487,6 +487,29 @@ public interface Configuration {
     boolean isEncryptionEnabled();
 
     /**
+     * Property {@code jcifs.smb.client.preferredCiphers} (string, default "AES_128_GCM,AES_128_CCM,AES_256_GCM,AES_256_CCM")
+     *
+     * @return preferred encryption cipher list in order of preference for SMB3 encryption
+     * @since 2.2
+     */
+    String getPreferredCiphers();
+
+    /**
+     * Property {@code jcifs.smb.client.aes256Enabled} (boolean, default true)
+     *
+     * @return whether AES-256 encryption ciphers are enabled for SMB3.x
+     * @since 2.2
+     */
+    boolean isAES256Enabled();
+
+    /**
+     * Property {@code jcifs.smb.client.compressionEnabled} (boolean, default false)
+     *
+     * @return whether SMB3 compression is enabled
+     */
+    boolean isCompressionEnabled();
+
+    /**
      *
      * Property {@code jcifs.smb.client.forceExtendedSecurity} (boolean, default false)
      *

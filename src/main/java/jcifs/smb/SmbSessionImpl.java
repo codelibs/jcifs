@@ -25,13 +25,13 @@ import java.net.Socket;
 import java.security.GeneralSecurityException;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -138,7 +138,7 @@ final class SmbSessionImpl implements SmbSessionInternal {
         this.targetDomain = targetDomain;
         this.targetHost = targetHost;
         this.transport = transport.acquire();
-        this.trees = new ArrayList<>();
+        this.trees = new CopyOnWriteArrayList<>();
         this.credentials = tf.getCredentials().unwrap(CredentialsInternal.class).clone();
 
         // Initialize multi-channel support
@@ -221,8 +221,16 @@ final class SmbSessionImpl implements SmbSessionInternal {
      */
     @Override
     protected void finalize() throws Throwable {
-        if (isConnected() && this.usageCount.get() != 0) {
-            log.warn("Session was not properly released");
+        try {
+            if (isConnected() && this.usageCount.get() != 0) {
+                log.warn("Session was not properly released, performing emergency cleanup: " + this);
+                // Perform emergency cleanup to prevent memory leaks
+                emergencyCleanup();
+            }
+        } catch (Exception e) {
+            log.error("Error during session finalization", e);
+        } finally {
+            super.finalize();
         }
     }
 
@@ -249,13 +257,21 @@ final class SmbSessionImpl implements SmbSessionInternal {
             if (log.isDebugEnabled()) {
                 log.debug("Usage dropped to zero, release connection " + this.transport);
             }
+            // Ensure atomic cleanup of all resources
             synchronized (this) {
+                // Double-check usage count within synchronized block
+                if (this.usageCount.get() != 0) {
+                    return; // Another thread acquired the session
+                }
+
                 if (this.transportAcquired.compareAndSet(true, false)) {
                     this.transport.release();
                 }
+
                 // Shutdown channel manager
                 if (this.channelManager != null) {
                     this.channelManager.shutdown();
+                    this.channelManager = null;
                 }
 
                 // Shutdown witness client
@@ -264,9 +280,113 @@ final class SmbSessionImpl implements SmbSessionInternal {
                     this.witnessClient = null;
                     this.witnessEnabled = false;
                 }
+
+                // Clear trees collection atomically
+                if (this.trees != null) {
+                    this.trees.clear();
+                }
             }
         } else if (usage < 0) {
             throw new RuntimeCIFSException("Usage count dropped below zero");
+        }
+    }
+
+    /**
+     * Emergency cleanup method called during finalization to prevent memory leaks
+     */
+    private void emergencyCleanup() {
+        try {
+            // Force usage count to zero to trigger cleanup
+            this.usageCount.set(0);
+
+            synchronized (this) {
+                // Emergency release of transport
+                if (this.transportAcquired.compareAndSet(true, false)) {
+                    try {
+                        this.transport.release();
+                    } catch (Exception e) {
+                        log.debug("Error releasing transport during emergency cleanup", e);
+                    }
+                }
+
+                // Emergency shutdown of managers
+                if (this.channelManager != null) {
+                    try {
+                        this.channelManager.shutdown();
+                        this.channelManager = null;
+                    } catch (Exception e) {
+                        log.debug("Error shutting down channel manager during emergency cleanup", e);
+                    }
+                }
+
+                if (this.witnessClient != null) {
+                    try {
+                        this.witnessClient.close();
+                        this.witnessClient = null;
+                        this.witnessEnabled = false;
+                    } catch (Exception e) {
+                        log.debug("Error closing witness client during emergency cleanup", e);
+                    }
+                }
+
+                if (this.leaseManager != null) {
+                    try {
+                        this.leaseManager.shutdown();
+                        this.leaseManager = null;
+                    } catch (Exception e) {
+                        log.debug("Error shutting down lease manager during emergency cleanup", e);
+                    }
+                }
+
+                if (this.persistentHandleManager != null) {
+                    try {
+                        this.persistentHandleManager.shutdown();
+                        this.persistentHandleManager = null;
+                    } catch (Exception e) {
+                        log.debug("Error shutting down persistent handle manager during emergency cleanup", e);
+                    }
+                }
+
+                // Emergency cleanup of trees
+                if (this.trees != null) {
+                    try {
+                        // Clear all tree references
+                        for (SmbTreeImpl tree : this.trees) {
+                            try {
+                                // Force release trees during emergency cleanup
+                                tree.release();
+                            } catch (Exception e) {
+                                log.debug("Error during emergency tree cleanup", e);
+                            }
+                        }
+                        this.trees.clear();
+                    } catch (Exception e) {
+                        log.debug("Error clearing trees during emergency cleanup", e);
+                    }
+                }
+
+                // Clear sensitive data
+                if (this.sessionKey != null) {
+                    java.util.Arrays.fill(this.sessionKey, (byte) 0);
+                    this.sessionKey = null;
+                }
+
+                if (this.preauthIntegrityHash != null) {
+                    java.util.Arrays.fill(this.preauthIntegrityHash, (byte) 0);
+                    this.preauthIntegrityHash = null;
+                }
+
+                // Clear encryption context
+                if (this.encryptionContext != null) {
+                    try {
+                        this.encryptionContext = null;
+                    } catch (Exception e) {
+                        log.debug("Error clearing encryption context during emergency cleanup", e);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("Failed to perform emergency cleanup", e);
         }
     }
 

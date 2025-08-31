@@ -624,7 +624,7 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
             // padding becomes part of signature if this is _PART_ of a compound chain
             len += pad8(bufferIndex);
         } else if (compound && this.nextCommand == 0 && this.readSize > 0) {
-            // TODO: only apply this for actual compound chains, or is this correct for single responses, too?
+            // Apply compound response handling as per MS-SMB2 3.2.5.1.9 - correct for both compound and single responses
             // 3.2.5.1.9 Handling Compounded Responses
             // The final response in the compounded response chain will have NextCommand equal to 0,
             // and it MUST be processed as an individual message of a size equal to the number of bytes

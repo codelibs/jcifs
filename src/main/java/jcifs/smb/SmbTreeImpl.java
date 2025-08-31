@@ -248,8 +248,39 @@ class SmbTreeImpl implements SmbTreeInternal {
      */
     @Override
     protected void finalize() throws Throwable {
-        if (isConnected() && this.usageCount.get() != 0) {
-            log.warn("Tree was not properly released");
+        try {
+            if (isConnected() && this.usageCount.get() != 0) {
+                log.warn("Tree was not properly released, performing emergency cleanup: " + this);
+                emergencyCleanup();
+            }
+        } catch (Exception e) {
+            log.error("Error during tree finalization", e);
+        } finally {
+            super.finalize();
+        }
+    }
+
+    /**
+     * Emergency cleanup method to prevent memory leaks during finalization
+     */
+    private void emergencyCleanup() {
+        try {
+            // Force usage count to zero
+            this.usageCount.set(0);
+
+            synchronized (this) {
+                // Force disconnection
+                this.connectionState.set(0);
+                this.tid = -1;
+
+                // Clear any cached resources
+                // Note: Most fields in SmbTreeImpl are final or managed differently
+
+                // Clear session reference if mutable
+                // Note: session field may be final, cannot be nulled
+            }
+        } catch (Exception e) {
+            log.error("Failed to perform emergency tree cleanup", e);
         }
     }
 

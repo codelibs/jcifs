@@ -484,17 +484,37 @@ public class Smb2NegotiateResponse extends ServerMessageBlock2Response implement
     protected int readBytesWireFormat(final byte[] buffer, int bufferIndex) throws SMBProtocolDecodingException {
         final int start = bufferIndex;
 
+        // Validate minimum buffer size for SMB2 negotiate response
+        if (buffer == null || buffer.length < bufferIndex + 65) {
+            throw new SMBProtocolDecodingException("Buffer too small for SMB2 negotiate response (minimum 65 bytes required)");
+        }
+
         final int structureSize = SMBUtil.readInt2(buffer, bufferIndex);
         if (structureSize != 65) {
-            throw new SMBProtocolDecodingException("Structure size is not 65");
+            throw new SMBProtocolDecodingException("Structure size is not 65, got: " + structureSize);
         }
 
         this.securityMode = SMBUtil.readInt2(buffer, bufferIndex + 2);
+        // Validate security mode flags
+        if ((this.securityMode & ~(Smb2Constants.SMB2_NEGOTIATE_SIGNING_ENABLED | Smb2Constants.SMB2_NEGOTIATE_SIGNING_REQUIRED)) != 0) {
+            log.warn("Server returned unknown security mode flags: 0x{}", Integer.toHexString(this.securityMode));
+        }
         bufferIndex += 4;
 
         this.dialectRevision = SMBUtil.readInt2(buffer, bufferIndex);
         final int negotiateContextCount = SMBUtil.readInt2(buffer, bufferIndex + 2);
+
+        // Validate negotiate context count - prevent excessive memory allocation
+        if (negotiateContextCount < 0 || negotiateContextCount > 100) {
+            throw new SMBProtocolDecodingException("Invalid negotiate context count: " + negotiateContextCount + " (must be 0-100)");
+        }
+
         bufferIndex += 4;
+
+        // Validate sufficient buffer space for server GUID and capabilities
+        if (buffer.length < bufferIndex + 16 + 4 + 4 + 4 + 4) {
+            throw new SMBProtocolDecodingException("Buffer too small for server GUID and capabilities section");
+        }
 
         System.arraycopy(buffer, bufferIndex, this.serverGuid, 0, 16);
         bufferIndex += 16;
@@ -503,11 +523,26 @@ public class Smb2NegotiateResponse extends ServerMessageBlock2Response implement
         bufferIndex += 4;
 
         this.maxTransactSize = SMBUtil.readInt4(buffer, bufferIndex);
-        bufferIndex += 4;
-        this.maxReadSize = SMBUtil.readInt4(buffer, bufferIndex);
-        bufferIndex += 4;
-        this.maxWriteSize = SMBUtil.readInt4(buffer, bufferIndex);
-        bufferIndex += 4;
+        this.maxReadSize = SMBUtil.readInt4(buffer, bufferIndex + 4);
+        this.maxWriteSize = SMBUtil.readInt4(buffer, bufferIndex + 8);
+
+        // Validate reasonable buffer sizes to prevent resource exhaustion
+        if (this.maxTransactSize < 0 || this.maxTransactSize > 16777216) { // 16MB max
+            throw new SMBProtocolDecodingException("Invalid maxTransactSize: " + this.maxTransactSize + " (must be 0-16777216)");
+        }
+        if (this.maxReadSize < 0 || this.maxReadSize > 16777216) { // 16MB max
+            throw new SMBProtocolDecodingException("Invalid maxReadSize: " + this.maxReadSize + " (must be 0-16777216)");
+        }
+        if (this.maxWriteSize < 0 || this.maxWriteSize > 16777216) { // 16MB max
+            throw new SMBProtocolDecodingException("Invalid maxWriteSize: " + this.maxWriteSize + " (must be 0-16777216)");
+        }
+
+        bufferIndex += 12;
+
+        // Validate sufficient buffer space for timestamps and offsets
+        if (buffer.length < bufferIndex + 8 + 8 + 4 + 4) {
+            throw new SMBProtocolDecodingException("Buffer too small for timestamps and offsets section");
+        }
 
         this.systemTime = SMBUtil.readTime(buffer, bufferIndex);
         bufferIndex += 8;
@@ -521,8 +556,24 @@ public class Smb2NegotiateResponse extends ServerMessageBlock2Response implement
         final int negotiateContextOffset = SMBUtil.readInt4(buffer, bufferIndex);
         bufferIndex += 4;
 
+        // Validate security buffer parameters
+        if (securityBufferLength < 0 || securityBufferLength > 65536) { // 64KB max for security buffer
+            throw new SMBProtocolDecodingException("Invalid security buffer length: " + securityBufferLength + " (must be 0-65536)");
+        }
+        if (securityBufferOffset < 0) {
+            throw new SMBProtocolDecodingException("Invalid security buffer offset: " + securityBufferOffset + " (must be non-negative)");
+        }
+
         final int hdrStart = getHeaderStart();
-        if (hdrStart + securityBufferOffset + securityBufferLength < buffer.length) {
+        if (securityBufferLength > 0) {
+            // Validate that security buffer doesn't exceed available data
+            if (hdrStart + securityBufferOffset < hdrStart || // Check for integer overflow
+                    hdrStart + securityBufferOffset + securityBufferLength < 0 || // Check for integer overflow
+                    hdrStart + securityBufferOffset + securityBufferLength > buffer.length) {
+                throw new SMBProtocolDecodingException("Security buffer extends beyond available data (offset: " + securityBufferOffset
+                        + ", length: " + securityBufferLength + ", buffer size: " + buffer.length + ")");
+            }
+
             this.securityBuffer = new byte[securityBufferLength];
             System.arraycopy(buffer, hdrStart + securityBufferOffset, this.securityBuffer, 0, securityBufferLength);
             bufferIndex += securityBufferLength;
@@ -532,21 +583,62 @@ public class Smb2NegotiateResponse extends ServerMessageBlock2Response implement
         bufferIndex += pad;
 
         if (this.dialectRevision == 0x0311 && negotiateContextOffset != 0 && negotiateContextCount != 0) {
+            // Validate negotiate context offset
+            if (negotiateContextOffset < 0) {
+                throw new SMBProtocolDecodingException(
+                        "Invalid negotiate context offset: " + negotiateContextOffset + " (must be non-negative)");
+            }
+
             int ncpos = getHeaderStart() + negotiateContextOffset;
+
+            // Validate that negotiate context data doesn't start beyond buffer
+            if (ncpos < 0 || ncpos >= buffer.length) {
+                throw new SMBProtocolDecodingException(
+                        "Negotiate context offset points beyond buffer (offset: " + ncpos + ", buffer size: " + buffer.length + ")");
+            }
+
             final NegotiateContextResponse[] contexts = new NegotiateContextResponse[negotiateContextCount];
             for (int i = 0; i < negotiateContextCount; i++) {
+                // Validate sufficient buffer space for context header
+                if (ncpos + 8 > buffer.length) {
+                    throw new SMBProtocolDecodingException("Buffer too small for negotiate context header at position " + i);
+                }
+
                 final int type = SMBUtil.readInt2(buffer, ncpos);
                 final int dataLen = SMBUtil.readInt2(buffer, ncpos + 2);
+
+                // Validate context data length
+                if (dataLen < 0 || dataLen > 1024) { // 1KB max per context
+                    throw new SMBProtocolDecodingException(
+                            "Invalid negotiate context data length: " + dataLen + " at position " + i + " (must be 0-1024)");
+                }
+
                 ncpos += 4;
                 ncpos += 4; // Reserved
+
+                // Validate that context data doesn't exceed buffer
+                if (ncpos + dataLen > buffer.length) {
+                    throw new SMBProtocolDecodingException("Negotiate context data extends beyond buffer at position " + i
+                            + " (data start: " + ncpos + ", length: " + dataLen + ", buffer size: " + buffer.length + ")");
+                }
+
                 final NegotiateContextResponse ctx = createContext(type);
                 if (ctx != null) {
-                    ctx.decode(buffer, ncpos, dataLen);
-                    contexts[i] = ctx;
+                    try {
+                        ctx.decode(buffer, ncpos, dataLen);
+                        contexts[i] = ctx;
+                    } catch (Exception e) {
+                        throw new SMBProtocolDecodingException(
+                                "Failed to decode negotiate context at position " + i + ": " + e.getMessage(), e);
+                    }
                 }
                 ncpos += dataLen;
                 if (i != negotiateContextCount - 1) {
-                    ncpos += pad8(ncpos);
+                    int padding = pad8(ncpos);
+                    if (ncpos + padding > buffer.length) {
+                        throw new SMBProtocolDecodingException("Negotiate context padding extends beyond buffer at position " + i);
+                    }
+                    ncpos += padding;
                 }
             }
             this.negotiateContexts = contexts;
@@ -568,6 +660,8 @@ public class Smb2NegotiateResponse extends ServerMessageBlock2Response implement
             return new EncryptionNegotiateContext();
         case PreauthIntegrityNegotiateContext.NEGO_CTX_PREAUTH_TYPE:
             return new PreauthIntegrityNegotiateContext();
+        case CompressionNegotiateContext.NEGO_CTX_COMPRESSION_TYPE:
+            return new CompressionNegotiateContext();
         }
         return null;
     }

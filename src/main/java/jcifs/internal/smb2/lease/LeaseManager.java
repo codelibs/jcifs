@@ -566,7 +566,31 @@ public class LeaseManager {
             }
         }
 
+        // Clean up expired weak references
+        cleanupExpiredReferences();
+
         // Release all leases
         releaseAll();
+
+        // Clear file cache
+        fileCache.clear();
+    }
+
+    /**
+     * Clean up expired weak references from the file cache
+     */
+    private void cleanupExpiredReferences() {
+        try {
+            fileCache.entrySet().removeIf(entry -> {
+                WeakReference<SmbFile> ref = entry.getValue();
+                if (ref.get() == null) {
+                    log.debug("Removing expired file cache entry: {}", entry.getKey());
+                    return true;
+                }
+                return false;
+            });
+        } catch (Exception e) {
+            log.error("Error cleaning up expired file cache references", e);
+        }
     }
 }

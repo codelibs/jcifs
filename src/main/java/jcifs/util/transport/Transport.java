@@ -170,8 +170,20 @@ public abstract class Transport implements Runnable, AutoCloseable {
      */
     @Override
     protected void finalize() throws Throwable {
-        if (!isDisconnected() && this.usageCount.get() != 0) {
-            log.warn("Session was not properly released");
+        try {
+            if (!isDisconnected() && this.usageCount.get() != 0) {
+                log.warn("Transport was not properly released, performing emergency cleanup");
+                // Force disconnect to prevent resource leaks
+                try {
+                    disconnect(true);
+                } catch (Exception e) {
+                    log.debug("Error during emergency transport disconnect", e);
+                }
+            }
+        } catch (Exception e) {
+            log.error("Error during transport finalization", e);
+        } finally {
+            super.finalize();
         }
     }
 

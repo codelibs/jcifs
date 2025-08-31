@@ -46,6 +46,16 @@ public class EncryptionNegotiateContext implements NegotiateContextRequest, Nego
      */
     public static final int CIPHER_AES128_GCM = 0x2;
 
+    /**
+     * AES 256 CCM
+     */
+    public static final int CIPHER_AES256_CCM = 0x3;
+
+    /**
+     * AES 256 GCM
+     */
+    public static final int CIPHER_AES256_GCM = 0x4;
+
     private int[] ciphers;
 
     /**

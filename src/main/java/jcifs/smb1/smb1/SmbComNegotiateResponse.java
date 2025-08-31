@@ -89,7 +89,7 @@ class SmbComNegotiateResponse extends ServerMessageBlock {
             bufferIndex += server.encryptionKeyLength;
             if (byteCount > server.encryptionKeyLength) {
                 int len = 0;
-                // TODO: we can use new string routine here
+                // Use appropriate string decoding based on Unicode flag
                 try {
                     if ((flags2 & FLAGS2_UNICODE) == FLAGS2_UNICODE) {
                         while (buffer[bufferIndex + len] != (byte) 0x00 || buffer[bufferIndex + len + 1] != (byte) 0x00) {

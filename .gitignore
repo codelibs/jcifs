@@ -6,3 +6,5 @@
 .idea
 .DS_Store
 .repository
+/.vscode
+/.serena

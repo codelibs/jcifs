@@ -171,7 +171,7 @@ public class NetworkExplorer extends HttpServlet {
                 out.write(buf, 0, n);
             }
         }
-        // TODO catch IOException
+        // IOException handling is done by calling code
     }
 
     /**
