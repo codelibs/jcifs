@@ -65,6 +65,38 @@ public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal
     private static final SecureKeyManager keyManager = new SecureKeyManager();
     private static final SecurityAuditLogger auditLogger = SecurityAuditLogger.getInstance();
 
+    /**
+     * Performs constant-time comparison of two char arrays to prevent timing attacks.
+     * This method always compares the full length of both arrays, regardless of when
+     * differences are found, making the execution time independent of the position
+     * of differing characters.
+     *
+     * @param a first char array to compare
+     * @param b second char array to compare
+     * @return true if arrays are equal, false otherwise
+     */
+    private static boolean constantTimeEquals(char[] a, char[] b) {
+        if (a == null && b == null) {
+            return true;
+        }
+        if (a == null || b == null) {
+            return false;
+        }
+
+        // Always compare full length to prevent timing leaks
+        int lengthEqual = (a.length == b.length) ? 1 : 0;
+        int maxLength = Math.max(a.length, b.length);
+
+        int result = lengthEqual;
+        for (int i = 0; i < maxLength; i++) {
+            char charA = (i < a.length) ? a[i] : '\0';
+            char charB = (i < b.length) ? b[i] : '\0';
+            result &= (charA == charB) ? 1 : 0;
+        }
+
+        return result == 1;
+    }
+
     /** The authentication type */
     private AuthenticationType type;
     /** The authentication domain */
@@ -536,7 +568,7 @@ public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal
             String domA = ntlm.getUserDomain() != null ? ntlm.getUserDomain().toUpperCase() : null;
             String domB = this.getUserDomain() != null ? this.getUserDomain().toUpperCase() : null;
             return ntlm.type == this.type && Objects.equals(domA, domB) && ntlm.getUsername().equalsIgnoreCase(this.getUsername())
-                    && Arrays.equals(getPasswordAsCharArray(), ntlm.getPasswordAsCharArray());
+                    && constantTimeEquals(getPasswordAsCharArray(), ntlm.getPasswordAsCharArray());
         }
         return false;
     }

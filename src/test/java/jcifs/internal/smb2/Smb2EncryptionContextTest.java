@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -346,7 +347,7 @@ class Smb2EncryptionContextTest {
     }
 
     @Test
-    @DisplayName("Should generate secure nonces with mixed random and counter components")
+    @DisplayName("Should generate SMB3-compliant nonces with guaranteed uniqueness")
     void testSMB3CompliantNonceGeneration() {
         // Given - GCM cipher context
         Smb2EncryptionContext gcmContext = new Smb2EncryptionContext(EncryptionNegotiateContext.CIPHER_AES128_GCM, DialectVersion.SMB311,
@@ -357,7 +358,7 @@ class Smb2EncryptionContextTest {
         byte[] nonce2 = gcmContext.generateNonce();
         byte[] nonce3 = gcmContext.generateNonce();
 
-        // Then - Nonces should be unique (using SecureRandom + counter XOR)
+        // Then - Nonces should be unique (SMB3 compliant: random + counter)
         assertFalse(Arrays.equals(nonce1, nonce2), "Nonces should be different");
         assertFalse(Arrays.equals(nonce2, nonce3), "Nonces should be different");
         assertFalse(Arrays.equals(nonce1, nonce3), "Nonces should be different");
@@ -367,15 +368,13 @@ class Smb2EncryptionContextTest {
         assertEquals(16, nonce2.length, "GCM nonce should be 16 bytes");
         assertEquals(16, nonce3.length, "GCM nonce should be 16 bytes");
 
-        // Nonces should not be all zeros (SecureRandom prevents this)
-        boolean hasNonZero = false;
-        for (byte b : nonce1) {
-            if (b != 0) {
-                hasNonZero = true;
-                break;
-            }
-        }
-        assertTrue(hasNonZero, "Nonce should not be all zeros");
+        // For GCM, last 4 bytes should contain incrementing counter
+        ByteBuffer buffer1 = ByteBuffer.wrap(nonce1, 12, 4).order(java.nio.ByteOrder.LITTLE_ENDIAN);
+        ByteBuffer buffer2 = ByteBuffer.wrap(nonce2, 12, 4).order(java.nio.ByteOrder.LITTLE_ENDIAN);
+        int counter1 = buffer1.getInt();
+        int counter2 = buffer2.getInt();
+
+        assertEquals(counter1 + 1, counter2, "Counter should increment between nonces");
     }
 
     @Test
@@ -443,6 +442,14 @@ class Smb2EncryptionContextTest {
         assertEquals(12, nonce1.length, "CCM nonce should be 12 bytes");
         assertEquals(12, nonce2.length, "CCM nonce should be 12 bytes");
         assertFalse(Arrays.equals(nonce1, nonce2), "Consecutive nonces should be different");
+
+        // For CCM, verify counter-based generation (first 8 bytes contain counter)
+        ByteBuffer buffer1 = ByteBuffer.wrap(nonce1, 0, 8).order(java.nio.ByteOrder.LITTLE_ENDIAN);
+        ByteBuffer buffer2 = ByteBuffer.wrap(nonce2, 0, 8).order(java.nio.ByteOrder.LITTLE_ENDIAN);
+        long counter1 = buffer1.getLong();
+        long counter2 = buffer2.getLong();
+
+        assertEquals(counter1 + 1, counter2, "CCM counter should increment between nonces");
     }
 
     @Test

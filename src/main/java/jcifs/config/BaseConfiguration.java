@@ -77,6 +77,12 @@ public class BaseConfiguration implements Configuration {
     protected boolean ipcSigningEnforced = true;
     /** Whether SMB3 encryption is enabled */
     protected boolean encryptionEnabled = false;
+    /** Whether SMB3 compression is enabled */
+    protected boolean compressionEnabled = false;
+    /** Preferred encryption ciphers in order of preference */
+    protected String preferredCiphers = "AES_128_GCM,AES_128_CCM,AES_256_GCM,AES_256_CCM";
+    /** Whether AES-256 encryption is enabled */
+    protected boolean aes256Enabled = true;
     /** Whether to use SMB2/SMB3 leases for caching */
     protected boolean useLease = true;
     /** Lease timeout in milliseconds */
@@ -674,6 +680,21 @@ public class BaseConfiguration implements Configuration {
     @Override
     public boolean isEncryptionEnabled() {
         return this.encryptionEnabled;
+    }
+
+    @Override
+    public boolean isCompressionEnabled() {
+        return this.compressionEnabled;
+    }
+
+    @Override
+    public String getPreferredCiphers() {
+        return this.preferredCiphers;
+    }
+
+    @Override
+    public boolean isAES256Enabled() {
+        return this.aes256Enabled;
     }
 
     @Override

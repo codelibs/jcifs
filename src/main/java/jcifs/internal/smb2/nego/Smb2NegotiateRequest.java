@@ -17,6 +17,7 @@
  */
 package jcifs.internal.smb2.nego;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -88,8 +89,27 @@ public class Smb2NegotiateRequest extends ServerMessageBlock2Request<Smb2Negotia
             this.preauthSalt = salt;
 
             if (config.isEncryptionEnabled()) {
-                negoContexts.add(new EncryptionNegotiateContext(config,
-                        new int[] { EncryptionNegotiateContext.CIPHER_AES128_GCM, EncryptionNegotiateContext.CIPHER_AES128_CCM }));
+                // Build cipher list based on AES-256 support
+                List<Integer> ciphers = new ArrayList<>();
+
+                // Prefer GCM over CCM for better performance
+                if (config.isAES256Enabled()) {
+                    ciphers.add(EncryptionNegotiateContext.CIPHER_AES256_GCM);
+                    ciphers.add(EncryptionNegotiateContext.CIPHER_AES256_CCM);
+                }
+
+                // Always include AES-128 for compatibility
+                ciphers.add(EncryptionNegotiateContext.CIPHER_AES128_GCM);
+                ciphers.add(EncryptionNegotiateContext.CIPHER_AES128_CCM);
+
+                int[] cipherArray = ciphers.stream().mapToInt(Integer::intValue).toArray();
+                negoContexts.add(new EncryptionNegotiateContext(config, cipherArray));
+            }
+
+            // Add compression context for SMB3 compression support
+            if (config.isCompressionEnabled()) {
+                negoContexts.add(new CompressionNegotiateContext(config, new int[] { CompressionNegotiateContext.COMPRESSION_LZ77,
+                        CompressionNegotiateContext.COMPRESSION_LZ77_HUFFMAN, CompressionNegotiateContext.COMPRESSION_LZNT1 }));
             }
         }
 

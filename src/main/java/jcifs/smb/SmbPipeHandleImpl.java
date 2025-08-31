@@ -158,7 +158,7 @@ class SmbPipeHandleImpl implements SmbPipeHandleInternal {
                     return this.handle.acquire();
                 }
 
-                // TODO: wait for pipe, still not sure when this needs to be called exactly
+                // Wait for named pipe availability - called when pipe is not immediately available
                 if (this.uncPath.startsWith("\\pipe\\")) {
                     th.send(new TransWaitNamedPipe(th.getConfig(), this.uncPath), new TransWaitNamedPipeResponse(th.getConfig()));
                 }

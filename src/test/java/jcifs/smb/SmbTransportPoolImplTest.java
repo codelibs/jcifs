@@ -164,24 +164,28 @@ class SmbTransportPoolImplTest {
         SmbTransportImpl pooled = pool.getSmbTransport(ctx, address, 445, false);
         SmbTransportImpl nonPooled = pool.getSmbTransport(ctx, address, 445, true);
 
-        // Use reflection to replace with spies
+        // Use reflection to access concurrent collections
         Field connectionsField = SmbTransportPoolImpl.class.getDeclaredField("connections");
         connectionsField.setAccessible(true);
         @SuppressWarnings("unchecked")
-        List<SmbTransportImpl> connections = (List<SmbTransportImpl>) connectionsField.get(pool);
+        java.util.concurrent.ConcurrentLinkedQueue<SmbTransportImpl> connections =
+                (java.util.concurrent.ConcurrentLinkedQueue<SmbTransportImpl>) connectionsField.get(pool);
 
         Field nonPooledField = SmbTransportPoolImpl.class.getDeclaredField("nonPooledConnections");
         nonPooledField.setAccessible(true);
         @SuppressWarnings("unchecked")
-        List<SmbTransportImpl> nonPooledConnections = (List<SmbTransportImpl>) nonPooledField.get(pool);
+        java.util.concurrent.ConcurrentLinkedQueue<SmbTransportImpl> nonPooledConnections =
+                (java.util.concurrent.ConcurrentLinkedQueue<SmbTransportImpl>) nonPooledField.get(pool);
 
         // Create spies
         SmbTransportImpl pooledSpy = spy(pooled);
         SmbTransportImpl nonPooledSpy = spy(nonPooled);
 
-        // Replace with spies
-        connections.set(connections.indexOf(pooled), pooledSpy);
-        nonPooledConnections.set(nonPooledConnections.indexOf(nonPooled), nonPooledSpy);
+        // Replace with spies (remove and add back for concurrent queues)
+        connections.remove(pooled);
+        connections.offer(pooledSpy);
+        nonPooledConnections.remove(nonPooled);
+        nonPooledConnections.offer(nonPooledSpy);
 
         // Mock disconnect behavior
         when(pooledSpy.disconnect(false, false)).thenReturn(true); // In use

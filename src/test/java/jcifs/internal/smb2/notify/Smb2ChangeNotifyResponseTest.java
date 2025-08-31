@@ -248,7 +248,7 @@ class Smb2ChangeNotifyResponseTest extends BaseTest {
         assertFalse(response.isErrorResponseStatus());
 
         // Test with success status
-        setStatus(response, NtStatus.NT_STATUS_OK);
+        setStatus(response, NtStatus.NT_STATUS_SUCCESS);
         assertFalse(response.isErrorResponseStatus());
 
         // Test with error status

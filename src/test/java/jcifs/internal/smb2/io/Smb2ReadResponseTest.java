@@ -354,7 +354,7 @@ class Smb2ReadResponseTest extends BaseTest {
         // Given - Use reflection to set status
         Field statusField = ServerMessageBlock2.class.getDeclaredField("status");
         statusField.setAccessible(true);
-        statusField.set(response, NtStatus.NT_STATUS_OK);
+        statusField.set(response, NtStatus.NT_STATUS_SUCCESS);
 
         // When
         boolean isError = response.isErrorResponseStatus();

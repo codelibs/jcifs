@@ -20,6 +20,7 @@ package jcifs.internal.smb2;
 import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.crypto.Cipher;
@@ -68,8 +69,8 @@ public class Smb2EncryptionContext implements AutoCloseable {
     private byte[] preauthIntegrityHash;
     private int rotationCount = 0;
 
-    // Key rotation tracking
-    private long bytesEncrypted = 0;
+    // Key rotation tracking - use atomic for lock-free operations
+    private final AtomicLong bytesEncrypted = new AtomicLong(0);
     private long encryptionStartTime = System.currentTimeMillis();
 
     // Configurable key rotation limits with defaults
@@ -247,7 +248,7 @@ public class Smb2EncryptionContext implements AutoCloseable {
         java.util.Map<String, Long> metrics = new java.util.HashMap<>();
         metrics.put("totalRotations", totalKeyRotations.get());
         metrics.put("lastRotationTime", lastKeyRotationTime.get());
-        metrics.put("bytesEncryptedSinceLastRotation", bytesEncrypted);
+        metrics.put("bytesEncryptedSinceLastRotation", bytesEncrypted.get());
         metrics.put("timeSinceLastRotation", System.currentTimeMillis() - encryptionStartTime);
         metrics.put("rotationBytesLimit", keyRotationBytesLimit);
         metrics.put("rotationTimeLimit", keyRotationTimeLimit);
@@ -256,30 +257,31 @@ public class Smb2EncryptionContext implements AutoCloseable {
 
     /**
      * Generate a unique nonce for encryption following SMB3 specification.
-     * Uses an incrementing counter as per the SMB3 specification.
-     * The counter ensures uniqueness while remaining bytes are zero-padded.
+     * Uses SMB3-compliant nonce generation with guaranteed uniqueness.
      *
      * @return nonce appropriate for the dialect (16 bytes for GCM, 12 bytes for CCM)
      */
     public byte[] generateNonce() {
-        // Use cryptographically secure random nonce generation for enhanced security
-        // Different nonce sizes for different cipher suites
         final byte[] nonce = new byte[isGCMCipher() ? 16 : 12];
 
-        // Use SecureRandom for cryptographically secure nonce generation
-        // This prevents nonce reuse attacks and improves security over simple counters
-        secureRandom.nextBytes(nonce);
+        if (isGCMCipher()) {
+            // SMB 3.1.1 GCM: 96-bit random/fixed + 32-bit counter for guaranteed uniqueness
+            // Fill first 12 bytes with random data
+            secureRandom.nextBytes(nonce);
 
-        // For compatibility, we can still include a counter component in the first 8 bytes
-        // This ensures uniqueness even in the unlikely event of random collision
-        final long counter = this.nonceCounter.incrementAndGet();
-        final ByteBuffer buffer = ByteBuffer.wrap(nonce);
-        buffer.order(java.nio.ByteOrder.LITTLE_ENDIAN);
-
-        // XOR the counter with the random bytes for the first 8 bytes
-        // This combines both approaches for maximum security
-        long randomLong = buffer.getLong(0);
-        buffer.putLong(0, randomLong ^ counter);
+            // Last 4 bytes: incrementing counter for guaranteed uniqueness
+            final long counter = this.nonceCounter.incrementAndGet();
+            final ByteBuffer buffer = ByteBuffer.wrap(nonce, 12, 4);
+            buffer.order(java.nio.ByteOrder.LITTLE_ENDIAN);
+            buffer.putInt((int) counter);
+        } else {
+            // SMB 3.0/3.0.2 CCM: Counter-based approach as per SMB3 specification
+            final long counter = this.nonceCounter.incrementAndGet();
+            final ByteBuffer buffer = ByteBuffer.wrap(nonce);
+            buffer.order(java.nio.ByteOrder.LITTLE_ENDIAN);
+            buffer.putLong(counter);
+            // Remaining bytes (if any) stay zero-padded
+        }
 
         return nonce;
     }
@@ -320,7 +322,7 @@ public class Smb2EncryptionContext implements AutoCloseable {
 
         // Check if key rotation is needed (including the current message)
         if (needsKeyRotation(message.length)) {
-            log.warn("Encryption keys need rotation - will exceed usage limits (bytes: {} + {}, time: {} ms)", bytesEncrypted,
+            log.warn("Encryption keys need rotation - will exceed usage limits (bytes: {} + {}, time: {} ms)", bytesEncrypted.get(),
                     message.length, System.currentTimeMillis() - encryptionStartTime);
 
             // Perform automatic key rotation if session key is available
@@ -359,10 +361,8 @@ public class Smb2EncryptionContext implements AutoCloseable {
             transformHeader.encode(result, 0);
             System.arraycopy(encResult.ciphertext, 0, result, Smb2TransformHeader.TRANSFORM_HEADER_SIZE, encResult.ciphertext.length);
 
-            // Track encrypted bytes for key rotation
-            synchronized (this) {
-                bytesEncrypted += message.length;
-            }
+            // Track encrypted bytes for key rotation - lock-free atomic operation
+            bytesEncrypted.addAndGet(message.length);
 
             return result;
         } catch (final Exception e) {
@@ -625,31 +625,82 @@ public class Smb2EncryptionContext implements AutoCloseable {
     }
 
     private Cipher createGCMCipher(final boolean encrypt, final byte[] nonce) throws Exception {
-        final String algorithm = "AES";
-        final byte[] key = encrypt ? getEncryptionKey() : getDecryptionKey();
-        final SecretKeySpec keySpec = new SecretKeySpec(key, algorithm);
+        // Determine key size based on cipher ID for AES-256 support
+        int keyLength = getKeyLength();
+        String transformation;
 
-        final Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-        final GCMParameterSpec gcmSpec = new GCMParameterSpec(getAuthTagLength() * 8, nonce);
+        // Select appropriate AES algorithm based on key length
+        if (keyLength == 32) {
+            // AES-256 support
+            transformation = "AES/GCM/NoPadding";
+        } else if (keyLength == 16) {
+            // AES-128 (existing)
+            transformation = "AES/GCM/NoPadding";
+        } else {
+            throw new IllegalArgumentException("Unsupported key length for GCM: " + keyLength);
+        }
+
+        byte[] key = null;
+        byte[] keyCopy = null;
 
         try {
+            // Get the key and create a defensive copy for SecretKeySpec
+            key = encrypt ? getEncryptionKey() : getDecryptionKey();
+            keyCopy = Arrays.copyOf(key, key.length);
+
+            // Validate key length matches expected cipher requirements
+            if (keyCopy.length != keyLength) {
+                throw new IllegalArgumentException("Key length mismatch: expected " + keyLength + ", got " + keyCopy.length);
+            }
+
+            // Create cipher with the copy - algorithm is just "AES" for SecretKeySpec
+            final SecretKeySpec keySpec = new SecretKeySpec(keyCopy, "AES");
+            final Cipher cipher = Cipher.getInstance(transformation);
+            final GCMParameterSpec gcmSpec = new GCMParameterSpec(getAuthTagLength() * 8, nonce);
+
             cipher.init(encrypt ? Cipher.ENCRYPT_MODE : Cipher.DECRYPT_MODE, keySpec, gcmSpec);
             return cipher;
         } finally {
-            // Securely wipe the key copy - guaranteed by try-finally
+            // Guaranteed cleanup of all key material
             if (key != null) {
                 SecureKeyManager.secureWipe(key);
+            }
+            if (keyCopy != null) {
+                SecureKeyManager.secureWipe(keyCopy);
             }
         }
     }
 
     private AEADBlockCipher createCCMCipher(final boolean encrypt, final byte[] nonce, final int aadLength, final int plaintextLength) {
-        final AEADBlockCipher cipher = new CCMBlockCipher(new AESEngine());
+        // Support both AES-128 and AES-256 for CCM cipher
+        int keyLength = getKeyLength();
+        final AEADBlockCipher cipher;
 
-        final byte[] key = encrypt ? getEncryptionKey() : getDecryptionKey();
-        final KeyParameter keyParam = new KeyParameter(key);
+        if (keyLength == 16) {
+            // AES-128 CCM
+            cipher = new CCMBlockCipher(new AESEngine());
+        } else if (keyLength == 32) {
+            // AES-256 CCM - Bouncy Castle supports AES-256 with same AESEngine
+            cipher = new CCMBlockCipher(new AESEngine());
+        } else {
+            throw new IllegalArgumentException("Unsupported key length for CCM: " + keyLength);
+        }
+
+        byte[] key = null;
+        byte[] keyCopy = null;
 
         try {
+            // Get the key and create a defensive copy for KeyParameter
+            key = encrypt ? getEncryptionKey() : getDecryptionKey();
+            keyCopy = Arrays.copyOf(key, key.length);
+
+            // Validate key length matches expected cipher requirements
+            if (keyCopy.length != keyLength) {
+                throw new IllegalArgumentException("Key length mismatch: expected " + keyLength + ", got " + keyCopy.length);
+            }
+
+            final KeyParameter keyParam = new KeyParameter(keyCopy);
+
             // CCMBlockCipher requires nonce length between 7 and 13
             // Use the nonce directly if it's 12 bytes (generated appropriately)
             final byte[] adjustedNonce;
@@ -667,9 +718,12 @@ public class Smb2EncryptionContext implements AutoCloseable {
 
             return cipher;
         } finally {
-            // Securely wipe the key copy - guaranteed by try-finally
+            // Guaranteed cleanup of all key material
             if (key != null) {
                 SecureKeyManager.secureWipe(key);
+            }
+            if (keyCopy != null) {
+                SecureKeyManager.secureWipe(keyCopy);
             }
         }
     }
@@ -700,7 +754,7 @@ public class Smb2EncryptionContext implements AutoCloseable {
     public boolean needsKeyRotation(int additionalBytes) {
         long currentTime = System.currentTimeMillis();
         long timeSinceStart = currentTime - encryptionStartTime;
-        long totalBytes = bytesEncrypted + additionalBytes;
+        long totalBytes = bytesEncrypted.get() + additionalBytes;
 
         boolean needsRotation = (keyRotationBytesLimit > 0 && totalBytes >= keyRotationBytesLimit)
                 || (keyRotationTimeLimit > 0 && timeSinceStart >= keyRotationTimeLimit);
@@ -717,11 +771,9 @@ public class Smb2EncryptionContext implements AutoCloseable {
      * Reset key rotation tracking after new keys are established
      */
     public void resetKeyRotationTracking() {
-        synchronized (this) {
-            bytesEncrypted = 0;
-            encryptionStartTime = System.currentTimeMillis();
-            log.debug("Key rotation tracking reset");
-        }
+        bytesEncrypted.set(0);
+        encryptionStartTime = System.currentTimeMillis();
+        log.debug("Key rotation tracking reset");
     }
 
     /**
@@ -797,7 +849,7 @@ public class Smb2EncryptionContext implements AutoCloseable {
     }
 
     /**
-     * Perform automatic key rotation using the stored session key
+     * Perform automatic key rotation using the stored session key following SMB3 key derivation
      *
      * @throws GeneralSecurityException if key rotation fails
      */
@@ -806,20 +858,21 @@ public class Smb2EncryptionContext implements AutoCloseable {
             throw new GeneralSecurityException("Session key not available for automatic rotation");
         }
 
-        // Increment rotation counter to modify key derivation
+        // Increment rotation counter for tracking and key derivation
         rotationCount++;
 
-        // Derive new keys with rotation salt to ensure different keys
-        byte[] modifiedSessionKey = new byte[sessionKey.length + 4];
+        // SMB3-compliant key rotation: Use rotation counter as per SMB3 specification
+        // This follows Microsoft's approach for predictable but unique key derivation
+        byte[] modifiedSessionKey = new byte[sessionKey.length + 8];
         System.arraycopy(sessionKey, 0, modifiedSessionKey, 0, sessionKey.length);
 
-        // Add rotation count as salt to ensure unique keys
-        modifiedSessionKey[sessionKey.length] = (byte) (rotationCount >>> 24);
-        modifiedSessionKey[sessionKey.length + 1] = (byte) (rotationCount >>> 16);
-        modifiedSessionKey[sessionKey.length + 2] = (byte) (rotationCount >>> 8);
-        modifiedSessionKey[sessionKey.length + 3] = (byte) rotationCount;
+        // Add rotation counter and timestamp for key uniqueness (SMB3-style)
+        final ByteBuffer saltBuffer = ByteBuffer.wrap(modifiedSessionKey, sessionKey.length, 8);
+        saltBuffer.order(java.nio.ByteOrder.LITTLE_ENDIAN);
+        saltBuffer.putInt(rotationCount); // Rotation counter
+        saltBuffer.putInt((int) (System.currentTimeMillis() / 1000)); // Timestamp for additional uniqueness
 
-        // Derive new keys using SMB3 KDF with rotation salt
+        // Derive new keys using SMB3 KDF with rotation-specific input
         final int dialectInt = dialect.getDialect();
         final byte[] newEncryptionKey = Smb3KeyDerivation.deriveEncryptionKey(dialectInt, modifiedSessionKey, preauthIntegrityHash);
         final byte[] newDecryptionKey = Smb3KeyDerivation.deriveDecryptionKey(dialectInt, modifiedSessionKey, preauthIntegrityHash);

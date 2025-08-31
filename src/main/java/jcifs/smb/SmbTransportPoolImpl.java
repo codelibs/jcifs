@@ -22,7 +22,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -66,8 +65,8 @@ public class SmbTransportPoolImpl implements SmbTransportPool {
 
     private static final Logger log = LoggerFactory.getLogger(SmbTransportPoolImpl.class);
 
-    private final List<SmbTransportImpl> connections = new LinkedList<>();
-    private final List<SmbTransportImpl> nonPooledConnections = new LinkedList<>();
+    private final ConcurrentLinkedQueue<SmbTransportImpl> connections = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<SmbTransportImpl> nonPooledConnections = new ConcurrentLinkedQueue<>();
     private final ConcurrentLinkedQueue<SmbTransportImpl> toRemove = new ConcurrentLinkedQueue<>();
     final Map<String, Integer> failCounts = new ConcurrentHashMap<>();
 
@@ -131,25 +130,27 @@ public class SmbTransportPoolImpl implements SmbTransportPool {
         if (port <= 0) {
             port = SmbConstants.DEFAULT_PORT;
         }
-        synchronized (this.connections) {
-            // Perform cleanup and health checks
-            cleanup();
-            performHealthCheck();
 
-            if (log.isTraceEnabled()) {
-                log.trace("Exclusive " + nonPooled + " enforced signing " + forceSigning);
+        // Perform cleanup and health checks without global synchronization
+        cleanup();
+        performHealthCheck();
+
+        if (log.isTraceEnabled()) {
+            log.trace("Exclusive " + nonPooled + " enforced signing " + forceSigning);
+        }
+
+        // Check for existing connection
+        if (!nonPooled && tc.getConfig().getSessionLimit() != 1) {
+            final SmbTransportImpl existing = findConnection(tc, address, port, localAddr, localPort, hostName, forceSigning, false);
+            if (existing != null) {
+                return existing;
             }
+        }
 
-            // Check for existing connection
-            if (!nonPooled && tc.getConfig().getSessionLimit() != 1) {
-                final SmbTransportImpl existing = findConnection(tc, address, port, localAddr, localPort, hostName, forceSigning, false);
-                if (existing != null) {
-                    return existing;
-                }
-            }
-
-            // Check pool size limits
-            if (!nonPooled && this.connections.size() >= maxPoolSize) {
+        // Check pool size limits using atomic operation
+        if (!nonPooled) {
+            int currentSize = this.connections.size();
+            if (currentSize >= maxPoolSize) {
                 // Try to remove idle connections
                 removeIdleConnections();
 
@@ -159,24 +160,24 @@ public class SmbTransportPoolImpl implements SmbTransportPool {
                             + ". Consider increasing pool size or closing idle connections.");
                 }
             }
-
-            final SmbTransportImpl conn = new SmbTransportImpl(tc, address, port, localAddr, localPort, forceSigning);
-            if (log.isDebugEnabled()) {
-                log.debug("New transport connection " + conn + " (pool size: " + connections.size() + "/" + maxPoolSize + ")");
-            }
-
-            // Track connection metrics
-            String key = getConnectionKey(address, port);
-            connectionMetrics.computeIfAbsent(key, k -> new ConnectionMetrics()).recordConnection();
-            activeConnections.incrementAndGet();
-
-            if (nonPooled) {
-                this.nonPooledConnections.add(conn);
-            } else {
-                this.connections.add(0, conn);
-            }
-            return conn;
         }
+
+        final SmbTransportImpl conn = new SmbTransportImpl(tc, address, port, localAddr, localPort, forceSigning);
+        if (log.isDebugEnabled()) {
+            log.debug("New transport connection " + conn + " (pool size: " + connections.size() + "/" + maxPoolSize + ")");
+        }
+
+        // Track connection metrics
+        String key = getConnectionKey(address, port);
+        connectionMetrics.computeIfAbsent(key, k -> new ConnectionMetrics()).recordConnection();
+        activeConnections.incrementAndGet();
+
+        if (nonPooled) {
+            this.nonPooledConnections.offer(conn);
+        } else {
+            this.connections.offer(conn);
+        }
+        return conn;
     }
 
     /**
@@ -260,13 +261,12 @@ public class SmbTransportPoolImpl implements SmbTransportPool {
             return Integer.compare(fail1, fail2);
         });
 
-        synchronized (this.connections) {
-            for (final Address addr : addrs) {
-                final SmbTransportImpl found = findConnection(tf, addr, port, tf.getConfig().getLocalAddr(), tf.getConfig().getLocalPort(),
-                        name, forceSigning, true);
-                if (found != null) {
-                    return found;
-                }
+        // Check for existing connections without global synchronization
+        for (final Address addr : addrs) {
+            final SmbTransportImpl found =
+                    findConnection(tf, addr, port, tf.getConfig().getLocalAddr(), tf.getConfig().getLocalPort(), name, forceSigning, true);
+            if (found != null) {
+                return found;
             }
         }
 
@@ -307,10 +307,8 @@ public class SmbTransportPoolImpl implements SmbTransportPool {
      * @return whether (non-exclusive) connection is in the pool
      */
     public boolean contains(final SmbTransport trans) {
-        synchronized (this.connections) {
-            cleanup();
-            return this.connections.contains(trans);
-        }
+        cleanup();
+        return this.connections.contains(trans);
     }
 
     @Override
@@ -322,16 +320,15 @@ public class SmbTransportPoolImpl implements SmbTransportPool {
     }
 
     private void cleanup() {
-        synchronized (this.connections) {
-            SmbTransportImpl trans;
-            while ((trans = this.toRemove.poll()) != null) {
-
-                if (log.isDebugEnabled()) {
-                    log.debug("Removing transport connection " + trans + " (" + System.identityHashCode(trans) + ")");
-                }
-                this.connections.remove(trans);
-                this.nonPooledConnections.remove(trans);
+        SmbTransportImpl trans;
+        while ((trans = this.toRemove.poll()) != null) {
+            if (log.isDebugEnabled()) {
+                log.debug("Removing transport connection " + trans + " (" + System.identityHashCode(trans) + ")");
             }
+            this.connections.remove(trans);
+            this.nonPooledConnections.remove(trans);
+            activeConnections.decrementAndGet();
+            connectionsRemoved.incrementAndGet();
         }
     }
 
@@ -344,15 +341,20 @@ public class SmbTransportPoolImpl implements SmbTransportPool {
     public boolean close() throws CIFSException {
         boolean inUse = false;
 
-        List<SmbTransportImpl> toClose;
-        synchronized (this.connections) {
-            cleanup();
-            log.debug("Closing pool");
-            toClose = new LinkedList<>(this.connections);
-            toClose.addAll(this.nonPooledConnections);
-            this.connections.clear();
-            this.nonPooledConnections.clear();
-        }
+        // Cleanup first
+        cleanup();
+        log.debug("Closing pool");
+
+        // Create a snapshot of connections to close
+        List<SmbTransportImpl> toClose = new ArrayList<>(this.connections);
+        toClose.addAll(this.nonPooledConnections);
+
+        // Clear the collections (thread-safe operations)
+        this.connections.clear();
+        this.nonPooledConnections.clear();
+        this.activeConnections.set(0);
+
+        // Close all connections outside of synchronization
         for (final SmbTransportImpl conn : toClose) {
             try {
                 inUse |= conn.disconnect(false, false);
@@ -360,9 +362,9 @@ public class SmbTransportPoolImpl implements SmbTransportPool {
                 log.warn("Failed to close connection", e);
             }
         }
-        synchronized (this.connections) {
-            cleanup();
-        }
+
+        // Final cleanup
+        cleanup();
         return inUse;
     }
 
@@ -459,6 +461,7 @@ public class SmbTransportPoolImpl implements SmbTransportPool {
         long now = System.currentTimeMillis();
         List<SmbTransportImpl> idle = new ArrayList<>();
 
+        // Iterate through connections without synchronization - ConcurrentLinkedQueue is thread-safe
         for (SmbTransportImpl transport : connections) {
             try {
                 // Check if connection has been idle too long
@@ -477,11 +480,14 @@ public class SmbTransportPoolImpl implements SmbTransportPool {
         int toRemoveCount = Math.min(idle.size(), Math.max(1, idle.size() / 2));
         for (int i = 0; i < toRemoveCount; i++) {
             SmbTransportImpl transport = idle.get(i);
-            connections.remove(transport);
-            try {
-                transport.disconnect(true, true);
-            } catch (Exception e) {
-                log.debug("Error disconnecting idle transport: {}", e.getMessage());
+            if (connections.remove(transport)) {
+                activeConnections.decrementAndGet();
+                connectionsRemoved.incrementAndGet();
+                try {
+                    transport.disconnect(true, true);
+                } catch (Exception e) {
+                    log.debug("Error disconnecting idle transport: {}", e.getMessage());
+                }
             }
         }
 
@@ -531,11 +537,9 @@ public class SmbTransportPoolImpl implements SmbTransportPool {
      * @return pool statistics string
      */
     public String getPoolStatistics() {
-        synchronized (this.connections) {
-            return String.format("Pool statistics: Active=%d, NonPooled=%d, MaxSize=%d, Failures=%d, HealthChecks=%d, Removed=%d",
-                    connections.size(), nonPooledConnections.size(), maxPoolSize, failCounts.size(), totalHealthChecks.get(),
-                    connectionsRemoved.get());
-        }
+        return String.format("Pool statistics: Active=%d, NonPooled=%d, MaxSize=%d, Failures=%d, HealthChecks=%d, Removed=%d",
+                connections.size(), nonPooledConnections.size(), maxPoolSize, failCounts.size(), totalHealthChecks.get(),
+                connectionsRemoved.get());
     }
 
     // Enhanced health checking methods
@@ -571,9 +575,7 @@ public class SmbTransportPoolImpl implements SmbTransportPool {
         }
 
         try {
-            synchronized (this.connections) {
-                performHealthCheck();
-            }
+            performHealthCheck();
         } catch (Exception e) {
             log.warn("Error during proactive health check: {}", e.getMessage());
         }
@@ -684,24 +686,20 @@ public class SmbTransportPoolImpl implements SmbTransportPool {
      */
     private void updateConnectionMetrics() {
         // Clean up metrics for connections that no longer exist
-        synchronized (this.connections) {
-            connectionMetrics.entrySet().removeIf(entry -> {
-                String key = entry.getKey();
-                boolean exists = connections.stream().anyMatch(conn -> getConnectionKey(conn).equals(key));
-                return !exists;
-            });
-        }
+        connectionMetrics.entrySet().removeIf(entry -> {
+            String key = entry.getKey();
+            boolean exists = connections.stream().anyMatch(conn -> getConnectionKey(conn).equals(key));
+            return !exists;
+        });
     }
 
     /**
      * Get detailed health statistics
      */
     public PoolHealthMetrics getHealthMetrics() {
-        synchronized (this.connections) {
-            return new PoolHealthMetrics(connections.size(), nonPooledConnections.size(), activeConnections.get(), maxPoolSize,
-                    totalHealthChecks.get(), failedHealthChecks.get(), connectionsRemoved.get(), connectionMetrics.size(),
-                    healthCheckingEnabled, proactiveHealthCheckEnabled);
-        }
+        return new PoolHealthMetrics(connections.size(), nonPooledConnections.size(), activeConnections.get(), maxPoolSize,
+                totalHealthChecks.get(), failedHealthChecks.get(), connectionsRemoved.get(), connectionMetrics.size(),
+                healthCheckingEnabled, proactiveHealthCheckEnabled);
     }
 
     /**
@@ -745,27 +743,26 @@ public class SmbTransportPoolImpl implements SmbTransportPool {
             Thread.currentThread().interrupt();
         }
 
-        // Close all connections
-        synchronized (this.connections) {
-            connections.forEach(conn -> {
-                try {
-                    conn.disconnect(true, true);
-                } catch (Exception e) {
-                    log.debug("Error closing connection: {}", e.getMessage());
-                }
-            });
-            connections.clear();
+        // Close all connections without synchronization - concurrent collections are thread-safe
+        connections.forEach(conn -> {
+            try {
+                conn.disconnect(true, true);
+            } catch (Exception e) {
+                log.debug("Error closing connection: {}", e.getMessage());
+            }
+        });
+        connections.clear();
 
-            nonPooledConnections.forEach(conn -> {
-                try {
-                    conn.disconnect(true, true);
-                } catch (Exception e) {
-                    log.debug("Error closing non-pooled connection: {}", e.getMessage());
-                }
-            });
-            nonPooledConnections.clear();
-        }
+        nonPooledConnections.forEach(conn -> {
+            try {
+                conn.disconnect(true, true);
+            } catch (Exception e) {
+                log.debug("Error closing non-pooled connection: {}", e.getMessage());
+            }
+        });
+        nonPooledConnections.clear();
 
+        activeConnections.set(0);
         log.info("Transport pool closed");
     }
 

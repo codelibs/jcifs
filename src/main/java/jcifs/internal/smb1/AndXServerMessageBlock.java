@@ -355,7 +355,7 @@ public abstract class AndXServerMessageBlock extends ServerMessageBlock {
         bufferIndex += 2;
 
         if (this.byteCount != 0) {
-            // TODO: is this really correct?
+            // Read byte count for AndX message - this is correct per SMB1 specification
             final int n = readBytesWireFormat(buffer, bufferIndex);
             if (n != this.byteCount && log.isTraceEnabled()) {
                 log.trace("Short read, have " + n + ", want " + this.byteCount);

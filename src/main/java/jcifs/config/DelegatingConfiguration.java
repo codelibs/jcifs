@@ -631,6 +631,21 @@ public class DelegatingConfiguration implements Configuration {
         return this.delegate.isEncryptionEnabled();
     }
 
+    @Override
+    public boolean isCompressionEnabled() {
+        return this.delegate.isCompressionEnabled();
+    }
+
+    @Override
+    public String getPreferredCiphers() {
+        return this.delegate.getPreferredCiphers();
+    }
+
+    @Override
+    public boolean isAES256Enabled() {
+        return this.delegate.isAES256Enabled();
+    }
+
     /**
      * {@inheritDoc}
      *

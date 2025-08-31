@@ -89,7 +89,7 @@ public class SmbComSeekResponse extends ServerMessageBlock {
      */
     @Override
     protected int readBytesWireFormat(final byte[] buffer, final int bufferIndex) throws SMBProtocolDecodingException {
-        // TODO Auto-generated method stub
+        // SmbComSeekResponse has no additional data to read beyond header
         return 0;
     }
 
