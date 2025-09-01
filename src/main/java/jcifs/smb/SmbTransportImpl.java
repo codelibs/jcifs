@@ -198,13 +198,31 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
     @Override
     public boolean isDisconnected() {
         final Socket s = this.socket;
-        return super.isDisconnected() || s == null || s.isClosed();
+        if (super.isDisconnected() || s == null) {
+            return true;
+        }
+        // Wrap isClosed() in try-catch to handle finalization race conditions
+        try {
+            return s.isClosed();
+        } catch (NullPointerException e) {
+            // Socket is being finalized and its internal state is inconsistent
+            return true;
+        }
     }
 
     @Override
     public boolean isFailed() {
         final Socket s = this.socket;
-        return super.isFailed() || s == null || s.isClosed();
+        if (super.isFailed() || s == null) {
+            return true;
+        }
+        // Wrap isClosed() in try-catch to handle finalization race conditions
+        try {
+            return s.isClosed();
+        } catch (NullPointerException e) {
+            // Socket is being finalized and its internal state is inconsistent
+            return true;
+        }
     }
 
     @Override

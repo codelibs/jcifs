@@ -289,7 +289,7 @@ class SmbTreeImpl implements SmbTreeInternal {
      * @return whether the tree is connected
      */
     public boolean isConnected() {
-        return this.tid != -1 && this.session.isConnected() && this.connectionState.get() == 2;
+        return this.tid != -1 && this.session != null && this.session.isConnected() && this.connectionState.get() == 2;
     }
 
     /**

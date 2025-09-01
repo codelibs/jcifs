@@ -1758,7 +1758,7 @@ final class SmbSessionImpl implements SmbSessionInternal {
      * @return whether the session is connected
      */
     public boolean isConnected() {
-        return !this.transport.isDisconnected() && this.connectionState.get() == 2;
+        return this.transport != null && !this.transport.isDisconnected() && this.connectionState.get() == 2;
     }
 
     /**
