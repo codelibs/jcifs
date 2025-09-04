@@ -298,8 +298,8 @@ public abstract class ServerMessageBlock2Response extends ServerMessageBlock2 im
             // MID checking not required here as we only read responses for which we're waiting
             // We only read what we were waiting for, so first guess would be no.
             final boolean verify = dgst.verify(buffer, i, size, 0, this);
-            this.verifyFailed = verify;
-            return !verify;
+            this.verifyFailed = !verify;
+            return verify;
         }
         return true;
     }

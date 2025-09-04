@@ -372,7 +372,7 @@ class ServerMessageBlock2ResponseTest {
         void testVerifySignatureSuccess() {
             byte[] buffer = new byte[100];
             response.setDigest(mockDigest);
-            when(mockDigest.verify(buffer, 0, 100, 0, response)).thenReturn(false);
+            when(mockDigest.verify(buffer, 0, 100, 0, response)).thenReturn(true); // SMB2/SMB3: true = success
 
             boolean result = response.verifySignature(buffer, 0, 100);
 
@@ -385,7 +385,7 @@ class ServerMessageBlock2ResponseTest {
         void testVerifySignatureFailure() {
             byte[] buffer = new byte[100];
             response.setDigest(mockDigest);
-            when(mockDigest.verify(buffer, 0, 100, 0, response)).thenReturn(true);
+            when(mockDigest.verify(buffer, 0, 100, 0, response)).thenReturn(false); // SMB2/SMB3: false = failure
 
             boolean result = response.verifySignature(buffer, 0, 100);
 
@@ -423,7 +423,7 @@ class ServerMessageBlock2ResponseTest {
             response.setDigest(mockDigest);
             response.setStatusForTest(NtStatus.NT_STATUS_ACCESS_DENIED);
             when(mockConfig.isRequireSecureNegotiate()).thenReturn(true);
-            when(mockDigest.verify(buffer, 0, 100, 0, response)).thenReturn(false);
+            when(mockDigest.verify(buffer, 0, 100, 0, response)).thenReturn(true); // SMB2/SMB3: true = success
 
             boolean result = response.verifySignature(buffer, 0, 100);
 
@@ -537,7 +537,7 @@ class ServerMessageBlock2ResponseTest {
         void testHaveResponseSignatureFailure() {
             byte[] buffer = new byte[100];
             response.setDigest(mockDigest);
-            when(mockDigest.verify(buffer, 0, 100, 0, response)).thenReturn(true);
+            when(mockDigest.verify(buffer, 0, 100, 0, response)).thenReturn(false); // SMB2/SMB3: false = failure
 
             SMBProtocolDecodingException exception =
                     assertThrows(SMBProtocolDecodingException.class, () -> response.haveResponse(buffer, 0, 100));

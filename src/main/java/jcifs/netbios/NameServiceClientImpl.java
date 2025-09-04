@@ -23,6 +23,7 @@ import java.io.InterruptedIOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.NoRouteToHostException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -480,6 +481,18 @@ public class NameServiceClientImpl implements Runnable, NameServiceClient {
                     log.trace("Failed to send nameservice request for " + name.name, ioe);
                 }
                 throw new UnknownHostException(name.name);
+            } catch (final NoRouteToHostException nrhe) {
+                // Broadcast to 255.255.255.255 often fails on modern systems
+                if (log.isDebugEnabled()) {
+                    log.debug("No route to host for broadcast address (this is expected on many systems): " + name.name, nrhe);
+                }
+                // For broadcast failures, we want to continue to next resolution method
+                if (!request.isBroadcast) {
+                    // Only throw if it wasn't a broadcast attempt
+                    throw new UnknownHostException(name.name);
+                }
+                // Return empty for broadcast failures to try next resolver
+                return new NbtAddress[0];
             } catch (final IOException ioe) {
                 log.info("Failed to send nameservice request for " + name.name, ioe);
                 throw new UnknownHostException(name.name);
@@ -513,6 +526,16 @@ public class NameServiceClientImpl implements Runnable, NameServiceClient {
                         log.trace("Timeout waiting for response " + name.name, ioe);
                     }
                     throw new UnknownHostException(name.name);
+                } catch (final NoRouteToHostException nrhe) {
+                    // Broadcast to 255.255.255.255 often fails on modern systems
+                    if (log.isDebugEnabled()) {
+                        log.debug("No route to host for broadcast address (this is expected on many systems): " + name.name, nrhe);
+                    }
+                    if (!request.isBroadcast) {
+                        // Only throw if it wasn't a broadcast attempt
+                        throw new UnknownHostException(name.name);
+                    }
+                    // For broadcast failures, treat as no response and retry
                 } catch (final IOException ioe) {
                     log.info("Failed to send nameservice request for " + name.name, ioe);
                     throw new UnknownHostException(name.name);
@@ -602,6 +625,13 @@ public class NameServiceClientImpl implements Runnable, NameServiceClient {
         while (n-- > 0) {
             try {
                 send(request, response, this.transportContext.getConfig().getNetbiosRetryTimeout());
+            } catch (final NoRouteToHostException nrhe) {
+                // Broadcast failures are expected on many systems
+                if (log.isDebugEnabled()) {
+                    log.debug("No route to host for node status request (this is expected on many systems): " + addr, nrhe);
+                }
+                // Node status usually uses direct address, not broadcast, so still throw
+                throw new UnknownHostException(addr.toString());
             } catch (final IOException ioe) {
                 log.info("Failed to send node status request for " + addr, ioe);
                 throw new UnknownHostException(addr.toString());

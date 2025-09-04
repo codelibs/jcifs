@@ -1025,8 +1025,8 @@ public abstract class ServerMessageBlock implements CommonServerMessageBlockRequ
          */
         if (this.digest != null && getErrorCode() == 0) {
             final boolean verify = this.digest.verify(buffer, i, size, 0, this);
-            this.verifyFailed = verify;
-            return !verify;
+            this.verifyFailed = verify; // SMB1SigningDigest returns true when signature is WRONG
+            return !verify; // Return true when signature is correct (standard behavior)
         }
         return true;
     }

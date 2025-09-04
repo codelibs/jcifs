@@ -288,7 +288,7 @@ class Smb2EchoResponseTest {
             setStatus(echoResponse, NtStatus.NT_STATUS_SUCCESS);
 
             when(mockConfig.isRequireSecureNegotiate()).thenReturn(true);
-            when(mockDigest.verify(buffer, 0, 100, 0, echoResponse)).thenReturn(false);
+            when(mockDigest.verify(buffer, 0, 100, 0, echoResponse)).thenReturn(true); // SMB2/SMB3: true = success
 
             boolean result = echoResponse.verifySignature(buffer, 0, 100);
 
@@ -305,7 +305,7 @@ class Smb2EchoResponseTest {
             setStatus(echoResponse, NtStatus.NT_STATUS_SUCCESS);
 
             when(mockConfig.isRequireSecureNegotiate()).thenReturn(true);
-            when(mockDigest.verify(buffer, 0, 100, 0, echoResponse)).thenReturn(true);
+            when(mockDigest.verify(buffer, 0, 100, 0, echoResponse)).thenReturn(false); // SMB2/SMB3: false = failure
 
             boolean result = echoResponse.verifySignature(buffer, 0, 100);
 
