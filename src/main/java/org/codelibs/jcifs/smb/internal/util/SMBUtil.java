@@ -54,10 +54,9 @@ public class SMBUtil {
      */
     public static void writeInt4(long val, final byte[] dst, int dstIndex) {
         dst[dstIndex] = (byte) val;
-        dstIndex++;
-        dst[dstIndex] = (byte) (val >>= 8);
-        dst[++dstIndex] = (byte) (val >>= 8);
-        dst[++dstIndex] = (byte) (val >> 8);
+        dst[dstIndex + 1] = (byte) (val >> 8);
+        dst[dstIndex + 2] = (byte) (val >> 16);
+        dst[dstIndex + 3] = (byte) (val >> 24);
     }
 
     /**
@@ -99,14 +98,13 @@ public class SMBUtil {
      */
     public static void writeInt8(long val, final byte[] dst, int dstIndex) {
         dst[dstIndex] = (byte) val;
-        dstIndex++;
-        dst[dstIndex] = (byte) (val >>= 8);
-        dst[++dstIndex] = (byte) (val >>= 8);
-        dst[++dstIndex] = (byte) (val >>= 8);
-        dst[++dstIndex] = (byte) (val >>= 8);
-        dst[++dstIndex] = (byte) (val >>= 8);
-        dst[++dstIndex] = (byte) (val >>= 8);
-        dst[++dstIndex] = (byte) (val >> 8);
+        dst[dstIndex + 1] = (byte) (val >> 8);
+        dst[dstIndex + 2] = (byte) (val >> 16);
+        dst[dstIndex + 3] = (byte) (val >> 24);
+        dst[dstIndex + 4] = (byte) (val >> 32);
+        dst[dstIndex + 5] = (byte) (val >> 40);
+        dst[dstIndex + 6] = (byte) (val >> 48);
+        dst[dstIndex + 7] = (byte) (val >> 56);
     }
 
     /**
