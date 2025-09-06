@@ -1,0 +1,176 @@
+/*
+ * © 2016 AgNO3 Gmbh & Co. KG
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+package org.codelibs.jcifs.smb.util;
+
+import java.security.InvalidKeyException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.Provider;
+
+import javax.crypto.Cipher;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.spec.SecretKeySpec;
+
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.codelibs.jcifs.smb.CIFSUnsupportedCryptoException;
+
+/**
+ * Cryptographic utility class providing encryption and decryption functionality for jCIFS.
+ * Handles security provider initialization and cryptographic operations for SMB authentication.
+ *
+ * @author mbechler
+ */
+public final class Crypto {
+
+    private static Provider provider = null;
+
+    /**
+     *
+     */
+    private Crypto() {
+    }
+
+    /**
+     * Get an MD4 message digest instance.
+     * @return MD4 digest instance
+     */
+    public static MessageDigest getMD4() {
+        try {
+            return MessageDigest.getInstance("MD4", getProvider());
+        } catch (final NoSuchAlgorithmException e) {
+            throw new CIFSUnsupportedCryptoException(e);
+        }
+    }
+
+    /**
+     * Get an MD5 message digest instance.
+     * @return MD5 digest instance
+     */
+    public static MessageDigest getMD5() {
+        try {
+            return MessageDigest.getInstance("MD5");
+        } catch (final NoSuchAlgorithmException e) {
+            throw new CIFSUnsupportedCryptoException(e);
+        }
+    }
+
+    /**
+     * Get a SHA-512 message digest instance.
+     * @return SHA512 digest instance
+     */
+    public static MessageDigest getSHA512() {
+        try {
+            return MessageDigest.getInstance("SHA-512");
+        } catch (final NoSuchAlgorithmException e) {
+            throw new CIFSUnsupportedCryptoException(e);
+        }
+    }
+
+    /**
+     * Get an HMACT64 message authentication code instance.
+     * @param key the key for the HMACT64 MAC
+     * @return HMACT64 MAC instance
+     */
+    public static MessageDigest getHMACT64(final byte[] key) {
+        return new HMACT64(key);
+    }
+
+    /**
+     * Get an RC4 cipher instance initialized with the specified key.
+     * @param key the encryption key
+     * @return RC4 cipher in encryption mode
+     */
+    public static Cipher getArcfour(final byte[] key) {
+        try {
+            final Cipher c = Cipher.getInstance("RC4");
+            c.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(key, "RC4"));
+            return c;
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException e) {
+            throw new CIFSUnsupportedCryptoException(e);
+        }
+    }
+
+    /**
+     * Get a DES cipher in encryption mode
+     *
+     * @param key
+     *            7 or 8 byte DES key
+     * @return DES cipher in encryption mode
+     */
+    public static Cipher getDES(final byte[] key) {
+        if (key.length == 7) {
+            return getDES(des7to8(key));
+        }
+
+        try {
+            final Cipher c = Cipher.getInstance("DES/ECB/NoPadding");
+            c.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(key, "DES"));
+            return c;
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException e) {
+            throw new CIFSUnsupportedCryptoException(e);
+        }
+    }
+
+    /**
+     * @param key
+     *            7-byte "raw" DES key
+     * @return 8-byte DES key with parity
+     */
+    static byte[] des7to8(final byte[] key) {
+        final byte key8[] = new byte[8];
+        key8[0] = (byte) (key[0] & 0xFE);
+        key8[1] = (byte) (key[0] << 7 | (key[1] & 0xFF) >>> 1);
+        key8[2] = (byte) (key[1] << 6 | (key[2] & 0xFF) >>> 2);
+        key8[3] = (byte) (key[2] << 5 | (key[3] & 0xFF) >>> 3);
+        key8[4] = (byte) (key[3] << 4 | (key[4] & 0xFF) >>> 4);
+        key8[5] = (byte) (key[4] << 3 | (key[5] & 0xFF) >>> 5);
+        key8[6] = (byte) (key[5] << 2 | (key[6] & 0xFF) >>> 6);
+        key8[7] = (byte) (key[6] << 1);
+        for (int i = 0; i < key8.length; i++) {
+            key8[i] ^= Integer.bitCount(key8[i] ^ 1) & 1;
+        }
+        return key8;
+    }
+
+    /**
+     * Default provider is BouncyCastleProvider.
+     * For registering custom provider
+     * @see org.codelibs.jcifs.smb.util.Crypto#initProvider(Provider)
+     * @return Provider
+     */
+    public static Provider getProvider() {
+        if (provider != null) {
+            return provider;
+        }
+        provider = new BouncyCastleProvider();
+        return provider;
+    }
+
+    /**
+     * Initialize Provider Instance with customProvider
+     * @param customProvider the custom cryptographic provider to use
+     * @throws CIFSUnsupportedCryptoException if Provider has already been initialized.
+     */
+    public static void initProvider(final Provider customProvider) throws CIFSUnsupportedCryptoException {
+        if (provider != null) {
+            throw new CIFSUnsupportedCryptoException(
+                    "Provider can't be re-initialized. Provider has already been initialized with " + provider.getInfo());
+        }
+        provider = customProvider;
+    }
+}

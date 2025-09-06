@@ -1,0 +1,41 @@
+/* org.codelibs.jcifs.smb msrpc client library in Java
+ * Copyright (C) 2007  "Michael B. Allen" <jcifs at samba dot org>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+package org.codelibs.jcifs.smb1.dcerpc.msrpc;
+
+/**
+ * MSRPC implementation for opening an alias handle.
+ * This class provides functionality to open a handle to a SAM alias
+ * (local group) using the SAMR RPC interface.
+ */
+public class MsrpcSamrOpenAlias extends samr.SamrOpenAlias {
+
+    /**
+     * Creates a new request to open an alias handle.
+     *
+     * @param handle the domain handle
+     * @param access the desired access rights
+     * @param rid the relative identifier of the alias
+     * @param aliasHandle the alias handle to be populated
+     */
+    public MsrpcSamrOpenAlias(final SamrDomainHandle handle, final int access, final int rid, final SamrAliasHandle aliasHandle) {
+        super(handle, access, rid, aliasHandle);
+        ptype = 0;
+        flags = DCERPC_FIRST_FRAG | DCERPC_LAST_FRAG;
+    }
+}
