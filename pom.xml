@@ -228,6 +228,7 @@
 						<exclude>.*</exclude>
 						<exclude>.*/**</exclude>
 						<exclude>META-INF/**</exclude>
+						<exclude>**/*.map</exclude>
 						<exclude>src/main/java/org/codelibs/jcifs/smb/dcerpc/msrpc/netdfs.java</exclude>
 						<exclude>src/main/java/org/codelibs/jcifs/smb/dcerpc/msrpc/srvsvc.java</exclude>
 						<exclude>src/main/java/org/codelibs/jcifs/smb/dcerpc/msrpc/samr.java</exclude>

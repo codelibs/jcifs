@@ -1,4 +1,4 @@
-/* org.codelibs.jcifs.smb smb client library in Java
+/*
  * Copyright (C) 2000  "Michael B. Allen" <jcifs at samba dot org>
  *
  * This library is free software; you can redistribute it and/or
@@ -27,9 +27,9 @@ import org.codelibs.jcifs.smb.internal.smb1.com.SmbComWriteAndX;
 import org.codelibs.jcifs.smb.internal.smb1.com.SmbComWriteAndXResponse;
 import org.codelibs.jcifs.smb.internal.smb1.com.SmbComWriteResponse;
 import org.codelibs.jcifs.smb.internal.smb2.info.Smb2SetInfoRequest;
+import org.codelibs.jcifs.smb.internal.smb2.io.Smb2FlushRequest;
 import org.codelibs.jcifs.smb.internal.smb2.io.Smb2WriteRequest;
 import org.codelibs.jcifs.smb.internal.smb2.io.Smb2WriteResponse;
-import org.codelibs.jcifs.smb.internal.smb2.io.Smb2FlushRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

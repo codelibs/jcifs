@@ -1,4 +1,4 @@
-/* org.codelibs.jcifs.smb smb client library in Java
+/*
  * Copyright (C) 2003  "Michael B. Allen" <jcifs at samba dot org>
  *
  * This library is free software; you can redistribute it and/or
