@@ -113,7 +113,10 @@ class SmbPipeHandleImpl implements SmbPipeHandleInternal {
      */
     @Override
     public boolean isOpen() {
-        return this.open && this.handle != null && this.handle.isValid();
+        // Use local copy to avoid race conditions with volatile field
+        final boolean currentlyOpen = this.open;
+        final SmbFileHandleImpl currentHandle = this.handle;
+        return currentlyOpen && currentHandle != null && currentHandle.isValid();
     }
 
     /**
@@ -136,42 +139,61 @@ class SmbPipeHandleImpl implements SmbPipeHandleInternal {
      */
     @Override
     public boolean isStale() {
-        return !this.open || this.handle != null && !this.handle.isValid();
+        // Use local copies to ensure consistent reads
+        final boolean currentlyOpen = this.open;
+        final SmbFileHandleImpl currentHandle = this.handle;
+        return !currentlyOpen || (currentHandle != null && !currentHandle.isValid());
     }
 
+    /**
+     * Ensures that the pipe handle is open and ready for use.
+     * This method is thread-safe and handles concurrent access properly.
+     *
+     * @return an acquired file handle for the pipe
+     * @throws SmbException if the pipe is closed or cannot be opened
+     * @throws CIFSException if there's an error establishing the connection
+     */
     @Override
     public synchronized SmbFileHandleImpl ensureOpen() throws CIFSException {
         if (!this.open) {
             throw new SmbException("Pipe handle already closed");
         }
 
-        if (!isOpen()) {
+        // Check if we need to open the pipe
+        final SmbFileHandleImpl currentHandle = this.handle;
+        if (currentHandle == null || !currentHandle.isValid()) {
             try (SmbTreeHandleImpl th = ensureTreeConnected()) {
+                log.debug("Opening pipe handle for {}", this.uncPath);
 
+                SmbFileHandleImpl newHandle;
                 if (th.isSMB2()) {
-                    this.handle = this.pipe.openUnshared(this.uncPath, 0, this.access, this.sharing, SmbConstants.ATTR_NORMAL, 0);
-                    return this.handle.acquire();
-                }
-
-                // Wait for named pipe availability - called when pipe is not immediately available
-                if (this.uncPath.startsWith("\\pipe\\")) {
-                    th.send(new TransWaitNamedPipe(th.getConfig(), this.uncPath), new TransWaitNamedPipeResponse(th.getConfig()));
-                }
-
-                if (th.hasCapability(SmbConstants.CAP_NT_SMBS) || this.uncPath.startsWith("\\pipe\\")) {
-                    this.handle = this.pipe.openUnshared(this.openFlags, this.access, this.sharing, SmbConstants.ATTR_NORMAL, 0);
+                    newHandle = this.pipe.openUnshared(this.uncPath, 0, this.access, this.sharing, SmbConstants.ATTR_NORMAL, 0);
                 } else {
-                    // at least on samba, SmbComOpenAndX fails without the pipe prefix
-                    this.handle = this.pipe.openUnshared("\\pipe" + getUncPath(), this.openFlags, this.access, this.sharing,
-                            SmbConstants.ATTR_NORMAL, 0);
-                }
-                // one extra acquire to keep this open till the stream is released
-                return this.handle.acquire();
-            }
+                    // SMB1 path
+                    // Wait for named pipe availability - called when pipe is not immediately available
+                    if (this.uncPath.startsWith("\\pipe\\")) {
+                        th.send(new TransWaitNamedPipe(th.getConfig(), this.uncPath), new TransWaitNamedPipeResponse(th.getConfig()));
+                    }
 
+                    if (th.hasCapability(SmbConstants.CAP_NT_SMBS) || this.uncPath.startsWith("\\pipe\\")) {
+                        newHandle = this.pipe.openUnshared(this.openFlags, this.access, this.sharing, SmbConstants.ATTR_NORMAL, 0);
+                    } else {
+                        // at least on samba, SmbComOpenAndX fails without the pipe prefix
+                        newHandle = this.pipe.openUnshared("\\pipe" + getUncPath(), this.openFlags, this.access, this.sharing,
+                                SmbConstants.ATTR_NORMAL, 0);
+                    }
+                }
+
+                // Update the handle reference atomically
+                this.handle = newHandle;
+
+                // Return an acquired handle to keep it alive
+                return newHandle.acquire();
+            }
+        } else {
+            log.trace("Pipe already open");
+            return currentHandle.acquire();
         }
-        log.trace("Pipe already open");
-        return this.handle.acquire();
     }
 
     /**
@@ -288,29 +310,84 @@ class SmbPipeHandleImpl implements SmbPipeHandleInternal {
      */
     @Override
     public synchronized void close() throws CIFSException {
-        final boolean wasOpen = isOpen();
-        this.open = false;
-        if (this.input != null) {
-            this.input.close();
-            this.input = null;
+        if (!this.open) {
+            log.debug("Pipe handle already closed: {}", this.uncPath);
+            return; // Already closed
         }
 
-        if (this.output != null) {
-            this.output.close();
-            this.output = null;
-        }
+        log.debug("Closing pipe handle: {}", this.uncPath);
+
+        // Mark as closed first to prevent new operations
+        this.open = false;
+
+        CIFSException closeException = null;
 
         try {
-            if (wasOpen) {
-                this.handle.close();
-            } else if (this.handle != null) {
-                this.handle.release();
+            // Close input stream
+            if (this.input != null) {
+                try {
+                    this.input.close();
+                } catch (Exception e) {
+                    log.warn("Error closing pipe input stream", e);
+                    if (closeException == null && e instanceof CIFSException) {
+                        closeException = (CIFSException) e;
+                    }
+                } finally {
+                    this.input = null;
+                }
             }
-            this.handle = null;
+
+            // Close output stream
+            if (this.output != null) {
+                try {
+                    this.output.close();
+                } catch (Exception e) {
+                    log.warn("Error closing pipe output stream", e);
+                    if (closeException == null && e instanceof CIFSException) {
+                        closeException = (CIFSException) e;
+                    }
+                } finally {
+                    this.output = null;
+                }
+            }
+
+            // Close or release the file handle
+            final SmbFileHandleImpl currentHandle = this.handle;
+            if (currentHandle != null) {
+                try {
+                    if (currentHandle.isValid()) {
+                        currentHandle.close();
+                    } else {
+                        currentHandle.release();
+                    }
+                } catch (Exception e) {
+                    log.warn("Error closing pipe file handle", e);
+                    if (closeException == null && e instanceof CIFSException) {
+                        closeException = (CIFSException) e;
+                    }
+                } finally {
+                    this.handle = null;
+                }
+            }
         } finally {
+            // Always release tree handle
             if (this.treeHandle != null) {
-                this.treeHandle.release();
+                try {
+                    this.treeHandle.release();
+                } catch (Exception e) {
+                    log.warn("Error releasing tree handle", e);
+                    if (closeException == null && e instanceof CIFSException) {
+                        closeException = (CIFSException) e;
+                    }
+                } finally {
+                    this.treeHandle = null;
+                }
             }
+        }
+
+        // Re-throw the first exception encountered, if any
+        if (closeException != null) {
+            throw closeException;
         }
     }
 

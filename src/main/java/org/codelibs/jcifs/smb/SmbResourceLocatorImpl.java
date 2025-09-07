@@ -546,11 +546,22 @@ class SmbResourceLocatorImpl implements SmbResourceLocatorInternal, Cloneable {
     }
 
     /**
-     * @throws MalformedURLException
+     * Canonicalizes the URL path by resolving '.' and '..' components and converting
+     * forward slashes to backslashes for UNC path representation.
      *
+     * <p>This method ensures that the URL path follows SMB conventions and is
+     * properly formatted for network operations. It handles relative path components
+     * according to standard path resolution rules.</p>
+     *
+     * @throws IllegalArgumentException if the SMB URL format is invalid
      */
     private synchronized void canonicalizePath() {
-        final char[] in = this.url.getPath().toCharArray();
+        final String urlPath = this.url.getPath();
+        if (urlPath == null) {
+            throw new IllegalArgumentException("URL path cannot be null for SMB resource: " + this.url);
+        }
+
+        final char[] in = urlPath.toCharArray();
         final char[] out = new char[in.length];
         final int length = in.length;
         int prefixLen = 0, state = 0;
@@ -558,63 +569,78 @@ class SmbResourceLocatorImpl implements SmbResourceLocatorInternal, Cloneable {
         /*
          * The canonicalization routine
          */
-        for (int i = 0; i < length; i++) {
-            switch (state) {
-            case 0:
-                if (in[i] != '/') {
-                    // Checked exception (e.g. MalformedURLException) would be better
-                    // but this would be a nightmare API wise
-                    throw new RuntimeCIFSException("Invalid smb: URL: " + this.url);
-                }
-                out[prefixLen] = in[i];
-                prefixLen++;
-                state = 1;
-                break;
-            case 1:
-                if (in[i] == '/') {
+        try {
+            for (int i = 0; i < length; i++) {
+                switch (state) {
+                case 0:
+                    if (in[i] != '/') {
+                        throw new IllegalArgumentException(
+                                String.format("Invalid SMB URL format - path must start with '/': %s (character at position %d: '%c')",
+                                        this.url, i, in[i]));
+                    }
+                    out[prefixLen] = in[i];
+                    prefixLen++;
+                    state = 1;
                     break;
-                }
-                if (in[i] == '.' && (i + 1 >= length || in[i + 1] == '/')) {
-                    i++;
-                    break;
-                } else if (i + 1 < length && in[i] == '.' && in[i + 1] == '.' && (i + 2 >= length || in[i + 2] == '/')) {
-                    i += 2;
-                    if (prefixLen == 1) {
+                case 1:
+                    if (in[i] == '/') {
                         break;
                     }
-                    do {
-                        prefixLen--;
-                    } while (prefixLen > 1 && out[prefixLen - 1] != '/');
+                    if (in[i] == '.' && (i + 1 >= length || in[i + 1] == '/')) {
+                        i++;
+                        break;
+                    } else if (i + 1 < length && in[i] == '.' && in[i + 1] == '.' && (i + 2 >= length || in[i + 2] == '/')) {
+                        i += 2;
+                        if (prefixLen == 1) {
+                            break;
+                        }
+                        do {
+                            prefixLen--;
+                        } while (prefixLen > 1 && out[prefixLen - 1] != '/');
+                        break;
+                    }
+                    state = 2;
+                case 2:
+                    if (in[i] == '/') {
+                        state = 1;
+                    }
+                    out[prefixLen++] = in[i];
                     break;
                 }
-                state = 2;
-            case 2:
-                if (in[i] == '/') {
-                    state = 1;
-                }
-                out[prefixLen++] = in[i];
-                break;
             }
+        } catch (ArrayIndexOutOfBoundsException e) {
+            throw new IllegalArgumentException("Invalid SMB URL - path canonicalization failed due to malformed structure: " + this.url, e);
         }
 
+        // Build the canonicalized path and extract components
         this.canon = new String(out, 0, prefixLen);
+
         if (prefixLen > 1) {
-            prefixLen--;
+            prefixLen--; // Adjust for processing
             final int firstSep = this.canon.indexOf('/', 1);
             if (firstSep < 0) {
+                // Path is just "/share"
                 this.share = this.canon.substring(1);
                 this.unc = "\\";
             } else if (firstSep == prefixLen) {
+                // Path is "/share/" (directory)
                 this.share = this.canon.substring(1, firstSep);
                 this.unc = "\\";
             } else {
+                // Path is "/share/path/to/file"
                 this.share = this.canon.substring(1, firstSep);
                 this.unc = this.canon.substring(firstSep, prefixLen + 1).replace('/', '\\');
             }
         } else {
+            // Root path "/"
             this.canon = "/";
             this.share = null;
             this.unc = "\\";
+        }
+
+        // Validate the resulting share name for SMB compliance
+        if (this.share != null && this.share.isEmpty()) {
+            throw new IllegalArgumentException("Invalid SMB URL - empty share name not allowed: " + this.url);
         }
     }
 

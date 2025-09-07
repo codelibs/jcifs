@@ -110,7 +110,7 @@ class SmbSessionImplTest {
         assertFalse(session.isInUse());
 
         // Next release goes below zero and throws
-        RuntimeException ex = assertThrows(RuntimeCIFSException.class, session::release);
+        RuntimeException ex = assertThrows(IllegalStateException.class, session::release);
         assertTrue(ex.getMessage().contains("below zero"));
 
         // Only one transport release should have occurred

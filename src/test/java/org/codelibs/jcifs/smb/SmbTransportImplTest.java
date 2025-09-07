@@ -385,22 +385,22 @@ class SmbTransportImplTest {
             byte[] sessionKey = new byte[16];
             byte[] preauth = new byte[16];
 
-            // SMB 3.0 -> AES-128-CCM
+            // SMB 3.0 -> AES-256-CCM (enhanced cipher selection)
             setField(transport, "smb2", true);
             Smb2NegotiateResponse smb300 = new Smb2NegotiateResponse(cfg);
             setField(smb300, "selectedDialect", DialectVersion.SMB300);
             setField(transport, "negotiated", smb300);
             Smb2EncryptionContext ccm = transport.createEncryptionContext(sessionKey, preauth);
-            assertEquals(EncryptionNegotiateContext.CIPHER_AES128_CCM, ccm.getCipherId());
+            assertEquals(EncryptionNegotiateContext.CIPHER_AES256_CCM, ccm.getCipherId());
             assertEquals(DialectVersion.SMB300, ccm.getDialect());
 
-            // SMB 3.1.1 -> default AES-128-GCM when server did not choose
+            // SMB 3.1.1 -> default AES-256-GCM when server did not choose (enhanced cipher selection)
             Smb2NegotiateResponse smb311 = new Smb2NegotiateResponse(cfg);
             setField(smb311, "selectedDialect", DialectVersion.SMB311);
             setField(smb311, "selectedCipher", -1);
             setField(transport, "negotiated", smb311);
             Smb2EncryptionContext gcm = transport.createEncryptionContext(sessionKey, preauth);
-            assertEquals(EncryptionNegotiateContext.CIPHER_AES128_GCM, gcm.getCipherId());
+            assertEquals(EncryptionNegotiateContext.CIPHER_AES256_GCM, gcm.getCipherId());
             assertEquals(DialectVersion.SMB311, gcm.getDialect());
         }
     }

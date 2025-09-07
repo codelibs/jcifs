@@ -118,12 +118,12 @@ class SmbResourceLocatorImplTest {
     }
 
     @Test
-    @DisplayName("Invalid path triggers RuntimeCIFSException during canonicalize")
+    @DisplayName("Invalid path triggers IllegalArgumentException during canonicalize")
     void testCanonicalizeInvalidPath() {
         SmbResourceLocatorImpl a = locator("smb:invalid-no-slash");
         // Any accessor that triggers canonicalizePath should throw
-        assertThrows(RuntimeCIFSException.class, a::getURLPath);
-        assertThrows(RuntimeCIFSException.class, a::getUNCPath);
+        assertThrows(IllegalArgumentException.class, a::getURLPath);
+        assertThrows(IllegalArgumentException.class, a::getUNCPath);
     }
 
     @Test

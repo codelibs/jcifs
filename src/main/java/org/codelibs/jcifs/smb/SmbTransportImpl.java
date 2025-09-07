@@ -125,7 +125,21 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
 
     private final Semaphore credits = new Semaphore(1, true);
 
-    private final int desiredCredits = 512;
+    // Enhanced credit management fields
+    private final int minDesiredCredits = 64; // Minimum credit window
+    private final int maxDesiredCredits = 1024; // Maximum credit window
+    private volatile int desiredCredits = 256; // Dynamic credit window
+
+    // Credit performance tracking
+    private volatile long totalCreditsGranted = 0;
+    private volatile long totalCreditsRequested = 0;
+    private volatile long creditRequestCount = 0;
+    private volatile long lastCreditAdjustment = System.currentTimeMillis();
+
+    // Credit starvation protection
+    private volatile int consecutiveZeroCredits = 0;
+    private static final int MAX_ZERO_CREDITS = 5;
+    private static final long CREDIT_STARVATION_TIMEOUT = 30000; // 30 seconds
 
     private byte[] preauthIntegrityHash = new byte[64];
     private final Object preauthHashLock = new Object();
@@ -916,7 +930,14 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
                     log.trace(String.format("%s costs %d avail %d (%s)", chain.getClass().getName(), cost, this.credits.availablePermits(),
                             this.name));
                 }
-                if ((next == null || chain.allowChain(next)) && totalSize + size < maxSize && this.credits.tryAcquire(cost)) {
+                boolean creditsAcquired = false;
+                try {
+                    creditsAcquired = acquireCreditsWithTimeout(cost, 1000);
+                } catch (final InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new SmbException("Interrupted while acquiring credits", e);
+                }
+                if ((next == null || chain.allowChain(next)) && totalSize + size < maxSize && creditsAcquired) {
                     totalSize += size;
                     last = chain;
                     chain = next;
@@ -929,8 +950,8 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
                     try {
                         final long timeout = getResponseTimeout(chain);
                         if (params.contains(RequestParam.NO_TIMEOUT)) {
-                            this.credits.acquire(cost);
-                        } else if (!this.credits.tryAcquire(cost, timeout, TimeUnit.MILLISECONDS)) {
+                            acquireCreditsWithStarvationProtection(cost);
+                        } else if (!acquireCreditsWithTimeout(cost, timeout)) {
                             throw new SmbException("Failed to acquire credits in time");
                         }
                         totalSize += size;
@@ -961,11 +982,17 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
                 }
             }
 
-            final int reqCredits = Math.max(1, this.desiredCredits - this.credits.availablePermits() - n + 1);
+            // Optimized credit request calculation
+            final int reqCredits = calculateOptimalCreditRequest(n);
             if (log.isTraceEnabled()) {
-                log.trace("Request credits " + reqCredits);
+                log.trace("Request credits {} (available: {}, desired: {})", reqCredits, this.credits.availablePermits(),
+                        this.desiredCredits);
             }
             request.setRequestCredits(reqCredits);
+
+            // Track credit request metrics
+            this.creditRequestCount++;
+            this.totalCreditsRequested += reqCredits;
 
             final CommonServerMessageBlockRequest thisReq = curHead;
             try {
@@ -1011,19 +1038,8 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
                     }
                     curReq = next;
                 }
-                if (!isDisconnected() && !curReq.isResponseAsync() && !curReq.getResponse().isAsync() && !curReq.getResponse().isError()
-                        && grantedCredits == 0) {
-                    if (this.credits.availablePermits() > 0 || n > 0) {
-                        log.debug("Server " + this + " returned zero credits for " + curReq);
-                    } else {
-                        log.warn("Server " + this + " took away all our credits");
-                    }
-                } else if (!curReq.isResponseAsync()) {
-                    if (log.isTraceEnabled()) {
-                        log.trace("Adding credits " + grantedCredits);
-                    }
-                    this.credits.release(grantedCredits);
-                }
+                // Enhanced credit handling with starvation protection
+                handleCreditResponse(curReq, grantedCredits, n);
             }
         }
 
@@ -1741,67 +1757,423 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
         }
     }
 
+    /**
+     * Calculates the pre-authentication integrity hash according to SMB 3.1.1 specification.
+     *
+     * <p>Per MS-SMB2 section 3.1.5.2, the pre-authentication integrity hash is computed as:
+     * Hash = CryptoHash( PreviousHash + SMB2 request/response )
+     * where CryptoHash is SHA-512 for SMB 3.1.1.</p>
+     *
+     * @param input the SMB2 message bytes to include in hash calculation
+     * @param off offset within the input array
+     * @param len length of data to hash
+     * @param oldHash the previous hash value (null for initial calculation)
+     * @return the new hash value
+     * @throws CIFSException if hash calculation fails or dialect doesn't support pre-auth integrity
+     */
     byte[] calculatePreauthHash(final byte[] input, final int off, final int len, final byte[] oldHash) throws CIFSException {
+        // Validate preconditions
         if (!this.smb2 || this.negotiated == null) {
-            throw new SmbUnsupportedOperationException();
+            throw new SmbUnsupportedOperationException("Pre-authentication integrity hash requires SMB2+ negotiation");
         }
 
         final Smb2NegotiateResponse resp = (Smb2NegotiateResponse) this.negotiated;
         if (!resp.getSelectedDialect().atLeast(DialectVersion.SMB311)) {
-            throw new SmbUnsupportedOperationException();
+            throw new SmbUnsupportedOperationException(
+                    "Pre-authentication integrity hash requires SMB 3.1.1 or later, got: " + resp.getSelectedDialect());
         }
 
-        MessageDigest dgst = switch (resp.getSelectedPreauthHash()) {
-        case 1 -> Crypto.getSHA512();
-        default -> throw new SmbUnsupportedOperationException();
-        };
-        if (oldHash != null) {
-            dgst.update(oldHash);
+        // Validate input parameters
+        if (input == null) {
+            throw new IllegalArgumentException("Input data cannot be null for hash calculation");
         }
-        dgst.update(input, off, len);
-        return dgst.digest();
+        if (off < 0 || len < 0 || off + len > input.length) {
+            throw new IllegalArgumentException(
+                    String.format("Invalid input parameters: off=%d, len=%d, input.length=%d", off, len, input.length));
+        }
+
+        try {
+            // Get the selected pre-authentication hash algorithm
+            final int preauthHashId = resp.getSelectedPreauthHash();
+            final MessageDigest digest = switch (preauthHashId) {
+            case 1 -> {
+                // SHA-512 - the only currently defined pre-auth hash in SMB 3.1.1
+                MessageDigest sha512 = Crypto.getSHA512();
+                if (sha512 == null) {
+                    throw new CIFSException("SHA-512 MessageDigest not available for pre-auth integrity hash");
+                }
+                yield sha512;
+            }
+            default -> throw new SmbUnsupportedOperationException("Unsupported pre-authentication hash algorithm ID: " + preauthHashId);
+            };
+
+            // Perform hash calculation according to SMB 3.1.1 spec
+            if (oldHash != null) {
+                // Validate old hash length for SHA-512 (should be 64 bytes)
+                if (oldHash.length != 64) {
+                    throw new CIFSException(
+                            String.format("Invalid previous hash length: expected 64 bytes for SHA-512, got %d", oldHash.length));
+                }
+                digest.update(oldHash);
+            }
+
+            digest.update(input, off, len);
+            byte[] result = digest.digest();
+
+            if (log.isTraceEnabled()) {
+                log.trace("Pre-auth integrity hash calculated: oldHash={}, inputLen={}, result={}", oldHash != null ? "present" : "null",
+                        len,
+                        result.length > 8
+                                ? "..." + java.util.Arrays.toString(java.util.Arrays.copyOfRange(result, result.length - 8, result.length))
+                                : java.util.Arrays.toString(result));
+            }
+
+            return result;
+
+        } catch (Exception e) {
+            if (e instanceof CIFSException) {
+                throw e;
+            }
+            throw new CIFSException("Pre-authentication integrity hash calculation failed", e);
+        }
     }
 
     /**
-     * Create encryption context for SMB3 encrypted communication
+     * Create encryption context for SMB3 encrypted communication.
+     *
+     * Supports the following encryption algorithms based on SMB dialect:
+     * - SMB 3.0/3.0.2: AES-128-CCM, AES-256-CCM
+     * - SMB 3.1.1: AES-128-CCM, AES-128-GCM, AES-256-CCM, AES-256-GCM
+     *
+     * The cipher selection follows this priority order for SMB 3.1.1:
+     * 1. Server-negotiated cipher (from encryption negotiate context)
+     * 2. AES-256-GCM (strongest available)
+     * 3. AES-128-GCM (fallback)
      *
      * @param sessionKey the session key from GSS-API authentication
-     * @param preauthHash the pre-authentication integrity hash (SMB 3.1.1 only)
-     * @return encryption context
+     * @param preauthHash the pre-authentication integrity hash (required for SMB 3.1.1, can be null for SMB 3.0/3.0.2)
+     * @return encryption context configured for the negotiated cipher
      * @throws CIFSException if encryption is not supported or fails
+     * @throws SmbUnsupportedOperationException if SMB version doesn't support encryption
+     * @throws IllegalArgumentException if parameters are invalid
      */
     Smb2EncryptionContext createEncryptionContext(final byte[] sessionKey, final byte[] preauthHash) throws CIFSException {
+        // Validate preconditions
         if (!this.smb2 || this.negotiated == null) {
             throw new SmbUnsupportedOperationException("SMB2/SMB3 required for encryption");
         }
 
+        if (sessionKey == null || sessionKey.length == 0) {
+            throw new IllegalArgumentException("Session key cannot be null or empty for encryption");
+        }
+
         final Smb2NegotiateResponse resp = (Smb2NegotiateResponse) this.negotiated;
         final DialectVersion dialect = resp.getSelectedDialect();
-        int cipherId = -1;
 
-        if (dialect.atLeast(DialectVersion.SMB311)) {
-            cipherId = resp.getSelectedCipher();
-            if (cipherId == -1) {
-                // Default to AES-128-GCM for SMB 3.1.1 if no cipher negotiated
-                cipherId = EncryptionNegotiateContext.CIPHER_AES128_GCM;
-            }
-        } else if (dialect.atLeast(DialectVersion.SMB300)) {
-            // SMB 3.0/3.0.2 only supports AES-128-CCM
-            cipherId = EncryptionNegotiateContext.CIPHER_AES128_CCM;
-        } else {
+        // Validate SMB3+ requirement for encryption
+        if (!dialect.atLeast(DialectVersion.SMB300)) {
             throw new SmbUnsupportedOperationException("SMB3 required for encryption, negotiated: " + dialect);
         }
 
+        int cipherId;
+
         try {
+            if (dialect.atLeast(DialectVersion.SMB311)) {
+                // SMB 3.1.1 supports all cipher algorithms
+                cipherId = selectCipherForSMB311(resp, preauthHash);
+            } else {
+                // SMB 3.0/3.0.2 supports CCM variants only
+                cipherId = selectCipherForSMB300(resp);
+            }
+
+            // Log the selected cipher for debugging
+            if (log.isDebugEnabled()) {
+                log.debug("Selected encryption cipher: {} for dialect: {}", getCipherName(cipherId), dialect);
+            }
+
             // Derive encryption and decryption keys using SMB3 KDF
             final int dialectInt = dialect.getDialect();
             final byte[] encryptionKey = Smb3KeyDerivation.deriveEncryptionKey(dialectInt, sessionKey, preauthHash);
             final byte[] decryptionKey = Smb3KeyDerivation.deriveDecryptionKey(dialectInt, sessionKey, preauthHash);
 
-            // Pass session key and preauthHash to enable automatic key rotation
+            // Validate derived keys
+            if (encryptionKey == null || decryptionKey == null) {
+                throw new CIFSException("Failed to derive encryption keys for cipher: " + getCipherName(cipherId));
+            }
+
+            // Create and return encryption context with session key and preauthHash for key rotation support
             return new Smb2EncryptionContext(cipherId, dialect, encryptionKey, decryptionKey, sessionKey, preauthHash);
+
+        } catch (final IllegalArgumentException | SmbUnsupportedOperationException e) {
+            // Re-throw these as they are expected exception types
+            throw e;
         } catch (final Exception e) {
-            throw new CIFSException("Failed to create encryption context", e);
+            throw new CIFSException("Failed to create encryption context for dialect " + dialect, e);
+        }
+    }
+
+    /**
+     * Select encryption cipher for SMB 3.1.1.
+     * Supports AES-128/256 in both CCM and GCM modes.
+     */
+    private int selectCipherForSMB311(final Smb2NegotiateResponse resp, final byte[] preauthHash) throws CIFSException {
+        if (preauthHash == null) {
+            throw new IllegalArgumentException("Pre-authentication integrity hash required for SMB 3.1.1 encryption");
+        }
+
+        // Check if server negotiated a specific cipher
+        final int negotiatedCipher = resp.getSelectedCipher();
+        if (negotiatedCipher != -1) {
+            // Validate that the negotiated cipher is supported
+            if (isSupportedCipher(negotiatedCipher)) {
+                return negotiatedCipher;
+            } else {
+                throw new SmbUnsupportedOperationException("Server selected unsupported cipher: " + negotiatedCipher);
+            }
+        }
+
+        // No specific cipher negotiated - select best available cipher
+        // Priority: AES-256-GCM > AES-256-CCM > AES-128-GCM > AES-128-CCM
+        if (isCipherSupported(EncryptionNegotiateContext.CIPHER_AES256_GCM)) {
+            return EncryptionNegotiateContext.CIPHER_AES256_GCM;
+        } else if (isCipherSupported(EncryptionNegotiateContext.CIPHER_AES256_CCM)) {
+            return EncryptionNegotiateContext.CIPHER_AES256_CCM;
+        } else if (isCipherSupported(EncryptionNegotiateContext.CIPHER_AES128_GCM)) {
+            return EncryptionNegotiateContext.CIPHER_AES128_GCM;
+        } else {
+            // Fallback to AES-128-CCM (always supported)
+            return EncryptionNegotiateContext.CIPHER_AES128_CCM;
+        }
+    }
+
+    /**
+     * Select encryption cipher for SMB 3.0/3.0.2.
+     * Only CCM modes are supported in these dialects.
+     */
+    private int selectCipherForSMB300(final Smb2NegotiateResponse resp) throws CIFSException {
+        // SMB 3.0/3.0.2 only supports CCM variants
+        // Priority: AES-256-CCM > AES-128-CCM
+        if (isCipherSupported(EncryptionNegotiateContext.CIPHER_AES256_CCM)) {
+            return EncryptionNegotiateContext.CIPHER_AES256_CCM;
+        } else {
+            // Fallback to AES-128-CCM (always supported in SMB 3.0+)
+            return EncryptionNegotiateContext.CIPHER_AES128_CCM;
+        }
+    }
+
+    /**
+     * Check if a cipher ID represents a supported encryption algorithm.
+     */
+    private boolean isSupportedCipher(final int cipherId) {
+        return cipherId == EncryptionNegotiateContext.CIPHER_AES128_CCM || cipherId == EncryptionNegotiateContext.CIPHER_AES128_GCM
+                || cipherId == EncryptionNegotiateContext.CIPHER_AES256_CCM || cipherId == EncryptionNegotiateContext.CIPHER_AES256_GCM;
+    }
+
+    /**
+     * Check if a cipher is supported in the current environment.
+     * This method can be extended to check for cryptographic provider capabilities.
+     */
+    private boolean isCipherSupported(final int cipherId) {
+        // For now, assume all defined ciphers are supported
+        // In a real implementation, this would check if the cryptographic provider
+        // supports the specific cipher (e.g., checking BouncyCastle capabilities)
+        return isSupportedCipher(cipherId);
+    }
+
+    /**
+     * Get a human-readable cipher name for logging and error messages.
+     */
+    private String getCipherName(final int cipherId) {
+        switch (cipherId) {
+        case EncryptionNegotiateContext.CIPHER_AES128_CCM:
+            return "AES-128-CCM";
+        case EncryptionNegotiateContext.CIPHER_AES128_GCM:
+            return "AES-128-GCM";
+        case EncryptionNegotiateContext.CIPHER_AES256_CCM:
+            return "AES-256-CCM";
+        case EncryptionNegotiateContext.CIPHER_AES256_GCM:
+            return "AES-256-GCM";
+        default:
+            return "Unknown cipher: " + cipherId;
+        }
+    }
+
+    /**
+     * Calculate optimal credit request based on current conditions.
+     * Implements dynamic credit window adjustment based on server behavior and network performance.
+     */
+    private int calculateOptimalCreditRequest(final int requestCount) {
+        final int available = this.credits.availablePermits();
+        final int currentDesired = this.desiredCredits;
+
+        // Basic credit need calculation
+        int needed = Math.max(1, currentDesired - available - requestCount + 1);
+
+        // Adjust based on credit efficiency metrics
+        if (this.creditRequestCount > 10) {
+            final double grantRatio = (double) this.totalCreditsGranted / this.totalCreditsRequested;
+
+            // If server is granting less than 70% of requested credits, reduce requests
+            if (grantRatio < 0.7) {
+                needed = Math.max(1, (int) (needed * 0.8));
+            }
+            // If server is generous (>95% grant ratio), we can request more
+            else if (grantRatio > 0.95 && available < currentDesired / 2) {
+                needed = Math.min(needed * 2, currentDesired - available);
+            }
+        }
+
+        // Don't request more than what would bring us to our desired level
+        needed = Math.min(needed, currentDesired - available);
+
+        return Math.max(1, needed);
+    }
+
+    /**
+     * Acquire credits with timeout, including fallback logic for credit starvation.
+     */
+    private boolean acquireCreditsWithTimeout(final int cost, final long timeoutMs) throws InterruptedException {
+        if (timeoutMs <= 0) {
+            return this.credits.tryAcquire(cost);
+        }
+
+        // Try normal acquisition first
+        if (this.credits.tryAcquire(cost, timeoutMs, TimeUnit.MILLISECONDS)) {
+            return true;
+        }
+
+        // If we couldn't acquire credits and are in potential starvation, try emergency acquisition
+        if (this.credits.availablePermits() == 0 && this.consecutiveZeroCredits >= MAX_ZERO_CREDITS) {
+            log.warn("Potential credit starvation detected, attempting emergency credit acquisition");
+            return tryEmergencyCreditAcquisition(cost, timeoutMs / 2);
+        }
+
+        return false;
+    }
+
+    /**
+     * Acquire credits with starvation protection for infinite timeout requests.
+     */
+    private void acquireCreditsWithStarvationProtection(final int cost) throws InterruptedException {
+        final long startTime = System.currentTimeMillis();
+
+        while (!this.credits.tryAcquire(cost, CREDIT_STARVATION_TIMEOUT, TimeUnit.MILLISECONDS)) {
+            if (System.currentTimeMillis() - startTime > CREDIT_STARVATION_TIMEOUT * 2) {
+                log.warn("Credit starvation protection triggered after {} ms", System.currentTimeMillis() - startTime);
+
+                // Try emergency acquisition
+                if (tryEmergencyCreditAcquisition(cost, CREDIT_STARVATION_TIMEOUT)) {
+                    return;
+                }
+
+                // If emergency fails, force a minimal acquisition to prevent deadlock
+                if (cost > 1) {
+                    log.error("Forcing single credit acquisition to prevent deadlock");
+                    this.credits.acquire(1);
+                    // Try to acquire remaining credits with a shorter timeout
+                    this.credits.tryAcquire(cost - 1, 1000, TimeUnit.MILLISECONDS);
+                    return;
+                }
+            }
+        }
+    }
+
+    /**
+     * Emergency credit acquisition when normal methods fail.
+     */
+    private boolean tryEmergencyCreditAcquisition(final int cost, final long timeoutMs) throws InterruptedException {
+        // In emergency situations, try to acquire just 1 credit to keep operations moving
+        if (cost > 1 && this.credits.tryAcquire(1, timeoutMs, TimeUnit.MILLISECONDS)) {
+            log.debug("Emergency: acquired 1 credit instead of requested {}", cost);
+            return true;
+        }
+
+        return this.credits.tryAcquire(cost, timeoutMs, TimeUnit.MILLISECONDS);
+    }
+
+    /**
+     * Enhanced credit response handling with dynamic adjustment and starvation protection.
+     */
+    private void handleCreditResponse(final CommonServerMessageBlockRequest curReq, final int grantedCredits, final int requestCount) {
+        final boolean isError = curReq.getResponse().isError();
+        final boolean isAsync = curReq.isResponseAsync();
+
+        if (!isDisconnected() && !isAsync && !curReq.getResponse().isAsync() && !isError && grantedCredits == 0) {
+            this.consecutiveZeroCredits++;
+
+            if (this.credits.availablePermits() > 0 || requestCount > 0) {
+                log.debug("Server {} returned zero credits for {} (consecutive: {})", this, curReq, this.consecutiveZeroCredits);
+            } else {
+                log.warn("Server {} took away all our credits (consecutive: {})", this, this.consecutiveZeroCredits);
+            }
+
+            // Adjust credit window if we're getting too many zero credit responses
+            if (this.consecutiveZeroCredits >= MAX_ZERO_CREDITS) {
+                adjustCreditWindowDown("Too many zero credit responses");
+            }
+
+        } else if (!isAsync) {
+            // Reset zero credit counter on successful credit grant
+            if (grantedCredits > 0) {
+                this.consecutiveZeroCredits = 0;
+                this.totalCreditsGranted += grantedCredits;
+            }
+
+            if (log.isTraceEnabled()) {
+                log.trace("Adding credits {} (total granted: {})", grantedCredits, this.totalCreditsGranted);
+            }
+
+            this.credits.release(grantedCredits);
+
+            // Periodically adjust credit window based on performance
+            adjustCreditWindow(grantedCredits);
+        }
+    }
+
+    /**
+     * Dynamically adjust credit window based on server performance.
+     */
+    private void adjustCreditWindow(final int grantedCredits) {
+        final long now = System.currentTimeMillis();
+
+        // Only adjust every 30 seconds to avoid too frequent changes
+        if (now - this.lastCreditAdjustment < 30000 || this.creditRequestCount < 10) {
+            return;
+        }
+
+        final double grantRatio = (double) this.totalCreditsGranted / this.totalCreditsRequested;
+        final int currentCredits = this.credits.availablePermits();
+
+        if (grantRatio > 0.9 && currentCredits > this.desiredCredits * 0.8) {
+            // Server is generous and we have plenty of credits, increase window
+            adjustCreditWindowUp("High grant ratio and sufficient credits");
+        } else if (grantRatio < 0.5 || this.consecutiveZeroCredits >= 3) {
+            // Server is stingy or not responding well, decrease window
+            adjustCreditWindowDown("Low grant ratio or frequent zero credits");
+        }
+
+        this.lastCreditAdjustment = now;
+    }
+
+    /**
+     * Increase the credit window for better performance.
+     */
+    private void adjustCreditWindowUp(final String reason) {
+        if (this.desiredCredits < this.maxDesiredCredits) {
+            final int oldDesired = this.desiredCredits;
+            this.desiredCredits = Math.min(this.maxDesiredCredits, this.desiredCredits + 64);
+            log.debug("Increased credit window from {} to {} ({})", oldDesired, this.desiredCredits, reason);
+        }
+    }
+
+    /**
+     * Decrease the credit window to reduce server load.
+     */
+    private void adjustCreditWindowDown(final String reason) {
+        if (this.desiredCredits > this.minDesiredCredits) {
+            final int oldDesired = this.desiredCredits;
+            this.desiredCredits = Math.max(this.minDesiredCredits, this.desiredCredits - 32);
+            log.debug("Decreased credit window from {} to {} ({})", oldDesired, this.desiredCredits, reason);
         }
     }
 

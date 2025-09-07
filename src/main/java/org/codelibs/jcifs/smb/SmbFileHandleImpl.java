@@ -20,6 +20,8 @@ package org.codelibs.jcifs.smb;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.codelibs.jcifs.smb.Configuration;
+import org.codelibs.jcifs.smb.RequestParam;
 import org.codelibs.jcifs.smb.internal.smb1.com.SmbComBlankResponse;
 import org.codelibs.jcifs.smb.internal.smb1.com.SmbComClose;
 import org.codelibs.jcifs.smb.internal.smb2.create.Smb2CloseRequest;
@@ -160,7 +162,24 @@ class SmbFileHandleImpl implements SmbFileHandle {
      */
     @Override
     public boolean isValid() {
-        return this.open && this.tree_num == this.tree.getTreeId() && this.tree.isConnected();
+        // Check basic validity conditions
+        if (!this.open || this.tree == null) {
+            return false;
+        }
+
+        // Check tree ID consistency
+        if (this.tree_num != this.tree.getTreeId()) {
+            return false;
+        }
+
+        // Check connection status for SMB compliance
+        // but handle errors gracefully to avoid platform-specific issues
+        try {
+            return this.tree.isConnected();
+        } catch (Exception e) {
+            // If checking connection status fails, assume invalid for safety
+            return false;
+        }
     }
 
     /**
@@ -198,7 +217,10 @@ class SmbFileHandleImpl implements SmbFileHandle {
                 // release tree usage
                 t.release();
             }
-            this.tree = null;
+            // Only null the tree reference on explicit close to prevent premature invalidation
+            if (explicit) {
+                this.tree = null;
+            }
         }
     }
 
@@ -232,16 +254,27 @@ class SmbFileHandleImpl implements SmbFileHandle {
     /**
      * {@inheritDoc}
      *
+     * @deprecated The finalize method is deprecated since Java 9.
+     *             Use try-with-resources or explicit close() calls for proper resource management.
+     *             This method serves as a safety net to prevent resource leaks.
+     *
      * @see java.lang.Object#finalize()
      */
     @Override
+    @Deprecated(since = "Java 9", forRemoval = true)
+    @SuppressWarnings("deprecation")
     protected void finalize() throws Throwable {
         try {
-            if (this.usageCount != null && this.usageCount.get() != 0 && this.open) {
-                log.warn("File handle was not properly closed, performing emergency cleanup: " + this);
+            // Only perform emergency cleanup if handle is still truly open
+            // Check usageCount > 0 instead of != 0 to handle decrement below zero
+            if (this.open && this.usageCount != null && this.usageCount.get() > 0) {
+                log.warn("File handle was not properly closed, performing emergency cleanup: {}. "
+                        + "Consider using try-with-resources or explicit close() calls.", this);
+
                 if (this.creationBacktrace != null) {
-                    log.warn(Arrays.toString(this.creationBacktrace));
+                    log.warn("File handle creation stack trace: {}", Arrays.toString(this.creationBacktrace));
                 }
+
                 emergencyCloseHandle();
             }
         } catch (Exception e) {
@@ -252,21 +285,60 @@ class SmbFileHandleImpl implements SmbFileHandle {
     }
 
     /**
-     * Emergency cleanup method to prevent resource leaks during finalization
+     * Emergency cleanup method to prevent resource leaks during finalization.
+     * This method attempts to properly close the SMB file handle even during
+     * garbage collection, though this should not be relied upon for normal operation.
+     *
+     * <p>Note: This method is called from finalize() and should not throw exceptions
+     * that could interfere with garbage collection.</p>
      */
     private void emergencyCloseHandle() {
         try {
             synchronized (this) {
-                // Force close the handle
+                if (!this.open) {
+                    return; // Already closed
+                }
+
+                final SmbTreeHandleImpl t = this.tree;
+
+                // Attempt to send SMB close request if possible
+                if (t != null && isValid()) {
+                    try {
+                        log.debug("Emergency closing file handle {}", this);
+
+                        if (t.isSMB2()) {
+                            final Smb2CloseRequest req = new Smb2CloseRequest(this.cfg, this.fileId);
+                            // Use NO_RETRY to avoid blocking during emergency cleanup
+                            t.send(req, RequestParam.NO_RETRY);
+                        } else {
+                            // For SMB1, use 0 for lastWriteTime during emergency cleanup
+                            t.send(new SmbComClose(this.cfg, this.fid, 0L), new SmbComBlankResponse(this.cfg), RequestParam.NO_RETRY);
+                        }
+                    } catch (Exception smbException) {
+                        // Log but don't propagate SMB errors during emergency cleanup
+                        log.debug("Failed to send SMB close request during emergency cleanup", smbException);
+                    }
+                }
+
+                // Force close the handle state
                 this.open = false;
                 this.usageCount.set(0);
 
-                // Clear mutable references to free memory
-                // Note: Some fields may be final and cannot be nulled
+                // Release tree connection
+                if (t != null) {
+                    try {
+                        t.release();
+                    } catch (Exception releaseException) {
+                        log.debug("Failed to release tree handle during emergency cleanup", releaseException);
+                    }
+                }
 
-                // Clear any other mutable state would go here
+                // Don't clear tree reference in emergency cleanup - let normal GC handle it
+                // This prevents issues with handles that might still be referenced
+                // this.tree = null;  // Commented out to prevent premature invalidation
             }
         } catch (Exception e) {
+            // Critical: Don't let exceptions escape during finalization
             log.error("Failed to perform emergency file handle cleanup", e);
         }
     }

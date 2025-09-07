@@ -186,18 +186,30 @@ final class SmbSessionImpl implements SmbSessionInternal {
     }
 
     /**
-     * @return session increased usage count
+     * Acquires a reference to this session, incrementing the usage count.
+     * This method is thread-safe and ensures proper resource management.
+     *
+     * @return session with increased usage count
+     * @throws IllegalStateException if the session usage count overflows
      */
     public SmbSessionImpl acquire() {
         long usage = this.usageCount.incrementAndGet();
         if (log.isTraceEnabled()) {
-            log.trace("Acquire session " + usage + " " + this);
+            log.trace("Acquire session {} {}", usage, this);
         }
 
+        // Check for usage count overflow (should never happen in practice)
+        if (usage <= 0) {
+            this.usageCount.decrementAndGet(); // Rollback
+            throw new IllegalStateException("Session usage count overflow detected: " + usage);
+        }
+
+        // Reacquire transport on first usage
         if (usage == 1) {
             synchronized (this) {
-                if (this.transportAcquired.compareAndSet(false, true)) {
-                    log.debug("Reacquire transport");
+                // Double-check the transport state within the synchronized block
+                if (this.usageCount.get() > 0 && this.transportAcquired.compareAndSet(false, true)) {
+                    log.debug("Reacquire transport for session {}", this);
                     this.transport.acquire();
                 }
             }
@@ -237,49 +249,72 @@ final class SmbSessionImpl implements SmbSessionInternal {
     }
 
     /**
+     * Releases a reference to this session, decrementing the usage count.
+     * When the usage count reaches zero, all associated resources are cleaned up.
+     * This method is thread-safe and handles concurrent access properly.
      *
+     * @throws IllegalStateException if the session usage count becomes negative
      */
     public void release() {
         long usage = this.usageCount.decrementAndGet();
         if (log.isTraceEnabled()) {
-            log.trace("Release session " + usage + " " + this);
+            log.trace("Release session {} {}", usage, this);
         }
 
         if (usage == 0) {
             if (log.isDebugEnabled()) {
-                log.debug("Usage dropped to zero, release connection " + this.transport);
+                log.debug("Usage dropped to zero, release connection {}", this.transport);
             }
+
             // Ensure atomic cleanup of all resources
             synchronized (this) {
-                // Double-check usage count within synchronized block
+                // Double-check usage count within synchronized block to prevent race conditions
                 if (this.usageCount.get() != 0) {
+                    log.debug("Session was reacquired during cleanup, skipping resource cleanup");
                     return; // Another thread acquired the session
                 }
 
-                if (this.transportAcquired.compareAndSet(true, false)) {
-                    this.transport.release();
-                }
+                try {
+                    // Release transport connection
+                    if (this.transportAcquired.compareAndSet(true, false)) {
+                        this.transport.release();
+                    }
 
-                // Shutdown channel manager
-                if (this.channelManager != null) {
-                    this.channelManager.shutdown();
-                    this.channelManager = null;
-                }
+                    // Shutdown channel manager
+                    if (this.channelManager != null) {
+                        try {
+                            this.channelManager.shutdown();
+                        } catch (Exception e) {
+                            log.warn("Error shutting down channel manager for session {}", this, e);
+                        } finally {
+                            this.channelManager = null;
+                        }
+                    }
 
-                // Shutdown witness client
-                if (this.witnessClient != null) {
-                    this.witnessClient.close();
-                    this.witnessClient = null;
-                    this.witnessEnabled = false;
-                }
+                    // Shutdown witness client
+                    if (this.witnessClient != null) {
+                        try {
+                            this.witnessClient.close();
+                        } catch (Exception e) {
+                            log.warn("Error closing witness client for session {}", this, e);
+                        } finally {
+                            this.witnessClient = null;
+                            this.witnessEnabled = false;
+                        }
+                    }
 
-                // Clear trees collection atomically
-                if (this.trees != null) {
-                    this.trees.clear();
+                    // Clear trees collection atomically
+                    if (this.trees != null) {
+                        this.trees.clear();
+                    }
+                } catch (Exception e) {
+                    log.error("Error during session resource cleanup for {}", this, e);
+                    throw new RuntimeException("Session cleanup failed", e);
                 }
             }
         } else if (usage < 0) {
-            throw new RuntimeCIFSException("Usage count dropped below zero");
+            log.error("Session usage count corruption detected: {}, session: {}", usage, this);
+            throw new IllegalStateException("Session usage count dropped below zero: " + usage + ", session: " + this);
         }
     }
 
