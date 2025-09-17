@@ -1,0 +1,144 @@
+/*
+ * © 2017 AgNO3 Gmbh & Co. KG
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+package org.codelibs.jcifs.smb.impl;
+
+import org.codelibs.jcifs.smb.CIFSException;
+import org.codelibs.jcifs.smb.ResourceNameFilter;
+import org.codelibs.jcifs.smb.SmbResource;
+import org.codelibs.jcifs.smb.SmbResourceLocator;
+import org.codelibs.jcifs.smb.internal.smb1.com.SmbComBlankResponse;
+import org.codelibs.jcifs.smb.internal.smb1.com.SmbComFindClose2;
+import org.codelibs.jcifs.smb.internal.smb1.trans.SmbComTransaction;
+import org.codelibs.jcifs.smb.internal.smb1.trans2.Trans2FindFirst2;
+import org.codelibs.jcifs.smb.internal.smb1.trans2.Trans2FindFirst2Response;
+import org.codelibs.jcifs.smb.internal.smb1.trans2.Trans2FindNext2;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+class DirFileEntryEnumIterator1 extends DirFileEntryEnumIteratorBase {
+
+    private static final Logger log = LoggerFactory.getLogger(DirFileEntryEnumIterator1.class);
+    private static final int FIND_OVERHEAD = 100; // plenty enough
+
+    private Trans2FindNext2 nextRequest;
+    private Trans2FindFirst2Response response;
+
+    public DirFileEntryEnumIterator1(final SmbTreeHandleImpl th, final SmbResource parent, final String wildcard,
+            final ResourceNameFilter filter, final int searchAttributes) throws CIFSException {
+        super(th, parent, wildcard, filter, searchAttributes);
+    }
+
+    @SuppressWarnings("resource")
+    @Override
+    protected final FileEntry open() throws CIFSException {
+        final SmbResourceLocator loc = this.getParent().getLocator();
+        final String unc = loc.getUNCPath();
+        final String p = loc.getURL().getPath();
+        if (p.lastIndexOf('/') != p.length() - 1) {
+            throw new SmbException(loc.getURL() + " directory must end with '/'");
+        }
+        if (unc.lastIndexOf('\\') != unc.length() - 1) {
+            throw new SmbException(unc + " UNC must end with '\\'");
+        }
+
+        final SmbTreeHandleImpl th = getTreeHandle();
+        this.response = new Trans2FindFirst2Response(th.getConfig());
+
+        try {
+            th.send(new Trans2FindFirst2(th.getConfig(), unc, this.getWildcard(), this.getSearchAttributes(), th.getConfig().getListCount(),
+                    th.getConfig().getListSize() - FIND_OVERHEAD), this.response);
+
+            this.nextRequest = new Trans2FindNext2(th.getConfig(), this.response.getSid(), this.response.getResumeKey(),
+                    this.response.getLastName(), th.getConfig().getListCount(), th.getConfig().getListSize() - FIND_OVERHEAD);
+        } catch (final SmbException e) {
+            if (this.response != null && this.response.isReceived() && e.getNtStatus() == NtStatus.NT_STATUS_NO_SUCH_FILE) {
+                doClose();
+                return null;
+            }
+            throw e;
+        }
+
+        this.response.setSubCommand(SmbComTransaction.TRANS2_FIND_NEXT2);
+        final FileEntry n = advance(false);
+        if (n == null) {
+            doClose();
+        }
+        return n;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see org.codelibs.jcifs.smb.impl.DirFileEntryEnumIteratorBase#getResults()
+     */
+    @Override
+    protected FileEntry[] getResults() {
+        return this.response.getResults();
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @throws CIFSException
+     *
+     * @see org.codelibs.jcifs.smb.impl.DirFileEntryEnumIteratorBase#fetchMore()
+     */
+    @Override
+    protected boolean fetchMore() throws CIFSException {
+        this.nextRequest.reset(this.response.getResumeKey(), this.response.getLastName());
+        this.response.reset();
+        try {
+            getTreeHandle().send(this.nextRequest, this.response);
+            return this.response.getStatus() != NtStatus.NT_STATUS_NO_MORE_FILES;
+        } catch (final SmbException e) {
+            if (e.getNtStatus() == NtStatus.NT_STATUS_NO_MORE_FILES) {
+                log.debug("No more entries", e);
+                return false;
+            }
+            throw e;
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see org.codelibs.jcifs.smb.impl.DirFileEntryEnumIteratorBase#isDone()
+     */
+    @Override
+    protected boolean isDone() {
+        return this.response.isEndOfSearch();
+    }
+
+    /**
+     * @throws CIFSException
+     */
+    @Override
+    protected void doCloseInternal() throws CIFSException {
+        try {
+            @SuppressWarnings("resource")
+            final SmbTreeHandleImpl th = getTreeHandle();
+            if (this.response != null) {
+                th.send(new SmbComFindClose2(th.getConfig(), this.response.getSid()), new SmbComBlankResponse(th.getConfig()));
+            }
+        } catch (final SmbException se) {
+            log.debug("SmbComFindClose2 failed", se);
+        }
+
+    }
+
+}

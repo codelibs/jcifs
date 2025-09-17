@@ -47,7 +47,7 @@ public class Smb2HandleCapabilities {
 
 ### 4.1 Handle GUID Structure
 ```java
-package jcifs.internal.smb2.persistent;
+package org.codelibs.jcifs.smb.internal.smb2.persistent;
 
 import java.util.UUID;
 import java.nio.ByteBuffer;
@@ -98,9 +98,9 @@ public class HandleGuid {
 
 ### 4.2 Durable Handle Request Context
 ```java
-package jcifs.internal.smb2.persistent;
+package org.codelibs.jcifs.smb.internal.smb2.persistent;
 
-import jcifs.internal.smb2.create.Smb2CreateContext;
+import org.codelibs.jcifs.smb.internal.smb2.create.Smb2CreateContext;
 
 public class DurableHandleRequest extends Smb2CreateContext {
     public static final String NAME = "DHnQ";  // Durable Handle Request
@@ -146,7 +146,7 @@ public class DurableHandleRequest extends Smb2CreateContext {
 
 ### 4.3 Durable Handle V2 Request Context
 ```java
-package jcifs.internal.smb2.persistent;
+package org.codelibs.jcifs.smb.internal.smb2.persistent;
 
 public class DurableHandleV2Request extends Smb2CreateContext {
     public static final String NAME = "DH2Q";  // Durable Handle V2 Request
@@ -190,7 +190,7 @@ public class DurableHandleV2Request extends Smb2CreateContext {
 
 ### 4.4 Durable Handle Reconnect Context
 ```java
-package jcifs.internal.smb2.persistent;
+package org.codelibs.jcifs.smb.internal.smb2.persistent;
 
 public class DurableHandleReconnect extends Smb2CreateContext {
     public static final String NAME = "DHnC";  // Durable Handle Reconnect
@@ -229,7 +229,7 @@ public class DurableHandleReconnect extends Smb2CreateContext {
 
 ### 4.5 Persistent Handle Manager
 ```java
-package jcifs.internal.smb2.persistent;
+package org.codelibs.jcifs.smb.internal.smb2.persistent;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
@@ -433,7 +433,7 @@ public class PersistentHandleManager {
 
 ### 5.1 Automatic Reconnection Handler
 ```java
-package jcifs.internal.smb2.persistent;
+package org.codelibs.jcifs.smb.internal.smb2.persistent;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -687,11 +687,11 @@ public void logoff() throws IOException {
 ### 7.1 Configuration Properties
 ```java
 // In PropertyConfiguration.java
-public static final String USE_DURABLE_HANDLES = "jcifs.smb.client.useDurableHandles";
-public static final String USE_PERSISTENT_HANDLES = "jcifs.smb.client.usePersistentHandles";
-public static final String DURABLE_HANDLE_TIMEOUT = "jcifs.smb.client.durableHandleTimeout";
-public static final String HANDLE_RECONNECT_RETRIES = "jcifs.smb.client.handleReconnectRetries";
-public static final String HANDLE_STATE_DIR = "jcifs.smb.client.handleStateDirectory";
+public static final String USE_DURABLE_HANDLES = "org.codelibs.jcifs.smb.impl.client.useDurableHandles";
+public static final String USE_PERSISTENT_HANDLES = "org.codelibs.jcifs.smb.impl.client.usePersistentHandles";
+public static final String DURABLE_HANDLE_TIMEOUT = "org.codelibs.jcifs.smb.impl.client.durableHandleTimeout";
+public static final String HANDLE_RECONNECT_RETRIES = "org.codelibs.jcifs.smb.impl.client.handleReconnectRetries";
+public static final String HANDLE_STATE_DIR = "org.codelibs.jcifs.smb.impl.client.handleStateDirectory";
 
 public boolean isUseDurableHandles() {
     return getBooleanProperty(USE_DURABLE_HANDLES, true);
@@ -719,7 +719,7 @@ public String getHandleStateDirectory() {
 
 ### 8.1 Unit Tests
 ```java
-package jcifs.tests.smb3;
+package org.codelibs.jcifs.smb.tests.smb3;
 
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -805,7 +805,7 @@ public class PersistentHandleTest {
 @Test
 public void testDurableHandleReconnection() throws Exception {
     CIFSContext context = getTestContext();
-    context.getConfig().setProperty("jcifs.smb.client.useDurableHandles", "true");
+    context.getConfig().setProperty("org.codelibs.jcifs.smb.impl.client.useDurableHandles", "true");
     
     SmbFile file = new SmbFile("smb://server/share/test.txt", context);
     file.createNewFile();
@@ -830,7 +830,7 @@ public void testDurableHandleReconnection() throws Exception {
 public void testPersistentHandleSurvivesReboot() throws Exception {
     // This test requires special setup with server reboot capability
     CIFSContext context = getTestContext();
-    context.getConfig().setProperty("jcifs.smb.client.usePersistentHandles", "true");
+    context.getConfig().setProperty("org.codelibs.jcifs.smb.impl.client.usePersistentHandles", "true");
     
     SmbFile file = new SmbFile("smb://server/share/persistent.txt", context);
     file.createNewFile();

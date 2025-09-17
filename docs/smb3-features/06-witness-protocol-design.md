@@ -61,7 +61,7 @@ public enum WitnessEventType {
 
 ### 4.1 Witness Registration
 ```java
-package jcifs.internal.witness;
+package org.codelibs.jcifs.smb.internal.witness;
 
 import java.net.InetAddress;
 import java.util.concurrent.atomic.AtomicLong;
@@ -135,7 +135,7 @@ public class WitnessRegistration {
 
 ### 4.2 Witness Notification
 ```java
-package jcifs.internal.witness;
+package org.codelibs.jcifs.smb.internal.witness;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -201,10 +201,10 @@ public class WitnessNotification {
 
 ### 4.3 Witness Client
 ```java
-package jcifs.internal.witness;
+package org.codelibs.jcifs.smb.internal.witness;
 
-import jcifs.dcerpc.*;
-import jcifs.dcerpc.rpc.*;
+import org.codelibs.jcifs.smb.dcerpc.*;
+import org.codelibs.jcifs.smb.dcerpc.rpc.*;
 import java.util.concurrent.*;
 
 public class WitnessClient implements AutoCloseable {
@@ -425,10 +425,10 @@ public class WitnessClient implements AutoCloseable {
 
 ### 4.4 Witness RPC Client
 ```java
-package jcifs.internal.witness;
+package org.codelibs.jcifs.smb.internal.witness;
 
-import jcifs.dcerpc.*;
-import jcifs.dcerpc.rpc.*;
+import org.codelibs.jcifs.smb.dcerpc.*;
+import org.codelibs.jcifs.smb.dcerpc.rpc.*;
 
 public class WitnessRpcClient implements AutoCloseable {
     private final DcerpcHandle handle;
@@ -900,11 +900,11 @@ protected void handleConnectionLoss(IOException error) {
 ### 6.1 Configuration Properties
 ```java
 // In PropertyConfiguration.java
-public static final String USE_WITNESS = "jcifs.smb.client.useWitness";
-public static final String WITNESS_HEARTBEAT_TIMEOUT = "jcifs.smb.client.witnessHeartbeatTimeout";
-public static final String WITNESS_REGISTRATION_TIMEOUT = "jcifs.smb.client.witnessRegistrationTimeout";
-public static final String WITNESS_RECONNECT_DELAY = "jcifs.smb.client.witnessReconnectDelay";
-public static final String WITNESS_SERVICE_DISCOVERY = "jcifs.smb.client.witnessServiceDiscovery";
+public static final String USE_WITNESS = "org.codelibs.jcifs.smb.impl.client.useWitness";
+public static final String WITNESS_HEARTBEAT_TIMEOUT = "org.codelibs.jcifs.smb.impl.client.witnessHeartbeatTimeout";
+public static final String WITNESS_REGISTRATION_TIMEOUT = "org.codelibs.jcifs.smb.impl.client.witnessRegistrationTimeout";
+public static final String WITNESS_RECONNECT_DELAY = "org.codelibs.jcifs.smb.impl.client.witnessReconnectDelay";
+public static final String WITNESS_SERVICE_DISCOVERY = "org.codelibs.jcifs.smb.impl.client.witnessServiceDiscovery";
 
 public boolean isUseWitness() {
     return getBooleanProperty(USE_WITNESS, false);  // Disabled by default
@@ -994,7 +994,7 @@ public void testWitnessClientMock() throws Exception {
 public void testWitnessFailover() throws Exception {
     // Requires cluster environment for testing
     CIFSContext context = getTestContext();
-    context.getConfig().setProperty("jcifs.smb.client.useWitness", "true");
+    context.getConfig().setProperty("org.codelibs.jcifs.smb.impl.client.useWitness", "true");
     
     SmbFile file = new SmbFile("smb://cluster-server/share/test.txt", context);
     file.createNewFile();
@@ -1015,8 +1015,8 @@ public void testWitnessFailover() throws Exception {
 @Test
 public void testWitnessServiceDiscovery() throws Exception {
     CIFSContext context = getTestContext();
-    context.getConfig().setProperty("jcifs.smb.client.useWitness", "true");
-    context.getConfig().setProperty("jcifs.smb.client.witnessServiceDiscovery", "true");
+    context.getConfig().setProperty("org.codelibs.jcifs.smb.impl.client.useWitness", "true");
+    context.getConfig().setProperty("org.codelibs.jcifs.smb.impl.client.witnessServiceDiscovery", "true");
     
     SmbSession session = new SmbSession(context, transport);
     session.initializeWitnessSupport();
