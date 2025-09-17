@@ -52,7 +52,7 @@ public enum DirectoryCacheScope {
 
 ### 4.1 Directory Lease Context
 ```java
-package jcifs.internal.smb2.lease;
+package org.codelibs.jcifs.smb.internal.smb2.lease;
 
 public class DirectoryLeaseContext extends Smb2LeaseContext {
     public static final String NAME_DIRECTORY_REQUEST = "DLse";
@@ -132,7 +132,7 @@ public class DirectoryLeaseContext extends Smb2LeaseContext {
 
 ### 4.2 Directory Cache Entry
 ```java
-package jcifs.internal.smb2.lease;
+package org.codelibs.jcifs.smb.internal.smb2.lease;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -288,7 +288,7 @@ public class DirectoryCacheEntry {
 
 ### 4.3 Directory Lease Manager
 ```java
-package jcifs.internal.smb2.lease;
+package org.codelibs.jcifs.smb.internal.smb2.lease;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
@@ -485,9 +485,9 @@ public class DirectoryLeaseManager {
 
 ### 4.4 Directory Change Notifier
 ```java
-package jcifs.internal.smb2.lease;
+package org.codelibs.jcifs.smb.internal.smb2.lease;
 
-import jcifs.internal.smb2.ServerMessageBlock2;
+import org.codelibs.jcifs.smb.internal.smb2.ServerMessageBlock2;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class DirectoryChangeNotifier {
@@ -775,11 +775,11 @@ public void logoff() throws IOException {
 ### 6.1 Configuration Properties
 ```java
 // In PropertyConfiguration.java
-public static final String USE_DIRECTORY_LEASING = "jcifs.smb.client.useDirectoryLeasing";
-public static final String DIRECTORY_CACHE_SCOPE = "jcifs.smb.client.directoryCacheScope";
-public static final String DIRECTORY_CACHE_TIMEOUT = "jcifs.smb.client.directoryCacheTimeout";
-public static final String DIRECTORY_NOTIFICATIONS_ENABLED = "jcifs.smb.client.directoryNotificationsEnabled";
-public static final String MAX_DIRECTORY_CACHE_ENTRIES = "jcifs.smb.client.maxDirectoryCacheEntries";
+public static final String USE_DIRECTORY_LEASING = "org.codelibs.jcifs.smb.impl.client.useDirectoryLeasing";
+public static final String DIRECTORY_CACHE_SCOPE = "org.codelibs.jcifs.smb.impl.client.directoryCacheScope";
+public static final String DIRECTORY_CACHE_TIMEOUT = "org.codelibs.jcifs.smb.impl.client.directoryCacheTimeout";
+public static final String DIRECTORY_NOTIFICATIONS_ENABLED = "org.codelibs.jcifs.smb.impl.client.directoryNotificationsEnabled";
+public static final String MAX_DIRECTORY_CACHE_ENTRIES = "org.codelibs.jcifs.smb.impl.client.maxDirectoryCacheEntries";
 
 public boolean isUseDirectoryLeasing() {
     return getBooleanProperty(USE_DIRECTORY_LEASING, true);
@@ -946,7 +946,7 @@ public void testDirectoryLeaseManager() {
 @Test
 public void testDirectoryListingCache() throws Exception {
     CIFSContext context = getTestContext();
-    context.getConfig().setProperty("jcifs.smb.client.useDirectoryLeasing", "true");
+    context.getConfig().setProperty("org.codelibs.jcifs.smb.impl.client.useDirectoryLeasing", "true");
     
     SmbFile dir = new SmbFile("smb://server/share/testdir/", context);
     
@@ -967,7 +967,7 @@ public void testDirectoryListingCache() throws Exception {
 @Test
 public void testDirectoryChangeNotification() throws Exception {
     CIFSContext context = getTestContext();
-    context.getConfig().setProperty("jcifs.smb.client.directoryNotificationsEnabled", "true");
+    context.getConfig().setProperty("org.codelibs.jcifs.smb.impl.client.directoryNotificationsEnabled", "true");
     
     SmbFile dir = new SmbFile("smb://server/share/testdir/", context);
     SmbFile testFile = new SmbFile("smb://server/share/testdir/newfile.txt", context);

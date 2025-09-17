@@ -1,0 +1,94 @@
+/*
+ * © 2017 AgNO3 Gmbh & Co. KG
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+package org.codelibs.jcifs.smb.internal.fscc;
+
+import java.nio.charset.StandardCharsets;
+
+import org.codelibs.jcifs.smb.Encodable;
+import org.codelibs.jcifs.smb.internal.util.SMBUtil;
+
+/**
+ * File System Control Code (FSCC) request for pipe wait operations.
+ * Implements the FSCTL_PIPE_WAIT control code used to wait for a named pipe
+ * to become available when attempting to connect to a busy pipe.
+ *
+ * @author mbechler
+ */
+public class FsctlPipeWaitRequest implements Encodable {
+
+    private final byte[] nameBytes;
+    private final long timeout;
+    private final boolean timeoutSpecified;
+
+    /**
+     * Constructs a pipe wait request without timeout.
+     *
+     * @param name the pipe name to wait for
+     */
+    public FsctlPipeWaitRequest(final String name) {
+        this.nameBytes = name.getBytes(StandardCharsets.UTF_16LE);
+        this.timeoutSpecified = false;
+        this.timeout = 0;
+    }
+
+    /**
+     * Constructs a pipe wait request with timeout.
+     *
+     * @param name the pipe name to wait for
+     * @param timeout the timeout value in milliseconds
+     */
+    public FsctlPipeWaitRequest(final String name, final long timeout) {
+        this.nameBytes = name.getBytes(StandardCharsets.UTF_16LE);
+        this.timeoutSpecified = true;
+        this.timeout = timeout;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see org.codelibs.jcifs.smb.Encodable#encode(byte[], int)
+     */
+    @Override
+    public int encode(final byte[] dst, int dstIndex) {
+        final int start = dstIndex;
+        SMBUtil.writeInt8(this.timeout, dst, dstIndex);
+        dstIndex += 8;
+        SMBUtil.writeInt4(this.nameBytes.length, dst, dstIndex);
+        dstIndex += 4;
+
+        dst[dstIndex] = (byte) (this.timeoutSpecified ? 0x1 : 0x0);
+        dstIndex++;
+        dstIndex++; // Padding
+
+        System.arraycopy(this.nameBytes, 0, dst, dstIndex, this.nameBytes.length);
+        dstIndex += this.nameBytes.length;
+
+        return dstIndex - start;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see org.codelibs.jcifs.smb.Encodable#size()
+     */
+    @Override
+    public int size() {
+        return 14 + this.nameBytes.length;
+    }
+
+}

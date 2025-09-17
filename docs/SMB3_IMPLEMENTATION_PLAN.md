@@ -12,7 +12,7 @@ SMB3 leases replace the traditional oplock mechanism and are foundational for ot
 
 #### 1.1 Core Lease Infrastructure
 ```
-Package: jcifs.internal.smb2.lease
+Package: org.codelibs.jcifs.smb.internal.smb2.lease
 ├── Smb2LeaseBreak.java          - Lease break notification handling
 ├── Smb2LeaseContext.java        - Lease context for create requests
 ├── Smb2LeaseKey.java            - 16-byte lease key management
@@ -43,7 +43,7 @@ Persistent handles allow connections to survive network interruptions and server
 
 #### 2.1 Core Persistent Handle Infrastructure
 ```
-Package: jcifs.internal.smb2.persistent
+Package: org.codelibs.jcifs.smb.internal.smb2.persistent
 ├── PersistentHandleContext.java     - Persistent handle create context
 ├── PersistentHandleManager.java     - Handle persistence management
 ├── DurableHandleRequest.java        - Durable handle v1 support
@@ -75,7 +75,7 @@ Multi-channel enables using multiple network connections for improved performanc
 
 #### 3.1 Core Multi-Channel Infrastructure
 ```
-Package: jcifs.internal.smb2.multichannel
+Package: org.codelibs.jcifs.smb.internal.smb2.multichannel
 ├── ChannelManager.java           - Manage multiple channels per session
 ├── ChannelBinding.java           - Channel binding and security
 ├── ChannelSequence.java          - Request sequencing across channels
@@ -108,7 +108,7 @@ Directory leasing extends the lease concept to directories for improved metadata
 
 #### 4.1 Core Directory Lease Infrastructure
 ```
-Package: jcifs.internal.smb2.lease
+Package: org.codelibs.jcifs.smb.internal.smb2.lease
 ├── DirectoryLeaseContext.java    - Directory-specific lease context
 ├── DirectoryLeaseCache.java      - Directory metadata cache
 └── DirectoryChangeNotifier.java  - Directory change tracking
@@ -136,7 +136,7 @@ RDMA provides high-speed, low-latency data transfer for supported network adapte
 
 #### 5.1 Core RDMA Infrastructure
 ```
-Package: jcifs.internal.smb2.rdma
+Package: org.codelibs.jcifs.smb.internal.smb2.rdma
 ├── RdmaTransport.java           - RDMA transport implementation
 ├── RdmaCapability.java          - RDMA capability detection
 ├── RdmaNegotiate.java           - RDMA negotiation context
@@ -169,7 +169,7 @@ Witness protocol enables rapid failover notification for clustered file servers.
 
 #### 6.1 Core Witness Infrastructure
 ```
-Package: jcifs.internal.witness
+Package: org.codelibs.jcifs.smb.internal.witness
 ├── WitnessClient.java           - Witness client implementation
 ├── WitnessRegistration.java     - Client registration with witness
 ├── WitnessNotification.java     - Notification handling
@@ -230,29 +230,29 @@ graph TD
 
 ```properties
 # Lease configuration
-jcifs.smb.client.useLeases=true
-jcifs.smb.client.leaseTimeout=30000
+org.codelibs.jcifs.smb.impl.client.useLeases=true
+org.codelibs.jcifs.smb.impl.client.leaseTimeout=30000
 
 # Persistent handles
-jcifs.smb.client.usePersistentHandles=true
-jcifs.smb.client.durableTimeout=120000
+org.codelibs.jcifs.smb.impl.client.usePersistentHandles=true
+org.codelibs.jcifs.smb.impl.client.durableTimeout=120000
 
 # Multi-channel
-jcifs.smb.client.useMultiChannel=true
-jcifs.smb.client.maxChannels=4
-jcifs.smb.client.channelBindingPolicy=required
+org.codelibs.jcifs.smb.impl.client.useMultiChannel=true
+org.codelibs.jcifs.smb.impl.client.maxChannels=4
+org.codelibs.jcifs.smb.impl.client.channelBindingPolicy=required
 
 # Directory leasing
-jcifs.smb.client.useDirectoryLeasing=true
-jcifs.smb.client.dirCacheTimeout=60000
+org.codelibs.jcifs.smb.impl.client.useDirectoryLeasing=true
+org.codelibs.jcifs.smb.impl.client.dirCacheTimeout=60000
 
 # RDMA
-jcifs.smb.client.useRDMA=auto
-jcifs.smb.client.rdmaProvider=disni
+org.codelibs.jcifs.smb.impl.client.useRDMA=auto
+org.codelibs.jcifs.smb.impl.client.rdmaProvider=disni
 
 # Witness
-jcifs.smb.client.useWitness=true
-jcifs.smb.client.witnessNotificationTimeout=5000
+org.codelibs.jcifs.smb.impl.client.useWitness=true
+org.codelibs.jcifs.smb.impl.client.witnessNotificationTimeout=5000
 ```
 
 ## Risk Assessment

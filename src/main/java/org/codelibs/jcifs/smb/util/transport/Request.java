@@ -1,0 +1,61 @@
+/*
+ * © 2017 AgNO3 Gmbh & Co. KG
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+package org.codelibs.jcifs.smb.util.transport;
+
+/**
+ * Interface for transport request messages.
+ * This interface represents requests sent to network transports.
+ */
+public interface Request extends Message {
+
+    /**
+     * Gets the number of credits this request requires.
+     *
+     * @return number of credits this request requires
+     */
+    int getCreditCost();
+
+    /**
+     * Sets the number of request credits.
+     *
+     * @param credits the number of credits to set
+     */
+    void setRequestCredits(int credits);
+
+    /**
+     * Checks if this is a cancel request.
+     *
+     * @return whether this is a cancel request
+     */
+    boolean isCancel();
+
+    /**
+     * Gets the next request in the chain.
+     *
+     * @return chained request
+     */
+    Request getNext();
+
+    /**
+     * Gets the response for this request.
+     *
+     * @return the response for this request
+     */
+    Response getResponse();
+
+}

@@ -1,0 +1,96 @@
+/*
+ * © 2017 AgNO3 Gmbh & Co. KG
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+package org.codelibs.jcifs.smb.internal.smb1.com;
+
+import org.codelibs.jcifs.smb.Configuration;
+import org.codelibs.jcifs.smb.internal.SMBProtocolDecodingException;
+import org.codelibs.jcifs.smb.internal.smb1.ServerMessageBlock;
+import org.codelibs.jcifs.smb.internal.util.SMBUtil;
+
+/**
+ * SMB1 Seek command response implementation.
+ * Handles server responses to file seek operations, returning the new file
+ * position after a seek request in SMB1 protocol file operations.
+ *
+ * @author mbechler
+ */
+public class SmbComSeekResponse extends ServerMessageBlock {
+
+    private long offset;
+
+    /**
+     * Constructs a seek response.
+     *
+     * @param config the configuration
+     */
+    public SmbComSeekResponse(final Configuration config) {
+        super(config);
+    }
+
+    /**
+     * Gets the current file offset after the seek operation.
+     *
+     * @return the offset
+     */
+    public long getOffset() {
+        return this.offset;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see org.codelibs.jcifs.smb.internal.smb1.ServerMessageBlock#writeParameterWordsWireFormat(byte[], int)
+     */
+    @Override
+    protected int writeParameterWordsWireFormat(final byte[] dst, final int dstIndex) {
+        return 0;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see org.codelibs.jcifs.smb.internal.smb1.ServerMessageBlock#writeBytesWireFormat(byte[], int)
+     */
+    @Override
+    protected int writeBytesWireFormat(final byte[] dst, final int dstIndex) {
+        return 0;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see org.codelibs.jcifs.smb.internal.smb1.ServerMessageBlock#readParameterWordsWireFormat(byte[], int)
+     */
+    @Override
+    protected int readParameterWordsWireFormat(final byte[] buffer, final int bufferIndex) {
+        this.offset = SMBUtil.readInt4(buffer, bufferIndex);
+        return 4;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see org.codelibs.jcifs.smb.internal.smb1.ServerMessageBlock#readBytesWireFormat(byte[], int)
+     */
+    @Override
+    protected int readBytesWireFormat(final byte[] buffer, final int bufferIndex) throws SMBProtocolDecodingException {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+}

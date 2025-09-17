@@ -37,7 +37,7 @@ public class Smb2LeaseState {
 
 ### 4.1 Lease Key Structure
 ```java
-package jcifs.internal.smb2.lease;
+package org.codelibs.jcifs.smb.internal.smb2.lease;
 
 import java.security.SecureRandom;
 import java.util.Arrays;
@@ -79,9 +79,9 @@ public class Smb2LeaseKey {
 
 ### 4.2 Lease Context Structure
 ```java
-package jcifs.internal.smb2.lease;
+package org.codelibs.jcifs.smb.internal.smb2.lease;
 
-import jcifs.internal.smb2.create.Smb2CreateContext;
+import org.codelibs.jcifs.smb.internal.smb2.create.Smb2CreateContext;
 
 public class Smb2LeaseContext extends Smb2CreateContext {
     // Context name for lease request
@@ -154,12 +154,12 @@ public class Smb2LeaseContext extends Smb2CreateContext {
 
 ### 4.3 Lease Manager
 ```java
-package jcifs.internal.smb2.lease;
+package org.codelibs.jcifs.smb.internal.smb2.lease;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import jcifs.CIFSContext;
+import org.codelibs.jcifs.smb.CIFSContext;
 
 public class LeaseManager {
     private final ConcurrentHashMap<Smb2LeaseKey, LeaseEntry> leases;
@@ -296,9 +296,9 @@ public class LeaseManager {
 
 ### 5.1 Lease Break Notification
 ```java
-package jcifs.internal.smb2.lease;
+package org.codelibs.jcifs.smb.internal.smb2.lease;
 
-import jcifs.internal.smb2.ServerMessageBlock2;
+import org.codelibs.jcifs.smb.internal.smb2.ServerMessageBlock2;
 
 public class Smb2LeaseBreakNotification extends ServerMessageBlock2 {
     // Command code for lease break
@@ -404,7 +404,7 @@ public class Smb2LeaseBreakNotification extends ServerMessageBlock2 {
 
 ### 5.2 Lease Break Acknowledgment
 ```java
-package jcifs.internal.smb2.lease;
+package org.codelibs.jcifs.smb.internal.smb2.lease;
 
 public class Smb2LeaseBreakAcknowledgment extends ServerMessageBlock2 {
     private int structureSize = 36;
@@ -560,10 +560,10 @@ private void handleIncomingMessage(ServerMessageBlock2 msg) {
 // In PropertyConfiguration.java
 public class PropertyConfiguration implements Configuration {
     // Lease configuration properties
-    public static final String USE_LEASES = "jcifs.smb.client.useLeases";
-    public static final String LEASE_TIMEOUT = "jcifs.smb.client.leaseTimeout";
-    public static final String MAX_LEASES = "jcifs.smb.client.maxLeases";
-    public static final String LEASE_VERSION = "jcifs.smb.client.leaseVersion";
+    public static final String USE_LEASES = "org.codelibs.jcifs.smb.impl.client.useLeases";
+    public static final String LEASE_TIMEOUT = "org.codelibs.jcifs.smb.impl.client.leaseTimeout";
+    public static final String MAX_LEASES = "org.codelibs.jcifs.smb.impl.client.maxLeases";
+    public static final String LEASE_VERSION = "org.codelibs.jcifs.smb.impl.client.leaseVersion";
     
     public boolean isUseLeases() {
         return getBooleanProperty(USE_LEASES, true);
@@ -587,7 +587,7 @@ public class PropertyConfiguration implements Configuration {
 
 ### 8.1 Unit Tests
 ```java
-package jcifs.tests.smb3;
+package org.codelibs.jcifs.smb.tests.smb3;
 
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -641,7 +641,7 @@ public class LeaseTest {
 public void testLeaseWithRealServer() throws Exception {
     // Requires SMB3 capable server
     CIFSContext context = getTestContext();
-    context.getConfig().setProperty("jcifs.smb.client.useLeases", "true");
+    context.getConfig().setProperty("org.codelibs.jcifs.smb.impl.client.useLeases", "true");
     
     try (SmbFile file = new SmbFile("smb://server/share/test.txt", context)) {
         // Open file with lease

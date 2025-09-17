@@ -77,9 +77,9 @@ For the latest version with SMB3 support (coming soon):
 ### Basic Usage
 
 ```java
-import jcifs.CIFSContext;
-import jcifs.context.SingletonContext;
-import jcifs.smb.SmbFile;
+import org.codelibs.jcifs.smb.CIFSContext;
+import org.codelibs.jcifs.smb.context.SingletonContext;
+import org.codelibs.jcifs.smb.impl.SmbFile;
 
 // Using default context
 CIFSContext context = SingletonContext.getInstance();
@@ -95,12 +95,12 @@ try (SmbFile file = new SmbFile("smb://server/share/file.txt", context)) {
 ### With Authentication
 
 ```java
-import jcifs.CIFSContext;
-import jcifs.context.BaseContext;
-import jcifs.smb.NtlmPasswordAuthenticator;
+import org.codelibs.jcifs.smb.CIFSContext;
+import org.codelibs.jcifs.smb.context.BaseContext;
+import org.codelibs.jcifs.smb.impl.NtlmPasswordAuthenticator;
 
 // Create context with credentials
-CIFSContext context = new BaseContext(new jcifs.config.PropertyConfiguration());
+CIFSContext context = new BaseContext(new org.codelibs.jcifs.smb.config.PropertyConfiguration());
 NtlmPasswordAuthenticator auth = new NtlmPasswordAuthenticator("domain", "username", "password");
 CIFSContext authContext = context.withCredentials(auth);
 
