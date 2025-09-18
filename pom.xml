@@ -183,24 +183,6 @@
 				</dependencies>
 			</plugin>
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-failsafe-plugin</artifactId>
-				<version>3.5.0</version>
-				<executions>
-					<execution>
-						<goals>
-							<goal>integration-test</goal>
-							<goal>verify</goal>
-						</goals>
-						<configuration>
-							<includes>
-								<include>**/*Test.java</include>
-							</includes>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
 				<version>0.8.13</version>
@@ -234,11 +216,10 @@
 				<configuration>
 					<addDefaultLicenseMatchers>true</addDefaultLicenseMatchers>
 					<excludes>
-						<exclude>pom.xml</exclude>
-						<exclude>breaking-changes.xml</exclude>
-						<exclude>README.md</exclude>
+						<exclude>*.xml</exclude>
+						<exclude>*.md</exclude>
 						<exclude>build.properties</exclude>
-						<exclude>src/test/resources/**</exclude>
+						<exclude>src/test/**</exclude>
 						<exclude>**/*.idl</exclude>
 						<exclude>**/*.css</exclude>
 						<exclude>.*</exclude>
@@ -250,7 +231,8 @@
 						<exclude>src/main/java/org/codelibs/jcifs/smb/dcerpc/msrpc/lsarpc.java</exclude>
 						<exclude>src/main/java/org/codelibs/jcifs/smb/dcerpc/rpc.java</exclude>
 						<exclude>src/main/java/org/codelibs/jcifs/smb1/**</exclude>
-						<exclude>src/test/java/**</exclude>
+						<exclude>src/main/resources/**</exclude>
+						<exclude>docs/**</exclude>
 					</excludes>
 					<licenses>
 						<license implementation="org.apache.rat.analysis.license.SimplePatternBasedLicense">

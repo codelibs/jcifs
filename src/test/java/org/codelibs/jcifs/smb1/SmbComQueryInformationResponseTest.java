@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.Date;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -22,80 +23,64 @@ public class SmbComQueryInformationResponseTest {
         response = new SmbComQueryInformationResponse(serverTimeZoneOffset);
     }
 
-    /**
-     * Test of constructor, of class SmbComQueryInformationResponse.
-     */
     @Test
-    public void testConstructor() {
+    @DisplayName("Constructor should initialize with command and server timezone offset")
+    public void constructorShouldInitializeCorrectly() {
         // The constructor sets the command and serverTimeZoneOffset.
         // We can't directly access serverTimeZoneOffset, but we can verify its effect.
         assertEquals(ServerMessageBlock.SMB_COM_QUERY_INFORMATION, response.command);
         assertEquals(serverTimeZoneOffset, response.getLastWriteTime());
     }
 
-    /**
-     * Test of getAttributes method, of class SmbComQueryInformationResponse.
-     */
     @Test
-    public void testGetAttributes() {
+    @DisplayName("getAttributes should return zero initially")
+    public void getAttributesShouldReturnZeroInitially() {
         // Initially, attributes should be 0.
         assertEquals(0, response.getAttributes());
     }
 
-    /**
-     * Test of getCreateTime method, of class SmbComQueryInformationResponse.
-     */
     @Test
-    public void testGetCreateTime() {
+    @DisplayName("getCreateTime should return server timezone offset initially")
+    public void getCreateTimeShouldReturnServerTimezoneOffset() {
         // Initially, lastWriteTime is 0, so createTime should be just the offset.
         assertEquals(serverTimeZoneOffset, response.getCreateTime());
     }
 
-    /**
-     * Test of getLastWriteTime method, of class SmbComQueryInformationResponse.
-     */
     @Test
-    public void testGetLastWriteTime() {
+    @DisplayName("getLastWriteTime should return server timezone offset initially")
+    public void getLastWriteTimeShouldReturnServerTimezoneOffset() {
         // Initially, lastWriteTime is 0, so it should return just the offset.
         assertEquals(serverTimeZoneOffset, response.getLastWriteTime());
     }
 
-    /**
-     * Test of getSize method, of class SmbComQueryInformationResponse.
-     */
     @Test
-    public void testGetSize() {
+    @DisplayName("getSize should return zero initially")
+    public void getSizeShouldReturnZeroInitially() {
         // Initially, fileSize should be 0.
         assertEquals(0, response.getSize());
     }
 
-    /**
-     * Test of writeParameterWordsWireFormat method, of class SmbComQueryInformationResponse.
-     */
     @Test
-    public void testWriteParameterWordsWireFormat() {
+    @DisplayName("writeParameterWordsWireFormat should return zero")
+    public void writeParameterWordsWireFormatShouldReturnZero() {
         byte[] dst = new byte[10];
         int dstIndex = 0;
         // This method does nothing and should return 0.
         assertEquals(0, response.writeParameterWordsWireFormat(dst, dstIndex));
     }
 
-    /**
-     * Test of writeBytesWireFormat method, of class SmbComQueryInformationResponse.
-     */
     @Test
-    public void testWriteBytesWireFormat() {
+    @DisplayName("writeBytesWireFormat should return zero")
+    public void writeBytesWireFormatShouldReturnZero() {
         byte[] dst = new byte[10];
         int dstIndex = 0;
         // This method does nothing and should return 0.
         assertEquals(0, response.writeBytesWireFormat(dst, dstIndex));
     }
 
-    /**
-     * Test of readParameterWordsWireFormat method, of class SmbComQueryInformationResponse.
-     */
     @Test
-    public void testReadParameterWordsWireFormat() {
+    @DisplayName("readParameterWordsWireFormat should read file attributes, time and size")
+    public void readParameterWordsWireFormatShouldReadFileData() {
         // Prepare a buffer with sample data.
         // 2 bytes for fileAttributes, 4 bytes for lastWriteTime, 4 bytes for fileSize
         byte[] buffer = new byte[20];
@@ -121,33 +106,27 @@ public class SmbComQueryInformationResponseTest {
         assertEquals(1024, response.getSize());
     }
 
-    /**
-     * Test of readParameterWordsWireFormat method with zero word count.
-     */
     @Test
-    public void testReadParameterWordsWireFormatWithZeroWordCount() {
+    @DisplayName("readParameterWordsWireFormat should return zero with zero word count")
+    public void readParameterWordsWireFormatWithZeroWordCountShouldReturnZero() {
         byte[] buffer = new byte[20];
         response.wordCount = 0;
         int bytesRead = response.readParameterWordsWireFormat(buffer, 0);
         assertEquals(0, bytesRead);
     }
 
-    /**
-     * Test of readBytesWireFormat method, of class SmbComQueryInformationResponse.
-     */
     @Test
-    public void testReadBytesWireFormat() {
+    @DisplayName("readBytesWireFormat should return zero")
+    public void readBytesWireFormatShouldReturnZero() {
         byte[] buffer = new byte[10];
         int bufferIndex = 0;
         // This method does nothing and should return 0.
         assertEquals(0, response.readBytesWireFormat(buffer, bufferIndex));
     }
 
-    /**
-     * Test of toString method, of class SmbComQueryInformationResponse.
-     */
     @Test
-    public void testToString() {
+    @DisplayName("toString should return properly formatted string representation")
+    public void toStringShouldReturnFormattedRepresentation() {
         String result = response.toString();
         assertNotNull(result);
         assertTrue(result.startsWith("SmbComQueryInformationResponse["));

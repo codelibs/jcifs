@@ -34,7 +34,7 @@ public class ServerDataTest {
      */
     @Test
     @DisplayName("Test default constructor initializes fields with default values")
-    public void testDefaultConstructor() {
+    public void shouldInitializeFieldsWithDefaultValues() {
         // Then - verify all fields have default values
         assertEquals((byte) 0, serverData.sflags);
         assertEquals(0, serverData.sflags2);
@@ -63,7 +63,7 @@ public class ServerDataTest {
     @ParameterizedTest
     @ValueSource(bytes = { 0x00, 0x01, 0x7F, (byte) 0x80, (byte) 0xFF })
     @DisplayName("Test sflags field with various byte values")
-    public void testSflagsField(byte value) {
+    public void shouldHandleVariousByteValuesForSflags(byte value) {
         // When
         serverData.sflags = value;
 
@@ -76,7 +76,7 @@ public class ServerDataTest {
      */
     @Test
     @DisplayName("Test int fields with various values")
-    public void testIntFields() {
+    public void shouldHandleVariousIntFieldValues() {
         // When
         serverData.sflags2 = 0x12345678;
         serverData.smaxMpxCount = 50;
@@ -109,7 +109,7 @@ public class ServerDataTest {
      */
     @Test
     @DisplayName("Test boolean fields")
-    public void testBooleanFields() {
+    public void shouldHandleBooleanFields() {
         // When - set all to true
         serverData.encryptedPasswords = true;
         serverData.signaturesEnabled = true;
@@ -136,7 +136,7 @@ public class ServerDataTest {
      */
     @Test
     @DisplayName("Test oemDomainName field with various string values")
-    public void testOemDomainNameField() {
+    public void shouldHandleVariousStringValuesForOemDomainName() {
         // Test with normal string
         serverData.oemDomainName = "WORKGROUP";
         assertEquals("WORKGROUP", serverData.oemDomainName);
@@ -163,7 +163,7 @@ public class ServerDataTest {
      */
     @Test
     @DisplayName("Test serverTime field with various long values")
-    public void testServerTimeField() {
+    public void shouldHandleVariousLongValuesForServerTime() {
         // Test with zero
         serverData.serverTime = 0L;
         assertEquals(0L, serverData.serverTime);
@@ -190,7 +190,7 @@ public class ServerDataTest {
      */
     @Test
     @DisplayName("Test byte array fields (encryptionKey and guid)")
-    public void testByteArrayFields() {
+    public void shouldHandleByteArrayFields() {
         // Test encryptionKey
         byte[] key = new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 };
         serverData.encryptionKey = key;
@@ -220,7 +220,7 @@ public class ServerDataTest {
      */
     @Test
     @DisplayName("Test byte array reference behavior")
-    public void testByteArrayReference() {
+    public void shouldMaintainByteArrayReferenceBehavior() {
         // Given
         byte[] originalKey = new byte[] { 0x01, 0x02, 0x03, 0x04 };
         serverData.encryptionKey = originalKey;
@@ -238,7 +238,7 @@ public class ServerDataTest {
      */
     @Test
     @DisplayName("Test multiple instances are independent")
-    public void testMultipleInstancesIndependence() {
+    public void shouldMaintainInstanceIndependence() {
         // Given
         ServerData serverData1 = new ServerData();
         ServerData serverData2 = new ServerData();
@@ -270,7 +270,7 @@ public class ServerDataTest {
      */
     @Test
     @DisplayName("Test all fields are public")
-    public void testAllFieldsArePublic() {
+    public void shouldHaveAllFieldsPublic() {
         // Get all declared fields
         Field[] fields = ServerData.class.getDeclaredFields();
 
@@ -288,7 +288,7 @@ public class ServerDataTest {
      */
     @Test
     @DisplayName("Test typical server configuration scenario")
-    public void testTypicalServerConfiguration() {
+    public void shouldHandleTypicalServerConfiguration() {
         // Given - typical SMB server configuration
         serverData.sflags = (byte) 0x98;
         serverData.sflags2 = 0xC853; // Unicode, extended security, etc.
@@ -337,7 +337,7 @@ public class ServerDataTest {
      */
     @Test
     @DisplayName("Test edge cases for numeric fields")
-    public void testNumericFieldsEdgeCases() {
+    public void shouldHandleNumericFieldsEdgeCases() {
         // Test maximum values for int fields
         serverData.sflags2 = Integer.MAX_VALUE;
         serverData.smaxMpxCount = Integer.MAX_VALUE;
@@ -370,7 +370,7 @@ public class ServerDataTest {
      */
     @Test
     @DisplayName("Test large byte arrays")
-    public void testLargeByteArrays() {
+    public void shouldHandleLargeByteArrays() {
         // Test with large encryption key
         byte[] largeKey = new byte[256];
         for (int i = 0; i < largeKey.length; i++) {
@@ -399,7 +399,7 @@ public class ServerDataTest {
      */
     @Test
     @DisplayName("Test ServerData can be used in collections")
-    public void testUseInCollections() {
+    public void shouldWorkInCollections() {
         // Given
         java.util.List<ServerData> serverList = new java.util.ArrayList<>();
 
@@ -423,7 +423,7 @@ public class ServerDataTest {
      */
     @Test
     @DisplayName("Test field types are correct")
-    public void testFieldTypes() throws NoSuchFieldException {
+    public void shouldHaveCorrectFieldTypes() throws NoSuchFieldException {
         // Verify field types
         assertEquals(byte.class, ServerData.class.getDeclaredField("sflags").getType());
         assertEquals(int.class, ServerData.class.getDeclaredField("sflags2").getType());

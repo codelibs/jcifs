@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -21,12 +22,14 @@ public class SmbComReadAndXResponseTest {
     }
 
     @Test
-    public void testConstructor() {
+    @DisplayName("Constructor should create non-null instance")
+    public void constructorShouldCreateNonNullInstance() {
         assertNotNull(response);
     }
 
     @Test
-    public void testConstructorWithParameters() {
+    @DisplayName("Constructor with parameters should set buffer and offset")
+    public void constructorWithParametersShouldSetBufferAndOffset() {
         byte[] b = new byte[0];
         response = new SmbComReadAndXResponse(b, 0);
         assertNotNull(response);
@@ -35,7 +38,8 @@ public class SmbComReadAndXResponseTest {
     }
 
     @Test
-    public void testSetParam() {
+    @DisplayName("setParam should update buffer and offset")
+    public void setParamShouldUpdateBufferAndOffset() {
         byte[] b = new byte[0];
         response.setParam(b, 0);
         assertEquals(b, response.b);
@@ -43,17 +47,20 @@ public class SmbComReadAndXResponseTest {
     }
 
     @Test
-    public void testWriteParameterWordsWireFormat() {
+    @DisplayName("writeParameterWordsWireFormat should return zero")
+    public void writeParameterWordsWireFormatShouldReturnZero() {
         assertEquals(0, response.writeParameterWordsWireFormat(new byte[0], 0));
     }
 
     @Test
-    public void testWriteBytesWireFormat() {
+    @DisplayName("writeBytesWireFormat should return zero")
+    public void writeBytesWireFormatShouldReturnZero() {
         assertEquals(0, response.writeBytesWireFormat(new byte[0], 0));
     }
 
     @Test
-    public void testReadBytesWireFormat() {
+    @DisplayName("readBytesWireFormat should return zero")
+    public void readBytesWireFormatShouldReturnZero() {
         assertEquals(0, response.readBytesWireFormat(new byte[0], 0));
     }
 
@@ -79,7 +86,8 @@ public class SmbComReadAndXResponseTest {
         }
 
         @Test
-        public void testReadParameterWordsWireFormat() {
+        @DisplayName("readParameterWordsWireFormat should parse buffer data correctly")
+        public void readParameterWordsWireFormatShouldParseBufferCorrectly() {
             int bytesRead = response.readParameterWordsWireFormat(buffer, 0);
 
             assertEquals(20, bytesRead);
@@ -90,7 +98,8 @@ public class SmbComReadAndXResponseTest {
     }
 
     @Test
-    public void testToString() {
+    @DisplayName("toString should include key response fields")
+    public void toStringShouldIncludeKeyFields() {
         response.dataCompactionMode = 1;
         response.dataLength = 1024;
         response.dataOffset = 54;

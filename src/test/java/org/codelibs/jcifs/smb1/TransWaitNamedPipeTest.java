@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
 
@@ -21,7 +22,8 @@ public class TransWaitNamedPipeTest {
     }
 
     @Test
-    public void testConstructorInitializesFields() {
+    @DisplayName("Constructor should initialize fields correctly")
+    public void constructorShouldInitializeFields() {
         // Test constructor initialization with proper expectations
         String pipeName = "\\\\pipe\\testPipe";
         TransWaitNamedPipe pipe = new TransWaitNamedPipe(pipeName);
@@ -50,7 +52,8 @@ public class TransWaitNamedPipeTest {
     }
 
     @Test
-    public void testWriteSetupWireFormat() {
+    @DisplayName("writeSetupWireFormat should write 4 bytes with subCommand")
+    public void writeSetupWireFormatShouldWriteCorrectBytes() {
         // Test the writeSetupWireFormat method
         TransWaitNamedPipe pipe = new TransWaitNamedPipe("\\\\pipe\\testPipe");
         byte[] dst = new byte[10];
@@ -68,7 +71,8 @@ public class TransWaitNamedPipeTest {
     }
 
     @Test
-    public void testReadSetupWireFormat() {
+    @DisplayName("readSetupWireFormat should always return 0")
+    public void readSetupWireFormatShouldReturnZero() {
         // Test the readSetupWireFormat method
         TransWaitNamedPipe pipe = new TransWaitNamedPipe("\\\\pipe\\testPipe");
         byte[] buffer = new byte[10];
@@ -79,7 +83,8 @@ public class TransWaitNamedPipeTest {
     }
 
     @Test
-    public void testWriteParametersWireFormat() {
+    @DisplayName("writeParametersWireFormat should return 0")
+    public void writeParametersWireFormatShouldReturnZero() {
         // Test that writeParametersWireFormat returns 0
         TransWaitNamedPipe pipe = new TransWaitNamedPipe("\\\\pipe\\testPipe");
         byte[] dst = new byte[100];
@@ -89,7 +94,8 @@ public class TransWaitNamedPipeTest {
     }
 
     @Test
-    public void testWriteDataWireFormat() {
+    @DisplayName("writeDataWireFormat should return 0")
+    public void writeDataWireFormatShouldReturnZero() {
         // Test that writeDataWireFormat returns 0
         TransWaitNamedPipe pipe = new TransWaitNamedPipe("\\\\pipe\\testPipe");
         byte[] dst = new byte[100];
@@ -99,7 +105,8 @@ public class TransWaitNamedPipeTest {
     }
 
     @Test
-    public void testReadParametersWireFormat() {
+    @DisplayName("readParametersWireFormat should return 0")
+    public void readParametersWireFormatShouldReturnZero() {
         // Test that readParametersWireFormat returns 0
         TransWaitNamedPipe pipe = new TransWaitNamedPipe("\\\\pipe\\testPipe");
         byte[] buffer = new byte[100];
@@ -109,7 +116,8 @@ public class TransWaitNamedPipeTest {
     }
 
     @Test
-    public void testReadDataWireFormat() {
+    @DisplayName("readDataWireFormat should return 0")
+    public void readDataWireFormatShouldReturnZero() {
         // Test that readDataWireFormat returns 0
         TransWaitNamedPipe pipe = new TransWaitNamedPipe("\\\\pipe\\testPipe");
         byte[] buffer = new byte[100];
@@ -119,7 +127,8 @@ public class TransWaitNamedPipeTest {
     }
 
     @Test
-    public void testToString() {
+    @DisplayName("toString should contain class name and pipe name")
+    public void toStringShouldContainClassAndPipeName() {
         // Test the toString method
         String pipeName = "\\\\pipe\\testPipe";
         TransWaitNamedPipe pipe = new TransWaitNamedPipe(pipeName);
@@ -131,7 +140,8 @@ public class TransWaitNamedPipeTest {
     }
 
     @Test
-    public void testMultiplePipeNames() {
+    @DisplayName("Constructor should work with various pipe names")
+    public void constructorShouldWorkWithVariousPipeNames() {
         // Test with various pipe names
         String[] pipeNames = { "\\\\pipe\\test", "\\\\pipe\\PIPE\\sql\\query", "\\\\pipe\\spoolss", "\\\\pipe\\winreg" };
 

@@ -21,6 +21,7 @@ import org.codelibs.jcifs.smb.NameServiceClient;
 import org.codelibs.jcifs.smb.NetbiosAddress;
 import org.codelibs.jcifs.smb.impl.NtlmPasswordAuthentication;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -210,7 +211,8 @@ public class NtlmSspTest {
      * @throws IOException
      */
     @Test
-    public void testAuthenticate_NoAuthorizationHeader() throws IOException {
+    @DisplayName("authenticate should return null and set WWW-Authenticate header when no authorization header")
+    public void authenticateWithNoAuthorizationHeader() throws IOException {
         // Setup: No "Authorization" header
         when(mockRequest.getHeader("Authorization")).thenReturn(null);
 
@@ -231,7 +233,8 @@ public class NtlmSspTest {
      * @throws IOException
      */
     @Test
-    public void testAuthenticate_Type1Message() throws IOException {
+    @DisplayName("authenticate should return null and set Type 2 message when Type 1 message provided")
+    public void authenticateWithType1Message() throws IOException {
         // Setup: "Authorization" header with a Type 1 message
         when(mockRequest.getHeader("Authorization")).thenReturn("NTLM " + type1MessageBase64);
 
@@ -272,7 +275,8 @@ public class NtlmSspTest {
      * @throws IOException
      */
     @Test
-    public void testAuthenticate_Type3Message() throws IOException {
+    @DisplayName("authenticate should return authentication when Type 3 message provided")
+    public void authenticateWithType3Message() throws IOException {
         // Setup: "Authorization" header with a Type 3 message
         when(mockRequest.getHeader("Authorization")).thenReturn("NTLM " + type3MessageBase64);
 
@@ -296,7 +300,8 @@ public class NtlmSspTest {
      * @throws IOException
      */
     @Test
-    public void testDoAuthentication() throws IOException {
+    @DisplayName("doAuthentication should handle authentication flow correctly")
+    public void doAuthenticationShouldHandleFlow() throws IOException {
         // Setup: No "Authorization" header to follow a simple path
         when(mockRequest.getHeader("Authorization")).thenReturn(null);
 

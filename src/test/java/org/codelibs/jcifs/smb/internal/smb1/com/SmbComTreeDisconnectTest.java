@@ -44,7 +44,7 @@ public class SmbComTreeDisconnectTest {
      */
     @Test
     @DisplayName("Test constructor initializes with correct command")
-    public void testConstructorWithValidConfig() {
+    public void shouldInitializeWithCorrectCommand() {
         // When
         smbComTreeDisconnect = new SmbComTreeDisconnect(config);
 
@@ -58,7 +58,7 @@ public class SmbComTreeDisconnectTest {
      */
     @Test
     @DisplayName("Test constructor throws NullPointerException with null configuration")
-    public void testConstructorWithNullConfig() {
+    public void shouldThrowNullPointerExceptionWithNullConfig() {
         // When & Then - should throw NullPointerException since ServerMessageBlock calls config.getPid()
         NullPointerException exception = assertThrows(NullPointerException.class, () -> {
             smbComTreeDisconnect = new SmbComTreeDisconnect(null);
@@ -73,7 +73,7 @@ public class SmbComTreeDisconnectTest {
      */
     @Test
     @DisplayName("Test constructor with mock configuration")
-    public void testConstructorWithMockConfig() {
+    public void shouldWorkWithMockConfiguration() {
         // Setup mock to return a valid PID
         when(mockConfig.getPid()).thenReturn(1234);
 
@@ -91,7 +91,7 @@ public class SmbComTreeDisconnectTest {
      */
     @Test
     @DisplayName("Test writeParameterWordsWireFormat always returns 0")
-    public void testWriteParameterWordsWireFormat() {
+    public void shouldAlwaysReturnZeroForWriteParameterWords() {
         // Given
         smbComTreeDisconnect = new SmbComTreeDisconnect(config);
         byte[] dst = new byte[100];
@@ -109,7 +109,7 @@ public class SmbComTreeDisconnectTest {
      */
     @Test
     @DisplayName("Test writeParameterWordsWireFormat with different buffer sizes")
-    public void testWriteParameterWordsWireFormatWithDifferentBufferSizes() {
+    public void shouldHandleDifferentBufferSizesForWriteParameterWords() {
         // Given
         smbComTreeDisconnect = new SmbComTreeDisconnect(config);
         int[] bufferSizes = { 0, 10, 50, 100, 1024 };
@@ -130,7 +130,7 @@ public class SmbComTreeDisconnectTest {
      */
     @Test
     @DisplayName("Test writeParameterWordsWireFormat with different offsets")
-    public void testWriteParameterWordsWireFormatWithDifferentOffsets() {
+    public void shouldHandleDifferentOffsetsForWriteParameterWords() {
         // Given
         smbComTreeDisconnect = new SmbComTreeDisconnect(config);
         byte[] dst = new byte[200];
@@ -150,7 +150,7 @@ public class SmbComTreeDisconnectTest {
      */
     @Test
     @DisplayName("Test writeBytesWireFormat always returns 0")
-    public void testWriteBytesWireFormat() {
+    public void shouldAlwaysReturnZeroForWriteBytes() {
         // Given
         smbComTreeDisconnect = new SmbComTreeDisconnect(config);
         byte[] dst = new byte[100];
@@ -168,7 +168,7 @@ public class SmbComTreeDisconnectTest {
      */
     @Test
     @DisplayName("Test writeBytesWireFormat with different buffer sizes")
-    public void testWriteBytesWireFormatWithDifferentBufferSizes() {
+    public void shouldHandleDifferentBufferSizesForWriteBytes() {
         // Given
         smbComTreeDisconnect = new SmbComTreeDisconnect(config);
         int[] bufferSizes = { 0, 10, 50, 100, 1024 };
@@ -189,7 +189,7 @@ public class SmbComTreeDisconnectTest {
      */
     @Test
     @DisplayName("Test writeBytesWireFormat with different offsets")
-    public void testWriteBytesWireFormatWithDifferentOffsets() {
+    public void shouldHandleDifferentOffsetsForWriteBytes() {
         // Given
         smbComTreeDisconnect = new SmbComTreeDisconnect(config);
         byte[] dst = new byte[200];
@@ -209,7 +209,7 @@ public class SmbComTreeDisconnectTest {
      */
     @Test
     @DisplayName("Test readParameterWordsWireFormat always returns 0")
-    public void testReadParameterWordsWireFormat() {
+    public void shouldAlwaysReturnZeroForReadParameterWords() {
         // Given
         smbComTreeDisconnect = new SmbComTreeDisconnect(config);
         byte[] buffer = new byte[100];
@@ -227,7 +227,7 @@ public class SmbComTreeDisconnectTest {
      */
     @Test
     @DisplayName("Test readParameterWordsWireFormat with different buffer sizes")
-    public void testReadParameterWordsWireFormatWithDifferentBufferSizes() {
+    public void shouldHandleDifferentBufferSizesForReadParameterWords() {
         // Given
         smbComTreeDisconnect = new SmbComTreeDisconnect(config);
         int[] bufferSizes = { 0, 10, 50, 100, 1024 };
@@ -248,7 +248,7 @@ public class SmbComTreeDisconnectTest {
      */
     @Test
     @DisplayName("Test readBytesWireFormat always returns 0")
-    public void testReadBytesWireFormat() {
+    public void shouldAlwaysReturnZeroForReadBytes() {
         // Given
         smbComTreeDisconnect = new SmbComTreeDisconnect(config);
         byte[] buffer = new byte[100];
@@ -266,7 +266,7 @@ public class SmbComTreeDisconnectTest {
      */
     @Test
     @DisplayName("Test readBytesWireFormat with different buffer sizes")
-    public void testReadBytesWireFormatWithDifferentBufferSizes() {
+    public void shouldHandleDifferentBufferSizesForReadBytes() {
         // Given
         smbComTreeDisconnect = new SmbComTreeDisconnect(config);
         int[] bufferSizes = { 0, 10, 50, 100, 1024 };
@@ -287,7 +287,7 @@ public class SmbComTreeDisconnectTest {
      */
     @Test
     @DisplayName("Test toString returns properly formatted string")
-    public void testToString() {
+    public void shouldReturnProperlyFormattedString() {
         // Given
         smbComTreeDisconnect = new SmbComTreeDisconnect(config);
 
@@ -306,7 +306,7 @@ public class SmbComTreeDisconnectTest {
      */
     @Test
     @DisplayName("Test toString requires valid configuration")
-    public void testToStringRequiresValidConfig() {
+    public void shouldRequireValidConfigurationForToString() {
         // Constructor with null config throws exception, so we can't test toString with null config
         // Instead, test that toString works with a valid config
 
@@ -328,7 +328,7 @@ public class SmbComTreeDisconnectTest {
      */
     @Test
     @DisplayName("Test SMB_COM_TREE_DISCONNECT command value is 0x71")
-    public void testCommandValue() {
+    public void shouldHaveCorrectCommandValue() {
         // Given
         smbComTreeDisconnect = new SmbComTreeDisconnect(config);
 
@@ -349,7 +349,7 @@ public class SmbComTreeDisconnectTest {
 
         @Test
         @DisplayName("Test write operations with empty buffer")
-        public void testWriteOperationsWithEmptyBuffer() {
+        public void shouldHandleWriteOperationsWithEmptyBuffer() {
             // Given
             smbComTreeDisconnect = new SmbComTreeDisconnect(config);
             byte[] emptyBuffer = new byte[0];
@@ -363,7 +363,7 @@ public class SmbComTreeDisconnectTest {
 
         @Test
         @DisplayName("Test read operations with empty buffer")
-        public void testReadOperationsWithEmptyBuffer() {
+        public void shouldHandleReadOperationsWithEmptyBuffer() {
             // Given
             smbComTreeDisconnect = new SmbComTreeDisconnect(config);
             byte[] emptyBuffer = new byte[0];
@@ -377,7 +377,7 @@ public class SmbComTreeDisconnectTest {
 
         @Test
         @DisplayName("Test operations with null buffer")
-        public void testOperationsWithNullBuffer() {
+        public void shouldHandleOperationsWithNullBuffer() {
             // Given
             smbComTreeDisconnect = new SmbComTreeDisconnect(config);
 
@@ -390,7 +390,7 @@ public class SmbComTreeDisconnectTest {
 
         @Test
         @DisplayName("Test buffer operations do not modify buffer contents")
-        public void testBufferContentsNotModified() {
+        public void shouldNotModifyBufferContents() {
             // Given
             smbComTreeDisconnect = new SmbComTreeDisconnect(config);
             byte[] originalBuffer = new byte[100];
@@ -415,7 +415,7 @@ public class SmbComTreeDisconnectTest {
      */
     @Test
     @DisplayName("Test inheritance from ServerMessageBlock")
-    public void testInheritance() {
+    public void shouldInheritFromServerMessageBlock() {
         // Given
         smbComTreeDisconnect = new SmbComTreeDisconnect(config);
 
@@ -428,7 +428,7 @@ public class SmbComTreeDisconnectTest {
      */
     @Test
     @DisplayName("Test multiple instances are independent")
-    public void testMultipleInstancesIndependence() {
+    public void shouldMaintainIndependentInstances() {
         // Setup mock to return a valid PID
         when(mockConfig.getPid()).thenReturn(5678);
 
@@ -447,7 +447,7 @@ public class SmbComTreeDisconnectTest {
      */
     @Test
     @DisplayName("Test thread safety of operations")
-    public void testThreadSafety() throws InterruptedException {
+    public void shouldBeThreadSafe() throws InterruptedException {
         // Given
         smbComTreeDisconnect = new SmbComTreeDisconnect(config);
         byte[] buffer = new byte[1000];
@@ -484,7 +484,7 @@ public class SmbComTreeDisconnectTest {
      */
     @Test
     @DisplayName("Test consistency across multiple calls")
-    public void testConsistencyAcrossMultipleCalls() {
+    public void shouldMaintainConsistencyAcrossMultipleCalls() {
         // Given
         smbComTreeDisconnect = new SmbComTreeDisconnect(config);
         byte[] buffer = new byte[100];
@@ -503,7 +503,7 @@ public class SmbComTreeDisconnectTest {
      */
     @Test
     @DisplayName("Test boundary conditions for buffer indices")
-    public void testBoundaryConditions() {
+    public void shouldHandleBoundaryConditions() {
         // Given
         smbComTreeDisconnect = new SmbComTreeDisconnect(config);
         byte[] buffer = new byte[100];
@@ -526,7 +526,7 @@ public class SmbComTreeDisconnectTest {
      */
     @Test
     @DisplayName("Test methods are properly overridden from parent class")
-    public void testMethodOverrides() throws NoSuchMethodException {
+    public void shouldProperlyOverrideMethods() throws NoSuchMethodException {
         // Given
         Class<?> clazz = SmbComTreeDisconnect.class;
 

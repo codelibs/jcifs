@@ -15,6 +15,7 @@ import java.io.OutputStream;
 
 import org.codelibs.jcifs.smb.impl.SmbPipeHandleInternal;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -53,29 +54,21 @@ public class SmbPipeHandleTest {
         when(smbPipeHandle.getOutput()).thenReturn(mockOutputStream);
     }
 
-    /**
-     * Tests that the getter for the underlying pipe resource returns the correct instance.
-     */
     @Test
-    public void testGetPipe() {
+    @DisplayName("Verify getPipe returns the correct underlying pipe resource")
+    public void shouldReturnCorrectPipeResource() {
         assertEquals(mockPipeResource, smbPipeHandle.getPipe(), "getPipe() should return the underlying pipe resource.");
     }
 
-    /**
-     * Tests that the getter for the input stream returns the correct stream.
-     * @throws CIFSException if an error occurs while getting the stream.
-     */
     @Test
-    public void testGetInputStream() throws CIFSException {
+    @DisplayName("Verify getInput returns the correct input stream")
+    public void shouldReturnCorrectInputStream() throws CIFSException {
         assertEquals(mockInputStream, smbPipeHandle.getInput(), "getInput() should return the correct input stream.");
     }
 
-    /**
-     * Tests that the getter for the output stream returns the correct stream.
-     * @throws CIFSException if an error occurs while getting the stream.
-     */
     @Test
-    public void testGetOutputStream() throws CIFSException {
+    @DisplayName("Verify getOutput returns the correct output stream")
+    public void shouldReturnCorrectOutputStream() throws CIFSException {
         assertEquals(mockOutputStream, smbPipeHandle.getOutput(), "getOutput() should return the correct output stream.");
     }
 
@@ -85,31 +78,24 @@ public class SmbPipeHandleTest {
     @Nested
     public class LifecycleManagementTest {
 
-        /**
-         * Verifies that the close method can be called without throwing an exception.
-         * @throws CIFSException if an error occurs during close.
-         */
         @Test
-        public void testClose() throws CIFSException {
+        @DisplayName("Verify close method can be called without throwing exception")
+        public void shouldCloseWithoutException() throws CIFSException {
             assertDoesNotThrow(() -> smbPipeHandle.close(), "close() should not throw an exception on a mock object.");
             // Verify that the close method was called
             Mockito.verify(smbPipeHandle).close();
         }
 
-        /**
-         * Verifies that the isOpen method returns true for an open handle.
-         */
         @Test
-        public void testIsOpen_ReturnsTrueWhenOpen() {
+        @DisplayName("Verify isOpen returns true when handle is open")
+        public void shouldReturnTrueWhenOpen() {
             when(smbPipeHandle.isOpen()).thenReturn(true);
             assertTrue(smbPipeHandle.isOpen(), "isOpen() should return true when the handle is open.");
         }
 
-        /**
-         * Verifies that the isOpen method returns false for a closed handle.
-         */
         @Test
-        public void testIsOpen_ReturnsFalseWhenClosed() {
+        @DisplayName("Verify isOpen returns false when handle is closed")
+        public void shouldReturnFalseWhenClosed() {
             when(smbPipeHandle.isOpen()).thenReturn(false);
             assertFalse(smbPipeHandle.isOpen(), "isOpen() should return false when the handle is closed.");
         }
@@ -121,20 +107,16 @@ public class SmbPipeHandleTest {
     @Nested
     public class HandleStateTest {
 
-        /**
-         * Verifies that isStale returns false for a fresh handle.
-         */
         @Test
-        public void testIsStale_ReturnsFalseWhenNotStale() {
+        @DisplayName("Verify isStale returns false for fresh handle")
+        public void shouldReturnFalseWhenNotStale() {
             when(smbPipeHandle.isStale()).thenReturn(false);
             assertFalse(smbPipeHandle.isStale(), "isStale() should return false for a fresh handle.");
         }
 
-        /**
-         * Verifies that isStale returns true for a stale handle.
-         */
         @Test
-        public void testIsStale_ReturnsTrueWhenStale() {
+        @DisplayName("Verify isStale returns true for stale handle")
+        public void shouldReturnTrueWhenStale() {
             when(smbPipeHandle.isStale()).thenReturn(true);
             assertTrue(smbPipeHandle.isStale(), "isStale() should return true for a stale handle.");
         }
@@ -146,21 +128,17 @@ public class SmbPipeHandleTest {
     @Nested
     public class UnwrapFunctionalityTest {
 
-        /**
-         * Verifies that unwrap returns the expected underlying object.
-         */
         @Test
-        public void testUnwrap() {
+        @DisplayName("Verify unwrap returns expected underlying object")
+        public void shouldUnwrapToExpectedType() {
             when(smbPipeHandle.unwrap(SmbPipeHandleInternal.class)).thenReturn(mockSmbPipeHandleInternal);
             SmbPipeHandleInternal unwrapped = smbPipeHandle.unwrap(SmbPipeHandleInternal.class);
             assertSame(mockSmbPipeHandleInternal, unwrapped, "Unwrap should return the underlying handle implementation.");
         }
 
-        /**
-         * Verifies that unwrap returns null if the requested type is not available.
-         */
         @Test
-        public void testUnwrap_ReturnsNullForUnsupportedType() {
+        @DisplayName("Verify unwrap returns null for unsupported type")
+        public void shouldReturnNullForUnsupportedType() {
             when(smbPipeHandle.unwrap(SmbPipeHandle.class)).thenReturn(null);
             assertNull(smbPipeHandle.unwrap(SmbPipeHandle.class), "Unwrap should return null for an unsupported type.");
         }
@@ -172,12 +150,9 @@ public class SmbPipeHandleTest {
     @Nested
     public class AutoCloseableContractTest {
 
-        /**
-         * Verifies that the handle is automatically closed in a try-with-resources statement.
-         * @throws Exception if an error occurs.
-         */
         @Test
-        public void testTryWithResources() throws Exception {
+        @DisplayName("Verify handle is automatically closed in try-with-resources")
+        public void shouldAutoCloseInTryWithResources() throws Exception {
             // This test ensures that any implementation of SmbPipeHandle can be used in a try-with-resources block.
             try (SmbPipeHandle handle = smbPipeHandle) {
                 // Perform operations with the handle

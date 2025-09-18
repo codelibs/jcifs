@@ -14,6 +14,7 @@ import java.nio.charset.StandardCharsets;
 import org.codelibs.jcifs.smb.RuntimeCIFSException;
 import org.codelibs.jcifs.smb.internal.smb1.trans2.Trans2GetDfsReferralResponse;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -33,7 +34,8 @@ public class ReferralTest {
     // Version 3 Referral Tests
 
     @Test
-    public void testDecodeVersion3WithoutNameList() {
+    @DisplayName("Decode version 3 referral without name list")
+    public void shouldDecodeVersion3WithoutNameList() {
         // Prepare test data
         ByteBuffer bb = ByteBuffer.wrap(testBuffer).order(ByteOrder.LITTLE_ENDIAN);
 
@@ -85,7 +87,8 @@ public class ReferralTest {
     }
 
     @Test
-    public void testDecodeVersion3WithNameList() {
+    @DisplayName("Decode version 3 referral with name list")
+    public void shouldDecodeVersion3WithNameList() {
         // Prepare test data
         ByteBuffer bb = ByteBuffer.wrap(testBuffer).order(ByteOrder.LITTLE_ENDIAN);
 
@@ -133,7 +136,8 @@ public class ReferralTest {
     }
 
     @Test
-    public void testVersion3WithZeroOffsets() {
+    @DisplayName("Handle version 3 referral with zero offsets")
+    public void shouldHandleVersion3WithZeroOffsets() {
         // Prepare test data with zero offsets
         ByteBuffer bb = ByteBuffer.wrap(testBuffer).order(ByteOrder.LITTLE_ENDIAN);
 
@@ -158,7 +162,8 @@ public class ReferralTest {
     }
 
     @Test
-    public void testVersion3WithEmptyExpandedNames() {
+    @DisplayName("Handle version 3 referral with empty expanded names")
+    public void shouldHandleVersion3WithEmptyExpandedNames() {
         ByteBuffer bb = ByteBuffer.wrap(testBuffer).order(ByteOrder.LITTLE_ENDIAN);
 
         bb.putShort((short) 3); // version
@@ -183,7 +188,8 @@ public class ReferralTest {
     // Version 1 Referral Tests
 
     @Test
-    public void testDecodeVersion1() {
+    @DisplayName("Decode version 1 referral correctly")
+    public void shouldDecodeVersion1Correctly() {
         // Prepare test data
         ByteBuffer bb = ByteBuffer.wrap(testBuffer).order(ByteOrder.LITTLE_ENDIAN);
 
@@ -219,7 +225,8 @@ public class ReferralTest {
     // Unsupported Version Tests
 
     @Test
-    public void testUnsupportedVersions() {
+    @DisplayName("Throw exception for unsupported versions")
+    public void shouldThrowExceptionForUnsupportedVersions() {
         int[] versions = { 0, 2, 4, 5, 100, 65535 };
         for (int version : versions) {
             ByteBuffer bb = ByteBuffer.wrap(testBuffer).order(ByteOrder.LITTLE_ENDIAN);
@@ -241,7 +248,8 @@ public class ReferralTest {
     // String Reading Tests
 
     @Test
-    public void testOddBufferIndexAlignment() {
+    @DisplayName("Handle odd buffer index alignment correctly")
+    public void shouldHandleOddBufferIndexAlignment() {
         // Create buffer with odd starting position
         ByteBuffer bb = ByteBuffer.wrap(testBuffer).order(ByteOrder.LITTLE_ENDIAN);
 
@@ -272,7 +280,8 @@ public class ReferralTest {
     }
 
     @Test
-    public void testUnicodeStringHandling() {
+    @DisplayName("Handle Unicode strings correctly")
+    public void shouldHandleUnicodeStrings() {
         ByteBuffer bb = ByteBuffer.wrap(testBuffer).order(ByteOrder.LITTLE_ENDIAN);
 
         bb.putShort((short) 3); // version
@@ -301,7 +310,8 @@ public class ReferralTest {
     // Debug Test
 
     @Test
-    public void testSimpleVersion3() {
+    @DisplayName("Decode simple version 3 referral")
+    public void shouldDecodeSimpleVersion3() {
         ByteBuffer bb = ByteBuffer.wrap(testBuffer).order(ByteOrder.LITTLE_ENDIAN);
 
         // Write the header
@@ -335,7 +345,8 @@ public class ReferralTest {
     // Getter Tests
 
     @Test
-    public void testGetters() {
+    @DisplayName("Verify all getter methods return correct values")
+    public void shouldReturnCorrectValuesFromGetters() {
         // Setup a complete referral
         ByteBuffer bb = ByteBuffer.wrap(testBuffer).order(ByteOrder.LITTLE_ENDIAN);
 
@@ -377,7 +388,8 @@ public class ReferralTest {
     // ToString Tests
 
     @Test
-    public void testToString() {
+    @DisplayName("Generate properly formatted toString output")
+    public void shouldGenerateProperToString() {
         ByteBuffer bb = ByteBuffer.wrap(testBuffer).order(ByteOrder.LITTLE_ENDIAN);
 
         bb.putShort((short) 3);
@@ -429,7 +441,8 @@ public class ReferralTest {
     }
 
     @Test
-    public void testToStringWithNulls() {
+    @DisplayName("Generate toString with null values")
+    public void shouldGenerateToStringWithNulls() {
         // Create minimal referral
         ByteBuffer bb = ByteBuffer.wrap(testBuffer).order(ByteOrder.LITTLE_ENDIAN);
 
@@ -452,7 +465,8 @@ public class ReferralTest {
     // Edge Cases and Boundary Tests
 
     @Test
-    public void testMaximumValues() {
+    @DisplayName("Handle maximum field values correctly")
+    public void shouldHandleMaximumValues() {
         ByteBuffer bb = ByteBuffer.wrap(testBuffer).order(ByteOrder.LITTLE_ENDIAN);
 
         bb.putShort((short) 3);
@@ -476,7 +490,8 @@ public class ReferralTest {
     }
 
     @Test
-    public void testEmptyStrings() {
+    @DisplayName("Handle empty string fields correctly")
+    public void shouldHandleEmptyStrings() {
         ByteBuffer bb = ByteBuffer.wrap(testBuffer).order(ByteOrder.LITTLE_ENDIAN);
 
         bb.putShort((short) 3);
@@ -505,7 +520,8 @@ public class ReferralTest {
     }
 
     @Test
-    public void testVariousFieldValues() {
+    @DisplayName("Handle various field value combinations")
+    public void shouldHandleVariousFieldValues() {
         int[][] testCases = { { 0, 0, 0 }, { 100, 200, 300 }, { 32767, 32767, 32767 }, { 65535, 65535, 65535 } };
 
         for (int[] testCase : testCases) {
@@ -537,7 +553,8 @@ public class ReferralTest {
     // Buffer Offset Tests
 
     @Test
-    public void testDecodeFromNonZeroIndex() {
+    @DisplayName("Decode referral from non-zero buffer index")
+    public void shouldDecodeFromNonZeroIndex() {
         int offset = 100;
         ByteBuffer bb = ByteBuffer.wrap(testBuffer).order(ByteOrder.LITTLE_ENDIAN);
 
@@ -557,7 +574,8 @@ public class ReferralTest {
     }
 
     @Test
-    public void testDifferentBufferLengths() {
+    @DisplayName("Handle different buffer lengths correctly")
+    public void shouldHandleDifferentBufferLengths() {
         ByteBuffer bb = ByteBuffer.wrap(testBuffer).order(ByteOrder.LITTLE_ENDIAN);
 
         bb.putShort((short) 1);
@@ -580,7 +598,8 @@ public class ReferralTest {
     // Multiple Expanded Names Tests
 
     @Test
-    public void testSingleExpandedName() {
+    @DisplayName("Handle single expanded name correctly")
+    public void shouldHandleSingleExpandedName() {
         ByteBuffer bb = ByteBuffer.wrap(testBuffer).order(ByteOrder.LITTLE_ENDIAN);
 
         bb.putShort((short) 3);
@@ -605,7 +624,8 @@ public class ReferralTest {
     }
 
     @Test
-    public void testManyExpandedNames() {
+    @DisplayName("Handle multiple expanded names correctly")
+    public void shouldHandleMultipleExpandedNames() {
         ByteBuffer bb = ByteBuffer.wrap(testBuffer).order(ByteOrder.LITTLE_ENDIAN);
 
         bb.putShort((short) 3);

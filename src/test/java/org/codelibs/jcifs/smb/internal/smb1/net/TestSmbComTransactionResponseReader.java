@@ -10,6 +10,7 @@ import org.codelibs.jcifs.smb.Configuration;
 import org.codelibs.jcifs.smb.SmbConstants;
 import org.codelibs.jcifs.smb.config.BaseConfiguration;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -43,19 +44,22 @@ public class TestSmbComTransactionResponseReader {
     }
 
     @Test
-    public void testUnicodeConfiguration() throws Exception {
+    @DisplayName("Verify Unicode configuration is enabled by default")
+    public void shouldHaveUnicodeEnabledByDefault() throws Exception {
         // Test Unicode configuration is enabled by default
         assertTrue(cfg.isUseUnicode(), "Unicode should be enabled by default");
     }
 
     @Test
-    public void testAsciiConfiguration() throws Exception {
+    @DisplayName("Verify ASCII configuration disables Unicode support")
+    public void shouldDisableUnicodeInAsciiConfig() throws Exception {
         Configuration asciiCfg = new OffUnicodeConfig();
         assertFalse(asciiCfg.isUseUnicode(), "Unicode should be disabled in ASCII config");
     }
 
     @Test
-    public void testUnicodeEncoding() {
+    @DisplayName("Verify Unicode string encoding uses little-endian format")
+    public void shouldEncodeUnicodeInLittleEndian() {
         // Test Unicode string encoding
         String msg = "\u00A1\u00A2"; // two Unicode characters
         byte[] encoded = encodeUnicode(msg);
@@ -69,14 +73,16 @@ public class TestSmbComTransactionResponseReader {
     }
 
     @Test
-    public void testAsciiEncoding() throws Exception {
+    @DisplayName("Verify ASCII encoding produces valid byte output")
+    public void shouldProduceValidAsciiBytes() throws Exception {
         String msg = "\u00A1\u00A2"; // same Unicode string
         byte[] asciiBytes = msg.getBytes(SmbConstants.DEFAULT_OEM_ENCODING);
         assertTrue(asciiBytes.length > 0, "ASCII encoding should produce bytes");
     }
 
     @Test
-    public void testBufferCreation() throws UnsupportedEncodingException {
+    @DisplayName("Verify buffer creation includes header, params and data")
+    public void shouldCreateBufferWithHeaderParamsAndData() throws UnsupportedEncodingException {
         byte[] dataBytes = { 1, 2, 3, 4 };
         String params = "test";
         byte[] buffer = createBuffer(10, dataBytes, params);
@@ -86,7 +92,8 @@ public class TestSmbComTransactionResponseReader {
     }
 
     @Test
-    public void testByteOperations() {
+    @DisplayName("Verify byte operations handle unsigned conversion correctly")
+    public void shouldHandleUnsignedByteConversion() {
         // Test byte operations that were used in the original test
         byte b = (byte) 0xFF;
         int value = b & 0xFF;
