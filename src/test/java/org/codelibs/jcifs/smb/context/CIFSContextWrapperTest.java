@@ -200,11 +200,11 @@ class CIFSContextWrapperTest {
 
     @Test
     void testWithGuestCrendentials() {
-        // Test withGuestCrendentials() method
+        // Test withGuestCredentials() method
         CIFSContext mockNewContext = mock(CIFSContext.class);
-        when(mockDelegate.withGuestCrendentials()).thenReturn(mockNewContext);
-        assertEquals(mockNewContext, cifsContextWrapper.withGuestCrendentials());
-        verify(mockDelegate).withGuestCrendentials();
+        when(mockDelegate.withGuestCredentials()).thenReturn(mockNewContext);
+        assertEquals(mockNewContext, cifsContextWrapper.withGuestCredentials());
+        verify(mockDelegate).withGuestCredentials();
     }
 
     @Test

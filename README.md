@@ -150,7 +150,7 @@ CIFSContext kerbContext = baseContext.withCredentials(kerbCreds);
 ### Guest Access
 ```java
 // Guest access for servers that allow it
-CIFSContext guestContext = baseContext.withGuestCrendentials();
+CIFSContext guestContext = baseContext.withGuestCredentials();
 ```
 
 ## 🔧 Advanced Usage

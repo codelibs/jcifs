@@ -144,7 +144,7 @@ class AbstractCIFSContextTest {
 
     @Test
     void testWithGuestCredentials() {
-        CIFSContext wrappedContext = context.withGuestCrendentials();
+        CIFSContext wrappedContext = context.withGuestCredentials();
 
         assertNotNull(wrappedContext);
         assertTrue(wrappedContext instanceof CIFSContextCredentialWrapper);

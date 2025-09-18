@@ -76,10 +76,10 @@ public abstract class AbstractCIFSContext extends Thread implements CIFSContext 
     /**
      * {@inheritDoc}
      *
-     * @see org.codelibs.jcifs.smb.CIFSContext#withGuestCrendentials()
+     * @see org.codelibs.jcifs.smb.CIFSContext#withGuestCredentials()
      */
     @Override
-    public CIFSContext withGuestCrendentials() {
+    public CIFSContext withGuestCredentials() {
         return withCredentials(new NtlmPasswordAuthenticator(null, null, null, AuthenticationType.GUEST));
     }
 
