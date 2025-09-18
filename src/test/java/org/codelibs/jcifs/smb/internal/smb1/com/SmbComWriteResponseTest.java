@@ -6,6 +6,7 @@ import static org.mockito.Mockito.mock;
 
 import org.codelibs.jcifs.smb.Configuration;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -24,12 +25,14 @@ public class SmbComWriteResponseTest {
     }
 
     @Test
-    public void testInitialCountIsZero() {
+    @DisplayName("Initial count should be zero")
+    public void initialCountShouldBeZero() {
         assertEquals(0, resp.getCount(), "Initial count should be zero");
     }
 
     @Test
-    public void testReadParameterWordsUpdatesCount() {
+    @DisplayName("readParameterWords should update count from buffer")
+    public void readParameterWordsShouldUpdateCount() {
         // create a buffer with count = 0x1234 (4660 decimal)
         // Using little-endian byte order as per SMBUtil.readInt2
         byte[] buf = new byte[12];
@@ -42,7 +45,8 @@ public class SmbComWriteResponseTest {
     }
 
     @Test
-    public void testToStringContainsCount() {
+    @DisplayName("toString should include numeric count value")
+    public void toStringShouldIncludeCount() {
         // Little-endian: count = 512 (0x0200)
         byte[] buf = new byte[12];
         buf[0] = 0x00;
@@ -53,7 +57,8 @@ public class SmbComWriteResponseTest {
     }
 
     @Test
-    public void testReturnFromReadParameterWordsWireFormatIs8() {
+    @DisplayName("readParameterWordsWireFormat should return 8 bytes processed")
+    public void readParameterWordsWireFormatShouldReturn8() {
         // ensure the method returns 8 as claimed
         byte[] buf = new byte[12];
         buf[0] = 0x00;

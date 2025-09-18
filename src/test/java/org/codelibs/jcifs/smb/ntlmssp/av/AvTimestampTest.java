@@ -5,15 +5,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import org.codelibs.jcifs.smb.internal.util.SMBUtil;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 public class AvTimestampTest {
 
-    /**
-     * Test constructor with raw bytes.
-     */
     @Test
-    public void testConstructorWithRawBytes() {
+    @DisplayName("Constructor with raw bytes should create AvTimestamp correctly")
+    public void constructorWithRawBytesShouldCreateCorrectly() {
         byte[] rawBytes = new byte[8];
         SMBUtil.writeInt8(1234567890L, rawBytes, 0); // Example timestamp
         AvTimestamp avTimestamp = new AvTimestamp(rawBytes);
@@ -23,11 +22,9 @@ public class AvTimestampTest {
         assertArrayEquals(rawBytes, avTimestamp.getRaw());
     }
 
-    /**
-     * Test constructor with long timestamp.
-     */
     @Test
-    public void testConstructorWithLongTimestamp() {
+    @DisplayName("Constructor with long timestamp should encode correctly")
+    public void constructorWithLongTimestampShouldEncodeCorrectly() {
         long timestamp = 9876543210L;
         AvTimestamp avTimestamp = new AvTimestamp(timestamp);
 
@@ -36,11 +33,9 @@ public class AvTimestampTest {
         assertEquals(timestamp, avTimestamp.getTimestamp()); // Verify encoding and decoding
     }
 
-    /**
-     * Test getTimestamp method with a positive timestamp.
-     */
     @Test
-    public void testGetTimestampPositive() {
+    @DisplayName("getTimestamp should return positive timestamp correctly")
+    public void getTimestampShouldReturnPositiveTimestampCorrectly() {
         long expectedTimestamp = 123456789012345L;
         byte[] rawBytes = new byte[8];
         SMBUtil.writeInt8(expectedTimestamp, rawBytes, 0);
@@ -49,11 +44,9 @@ public class AvTimestampTest {
         assertEquals(expectedTimestamp, avTimestamp.getTimestamp());
     }
 
-    /**
-     * Test getTimestamp method with zero timestamp.
-     */
     @Test
-    public void testGetTimestampZero() {
+    @DisplayName("getTimestamp should handle zero timestamp correctly")
+    public void getTimestampShouldHandleZeroCorrectly() {
         long expectedTimestamp = 0L;
         byte[] rawBytes = new byte[8];
         SMBUtil.writeInt8(expectedTimestamp, rawBytes, 0);
@@ -62,12 +55,9 @@ public class AvTimestampTest {
         assertEquals(expectedTimestamp, avTimestamp.getTimestamp());
     }
 
-    /**
-     * Test getTimestamp method with a negative timestamp (though timestamps are usually positive).
-     * This tests the underlying SMBUtil.readInt8 behavior.
-     */
     @Test
-    public void testGetTimestampNegative() {
+    @DisplayName("getTimestamp should handle negative timestamp correctly")
+    public void getTimestampShouldHandleNegativeCorrectly() {
         long expectedTimestamp = -1L; // Represents all bits set to 1 for an 8-byte long
         byte[] rawBytes = new byte[8];
         SMBUtil.writeInt8(expectedTimestamp, rawBytes, 0);
@@ -76,11 +66,9 @@ public class AvTimestampTest {
         assertEquals(expectedTimestamp, avTimestamp.getTimestamp());
     }
 
-    /**
-     * Test round-trip conversion: long -> bytes -> long.
-     */
     @Test
-    public void testRoundTripConversion() {
+    @DisplayName("Round-trip conversion should preserve timestamp value")
+    public void roundTripConversionShouldPreserveValue() {
         long originalTimestamp = 543210987654321L;
         AvTimestamp avTimestamp = new AvTimestamp(originalTimestamp);
 

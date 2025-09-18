@@ -41,7 +41,7 @@ class CIFSContextTest extends BaseTest {
             mockContext.hasDefaultCredentials();
             mockContext.withDefaultCredentials();
             mockContext.withAnonymousCredentials();
-            mockContext.withGuestCrendentials();
+            mockContext.withGuestCredentials();
             mockContext.withCredentials(mock(Credentials.class));
             mockContext.renewCredentials("hint", new Exception());
         });
@@ -259,14 +259,14 @@ class CIFSContextTest extends BaseTest {
     void testWithGuestCrendentials() {
         // Given
         CIFSContext newContext = mock(CIFSContext.class);
-        when(mockContext.withGuestCrendentials()).thenReturn(newContext);
+        when(mockContext.withGuestCredentials()).thenReturn(newContext);
 
         // When
-        CIFSContext context = mockContext.withGuestCrendentials();
+        CIFSContext context = mockContext.withGuestCredentials();
 
         // Then
         assertEquals(newContext, context);
-        verify(mockContext).withGuestCrendentials();
+        verify(mockContext).withGuestCredentials();
     }
 
     @Test

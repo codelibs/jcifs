@@ -15,6 +15,7 @@ import org.codelibs.jcifs.smb.internal.smb1.SMB1SigningDigest;
 import org.codelibs.jcifs.smb.internal.smb1.ServerMessageBlock;
 import org.codelibs.jcifs.smb.internal.util.SMBUtil;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -34,11 +35,9 @@ public class SmbComCloseTest {
         when(context.getConfig()).thenReturn(config);
     }
 
-    /**
-     * Test method for {@link org.codelibs.jcifs.smb.internal.smb1.com.SmbComClose#SmbComClose(org.codelibs.jcifs.smb.Configuration, int, long)}.
-     */
     @Test
-    public void testConstructor() {
+    @DisplayName("Verify constructor initializes SmbComClose with correct command")
+    public void shouldInitializeWithCorrectCommand() {
         // Given
         int fid = 123;
         long lastWriteTime = System.currentTimeMillis();
@@ -51,11 +50,9 @@ public class SmbComCloseTest {
         // Private fields are not directly accessible, but we can check their effect in other methods.
     }
 
-    /**
-     * Test method for {@link org.codelibs.jcifs.smb.internal.smb1.com.SmbComClose#writeParameterWordsWireFormat(byte[], int)}.
-     */
     @Test
-    public void testWriteParameterWordsWireFormat() {
+    @DisplayName("Verify writeParameterWordsWireFormat writes FID correctly")
+    public void shouldWriteFidCorrectly() {
         // Given
         int fid = 456;
         long lastWriteTime = System.currentTimeMillis();
@@ -72,11 +69,9 @@ public class SmbComCloseTest {
         assertEquals(0, SMBUtil.readInt4(dst, 2));
     }
 
-    /**
-     * Test method for {@link org.codelibs.jcifs.smb.internal.smb1.com.SmbComClose#writeParameterWordsWireFormat(byte[], int)} with a signing digest.
-     */
     @Test
-    public void testWriteParameterWordsWireFormatWithDigest() {
+    @DisplayName("Verify writeParameterWordsWireFormat handles signing digest correctly")
+    public void shouldHandleSigningDigestCorrectly() {
         // Given
         int fid = 789;
         long lastWriteTime = System.currentTimeMillis();
@@ -99,11 +94,9 @@ public class SmbComCloseTest {
         assertTrue(writtenTime != 0 || lastWriteTime == 0);
     }
 
-    /**
-     * Test method for {@link org.codelibs.jcifs.smb.internal.smb1.com.SmbComClose#writeBytesWireFormat(byte[], int)}.
-     */
     @Test
-    public void testWriteBytesWireFormat() {
+    @DisplayName("Verify writeBytesWireFormat returns zero bytes written")
+    public void shouldReturnZeroBytesWritten() {
         // Given
         SmbComClose smbComClose = new SmbComClose(config, 1, 1L);
         byte[] dst = new byte[0];
@@ -115,11 +108,9 @@ public class SmbComCloseTest {
         assertEquals(0, bytesWritten);
     }
 
-    /**
-     * Test method for {@link org.codelibs.jcifs.smb.internal.smb1.com.SmbComClose#readParameterWordsWireFormat(byte[], int)}.
-     */
     @Test
-    public void testReadParameterWordsWireFormat() {
+    @DisplayName("Verify readParameterWordsWireFormat returns zero bytes read")
+    public void shouldReturnZeroBytesReadFromParameters() {
         // Given
         SmbComClose smbComClose = new SmbComClose(config, 1, 1L);
         byte[] buffer = new byte[0];
@@ -131,11 +122,9 @@ public class SmbComCloseTest {
         assertEquals(0, bytesRead);
     }
 
-    /**
-     * Test method for {@link org.codelibs.jcifs.smb.internal.smb1.com.SmbComClose#readBytesWireFormat(byte[], int)}.
-     */
     @Test
-    public void testReadBytesWireFormat() {
+    @DisplayName("Verify readBytesWireFormat returns zero bytes read")
+    public void shouldReturnZeroBytesReadFromBytes() {
         // Given
         SmbComClose smbComClose = new SmbComClose(config, 1, 1L);
         byte[] buffer = new byte[0];
@@ -147,11 +136,9 @@ public class SmbComCloseTest {
         assertEquals(0, bytesRead);
     }
 
-    /**
-     * Test method for {@link org.codelibs.jcifs.smb.internal.smb1.com.SmbComClose#toString()}.
-     */
     @Test
-    public void testToString() {
+    @DisplayName("Verify toString returns formatted string with FID and lastWriteTime")
+    public void shouldReturnFormattedString() {
         // Given
         int fid = 999;
         long lastWriteTime = 1672531200000L; // 2023-01-01 00:00:00 UTC
@@ -167,11 +154,9 @@ public class SmbComCloseTest {
         assertTrue(result.endsWith("]"));
     }
 
-    /**
-     * Test method for {@link org.codelibs.jcifs.smb.internal.smb1.com.SmbComClose#getResponse()}.
-     */
     @Test
-    public void testGetResponse() {
+    @DisplayName("Verify getResponse returns the set response object")
+    public void shouldReturnSetResponseObject() {
         // Given
         SmbComClose smbComClose = new SmbComClose(config, 1, 1L);
         SmbComBlankResponse expectedResponse = new SmbComBlankResponse(config);
@@ -184,11 +169,9 @@ public class SmbComCloseTest {
         assertEquals(expectedResponse, actualResponse);
     }
 
-    /**
-     * Test method for {@link org.codelibs.jcifs.smb.internal.smb1.com.SmbComClose#initResponse(org.codelibs.jcifs.smb.CIFSContext)}.
-     */
     @Test
-    public void testInitResponse() {
+    @DisplayName("Verify initResponse creates and sets new blank response")
+    public void shouldCreateAndSetNewBlankResponse() {
         // Given
         SmbComClose smbComClose = new SmbComClose(config, 1, 1L);
 

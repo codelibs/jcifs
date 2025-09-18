@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 public class SmbComQueryInformationTest {
@@ -17,21 +18,24 @@ public class SmbComQueryInformationTest {
     }
 
     @Test
-    public void testConstructor() {
+    @DisplayName("Constructor should set file name and command correctly")
+    public void constructorShouldSetFileNameAndCommand() {
         // Test if the constructor sets the file name and command correctly
         assertEquals(TEST_FILE_NAME, smbComQueryInformation.path);
         assertEquals(ServerMessageBlock.SMB_COM_QUERY_INFORMATION, smbComQueryInformation.command);
     }
 
     @Test
-    public void testWriteParameterWordsWireFormat() {
+    @DisplayName("writeParameterWordsWireFormat should do nothing and return zero")
+    public void writeParameterWordsWireFormatShouldReturnZero() {
         // This method is expected to do nothing and return 0
         int result = smbComQueryInformation.writeParameterWordsWireFormat(new byte[0], 0);
         assertEquals(0, result);
     }
 
     @Test
-    public void testWriteBytesWireFormat() {
+    @DisplayName("writeBytesWireFormat should write buffer format and file name")
+    public void writeBytesWireFormatShouldWriteBufferFormatAndFileName() {
         // Test the writing of bytes to a byte array
         byte[] dst = new byte[100];
         int bytesWritten = smbComQueryInformation.writeBytesWireFormat(dst, 0);
@@ -44,21 +48,24 @@ public class SmbComQueryInformationTest {
     }
 
     @Test
-    public void testReadParameterWordsWireFormat() {
+    @DisplayName("readParameterWordsWireFormat should do nothing and return zero")
+    public void readParameterWordsWireFormatShouldReturnZero() {
         // This method is expected to do nothing and return 0
         int result = smbComQueryInformation.readParameterWordsWireFormat(new byte[0], 0);
         assertEquals(0, result);
     }
 
     @Test
-    public void testReadBytesWireFormat() {
+    @DisplayName("readBytesWireFormat should do nothing and return zero")
+    public void readBytesWireFormatShouldReturnZero() {
         // This method is expected to do nothing and return 0
         int result = smbComQueryInformation.readBytesWireFormat(new byte[0], 0);
         assertEquals(0, result);
     }
 
     @Test
-    public void testToString() {
+    @DisplayName("toString should return formatted string with class name and filename")
+    public void toStringShouldReturnFormattedString() {
         // Test the string representation of the object
         String result = smbComQueryInformation.toString();
         assertTrue(result.startsWith("SmbComQueryInformation["));

@@ -21,6 +21,7 @@ import org.codelibs.jcifs.smb.internal.SmbNegotiationRequest;
 import org.codelibs.jcifs.smb.internal.util.SMBUtil;
 import org.codelibs.jcifs.smb.util.Hexdump;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
@@ -43,13 +44,15 @@ public class SmbComNegotiateResponseTest {
     }
 
     @Test
-    public void testConstructor() {
+    @DisplayName("Verify constructor initializes response with correct dialect")
+    public void shouldInitializeWithCorrectDialect() {
         assertNotNull(response);
         assertEquals(DialectVersion.SMB1, response.getSelectedDialect());
     }
 
     @Test
-    public void testReadParameterWordsWireFormat() {
+    @DisplayName("Verify readParameterWordsWireFormat parses negotiate response parameters")
+    public void shouldParseNegotiateResponseParameters() {
         byte[] buffer = new byte[34];
         int bufferIndex = 0;
 
@@ -109,7 +112,8 @@ public class SmbComNegotiateResponseTest {
     }
 
     @Test
-    public void testReadBytesWireFormatWithoutExtendedSecurity() throws UnsupportedEncodingException {
+    @DisplayName("Verify readBytesWireFormat handles non-extended security mode")
+    public void shouldHandleNonExtendedSecurityMode() throws UnsupportedEncodingException {
         response.getServerData().scapabilities = 0;
         response.getServerData().encryptionKeyLength = 8;
         // Domain name in OEM encoding (ASCII) with null terminator
@@ -131,7 +135,8 @@ public class SmbComNegotiateResponseTest {
     }
 
     @Test
-    public void testReadBytesWireFormatWithUnicode() throws UnsupportedEncodingException {
+    @DisplayName("Verify readBytesWireFormat handles Unicode encoding")
+    public void shouldHandleUnicodeEncoding() throws UnsupportedEncodingException {
         response.getServerData().scapabilities = SmbConstants.CAP_UNICODE;
         response.getServerData().encryptionKeyLength = 8;
         // Set Unicode flag to use Unicode encoding
@@ -155,7 +160,8 @@ public class SmbComNegotiateResponseTest {
     }
 
     @Test
-    public void testReadBytesWireFormatWithExtendedSecurity() {
+    @DisplayName("Verify readBytesWireFormat handles extended security mode")
+    public void shouldHandleExtendedSecurityMode() {
         response.getServerData().scapabilities = SmbConstants.CAP_EXTENDED_SECURITY;
         // Use reflection to set protected byteCount field
         int byteCountValue = 16 + 10; // guid + token
@@ -181,7 +187,8 @@ public class SmbComNegotiateResponseTest {
     }
 
     @Test
-    public void testIsValid() {
+    @DisplayName("Verify isValid returns true for valid response with signing")
+    public void shouldReturnTrueForValidResponseWithSigning() {
         SmbNegotiationRequest request = mock(SmbNegotiationRequest.class);
         when(request.isSigningEnforced()).thenReturn(true);
         response.getServerData().signaturesEnabled = true;
@@ -192,7 +199,8 @@ public class SmbComNegotiateResponseTest {
     }
 
     @Test
-    public void testIsValidWithUnicode() {
+    @DisplayName("Verify isValid handles Unicode capability correctly")
+    public void shouldHandleUnicodeCapabilityCorrectly() {
         SmbNegotiationRequest request = mock(SmbNegotiationRequest.class);
         response.getServerData().scapabilities = SmbConstants.CAP_UNICODE;
         // Set some required server data for valid response
@@ -205,7 +213,8 @@ public class SmbComNegotiateResponseTest {
     }
 
     @Test
-    public void testIsValidWithInvalidDialect() {
+    @DisplayName("Verify isValid returns false for invalid dialect index")
+    public void shouldReturnFalseForInvalidDialect() {
         SmbNegotiationRequest request = mock(SmbNegotiationRequest.class);
         // Use reflection to set private dialectIndex field
         setDialectIndex(response, 11);
@@ -213,7 +222,8 @@ public class SmbComNegotiateResponseTest {
     }
 
     @Test
-    public void testToString() {
+    @DisplayName("Verify toString returns properly formatted response string")
+    public void shouldReturnFormattedResponseString() {
         response.getServerData().securityMode = 1;
         response.getServerData().encryptedPasswords = true;
         response.getServerData().smaxMpxCount = 50;

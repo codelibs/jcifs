@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.net.MalformedURLException;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,7 +36,8 @@ public class SmbFileTest {
     class ConstructorTests {
 
         @Test
-        public void testConstructorWithValidUrl() throws MalformedURLException {
+        @DisplayName("Test constructor with valid SMB URL")
+        public void shouldCreateSmbFileWithValidUrl() throws MalformedURLException {
             // Test basic constructor with a valid SMB URL
             String url = "smb1://server/share/file.txt";
             SmbFile smbFile = new SmbFile(url);
@@ -44,7 +46,8 @@ public class SmbFileTest {
         }
 
         @Test
-        public void testConstructorWithValidUrlAndAuth() throws MalformedURLException {
+        @DisplayName("Test constructor with URL and authentication")
+        public void shouldCreateSmbFileWithUrlAndAuth() throws MalformedURLException {
             // Test constructor with authentication
             String url = "smb1://user:pass@server/share/file.txt";
             SmbFile smbFile = new SmbFile(url, mockAuth);
@@ -55,7 +58,8 @@ public class SmbFileTest {
         }
 
         @Test
-        public void testConstructorWithMalformedUrl() {
+        @DisplayName("Test constructor throws exception for malformed URL")
+        public void shouldThrowExceptionForMalformedUrl() {
             // Test that constructor throws MalformedURLException for completely invalid URL
             // Note: http:// URLs are actually accepted by the URL constructor but the protocol is changed to smb
             String invalidUrl = "not-a-valid-url";
@@ -63,7 +67,8 @@ public class SmbFileTest {
         }
 
         @Test
-        public void testConstructorWithContextAndName() throws Exception {
+        @DisplayName("Test constructor with context and name")
+        public void shouldCreateSmbFileWithContextAndName() throws Exception {
             // Test constructor that takes a context SmbFile and a name
             SmbFile context = new SmbFile("smb1://server/share/");
             String name = "file.txt";
@@ -72,7 +77,8 @@ public class SmbFileTest {
         }
 
         @Test
-        public void testConstructorWithIllegalShareAccess() {
+        @DisplayName("Test constructor throws exception for illegal share access")
+        public void shouldThrowExceptionForIllegalShareAccess() {
             // Test that constructor throws RuntimeException for illegal shareAccess parameter
             String url = "smb1://server/share/file.txt";
             int illegalShareAccess = 99; // Not a valid combination
@@ -84,7 +90,8 @@ public class SmbFileTest {
     class PathManipulationTests {
 
         @Test
-        public void testGetName() throws MalformedURLException {
+        @DisplayName("Test getName returns correct file/directory names")
+        public void shouldReturnCorrectNames() throws MalformedURLException {
             // Test file name extraction
             assertEquals("file.txt", new SmbFile("smb1://server/share/file.txt").getName());
             // Test directory name extraction (should include trailing slash)
@@ -98,7 +105,8 @@ public class SmbFileTest {
         }
 
         @Test
-        public void testGetParent() throws MalformedURLException {
+        @DisplayName("Test getParent returns correct parent paths")
+        public void shouldReturnCorrectParentPaths() throws MalformedURLException {
             // Test parent of a file
             assertEquals("smb1://server/share/", new SmbFile("smb1://server/share/file.txt").getParent());
             // Test parent of a directory
@@ -114,7 +122,8 @@ public class SmbFileTest {
         }
 
         @Test
-        public void testGetPath() throws MalformedURLException {
+        @DisplayName("Test getPath returns original uncanonicalized URL")
+        public void shouldReturnOriginalUrl() throws MalformedURLException {
             // Path should be the original, uncanonicalized URL
             String url = "smb1://server/share/../share/file.txt";
             SmbFile smbFile = new SmbFile(url);
@@ -122,7 +131,8 @@ public class SmbFileTest {
         }
 
         @Test
-        public void testGetCanonicalPath() throws MalformedURLException {
+        @DisplayName("Test getCanonicalPath performs path canonicalization")
+        public void shouldCanonicalizePathCorrectly() throws MalformedURLException {
             // Test path canonicalization (removing . and ..)
             assertEquals("smb1://server/share/file.txt", new SmbFile("smb1://server/share/dir/../file.txt").getCanonicalPath());
             assertEquals("smb1://server/file.txt", new SmbFile("smb1://server/share/../file.txt").getCanonicalPath());
@@ -130,7 +140,8 @@ public class SmbFileTest {
         }
 
         @Test
-        public void testGetUncPath() throws MalformedURLException {
+        @DisplayName("Test getUncPath converts to UNC format")
+        public void shouldConvertToUncFormat() throws MalformedURLException {
             // Test UNC path conversion
             assertEquals("\\\\server\\share\\file.txt", new SmbFile("smb1://server/share/file.txt").getUncPath());
             // For share URLs with trailing slash, the UNC path includes the trailing slash
@@ -139,14 +150,16 @@ public class SmbFileTest {
         }
 
         @Test
-        public void testGetShare() throws MalformedURLException {
+        @DisplayName("Test getShare extracts share name correctly")
+        public void shouldExtractShareNameCorrectly() throws MalformedURLException {
             assertEquals("share", new SmbFile("smb1://server/share/file.txt").getShare());
             assertEquals("share", new SmbFile("smb1://server/share/").getShare());
             assertEquals(null, new SmbFile("smb1://server/").getShare());
         }
 
         @Test
-        public void testGetServer() throws MalformedURLException {
+        @DisplayName("Test getServer extracts server name correctly")
+        public void shouldExtractServerNameCorrectly() throws MalformedURLException {
             assertEquals("server", new SmbFile("smb1://server/share/file.txt").getServer());
             assertEquals("server", new SmbFile("smb1://server/").getServer());
             assertEquals(null, new SmbFile("smb1://").getServer());
@@ -157,7 +170,8 @@ public class SmbFileTest {
     class AttributeAndStateTests {
 
         @Test
-        public void testGetTypeForFile() throws Exception {
+        @DisplayName("Test getType returns TYPE_FILESYSTEM for files")
+        public void shouldReturnFileSystemTypeForFiles() throws Exception {
             // Mocking underlying connection and info retrieval is complex.
             // This test focuses on the logic based on the URL structure.
             SmbFile file = new SmbFile("smb1://server/share/file.txt");
@@ -167,7 +181,8 @@ public class SmbFileTest {
         }
 
         @Test
-        public void testGetTypeForShare() throws Exception {
+        @DisplayName("Test getType attempts connection for shares")
+        public void shouldAttemptConnectionForShares() throws Exception {
             SmbFile share = new SmbFile("smb1://server/share/");
             // To test this properly, we would need to mock connect0() and the tree object.
             // This is a limitation of unit testing such a coupled class.
@@ -176,7 +191,8 @@ public class SmbFileTest {
         }
 
         @Test
-        public void testIsHiddenForDollarShare() throws Exception {
+        @DisplayName("Test isHidden returns true for dollar shares")
+        public void shouldRecognizeDollarSharesAsHidden() throws Exception {
             SmbFile hiddenShare = new SmbFile("smb1://server/C$/");
             assertTrue(hiddenShare.isHidden());
         }

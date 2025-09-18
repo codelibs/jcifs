@@ -39,7 +39,7 @@ public class SmbComRenameTest {
      */
     @Test
     @DisplayName("Test constructor initializes fields correctly")
-    public void testConstructor() throws Exception {
+    public void shouldInitializeFieldsCorrectly() throws Exception {
         // Given
         String oldFileName = "oldFile.txt";
         String newFileName = "newFile.txt";
@@ -70,7 +70,7 @@ public class SmbComRenameTest {
      */
     @Test
     @DisplayName("Test writeParameterWordsWireFormat writes search attributes correctly")
-    public void testWriteParameterWordsWireFormat() {
+    public void shouldWriteSearchAttributesCorrectly() {
         // Given
         byte[] dst = new byte[10];
         smbComRename = new SmbComRename(config, "old.txt", "new.txt");
@@ -93,7 +93,7 @@ public class SmbComRenameTest {
      */
     @Test
     @DisplayName("Test writeBytesWireFormat writes file names correctly in ASCII")
-    public void testWriteBytesWireFormatAscii() throws Exception {
+    public void shouldWriteFileNamesInAscii() throws Exception {
         // Given
         String oldFileName = "oldFile.txt";
         String newFileName = "newFile.txt";
@@ -124,7 +124,7 @@ public class SmbComRenameTest {
      */
     @Test
     @DisplayName("Test writeBytesWireFormat writes file names correctly in Unicode")
-    public void testWriteBytesWireFormatUnicode() throws Exception {
+    public void shouldWriteFileNamesInUnicode() throws Exception {
         // Given
         String oldFileName = "oldFile.txt";
         String newFileName = "newFile.txt";
@@ -165,7 +165,7 @@ public class SmbComRenameTest {
      */
     @Test
     @DisplayName("Test writeBytesWireFormat with empty file names")
-    public void testWriteBytesWireFormatEmptyFileNames() {
+    public void shouldHandleEmptyFileNames() {
         // Given
         byte[] dst = new byte[100];
         smbComRename = new SmbComRename(config, "", "");
@@ -186,7 +186,7 @@ public class SmbComRenameTest {
      */
     @Test
     @DisplayName("Test writeBytesWireFormat with special characters in file names")
-    public void testWriteBytesWireFormatSpecialCharacters() {
+    public void shouldHandleSpecialCharactersInFileNames() {
         // Given
         String oldFileName = "file with spaces.txt";
         String newFileName = "file@#$%.doc";
@@ -207,7 +207,7 @@ public class SmbComRenameTest {
      */
     @Test
     @DisplayName("Test readParameterWordsWireFormat always returns 0")
-    public void testReadParameterWordsWireFormat() {
+    public void shouldAlwaysReturnZeroForReadParameterWords() {
         // Given
         byte[] buffer = new byte[10];
         smbComRename = new SmbComRename(config, "old.txt", "new.txt");
@@ -224,7 +224,7 @@ public class SmbComRenameTest {
      */
     @Test
     @DisplayName("Test readBytesWireFormat always returns 0")
-    public void testReadBytesWireFormat() {
+    public void shouldAlwaysReturnZeroForReadBytes() {
         // Given
         byte[] buffer = new byte[10];
         smbComRename = new SmbComRename(config, "old.txt", "new.txt");
@@ -241,7 +241,7 @@ public class SmbComRenameTest {
      */
     @Test
     @DisplayName("Test toString returns properly formatted string")
-    public void testToString() {
+    public void shouldReturnProperlyFormattedString() {
         // Given
         String oldFileName = "oldFile.txt";
         String newFileName = "newFile.txt";
@@ -263,7 +263,7 @@ public class SmbComRenameTest {
      */
     @Test
     @DisplayName("Test constructor with null configuration throws NullPointerException")
-    public void testConstructorWithNullConfig() {
+    public void shouldThrowNullPointerExceptionForNullConfig() {
         // Given
         String oldFileName = "old.txt";
         String newFileName = "new.txt";
@@ -279,7 +279,7 @@ public class SmbComRenameTest {
      */
     @Test
     @DisplayName("Test constructor with null file names")
-    public void testConstructorWithNullFileNames() {
+    public void shouldAcceptNullFileNames() {
         // When & Then - should not throw exception during construction
         assertDoesNotThrow(() -> {
             new SmbComRename(config, null, null);
@@ -291,7 +291,7 @@ public class SmbComRenameTest {
      */
     @Test
     @DisplayName("Test writeBytesWireFormat with very long file names")
-    public void testWriteBytesWireFormatLongFileNames() {
+    public void shouldHandleLongFileNames() {
         // Given
         String longOldFileName = "a".repeat(255); // Max filename length
         String longNewFileName = "b".repeat(255);
@@ -313,7 +313,7 @@ public class SmbComRenameTest {
      */
     @Test
     @DisplayName("Test writeBytesWireFormat with different buffer offsets")
-    public void testWriteBytesWireFormatWithOffset() {
+    public void shouldHandleDifferentBufferOffsets() {
         // Given
         String oldFileName = "old.txt";
         String newFileName = "new.txt";
@@ -334,7 +334,7 @@ public class SmbComRenameTest {
      */
     @Test
     @DisplayName("Test search attributes include HIDDEN, SYSTEM, and DIRECTORY")
-    public void testSearchAttributesValue() throws Exception {
+    public void shouldIncludeRequiredSearchAttributes() throws Exception {
         // Given
         smbComRename = new SmbComRename(config, "old.txt", "new.txt");
 
@@ -354,7 +354,7 @@ public class SmbComRenameTest {
      */
     @Test
     @DisplayName("Test writeString handles path separators correctly")
-    public void testWriteStringWithPathSeparators() {
+    public void shouldHandlePathSeparatorsCorrectly() {
         // Given
         String oldFileName = "folder\\oldFile.txt";
         String newFileName = "folder\\newFile.txt";

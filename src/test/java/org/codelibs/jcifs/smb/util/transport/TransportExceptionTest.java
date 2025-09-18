@@ -17,7 +17,7 @@ public class TransportExceptionTest {
 
     @Test
     @DisplayName("Test default constructor creates exception with null message")
-    public void testDefaultConstructor() {
+    public void shouldCreateExceptionWithNullMessage() {
         // Create exception with default constructor
         TransportException exception = new TransportException();
 
@@ -32,7 +32,7 @@ public class TransportExceptionTest {
 
     @Test
     @DisplayName("Test constructor with message creates exception with specified message")
-    public void testConstructorWithMessage() {
+    public void shouldCreateExceptionWithSpecifiedMessage() {
         // Test with various messages
         String message = "Test error message";
         TransportException exception = new TransportException(message);
@@ -53,7 +53,7 @@ public class TransportExceptionTest {
 
     @Test
     @DisplayName("Test constructor with cause creates exception with specified cause")
-    public void testConstructorWithCause() {
+    public void shouldCreateExceptionWithSpecifiedCause() {
         // Create a root cause exception
         RuntimeException rootCause = new RuntimeException("Root cause error");
         TransportException exception = new TransportException(rootCause);
@@ -70,7 +70,7 @@ public class TransportExceptionTest {
 
     @Test
     @DisplayName("Test constructor with message and cause creates exception with both")
-    public void testConstructorWithMessageAndCause() {
+    public void shouldCreateExceptionWithMessageAndCause() {
         // Create exception with both message and cause
         String message = "Transport error occurred";
         IllegalStateException rootCause = new IllegalStateException("State error");
@@ -100,7 +100,7 @@ public class TransportExceptionTest {
     @Test
     @DisplayName("Test deprecated getRootCause method returns the same as getCause")
     @SuppressWarnings("deprecation")
-    public void testGetRootCause() {
+    public void shouldReturnSameAsGetCause() {
         // Test with no cause
         TransportException noCauseException = new TransportException("No cause");
         assertNull(noCauseException.getRootCause());
@@ -121,7 +121,7 @@ public class TransportExceptionTest {
 
     @Test
     @DisplayName("Test exception inheritance and polymorphism")
-    public void testInheritance() {
+    public void shouldDemonstrateCorrectInheritance() {
         // Create exception
         TransportException exception = new TransportException("Test exception");
 
@@ -144,7 +144,7 @@ public class TransportExceptionTest {
 
     @Test
     @DisplayName("Test exception can be thrown and caught")
-    public void testThrowAndCatch() {
+    public void shouldBeThrownAndCaught() {
         // Test throwing and catching with message
         String expectedMessage = "Transport failed";
         assertThrows(TransportException.class, () -> {
@@ -168,7 +168,7 @@ public class TransportExceptionTest {
 
     @Test
     @DisplayName("Test serialization compatibility")
-    public void testSerialVersionUID() {
+    public void shouldBeSerializable() {
         // Verify that the serialVersionUID is set
         TransportException exception = new TransportException();
 

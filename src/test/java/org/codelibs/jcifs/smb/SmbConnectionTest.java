@@ -20,7 +20,7 @@ public class SmbConnectionTest {
      */
     @Test
     @DisplayName("getBatchLimit returns correct values for different SMB commands")
-    public void testBatchLimitForDifferentCommands() throws CIFSException {
+    public void batchLimitForDifferentCommandsShouldReturnCorrectValues() throws CIFSException {
         Properties props = new Properties();
         props.setProperty("jcifs.client.useBatching", "true");
         props.setProperty("jcifs.client.useUnicode", "true");
@@ -43,7 +43,7 @@ public class SmbConnectionTest {
      */
     @Test
     @DisplayName("Batch limit configuration with Unicode enabled")
-    public void testBatchLimitWithUnicodeEnabled() throws CIFSException {
+    public void batchLimitWithUnicodeEnabledShouldWork() throws CIFSException {
         Properties props = new Properties();
         props.setProperty("jcifs.client.useUnicode", "true");
         props.setProperty("jcifs.client.useBatching", "true");
@@ -63,7 +63,7 @@ public class SmbConnectionTest {
      */
     @Test
     @DisplayName("Batch limit configuration with batching disabled")
-    public void testBatchLimitWithBatchingDisabled() throws CIFSException {
+    public void batchLimitWithBatchingDisabledShouldWork() throws CIFSException {
         Properties props = new Properties();
         props.setProperty("jcifs.client.useUnicode", "true");
         props.setProperty("jcifs.client.useBatching", "false");
@@ -83,7 +83,7 @@ public class SmbConnectionTest {
      */
     @Test
     @DisplayName("Batch limit configuration with Unicode disabled")
-    public void testBatchLimitWithUnicodeDisabled() throws CIFSException {
+    public void batchLimitWithUnicodeDisabledShouldWork() throws CIFSException {
         Properties props = new Properties();
         props.setProperty("jcifs.client.useUnicode", "false");
         props.setProperty("jcifs.client.useBatching", "true");

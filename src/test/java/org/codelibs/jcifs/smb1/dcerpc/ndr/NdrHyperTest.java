@@ -39,7 +39,7 @@ public class NdrHyperTest {
      */
     @Test
     @DisplayName("Basic round‑trip for a fixed value")
-    public void testEncodeRoundTrip() throws NdrException {
+    public void shouldEncodeAndDecodeRoundTrip() throws NdrException {
         final long original = 0x1122334455667788L;
         NdrHyper hyper = new NdrHyper(original);
         // Create buffer with extra space for alignment
@@ -57,7 +57,7 @@ public class NdrHyperTest {
      */
     @ParameterizedTest(name = "Encode and decode {0}")
     @ValueSource(longs = { 0L, 1L, -1L, Long.MAX_VALUE, Long.MIN_VALUE })
-    public void testEncodeWithVariousValues(long val) throws NdrException {
+    public void shouldEncodeAndDecodeVariousValues(long val) throws NdrException {
         NdrHyper hyper = new NdrHyper(val);
         // Create buffer with extra space for alignment
         NdrBuffer buf = new NdrBuffer(new byte[16], 0);
@@ -74,7 +74,7 @@ public class NdrHyperTest {
      */
     @Test
     @DisplayName("Encode with null buffer throws NullPointerException")
-    public void testEncodeNullBuffer() throws NdrException {
+    public void shouldThrowNullPointerExceptionForEncodeWithNullBuffer() throws NdrException {
         NdrHyper hyper = new NdrHyper(5L);
         assertThrows(NullPointerException.class, () -> hyper.encode(null));
     }
@@ -84,7 +84,7 @@ public class NdrHyperTest {
      */
     @Test
     @DisplayName("Decode with null buffer throws NullPointerException")
-    public void testDecodeNullBuffer() throws NdrException {
+    public void shouldThrowNullPointerExceptionForDecodeWithNullBuffer() throws NdrException {
         NdrHyper hyper = new NdrHyper(0L);
         assertThrows(NullPointerException.class, () -> hyper.decode(null));
     }
@@ -94,7 +94,7 @@ public class NdrHyperTest {
      */
     @Test
     @DisplayName("Encode should call NdrBuffer.enc_ndr_hyper with correct value")
-    public void testEncodeInteraction() throws NdrException {
+    public void shouldCallEncodeHyperWithCorrectValue() throws NdrException {
         NdrBuffer buf = mock(NdrBuffer.class);
         NdrHyper hyper = new NdrHyper(12345L);
         hyper.encode(buf);
@@ -106,7 +106,7 @@ public class NdrHyperTest {
      */
     @Test
     @DisplayName("Decode should set value from NdrBuffer.dec_ndr_hyper")
-    public void testDecodeInteraction() throws NdrException {
+    public void shouldSetValueFromDecodeHyper() throws NdrException {
         NdrBuffer buf = mock(NdrBuffer.class);
         when(buf.dec_ndr_hyper()).thenReturn(0xdeadbeefcafebabeL);
         NdrHyper hyper = new NdrHyper(0L);

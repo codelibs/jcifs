@@ -10,6 +10,7 @@ import org.codelibs.jcifs.smb.CIFSException;
 import org.codelibs.jcifs.smb.Configuration;
 import org.codelibs.jcifs.smb.config.PropertyConfiguration;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 public class SmbComWriteAndXResponseTest {
@@ -21,11 +22,9 @@ public class SmbComWriteAndXResponseTest {
         config = new PropertyConfiguration(new Properties());
     }
 
-    /**
-     * Test of readParameterWordsWireFormat method
-     */
     @Test
-    public void testReadParameterWordsWireFormat() {
+    @DisplayName("readParameterWordsWireFormat should read count correctly")
+    public void readParameterWordsWireFormatShouldReadCount() {
         // Given
         byte[] buffer = new byte[] { (byte) 0xff, (byte) 0xff, 0, 0, 0, 0, 0, 0 };
         SmbComWriteAndXResponse instance = new SmbComWriteAndXResponse(config);
@@ -38,11 +37,9 @@ public class SmbComWriteAndXResponseTest {
         assertEquals(0xffffL, instance.getCount());
     }
 
-    /**
-     * Test of readParameterWordsWireFormat with zero count
-     */
     @Test
-    public void testReadParameterWordsWireFormatZeroCount() {
+    @DisplayName("readParameterWordsWireFormat should handle zero count")
+    public void readParameterWordsWireFormatShouldHandleZeroCount() {
         // Given
         byte[] buffer = new byte[] { 0, 0, 0, 0, 0, 0, 0, 0 };
         SmbComWriteAndXResponse instance = new SmbComWriteAndXResponse(config);
@@ -55,11 +52,9 @@ public class SmbComWriteAndXResponseTest {
         assertEquals(0L, instance.getCount());
     }
 
-    /**
-     * Test of writeParameterWordsWireFormat method
-     */
     @Test
-    public void testWriteParameterWordsWireFormat() {
+    @DisplayName("writeParameterWordsWireFormat should return 0")
+    public void writeParameterWordsWireFormatShouldReturnZero() {
         // Given
         byte[] buffer = new byte[10];
         SmbComWriteAndXResponse instance = new SmbComWriteAndXResponse(config);
@@ -71,11 +66,9 @@ public class SmbComWriteAndXResponseTest {
         assertEquals(0, result);
     }
 
-    /**
-     * Test of writeBytesWireFormat method
-     */
     @Test
-    public void testWriteBytesWireFormat() {
+    @DisplayName("writeBytesWireFormat should return 0")
+    public void writeBytesWireFormatShouldReturnZero() {
         // Given
         byte[] buffer = new byte[10];
         SmbComWriteAndXResponse instance = new SmbComWriteAndXResponse(config);
@@ -87,11 +80,9 @@ public class SmbComWriteAndXResponseTest {
         assertEquals(0, result);
     }
 
-    /**
-     * Test of readBytesWireFormat method
-     */
     @Test
-    public void testReadBytesWireFormat() {
+    @DisplayName("readBytesWireFormat should return 0")
+    public void readBytesWireFormatShouldReturnZero() {
         // Given
         byte[] buffer = new byte[10];
         SmbComWriteAndXResponse instance = new SmbComWriteAndXResponse(config);
@@ -103,11 +94,9 @@ public class SmbComWriteAndXResponseTest {
         assertEquals(0, result);
     }
 
-    /**
-     * Test of toString method
-     */
     @Test
-    public void testToString() {
+    @DisplayName("toString should contain class name and count")
+    public void toStringShouldContainClassNameAndCount() {
         // Given
         SmbComWriteAndXResponse instance = new SmbComWriteAndXResponse(config);
 

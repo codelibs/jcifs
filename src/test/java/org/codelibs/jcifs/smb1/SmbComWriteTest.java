@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.reflect.Field;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -31,7 +32,8 @@ public class SmbComWriteTest {
      * Test that the constructor initializes all fields correctly
      */
     @Test
-    public void testConstructor() {
+    @DisplayName("Constructor should initialize all fields correctly")
+    public void constructorShouldInitializeAllFields() {
         // Arrange
         int fid = 0x1234;
         int offset = 100;
@@ -56,7 +58,8 @@ public class SmbComWriteTest {
      * Test setParam method updates the write parameters
      */
     @Test
-    public void testSetParam() {
+    @DisplayName("setParam should update all write parameters")
+    public void setParamShouldUpdateAllWriteParameters() {
         // Arrange
         SmbComWrite write = new SmbComWrite();
         int fid = 0x5678;
@@ -83,7 +86,8 @@ public class SmbComWriteTest {
      * Test writeParameterWordsWireFormat writes correct bytes
      */
     @Test
-    public void testWriteParameterWordsWireFormat() {
+    @DisplayName("writeParameterWordsWireFormat should write correct parameter bytes")
+    public void writeParameterWordsWireFormatShouldWriteCorrectBytes() {
         // Arrange
         SmbComWrite write = new SmbComWrite();
         write.setParam(0x1234, 0x5678L, 100, new byte[10], 0, 10);
@@ -109,7 +113,8 @@ public class SmbComWriteTest {
      * Test writeBytesWireFormat writes data correctly
      */
     @Test
-    public void testWriteBytesWireFormat() {
+    @DisplayName("writeBytesWireFormat should write data block correctly")
+    public void writeBytesWireFormatShouldWriteDataCorrectly() {
         // Arrange
         byte[] data = { 1, 2, 3, 4, 5 };
         SmbComWrite write = new SmbComWrite();
@@ -133,7 +138,8 @@ public class SmbComWriteTest {
      * Test readParameterWordsWireFormat always returns 0
      */
     @Test
-    public void testReadParameterWordsWireFormat() {
+    @DisplayName("readParameterWordsWireFormat should always return zero")
+    public void readParameterWordsWireFormatShouldReturnZero() {
         SmbComWrite write = new SmbComWrite();
         byte[] buffer = new byte[10];
         int result = write.readParameterWordsWireFormat(buffer, 0);
@@ -144,7 +150,8 @@ public class SmbComWriteTest {
      * Test readBytesWireFormat always returns 0
      */
     @Test
-    public void testReadBytesWireFormat() {
+    @DisplayName("readBytesWireFormat should always return zero")
+    public void readBytesWireFormatShouldReturnZero() {
         SmbComWrite write = new SmbComWrite();
         byte[] buffer = new byte[10];
         int result = write.readBytesWireFormat(buffer, 0);
@@ -155,7 +162,8 @@ public class SmbComWriteTest {
      * Test toString contains relevant information
      */
     @Test
-    public void testToString() {
+    @DisplayName("toString should contain relevant write command information")
+    public void toStringShouldContainRelevantInformation() {
         SmbComWrite write = new SmbComWrite();
         write.setParam(0x1234, 100L, 50, new byte[10], 0, 10);
 

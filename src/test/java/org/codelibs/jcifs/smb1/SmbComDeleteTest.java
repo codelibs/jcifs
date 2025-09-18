@@ -8,6 +8,7 @@ import java.lang.reflect.Field;
 
 import org.codelibs.jcifs.smb1.util.Hexdump;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 public class SmbComDeleteTest {
@@ -21,14 +22,16 @@ public class SmbComDeleteTest {
     }
 
     @Test
-    public void testConstructor() {
+    @DisplayName("Constructor should set file name and command correctly")
+    public void constructorShouldSetFileNameAndCommand() {
         // Test if the constructor sets the file name and command correctly
         assertEquals(TEST_FILE_NAME, smbComDelete.path);
         assertEquals(ServerMessageBlock.SMB_COM_DELETE, smbComDelete.command);
     }
 
     @Test
-    public void testWriteParameterWordsWireFormat() {
+    @DisplayName("writeParameterWordsWireFormat should write search attributes")
+    public void writeParameterWordsWireFormatShouldWriteSearchAttributes() {
         // Test the writing of parameter words to a byte array
         byte[] dst = new byte[2];
         int bytesWritten = smbComDelete.writeParameterWordsWireFormat(dst, 0);
@@ -39,7 +42,8 @@ public class SmbComDeleteTest {
     }
 
     @Test
-    public void testWriteBytesWireFormat() {
+    @DisplayName("writeBytesWireFormat should write buffer format and file name")
+    public void writeBytesWireFormatShouldWriteBufferFormatAndFileName() {
         // Test the writing of bytes to a byte array
         byte[] dst = new byte[100];
         int bytesWritten = smbComDelete.writeBytesWireFormat(dst, 0);
@@ -52,21 +56,24 @@ public class SmbComDeleteTest {
     }
 
     @Test
-    public void testReadParameterWordsWireFormat() {
+    @DisplayName("readParameterWordsWireFormat should do nothing and return zero")
+    public void readParameterWordsWireFormatShouldReturnZero() {
         // This method is expected to do nothing and return 0
         int result = smbComDelete.readParameterWordsWireFormat(new byte[0], 0);
         assertEquals(0, result);
     }
 
     @Test
-    public void testReadBytesWireFormat() {
+    @DisplayName("readBytesWireFormat should do nothing and return zero")
+    public void readBytesWireFormatShouldReturnZero() {
         // This method is expected to do nothing and return 0
         int result = smbComDelete.readBytesWireFormat(new byte[0], 0);
         assertEquals(0, result);
     }
 
     @Test
-    public void testToString() {
+    @DisplayName("toString should return formatted string with search attributes and file name")
+    public void toStringShouldReturnFormattedString() {
         // Test the string representation of the object
         String result = smbComDelete.toString();
         assertNotNull(result);
