@@ -875,6 +875,204 @@ public class SmbFileIntegrationTest {
 
             assertEquals(source.length(), dest.length(), "File sizes should match after copy");
         }
+
+        @Test
+        void testCopyPreservesTimestampsForRegularFile() throws Exception {
+            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final SmbFile source = new SmbFile(createSmbUrl("users", "timestampsource.txt"), context);
+            final SmbFile dest = new SmbFile(createSmbUrl("users", "timestampdest.txt"), context);
+
+            final String content = "Test timestamp preservation";
+            try (OutputStream os = source.getOutputStream()) {
+                os.write(content.getBytes(StandardCharsets.UTF_8));
+            }
+
+            // Set specific timestamps on source file
+            final long createTime = System.currentTimeMillis() - 172800000; // 2 days ago
+            final long modifiedTime = System.currentTimeMillis() - 86400000; // 1 day ago
+            final long accessTime = System.currentTimeMillis() - 43200000; // 12 hours ago
+
+            source.setFileTimes(createTime, modifiedTime, accessTime);
+
+            // Get actual timestamps from source (may differ slightly due to SMB time resolution)
+            final long srcCreateTime = source.createTime();
+            final long srcModifiedTime = source.lastModified();
+            final long srcAccessTime = source.lastAccess();
+            final int srcAttributes = source.getAttributes();
+
+            // Copy file
+            source.copyTo(dest);
+
+            // Verify timestamps are preserved (allowing 5 second tolerance for SMB time resolution)
+            assertTrue(Math.abs(dest.createTime() - srcCreateTime) < 5000,
+                    String.format("Create time should be preserved (expected: %d, actual: %d)", srcCreateTime, dest.createTime()));
+            assertTrue(Math.abs(dest.lastModified() - srcModifiedTime) < 5000,
+                    String.format("Modified time should be preserved (expected: %d, actual: %d)", srcModifiedTime, dest.lastModified()));
+            assertTrue(Math.abs(dest.lastAccess() - srcAccessTime) < 5000,
+                    String.format("Access time should be preserved (expected: %d, actual: %d)", srcAccessTime, dest.lastAccess()));
+
+            // Verify attributes are preserved
+            assertEquals(srcAttributes, dest.getAttributes(), "Attributes should be preserved");
+
+            // Verify content is intact
+            try (InputStream is = dest.getInputStream()) {
+                final byte[] buffer = new byte[1024];
+                final int bytesRead = is.read(buffer);
+                final String readContent = new String(buffer, 0, bytesRead, StandardCharsets.UTF_8);
+                assertEquals(content, readContent, "Content should be preserved");
+            }
+        }
+
+        @Test
+        void testCopyPreservesTimestampsForEmptyFile() throws Exception {
+            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final SmbFile source = new SmbFile(createSmbUrl("users", "emptysource.txt"), context);
+            final SmbFile dest = new SmbFile(createSmbUrl("users", "emptydest.txt"), context);
+
+            // Create empty file
+            source.createNewFile();
+
+            // Set specific timestamps on empty source file
+            final long createTime = System.currentTimeMillis() - 172800000; // 2 days ago
+            final long modifiedTime = System.currentTimeMillis() - 86400000; // 1 day ago
+            final long accessTime = System.currentTimeMillis() - 43200000; // 12 hours ago
+
+            source.setFileTimes(createTime, modifiedTime, accessTime);
+
+            // Get actual timestamps from source
+            final long srcCreateTime = source.createTime();
+            final long srcModifiedTime = source.lastModified();
+            final long srcAccessTime = source.lastAccess();
+
+            // Copy empty file
+            source.copyTo(dest);
+
+            // Verify file is empty
+            assertEquals(0, dest.length(), "Copied file should be empty");
+
+            // Verify timestamps are preserved for empty files (allowing 5 second tolerance)
+            assertTrue(Math.abs(dest.createTime() - srcCreateTime) < 5000, String
+                    .format("Create time should be preserved for empty file (expected: %d, actual: %d)", srcCreateTime, dest.createTime()));
+            assertTrue(Math.abs(dest.lastModified() - srcModifiedTime) < 5000, String.format(
+                    "Modified time should be preserved for empty file (expected: %d, actual: %d)", srcModifiedTime, dest.lastModified()));
+            assertTrue(Math.abs(dest.lastAccess() - srcAccessTime) < 5000, String
+                    .format("Access time should be preserved for empty file (expected: %d, actual: %d)", srcAccessTime, dest.lastAccess()));
+        }
+
+        @Test
+        void testCopyPreservesTimestampsAcrossDirectories() throws Exception {
+            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final SmbFile sourceDir = new SmbFile(createSmbUrl("users", "srcdir/"), context);
+            final SmbFile destDir = new SmbFile(createSmbUrl("users", "destdir/"), context);
+
+            sourceDir.mkdir();
+            destDir.mkdir();
+
+            final SmbFile source = new SmbFile(createSmbUrl("users", "srcdir/file.txt"), context);
+            final SmbFile dest = new SmbFile(createSmbUrl("users", "destdir/file.txt"), context);
+
+            final String content = "Cross-directory copy";
+            try (OutputStream os = source.getOutputStream()) {
+                os.write(content.getBytes(StandardCharsets.UTF_8));
+            }
+
+            // Set specific timestamps
+            final long createTime = System.currentTimeMillis() - 172800000;
+            final long modifiedTime = System.currentTimeMillis() - 86400000;
+            final long accessTime = System.currentTimeMillis() - 43200000;
+
+            source.setFileTimes(createTime, modifiedTime, accessTime);
+
+            final long srcCreateTime = source.createTime();
+            final long srcModifiedTime = source.lastModified();
+            final long srcAccessTime = source.lastAccess();
+
+            // Copy across directories
+            source.copyTo(dest);
+
+            // Verify timestamps are preserved across directories
+            assertTrue(Math.abs(dest.createTime() - srcCreateTime) < 5000, "Create time should be preserved across directories");
+            assertTrue(Math.abs(dest.lastModified() - srcModifiedTime) < 5000, "Modified time should be preserved across directories");
+            assertTrue(Math.abs(dest.lastAccess() - srcAccessTime) < 5000, "Access time should be preserved across directories");
+        }
+
+        @Test
+        void testCopyPreservesFileAttributes() throws Exception {
+            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final SmbFile source = new SmbFile(createSmbUrl("users", "attrsource.txt"), context);
+            final SmbFile dest = new SmbFile(createSmbUrl("users", "attrdest.txt"), context);
+
+            final String content = "Attribute preservation test";
+            try (OutputStream os = source.getOutputStream()) {
+                os.write(content.getBytes(StandardCharsets.UTF_8));
+            }
+
+            // Set file to read-only and set timestamps
+            source.setReadOnly();
+            final long createTime = System.currentTimeMillis() - 172800000;
+            final long modifiedTime = System.currentTimeMillis() - 86400000;
+            final long accessTime = System.currentTimeMillis() - 43200000;
+
+            source.setFileTimes(createTime, modifiedTime, accessTime);
+
+            final long srcCreateTime = source.createTime();
+            final long srcModifiedTime = source.lastModified();
+            final long srcAccessTime = source.lastAccess();
+            final int srcAttributes = source.getAttributes();
+
+            // Copy file
+            source.copyTo(dest);
+
+            // Verify both attributes and timestamps are preserved
+            assertEquals(srcAttributes, dest.getAttributes(), "File attributes should be preserved");
+
+            assertTrue(Math.abs(dest.createTime() - srcCreateTime) < 5000, "Create time should be preserved with attributes");
+            assertTrue(Math.abs(dest.lastModified() - srcModifiedTime) < 5000, "Modified time should be preserved with attributes");
+            assertTrue(Math.abs(dest.lastAccess() - srcAccessTime) < 5000, "Access time should be preserved with attributes");
+
+            // Reset read-only flag for cleanup
+            dest.setReadWrite();
+        }
+
+        @Test
+        void testCopyPreservesTimestampsForLargeFile() throws Exception {
+            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final SmbFile source = new SmbFile(createSmbUrl("users", "largetimestamp.dat"), context);
+            final SmbFile dest = new SmbFile(createSmbUrl("users", "largetimestampdest.dat"), context);
+
+            // Create a larger file (1MB) to test chunked copy path
+            final int size = 1024 * 1024; // 1MB
+            final byte[] data = new byte[size];
+            for (int i = 0; i < size; i++) {
+                data[i] = (byte) (i % 256);
+            }
+
+            try (OutputStream os = source.getOutputStream()) {
+                os.write(data);
+            }
+
+            // Set specific timestamps
+            final long createTime = System.currentTimeMillis() - 172800000;
+            final long modifiedTime = System.currentTimeMillis() - 86400000;
+            final long accessTime = System.currentTimeMillis() - 43200000;
+
+            source.setFileTimes(createTime, modifiedTime, accessTime);
+
+            final long srcCreateTime = source.createTime();
+            final long srcModifiedTime = source.lastModified();
+            final long srcAccessTime = source.lastAccess();
+
+            // Copy large file
+            source.copyTo(dest);
+
+            // Verify file size matches
+            assertEquals(source.length(), dest.length(), "File sizes should match");
+
+            // Verify timestamps are preserved for large files
+            assertTrue(Math.abs(dest.createTime() - srcCreateTime) < 5000, "Create time should be preserved for large files");
+            assertTrue(Math.abs(dest.lastModified() - srcModifiedTime) < 5000, "Modified time should be preserved for large files");
+            assertTrue(Math.abs(dest.lastAccess() - srcAccessTime) < 5000, "Access time should be preserved for large files");
+        }
     }
 
     /**
