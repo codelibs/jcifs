@@ -182,6 +182,13 @@ public final class SmbCopyUtil {
     private static void serverSideCopy(final SmbFile src, final SmbFile dest, final SmbTreeHandleImpl sh, final SmbTreeHandleImpl dh,
             final boolean write) throws CIFSException {
         log.debug("Trying server side copy");
+
+        // Get source file timestamps and attributes before copying
+        final int attrs = src.getAttributes();
+        final long mtime = src.lastModified();
+        final long ctime = src.createTime();
+        final long atime = src.lastAccess();
+
         SmbFileHandleImpl dfd = null;
         try {
             long size;
@@ -191,7 +198,19 @@ public final class SmbCopyUtil {
             try (SmbFileHandleImpl sfd =
                     src.openUnshared(0, SmbConstants.O_RDONLY, SmbConstants.FILE_SHARE_READ, SmbConstants.ATTR_NORMAL, 0)) {
                 if (sfd.getInitialSize() == 0) {
-                    try (SmbFileHandleImpl edfd = openCopyTargetFile(dest, src.getAttributes(), !write)) {
+                    try (SmbFileHandleImpl edfd = openCopyTargetFile(dest, attrs, !write)) {
+                        // Set timestamps for empty files
+                        if (dh.isSMB2()) {
+                            final Smb2SetInfoRequest req = new Smb2SetInfoRequest(dh.getConfig(), edfd.getFileId());
+                            req.setFileInformation(new FileBasicInfo(ctime, atime, mtime, 0L, attrs));
+                            dh.send(req);
+                        } else if (dh.hasCapability(SmbConstants.CAP_NT_SMBS)) {
+                            dh.send(new Trans2SetFileInformation(dh.getConfig(), edfd.getFid(), attrs, ctime, mtime, atime),
+                                    new Trans2SetFileInformationResponse(dh.getConfig()));
+                        } else {
+                            dh.send(new SmbComSetInformation(dh.getConfig(), dest.getUncPath(), attrs, mtime),
+                                    new SmbComSetInformationResponse(dh.getConfig()));
+                        }
                         return;
                     }
                 }
@@ -244,7 +263,7 @@ public final class SmbCopyUtil {
 
                         if (dfd == null || !dfd.isValid()) {
                             // don't reopen the file for every round if it's not necessary, keep the lock
-                            dfd = openCopyTargetFile(dest, src.getAttributes(), !write);
+                            dfd = openCopyTargetFile(dest, attrs, !write);
                         }
 
                         // FSCTL_SRV_COPYCHUNK_WRITE allows to open the file for writing only, FSCTL_SRV_COPYCHUNK also
@@ -278,6 +297,21 @@ public final class SmbCopyUtil {
                     }
                     break;
                 } while (retry);
+            }
+
+            // Set timestamps on the destination file after successful copy
+            if (dfd != null && dfd.isValid()) {
+                if (dh.isSMB2()) {
+                    final Smb2SetInfoRequest req = new Smb2SetInfoRequest(dh.getConfig(), dfd.getFileId());
+                    req.setFileInformation(new FileBasicInfo(ctime, atime, mtime, 0L, attrs));
+                    dh.send(req);
+                } else if (dh.hasCapability(SmbConstants.CAP_NT_SMBS)) {
+                    dh.send(new Trans2SetFileInformation(dh.getConfig(), dfd.getFid(), attrs, ctime, mtime, atime),
+                            new Trans2SetFileInformationResponse(dh.getConfig()));
+                } else {
+                    dh.send(new SmbComSetInformation(dh.getConfig(), dest.getUncPath(), attrs, mtime),
+                            new SmbComSetInformationResponse(dh.getConfig()));
+                }
             }
         } catch (final SmbUnsupportedOperationException e) {
             throw e;
