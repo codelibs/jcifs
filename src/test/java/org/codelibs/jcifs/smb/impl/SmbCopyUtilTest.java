@@ -396,8 +396,9 @@ public class SmbCopyUtilTest {
             SmbTreeHandleImpl sh = mock(SmbTreeHandleImpl.class, RETURNS_DEEP_STUBS);
             SmbTreeHandleImpl dh = mock(SmbTreeHandleImpl.class, RETURNS_DEEP_STUBS);
 
-            // Force legacy SMB path (no CAP_NT_SMBS)
-            when(sh.isSMB2()).thenReturn(true);
+            // Force legacy SMB path without CAP_NT_SMBS capability
+            // This tests the oldest timestamp preservation method using SmbComSetInformation
+            when(sh.isSMB2()).thenReturn(false);
             when(dh.isSMB2()).thenReturn(false);
             when(dh.hasCapability(SmbConstants.CAP_NT_SMBS)).thenReturn(false);
             lenient().when(sh.isSameTree(dh)).thenReturn(false); // Different trees
