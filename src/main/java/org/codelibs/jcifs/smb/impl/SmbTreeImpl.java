@@ -22,8 +22,10 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -92,7 +94,7 @@ class SmbTreeImpl implements SmbTreeInternal {
     private final List<StackTraceElement[]> acquires;
     private final List<StackTraceElement[]> releases;
 
-    private DfsReferralData treeReferral;
+    private final Map<String, DfsReferralData> treeReferrals = new HashMap<>();
 
     SmbTreeImpl(final SmbSessionImpl session, final String share, final String service) {
         this.session = session.acquire();
@@ -311,16 +313,36 @@ class SmbTreeImpl implements SmbTreeInternal {
 
     /**
      * @param referral
+     * @param path
      */
-    public void setTreeReferral(final DfsReferralData referral) {
-        this.treeReferral = referral;
+    public void setTreeReferral(final DfsReferralData referral, final String path) {
+        if (referral.getLink() != null) {
+            log.debug("Mapping tree referral [{}] with link [{}]", referral, referral.getLink());
+            this.treeReferrals.put(referral.getLink(), referral);
+        }
+        if (path != null) {
+            log.debug("Mapping tree referral [{}] with path [{}]", referral, path);
+            this.treeReferrals.put(path, referral);
+        }
     }
 
     /**
+     * @param path
      * @return the treeReferral
      */
-    public DfsReferralData getTreeReferral() {
-        return this.treeReferral;
+    public DfsReferralData getTreeReferral(final String path) {
+        if (path != null) {
+            log.debug("Finding tree referral for path [{}]", path);
+            for (final String link : this.treeReferrals.keySet()) {
+                if (path.startsWith(link)) {
+                    final DfsReferralData referral = this.treeReferrals.get(link);
+                    log.debug("Found tree referral [{}] for path [{}]", referral, path);
+                    return this.treeReferrals.get(link);
+                }
+            }
+            log.debug("No tree referral found for path [{}]", path);
+        }
+        return null;
     }
 
     /**

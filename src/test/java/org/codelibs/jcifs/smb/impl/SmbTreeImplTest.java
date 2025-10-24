@@ -25,6 +25,9 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import org.codelibs.jcifs.smb.DfsReferralData;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
 class SmbTreeImplTest {
 
     @Mock
@@ -213,5 +216,241 @@ class SmbTreeImplTest {
 
         tree.treeDisconnect(false, false);
         assertFalse(tree.isConnected());
+    }
+
+    // ========================================
+    // DFS Referral Multiple Support Tests
+    // ========================================
+
+    /**
+     * Test setting and getting a single tree referral (backward compatibility)
+     */
+    @Test
+    void testSetAndGetTreeReferral_singleReferral() {
+        SmbTreeImpl tree = new SmbTreeImpl(session, "SHARE", "A:");
+
+        // Create mock referral
+        DfsReferralData referral = mock(DfsReferralData.class);
+        when(referral.getLink()).thenReturn("/path/to/resource");
+        when(referral.getServer()).thenReturn("server1");
+
+        // Set referral with path
+        tree.setTreeReferral(referral, "/path/to/resource");
+
+        // Get referral by exact path
+        DfsReferralData result = tree.getTreeReferral("/path/to/resource");
+        assertNotNull(result);
+        assertEquals(referral, result);
+    }
+
+    /**
+     * Test setting tree referral with both link and path
+     */
+    @Test
+    void testSetTreeReferral_withLinkAndPath() {
+        SmbTreeImpl tree = new SmbTreeImpl(session, "SHARE", "A:");
+
+        // Create mock referral
+        DfsReferralData referral = mock(DfsReferralData.class);
+        when(referral.getLink()).thenReturn("/link/path");
+
+        // Set referral with different path
+        tree.setTreeReferral(referral, "/actual/path");
+
+        // Should be retrievable by both link and path
+        DfsReferralData byLink = tree.getTreeReferral("/link/path");
+        DfsReferralData byPath = tree.getTreeReferral("/actual/path");
+
+        assertNotNull(byLink);
+        assertNotNull(byPath);
+        assertEquals(referral, byLink);
+        assertEquals(referral, byPath);
+    }
+
+    /**
+     * Test setting tree referral with null path
+     */
+    @Test
+    void testSetTreeReferral_nullPath() {
+        SmbTreeImpl tree = new SmbTreeImpl(session, "SHARE", "A:");
+
+        // Create mock referral with link only
+        DfsReferralData referral = mock(DfsReferralData.class);
+        when(referral.getLink()).thenReturn("/link/only");
+
+        // Set referral with null path
+        tree.setTreeReferral(referral, null);
+
+        // Should be retrievable by link only
+        DfsReferralData byLink = tree.getTreeReferral("/link/only");
+        assertNotNull(byLink);
+        assertEquals(referral, byLink);
+    }
+
+    /**
+     * Test setting tree referral with null link
+     */
+    @Test
+    void testSetTreeReferral_nullLink() {
+        SmbTreeImpl tree = new SmbTreeImpl(session, "SHARE", "A:");
+
+        // Create mock referral with null link
+        DfsReferralData referral = mock(DfsReferralData.class);
+        when(referral.getLink()).thenReturn(null);
+
+        // Set referral with path only
+        tree.setTreeReferral(referral, "/path/only");
+
+        // Should be retrievable by path only
+        DfsReferralData byPath = tree.getTreeReferral("/path/only");
+        assertNotNull(byPath);
+        assertEquals(referral, byPath);
+    }
+
+    /**
+     * Test setting and getting multiple tree referrals
+     */
+    @Test
+    void testSetAndGetTreeReferral_multipleReferrals() {
+        SmbTreeImpl tree = new SmbTreeImpl(session, "SHARE", "A:");
+
+        // Create multiple mock referrals
+        DfsReferralData referral1 = mock(DfsReferralData.class);
+        when(referral1.getLink()).thenReturn("/path1");
+
+        DfsReferralData referral2 = mock(DfsReferralData.class);
+        when(referral2.getLink()).thenReturn("/path2");
+
+        DfsReferralData referral3 = mock(DfsReferralData.class);
+        when(referral3.getLink()).thenReturn("/path3");
+
+        // Set multiple referrals
+        tree.setTreeReferral(referral1, "/path1");
+        tree.setTreeReferral(referral2, "/path2");
+        tree.setTreeReferral(referral3, "/path3");
+
+        // All should be retrievable
+        assertEquals(referral1, tree.getTreeReferral("/path1"));
+        assertEquals(referral2, tree.getTreeReferral("/path2"));
+        assertEquals(referral3, tree.getTreeReferral("/path3"));
+    }
+
+    /**
+     * Test prefix matching behavior
+     */
+    @Test
+    void testGetTreeReferral_prefixMatching() {
+        SmbTreeImpl tree = new SmbTreeImpl(session, "SHARE", "A:");
+
+        // Create mock referral
+        DfsReferralData referral = mock(DfsReferralData.class);
+        when(referral.getLink()).thenReturn("/root/dir");
+
+        tree.setTreeReferral(referral, "/root/dir");
+
+        // Exact match should work
+        assertNotNull(tree.getTreeReferral("/root/dir"));
+
+        // Prefix match should work (path starts with registered path)
+        assertNotNull(tree.getTreeReferral("/root/dir/subdir"));
+        assertNotNull(tree.getTreeReferral("/root/dir/subdir/file.txt"));
+
+        // Non-matching prefix should return null
+        assertNull(tree.getTreeReferral("/other/path"));
+        assertNull(tree.getTreeReferral("/root")); // Partial match of path component
+    }
+
+    /**
+     * Test behavior when multiple prefixes match
+     */
+    @Test
+    void testGetTreeReferral_multiplePrefixMatches() {
+        SmbTreeImpl tree = new SmbTreeImpl(session, "SHARE", "A:");
+
+        // Create mock referrals with overlapping paths
+        DfsReferralData referral1 = mock(DfsReferralData.class);
+        when(referral1.getLink()).thenReturn("/root");
+        when(referral1.getServer()).thenReturn("server1");
+
+        DfsReferralData referral2 = mock(DfsReferralData.class);
+        when(referral2.getLink()).thenReturn("/root/subdir");
+        when(referral2.getServer()).thenReturn("server2");
+
+        tree.setTreeReferral(referral1, "/root");
+        tree.setTreeReferral(referral2, "/root/subdir");
+
+        // When multiple prefixes match, should return one of them
+        // (The implementation returns the first match found)
+        DfsReferralData result = tree.getTreeReferral("/root/subdir/file.txt");
+        assertNotNull(result);
+        assertTrue(result == referral1 || result == referral2);
+    }
+
+    /**
+     * Test overwriting same path
+     */
+    @Test
+    void testSetTreeReferral_overwriteSamePath() {
+        SmbTreeImpl tree = new SmbTreeImpl(session, "SHARE", "A:");
+
+        // Create two different referrals
+        DfsReferralData referral1 = mock(DfsReferralData.class);
+        when(referral1.getLink()).thenReturn("/path");
+        when(referral1.getServer()).thenReturn("server1");
+
+        DfsReferralData referral2 = mock(DfsReferralData.class);
+        when(referral2.getLink()).thenReturn("/path");
+        when(referral2.getServer()).thenReturn("server2");
+
+        // Set first referral
+        tree.setTreeReferral(referral1, "/path");
+        assertEquals(referral1, tree.getTreeReferral("/path"));
+
+        // Overwrite with second referral
+        tree.setTreeReferral(referral2, "/path");
+        assertEquals(referral2, tree.getTreeReferral("/path"));
+    }
+
+    /**
+     * Test getting tree referral with null path
+     */
+    @Test
+    void testGetTreeReferral_nullPath() {
+        SmbTreeImpl tree = new SmbTreeImpl(session, "SHARE", "A:");
+
+        // Create and set a referral
+        DfsReferralData referral = mock(DfsReferralData.class);
+        when(referral.getLink()).thenReturn("/path");
+        tree.setTreeReferral(referral, "/path");
+
+        // Getting with null path should return null
+        assertNull(tree.getTreeReferral(null));
+    }
+
+    /**
+     * Test getting tree referral with empty path
+     */
+    @Test
+    void testGetTreeReferral_emptyPath() {
+        SmbTreeImpl tree = new SmbTreeImpl(session, "SHARE", "A:");
+
+        // Create and set a referral
+        DfsReferralData referral = mock(DfsReferralData.class);
+        when(referral.getLink()).thenReturn("/path");
+        tree.setTreeReferral(referral, "/path");
+
+        // Getting with empty path should return null (no prefix match)
+        assertNull(tree.getTreeReferral(""));
+    }
+
+    /**
+     * Test getting tree referral when no referrals are set
+     */
+    @Test
+    void testGetTreeReferral_noReferralsSet() {
+        SmbTreeImpl tree = new SmbTreeImpl(session, "SHARE", "A:");
+
+        // Getting any path should return null when no referrals are set
+        assertNull(tree.getTreeReferral("/any/path"));
     }
 }
