@@ -86,7 +86,7 @@ class NtlmAuthenticatorTest extends BaseTest {
         void testRequestCallsGetCredentials() {
             // Arrange
             String testUrl = "smb://server/share";
-            SmbAuthException exception = new SmbAuthException(0, null);
+            SmbAuthException exception = new SmbAuthException("Test auth failure");
             TestAuthenticator auth = new TestAuthenticator();
             NtlmPasswordAuthenticator expectedCreds = new NtlmPasswordAuthenticator("DOMAIN", "user", "pass");
             auth.setCredentialsToReturn(expectedCreds);
@@ -109,7 +109,7 @@ class NtlmAuthenticatorTest extends BaseTest {
         void testRequestWithExplicitAuthenticator() {
             // Arrange
             String testUrl = "smb://server/share";
-            SmbAuthException exception = new SmbAuthException(0, null);
+            SmbAuthException exception = new SmbAuthException("Test auth failure");
             TestAuthenticator auth = new TestAuthenticator();
             NtlmPasswordAuthenticator expectedCreds = new NtlmPasswordAuthenticator("user", "pass");
             auth.setCredentialsToReturn(expectedCreds);
@@ -175,7 +175,7 @@ class NtlmAuthenticatorTest extends BaseTest {
         @DisplayName("getRequestingException() returns the exception set during request")
         void testGetRequestingException() {
             // Arrange
-            SmbAuthException exception = new SmbAuthException(0, null);
+            SmbAuthException exception = new SmbAuthException("Test auth failure");
             TestAuthenticator auth = new TestAuthenticator();
             NtlmAuthenticator.setDefault(auth);
 

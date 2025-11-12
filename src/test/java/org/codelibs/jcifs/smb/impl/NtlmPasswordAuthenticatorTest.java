@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.security.GeneralSecurityException;
-import java.util.Random;
+import java.security.SecureRandom;
 
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.codelibs.jcifs.smb.BaseTest;
@@ -327,10 +327,11 @@ class NtlmPasswordAuthenticatorTest extends BaseTest {
         }
 
         @Test
-        @DisplayName("unwrap() returns null for incompatible type")
+        @DisplayName("unwrap() returns null for incompatible Credentials type")
         void testUnwrapIncompatible() {
             NtlmPasswordAuthenticator auth = new NtlmPasswordAuthenticator("user", "pass");
-            String unwrapped = auth.unwrap(String.class);
+            // Use NtlmNtHashAuthenticator as an incompatible Credentials type
+            NtlmNtHashAuthenticator unwrapped = auth.unwrap(NtlmNtHashAuthenticator.class);
 
             assertNull(unwrapped);
         }
@@ -415,7 +416,7 @@ class NtlmPasswordAuthenticatorTest extends BaseTest {
             byte[] challenge = new byte[8];
             when(cifsContext.getConfig()).thenReturn(configuration);
             when(configuration.getLanManCompatibility()).thenReturn(3);
-            Random mockRandom = mock(Random.class);
+            SecureRandom mockRandom = mock(SecureRandom.class);
             when(configuration.getRandom()).thenReturn(mockRandom);
 
             // Act
