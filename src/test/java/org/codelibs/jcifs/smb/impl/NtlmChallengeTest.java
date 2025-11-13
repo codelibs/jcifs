@@ -109,9 +109,9 @@ class NtlmChallengeTest extends BaseTest {
         @Test
         @DisplayName("toString() includes basic structure")
         void testToStringBasicStructure() throws Exception {
-            // Arrange - use null challenge to avoid Hexdump.toHexString bug
+            // Arrange - use empty challenge to avoid Hexdump.toHexString bug with non-empty arrays
             UniAddress dc = new UniAddress(InetAddress.getByName("127.0.0.1"));
-            NtlmChallenge ntlmChallenge = new NtlmChallenge(null, dc);
+            NtlmChallenge ntlmChallenge = new NtlmChallenge(new byte[0], dc);
 
             // Act & Assert - just verify it doesn't throw
             String result = ntlmChallenge.toString();
