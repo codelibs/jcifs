@@ -147,7 +147,7 @@ class NtlmContextTest extends BaseTest {
 
         @Test
         @DisplayName("initSecContext() generates Type1 message on first call")
-        void testInitSecContextType1() {
+        void testInitSecContextType1() throws Exception {
             // Arrange
             NtlmContext context = new NtlmContext(cifsContext, authenticator, false);
 
@@ -344,7 +344,7 @@ class NtlmContextTest extends BaseTest {
 
         @Test
         @DisplayName("dispose() clears context state")
-        void testDispose() {
+        void testDispose() throws Exception {
             // Arrange
             NtlmContext context = new NtlmContext(cifsContext, authenticator, false);
             context.initSecContext(null, 0, 0); // Initialize
@@ -450,7 +450,7 @@ class NtlmContextTest extends BaseTest {
 
         @Test
         @DisplayName("Full authentication flow initialization")
-        void testFullAuthenticationFlowInit() {
+        void testFullAuthenticationFlowInit() throws Exception {
             // Arrange
             NtlmContext context = new NtlmContext(cifsContext, authenticator, false);
 
@@ -476,7 +476,7 @@ class NtlmContextTest extends BaseTest {
 
         @Test
         @DisplayName("Context with signing requirement")
-        void testContextWithSigningRequirement() {
+        void testContextWithSigningRequirement() throws Exception {
             // Arrange & Act
             NtlmContext context = new NtlmContext(cifsContext, authenticator, true);
             byte[] type1 = context.initSecContext(null, 0, 0);
@@ -489,7 +489,7 @@ class NtlmContextTest extends BaseTest {
 
         @Test
         @DisplayName("Multiple contexts are independent")
-        void testMultipleContextsIndependent() {
+        void testMultipleContextsIndependent() throws Exception {
             // Arrange
             NtlmPasswordAuthenticator auth1 = new NtlmPasswordAuthenticator("DOMAIN1", "user1", "pass1");
             NtlmPasswordAuthenticator auth2 = new NtlmPasswordAuthenticator("DOMAIN2", "user2", "pass2");
