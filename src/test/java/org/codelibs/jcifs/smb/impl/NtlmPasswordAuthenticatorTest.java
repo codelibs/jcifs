@@ -130,7 +130,7 @@ class NtlmPasswordAuthenticatorTest extends BaseTest {
         @DisplayName("Constructor guesses NULL type for empty credentials")
         void testAuthenticationTypeGuessingAnonymous() {
             // Act - use 4-arg constructor with null type to enable guessing
-            NtlmPasswordAuthenticator auth = new NtlmPasswordAuthenticator("", "", "", null);
+            NtlmPasswordAuthenticator auth = new NtlmPasswordAuthenticator("", "", "", (AuthenticationType) null);
 
             // Assert
             assertTrue(auth.isAnonymous(), "Should be anonymous with all empty strings");
@@ -141,8 +141,8 @@ class NtlmPasswordAuthenticatorTest extends BaseTest {
         @DisplayName("Constructor guesses GUEST type for guest username")
         void testAuthenticationTypeGuessingGuest() {
             // Act - use 4-arg constructor with null type to enable guessing
-            NtlmPasswordAuthenticator auth1 = new NtlmPasswordAuthenticator("DOMAIN", "guest", "password", null);
-            NtlmPasswordAuthenticator auth2 = new NtlmPasswordAuthenticator("DOMAIN", "GUEST", "password", null);
+            NtlmPasswordAuthenticator auth1 = new NtlmPasswordAuthenticator("DOMAIN", "guest", "password", (AuthenticationType) null);
+            NtlmPasswordAuthenticator auth2 = new NtlmPasswordAuthenticator("DOMAIN", "GUEST", "password", (AuthenticationType) null);
 
             // Assert
             assertFalse(auth1.isAnonymous(), "Should not be anonymous");
@@ -155,7 +155,7 @@ class NtlmPasswordAuthenticatorTest extends BaseTest {
         @DisplayName("Constructor guesses USER type for regular credentials")
         void testAuthenticationTypeGuessingUser() {
             // Act - use 4-arg constructor with null type to enable guessing
-            NtlmPasswordAuthenticator auth = new NtlmPasswordAuthenticator("DOMAIN", "user", "password", null);
+            NtlmPasswordAuthenticator auth = new NtlmPasswordAuthenticator("DOMAIN", "user", "password", (AuthenticationType) null);
 
             // Assert
             assertFalse(auth.isAnonymous(), "Should not be anonymous");
