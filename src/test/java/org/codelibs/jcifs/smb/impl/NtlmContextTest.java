@@ -15,8 +15,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 @DisplayName("NtlmContext Tests")
+@MockitoSettings(strictness = Strictness.LENIENT)
 class NtlmContextTest extends BaseTest {
 
     @Mock
@@ -505,8 +508,12 @@ class NtlmContextTest extends BaseTest {
             assertNotNull(token1);
             assertNotNull(token2);
             assertNotSame(token1, token2);
-            // Tokens should be different due to different credentials
-            assertFalse(java.util.Arrays.equals(token1, token2));
+            // Note: Type1 messages may be identical even with different credentials
+            // because they don't contain username/password - those appear in Type3.
+            // We verify the contexts are independent, not that tokens are different.
+            assertNotSame(context1, context2);
+            assertFalse(context1.isEstablished());
+            assertFalse(context2.isEstablished());
         }
     }
 

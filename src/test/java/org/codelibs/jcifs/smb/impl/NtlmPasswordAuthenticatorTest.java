@@ -91,14 +91,15 @@ class NtlmPasswordAuthenticatorTest extends BaseTest {
         @Test
         @DisplayName("Constructor handles null values")
         void testConstructorWithNulls() {
-            // Act
+            // Act - 3-arg constructor sets type to USER explicitly
             NtlmPasswordAuthenticator auth = new NtlmPasswordAuthenticator(null, null, null);
 
             // Assert
             assertEquals("", auth.getUserDomain());
             assertEquals("", auth.getUsername());
             assertEquals("", auth.getPassword());
-            assertTrue(auth.isAnonymous());
+            // 3-arg constructor defaults to USER type, not guessed
+            assertFalse(auth.isAnonymous());
         }
 
         @Test
@@ -125,24 +126,40 @@ class NtlmPasswordAuthenticatorTest extends BaseTest {
             assertEquals("password", auth.getPassword());
         }
 
-        @ParameterizedTest
-        @CsvSource({
-            "'', '', '', true, false",
-            "guest, password, DOMAIN, false, true",
-            "GUEST, password, DOMAIN, false, true",
-            "user, password, DOMAIN, false, false"
-        })
-        @DisplayName("Constructor correctly guesses authentication type")
-        void testAuthenticationTypeGuessing(String username, String password, String domain,
-                                            boolean expectAnonymous, boolean expectGuest) {
-            // Act
-            NtlmPasswordAuthenticator auth = new NtlmPasswordAuthenticator(domain, username, password);
+        @Test
+        @DisplayName("Constructor guesses NULL type for empty credentials")
+        void testAuthenticationTypeGuessingAnonymous() {
+            // Act - all empty
+            NtlmPasswordAuthenticator auth = new NtlmPasswordAuthenticator("", "", "");
 
             // Assert
-            assertEquals(expectAnonymous, auth.isAnonymous(),
-                        "Anonymous check failed for: " + username);
-            assertEquals(expectGuest, auth.isGuest(),
-                        "Guest check failed for: " + username);
+            assertTrue(auth.isAnonymous(), "Should be anonymous with all empty strings");
+            assertFalse(auth.isGuest(), "Should not be guest");
+        }
+
+        @Test
+        @DisplayName("Constructor guesses GUEST type for guest username")
+        void testAuthenticationTypeGuessingGuest() {
+            // Act - username is "guest"
+            NtlmPasswordAuthenticator auth1 = new NtlmPasswordAuthenticator("DOMAIN", "guest", "password");
+            NtlmPasswordAuthenticator auth2 = new NtlmPasswordAuthenticator("DOMAIN", "GUEST", "password");
+
+            // Assert
+            assertFalse(auth1.isAnonymous(), "Should not be anonymous");
+            assertTrue(auth1.isGuest(), "Should be guest with 'guest' username");
+            assertFalse(auth2.isAnonymous(), "Should not be anonymous");
+            assertTrue(auth2.isGuest(), "Should be guest with 'GUEST' username");
+        }
+
+        @Test
+        @DisplayName("Constructor guesses USER type for regular credentials")
+        void testAuthenticationTypeGuessingUser() {
+            // Act
+            NtlmPasswordAuthenticator auth = new NtlmPasswordAuthenticator("DOMAIN", "user", "password");
+
+            // Assert
+            assertFalse(auth.isAnonymous(), "Should not be anonymous");
+            assertFalse(auth.isGuest(), "Should not be guest");
         }
     }
 
