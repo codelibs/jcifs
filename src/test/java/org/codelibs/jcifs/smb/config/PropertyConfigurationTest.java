@@ -303,4 +303,46 @@ class PropertyConfigurationTest extends BaseTest {
             }
         }
     }
+
+    @Test
+    @DisplayName("Should parse preserveShareCase property as true")
+    void testPreserveShareCaseTrue() throws CIFSException {
+        // Given
+        Properties props = new Properties();
+        props.setProperty("jcifs.smb.client.preserveShareCase", "true");
+
+        // When
+        PropertyConfiguration testConfig = new PropertyConfiguration(props);
+
+        // Then
+        assertTrue(testConfig.isPreserveShareCase());
+    }
+
+    @Test
+    @DisplayName("Should parse preserveShareCase property as false")
+    void testPreserveShareCaseFalse() throws CIFSException {
+        // Given
+        Properties props = new Properties();
+        props.setProperty("jcifs.smb.client.preserveShareCase", "false");
+
+        // When
+        PropertyConfiguration testConfig = new PropertyConfiguration(props);
+
+        // Then
+        assertFalse(testConfig.isPreserveShareCase());
+    }
+
+    @Test
+    @DisplayName("Should default preserveShareCase to false when not set")
+    void testPreserveShareCaseDefault() throws CIFSException {
+        // Given
+        Properties props = new Properties();
+        // Not setting preserveShareCase
+
+        // When
+        PropertyConfiguration testConfig = new PropertyConfiguration(props);
+
+        // Then
+        assertFalse(testConfig.isPreserveShareCase());
+    }
 }

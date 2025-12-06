@@ -174,8 +174,7 @@ class NtlmPasswordAuthenticatorTest extends BaseTest {
             // Format: domain;username:password
             String userInfo = "TESTDOMAIN;testuser:testpass";
 
-            NtlmPasswordAuthenticator auth = new TestableNtlmPasswordAuthenticator(
-                userInfo, null, null, null, null);
+            NtlmPasswordAuthenticator auth = new TestableNtlmPasswordAuthenticator(userInfo, null, null, null, null);
 
             // Assert
             assertEquals("TESTDOMAIN", auth.getUserDomain());
@@ -185,11 +184,10 @@ class NtlmPasswordAuthenticatorTest extends BaseTest {
 
         @Test
         @DisplayName("Parse userInfo with username:password format (no domain)")
-        void testUserInfoParsingNoDomai() {
+        void testUserInfoParsingNoDomain() {
             String userInfo = "testuser:testpass";
 
-            NtlmPasswordAuthenticator auth = new TestableNtlmPasswordAuthenticator(
-                userInfo, null, null, null, null);
+            NtlmPasswordAuthenticator auth = new TestableNtlmPasswordAuthenticator(userInfo, null, null, null, null);
 
             // Assert
             assertEquals("", auth.getUserDomain());
@@ -200,8 +198,8 @@ class NtlmPasswordAuthenticatorTest extends BaseTest {
         @Test
         @DisplayName("Parse userInfo with defaults")
         void testUserInfoWithDefaults() {
-            NtlmPasswordAuthenticator auth = new TestableNtlmPasswordAuthenticator(
-                null, "DEFAULTDOMAIN", "defaultuser", "defaultpass", null);
+            NtlmPasswordAuthenticator auth =
+                    new TestableNtlmPasswordAuthenticator(null, "DEFAULTDOMAIN", "defaultuser", "defaultpass", null);
 
             // Assert
             assertEquals("DEFAULTDOMAIN", auth.getUserDomain());
@@ -646,9 +644,8 @@ class NtlmPasswordAuthenticatorTest extends BaseTest {
      * Testable subclass that exposes protected constructor
      */
     private static class TestableNtlmPasswordAuthenticator extends NtlmPasswordAuthenticator {
-        public TestableNtlmPasswordAuthenticator(String userInfo, String defDomain,
-                                                  String defUser, String defPassword,
-                                                  AuthenticationType type) {
+        public TestableNtlmPasswordAuthenticator(String userInfo, String defDomain, String defUser, String defPassword,
+                AuthenticationType type) {
             super(userInfo, defDomain, defUser, defPassword, type);
         }
     }

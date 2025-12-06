@@ -74,8 +74,7 @@ class NtlmAuthenticatorTest extends BaseTest {
         @DisplayName("requestNtlmPasswordAuthentication() returns null when no authenticator set")
         void testRequestWithoutAuthenticator() {
             // Act
-            NtlmPasswordAuthenticator result = NtlmAuthenticator.requestNtlmPasswordAuthentication(
-                "smb://server/share", null);
+            NtlmPasswordAuthenticator result = NtlmAuthenticator.requestNtlmPasswordAuthentication("smb://server/share", null);
 
             // Assert
             assertNull(result);
@@ -94,8 +93,7 @@ class NtlmAuthenticatorTest extends BaseTest {
             NtlmAuthenticator.setDefault(auth);
 
             // Act
-            NtlmPasswordAuthenticator result = NtlmAuthenticator.requestNtlmPasswordAuthentication(
-                testUrl, exception);
+            NtlmPasswordAuthenticator result = NtlmAuthenticator.requestNtlmPasswordAuthentication(testUrl, exception);
 
             // Assert
             assertSame(expectedCreds, result);
@@ -115,8 +113,7 @@ class NtlmAuthenticatorTest extends BaseTest {
             auth.setCredentialsToReturn(expectedCreds);
 
             // Act - using the static method with explicit authenticator
-            NtlmPasswordAuthenticator result = NtlmAuthenticator.requestNtlmPasswordAuthentication(
-                auth, testUrl, exception);
+            NtlmPasswordAuthenticator result = NtlmAuthenticator.requestNtlmPasswordAuthentication(auth, testUrl, exception);
 
             // Assert
             assertSame(expectedCreds, result);
@@ -132,8 +129,7 @@ class NtlmAuthenticatorTest extends BaseTest {
             NtlmAuthenticator.setDefault(auth);
 
             // Act
-            NtlmPasswordAuthenticator result = NtlmAuthenticator.requestNtlmPasswordAuthentication(
-                "smb://server/share", null);
+            NtlmPasswordAuthenticator result = NtlmAuthenticator.requestNtlmPasswordAuthentication("smb://server/share", null);
 
             // Assert
             assertNull(result);
@@ -144,8 +140,7 @@ class NtlmAuthenticatorTest extends BaseTest {
         @DisplayName("requestNtlmPasswordAuthentication() with null authenticator returns null")
         void testRequestWithNullAuthenticator() {
             // Act
-            NtlmPasswordAuthenticator result = NtlmAuthenticator.requestNtlmPasswordAuthentication(
-                null, "smb://server/share", null);
+            NtlmPasswordAuthenticator result = NtlmAuthenticator.requestNtlmPasswordAuthentication(null, "smb://server/share", null);
 
             // Assert
             assertNull(result);

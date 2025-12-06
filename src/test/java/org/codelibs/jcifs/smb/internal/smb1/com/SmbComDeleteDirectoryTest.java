@@ -217,7 +217,8 @@ public class SmbComDeleteDirectoryTest {
         // Given
         StringBuilder longPath = new StringBuilder();
         for (int i = 0; i < 20; i++) {
-            if (i > 0) longPath.append("\\");
+            if (i > 0)
+                longPath.append("\\");
             longPath.append("dir").append(i);
         }
         SmbComDeleteDirectory deleteDir = new SmbComDeleteDirectory(config, longPath.toString());

@@ -78,6 +78,18 @@ public interface Configuration {
     boolean isDfsConvertToFQDN();
 
     /**
+     * Whether to preserve share name case
+     *
+     * When true, preserve the original case of share names instead of converting to uppercase.
+     * This is required for DFS namespaces with case-sensitive link names.
+     *
+     * Property {@code jcifs.smb.client.preserveShareCase} (boolean, default false)
+     *
+     * @return whether to preserve share name case
+     */
+    boolean isPreserveShareCase();
+
+    /**
      * Minimum protocol version
      *
      * Property {@code org.codelibs.jcifs.smb.impl.client.minVersion} (string, default SMB1)

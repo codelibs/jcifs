@@ -453,4 +453,101 @@ class SmbTreeImplTest {
         // Getting any path should return null when no referrals are set
         assertNull(tree.getTreeReferral("/any/path"));
     }
+
+    // ========================================
+    // Share Case Preservation Tests
+    // ========================================
+
+    /**
+     * Test that share name is converted to uppercase by default (preserveShareCase = false)
+     */
+    @Test
+    void testShareCaseConvertedToUppercaseByDefault() {
+        // Given: preserveShareCase is false (default)
+        when(config.isPreserveShareCase()).thenReturn(false);
+
+        // When: creating a tree with mixed case share name
+        SmbTreeImpl tree = new SmbTreeImpl(session, "MixedCaseShare", "A:");
+
+        // Then: share name should be converted to uppercase
+        assertEquals("MIXEDCASESHARE", tree.getShare());
+    }
+
+    /**
+     * Test that share name case is preserved when preserveShareCase is true
+     */
+    @Test
+    void testShareCasePreservedWhenConfigured() {
+        // Given: preserveShareCase is true
+        when(config.isPreserveShareCase()).thenReturn(true);
+
+        // When: creating a tree with mixed case share name
+        SmbTreeImpl tree = new SmbTreeImpl(session, "MixedCaseShare", "A:");
+
+        // Then: share name should preserve original case
+        assertEquals("MixedCaseShare", tree.getShare());
+    }
+
+    /**
+     * Test that lowercase share name is preserved when preserveShareCase is true
+     */
+    @Test
+    void testLowercaseShareCasePreserved() {
+        // Given: preserveShareCase is true
+        when(config.isPreserveShareCase()).thenReturn(true);
+
+        // When: creating a tree with lowercase share name
+        SmbTreeImpl tree = new SmbTreeImpl(session, "lowercaseshare", "A:");
+
+        // Then: share name should remain lowercase
+        assertEquals("lowercaseshare", tree.getShare());
+    }
+
+    /**
+     * Test that uppercase share name remains uppercase when preserveShareCase is true
+     */
+    @Test
+    void testUppercaseShareCasePreserved() {
+        // Given: preserveShareCase is true
+        when(config.isPreserveShareCase()).thenReturn(true);
+
+        // When: creating a tree with uppercase share name
+        SmbTreeImpl tree = new SmbTreeImpl(session, "UPPERCASESHARE", "A:");
+
+        // Then: share name should remain uppercase
+        assertEquals("UPPERCASESHARE", tree.getShare());
+    }
+
+    /**
+     * Test matches method works correctly with case-preserved share names
+     */
+    @Test
+    void testMatchesWithCasePreservedShare() {
+        // Given: preserveShareCase is true
+        when(config.isPreserveShareCase()).thenReturn(true);
+
+        // When: creating a tree with mixed case share name
+        SmbTreeImpl tree = new SmbTreeImpl(session, "MixedCase", "A:");
+
+        // Then: matches should work case-insensitively
+        assertTrue(tree.matches("MixedCase", "A:"));
+        assertTrue(tree.matches("mixedcase", "A:"));
+        assertTrue(tree.matches("MIXEDCASE", "A:"));
+        assertFalse(tree.matches("OtherShare", "A:"));
+    }
+
+    /**
+     * Test DFS share name like the reported issue (e.g., "SHAREname")
+     */
+    @Test
+    void testDfsStyleShareNamePreserved() {
+        // Given: preserveShareCase is true (for DFS namespaces with case-sensitive links)
+        when(config.isPreserveShareCase()).thenReturn(true);
+
+        // When: creating a tree with DFS-style mixed case share name
+        SmbTreeImpl tree = new SmbTreeImpl(session, "SHAREname", "A:");
+
+        // Then: share name should preserve exact case for DFS compatibility
+        assertEquals("SHAREname", tree.getShare());
+    }
 }

@@ -101,7 +101,14 @@ class BaseConfigurationTest {
         assertFalse(config.isDfsStrictView());
         assertEquals(300L, config.getDfsTtl());
         assertFalse(config.isDfsConvertToFQDN());
+        assertFalse(config.isPreserveShareCase());
         assertNull(config.getLogonShare());
+    }
+
+    @Test
+    @DisplayName("Test isPreserveShareCase default value is false")
+    void testIsPreserveShareCaseDefault() {
+        assertFalse(config.isPreserveShareCase());
     }
 
     @Test

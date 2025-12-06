@@ -148,6 +148,8 @@ public class BaseConfiguration implements Configuration {
     protected boolean dfsStrictView = false;
     /** Whether to convert DFS paths to FQDN */
     protected boolean dfsConvertToFqdn;
+    /** Whether to preserve share name case instead of converting to uppercase */
+    protected boolean preserveShareCase = false;
     /** Default logon share */
     protected String logonShare;
     /** Default domain for authentication */
@@ -388,6 +390,11 @@ public class BaseConfiguration implements Configuration {
     @Override
     public boolean isDfsConvertToFQDN() {
         return this.dfsConvertToFqdn;
+    }
+
+    @Override
+    public boolean isPreserveShareCase() {
+        return this.preserveShareCase;
     }
 
     @Override

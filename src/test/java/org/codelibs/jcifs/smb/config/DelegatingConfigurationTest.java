@@ -466,4 +466,32 @@ class DelegatingConfigurationTest extends BaseTest {
             chainedConfig.getOemEncoding();
         }, "Should work with chained delegation");
     }
+
+    @Test
+    @DisplayName("isPreserveShareCase should delegate correctly")
+    void testPreserveShareCaseDelegation() {
+        // Given
+        when(mockDelegate.isPreserveShareCase()).thenReturn(true);
+
+        // When
+        boolean result = delegatingConfig.isPreserveShareCase();
+
+        // Then
+        assertTrue(result, "Should delegate preserveShareCase setting");
+        verify(mockDelegate).isPreserveShareCase();
+    }
+
+    @Test
+    @DisplayName("isPreserveShareCase should return false when delegate returns false")
+    void testPreserveShareCaseDelegationFalse() {
+        // Given
+        when(mockDelegate.isPreserveShareCase()).thenReturn(false);
+
+        // When
+        boolean result = delegatingConfig.isPreserveShareCase();
+
+        // Then
+        assertFalse(result, "Should return false when delegate returns false");
+        verify(mockDelegate).isPreserveShareCase();
+    }
 }

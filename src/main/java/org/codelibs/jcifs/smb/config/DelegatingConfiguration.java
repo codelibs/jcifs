@@ -159,6 +159,16 @@ public class DelegatingConfiguration implements Configuration {
     /**
      * {@inheritDoc}
      *
+     * @see org.codelibs.jcifs.smb.Configuration#isPreserveShareCase()
+     */
+    @Override
+    public boolean isPreserveShareCase() {
+        return this.delegate.isPreserveShareCase();
+    }
+
+    /**
+     * {@inheritDoc}
+     *
      * @see org.codelibs.jcifs.smb.Configuration#isForceUnicode()
      */
     @Override
