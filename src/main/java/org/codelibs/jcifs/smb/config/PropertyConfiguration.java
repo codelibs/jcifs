@@ -104,6 +104,7 @@ public final class PropertyConfiguration extends BaseConfiguration implements Co
         this.dfsTTL = Config.getLong(p, "jcifs.client.dfs.ttl", 300);
         this.dfsStrictView = Config.getBoolean(p, "jcifs.client.dfs.strictView", false);
         this.dfsConvertToFqdn = Config.getBoolean(p, "jcifs.client.dfs.convertToFQDN", false);
+        this.preserveShareCase = Config.getBoolean(p, "jcifs.smb.client.preserveShareCase", false);
 
         this.logonShare = p.getProperty("jcifs.client.logonShare", null);
 

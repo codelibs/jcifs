@@ -22,7 +22,7 @@ class NtlmChallengeTest extends BaseTest {
         @DisplayName("Constructor sets challenge and dc fields")
         void testConstructor() throws Exception {
             // Arrange
-            byte[] challenge = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
+            byte[] challenge = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 };
             UniAddress dc = new UniAddress(InetAddress.getByName("192.168.1.1"));
 
             // Act
@@ -53,7 +53,7 @@ class NtlmChallengeTest extends BaseTest {
         @DisplayName("Constructor accepts null dc")
         void testConstructorWithNullDc() {
             // Arrange
-            byte[] challenge = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
+            byte[] challenge = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 };
 
             // Act
             NtlmChallenge ntlmChallenge = new NtlmChallenge(challenge, null);
@@ -132,7 +132,7 @@ class NtlmChallengeTest extends BaseTest {
         @DisplayName("Challenge field is directly accessible")
         void testChallengeFieldAccess() throws Exception {
             // Arrange
-            byte[] challenge = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, (byte) 0x88};
+            byte[] challenge = { 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, (byte) 0x88 };
             UniAddress dc = new UniAddress(InetAddress.getByName("192.168.1.2"));
             NtlmChallenge ntlmChallenge = new NtlmChallenge(challenge, dc);
 
@@ -157,7 +157,7 @@ class NtlmChallengeTest extends BaseTest {
         @DisplayName("Challenge field can be modified after construction")
         void testChallengeFieldModifiable() throws Exception {
             // Arrange
-            byte[] challenge = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
+            byte[] challenge = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 };
             UniAddress dc = new UniAddress(InetAddress.getByName("192.168.1.2"));
             NtlmChallenge ntlmChallenge = new NtlmChallenge(challenge, dc);
 
@@ -172,8 +172,8 @@ class NtlmChallengeTest extends BaseTest {
         @DisplayName("Challenge field can be replaced")
         void testChallengeFieldReplaceable() throws Exception {
             // Arrange
-            byte[] oldChallenge = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
-            byte[] newChallenge = {0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18};
+            byte[] oldChallenge = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 };
+            byte[] newChallenge = { 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18 };
             UniAddress dc = new UniAddress(InetAddress.getByName("192.168.1.2"));
             NtlmChallenge ntlmChallenge = new NtlmChallenge(oldChallenge, dc);
 
@@ -212,8 +212,8 @@ class NtlmChallengeTest extends BaseTest {
         @DisplayName("Multiple NtlmChallenge instances are independent")
         void testMultipleInstancesIndependent() throws Exception {
             // Arrange
-            byte[] challenge1 = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
-            byte[] challenge2 = {0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18};
+            byte[] challenge1 = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 };
+            byte[] challenge2 = { 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18 };
             UniAddress dc1 = new UniAddress(InetAddress.getByName("192.168.1.5"));
             UniAddress dc2 = new UniAddress(InetAddress.getByName("192.168.1.6"));
 

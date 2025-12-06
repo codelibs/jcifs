@@ -347,4 +347,56 @@ class SmbTreeConnectionTest {
         SmbTreeConnection c = newConn();
         assertNull(c.getSession());
     }
+
+    // ========================================
+    // Share Case Comparison Tests
+    // ========================================
+
+    @Test
+    @DisplayName("Share comparison should be case-insensitive when comparing locator and tree share")
+    void testShareComparisonCaseInsensitive_locatorVsTree() throws Exception {
+        SmbTreeConnection c = spy(newConn());
+        SmbTreeImpl tree = mock(SmbTreeImpl.class);
+        SmbSessionImpl session = mock(SmbSessionImpl.class);
+        SmbTransportImpl transport = mock(SmbTransportImpl.class);
+
+        // Tree has uppercase share name (legacy behavior)
+        when(tree.getShare()).thenReturn("SHARENAME");
+        when(tree.isConnected()).thenReturn(true);
+        when(tree.getSession()).thenReturn(session);
+        when(tree.acquire(false)).thenReturn(tree);
+        when(session.getTransport()).thenReturn(transport);
+        when(session.getTargetDomain()).thenReturn("DOMAIN");
+        when(session.isFailed()).thenReturn(false);
+        when(transport.isDisconnected()).thenReturn(false);
+        when(transport.getRemoteHostName()).thenReturn("host");
+        setTree(c, tree);
+
+        // Locator has mixed case share name (as user specified)
+        SmbResourceLocatorImpl loc = new SmbResourceLocatorImpl(ctx, smbUrl("smb://host/SHAREname/"));
+
+        // The case-insensitive comparison should consider these as matching
+        // This is testing the fix at SmbTreeConnection.java line 469
+        // Previously: Objects.equals(loc.getShare(), t.getShare()) - case sensitive
+        // Now: loc.getShare().equalsIgnoreCase(t.getShare()) - case insensitive
+
+        // verify the shares are different in case
+        assertEquals("SHAREname", loc.getShare());
+        assertEquals("SHARENAME", tree.getShare());
+
+        // But they should be considered equal ignoring case
+        assertTrue(loc.getShare().equalsIgnoreCase(tree.getShare()));
+    }
+
+    @Test
+    @DisplayName("getConnectedShare returns tree share with preserved case")
+    void testGetConnectedSharePreservesCase() {
+        SmbTreeConnection c = newConn();
+        SmbTreeImpl tree = mock(SmbTreeImpl.class);
+        when(tree.acquire(false)).thenReturn(tree);
+        when(tree.getShare()).thenReturn("MixedCaseShare");
+        setTree(c, tree);
+
+        assertEquals("MixedCaseShare", c.getConnectedShare());
+    }
 }

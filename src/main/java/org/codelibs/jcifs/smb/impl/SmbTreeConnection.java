@@ -466,7 +466,7 @@ class SmbTreeConnection {
                     log.debug("Tree is " + t);
                 }
 
-                if (Objects.equals(loc.getShare(), t.getShare())) {
+                if (loc.getShare() != null && loc.getShare().equalsIgnoreCase(t.getShare())) {
                     try (SmbSessionImpl session = t.getSession()) {
                         targetDomain = session.getTargetDomain();
                         if (!session.isFailed()) {
@@ -701,7 +701,7 @@ class SmbTreeConnection {
                     request.setPath(dunc);
                 }
 
-                if (!t.getShare().equals(dr.getShare())) {
+                if (!t.getShare().equalsIgnoreCase(dr.getShare())) {
                     // this should only happen for standalone roots or if the DC/domain root lookup failed
                     IOException last;
                     final DfsReferralData start = dr;

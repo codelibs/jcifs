@@ -46,7 +46,7 @@ class NtlmNtHashAuthenticatorTest extends BaseTest {
             assertNotNull(auth);
             assertEquals("DOMAIN", auth.getUserDomain());
             assertEquals("user", auth.getUsername());
-            assertEquals("", auth.getPassword());  // Password is empty string, not null
+            assertEquals("", auth.getPassword()); // Password is empty string, not null
         }
 
         @Test
@@ -195,8 +195,8 @@ class NtlmNtHashAuthenticatorTest extends BaseTest {
         @DisplayName("clone() preserves hash data")
         void testClonePreservesHash() {
             // Arrange
-            byte[] hash = {(byte) 0xAB, (byte) 0xCD, (byte) 0xEF, 0x01, 0x23, 0x45, 0x67, (byte) 0x89,
-                          (byte) 0xFE, (byte) 0xDC, (byte) 0xBA, (byte) 0x98, 0x76, 0x54, 0x32, 0x10};
+            byte[] hash = { (byte) 0xAB, (byte) 0xCD, (byte) 0xEF, 0x01, 0x23, 0x45, 0x67, (byte) 0x89, (byte) 0xFE, (byte) 0xDC,
+                    (byte) 0xBA, (byte) 0x98, 0x76, 0x54, 0x32, 0x10 };
             NtlmNtHashAuthenticator original = new NtlmNtHashAuthenticator("DOMAIN", "user", hash);
 
             // Act
@@ -318,7 +318,7 @@ class NtlmNtHashAuthenticatorTest extends BaseTest {
             assertEquals("DOMAIN\\user", auth.toString());
             assertFalse(auth.isAnonymous());
             assertFalse(auth.isGuest());
-            assertEquals("", auth.getPassword());  // Password is empty string, not null
+            assertEquals("", auth.getPassword()); // Password is empty string, not null
         }
 
         @Test
@@ -353,7 +353,7 @@ class NtlmNtHashAuthenticatorTest extends BaseTest {
             assertNotNull(auth);
             assertEquals("TESTDOMAIN", auth.getUserDomain());
             assertEquals("testuser", auth.getUsername());
-            assertEquals("", auth.getPassword());  // Password is empty string, not null
+            assertEquals("", auth.getPassword()); // Password is empty string, not null
             assertEquals(16, auth.getNTHash().length);
 
             // Verify the hash matches

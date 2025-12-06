@@ -98,7 +98,7 @@ class SmbTreeImpl implements SmbTreeInternal {
 
     SmbTreeImpl(final SmbSessionImpl session, final String share, final String service) {
         this.session = session.acquire();
-        this.share = share.toUpperCase();
+        this.share = session.getConfig().isPreserveShareCase() ? share : share.toUpperCase();
         if (service != null && !service.startsWith("??")) {
             this.service = service;
         }
