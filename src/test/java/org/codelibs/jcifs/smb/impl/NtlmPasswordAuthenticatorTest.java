@@ -184,7 +184,7 @@ class NtlmPasswordAuthenticatorTest extends BaseTest {
 
         @Test
         @DisplayName("Parse userInfo with username:password format (no domain)")
-        void testUserInfoParsingNoDomai() {
+        void testUserInfoParsingNoDomain() {
             String userInfo = "testuser:testpass";
 
             NtlmPasswordAuthenticator auth = new TestableNtlmPasswordAuthenticator(userInfo, null, null, null, null);
