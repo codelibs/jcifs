@@ -190,7 +190,7 @@ class DfsImplTest {
                     .thenReturn(mockTransport);
             when(mockTransport.unwrap(SmbTransportInternal.class)).thenReturn(mockInternal);
             when(mockInternal.getDfsReferrals(any(), anyString(), anyString(), anyString(), anyInt()))
-                    .thenThrow(new SmbAuthException(0, false));
+                    .thenThrow(new SmbAuthException("Authentication failed"));
 
             assertThrows(SmbAuthException.class, () -> dfsImpl.getDc(mockContext, "domain.com"));
         }
