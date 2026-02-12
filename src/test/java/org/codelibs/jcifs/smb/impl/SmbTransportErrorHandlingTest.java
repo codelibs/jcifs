@@ -103,31 +103,25 @@ class SmbTransportErrorHandlingTest {
         @Test
         @DisplayName("Should throw UnknownHostException when host cannot be resolved")
         void testUnknownHost() throws Exception {
-            when(nameSvc.getAllByName(eq("unknown.host"), eq(true)))
-                    .thenReturn(new Address[0]);
+            when(nameSvc.getAllByName(eq("unknown.host"), eq(true))).thenReturn(new Address[0]);
 
-            assertThrows(UnknownHostException.class,
-                    () -> pool.getSmbTransport(ctx, "unknown.host", 445, false, false));
+            assertThrows(UnknownHostException.class, () -> pool.getSmbTransport(ctx, "unknown.host", 445, false, false));
         }
 
         @Test
         @DisplayName("Should throw UnknownHostException when name service returns null")
         void testNullAddressArray() throws Exception {
-            when(nameSvc.getAllByName(eq("null.host"), eq(true)))
-                    .thenReturn(null);
+            when(nameSvc.getAllByName(eq("null.host"), eq(true))).thenReturn(null);
 
-            assertThrows(UnknownHostException.class,
-                    () -> pool.getSmbTransport(ctx, "null.host", 445, false, false));
+            assertThrows(UnknownHostException.class, () -> pool.getSmbTransport(ctx, "null.host", 445, false, false));
         }
 
         @Test
         @DisplayName("Should propagate CIFSException from name service")
         void testNameServiceException() throws Exception {
-            when(nameSvc.getAllByName(eq("error.host"), eq(true)))
-                    .thenThrow(new UnknownHostException("DNS lookup failed"));
+            when(nameSvc.getAllByName(eq("error.host"), eq(true))).thenThrow(new UnknownHostException("DNS lookup failed"));
 
-            assertThrows(UnknownHostException.class,
-                    () -> pool.getSmbTransport(ctx, "error.host", 445, false, false));
+            assertThrows(UnknownHostException.class, () -> pool.getSmbTransport(ctx, "error.host", 445, false, false));
         }
     }
 
@@ -140,22 +134,18 @@ class SmbTransportErrorHandlingTest {
         void testConnectionRefused() throws Exception {
             Address addr = mock(Address.class);
             when(addr.getHostAddress()).thenReturn("10.0.0.1");
-            when(nameSvc.getAllByName(eq("refused.host"), eq(true)))
-                    .thenReturn(new Address[] { addr });
+            when(nameSvc.getAllByName(eq("refused.host"), eq(true))).thenReturn(new Address[] { addr });
 
             SmbTransportPoolImpl poolSpy = spy(pool);
             when(ctx.getTransportPool()).thenReturn(poolSpy);
 
             SmbTransportImpl mockTransport = mock(SmbTransportImpl.class);
             when(mockTransport.unwrap(SmbTransportImpl.class)).thenReturn(mockTransport);
-            doThrow(new ConnectException("Connection refused"))
-                    .when(mockTransport).ensureConnected();
+            doThrow(new ConnectException("Connection refused")).when(mockTransport).ensureConnected();
 
-            doReturn(mockTransport).when(poolSpy)
-                    .getSmbTransport(eq(ctx), eq(addr), anyInt(), anyBoolean(), anyBoolean());
+            doReturn(mockTransport).when(poolSpy).getSmbTransport(eq(ctx), eq(addr), anyInt(), anyBoolean(), anyBoolean());
 
-            IOException ex = assertThrows(IOException.class,
-                    () -> poolSpy.getSmbTransport(ctx, "refused.host", 445, false, false));
+            IOException ex = assertThrows(IOException.class, () -> poolSpy.getSmbTransport(ctx, "refused.host", 445, false, false));
             assertTrue(ex.getMessage().contains("Connection refused"));
 
             // Verify fail count was incremented
@@ -167,22 +157,18 @@ class SmbTransportErrorHandlingTest {
         void testConnectionTimeout() throws Exception {
             Address addr = mock(Address.class);
             when(addr.getHostAddress()).thenReturn("10.0.0.2");
-            when(nameSvc.getAllByName(eq("timeout.host"), eq(true)))
-                    .thenReturn(new Address[] { addr });
+            when(nameSvc.getAllByName(eq("timeout.host"), eq(true))).thenReturn(new Address[] { addr });
 
             SmbTransportPoolImpl poolSpy = spy(pool);
             when(ctx.getTransportPool()).thenReturn(poolSpy);
 
             SmbTransportImpl mockTransport = mock(SmbTransportImpl.class);
             when(mockTransport.unwrap(SmbTransportImpl.class)).thenReturn(mockTransport);
-            doThrow(new SocketTimeoutException("Connection timed out"))
-                    .when(mockTransport).ensureConnected();
+            doThrow(new SocketTimeoutException("Connection timed out")).when(mockTransport).ensureConnected();
 
-            doReturn(mockTransport).when(poolSpy)
-                    .getSmbTransport(eq(ctx), eq(addr), anyInt(), anyBoolean(), anyBoolean());
+            doReturn(mockTransport).when(poolSpy).getSmbTransport(eq(ctx), eq(addr), anyInt(), anyBoolean(), anyBoolean());
 
-            IOException ex = assertThrows(IOException.class,
-                    () -> poolSpy.getSmbTransport(ctx, "timeout.host", 445, false, false));
+            IOException ex = assertThrows(IOException.class, () -> poolSpy.getSmbTransport(ctx, "timeout.host", 445, false, false));
             assertTrue(ex instanceof SocketTimeoutException);
         }
 
@@ -191,22 +177,18 @@ class SmbTransportErrorHandlingTest {
         void testNoRouteToHost() throws Exception {
             Address addr = mock(Address.class);
             when(addr.getHostAddress()).thenReturn("10.0.0.3");
-            when(nameSvc.getAllByName(eq("noroute.host"), eq(true)))
-                    .thenReturn(new Address[] { addr });
+            when(nameSvc.getAllByName(eq("noroute.host"), eq(true))).thenReturn(new Address[] { addr });
 
             SmbTransportPoolImpl poolSpy = spy(pool);
             when(ctx.getTransportPool()).thenReturn(poolSpy);
 
             SmbTransportImpl mockTransport = mock(SmbTransportImpl.class);
             when(mockTransport.unwrap(SmbTransportImpl.class)).thenReturn(mockTransport);
-            doThrow(new NoRouteToHostException("No route to host"))
-                    .when(mockTransport).ensureConnected();
+            doThrow(new NoRouteToHostException("No route to host")).when(mockTransport).ensureConnected();
 
-            doReturn(mockTransport).when(poolSpy)
-                    .getSmbTransport(eq(ctx), eq(addr), anyInt(), anyBoolean(), anyBoolean());
+            doReturn(mockTransport).when(poolSpy).getSmbTransport(eq(ctx), eq(addr), anyInt(), anyBoolean(), anyBoolean());
 
-            IOException ex = assertThrows(IOException.class,
-                    () -> poolSpy.getSmbTransport(ctx, "noroute.host", 445, false, false));
+            IOException ex = assertThrows(IOException.class, () -> poolSpy.getSmbTransport(ctx, "noroute.host", 445, false, false));
             assertTrue(ex instanceof NoRouteToHostException);
         }
 
@@ -215,22 +197,18 @@ class SmbTransportErrorHandlingTest {
         void testSocketException() throws Exception {
             Address addr = mock(Address.class);
             when(addr.getHostAddress()).thenReturn("10.0.0.4");
-            when(nameSvc.getAllByName(eq("socket.host"), eq(true)))
-                    .thenReturn(new Address[] { addr });
+            when(nameSvc.getAllByName(eq("socket.host"), eq(true))).thenReturn(new Address[] { addr });
 
             SmbTransportPoolImpl poolSpy = spy(pool);
             when(ctx.getTransportPool()).thenReturn(poolSpy);
 
             SmbTransportImpl mockTransport = mock(SmbTransportImpl.class);
             when(mockTransport.unwrap(SmbTransportImpl.class)).thenReturn(mockTransport);
-            doThrow(new SocketException("Socket closed"))
-                    .when(mockTransport).ensureConnected();
+            doThrow(new SocketException("Socket closed")).when(mockTransport).ensureConnected();
 
-            doReturn(mockTransport).when(poolSpy)
-                    .getSmbTransport(eq(ctx), eq(addr), anyInt(), anyBoolean(), anyBoolean());
+            doReturn(mockTransport).when(poolSpy).getSmbTransport(eq(ctx), eq(addr), anyInt(), anyBoolean(), anyBoolean());
 
-            IOException ex = assertThrows(IOException.class,
-                    () -> poolSpy.getSmbTransport(ctx, "socket.host", 445, false, false));
+            IOException ex = assertThrows(IOException.class, () -> poolSpy.getSmbTransport(ctx, "socket.host", 445, false, false));
             assertTrue(ex instanceof SocketException);
         }
     }
@@ -248,8 +226,7 @@ class SmbTransportErrorHandlingTest {
             Address addr2 = mock(Address.class);
             when(addr2.getHostAddress()).thenReturn("10.0.0.2");
 
-            when(nameSvc.getAllByName(eq("failover.host"), eq(true)))
-                    .thenReturn(new Address[] { addr1, addr2 });
+            when(nameSvc.getAllByName(eq("failover.host"), eq(true))).thenReturn(new Address[] { addr1, addr2 });
 
             SmbTransportPoolImpl poolSpy = spy(pool);
             when(ctx.getTransportPool()).thenReturn(poolSpy);
@@ -265,10 +242,8 @@ class SmbTransportErrorHandlingTest {
             when(mockTransport2.ensureConnected()).thenReturn(true);
             when(mockTransport2.acquire()).thenReturn(mockTransport2);
 
-            doReturn(mockTransport1).when(poolSpy)
-                    .getSmbTransport(eq(ctx), eq(addr1), anyInt(), anyBoolean(), anyBoolean());
-            doReturn(mockTransport2).when(poolSpy)
-                    .getSmbTransport(eq(ctx), eq(addr2), anyInt(), anyBoolean(), anyBoolean());
+            doReturn(mockTransport1).when(poolSpy).getSmbTransport(eq(ctx), eq(addr1), anyInt(), anyBoolean(), anyBoolean());
+            doReturn(mockTransport2).when(poolSpy).getSmbTransport(eq(ctx), eq(addr2), anyInt(), anyBoolean(), anyBoolean());
 
             SmbTransportImpl result = poolSpy.getSmbTransport(ctx, "failover.host", 445, false, false);
 
@@ -286,8 +261,7 @@ class SmbTransportErrorHandlingTest {
             Address addr2 = mock(Address.class);
             when(addr2.getHostAddress()).thenReturn("10.0.0.2");
 
-            when(nameSvc.getAllByName(eq("allfail.host"), eq(true)))
-                    .thenReturn(new Address[] { addr1, addr2 });
+            when(nameSvc.getAllByName(eq("allfail.host"), eq(true))).thenReturn(new Address[] { addr1, addr2 });
 
             SmbTransportPoolImpl poolSpy = spy(pool);
             when(ctx.getTransportPool()).thenReturn(poolSpy);
@@ -300,13 +274,10 @@ class SmbTransportErrorHandlingTest {
             when(mockTransport2.unwrap(SmbTransportImpl.class)).thenReturn(mockTransport2);
             doThrow(new IOException("Second failure")).when(mockTransport2).ensureConnected();
 
-            doReturn(mockTransport1).when(poolSpy)
-                    .getSmbTransport(eq(ctx), eq(addr1), anyInt(), anyBoolean(), anyBoolean());
-            doReturn(mockTransport2).when(poolSpy)
-                    .getSmbTransport(eq(ctx), eq(addr2), anyInt(), anyBoolean(), anyBoolean());
+            doReturn(mockTransport1).when(poolSpy).getSmbTransport(eq(ctx), eq(addr1), anyInt(), anyBoolean(), anyBoolean());
+            doReturn(mockTransport2).when(poolSpy).getSmbTransport(eq(ctx), eq(addr2), anyInt(), anyBoolean(), anyBoolean());
 
-            IOException ex = assertThrows(IOException.class,
-                    () -> poolSpy.getSmbTransport(ctx, "allfail.host", 445, false, false));
+            IOException ex = assertThrows(IOException.class, () -> poolSpy.getSmbTransport(ctx, "allfail.host", 445, false, false));
 
             // Should throw the last exception
             assertTrue(ex.getMessage().contains("Second failure"));
@@ -329,8 +300,7 @@ class SmbTransportErrorHandlingTest {
             pool.failCounts.put("10.0.0.1", 5);
             pool.failCounts.put("10.0.0.2", 1);
 
-            when(nameSvc.getAllByName(eq("sorted.host"), eq(true)))
-                    .thenReturn(new Address[] { addr1, addr2 });
+            when(nameSvc.getAllByName(eq("sorted.host"), eq(true))).thenReturn(new Address[] { addr1, addr2 });
 
             SmbTransportPoolImpl poolSpy = spy(pool);
             when(ctx.getTransportPool()).thenReturn(poolSpy);
@@ -341,8 +311,7 @@ class SmbTransportErrorHandlingTest {
             when(mockTransport2.ensureConnected()).thenReturn(true);
             when(mockTransport2.acquire()).thenReturn(mockTransport2);
 
-            doReturn(mockTransport2).when(poolSpy)
-                    .getSmbTransport(eq(ctx), eq(addr2), anyInt(), anyBoolean(), anyBoolean());
+            doReturn(mockTransport2).when(poolSpy).getSmbTransport(eq(ctx), eq(addr2), anyInt(), anyBoolean(), anyBoolean());
 
             SmbTransportImpl result = poolSpy.getSmbTransport(ctx, "sorted.host", 445, false, false);
 
@@ -369,11 +338,9 @@ class SmbTransportErrorHandlingTest {
             when(mockTransport.unwrap(SmbTransportInternal.class)).thenReturn(internal);
             doThrow(new IOException("Network error")).when(internal).ensureConnected();
 
-            doReturn(mockTransport).when(poolSpy)
-                    .getSmbTransport(eq(ctx), any(Address.class), anyInt(), eq(false), anyBoolean());
+            doReturn(mockTransport).when(poolSpy).getSmbTransport(eq(ctx), any(Address.class), anyInt(), eq(false), anyBoolean());
 
-            SmbException ex = assertThrows(SmbException.class,
-                    () -> poolSpy.getChallenge(ctx, address));
+            SmbException ex = assertThrows(SmbException.class, () -> poolSpy.getChallenge(ctx, address));
 
             assertTrue(ex.getMessage().contains("Connection failed"));
         }
@@ -391,11 +358,9 @@ class SmbTransportErrorHandlingTest {
             when(mockTransport.unwrap(SmbTransportInternal.class)).thenReturn(internal);
             doThrow(new SmbException("SMB error")).when(internal).ensureConnected();
 
-            doReturn(mockTransport).when(poolSpy)
-                    .getSmbTransport(eq(ctx), any(Address.class), anyInt(), eq(false), anyBoolean());
+            doReturn(mockTransport).when(poolSpy).getSmbTransport(eq(ctx), any(Address.class), anyInt(), eq(false), anyBoolean());
 
-            SmbException ex = assertThrows(SmbException.class,
-                    () -> poolSpy.getChallenge(ctx, address));
+            SmbException ex = assertThrows(SmbException.class, () -> poolSpy.getChallenge(ctx, address));
 
             assertTrue(ex.getMessage().contains("SMB error"));
         }

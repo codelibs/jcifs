@@ -207,7 +207,7 @@ class PropertyConfigurationEdgeCaseTest {
         }
 
         @ParameterizedTest
-        @ValueSource(strings = {"SMB1", "SMB202", "SMB210", "SMB300", "SMB302", "SMB311"})
+        @ValueSource(strings = { "SMB1", "SMB202", "SMB210", "SMB300", "SMB302", "SMB311" })
         @DisplayName("Should accept all valid SMB version strings")
         void testAllValidVersionStrings(String version) throws CIFSException {
             Properties props = new Properties();
@@ -333,7 +333,7 @@ class PropertyConfigurationEdgeCaseTest {
     class BooleanPropertyEdgeCases {
 
         @ParameterizedTest
-        @ValueSource(strings = {"TRUE", "True", "true"})
+        @ValueSource(strings = { "TRUE", "True", "true" })
         @DisplayName("Should handle various true values")
         void testVariousTrueValues(String trueValue) throws CIFSException {
             Properties props = new Properties();
@@ -346,7 +346,7 @@ class PropertyConfigurationEdgeCaseTest {
         }
 
         @ParameterizedTest
-        @ValueSource(strings = {"FALSE", "False", "false", "NO", "no", "0", "invalid"})
+        @ValueSource(strings = { "FALSE", "False", "false", "NO", "no", "0", "invalid" })
         @DisplayName("Should handle various false values")
         void testVariousFalseValues(String falseValue) throws CIFSException {
             Properties props = new Properties();
@@ -399,7 +399,7 @@ class PropertyConfigurationEdgeCaseTest {
         }
 
         @ParameterizedTest
-        @ValueSource(strings = {"UTF-8", "ISO-8859-1", "US-ASCII", "Cp437"})
+        @ValueSource(strings = { "UTF-8", "ISO-8859-1", "US-ASCII", "Cp437" })
         @DisplayName("Should handle various valid encodings")
         void testVariousValidEncodings(String encoding) throws CIFSException {
             Properties props = new Properties();
@@ -555,8 +555,7 @@ class PropertyConfigurationEdgeCaseTest {
         @Test
         @DisplayName("Should throw for null properties")
         void testNullProperties() {
-            assertThrows(NullPointerException.class,
-                    () -> new PropertyConfiguration(null));
+            assertThrows(NullPointerException.class, () -> new PropertyConfiguration(null));
         }
     }
 }
