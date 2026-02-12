@@ -156,6 +156,7 @@ class Kerb5AuthenticatorTest {
         Kerb5Authenticator d1 = new Kerb5Authenticator(shared);
         Kerb5Authenticator d2 = new Kerb5Authenticator(shared);
         assertEquals(d1, d2);
+        assertEquals(d1.hashCode(), d2.hashCode());
 
         // Different type -> false
         assertFalse(a.equals("not-an-auth"));

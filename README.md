@@ -140,11 +140,11 @@ try (SmbFile file = new SmbFile("smb://server/share/", authContext)) {
 
 ### Kerberos Authentication
 ```java
-import org.codelibs.jcifs.smb.impl.KerberosCredentials;
+import org.codelibs.jcifs.smb.impl.JAASAuthenticator;
 
-// Kerberos authentication (requires proper Kerberos setup)
-KerberosCredentials kerbCreds = new KerberosCredentials("user@DOMAIN.COM");
-CIFSContext kerbContext = baseContext.withCredentials(kerbCreds);
+// Kerberos authentication via JAAS login context (requires proper Kerberos/JAAS setup)
+JAASAuthenticator kerbAuth = new JAASAuthenticator("jCIFS");
+CIFSContext kerbContext = baseContext.withCredentials(kerbAuth);
 ```
 
 ### Guest Access

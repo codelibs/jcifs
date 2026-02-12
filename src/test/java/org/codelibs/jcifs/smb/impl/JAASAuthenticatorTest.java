@@ -198,4 +198,16 @@ public class JAASAuthenticatorTest {
         assertSame(auth, result);
         verify(auth, times(1)).getSubject();
     }
+
+    @Test
+    @DisplayName("renew: returns null when subject renewal fails")
+    void testRenewReturnsNullOnFailedSubjectRefresh() {
+        JAASAuthenticator auth = spy(new JAASAuthenticator());
+        doReturn(null).when(auth).getSubject();
+
+        CredentialsInternal result = auth.renew();
+
+        assertNull(result);
+        verify(auth, times(1)).getSubject();
+    }
 }

@@ -60,6 +60,28 @@ class SmbSessionImplTest {
         return new SmbSessionImpl(cifsContext, "server.example", "EXAMPLE", transport);
     }
 
+    private static final class NonInternalCredentials implements Credentials {
+        @Override
+        public <T extends Credentials> T unwrap(Class<T> type) {
+            return null;
+        }
+
+        @Override
+        public String getUserDomain() {
+            return "DOMAIN";
+        }
+
+        @Override
+        public boolean isAnonymous() {
+            return false;
+        }
+
+        @Override
+        public boolean isGuest() {
+            return false;
+        }
+    }
+
     @BeforeEach
     void setup() {
         // Base context configuration - always needed
@@ -102,6 +124,47 @@ class SmbSessionImplTest {
         clearInvocations(transport);
         assertSame(transport, session.getTransport());
         verify(transport, times(1)).acquire();
+    }
+
+    @Test
+    @DisplayName("constructor fails fast when credentials cannot be unwrapped to internal credentials")
+    void testConstructorRejectsNonInternalCredentials() {
+        when(credentials.unwrap(CredentialsInternal.class)).thenReturn(null);
+
+        IllegalArgumentException ex =
+                assertThrows(IllegalArgumentException.class, () -> new SmbSessionImpl(cifsContext, "server.example", "EXAMPLE", transport));
+        assertTrue(ex.getMessage().contains("Credentials must implement CredentialsInternal"));
+    }
+
+    @Test
+    @DisplayName("constructor fails fast when context credentials are null")
+    void testConstructorRejectsNullCredentials() {
+        when(cifsContext.getCredentials()).thenReturn(null);
+
+        IllegalArgumentException ex =
+                assertThrows(IllegalArgumentException.class, () -> new SmbSessionImpl(cifsContext, "server.example", "EXAMPLE", transport));
+        assertTrue(ex.getMessage().contains("but got: null"));
+    }
+
+    @Test
+    @DisplayName("constructor error message includes provided credential type")
+    void testConstructorErrorIncludesCredentialType() {
+        when(cifsContext.getCredentials()).thenReturn(new NonInternalCredentials());
+
+        IllegalArgumentException ex =
+                assertThrows(IllegalArgumentException.class, () -> new SmbSessionImpl(cifsContext, "server.example", "EXAMPLE", transport));
+        assertTrue(ex.getMessage().contains(NonInternalCredentials.class.getName()));
+    }
+
+    @Test
+    @DisplayName("constructor uses cloned credentials instance")
+    void testConstructorUsesClonedCredentialsInstance() {
+        CredentialsInternal clonedInternal = mock(CredentialsInternal.class);
+        when(credentialsInternal.clone()).thenReturn(clonedInternal);
+
+        SmbSessionImpl session = newSession();
+        assertSame(clonedInternal, session.getCredentials());
+        verify(credentialsInternal, times(1)).clone();
     }
 
     @Test
