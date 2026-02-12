@@ -155,6 +155,9 @@ public interface CIFSContext {
     /**
      * Create a child context with specified credentials
      *
+     * The credentials must be usable as internal credentials via
+     * {@code creds.unwrap(CredentialsInternal.class)}.
+     *
      * @param creds the credentials to use
      * @return a child context using using the given credentials
      */

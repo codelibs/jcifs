@@ -236,8 +236,7 @@ public class JAASAuthenticator extends Kerb5Authenticator implements CallbackHan
     public CredentialsInternal renew() {
         log.debug("Renewing credentials");
         this.cachedSubject = null;
-        getSubject();
-        return this;
+        return getSubject() != null ? this : null;
     }
 
     /**

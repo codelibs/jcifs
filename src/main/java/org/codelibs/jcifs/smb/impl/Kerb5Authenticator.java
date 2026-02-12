@@ -387,7 +387,7 @@ public class Kerb5Authenticator extends NtlmPasswordAuthenticator {
      */
     @Override
     public int hashCode() {
-        return super.hashCode();
+        return Objects.hash(this.getSubject());
     }
 
     @Override

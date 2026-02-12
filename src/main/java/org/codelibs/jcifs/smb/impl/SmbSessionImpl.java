@@ -113,7 +113,14 @@ final class SmbSessionImpl implements SmbSessionInternal {
         this.targetHost = targetHost;
         this.transport = transport.acquire();
         this.trees = new ArrayList<>();
-        this.credentials = tf.getCredentials().unwrap(CredentialsInternal.class).clone();
+        final var providedCredentials = tf.getCredentials();
+        final CredentialsInternal internalCredentials =
+                providedCredentials != null ? providedCredentials.unwrap(CredentialsInternal.class) : null;
+        if (internalCredentials == null) {
+            final String credentialType = providedCredentials != null ? providedCredentials.getClass().getName() : "null";
+            throw new IllegalArgumentException("Credentials must implement CredentialsInternal, but got: " + credentialType);
+        }
+        this.credentials = internalCredentials.clone();
     }
 
     /**
