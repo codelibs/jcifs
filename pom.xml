@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.codelibs</groupId>
 	<artifactId>jcifs</artifactId>
-	<version>3.0.2</version>
+	<version>3.0.3-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>jCIFS</name>
 	<url>https://github.com/codelibs/jcifs</url>
@@ -32,7 +32,7 @@
 		<connection>scm:git:git@github.com:codelibs/jcifs.git</connection>
 		<developerConnection>scm:git:git@github.com:codelibs/jcifs.git</developerConnection>
 		<url>https://github.com/codelibs/jcifs</url>
-	  <tag>jcifs-3.0.2</tag>
+	  <tag>HEAD</tag>
   </scm>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
