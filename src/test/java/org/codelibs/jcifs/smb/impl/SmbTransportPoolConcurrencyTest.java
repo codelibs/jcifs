@@ -158,8 +158,7 @@ class SmbTransportPoolConcurrencyTest {
         startLatch.countDown();
         assertTrue(doneLatch.await(30, TimeUnit.SECONDS), "All threads should complete");
         assertTrue(exceptions.isEmpty(), "No exceptions should be thrown: " + exceptions);
-        assertEquals(threadCount * operationsPerThread, successCount.get(),
-                "All operations should succeed");
+        assertEquals(threadCount * operationsPerThread, successCount.get(), "All operations should succeed");
     }
 
     @Test

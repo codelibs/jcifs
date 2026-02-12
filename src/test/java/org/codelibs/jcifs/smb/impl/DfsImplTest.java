@@ -380,8 +380,7 @@ class DfsImplTest {
         @DisplayName("Should handle non-DfsReferralDataInternal type")
         void testCacheWithNonInternalReferral() {
             // Create a mock that is not DfsReferralDataInternal
-            org.codelibs.jcifs.smb.DfsReferralData mockReferral =
-                    mock(org.codelibs.jcifs.smb.DfsReferralData.class);
+            org.codelibs.jcifs.smb.DfsReferralData mockReferral = mock(org.codelibs.jcifs.smb.DfsReferralData.class);
 
             // Should handle gracefully - DFS is disabled when referral is wrong type
             assertDoesNotThrow(() -> dfsImpl.cache(mockContext, "\\\\server\\share\\path", mockReferral));
