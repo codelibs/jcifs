@@ -31,8 +31,14 @@ src/main/java/org/codelibs/jcifs/
 │   ├── impl/              # Core implementations (SmbFile, authenticators)
 │   ├── internal/          # Protocol internals (NOT public API)
 │   │   ├── smb1/          # SMB1/CIFS protocol
-│   │   └── smb2/          # SMB2/SMB3 protocol
+│   │   ├── smb2/          # SMB2/SMB3 protocol
+│   │   ├── dfs/           # DFS referral internals
+│   │   ├── dtyp/          # Windows data types
+│   │   ├── fscc/          # File system control codes
+│   │   └── util/          # Internal utilities
 │   ├── dcerpc/            # DCE/RPC implementation
+│   ├── http/              # NTLM HTTP authentication (filter, servlet, URL handler)
+│   ├── https/             # HTTPS URL handler
 │   ├── netbios/           # NetBIOS name service
 │   ├── ntlmssp/           # NTLM authentication
 │   ├── pac/               # Kerberos PAC structures
@@ -42,38 +48,14 @@ src/main/java/org/codelibs/jcifs/
 
 ## Key Classes
 
-### Public API (`org.codelibs.jcifs.smb`)
+- Entry point: `CIFSContext` (interface) / `BaseContext` (impl) - config, credentials, services
+- Files: `SmbResource` (interface) / `SmbFile` (impl)
+- Auth: `NtlmPasswordAuthenticator`, `Kerb5Authenticator`
+- Config: `Configuration` interface - see `BaseConfiguration` for defaults
 
-| Class/Interface | Purpose |
-|-----------------|---------|
-| `CIFSContext` | Main entry point - config, credentials, services |
-| `SmbResource` | Interface for SMB files and directories |
-| `Configuration` | Configuration interface |
-| `Credentials` | Authentication credentials interface |
+## Configuration
 
-### Implementation (`org.codelibs.jcifs.smb.impl`)
-
-| Class | Purpose |
-|-------|---------|
-| `SmbFile` | Main file/directory implementation |
-| `SmbTransportImpl` | Network transport layer |
-| `SmbSessionImpl` | SMB session management |
-| `NtlmPasswordAuthenticator` | NTLM credentials |
-| `Kerb5Authenticator` | Kerberos authentication |
-
-## Configuration Properties
-
-Prefix: `jcifs.smb.client.`
-
-| Property | Default | Description |
-|----------|---------|-------------|
-| `minVersion` | SMB1 | Minimum SMB protocol version |
-| `maxVersion` | SMB311 | Maximum SMB protocol version |
-| `soTimeout` | 35000 | Socket timeout (ms) |
-| `connTimeout` | 35000 | Connection timeout (ms) |
-| `responseTimeout` | 30000 | Response timeout (ms) |
-| `signingPreferred` | false | Prefer SMB signing |
-| `dfs.disabled` | false | Disable DFS resolution |
+Prefix: `jcifs.smb.client.` - see `Configuration` interface for all properties and defaults
 
 ## Code Conventions
 
@@ -124,14 +106,6 @@ CIFSContext → SmbTransportPool → SmbTransport → SmbSession → SmbTree →
 2. Implement in `BaseConfiguration` with default
 3. Add delegation in `DelegatingConfiguration`
 4. Add parsing in `PropertyConfiguration`
-
-### Adding a New SMB2 Command
-
-1. Create request class in `internal/smb2/` (extend `ServerMessageBlock2Request`)
-2. Create response class (extend `ServerMessageBlock2Response`)
-3. Add command constant to `Smb2Constants`
-4. Implement encoding/decoding
-5. Add tests
 
 ## Known Caveats
 
