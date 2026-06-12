@@ -282,7 +282,7 @@
 				<plugins>
 					<plugin>
 						<artifactId>maven-source-plugin</artifactId>
-						<version>3.3.1</version>
+						<version>3.2.1</version><!-- https://issues.apache.org/jira/browse/MSOURCES-143 -->
 						<executions>
 							<execution>
 								<id>attach-sources</id>
