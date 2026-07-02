@@ -264,9 +264,9 @@ class FileBothDirectoryInfoTest {
         // Decode and check return value
         int bytesConsumed = fileBothDirectoryInfo.decode(buffer, 0, buffer.length);
 
-        // Verify bytes consumed matches the actual data size
-        assertTrue(bytesConsumed < 0); // Return value is negative (start - bufferIndex)
-        assertEquals(-94 - filename.length() * 2, bytesConsumed); // Base structure + filename length
+        // Verify bytes consumed is positive and matches the actual data size (Decodable contract)
+        assertTrue(bytesConsumed > 0);
+        assertEquals(94 + filename.length() * 2, bytesConsumed); // Base structure + filename length
     }
 
     @Test

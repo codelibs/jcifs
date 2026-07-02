@@ -104,7 +104,7 @@ public class Smb2ReadResponse extends ServerMessageBlock2Response {
             throw new SMBProtocolDecodingException("Expected structureSize = 17");
         }
 
-        final short dataOffset = buffer[bufferIndex + 2];
+        final int dataOffset = buffer[bufferIndex + 2] & 0xFF;
         bufferIndex += 4;
         this.dataLength = SMBUtil.readInt4(buffer, bufferIndex);
         bufferIndex += 4;
@@ -114,6 +114,9 @@ public class Smb2ReadResponse extends ServerMessageBlock2Response {
 
         final int dataStart = getHeaderStart() + dataOffset;
 
+        if (this.dataLength < 0 || dataStart < 0 || (long) dataStart + this.dataLength > buffer.length) {
+            throw new SMBProtocolDecodingException("Invalid read response data offset/length");
+        }
         if (this.dataLength + this.outputBufferOffset > this.outputBuffer.length) {
             throw new SMBProtocolDecodingException("Buffer to small for read response");
         }

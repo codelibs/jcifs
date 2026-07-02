@@ -214,7 +214,7 @@ public class SmbRandomAccessFile implements SmbRandomAccess {
                     final Smb2ReadRequest request = new Smb2ReadRequest(th.getConfig(), fh.getFileId(), b, off);
                     request.setOffset(this.fp);
                     request.setReadLength(r);
-                    request.setRemainingBytes(len - off);
+                    request.setRemainingBytes(len);
                     try {
                         final Smb2ReadResponse resp = th.send(request, RequestParam.NO_RETRY);
                         n = resp.getDataLength();
@@ -308,7 +308,7 @@ public class SmbRandomAccessFile implements SmbRandomAccess {
                 if (th.isSMB2()) {
                     final Smb2WriteRequest request = new Smb2WriteRequest(th.getConfig(), fh.getFileId());
                     request.setOffset(this.fp);
-                    request.setRemainingBytes(len - w - off);
+                    request.setRemainingBytes(len - w);
                     request.setData(b, off, w);
                     final Smb2WriteResponse resp = th.send(request, RequestParam.NO_RETRY);
                     cnt = resp.getCount();
@@ -319,6 +319,9 @@ public class SmbRandomAccessFile implements SmbRandomAccess {
                     cnt = this.write_andx_resp.getCount();
                 }
 
+                if (cnt <= 0) {
+                    throw new SmbException("Server returned zero-length write while " + len + " bytes remained");
+                }
                 this.fp += cnt;
                 len -= cnt;
                 off += cnt;

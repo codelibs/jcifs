@@ -158,6 +158,9 @@ public class FileBothDirectoryInfo implements FileEntry, Decodable {
         this.shortName = Strings.fromUNIBytes(buffer, bufferIndex, shortNameLength);
         bufferIndex += 24;
 
+        if (fileNameLength < 0 || (long) bufferIndex + fileNameLength > buffer.length) {
+            throw new SMBProtocolDecodingException("Invalid file name length in directory entry");
+        }
         String str;
         if (this.unicode) {
             if (fileNameLength > 0 && buffer[bufferIndex + fileNameLength - 1] == '\0'
@@ -174,7 +177,7 @@ public class FileBothDirectoryInfo implements FileEntry, Decodable {
         this.filename = str;
         bufferIndex += fileNameLength;
 
-        return start - bufferIndex;
+        return bufferIndex - start;
     }
 
     @Override

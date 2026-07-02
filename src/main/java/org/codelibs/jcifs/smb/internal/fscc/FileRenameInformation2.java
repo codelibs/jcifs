@@ -81,8 +81,14 @@ public class FileRenameInformation2 implements FileInformation {
     public int encode(final byte[] dst, int dstIndex) {
         final int start = dstIndex;
         dst[dstIndex] = (byte) (this.replaceIfExists ? 1 : 0);
-        dstIndex += 8; // 7 Reserved
-        dstIndex += 8; // RootDirectory = 0
+        for (int i = 1; i < 8; i++) {
+            dst[dstIndex + i] = 0; // Reserved (7 bytes)
+        }
+        dstIndex += 8;
+        for (int i = 0; i < 8; i++) {
+            dst[dstIndex + i] = 0; // RootDirectory = 0
+        }
+        dstIndex += 8;
 
         final byte[] nameBytes = this.fileName.getBytes(StandardCharsets.UTF_16LE);
 

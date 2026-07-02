@@ -43,11 +43,11 @@ public final class Smb3KeyDerivation {
 
     private static final byte[] ENCCONTEXT_300 = toCBytes("ServerIn "); // there really is a space there
     private static final byte[] ENCLABEL_300 = toCBytes("SMB2AESCCM");
-    private static final byte[] ENCLABEL_311 = toCBytes("SMB2C2SCipherKey");
+    private static final byte[] ENCLABEL_311 = toCBytes("SMBC2SCipherKey");
 
     private static final byte[] DECCONTEXT_300 = toCBytes("ServerOut");
     private static final byte[] DECLABEL_300 = toCBytes("SMB2AESCCM");
-    private static final byte[] DECLABEL_311 = toCBytes("SMB2S2CCipherKey");
+    private static final byte[] DECLABEL_311 = toCBytes("SMBS2CCipherKey");
 
     /**
      *

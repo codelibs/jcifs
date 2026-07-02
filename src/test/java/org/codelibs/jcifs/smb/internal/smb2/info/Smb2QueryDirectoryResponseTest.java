@@ -398,8 +398,8 @@ class Smb2QueryDirectoryResponseTest {
     }
 
     @Test
-    @DisplayName("Test readBytesWireFormat with properly formed empty response")
-    void testReadBytesWireFormatProperlyFormedEmpty() throws Exception {
+    @DisplayName("Test readBytesWireFormat rejects malformed negative buffer length")
+    void testReadBytesWireFormatNegativeBufferLengthRejected() throws Exception {
         response = new Smb2QueryDirectoryResponse(mockConfig, Smb2QueryDirectoryRequest.FILE_BOTH_DIRECTORY_INFO);
 
         byte[] buffer = new byte[1024];
@@ -409,18 +409,14 @@ class Smb2QueryDirectoryResponseTest {
         SMBUtil.writeInt2(9, buffer, bufferIndex);
         // Set buffer offset
         SMBUtil.writeInt2(100, buffer, bufferIndex + 2);
-        // Set buffer length to -1 to indicate no entries
+        // Set an invalid (negative) OutputBufferLength
         SMBUtil.writeInt4(-1, buffer, bufferIndex + 4);
 
         response = spy(response);
         when(response.getHeaderStart()).thenReturn(0);
 
-        int result = response.readBytesWireFormat(buffer, bufferIndex);
-
-        assertEquals(8, result);
-        assertNotNull(response.getResults());
-        // Even with -1, the do-while loop executes at least once due to the bug
-        assertEquals(1, response.getResults().length);
+        // A malformed negative OutputBufferLength must be rejected, not silently decoded as one bogus entry
+        assertThrows(SMBProtocolDecodingException.class, () -> response.readBytesWireFormat(buffer, bufferIndex));
     }
 
     @Test

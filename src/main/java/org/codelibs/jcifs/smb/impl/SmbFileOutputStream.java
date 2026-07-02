@@ -202,7 +202,7 @@ public class SmbFileOutputStream extends OutputStream {
     @Override
     public void close() throws IOException {
         try {
-            if (this.handle.isValid()) {
+            if (this.handle != null && this.handle.isValid()) {
                 this.handle.close();
             }
         } finally {
@@ -331,6 +331,9 @@ public class SmbFileOutputStream extends OutputStream {
 
                     final Smb2WriteResponse resp = th.send(wr, RequestParam.NO_RETRY);
                     final long cnt = resp.getCount();
+                    if (cnt <= 0) {
+                        throw new IOException("Server returned zero-length write while " + len + " bytes remained");
+                    }
                     this.fp += cnt;
                     len -= cnt;
                     off += cnt;

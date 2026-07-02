@@ -290,6 +290,11 @@ public class Smb2CreateResponse extends ServerMessageBlock2Response implements S
                 final int dataLength = SMBUtil.readInt4(buffer, cci);
                 cci += 4;
 
+                if (nameLength < 0 || dataLength < 0 || createContextStart < 0
+                        || (long) createContextStart + nameOffset + nameLength > buffer.length
+                        || (long) createContextStart + dataOffset + dataLength > buffer.length) {
+                    throw new SMBProtocolDecodingException("Invalid create context offset/length");
+                }
                 final byte[] nameBytes = new byte[nameLength];
                 System.arraycopy(buffer, createContextStart + nameOffset, nameBytes, 0, nameBytes.length);
                 cci = Math.max(cci, createContextStart + nameOffset + nameLength);

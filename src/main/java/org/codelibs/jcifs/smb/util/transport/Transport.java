@@ -407,7 +407,7 @@ public abstract class Transport implements Runnable, AutoCloseable {
                     }
 
                     curResp.wait();
-                    if (handleIntermediate(request, curResp)) {
+                    if (handleIntermediate(curReq, curResp)) {
                         continue;
                     }
                     if (log.isDebugEnabled()) {

@@ -132,6 +132,8 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
 
     private byte[] preauthIntegrityHash = new byte[64];
 
+    private final Object preauthLock = new Object();
+
     SmbTransportImpl(final CIFSContext tc, final Address address, final int port, final InetAddress localAddr, final int localPort,
             final boolean forceSigning) {
         this.transportContext = tc;
@@ -935,7 +937,7 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
             if (log.isTraceEnabled()) {
                 log.trace("Request credits " + reqCredits);
             }
-            request.setRequestCredits(reqCredits);
+            curHead.setRequestCredits(reqCredits);
 
             final CommonServerMessageBlockRequest thisReq = curHead;
             try {
@@ -981,8 +983,8 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
                     }
                     curReq = next;
                 }
-                if (!isDisconnected() && !curReq.isResponseAsync() && !curReq.getResponse().isAsync() && !curReq.getResponse().isError()
-                        && grantedCredits == 0) {
+                if (!isDisconnected() && !curReq.isResponseAsync() && curReq.getResponse() != null && !curReq.getResponse().isAsync()
+                        && !curReq.getResponse().isError() && grantedCredits == 0) {
                     if (this.credits.availablePermits() > 0 || n > 0) {
                         log.debug("Server " + this + " returned zero credits for " + curReq);
                     } else {
@@ -1686,7 +1688,7 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
     }
 
     private void updatePreauthHash(final byte[] input) throws CIFSException {
-        synchronized (this.preauthIntegrityHash) {
+        synchronized (this.preauthLock) {
             this.preauthIntegrityHash = calculatePreauthHash(input, 0, input.length, this.preauthIntegrityHash);
         }
     }

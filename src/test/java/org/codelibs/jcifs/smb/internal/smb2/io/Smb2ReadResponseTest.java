@@ -560,8 +560,8 @@ class Smb2ReadResponseTest extends BaseTest {
         headerStartField.setAccessible(true);
         headerStartField.set(response, 0);
 
-        // When & Then - should throw when trying to read beyond buffer
-        assertThrows(ArrayIndexOutOfBoundsException.class, () -> response.readBytesWireFormat(smallBuffer, bodyStart));
+        // When & Then - an out-of-bounds data offset/length must be rejected with a decoding exception, not a raw AIOOBE
+        assertThrows(SMBProtocolDecodingException.class, () -> response.readBytesWireFormat(smallBuffer, bodyStart));
     }
 
     @Test
