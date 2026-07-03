@@ -196,6 +196,11 @@ public class Smb2IoctlResponse extends ServerMessageBlock2Response {
         bufferIndex += 4;
         bufferIndex += 4; // Reserved2
 
+        if (inputCount < 0 || outputCount < 0 || inputOffset < 0 || outputOffset < 0 || (long) inputOffset + inputCount > buffer.length
+                || (long) outputOffset + outputCount > buffer.length) {
+            throw new SMBProtocolDecodingException("Invalid ioctl input/output offset/length");
+        }
+
         this.inputData = createInputDecodable();
         this.outputData = this.outputBuffer == null ? createOutputDecodable() : null;
 

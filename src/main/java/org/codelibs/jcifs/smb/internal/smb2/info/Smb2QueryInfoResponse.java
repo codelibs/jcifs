@@ -121,6 +121,9 @@ public class Smb2QueryInfoResponse extends ServerMessageBlock2Response {
         bufferIndex += 4;
         final int bufferLength = SMBUtil.readInt4(buffer, bufferIndex);
         bufferIndex += 4;
+        if (bufferLength < 0 || bufferOffset < 0 || (long) bufferOffset + bufferLength > buffer.length) {
+            throw new SMBProtocolDecodingException("Invalid query info buffer offset/length");
+        }
         final Decodable i = createInformation(this.expectInfoType, this.expectInfoClass);
         if (i != null) {
             i.decode(buffer, bufferOffset, bufferLength);

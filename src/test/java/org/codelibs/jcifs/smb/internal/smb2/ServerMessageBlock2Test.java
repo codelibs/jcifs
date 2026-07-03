@@ -845,6 +845,21 @@ class ServerMessageBlock2Test {
             assertEquals(0, testMessage.getErrorContextCount());
             assertNull(testMessage.getErrorData());
         }
+
+        @Test
+        @DisplayName("Should read error context count as unsigned value")
+        void testReadErrorResponseUnsignedContextCount() throws SMBProtocolDecodingException {
+            byte[] buffer = new byte[256];
+            int bufferIndex = 0;
+
+            SMBUtil.writeInt2(9, buffer, bufferIndex); // structure size
+            buffer[bufferIndex + 2] = (byte) 0x80; // error context count with high bit set (== 128 unsigned)
+            SMBUtil.writeInt4(0, buffer, bufferIndex + 4); // zero byte count
+
+            testMessage.readErrorResponse(buffer, bufferIndex);
+
+            assertEquals(128, testMessage.getErrorContextCount(), "ErrorContextCount is a UCHAR and must be read unsigned");
+        }
     }
 
     @Nested

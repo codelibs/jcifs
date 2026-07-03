@@ -118,9 +118,14 @@ public class Smb2SessionSetupResponse extends ServerMessageBlock2Response {
         final int securityBufferLength = SMBUtil.readInt2(buffer, bufferIndex + 2);
         bufferIndex += 4;
 
-        final int pad = bufferIndex - (getHeaderStart() + securityBufferOffset);
+        final int securityBufferStart = getHeaderStart() + securityBufferOffset;
+        if (securityBufferLength < 0 || securityBufferStart < 0 || (long) securityBufferStart + securityBufferLength > buffer.length) {
+            throw new SMBProtocolDecodingException("Invalid session setup security buffer offset/length");
+        }
+
+        final int pad = bufferIndex - securityBufferStart;
         this.blob = new byte[securityBufferLength];
-        System.arraycopy(buffer, getHeaderStart() + securityBufferOffset, this.blob, 0, securityBufferLength);
+        System.arraycopy(buffer, securityBufferStart, this.blob, 0, securityBufferLength);
         bufferIndex += pad;
         bufferIndex += securityBufferLength;
 

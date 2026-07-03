@@ -632,4 +632,42 @@ class Smb2QueryInfoResponseTest {
         assertNotNull(response.getInfo());
         assertTrue(response.getInfo() instanceof FileInternalInfo);
     }
+
+    @Test
+    @DisplayName("Test readBytesWireFormat rejects buffer length that overflows the packet")
+    void testReadBytesWireFormatRejectsHugeBufferLength() {
+        response = new Smb2QueryInfoResponse(mockConfig, Smb2Constants.SMB2_0_INFO_FILE, FileInformation.FILE_INTERNAL_INFO);
+
+        byte[] buffer = new byte[512];
+        // structureSize
+        SMBUtil.writeInt2(9, buffer, 0);
+        // bufferOffset (relative to header start)
+        SMBUtil.writeInt2(20, buffer, 2);
+        // bufferLength far beyond the actual buffer
+        SMBUtil.writeInt4(0x7FFFFFFF, buffer, 4);
+
+        response = spy(response);
+        when(response.getHeaderStart()).thenReturn(0);
+
+        assertThrows(SMBProtocolDecodingException.class, () -> response.readBytesWireFormat(buffer, 0),
+                "Should reject a bufferLength that exceeds the buffer bounds");
+    }
+
+    @Test
+    @DisplayName("Test readBytesWireFormat rejects negative buffer length")
+    void testReadBytesWireFormatRejectsNegativeBufferLength() {
+        response = new Smb2QueryInfoResponse(mockConfig, Smb2Constants.SMB2_0_INFO_FILE, FileInformation.FILE_INTERNAL_INFO);
+
+        byte[] buffer = new byte[512];
+        SMBUtil.writeInt2(9, buffer, 0);
+        SMBUtil.writeInt2(20, buffer, 2);
+        // negative bufferLength
+        SMBUtil.writeInt4(-1, buffer, 4);
+
+        response = spy(response);
+        when(response.getHeaderStart()).thenReturn(0);
+
+        assertThrows(SMBProtocolDecodingException.class, () -> response.readBytesWireFormat(buffer, 0),
+                "Should reject a negative bufferLength");
+    }
 }

@@ -221,4 +221,23 @@ class Smb2SessionSetupResponseTest extends BaseTest {
         int written = resp.writeBytesWireFormat(dst, 0);
         assertEquals(0, written);
     }
+
+    @Test
+    @DisplayName("Security buffer offset/length beyond packet should throw")
+    void testDecodeRejectsOutOfBoundsSecurityBuffer() {
+        Smb2SessionSetupResponse resp = newResponse();
+
+        byte[] buf = new byte[256];
+        int headerStart = 0;
+        buildHeader(buf, headerStart, NtStatus.NT_STATUS_MORE_PROCESSING_REQUIRED, 0x0001, 0x0L);
+
+        int bodyStart = headerStart + Smb2Constants.SMB2_HEADER_LENGTH; // 64
+        SMBUtil.writeInt2(9, buf, bodyStart); // structureSize
+        SMBUtil.writeInt2(0, buf, bodyStart + 2); // sessionFlags
+        SMBUtil.writeInt2(250, buf, bodyStart + 4); // securityBufferOffset
+        SMBUtil.writeInt2(100, buf, bodyStart + 6); // securityBufferLength (250 + 100 = 350 > 256)
+
+        assertThrows(SMBProtocolDecodingException.class, () -> resp.decode(buf, headerStart),
+                "Out-of-bounds security buffer should raise a decoding exception");
+    }
 }

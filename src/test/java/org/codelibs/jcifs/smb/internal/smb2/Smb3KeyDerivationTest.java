@@ -5,8 +5,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.Arrays;
+
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -418,5 +423,75 @@ class Smb3KeyDerivationTest {
         assertNotNull(signingKey, "Should handle all-0xFF session key");
         assertEquals(16, signingKey.length, "Should produce 16-byte key");
         assertFalse(Arrays.equals(ffSessionKey, signingKey), "Derived key should be different from all-0xFF input");
+    }
+
+    /**
+     * Independent, in-test SP800-108 CTR-mode HMAC-SHA256 oracle that reproduces
+     * the fixed-input byte layout of {@link Smb3KeyDerivation}'s private {@code derive}:
+     *
+     * <pre>
+     * [00 00 00 01] || label (US-ASCII) || 0x00 (label terminator) || 0x00 (separator)
+     *               || context || [00 00 00 80]
+     * </pre>
+     *
+     * A single HMAC-SHA256 pass keyed with the session key yields the 32-byte block;
+     * the first 16 bytes are the derived key. This oracle is intentionally independent
+     * of the BouncyCastle KDF used by production so it can pin the label constants.
+     */
+    private static byte[] deriveOracle(final String label, final byte[] context, final byte[] sessionKey) throws Exception {
+        final byte[] ascii = label.getBytes(StandardCharsets.US_ASCII);
+        final ByteArrayOutputStream fixedInput = new ByteArrayOutputStream();
+        fixedInput.writeBytes(new byte[] { 0x00, 0x00, 0x00, 0x01 }); // counter i = 1 (4-byte BE, r = 32)
+        fixedInput.writeBytes(ascii); // label
+        fixedInput.write(0x00); // label null terminator (toCBytes)
+        fixedInput.write(0x00); // 0x00 separator between label and context
+        fixedInput.writeBytes(context); // context
+        fixedInput.writeBytes(new byte[] { 0x00, 0x00, 0x00, (byte) 0x80 }); // L = 128 (4-byte BE)
+
+        final Mac mac = Mac.getInstance("HmacSHA256");
+        mac.init(new SecretKeySpec(sessionKey, "HmacSHA256"));
+        final byte[] full = mac.doFinal(fixedInput.toByteArray());
+        return Arrays.copyOf(full, 16);
+    }
+
+    private static byte[] fixedSessionKey() {
+        final byte[] key = new byte[16];
+        Arrays.fill(key, (byte) 0x01);
+        return key;
+    }
+
+    private static byte[] fixedPreauth() {
+        // Non-empty: javax.crypto.Mac rejects a zero-length HMAC key.
+        final byte[] preauth = new byte[64];
+        Arrays.fill(preauth, (byte) 0x02);
+        return preauth;
+    }
+
+    @Test
+    @DisplayName("KDF oracle reproduces the never-buggy signing key (validates the oracle)")
+    void testKdfOracleReproducesSigningKey() throws Exception {
+        final byte[] sk = fixedSessionKey();
+        final byte[] preauth = fixedPreauth();
+
+        // SMBSigningKey was never affected by the label bug, so it cross-checks the oracle itself.
+        final byte[] expected = Smb3KeyDerivation.deriveSigningKey(Smb2Constants.SMB2_DIALECT_0311, sk, preauth);
+        final byte[] oracle = deriveOracle("SMBSigningKey", preauth, sk);
+
+        assertArrayEquals(expected, oracle, "In-test SP800-108 oracle must faithfully reproduce the production KDF");
+    }
+
+    @Test
+    @DisplayName("SMB 3.1.1 cipher keys must use SMBC2SCipherKey / SMBS2CCipherKey labels")
+    void testCipherKeyLabelsArePinned() throws Exception {
+        final byte[] sk = fixedSessionKey();
+        final byte[] preauth = fixedPreauth();
+
+        final byte[] encExpected = deriveOracle("SMBC2SCipherKey", preauth, sk);
+        final byte[] encActual = Smb3KeyDerivation.deriveEncryptionKey(Smb2Constants.SMB2_DIALECT_0311, sk, preauth);
+        assertArrayEquals(encExpected, encActual, "Encryption key must be derived with the SMBC2SCipherKey label");
+
+        final byte[] decExpected = deriveOracle("SMBS2CCipherKey", preauth, sk);
+        final byte[] decActual = Smb3KeyDerivation.deriveDecryptionKey(Smb2Constants.SMB2_DIALECT_0311, sk, preauth);
+        assertArrayEquals(decExpected, decActual, "Decryption key must be derived with the SMBS2CCipherKey label");
     }
 }

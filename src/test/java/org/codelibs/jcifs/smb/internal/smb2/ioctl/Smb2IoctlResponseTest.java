@@ -243,4 +243,42 @@ class Smb2IoctlResponseTest {
         assertEquals(0, peek.getNumberOfMessages());
         assertEquals(0, peek.getMessageLength());
     }
+
+    @Test
+    void throwsWhenOutputOffsetExceedsBuffer() throws Exception {
+        // A malicious server can point outputOffset outside the packet while keeping
+        // outputCount within the provided buffer capacity, so the capacity guard alone
+        // does not protect the arraycopy.
+        byte[] header = buildHeader(NtStatus.NT_STATUS_SUCCESS);
+        byte[] output = new byte[] { 1, 2, 3, 4, 5 };
+        byte[] body = buildIoctlResponseBody(Smb2IoctlRequest.FSCTL_SRV_COPYCHUNK, new byte[16], 0, null, output.length, output, 0);
+        byte[] packet = new byte[header.length + body.length];
+        System.arraycopy(header, 0, packet, 0, header.length);
+        System.arraycopy(body, 0, packet, header.length, body.length);
+
+        // Overwrite outputOffset field (body offset 32 -> packet offset 64 + 32 = 96) with a bogus value.
+        SMBUtil.writeInt4(100000, packet, 96);
+
+        BaseConfiguration config = new BaseConfiguration(true);
+        // outputBuffer large enough that the capacity guard (outputCount > outputBuffer.length) passes.
+        Smb2IoctlResponse resp = new Smb2IoctlResponse(config, new byte[8]);
+        assertThrows(SMBProtocolDecodingException.class, () -> resp.decode(packet, 0));
+    }
+
+    @Test
+    void throwsWhenOutputCountIsNegative() throws Exception {
+        byte[] header = buildHeader(NtStatus.NT_STATUS_SUCCESS);
+        byte[] output = new byte[] { 1, 2, 3, 4, 5 };
+        byte[] body = buildIoctlResponseBody(Smb2IoctlRequest.FSCTL_SRV_COPYCHUNK, new byte[16], 0, null, output.length, output, 0);
+        byte[] packet = new byte[header.length + body.length];
+        System.arraycopy(header, 0, packet, 0, header.length);
+        System.arraycopy(body, 0, packet, header.length, body.length);
+
+        // Overwrite outputCount field (body offset 36 -> packet offset 64 + 36 = 100) with -1.
+        SMBUtil.writeInt4(-1, packet, 100);
+
+        BaseConfiguration config = new BaseConfiguration(true);
+        Smb2IoctlResponse resp = new Smb2IoctlResponse(config, new byte[8]);
+        assertThrows(SMBProtocolDecodingException.class, () -> resp.decode(packet, 0));
+    }
 }

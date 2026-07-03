@@ -81,7 +81,7 @@ class SmbComLockingAndXTest {
 
         byte[] buffer = new byte[20];
         int len = cmd.writeParameterWordsWireFormat(buffer, 0);
-        assertEquals(-12, len, "writeParameterWordsWireFormat should write 12 Bytes");
+        assertEquals(12, len, "writeParameterWordsWireFormat should write 12 Bytes");
         // Validate parameter bytes using reflection since fields are private
         assertEquals(getField(cmd, "fid"), SMBUtil.readInt2(buffer, 0));
         assertEquals(getField(cmd, "typeOfLock"), buffer[2]);
@@ -168,5 +168,57 @@ class SmbComLockingAndXTest {
         assertEquals(99, decoded.getPid());
         assertEquals(123456L, decoded.getByteOffset());
         assertEquals(654321L, decoded.getLengthInBytes());
+    }
+
+    /**
+     * The parameter-word wire methods must report the positive number of bytes
+     * consumed (like every sibling SMB1 command), not a negative value.
+     */
+    @Test
+    void parameterWireFormatMethodsReturnPositiveConsumedCounts() {
+        Configuration cfg = mock(Configuration.class);
+        SmbComLockingAndX cmd = new SmbComLockingAndX(cfg);
+        setField(cmd, "fid", 0x1234);
+        setField(cmd, "typeOfLock", (byte) 0x02);
+        setField(cmd, "newOpLockLevel", (byte) 0x00);
+        setField(cmd, "timeout", 1000L);
+        setField(cmd, "locks", new LockingAndXRange[0]);
+        setField(cmd, "unlocks", new LockingAndXRange[0]);
+        setField(cmd, "largeFile", false);
+
+        byte[] buffer = new byte[32];
+        int written = cmd.writeParameterWordsWireFormat(buffer, 0);
+        assertEquals(12, written, "writeParameterWordsWireFormat should return the positive count of bytes written");
+
+        SmbComLockingAndX reader = new SmbComLockingAndX(cfg);
+        int read = reader.readParameterWordsWireFormat(buffer, 0);
+        assertEquals(12, read, "readParameterWordsWireFormat should return the positive count of bytes read");
+    }
+
+    /**
+     * The byte (data) wire methods must likewise report the positive number of
+     * bytes consumed for a single lock range.
+     */
+    @Test
+    void byteWireFormatMethodsReturnPositiveConsumedCounts() throws Exception {
+        Configuration cfg = mock(Configuration.class);
+        SmbComLockingAndX cmd = new SmbComLockingAndX(cfg);
+        LockingAndXRange lock = new LockingAndXRange(false);
+        setField(lock, "pid", 7);
+        setField(lock, "byteOffset", 0L);
+        setField(lock, "lengthInBytes", 10L);
+        setField(cmd, "locks", new LockingAndXRange[] { lock });
+        setField(cmd, "unlocks", new LockingAndXRange[0]);
+
+        byte[] buffer = new byte[32];
+        int written = cmd.writeBytesWireFormat(buffer, 0);
+        assertEquals(10, written, "writeBytesWireFormat should return the positive count of bytes written");
+
+        SmbComLockingAndX reader = new SmbComLockingAndX(cfg);
+        setField(reader, "locks", new LockingAndXRange[1]);
+        setField(reader, "unlocks", new LockingAndXRange[0]);
+        setField(reader, "largeFile", false);
+        int read = reader.readBytesWireFormat(buffer, 0);
+        assertEquals(10, read, "readBytesWireFormat should return the positive count of bytes read");
     }
 }

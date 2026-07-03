@@ -131,7 +131,7 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
     private boolean async;
     private int treeId;
     private long mid, asyncId, sessionId;
-    private byte errorContextCount;
+    private int errorContextCount;
     private byte[] errorData;
 
     private boolean retainPayload;
@@ -495,7 +495,7 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
      *
      * @return the errorContextCount
      */
-    public final byte getErrorContextCount() {
+    public final int getErrorContextCount() {
         return this.errorContextCount;
     }
 
@@ -675,7 +675,7 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
         if (structureSize != 9) {
             throw new SMBProtocolDecodingException("Error structureSize should be 9");
         }
-        this.errorContextCount = buffer[bufferIndex + 2];
+        this.errorContextCount = buffer[bufferIndex + 2] & 0xFF;
         bufferIndex += 4;
 
         final int bc = SMBUtil.readInt4(buffer, bufferIndex);

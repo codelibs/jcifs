@@ -73,7 +73,7 @@ public class SmbComLockingAndX extends AndXServerMessageBlock {
 
         SMBUtil.writeInt2(this.locks != null ? this.locks.length : 0, dst, dstIndex);
         dstIndex += 2;
-        return start - dstIndex;
+        return dstIndex - start;
     }
 
     /**
@@ -107,7 +107,7 @@ public class SmbComLockingAndX extends AndXServerMessageBlock {
         final int nlocks = SMBUtil.readInt2(buffer, bufferIndex);
         this.locks = new LockingAndXRange[nlocks];
         bufferIndex += 2;
-        return start - bufferIndex;
+        return bufferIndex - start;
     }
 
     /**
@@ -128,7 +128,7 @@ public class SmbComLockingAndX extends AndXServerMessageBlock {
                 dstIndex += lockingAndXRange.encode(dst, dstIndex);
             }
         }
-        return start - dstIndex;
+        return dstIndex - start;
     }
 
     /**
@@ -149,7 +149,7 @@ public class SmbComLockingAndX extends AndXServerMessageBlock {
             bufferIndex += this.locks[i].decode(buffer, bufferIndex, buffer.length);
         }
 
-        return start - bufferIndex;
+        return bufferIndex - start;
     }
 
     /**
