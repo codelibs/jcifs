@@ -2,6 +2,7 @@ package org.codelibs.jcifs.smb.internal.fscc;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
@@ -418,6 +419,27 @@ class FileBothDirectoryInfoTest {
 
         // Verify
         assertEquals(expectedFilename, fileBothDirectoryInfo.getFilename());
+    }
+
+    @Test
+    @DisplayName("Test decode rejects short name length greater than 24")
+    void testDecodeRejectsInvalidShortNameLength() {
+        // The ShortName field is a fixed 24-byte area; a length > 24 is malformed and must be rejected
+        byte[] buffer = createValidBuffer("file.txt", "FILE~1.TXT", true);
+        buffer[68] = (byte) 25; // shortNameLength
+
+        assertThrows(SMBProtocolDecodingException.class, () -> fileBothDirectoryInfo.decode(buffer, 0, buffer.length),
+                "Short name length greater than 24 must be rejected");
+    }
+
+    @Test
+    @DisplayName("Test decode rejects buffer smaller than the fixed entry size")
+    void testDecodeRejectsTruncatedBuffer() {
+        // The fixed portion of a FILE_BOTH_DIR_INFORMATION entry is 94 bytes; anything shorter is malformed
+        byte[] buffer = new byte[93];
+
+        assertThrows(SMBProtocolDecodingException.class, () -> fileBothDirectoryInfo.decode(buffer, 0, buffer.length),
+                "Buffer smaller than 94 bytes must be rejected");
     }
 
     // Helper methods to create valid buffer data

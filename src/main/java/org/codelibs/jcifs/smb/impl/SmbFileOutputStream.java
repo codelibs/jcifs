@@ -324,19 +324,14 @@ public class SmbFileOutputStream extends OutputStream {
                 final int blockSize = this.file.getType() == SmbConstants.TYPE_FILESYSTEM ? this.writeSizeFile : this.writeSize;
                 w = len > blockSize ? blockSize : len;
 
+                long cnt;
                 if (this.smb2) {
                     final Smb2WriteRequest wr = new Smb2WriteRequest(th.getConfig(), fh.getFileId());
                     wr.setOffset(this.fp);
                     wr.setData(b, off, w);
 
                     final Smb2WriteResponse resp = th.send(wr, RequestParam.NO_RETRY);
-                    final long cnt = resp.getCount();
-                    if (cnt <= 0) {
-                        throw new IOException("Server returned zero-length write while " + len + " bytes remained");
-                    }
-                    this.fp += cnt;
-                    len -= cnt;
-                    off += cnt;
+                    cnt = resp.getCount();
                 } else if (this.useNTSmbs) {
                     this.reqx.setParam(fh.getFid(), this.fp, len - w, b, off, w);
                     if ((flags & 1) != 0) {
@@ -347,25 +342,25 @@ public class SmbFileOutputStream extends OutputStream {
                     }
 
                     th.send(this.reqx, this.rspx, RequestParam.NO_RETRY);
-                    final long cnt = this.rspx.getCount();
-                    this.fp += cnt;
-                    len -= cnt;
-                    off += cnt;
+                    cnt = this.rspx.getCount();
                 } else {
                     if (log.isTraceEnabled()) {
                         log.trace(String.format("Wrote at %d remain %d off %d len %d", this.fp, len - w, off, w));
                     }
                     this.req.setParam(fh.getFid(), this.fp, len - w, b, off, w);
                     th.send(this.req, this.rsp);
-                    final long cnt = this.rsp.getCount();
-                    this.fp += cnt;
-                    len -= cnt;
-                    off += cnt;
+                    cnt = this.rsp.getCount();
                     if (log.isTraceEnabled()) {
                         log.trace(String.format("Wrote at %d remain %d off %d len %d", this.fp, len - w, off, w));
                     }
                 }
 
+                if (cnt <= 0) {
+                    throw new IOException("Server returned zero-length write while " + len + " bytes remained");
+                }
+                this.fp += cnt;
+                len -= cnt;
+                off += cnt;
             } while (len > 0);
         }
     }

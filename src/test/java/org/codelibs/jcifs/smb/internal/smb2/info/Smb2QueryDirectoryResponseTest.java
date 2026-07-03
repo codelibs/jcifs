@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
@@ -395,6 +396,42 @@ class Smb2QueryDirectoryResponseTest {
 
         assertTrue(result >= 8);
         assertNotNull(response.getResults());
+    }
+
+    @Test
+    @DisplayName("Test readBytesWireFormat handles overflowing nextEntryOffset without AIOOBE")
+    void testReadBytesWireFormatNextEntryOffsetOverflow() throws Exception {
+        response = new Smb2QueryDirectoryResponse(mockConfig, Smb2QueryDirectoryRequest.FILE_BOTH_DIRECTORY_INFO);
+
+        byte[] buffer = new byte[512];
+        int bufferIndex = 0;
+        int dataOffset = 80;
+
+        // Set structure size to 9
+        SMBUtil.writeInt2(9, buffer, bufferIndex);
+        // Set buffer offset
+        SMBUtil.writeInt2(dataOffset, buffer, bufferIndex + 2);
+        // Set buffer length
+        SMBUtil.writeInt4(200, buffer, bufferIndex + 4);
+
+        response = spy(response);
+        when(response.getHeaderStart()).thenReturn(0);
+
+        // The implementation begins decoding entries at bufferIndex = 8.
+        // Give the (only) entry a huge nextEntryOffset that overflows int when added to bufferIndex.
+        int entryStart = 8;
+        SMBUtil.writeInt4(Integer.MAX_VALUE, buffer, entryStart); // nextEntryOffset
+        SMBUtil.writeInt4(0, buffer, entryStart + 60); // FileNameLength = 0 -> fixed 94-byte entry
+
+        // A crafted overflowing nextEntryOffset must either stop cleanly or be rejected as a decoding
+        // error, but must never surface as a raw ArrayIndexOutOfBoundsException.
+        try {
+            response.readBytesWireFormat(buffer, bufferIndex);
+        } catch (final ArrayIndexOutOfBoundsException e) {
+            fail("Overflowing nextEntryOffset leaked ArrayIndexOutOfBoundsException: " + e);
+        } catch (final SMBProtocolDecodingException e) {
+            // Acceptable: rejected as a decoding error
+        }
     }
 
     @Test

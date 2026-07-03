@@ -277,6 +277,9 @@ public class Smb2CreateResponse extends ServerMessageBlock2Response implements S
             int createContextStart = getHeaderStart() + createContextOffset;
             int next = 0;
             do {
+                if (createContextStart < 0 || (long) createContextStart + 16 > buffer.length) {
+                    throw new SMBProtocolDecodingException("Invalid create context offset");
+                }
                 int cci = createContextStart;
                 next = SMBUtil.readInt4(buffer, cci);
                 cci += 4;

@@ -267,6 +267,28 @@ class Smb2CreateResponseTest {
     }
 
     @Test
+    void decode_createContextOffsetBeyondBuffer_throwsDecodingException() {
+        Configuration config = Mockito.mock(Configuration.class);
+        Smb2CreateResponse resp = new Smb2CreateResponse(config, "file.txt");
+
+        byte[] fileId = new byte[16];
+        Arrays.fill(fileId, (byte) 0xAB);
+
+        byte[] header = buildSmb2Header();
+        byte[] body = buildCreateBodyNoContexts((byte) 0, (byte) 0, 0, 0L, 0L, 0L, 0L, 0L, 0L, 0, fileId);
+
+        // Point the create-context section far past the end of the buffer, with a non-zero length so it is parsed.
+        // A crafted offset must be rejected as a decoding error, not surface as a raw AIOOBE.
+        int offsetFieldPos = body.length - 8;
+        SMBUtil.writeInt4(100000, body, offsetFieldPos); // CreateContextsOffset
+        SMBUtil.writeInt4(8, body, offsetFieldPos + 4); // CreateContextsLength
+
+        byte[] packet = buildPacket(header, body, null, null);
+
+        assertThrows(SMBProtocolDecodingException.class, () -> resp.decode(packet, 0, false));
+    }
+
+    @Test
     void decode_invalidStructureSize_throws() {
         Configuration config = Mockito.mock(Configuration.class);
         Smb2CreateResponse resp = new Smb2CreateResponse(config, "bad");

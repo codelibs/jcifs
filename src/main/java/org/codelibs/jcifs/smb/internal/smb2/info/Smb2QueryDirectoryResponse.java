@@ -114,6 +114,9 @@ public class Smb2QueryDirectoryResponse extends ServerMessageBlock2Response {
             if (nextEntryOffset <= 0) {
                 break;
             }
+            if ((long) bufferIndex + nextEntryOffset >= (long) bufferOffset + bufferLength) {
+                break;
+            }
             bufferIndex += nextEntryOffset;
         } while (bufferIndex < bufferOffset + bufferLength);
         this.results = infos.toArray(new FileEntry[infos.size()]);

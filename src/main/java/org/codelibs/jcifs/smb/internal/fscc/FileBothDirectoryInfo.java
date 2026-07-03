@@ -129,6 +129,9 @@ public class FileBothDirectoryInfo implements FileEntry, Decodable {
     @Override
     public int decode(final byte[] buffer, int bufferIndex, final int len) throws SMBProtocolDecodingException {
         final int start = bufferIndex;
+        if (bufferIndex < 0 || (long) bufferIndex + 94 > buffer.length) {
+            throw new SMBProtocolDecodingException("Invalid directory entry: buffer too small");
+        }
         this.nextEntryOffset = SMBUtil.readInt4(buffer, bufferIndex);
         bufferIndex += 4;
         this.fileIndex = SMBUtil.readInt4(buffer, bufferIndex);
@@ -153,6 +156,9 @@ public class FileBothDirectoryInfo implements FileEntry, Decodable {
         bufferIndex += 4;
 
         final int shortNameLength = buffer[bufferIndex] & 0xFF;
+        if (shortNameLength > 24) {
+            throw new SMBProtocolDecodingException("Invalid short name length in directory entry");
+        }
         bufferIndex += 2;
 
         this.shortName = Strings.fromUNIBytes(buffer, bufferIndex, shortNameLength);

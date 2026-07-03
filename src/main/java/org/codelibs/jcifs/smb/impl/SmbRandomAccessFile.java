@@ -313,8 +313,7 @@ public class SmbRandomAccessFile implements SmbRandomAccess {
                     final Smb2WriteResponse resp = th.send(request, RequestParam.NO_RETRY);
                     cnt = resp.getCount();
                 } else {
-                    final SmbComWriteAndX request =
-                            new SmbComWriteAndX(th.getConfig(), fh.getFid(), this.fp, len - w - off, b, off, w, null);
+                    final SmbComWriteAndX request = new SmbComWriteAndX(th.getConfig(), fh.getFid(), this.fp, len - w, b, off, w, null);
                     th.send(request, this.write_andx_resp, RequestParam.NO_RETRY);
                     cnt = this.write_andx_resp.getCount();
                 }

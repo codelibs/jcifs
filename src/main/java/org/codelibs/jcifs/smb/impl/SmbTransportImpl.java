@@ -130,7 +130,7 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
 
     private final int desiredCredits = 512;
 
-    private byte[] preauthIntegrityHash = new byte[64];
+    private volatile byte[] preauthIntegrityHash = new byte[64];
 
     private final Object preauthLock = new Object();
 
