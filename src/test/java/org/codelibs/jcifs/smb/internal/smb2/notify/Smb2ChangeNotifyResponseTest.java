@@ -393,9 +393,9 @@ class Smb2ChangeNotifyResponseTest extends BaseTest {
     }
 
     @Test
-    @DisplayName("Should handle malformed next entry offset")
+    @DisplayName("Should cleanly stop on a next entry offset that overruns the notify buffer")
     void testMalformedNextEntryOffset() throws Exception {
-        // Given - notification with invalid next entry offset
+        // Given - notification whose nextEntryOffset points past the end of the notify buffer
         byte[] buffer = new byte[512];
         int offset = 0;
 
@@ -404,19 +404,44 @@ class Smb2ChangeNotifyResponseTest extends BaseTest {
         // Write structure
         SMBUtil.writeInt2(9, buffer, offset);
         SMBUtil.writeInt2(80 - 64, buffer, offset + 2);
-        SMBUtil.writeInt4(100, buffer, offset + 4);
+        SMBUtil.writeInt4(100, buffer, offset + 4); // notify buffer covers [80, 180)
 
-        // Write notification with next offset beyond buffer
+        // Write notification with next offset beyond the notify buffer window
         int notifyOffset = 80;
-        SMBUtil.writeInt4(500, buffer, notifyOffset); // Invalid - too large
+        SMBUtil.writeInt4(500, buffer, notifyOffset); // 80 + 500 = 580, well past 180
         SMBUtil.writeInt4(1, buffer, notifyOffset + 4);
         SMBUtil.writeInt4(8, buffer, notifyOffset + 8);
         System.arraycopy("test".getBytes("UnicodeLittleUnmarked"), 0, buffer, notifyOffset + 12, 8);
 
-        // When & Then - should handle gracefully
-        assertThrows(Exception.class, () -> {
-            response.readBytesWireFormat(buffer, offset);
-        });
+        // When - the loop-advance guard must break cleanly instead of chasing the bogus
+        // offset into an ArrayIndexOutOfBoundsException
+        int bytesRead = response.readBytesWireFormat(buffer, offset);
+
+        // Then - the single valid entry is decoded and iteration stops
+        assertTrue(bytesRead > 0);
+        List<FileNotifyInformation> notifications = response.getNotifyInformation();
+        assertEquals(1, notifications.size());
+        assertEquals(1, notifications.get(0).getAction());
+        assertEquals("test", notifications.get(0).getFileName());
+    }
+
+    @Test
+    @DisplayName("Should throw exception when buffer offset/length overruns the message buffer")
+    void testOutOfRangeBufferOffset() throws Exception {
+        // Given - structurally valid header, but OutputBufferOffset + OutputBufferLength is
+        // larger than the actual message buffer
+        byte[] buffer = new byte[128];
+        int offset = 0;
+
+        setHeaderStart(response, 64);
+
+        SMBUtil.writeInt2(9, buffer, offset); // Structure size
+        SMBUtil.writeInt2(80 - 64, buffer, offset + 2); // Buffer offset (absolute 80)
+        SMBUtil.writeInt4(100, buffer, offset + 4); // Length -> 80 + 100 = 180 > 128
+
+        // When & Then - an out-of-range offset/length must be rejected with a decoding
+        // exception rather than allowed to drive an out-of-bounds read
+        assertThrows(SMBProtocolDecodingException.class, () -> response.readBytesWireFormat(buffer, offset));
     }
 
     @Test

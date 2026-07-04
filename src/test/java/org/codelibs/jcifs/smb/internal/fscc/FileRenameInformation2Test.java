@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 import org.codelibs.jcifs.smb.internal.SMBProtocolDecodingException;
 import org.codelibs.jcifs.smb.internal.util.SMBUtil;
@@ -317,5 +318,43 @@ class FileRenameInformation2Test {
 
         assertEquals(bytesWritten1, bytesWritten2);
         assertArrayEquals(buffer1, buffer2);
+    }
+
+    @Test
+    @DisplayName("Test encode explicitly zeroes Reserved and RootDirectory over dirty buffer")
+    void testEncodeZerosReservedAndRootDirectory() {
+        int offset = 8;
+        String fileName = "rn.txt";
+        FileRenameInformation2 info = new FileRenameInformation2(fileName, true);
+
+        // Pre-fill the destination with 0xFF so that only bytes the encoder explicitly
+        // writes will be zero - this locks in the explicit zeroing of Reserved/RootDirectory
+        byte[] buffer = new byte[100];
+        Arrays.fill(buffer, (byte) 0xFF);
+
+        int bytesWritten = info.encode(buffer, offset);
+
+        // ReplaceIfExists flag at offset 0
+        assertEquals(1, buffer[offset]);
+
+        // Reserved (7 bytes: offset+1 .. offset+7) must be explicitly zeroed
+        for (int i = 1; i <= 7; i++) {
+            assertEquals(0, buffer[offset + i], "Reserved byte at +" + i + " must be zero");
+        }
+
+        // RootDirectory (8 bytes: offset+8 .. offset+15) must be explicitly zeroed
+        for (int i = 8; i <= 15; i++) {
+            assertEquals(0, buffer[offset + i], "RootDirectory byte at +" + i + " must be zero");
+        }
+
+        // FileName length and bytes remain intact
+        byte[] nameBytes = fileName.getBytes(StandardCharsets.UTF_16LE);
+        assertEquals(nameBytes.length, SMBUtil.readInt4(buffer, offset + 16));
+        byte[] actualName = new byte[nameBytes.length];
+        System.arraycopy(buffer, offset + 20, actualName, 0, nameBytes.length);
+        assertArrayEquals(nameBytes, actualName);
+
+        // Return value equals size()
+        assertEquals(info.size(), bytesWritten);
     }
 }

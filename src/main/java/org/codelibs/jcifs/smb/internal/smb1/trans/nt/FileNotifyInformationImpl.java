@@ -99,6 +99,10 @@ public class FileNotifyInformationImpl implements FileNotifyInformation, Decodab
         this.fileNameLength = SMBUtil.readInt4(buffer, bufferIndex);
         bufferIndex += 4;
 
+        if (this.fileNameLength < 0 || (long) bufferIndex + this.fileNameLength > buffer.length) {
+            throw new SMBProtocolDecodingException("Invalid file notify name length");
+        }
+
         this.fileName = Strings.fromUNIBytes(buffer, bufferIndex, this.fileNameLength);
         bufferIndex += this.fileNameLength;
         return bufferIndex - start;

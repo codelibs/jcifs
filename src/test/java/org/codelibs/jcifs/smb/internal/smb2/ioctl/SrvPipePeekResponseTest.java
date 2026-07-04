@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.codelibs.jcifs.smb.internal.SMBProtocolDecodingException;
 import org.codelibs.jcifs.smb.internal.util.SMBUtil;
@@ -294,5 +295,53 @@ class SrvPipePeekResponseTest {
         for (int i = 0; i < 16; i++) {
             assertEquals(expectedData[i], actualData[i], "Data mismatch at index " + i);
         }
+    }
+
+    @Test
+    @DisplayName("Test decode with length below the 16-byte fixed header throws exception")
+    void testDecodeLengthBelowHeader() {
+        byte[] buffer = new byte[16];
+
+        // A len shorter than the 16-byte fixed header used to underflow new byte[len - 16]
+        // with a NegativeArraySizeException; it must now be a clean decoding exception
+        assertThrows(SMBProtocolDecodingException.class, () -> response.decode(buffer, 0, 8));
+    }
+
+    @Test
+    @DisplayName("Test decode with zero length throws exception")
+    void testDecodeZeroLength() {
+        byte[] buffer = new byte[16];
+
+        assertThrows(SMBProtocolDecodingException.class, () -> response.decode(buffer, 0, 0));
+    }
+
+    @Test
+    @DisplayName("Test decode with length beyond buffer bounds throws exception")
+    void testDecodeLengthBeyondBuffer() {
+        byte[] buffer = new byte[16];
+
+        // len extends past the end of the actual buffer -> reject instead of AIOOBE
+        assertThrows(SMBProtocolDecodingException.class, () -> response.decode(buffer, 0, 32));
+    }
+
+    @Test
+    @DisplayName("Test decode with valid length decodes fields and data without false rejection")
+    void testDecodeValidMinimumLength() throws SMBProtocolDecodingException {
+        byte[] buffer = new byte[24]; // 16-byte header + 8 bytes of data
+        SMBUtil.writeInt4(0x11, buffer, 0);
+        SMBUtil.writeInt4(0x22, buffer, 4);
+        SMBUtil.writeInt4(0x33, buffer, 8);
+        SMBUtil.writeInt4(0x44, buffer, 12);
+        byte[] testData = { 1, 2, 3, 4, 5, 6, 7, 8 };
+        System.arraycopy(testData, 0, buffer, 16, testData.length);
+
+        int bytesDecoded = response.decode(buffer, 0, buffer.length);
+
+        assertEquals(16, bytesDecoded);
+        assertEquals(0x11, response.getNamedPipeState());
+        assertEquals(0x22, response.getReadDataAvailable());
+        assertEquals(0x33, response.getNumberOfMessages());
+        assertEquals(0x44, response.getMessageLength());
+        assertArrayEquals(testData, response.getData());
     }
 }

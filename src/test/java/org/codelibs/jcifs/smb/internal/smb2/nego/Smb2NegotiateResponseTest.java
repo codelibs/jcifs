@@ -547,6 +547,60 @@ class Smb2NegotiateResponseTest {
     }
 
     @Test
+    @DisplayName("Should throw exception when negotiate context offset is out of range")
+    void testReadBytesWireFormatNegotiateContextOffsetOutOfRange() {
+        // Given - a valid 3.1.1 response header whose negotiateContextOffset points past the buffer
+        byte[] buffer = createNegotiateResponseHeader(256, 1, 10000);
+
+        // When & Then - an out-of-range context offset must be rejected with a decoding
+        // exception rather than allowed to drive an out-of-bounds read
+        assertThrows(SMBProtocolDecodingException.class, () -> response.readBytesWireFormat(buffer, 0), "Invalid negotiate context offset");
+    }
+
+    @Test
+    @DisplayName("Should throw exception when negotiate context data length is out of range")
+    void testReadBytesWireFormatNegotiateContextDataLengthOutOfRange() {
+        // Given - a valid 3.1.1 response with an in-range context offset but an oversized data length
+        int ctxOffset = 144;
+        byte[] buffer = createNegotiateResponseHeader(256, 1, ctxOffset);
+        SMBUtil.writeInt2(EncryptionNegotiateContext.NEGO_CTX_ENC_TYPE, buffer, ctxOffset);
+        SMBUtil.writeInt2(200, buffer, ctxOffset + 2); // Data length far beyond the buffer
+
+        // When & Then
+        assertThrows(SMBProtocolDecodingException.class, () -> response.readBytesWireFormat(buffer, 0),
+                "Invalid negotiate context data length");
+    }
+
+    /**
+     * Helper that builds a minimal but structurally valid SMB 3.1.1 negotiate response header
+     * with the given negotiate context count and offset (relative to the header start).
+     */
+    private byte[] createNegotiateResponseHeader(int bufferSize, int negotiateContextCount, int negotiateContextOffset) {
+        byte[] buffer = new byte[bufferSize];
+
+        SMBUtil.writeInt2(65, buffer, 0); // Structure size
+        SMBUtil.writeInt2(Smb2Constants.SMB2_NEGOTIATE_SIGNING_REQUIRED, buffer, 2); // Security mode
+        SMBUtil.writeInt2(0x0311, buffer, 4); // Dialect revision (SMB 3.1.1)
+        SMBUtil.writeInt2(negotiateContextCount, buffer, 6); // Negotiate context count
+
+        // Server GUID (16 bytes) intentionally left zero
+
+        SMBUtil.writeInt4(0, buffer, 24); // Capabilities
+        SMBUtil.writeInt4(1048576, buffer, 28); // Max transact size
+        SMBUtil.writeInt4(1048576, buffer, 32); // Max read size
+        SMBUtil.writeInt4(1048576, buffer, 36); // Max write size
+        SMBUtil.writeTime(System.currentTimeMillis(), buffer, 40); // System time
+        SMBUtil.writeTime(System.currentTimeMillis() - 3600000, buffer, 48); // Server start time
+
+        SMBUtil.writeInt2(128, buffer, 56); // Security buffer offset
+        SMBUtil.writeInt2(0, buffer, 58); // Security buffer length
+
+        SMBUtil.writeInt4(negotiateContextOffset, buffer, 60); // Negotiate context offset
+
+        return buffer;
+    }
+
+    @Test
     @DisplayName("Should write empty bytes to wire format")
     void testWriteBytesWireFormat() {
         // Given

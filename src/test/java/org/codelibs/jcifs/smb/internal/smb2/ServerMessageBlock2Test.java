@@ -860,6 +860,54 @@ class ServerMessageBlock2Test {
 
             assertEquals(128, testMessage.getErrorContextCount(), "ErrorContextCount is a UCHAR and must be read unsigned");
         }
+
+        @Test
+        @DisplayName("Should throw exception when byte count exceeds buffer bounds")
+        void testReadErrorResponseByteCountOutOfRange() {
+            byte[] buffer = new byte[64];
+            int bufferIndex = 0;
+
+            SMBUtil.writeInt2(9, buffer, bufferIndex); // structure size
+            buffer[bufferIndex + 2] = 1; // error context count
+            SMBUtil.writeInt4(1000, buffer, bufferIndex + 4); // byte count far beyond buffer length
+
+            // An out-of-range ByteCount must be rejected with a decoding exception,
+            // not allowed to drive an oversized System.arraycopy (AIOOBE)
+            assertThrows(SMBProtocolDecodingException.class, () -> testMessage.readErrorResponse(buffer, bufferIndex));
+        }
+
+        @Test
+        @DisplayName("Should throw exception when byte count is negative")
+        void testReadErrorResponseNegativeByteCount() {
+            byte[] buffer = new byte[64];
+            int bufferIndex = 0;
+
+            SMBUtil.writeInt2(9, buffer, bufferIndex); // structure size
+            buffer[bufferIndex + 2] = 0; // error context count
+            SMBUtil.writeInt4(-1, buffer, bufferIndex + 4); // negative (unsigned high-bit) byte count
+
+            assertThrows(SMBProtocolDecodingException.class, () -> testMessage.readErrorResponse(buffer, bufferIndex));
+        }
+
+        @Test
+        @DisplayName("Should decode a small in-bounds byte count without false rejection")
+        void testReadErrorResponseByteCountWithinBounds() throws SMBProtocolDecodingException {
+            byte[] buffer = new byte[64];
+            int bufferIndex = 0;
+
+            SMBUtil.writeInt2(9, buffer, bufferIndex); // structure size
+            buffer[bufferIndex + 2] = 1; // error context count
+            SMBUtil.writeInt4(4, buffer, bufferIndex + 4); // small byte count fully inside the buffer
+            for (int i = 0; i < 4; i++) {
+                buffer[bufferIndex + 8 + i] = (byte) (0x10 + i);
+            }
+
+            int bytesRead = testMessage.readErrorResponse(buffer, bufferIndex);
+
+            assertEquals(12, bytesRead); // 8 header + 4 data
+            assertNotNull(testMessage.getErrorData());
+            assertEquals(4, testMessage.getErrorData().length);
+        }
     }
 
     @Nested

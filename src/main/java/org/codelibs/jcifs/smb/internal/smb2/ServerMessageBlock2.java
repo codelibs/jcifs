@@ -681,6 +681,9 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
         final int bc = SMBUtil.readInt4(buffer, bufferIndex);
         bufferIndex += 4;
 
+        if (bc < 0 || (long) bufferIndex + bc > buffer.length) {
+            throw new SMBProtocolDecodingException("Invalid error data length");
+        }
         if (bc > 0) {
             this.errorData = new byte[bc];
             System.arraycopy(buffer, bufferIndex, this.errorData, 0, bc);

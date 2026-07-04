@@ -300,6 +300,48 @@ class FileNotifyInformationImplTest {
         assertEquals("", notifyInfo.getFileName());
     }
 
+    @Test
+    @DisplayName("Test decode with file name length beyond buffer throws exception")
+    void testDecodeFileNameLengthBeyondBuffer() {
+        byte[] buffer = new byte[20];
+        SMBUtil.writeInt4(0, buffer, 0); // nextEntryOffset (aligned)
+        SMBUtil.writeInt4(FileNotifyInformation.FILE_ACTION_ADDED, buffer, 4);
+        SMBUtil.writeInt4(1000, buffer, 8); // fileNameLength far beyond the buffer
+
+        // An out-of-range fileNameLength must be rejected with a decoding exception rather
+        // than allowed to read past the end of the buffer
+        assertThrows(SMBProtocolDecodingException.class, () -> notifyInfo.decode(buffer, 0, buffer.length));
+    }
+
+    @Test
+    @DisplayName("Test decode with negative file name length throws exception")
+    void testDecodeNegativeFileNameLength() {
+        byte[] buffer = new byte[20];
+        SMBUtil.writeInt4(0, buffer, 0); // nextEntryOffset (aligned)
+        SMBUtil.writeInt4(FileNotifyInformation.FILE_ACTION_ADDED, buffer, 4);
+        SMBUtil.writeInt4(-4, buffer, 8); // negative fileNameLength
+
+        assertThrows(SMBProtocolDecodingException.class, () -> notifyInfo.decode(buffer, 0, buffer.length));
+    }
+
+    @Test
+    @DisplayName("Test decode with file name length exactly filling the buffer does not false-reject")
+    void testDecodeFileNameLengthAtBufferBoundary() throws SMBProtocolDecodingException {
+        String fileName = "ok.txt";
+        byte[] nameBytes = fileName.getBytes(StandardCharsets.UTF_16LE);
+        byte[] buffer = new byte[12 + nameBytes.length]; // header + name exactly fills the buffer
+        SMBUtil.writeInt4(0, buffer, 0);
+        SMBUtil.writeInt4(FileNotifyInformation.FILE_ACTION_MODIFIED, buffer, 4);
+        SMBUtil.writeInt4(nameBytes.length, buffer, 8);
+        System.arraycopy(nameBytes, 0, buffer, 12, nameBytes.length);
+
+        int bytesRead = notifyInfo.decode(buffer, 0, buffer.length);
+
+        assertEquals(12 + nameBytes.length, bytesRead);
+        assertEquals(FileNotifyInformation.FILE_ACTION_MODIFIED, notifyInfo.getAction());
+        assertEquals(fileName, notifyInfo.getFileName());
+    }
+
     /**
      * Helper method to create a valid notification buffer
      */

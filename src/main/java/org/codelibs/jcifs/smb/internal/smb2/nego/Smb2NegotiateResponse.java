@@ -534,10 +534,16 @@ public class Smb2NegotiateResponse extends ServerMessageBlock2Response implement
             int ncpos = getHeaderStart() + negotiateContextOffset;
             final NegotiateContextResponse[] contexts = new NegotiateContextResponse[negotiateContextCount];
             for (int i = 0; i < negotiateContextCount; i++) {
+                if (ncpos < 0 || (long) ncpos + 8 > buffer.length) {
+                    throw new SMBProtocolDecodingException("Invalid negotiate context offset");
+                }
                 final int type = SMBUtil.readInt2(buffer, ncpos);
                 final int dataLen = SMBUtil.readInt2(buffer, ncpos + 2);
                 ncpos += 4;
                 ncpos += 4; // Reserved
+                if ((long) ncpos + dataLen > buffer.length) {
+                    throw new SMBProtocolDecodingException("Invalid negotiate context data length");
+                }
                 final NegotiateContextResponse ctx = createContext(type);
                 if (ctx != null) {
                     ctx.decode(buffer, ncpos, dataLen);

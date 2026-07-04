@@ -92,6 +92,9 @@ public class SrvPipePeekResponse implements Decodable {
      */
     @Override
     public int decode(final byte[] buffer, int bufferIndex, final int len) throws SMBProtocolDecodingException {
+        if (len < 16 || (long) bufferIndex + len > buffer.length) {
+            throw new SMBProtocolDecodingException("Invalid pipe peek response length");
+        }
         final int start = bufferIndex;
         this.namedPipeState = SMBUtil.readInt4(buffer, bufferIndex);
         bufferIndex += 4;

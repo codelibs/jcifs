@@ -595,4 +595,39 @@ class Smb2ReadResponseTest extends BaseTest {
         assertEquals(dataOffsetFromHeader + 10 - bodyStart, bytesRead);
         assertEquals(10, response.getDataLength());
     }
+
+    @Test
+    @DisplayName("Should treat a data offset with the high bit set as unsigned")
+    void testReadBytesWireFormatUnsignedDataOffsetHighBit() throws Exception {
+        // Given - DataOffset byte = 0x90 (144). Read as a signed byte this is -112, which
+        // would make the data start negative and be rejected; it must be read unsigned.
+        byte[] buffer = new byte[256];
+        int bodyStart = 0;
+        int dataLength = 8;
+        int dataOffsetValue = 0x90; // 144
+
+        SMBUtil.writeInt2(17, buffer, bodyStart);
+        buffer[bodyStart + 2] = (byte) dataOffsetValue;
+        SMBUtil.writeInt4(dataLength, buffer, bodyStart + 4);
+        SMBUtil.writeInt4(0, buffer, bodyStart + 8);
+        SMBUtil.writeInt4(0, buffer, bodyStart + 12);
+
+        // Distinct payload written at the unsigned offset so a wrong offset would be detected
+        byte[] testData = { (byte) 0xD1, (byte) 0xD2, (byte) 0xD3, (byte) 0xD4, (byte) 0xD5, (byte) 0xD6, (byte) 0xD7, (byte) 0xD8 };
+        System.arraycopy(testData, 0, buffer, dataOffsetValue, testData.length);
+
+        // Use reflection to set headerStart
+        Field headerStartField = ServerMessageBlock2.class.getDeclaredField("headerStart");
+        headerStartField.setAccessible(true);
+        headerStartField.set(response, 0);
+
+        // When
+        int bytesRead = response.readBytesWireFormat(buffer, bodyStart);
+
+        // Then - decoding succeeds and the data is read from the correct (unsigned) offset
+        assertEquals(dataOffsetValue + dataLength - bodyStart, bytesRead);
+        assertEquals(dataLength, response.getDataLength());
+        byte[] copiedData = Arrays.copyOfRange(outputBuffer, 0, dataLength);
+        assertArrayEquals(testData, copiedData);
+    }
 }

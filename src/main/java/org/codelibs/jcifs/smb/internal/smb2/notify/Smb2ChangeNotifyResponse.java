@@ -83,12 +83,19 @@ public class Smb2ChangeNotifyResponse extends ServerMessageBlock2Response implem
         final int len = SMBUtil.readInt4(buffer, bufferIndex);
         bufferIndex += 4;
 
+        if (len < 0 || bufferOffset < 0 || (long) bufferOffset + len > buffer.length) {
+            throw new SMBProtocolDecodingException("Invalid change notify buffer offset/length");
+        }
+
         int elemStart = bufferOffset;
         FileNotifyInformationImpl i = new FileNotifyInformationImpl();
         bufferIndex += i.decode(buffer, bufferOffset, len);
         this.notifyInformation.add(i);
 
         while (i.getNextEntryOffset() > 0 && bufferIndex < bufferOffset + len) {
+            if ((long) elemStart + i.getNextEntryOffset() >= (long) bufferOffset + len) {
+                break;
+            }
             bufferIndex = elemStart + i.getNextEntryOffset();
             elemStart = bufferIndex;
 
