@@ -110,7 +110,7 @@ public class SecurityDescriptor implements SecurityInfo {
     public int decode(final byte[] buffer, int bufferIndex, final int len) throws SMBProtocolDecodingException {
         final int start = bufferIndex;
 
-        if ((long) start + 20 > buffer.length) {
+        if (start < 0 || (long) start + 20 > buffer.length) {
             throw new SMBProtocolDecodingException("Invalid SecurityDescriptor");
         }
 
