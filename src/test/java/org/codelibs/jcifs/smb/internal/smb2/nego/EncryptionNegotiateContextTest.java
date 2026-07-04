@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.codelibs.jcifs.smb.Configuration;
@@ -515,6 +516,43 @@ class EncryptionNegotiateContextTest {
 
             assertEquals(EncryptionNegotiateContext.NEGO_CTX_ENC_TYPE, request.getContextType());
             assertEquals(EncryptionNegotiateContext.NEGO_CTX_ENC_TYPE, response.getContextType());
+        }
+    }
+
+    @Nested
+    @DisplayName("Decode Bounds Guard Tests")
+    class DecodeBoundsGuardTests {
+
+        @Test
+        @DisplayName("Should reject decode when cipher count exceeds the buffer")
+        void testDecodeRejectsHugeCipherCount() {
+            byte[] smallBuffer = new byte[8];
+            SMBUtil.writeInt2(0xFFFF, smallBuffer, 0); // CipherCount = 65535, far beyond the buffer
+
+            EncryptionNegotiateContext context = new EncryptionNegotiateContext();
+            // Without the bounds guard the ciphers array is over-allocated and the read loop walks
+            // past the buffer, throwing ArrayIndexOutOfBoundsException instead of a decoding exception.
+            assertThrows(SMBProtocolDecodingException.class, () -> context.decode(smallBuffer, 0, smallBuffer.length));
+        }
+
+        @Test
+        @DisplayName("Should decode a valid context sized exactly to the buffer without false-reject")
+        void testDecodeValidContextAtExactBufferBoundary() throws SMBProtocolDecodingException {
+            byte[] exactBuffer = new byte[2 + 2 * 2]; // CipherCount + two ciphers
+            SMBUtil.writeInt2(2, exactBuffer, 0); // CipherCount = 2
+            SMBUtil.writeInt2(EncryptionNegotiateContext.CIPHER_AES128_CCM, exactBuffer, 2);
+            SMBUtil.writeInt2(EncryptionNegotiateContext.CIPHER_AES128_GCM, exactBuffer, 4);
+
+            EncryptionNegotiateContext context = new EncryptionNegotiateContext();
+            int bytesRead = context.decode(exactBuffer, 0, exactBuffer.length);
+
+            assertEquals(exactBuffer.length, bytesRead);
+            assertNotNull(context.getCiphers());
+            assertEquals(2, context.getCiphers().length);
+            assertEquals(EncryptionNegotiateContext.CIPHER_AES128_CCM, context.getCiphers()[0]);
+            assertEquals(EncryptionNegotiateContext.CIPHER_AES128_GCM, context.getCiphers()[1]);
+            assertArrayEquals(new int[] { EncryptionNegotiateContext.CIPHER_AES128_CCM, EncryptionNegotiateContext.CIPHER_AES128_GCM },
+                    context.getCiphers());
         }
     }
 }

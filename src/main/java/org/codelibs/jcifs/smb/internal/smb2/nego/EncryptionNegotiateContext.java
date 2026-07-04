@@ -114,6 +114,10 @@ public class EncryptionNegotiateContext implements NegotiateContextRequest, Nego
         final int nciphers = SMBUtil.readInt2(buffer, bufferIndex);
         bufferIndex += 2;
 
+        if ((long) bufferIndex + 2L * nciphers > buffer.length) {
+            throw new SMBProtocolDecodingException("Invalid encryption negotiate context");
+        }
+
         this.ciphers = new int[nciphers];
         for (int i = 0; i < nciphers; i++) {
             this.ciphers[i] = SMBUtil.readInt2(buffer, bufferIndex);

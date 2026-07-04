@@ -86,6 +86,10 @@ public class FileNotifyInformationImpl implements FileNotifyInformation, Decodab
         }
         final int start = bufferIndex;
 
+        if ((long) bufferIndex + 12 > buffer.length) {
+            throw new SMBProtocolDecodingException("Invalid file notify information");
+        }
+
         this.nextEntryOffset = SMBUtil.readInt4(buffer, bufferIndex);
         bufferIndex += 4;
 

@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
@@ -806,6 +807,63 @@ class PreauthIntegrityNegotiateContextTest {
             PreauthIntegrityNegotiateContext context = new PreauthIntegrityNegotiateContext(mockConfig, new int[] { 0x01 }, null);
 
             assertNull(context.getSalt());
+        }
+    }
+
+    @Nested
+    @DisplayName("Decode Bounds Guard Tests")
+    class DecodeBoundsGuardTests {
+
+        @Test
+        @DisplayName("Should reject decode when salt length exceeds the buffer")
+        void testDecodeRejectsHugeSaltLength() {
+            byte[] smallBuffer = new byte[8];
+            SMBUtil.writeInt2(1, smallBuffer, 0); // HashAlgorithmCount = 1
+            SMBUtil.writeInt2(0xFFFF, smallBuffer, 2); // SaltLength = 65535, far beyond the buffer
+
+            PreauthIntegrityNegotiateContext context = new PreauthIntegrityNegotiateContext();
+            // Without the bounds guard the salt is over-allocated and the arraycopy reads past the
+            // buffer, throwing ArrayIndexOutOfBoundsException instead of a decoding exception.
+            assertThrows(SMBProtocolDecodingException.class, () -> context.decode(smallBuffer, 0, smallBuffer.length));
+        }
+
+        @Test
+        @DisplayName("Should reject decode when hash algorithm count exceeds the buffer")
+        void testDecodeRejectsHugeHashAlgoCount() {
+            byte[] smallBuffer = new byte[8];
+            SMBUtil.writeInt2(0xFFFF, smallBuffer, 0); // HashAlgorithmCount = 65535, far beyond the buffer
+            SMBUtil.writeInt2(0, smallBuffer, 2); // SaltLength = 0
+
+            PreauthIntegrityNegotiateContext context = new PreauthIntegrityNegotiateContext();
+            // Without the bounds guard the hash-algo read loop walks past the buffer, throwing
+            // ArrayIndexOutOfBoundsException instead of a decoding exception.
+            assertThrows(SMBProtocolDecodingException.class, () -> context.decode(smallBuffer, 0, smallBuffer.length));
+        }
+
+        @Test
+        @DisplayName("Should decode a valid context sized exactly to the buffer without false-reject")
+        void testDecodeValidContextAtExactBufferBoundary() throws SMBProtocolDecodingException {
+            int nsalt = 32;
+            byte[] exactBuffer = new byte[4 + 2 + nsalt]; // header + one hash algo + salt
+            SMBUtil.writeInt2(1, exactBuffer, 0); // HashAlgorithmCount = 1
+            SMBUtil.writeInt2(nsalt, exactBuffer, 2); // SaltLength = 32
+            SMBUtil.writeInt2(PreauthIntegrityNegotiateContext.HASH_ALGO_SHA512, exactBuffer, 4);
+            byte[] salt = new byte[nsalt];
+            for (int i = 0; i < nsalt; i++) {
+                salt[i] = (byte) (i + 1);
+            }
+            System.arraycopy(salt, 0, exactBuffer, 6, nsalt);
+
+            PreauthIntegrityNegotiateContext context = new PreauthIntegrityNegotiateContext();
+            int bytesRead = context.decode(exactBuffer, 0, exactBuffer.length);
+
+            assertEquals(exactBuffer.length, bytesRead);
+            assertNotNull(context.getHashAlgos());
+            assertEquals(1, context.getHashAlgos().length);
+            assertEquals(PreauthIntegrityNegotiateContext.HASH_ALGO_SHA512, context.getHashAlgos()[0]);
+            assertNotNull(context.getSalt());
+            assertEquals(nsalt, context.getSalt().length);
+            assertArrayEquals(salt, context.getSalt());
         }
     }
 }

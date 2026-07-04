@@ -130,6 +130,10 @@ public class PreauthIntegrityNegotiateContext implements NegotiateContextRequest
         final int nsalt = SMBUtil.readInt2(buffer, bufferIndex + 2);
         bufferIndex += 4;
 
+        if ((long) bufferIndex + 2L * nalgos + nsalt > buffer.length) {
+            throw new SMBProtocolDecodingException("Invalid preauth integrity negotiate context");
+        }
+
         this.hashAlgos = new int[nalgos];
         for (int i = 0; i < nalgos; i++) {
             this.hashAlgos[i] = SMBUtil.readInt2(buffer, bufferIndex);
