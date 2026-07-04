@@ -110,6 +110,10 @@ public class SecurityDescriptor implements SecurityInfo {
     public int decode(final byte[] buffer, int bufferIndex, final int len) throws SMBProtocolDecodingException {
         final int start = bufferIndex;
 
+        if ((long) start + 20 > buffer.length) {
+            throw new SMBProtocolDecodingException("Invalid SecurityDescriptor");
+        }
+
         bufferIndex++; // revision
         bufferIndex++;
         this.type = SMBUtil.readInt2(buffer, bufferIndex);
@@ -121,6 +125,11 @@ public class SecurityDescriptor implements SecurityInfo {
         SMBUtil.readInt4(buffer, bufferIndex); // offset to sacl
         bufferIndex += 4;
         final int daclOffset = SMBUtil.readInt4(buffer, bufferIndex);
+
+        if (ownerUOffset < 0 || ownerGOffset < 0 || daclOffset < 0 || (long) start + ownerUOffset > buffer.length
+                || (long) start + ownerGOffset > buffer.length || (long) start + daclOffset > buffer.length) {
+            throw new SMBProtocolDecodingException("Invalid SecurityDescriptor offset");
+        }
 
         if (ownerUOffset > 0) {
             bufferIndex = start + ownerUOffset;
@@ -137,6 +146,9 @@ public class SecurityDescriptor implements SecurityInfo {
         bufferIndex = start + daclOffset;
 
         if (daclOffset > 0) {
+            if ((long) start + daclOffset + 8 > buffer.length) {
+                throw new SMBProtocolDecodingException("Invalid SecurityDescriptor");
+            }
             bufferIndex++; // revision
             bufferIndex++;
             SMBUtil.readInt2(buffer, bufferIndex);
@@ -144,12 +156,15 @@ public class SecurityDescriptor implements SecurityInfo {
             final int numAces = SMBUtil.readInt4(buffer, bufferIndex);
             bufferIndex += 4;
 
-            if (numAces > 4096) {
+            if (numAces < 0 || numAces > 4096) {
                 throw new SMBProtocolDecodingException("Invalid SecurityDescriptor");
             }
 
             this.aces = new ACE[numAces];
             for (int i = 0; i < numAces; i++) {
+                if ((long) bufferIndex + 8 > buffer.length) {
+                    throw new SMBProtocolDecodingException("Invalid SecurityDescriptor");
+                }
                 this.aces[i] = new ACE();
                 bufferIndex += this.aces[i].decode(buffer, bufferIndex, len - bufferIndex);
             }

@@ -366,6 +366,85 @@ class SecurityDescriptorTest {
         assertEquals(1, securityDescriptor.getAces().length);
     }
 
+    @Test
+    @DisplayName("Test decode throws for buffer too short for the 20-byte header")
+    void testDecodeThrowsForBufferTooShortForHeader() {
+        // A 10-byte buffer is smaller than the fixed 20-byte SecurityDescriptor header
+        byte[] shortBuffer = new byte[10];
+
+        assertThrows(SMBProtocolDecodingException.class, () -> securityDescriptor.decode(shortBuffer, 0, shortBuffer.length),
+                "Should throw for a buffer smaller than the 20-byte header");
+    }
+
+    @Test
+    @DisplayName("Test decode throws when owner offset points past the buffer")
+    void testDecodeThrowsForOwnerOffsetPastBuffer() {
+        // Valid 20-byte header, but the owner SID offset points well past the end of the buffer
+        byte[] buffer = new byte[24];
+        buffer[0] = 0x01; // revision
+        buffer[1] = 0x00; // padding
+        SMBUtil.writeInt2(0x8004, buffer, 2); // type
+        SMBUtil.writeInt4(1000, buffer, 4); // owner offset (past buffer)
+        SMBUtil.writeInt4(0, buffer, 8); // group offset
+        SMBUtil.writeInt4(0, buffer, 12); // SACL offset
+        SMBUtil.writeInt4(0, buffer, 16); // DACL offset
+
+        assertThrows(SMBProtocolDecodingException.class, () -> securityDescriptor.decode(buffer, 0, buffer.length),
+                "Should throw when the owner offset points past the buffer");
+    }
+
+    @Test
+    @DisplayName("Test decode throws for negative ACE count (guards against NegativeArraySizeException)")
+    void testDecodeThrowsForNegativeAceCount() {
+        // Header with a DACL whose numAces field is 0x80000000, i.e. negative when read as a signed int
+        byte[] buffer = new byte[64];
+        buffer[0] = 0x01; // revision
+        buffer[1] = 0x00; // padding
+        SMBUtil.writeInt2(0x8004, buffer, 2); // type
+        SMBUtil.writeInt4(0, buffer, 4); // owner offset
+        SMBUtil.writeInt4(0, buffer, 8); // group offset
+        SMBUtil.writeInt4(0, buffer, 12); // SACL offset
+        SMBUtil.writeInt4(20, buffer, 16); // DACL offset
+
+        // DACL header at offset 20
+        buffer[20] = 0x02; // revision
+        buffer[21] = 0x00; // padding
+        SMBUtil.writeInt2(0, buffer, 22); // size
+        SMBUtil.writeInt4(0x80000000L, buffer, 24); // ACE count = negative
+
+        assertThrows(SMBProtocolDecodingException.class, () -> securityDescriptor.decode(buffer, 0, buffer.length),
+                "Should throw for a negative ACE count instead of raising NegativeArraySizeException");
+    }
+
+    @Test
+    @DisplayName("Test decode accepts owner SID plus a DACL with two ACEs (no false reject)")
+    void testDecodeOwnerAndDaclWithAcesValid() throws SMBProtocolDecodingException {
+        // Well-formed descriptor: header (20 bytes), owner SID at offset 20, DACL with 2 ACEs at offset 32
+        testBuffer[0] = 0x01; // revision
+        testBuffer[1] = 0x00; // padding
+        SMBUtil.writeInt2(0x8004, testBuffer, 2); // type
+        SMBUtil.writeInt4(20, testBuffer, 4); // owner offset
+        SMBUtil.writeInt4(0, testBuffer, 8); // group offset
+        SMBUtil.writeInt4(0, testBuffer, 12); // SACL offset
+        SMBUtil.writeInt4(32, testBuffer, 16); // DACL offset
+
+        // Owner SID (simple, single sub-authority) at offset 20, occupying bytes 20..31
+        prepareSimpleSid(testBuffer, 20);
+
+        // DACL header at offset 32, then two 32-byte ACEs at offsets 40 and 72
+        prepareDaclHeader(testBuffer, 32, 2);
+        prepareSimpleAce(testBuffer, 40);
+        prepareSimpleAce(testBuffer, 72);
+
+        int size = securityDescriptor.decode(testBuffer, 0, testBuffer.length);
+
+        assertTrue(size > 0);
+        assertNotNull(securityDescriptor.getOwnerUserSid());
+        assertEquals(1, securityDescriptor.getOwnerUserSid().sub_authority_count);
+        assertNotNull(securityDescriptor.getAces());
+        assertEquals(2, securityDescriptor.getAces().length);
+    }
+
     // Helper methods
 
     private void prepareMinimalSecurityDescriptorBuffer(byte[] buffer, int offset, boolean includeOwner, boolean includeGroup,

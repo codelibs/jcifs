@@ -649,4 +649,68 @@ public class ReferralTest {
 
         assertArrayEquals(expectedNames, referral.getExpandedNames());
     }
+
+    // Bounds Guard Tests
+
+    @Test
+    @DisplayName("Throw for a truncated referral shorter than the 8-byte header")
+    public void shouldThrowForTruncatedReferral() {
+        // Buffer smaller than the fixed 8-byte referral header
+        byte[] shortBuffer = new byte[6];
+
+        RuntimeCIFSException ex = assertThrows(RuntimeCIFSException.class, () -> new Referral().decode(shortBuffer, 0, shortBuffer.length),
+                "Should throw for a truncated referral header");
+        assertTrue(ex.getMessage().contains("Invalid referral"));
+    }
+
+    @Test
+    @DisplayName("Throw for version 3 referral whose path offset points past the buffer")
+    public void shouldThrowForVersion3PathOffsetPastBuffer() {
+        // Valid v3 header, but pathOffset points well past the end of the buffer so readString would over-read
+        byte[] buffer = new byte[20];
+        ByteBuffer bb = ByteBuffer.wrap(buffer).order(ByteOrder.LITTLE_ENDIAN);
+        bb.putShort((short) 3); // version
+        bb.putShort((short) 18); // size
+        bb.putShort((short) 1); // serverType
+        bb.putShort((short) 0); // rflags (no name list)
+        bb.putShort((short) 5); // proximity
+        bb.putShort((short) 300); // ttl
+        bb.putShort((short) 1000); // pathOffset (past buffer)
+        bb.putShort((short) 0); // altPathOffset
+        bb.putShort((short) 0); // nodeOffset
+
+        RuntimeCIFSException ex = assertThrows(RuntimeCIFSException.class, () -> new Referral().decode(buffer, 0, buffer.length),
+                "Should throw when a v3 string offset points past the buffer");
+        assertTrue(ex.getMessage().contains("Invalid referral"));
+    }
+
+    @Test
+    @DisplayName("Decode version 3 referral whose node string terminates exactly at the buffer end (no false reject / no truncation)")
+    public void shouldDecodeVersion3WithStringAtBufferEnd() {
+        // Header (v3, no name list) = 18 bytes; node "NODE" = 8 bytes at 18..25, terminator at 26..27
+        // Buffer length is exactly 28 so the terminator occupies the last two bytes; the maxLen cap must not truncate it.
+        byte[] buffer = new byte[28];
+        ByteBuffer bb = ByteBuffer.wrap(buffer).order(ByteOrder.LITTLE_ENDIAN);
+        bb.putShort((short) 3); // version
+        bb.putShort((short) 28); // size
+        bb.putShort((short) 1); // serverType
+        bb.putShort((short) 0); // rflags (no name list)
+        bb.putShort((short) 5); // proximity
+        bb.putShort((short) 300); // ttl
+        bb.putShort((short) 0); // pathOffset (none)
+        bb.putShort((short) 0); // altPathOffset (none)
+        bb.putShort((short) 18); // nodeOffset
+
+        bb.position(18);
+        bb.put("NODE".getBytes(StandardCharsets.UTF_16LE)); // 8 bytes: 18..25
+        bb.putShort((short) 0); // terminator at 26..27 (last two bytes of the buffer)
+
+        Referral ref = new Referral();
+        int decodedSize = ref.decode(buffer, 0, buffer.length);
+
+        assertEquals(28, decodedSize);
+        assertEquals("NODE", ref.getNode()); // full string returned, not truncated by the maxLen cap
+        assertNull(ref.getRpath());
+        assertNull(ref.getAltPath());
+    }
 }

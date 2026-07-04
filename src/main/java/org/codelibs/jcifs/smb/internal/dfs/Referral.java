@@ -156,6 +156,10 @@ public class Referral implements Decodable {
     public int decode(final byte[] buffer, int bufferIndex, final int len) {
         final int start = bufferIndex;
 
+        if (bufferIndex < 0 || (long) bufferIndex + 8 > buffer.length) {
+            throw new RuntimeCIFSException("Invalid referral");
+        }
+
         this.version = SMBUtil.readInt2(buffer, bufferIndex);
         if (this.version != 3 && this.version != 1) {
             throw new RuntimeCIFSException(
@@ -169,6 +173,9 @@ public class Referral implements Decodable {
         this.rflags = SMBUtil.readInt2(buffer, bufferIndex);
         bufferIndex += 2;
         if (this.version == 3) {
+            if ((long) bufferIndex + 10 > buffer.length) {
+                throw new RuntimeCIFSException("Invalid referral");
+            }
             this.proximity = SMBUtil.readInt2(buffer, bufferIndex);
             bufferIndex += 2;
             this.ttl = SMBUtil.readInt2(buffer, bufferIndex);
@@ -226,7 +233,11 @@ public class Referral implements Decodable {
         if (bufferIndex % 2 != 0) {
             bufferIndex++;
         }
-        return Strings.fromUNIBytes(buffer, bufferIndex, Strings.findUNITermination(buffer, bufferIndex, len));
+        if (bufferIndex < 0 || (long) bufferIndex + 2 > buffer.length) {
+            throw new RuntimeCIFSException("Invalid referral string offset");
+        }
+        final int maxLen = Math.min(len, buffer.length - bufferIndex - 2);
+        return Strings.fromUNIBytes(buffer, bufferIndex, Strings.findUNITermination(buffer, bufferIndex, maxLen));
     }
 
     @Override

@@ -125,14 +125,21 @@ public class SID extends rpc.sid_t implements org.codelibs.jcifs.smb.SID {
      * @param si the starting index in the array
      */
     public SID(final byte[] src, int si) {
+        final int start = si;
+        if (si < 0 || (long) si + 8 > src.length) {
+            throw new RuntimeCIFSException("Invalid SID: buffer too short");
+        }
         this.revision = src[si];
         si++;
         this.sub_authority_count = src[si++];
         this.identifier_authority = new byte[6];
         System.arraycopy(src, si, this.identifier_authority, 0, 6);
         si += 6;
-        if (this.sub_authority_count > 100) {
+        if (this.sub_authority_count < 0 || this.sub_authority_count > 100) {
             throw new RuntimeCIFSException("Invalid SID sub_authority_count");
+        }
+        if ((long) start + 8 + 4L * this.sub_authority_count > src.length) {
+            throw new RuntimeCIFSException("Invalid SID: sub authorities exceed buffer");
         }
         this.sub_authority = new int[this.sub_authority_count];
         for (int i = 0; i < this.sub_authority_count; i++) {

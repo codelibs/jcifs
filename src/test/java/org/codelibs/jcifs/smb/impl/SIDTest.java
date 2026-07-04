@@ -24,6 +24,7 @@ import java.util.Arrays;
 
 import org.codelibs.jcifs.smb.CIFSContext;
 import org.codelibs.jcifs.smb.CIFSException;
+import org.codelibs.jcifs.smb.RuntimeCIFSException;
 import org.codelibs.jcifs.smb.SidResolver;
 import org.codelibs.jcifs.smb.dcerpc.rpc;
 import org.junit.jupiter.api.BeforeEach;
@@ -128,6 +129,49 @@ class SIDTest {
             // Act + Assert
             RuntimeException ex = assertThrows(RuntimeException.class, () -> new SID(bytes, 0));
             assertTrue(ex.getMessage().contains("Invalid SID sub_authority_count"));
+        }
+
+        @Test
+        @DisplayName("Binary constructor rejects buffer too short for the 8-byte fixed header")
+        void testBinaryConstructorBufferTooShort() {
+            // Arrange: only 6 bytes, fewer than the fixed 8-byte SID header (revision + count + 6-byte authority)
+            byte[] tooShort = new byte[6];
+            tooShort[0] = 1; // revision
+
+            // Act + Assert
+            RuntimeCIFSException ex = assertThrows(RuntimeCIFSException.class, () -> new SID(tooShort, 0));
+            assertTrue(ex.getMessage().contains("buffer too short"));
+        }
+
+        @Test
+        @DisplayName("Binary constructor rejects sub_authority_count that exceeds the buffer")
+        void testBinaryConstructorSubAuthoritiesExceedBuffer() {
+            // Arrange: header claims 5 sub-authorities, but the buffer only holds 2 (8 + 2*4 = 16 bytes)
+            byte[] bytes = new byte[8 + 2 * 4];
+            bytes[0] = 1; // revision
+            bytes[1] = 5; // sub_authority_count says 5, buffer only holds 2
+
+            // Act + Assert
+            RuntimeCIFSException ex = assertThrows(RuntimeCIFSException.class, () -> new SID(bytes, 0));
+            assertTrue(ex.getMessage().contains("sub authorities exceed buffer"));
+        }
+
+        @Test
+        @DisplayName("Binary constructor accepts a well-formed SID sized exactly to the buffer (no false reject)")
+        void testBinaryConstructorExactFitBoundary() {
+            // Arrange: S-1-5-21-1-2-3-1029, 5 sub-authorities, buffer sized exactly 8 + 5*4 = 28
+            byte[] ident = new byte[] { 0, 0, 0, 0, 0, 5 };
+            byte[] bytes = SID.toByteArray(buildSidT((byte) 1, ident, 21, 1, 2, 3, 1029));
+            assertEquals(28, bytes.length); // exact fit: no trailing slack
+
+            // Act: an exactly-sized buffer must be accepted, not rejected by the new bounds guard
+            SID sid = new SID(bytes, 0);
+
+            // Assert
+            assertEquals(1, sid.revision);
+            assertEquals(5, sid.sub_authority_count);
+            assertEquals("S-1-5-21-1-2-3-1029", sid.toString());
+            assertEquals(1029, sid.getRid());
         }
 
         @Test
