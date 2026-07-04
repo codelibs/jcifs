@@ -12,6 +12,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 import org.codelibs.jcifs.smb.Configuration;
+import org.codelibs.jcifs.smb.RuntimeCIFSException;
 import org.codelibs.jcifs.smb.internal.dtyp.SecurityDescriptor;
 import org.codelibs.jcifs.smb.internal.util.SMBUtil;
 import org.junit.jupiter.api.BeforeEach;
@@ -151,16 +152,17 @@ class NtTransQuerySecurityDescResponseTest {
     }
 
     @Test
-    @DisplayName("Test readDataWireFormat with IOException throws ArrayIndexOutOfBoundsException")
+    @DisplayName("Test readDataWireFormat with too-small buffer throws RuntimeCIFSException")
     void testReadDataWireFormatWithIOException() throws Exception {
-        // Create an invalid security descriptor buffer that will cause ArrayIndexOutOfBoundsException
+        // Create an invalid security descriptor buffer that is too small to decode
         byte[] buffer = new byte[4];
 
         // Set error code to 0
         setErrorCode(response, 0);
 
-        // ArrayIndexOutOfBoundsException is thrown when buffer is too small
-        assertThrows(ArrayIndexOutOfBoundsException.class, () -> {
+        // decode rejects the too-small buffer with a controlled SMBProtocolDecodingException,
+        // which readDataWireFormat surfaces as a RuntimeCIFSException
+        assertThrows(RuntimeCIFSException.class, () -> {
             response.readDataWireFormat(buffer, 0, buffer.length);
         });
     }
@@ -218,8 +220,9 @@ class NtTransQuerySecurityDescResponseTest {
 
         setErrorCode(response, 0);
 
-        // ArrayIndexOutOfBoundsException is thrown when buffer is too small
-        assertThrows(ArrayIndexOutOfBoundsException.class, () -> {
+        // decode rejects the zero-length buffer with a controlled SMBProtocolDecodingException,
+        // which readDataWireFormat surfaces as a RuntimeCIFSException
+        assertThrows(RuntimeCIFSException.class, () -> {
             response.readDataWireFormat(buffer, 0, 0);
         });
     }

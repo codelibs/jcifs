@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.lang.reflect.Field;
 
 import org.codelibs.jcifs.smb.dcerpc.DcerpcConstants;
+import org.codelibs.jcifs.smb.internal.SMBProtocolDecodingException;
 import org.codelibs.jcifs.smb.internal.dtyp.ACE;
 import org.codelibs.jcifs.smb.internal.dtyp.SecurityDescriptor;
 import org.junit.jupiter.api.BeforeEach;
@@ -187,8 +188,9 @@ class MsrpcShareGetInfoTest {
         infoField.setAccessible(true);
         infoField.set(msrpcShareGetInfo, info502);
 
-        // Test getSecurity with empty descriptor - should throw exception
-        assertThrows(ArrayIndexOutOfBoundsException.class, () -> {
+        // Test getSecurity with empty descriptor - decode rejects the malformed
+        // (too short for the fixed 20-byte header) buffer with a controlled exception
+        assertThrows(SMBProtocolDecodingException.class, () -> {
             msrpcShareGetInfo.getSecurity();
         });
     }
@@ -230,15 +232,16 @@ class MsrpcShareGetInfoTest {
         // Test when sd_size doesn't match actual array size
         srvsvc.ShareInfo502 info502 = new srvsvc.ShareInfo502();
         info502.security_descriptor = new byte[] { 1, 2, 3, 4 };
-        info502.sd_size = 100; // Mismatched size - SecurityDescriptor will try to read beyond array bounds
+        info502.sd_size = 100; // Mismatched size - buffer is too short for the descriptor
 
         // Replace info field
         Field infoField = msrpcShareGetInfo.getClass().getSuperclass().getDeclaredField("info");
         infoField.setAccessible(true);
         infoField.set(msrpcShareGetInfo, info502);
 
-        // This should throw an ArrayIndexOutOfBoundsException when trying to read beyond array
-        assertThrows(ArrayIndexOutOfBoundsException.class, () -> {
+        // decode rejects the truncated buffer with a controlled exception instead of
+        // reading beyond the array bounds
+        assertThrows(SMBProtocolDecodingException.class, () -> {
             msrpcShareGetInfo.getSecurity();
         });
     }
@@ -322,8 +325,9 @@ class MsrpcShareGetInfoTest {
         infoField.setAccessible(true);
         infoField.set(msrpcShareGetInfo, info502);
 
-        // Test getSecurity with special bytes - should throw exception due to invalid format
-        assertThrows(ArrayIndexOutOfBoundsException.class, () -> {
+        // Test getSecurity with special bytes - decode rejects the invalid/undersized
+        // descriptor with a controlled exception due to invalid format
+        assertThrows(SMBProtocolDecodingException.class, () -> {
             msrpcShareGetInfo.getSecurity();
         });
     }
