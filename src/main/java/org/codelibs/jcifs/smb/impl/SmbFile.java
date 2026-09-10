@@ -419,6 +419,9 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
      * as a file or directory. The second parameter is a relative path from
      * the <code>parent SmbFile</code>. See the description above for examples
      * of using the second <code>name</code> parameter.
+     * <p>
+     * The <code>context</code> is always treated as the directory the name is resolved in, even if its URL does not
+     * carry the trailing slash that a directory URL is required to have.
      *
      * @param context
      *            A base <code>SmbFile</code> that serves as the parent resource
@@ -432,7 +435,7 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
      */
     public SmbFile(final SmbResource context, final String name) throws MalformedURLException, UnknownHostException {
         this(isWorkgroup(context) ? new URL(null, "smb://" + checkName(name), context.getContext().getUrlHandler())
-                : new URL(context.getLocator().getURL(), encodeRelativePath(checkName(name)), context.getContext().getUrlHandler()),
+                : new URL(getBaseURL(context), encodeRelativePath(checkName(name)), context.getContext().getUrlHandler()),
                 context.getContext());
         setContext(context, name);
     }
@@ -470,8 +473,7 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
     SmbFile(final SmbResource context, final String name, final boolean loadedAttributes, final int type, final int attributes,
             final long createTime, final long lastModified, final long lastAccess, final long size) throws MalformedURLException {
         this(isWorkgroup(context) ? new URL(null, "smb://" + checkName(name) + "/", context.getContext().getUrlHandler())
-                : new URL(context.getLocator().getURL(),
-                        encodeRelativePath(checkName(name)) + ((attributes & ATTR_DIRECTORY) > 0 ? "/" : "")),
+                : new URL(getBaseURL(context), encodeRelativePath(checkName(name)) + ((attributes & ATTR_DIRECTORY) > 0 ? "/" : "")),
                 context.getContext());
 
         if (!isWorkgroup(context)) {
@@ -493,6 +495,29 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
         if (loadedAttributes) {
             this.attrExpiration = this.sizeExpiration = System.currentTimeMillis() + getContext().getConfig().getAttributeCacheTimeout();
         }
+    }
+
+    /**
+     * Returns the URL a relative child name has to be resolved against.
+     *
+     * <p>
+     * Relative resolution as implemented by {@link URL} replaces the last path segment when the base does not end with a
+     * slash. A parent resource always has to be treated as a directory here, otherwise the child would silently be
+     * resolved as a sibling and diverge from the UNC path built by
+     * {@link SmbResourceLocatorImpl#resolveInContext(org.codelibs.jcifs.smb.SmbResourceLocator, String)}.
+     * </p>
+     *
+     * @param context the parent resource
+     * @return the parent URL in directory form
+     * @throws MalformedURLException if the directory form of the parent URL cannot be constructed
+     */
+    private static URL getBaseURL(final SmbResource context) throws MalformedURLException {
+        final URL u = context.getLocator().getURL();
+        final String path = u.getPath();
+        if (path == null || path.isEmpty() || path.charAt(path.length() - 1) == '/') {
+            return u;
+        }
+        return new URL(u, path + "/", context.getContext().getUrlHandler());
     }
 
     private static String encodeRelativePath(String name) {

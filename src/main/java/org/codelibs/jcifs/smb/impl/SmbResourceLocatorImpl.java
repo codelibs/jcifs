@@ -111,6 +111,7 @@ class SmbResourceLocatorImpl implements SmbResourceLocatorInternal, Cloneable {
         if (shr != null) {
             this.dfsReferral = context.getDfsReferral();
         }
+        final boolean absolute = name.startsWith("/");
         final int last = name.length() - 1;
         boolean trailingSlash = false;
         if (last >= 0 && name.charAt(last) == '/') {
@@ -148,14 +149,14 @@ class SmbResourceLocatorImpl implements SmbResourceLocatorInternal, Cloneable {
                 }
             }
         } else {
+            // The context is the parent directory the name is resolved against, so both prefixes have to be
+            // terminated properly. Otherwise the name is glued to the last segment of the context path (issue #83).
+            // Absolute names carry their own leading separator.
             final String uncPath = context.getUNCPath();
-            if (uncPath.equals("\\")) {
-                // context share != null, so the remainder is path
-                this.unc = '\\' + name.replace('/', '\\') + (trailingSlash ? "\\" : "");
-            } else {
-                this.unc = uncPath + name.replace('/', '\\') + (trailingSlash ? "\\" : "");
-            }
-            this.canon = context.getURLPath() + name + (trailingSlash ? "/" : "");
+            this.unc =
+                    (absolute || uncPath.endsWith("\\") ? uncPath : uncPath + '\\') + name.replace('/', '\\') + (trailingSlash ? "\\" : "");
+            final String urlPath = context.getURLPath();
+            this.canon = (absolute || urlPath.endsWith("/") ? urlPath : urlPath + '/') + name + (trailingSlash ? "/" : "");
             this.share = shr;
         }
     }
