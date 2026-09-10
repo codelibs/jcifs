@@ -329,7 +329,7 @@ public class NtlmHttpFilter implements Filter {
             if (!tf.hasDefaultCredentials()) {
                 trans.ensureConnected();
                 log.warn("""
-                        Default credentials (jcifs.smb.client.username/password)\
+                        Default credentials (jcifs.client.username/password)\
                          not specified. SMB signing may not work propertly.\
                           Skipping DC interrogation.""");
             } else {

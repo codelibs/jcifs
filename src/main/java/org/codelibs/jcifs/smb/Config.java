@@ -170,7 +170,7 @@ public class Config {
             try {
                 return InetAddress.getByName(addr);
             } catch (final UnknownHostException uhe) {
-                log.error("Ignoring org.codelibs.jcifs.smb.impl.client.laddr address: " + addr, uhe);
+                log.error("Ignoring jcifs.client.laddr address: " + addr, uhe);
             }
         }
 

@@ -506,7 +506,7 @@ public class NtlmPasswordAuthenticator implements Principal, CredentialsInternal
              * all be cleaned up an normalized in JCIFS 2.x.
              */
             throw new SmbException(
-                    "NTLMv2 requires extended security (org.codelibs.jcifs.smb.impl.client.useExtendedSecurity must be true if org.codelibs.jcifs.smb.impl.lmCompatibility >= 3)");
+                    "NTLMv2 requires extended security (jcifs.client.useExtendedSecurity must be true if jcifs.lmCompatibility >= 3)");
         }
         return null;
     }

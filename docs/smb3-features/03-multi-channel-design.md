@@ -993,11 +993,11 @@ public void optimizedLargeRead(byte[] buffer, long offset, int length) throws IO
 ### 6.1 Configuration Properties
 ```java
 // In PropertyConfiguration.java
-public static final String USE_MULTI_CHANNEL = "org.codelibs.jcifs.smb.impl.client.useMultiChannel";
-public static final String MAX_CHANNELS = "org.codelibs.jcifs.smb.impl.client.maxChannels";
-public static final String CHANNEL_BINDING_POLICY = "org.codelibs.jcifs.smb.impl.client.channelBindingPolicy";
-public static final String LOAD_BALANCING_STRATEGY = "org.codelibs.jcifs.smb.impl.client.loadBalancingStrategy";
-public static final String CHANNEL_HEALTH_CHECK_INTERVAL = "org.codelibs.jcifs.smb.impl.client.channelHealthCheckInterval";
+public static final String USE_MULTI_CHANNEL = "jcifs.client.useMultiChannel";
+public static final String MAX_CHANNELS = "jcifs.client.maxChannels";
+public static final String CHANNEL_BINDING_POLICY = "jcifs.client.channelBindingPolicy";
+public static final String LOAD_BALANCING_STRATEGY = "jcifs.client.loadBalancingStrategy";
+public static final String CHANNEL_HEALTH_CHECK_INTERVAL = "jcifs.client.channelHealthCheckInterval";
 
 public boolean isUseMultiChannel() {
     return getBooleanProperty(USE_MULTI_CHANNEL, true);
@@ -1076,8 +1076,8 @@ public void testChannelFailover() throws Exception {
 public void testMultiChannelThroughput() throws Exception {
     // Requires multi-NIC test environment
     CIFSContext context = getTestContext();
-    context.getConfig().setProperty("org.codelibs.jcifs.smb.impl.client.useMultiChannel", "true");
-    context.getConfig().setProperty("org.codelibs.jcifs.smb.impl.client.maxChannels", "4");
+    context.getConfig().setProperty("jcifs.client.useMultiChannel", "true");
+    context.getConfig().setProperty("jcifs.client.maxChannels", "4");
     
     SmbFile file = new SmbFile("smb://server/share/largefile.dat", context);
     

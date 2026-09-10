@@ -775,11 +775,11 @@ public void logoff() throws IOException {
 ### 6.1 Configuration Properties
 ```java
 // In PropertyConfiguration.java
-public static final String USE_DIRECTORY_LEASING = "org.codelibs.jcifs.smb.impl.client.useDirectoryLeasing";
-public static final String DIRECTORY_CACHE_SCOPE = "org.codelibs.jcifs.smb.impl.client.directoryCacheScope";
-public static final String DIRECTORY_CACHE_TIMEOUT = "org.codelibs.jcifs.smb.impl.client.directoryCacheTimeout";
-public static final String DIRECTORY_NOTIFICATIONS_ENABLED = "org.codelibs.jcifs.smb.impl.client.directoryNotificationsEnabled";
-public static final String MAX_DIRECTORY_CACHE_ENTRIES = "org.codelibs.jcifs.smb.impl.client.maxDirectoryCacheEntries";
+public static final String USE_DIRECTORY_LEASING = "jcifs.client.useDirectoryLeasing";
+public static final String DIRECTORY_CACHE_SCOPE = "jcifs.client.directoryCacheScope";
+public static final String DIRECTORY_CACHE_TIMEOUT = "jcifs.client.directoryCacheTimeout";
+public static final String DIRECTORY_NOTIFICATIONS_ENABLED = "jcifs.client.directoryNotificationsEnabled";
+public static final String MAX_DIRECTORY_CACHE_ENTRIES = "jcifs.client.maxDirectoryCacheEntries";
 
 public boolean isUseDirectoryLeasing() {
     return getBooleanProperty(USE_DIRECTORY_LEASING, true);
@@ -946,7 +946,7 @@ public void testDirectoryLeaseManager() {
 @Test
 public void testDirectoryListingCache() throws Exception {
     CIFSContext context = getTestContext();
-    context.getConfig().setProperty("org.codelibs.jcifs.smb.impl.client.useDirectoryLeasing", "true");
+    context.getConfig().setProperty("jcifs.client.useDirectoryLeasing", "true");
     
     SmbFile dir = new SmbFile("smb://server/share/testdir/", context);
     
@@ -967,7 +967,7 @@ public void testDirectoryListingCache() throws Exception {
 @Test
 public void testDirectoryChangeNotification() throws Exception {
     CIFSContext context = getTestContext();
-    context.getConfig().setProperty("org.codelibs.jcifs.smb.impl.client.directoryNotificationsEnabled", "true");
+    context.getConfig().setProperty("jcifs.client.directoryNotificationsEnabled", "true");
     
     SmbFile dir = new SmbFile("smb://server/share/testdir/", context);
     SmbFile testFile = new SmbFile("smb://server/share/testdir/newfile.txt", context);

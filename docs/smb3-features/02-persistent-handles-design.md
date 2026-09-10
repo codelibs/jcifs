@@ -687,11 +687,11 @@ public void logoff() throws IOException {
 ### 7.1 Configuration Properties
 ```java
 // In PropertyConfiguration.java
-public static final String USE_DURABLE_HANDLES = "org.codelibs.jcifs.smb.impl.client.useDurableHandles";
-public static final String USE_PERSISTENT_HANDLES = "org.codelibs.jcifs.smb.impl.client.usePersistentHandles";
-public static final String DURABLE_HANDLE_TIMEOUT = "org.codelibs.jcifs.smb.impl.client.durableHandleTimeout";
-public static final String HANDLE_RECONNECT_RETRIES = "org.codelibs.jcifs.smb.impl.client.handleReconnectRetries";
-public static final String HANDLE_STATE_DIR = "org.codelibs.jcifs.smb.impl.client.handleStateDirectory";
+public static final String USE_DURABLE_HANDLES = "jcifs.client.useDurableHandles";
+public static final String USE_PERSISTENT_HANDLES = "jcifs.client.usePersistentHandles";
+public static final String DURABLE_HANDLE_TIMEOUT = "jcifs.client.durableHandleTimeout";
+public static final String HANDLE_RECONNECT_RETRIES = "jcifs.client.handleReconnectRetries";
+public static final String HANDLE_STATE_DIR = "jcifs.client.handleStateDirectory";
 
 public boolean isUseDurableHandles() {
     return getBooleanProperty(USE_DURABLE_HANDLES, true);
@@ -805,7 +805,7 @@ public class PersistentHandleTest {
 @Test
 public void testDurableHandleReconnection() throws Exception {
     CIFSContext context = getTestContext();
-    context.getConfig().setProperty("org.codelibs.jcifs.smb.impl.client.useDurableHandles", "true");
+    context.getConfig().setProperty("jcifs.client.useDurableHandles", "true");
     
     SmbFile file = new SmbFile("smb://server/share/test.txt", context);
     file.createNewFile();
@@ -830,7 +830,7 @@ public void testDurableHandleReconnection() throws Exception {
 public void testPersistentHandleSurvivesReboot() throws Exception {
     // This test requires special setup with server reboot capability
     CIFSContext context = getTestContext();
-    context.getConfig().setProperty("org.codelibs.jcifs.smb.impl.client.usePersistentHandles", "true");
+    context.getConfig().setProperty("jcifs.client.usePersistentHandles", "true");
     
     SmbFile file = new SmbFile("smb://server/share/persistent.txt", context);
     file.createNewFile();

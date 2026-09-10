@@ -26,8 +26,8 @@ import org.codelibs.jcifs.smb.CIFSContext;
 
 /**
  * This class stores and encrypts NTLM user credentials. The default
- * credentials are retrieved from the {@code org.codelibs.jcifs.smb.impl.client.domain},
- * {@code org.codelibs.jcifs.smb.impl.client.username}, and {@code org.codelibs.jcifs.smb.impl.client.password}
+ * credentials are retrieved from the {@code jcifs.client.domain},
+ * {@code jcifs.client.username}, and {@code jcifs.client.password}
  * properties.
  * <p>
  * Read <a href="../../../authhandler.html">jCIFS Exceptions and
@@ -85,8 +85,8 @@ public class NtlmPasswordAuthentication extends NtlmPasswordAuthenticator {
     /**
      * Create an {@code NtlmPasswordAuthentication} object from a
      * domain, username, and password. Parameters that are {@code null}
-     * will be substituted with {@code org.codelibs.jcifs.smb.impl.client.domain},
-     * {@code org.codelibs.jcifs.smb.impl.client.username}, {@code org.codelibs.jcifs.smb.impl.client.password}
+     * will be substituted with {@code jcifs.client.domain},
+     * {@code jcifs.client.username}, {@code jcifs.client.password}
      * property values.
      *
      * @param tc
