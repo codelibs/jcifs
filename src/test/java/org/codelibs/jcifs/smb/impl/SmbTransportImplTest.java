@@ -401,11 +401,21 @@ class SmbTransportImplTest {
             assertEquals(EncryptionNegotiateContext.CIPHER_AES128_CCM, ccm.getCipherId());
             assertEquals(DialectVersion.SMB300, ccm.getDialect());
 
-            // SMB 3.1.1 -> default AES-128-GCM when server did not choose
+            // SMB 3.1.1 with no encryption capabilities context in the response -> AES-128-CCM
+            // (MS-SMB2 3.2.5.2). In practice the negotiate would have been rejected before reaching here.
             Smb2NegotiateResponse smb311 = new Smb2NegotiateResponse(cfg);
             setField(smb311, "selectedDialect", DialectVersion.SMB311);
             setField(smb311, "selectedCipher", -1);
             setField(transport, "negotiated", smb311);
+            Smb2EncryptionContext defaulted = transport.createEncryptionContext(sessionKey, preauth);
+            assertEquals(EncryptionNegotiateContext.CIPHER_AES128_CCM, defaulted.getCipherId());
+            assertEquals(DialectVersion.SMB311, defaulted.getDialect());
+
+            // SMB 3.1.1 with AES-128-GCM negotiated
+            Smb2NegotiateResponse smb311gcm = new Smb2NegotiateResponse(cfg);
+            setField(smb311gcm, "selectedDialect", DialectVersion.SMB311);
+            setField(smb311gcm, "selectedCipher", EncryptionNegotiateContext.CIPHER_AES128_GCM);
+            setField(transport, "negotiated", smb311gcm);
             Smb2EncryptionContext gcm = transport.createEncryptionContext(sessionKey, preauth);
             assertEquals(EncryptionNegotiateContext.CIPHER_AES128_GCM, gcm.getCipherId());
             assertEquals(DialectVersion.SMB311, gcm.getDialect());

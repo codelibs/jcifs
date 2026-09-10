@@ -18,7 +18,7 @@ JCIFS is a comprehensive, pure Java implementation of the CIFS/SMB networking pr
   - **Pre-Authentication Integrity** (SMB 3.1.1)
   - **AES-CMAC signing** for data integrity
   - **Automatic protocol negotiation**
-  - **Transparent encryption** when required by server
+  - **Transparent encryption** when required by the server, per session or per share (opt-in, see below)
 
 ### **Security & Authentication**
 - **Multi-method Authentication**: NTLMSSP, Kerberos, SPNEGO
@@ -380,7 +380,8 @@ props.setProperty("jcifs.client.maxVersion", "SMB311");
 - **Rotate credentials** regularly and implement credential renewal
 
 ### Network Security
-- **Use encrypted connections** when available (SMB3 encryption is automatic)
+- **Use encrypted connections** when available: set `jcifs.client.encryptionEnabled=true` (default `false`).
+  Once enabled, encryption is applied automatically to any session or share the server marks as requiring it.
 - **Limit protocol versions** to minimum required for your environment
 - **Monitor failed authentication** attempts in logs
 - **Use VPN or secure networks** when accessing SMB over public networks

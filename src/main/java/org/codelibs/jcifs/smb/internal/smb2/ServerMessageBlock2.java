@@ -120,6 +120,7 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
 
     private final byte[] signature = new byte[16];
     private Smb2SigningDigest digest = null;
+    private boolean encrypt;
 
     private final Configuration config;
 
@@ -174,6 +175,10 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
         this.digest = null;
         this.sessionId = 0;
         this.treeId = 0;
+        // A retried or DFS-redirected request is re-marked by whichever session/tree it is sent on. Carrying the
+        // previous decision to a different server would encrypt where nothing asked for it, or fail for want of
+        // an encryption context.
+        this.encrypt = false;
     }
 
     /**
@@ -321,6 +326,33 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
     }
 
     /**
+     * Whether this message must be sent inside an SMB2 TRANSFORM_HEADER.
+     *
+     * @return true if the message must be encrypted
+     */
+    public boolean isEncrypt() {
+        return this.encrypt;
+    }
+
+    /**
+     * Marks this message, and every message already chained to it, as requiring SMB3 encryption.
+     *
+     * <p>
+     * A compound chain is wrapped in a single transform header, so the marker must be visible from the head of the
+     * chain no matter which link set it.
+     * </p>
+     *
+     * @param encrypt
+     *            whether the message must be encrypted
+     */
+    public void setEncrypt(final boolean encrypt) {
+        this.encrypt = encrypt;
+        if (this.next != null) {
+            this.next.setEncrypt(encrypt);
+        }
+    }
+
+    /**
      *
      * {@inheritDoc}
      *
@@ -440,6 +472,9 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
         }
 
         n.addFlags(SMB2_FLAGS_RELATED_OPERATIONS);
+        if (this.encrypt) {
+            n.setEncrypt(true);
+        }
         this.next = n;
         return true;
     }

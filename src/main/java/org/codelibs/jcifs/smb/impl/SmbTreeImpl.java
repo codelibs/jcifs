@@ -43,6 +43,7 @@ import org.codelibs.jcifs.smb.internal.CommonServerMessageBlockResponse;
 import org.codelibs.jcifs.smb.internal.RequestWithPath;
 import org.codelibs.jcifs.smb.internal.SmbNegotiationResponse;
 import org.codelibs.jcifs.smb.internal.TreeConnectResponse;
+import org.codelibs.jcifs.smb.internal.smb2.tree.Smb2TreeConnectResponse;
 import org.codelibs.jcifs.smb.internal.smb1.ServerMessageBlock;
 import org.codelibs.jcifs.smb.internal.smb1.com.SmbComBlankResponse;
 import org.codelibs.jcifs.smb.internal.smb1.com.SmbComNegotiateResponse;
@@ -85,6 +86,8 @@ class SmbTreeImpl implements SmbTreeInternal {
     private volatile int tid = -1;
     private volatile String service = "?????";
     private volatile boolean inDfs, inDomainDfs;
+    /** Whether the server requires encryption for every message on this share (SMB2_SHAREFLAG_ENCRYPT_DATA). */
+    private volatile boolean encryptData;
     private volatile long treeNum; // used by SmbFile.isOpen
 
     private final AtomicLong usageCount = new AtomicLong(0);
@@ -444,6 +447,10 @@ class SmbTreeImpl implements SmbTreeInternal {
             final int t = this.tid;
             request.setTid(t);
 
+            if (this.encryptData && request instanceof final ServerMessageBlock2 smb2Request) {
+                smb2Request.setEncrypt(true);
+            }
+
             if (!transport.isSMB2()) {
                 final ServerMessageBlock req = (ServerMessageBlock) request;
                 svc = this.service;
@@ -596,7 +603,11 @@ class SmbTreeImpl implements SmbTreeInternal {
 
                     if (transport.isSMB2()) {
                         final Smb2TreeConnectRequest req = new Smb2TreeConnectRequest(sess.getConfig(), unc);
-                        if (andx != null) {
+                        // Whether the share requires encryption is only learned from this response, and the
+                        // TREE_CONNECT itself goes out in the clear. Compounding onto it would put the caller's
+                        // request on the wire unencrypted, so when encryption is available for this session the
+                        // request is sent separately once the share's requirement is known.
+                        if (andx != null && (!sess.isEncryptionEnabled() || sess.isEncryptData())) {
                             req.chain((ServerMessageBlock2) andx);
                         }
                         request = req;
@@ -621,10 +632,25 @@ class SmbTreeImpl implements SmbTreeInternal {
                         // tree connect might still have succeeded
                         response = (TreeConnectResponse) request.getResponse();
                         if (response.isReceived() && !response.isError() && response.getErrorCode() == NtStatus.NT_STATUS_SUCCESS) {
-                            if (!transport.isDisconnected()) {
-                                treeConnected(transport, sess, response);
+                            if (transport.isDisconnected()) {
+                                throw se;
                             }
-                            throw se;
+                            boolean established = false;
+                            try {
+                                treeConnected(transport, sess, response);
+                                established = true;
+                            } catch (final IOException e2) {
+                                // treeConnected rejects this response as well, so the tree never reached the
+                                // connected state. Fall through to the failure path below instead of letting the
+                                // exception escape: skipping the reset would leave connectionState at "connecting",
+                                // and every later treeConnect would then wait on the transport monitor forever.
+                                if (e2 != se) {
+                                    se.addSuppressed(e2);
+                                }
+                            }
+                            if (established) {
+                                throw se;
+                            }
                         }
                     }
                     try {
@@ -665,6 +691,21 @@ class SmbTreeImpl implements SmbTreeInternal {
 
         this.service = rsvc;
         this.inDfs = response.isShareDfs();
+
+        if (response instanceof final Smb2TreeConnectResponse tcr) {
+            // A share can demand encryption even when the session does not (MS-SMB2 2.2.10); this is the only
+            // place that requirement is announced.
+            this.encryptData = (tcr.getShareFlags() & Smb2TreeConnectResponse.SMB2_SHAREFLAG_ENCRYPT_DATA) != 0;
+            if (this.encryptData) {
+                if (!sess.isEncryptionEnabled()) {
+                    throw new SmbUnsupportedOperationException(
+                            "Share '" + this.share + "' requires encryption but no encryption context is available");
+                }
+                if (log.isDebugEnabled()) {
+                    log.debug("Share " + this.share + " requires encryption");
+                }
+            }
+        }
         this.treeNum = TREE_CONN_COUNTER.incrementAndGet();
 
         this.connectionState.set(2); // connected
