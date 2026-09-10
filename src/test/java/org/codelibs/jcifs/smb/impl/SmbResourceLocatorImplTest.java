@@ -298,7 +298,7 @@ class SmbResourceLocatorImplTest {
     }
 
     @Test
-    @DisplayName("overlaps requires same address and canonical URL prefix match")
+    @DisplayName("overlaps requires the same address")
     void testOverlaps() throws Exception {
         UniAddress a = mock(UniAddress.class);
         when(nsc.getAllByName(anyString(), anyBoolean())).thenReturn(new Address[] { a });
@@ -308,6 +308,30 @@ class SmbResourceLocatorImplTest {
 
         SmbResourceLocatorImpl other = locator("smb://server/share/other");
         assertFalse(base.overlaps(other));
+
+        UniAddress b = mock(UniAddress.class);
+        when(nsc.getAllByName(eq("other"), anyBoolean())).thenReturn(new Address[] { b });
+        assertFalse(base.overlaps(locator("smb://other/share/dir/file")));
+    }
+
+    @ParameterizedTest
+    @DisplayName("overlaps matches whole path elements, ignoring authority and trailing separators")
+    @CsvSource({
+            // parent/child and identical paths overlap
+            "smb://server/share/dir,smb://server/share/dir/file,true", "smb://server/share/dir/file,smb://server/share/dir,true",
+            "smb://server/share/dir/,smb://server/share/dir/file,true", "smb://server/share/a/b,smb://server/share/a/b/,true",
+            "smb://server/share/file,smb://server/share/file,true", "smb://server/share/file,smb://server/share/FILE,true",
+            "smb://server/share,smb://server/share/dir/file,true", "smb://server/share/,smb://server/share/dir/file,true",
+            // the authority is not part of the path, the address comparison covers the server
+            "smb://user@server/share/a,smb://server/share/a/b,true", "smb://server:445/share/a,smb://server/share/a/b,true",
+            // siblings sharing a name prefix are not parent/child
+            "smb://server/share/file,smb://server/share/file123,false", "smb://server/share/file123,smb://server/share/file,false",
+            "smb://server/share/dir,smb://server/share/dir2/,false", "smb://server/share/dir/,smb://server/share/dir2/,false",
+            "smb://server/share,smb://server/share2/file,false", "smb://server/share/other,smb://server/share/dir,false" })
+    void testOverlapsPathBoundaries(String left, String right, boolean expected) throws Exception {
+        UniAddress a = mock(UniAddress.class);
+        when(nsc.getAllByName(anyString(), anyBoolean())).thenReturn(new Address[] { a });
+        assertEquals(expected, locator(left).overlaps(locator(right)));
     }
 
     @Test
