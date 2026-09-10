@@ -154,8 +154,9 @@ class SmbFileIT extends AbstractSmbIT {
         @Test
         @RequiresBackend(SmbBackend.SAMBA)
         // Samba refuses the tree connect, and exists() rethrows anything that is
-        // not a "not found" status. Windows answers differently - see
-        // AuthenticationIT.inaccessibleShareIsNotReportedAsExisting.
+        // not a "not found" status. Windows accepts the tree connect and refuses at
+        // open instead - see
+        // AuthenticationIT.inaccessibleShareStillReportsThatItExists.
         void testAccessDeniedToPrivateShare() throws Exception {
             final CIFSContext context = createContext(TESTUSER1, password());
             final String url = createSmbUrl("testuser2private", "");

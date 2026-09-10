@@ -82,6 +82,15 @@ public interface SmbResource extends AutoCloseable {
      * this <code>SmbResource</code> is a traditional file or directory, it will
      * be queried for on the specified server as expected.
      *
+     * <p>
+     * For a share root this reflects whether the tree connect succeeded, which is
+     * all the protocol offers at that level, and servers answer it differently:
+     * Windows accepts the tree connect for an account the share's ACL excludes and
+     * refuses at open, while Samba refuses the tree connect itself. A
+     * <code>true</code> here therefore says the share is present, not that it can
+     * be read.
+     * </p>
+     *
      * @return <code>true</code> if the resource exists or is alive or
      *         <code>false</code> otherwise
      * @throws CIFSException if an error occurs accessing the resource

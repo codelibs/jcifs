@@ -42,10 +42,21 @@ foreach ($name in $shareNames) {
 }
 New-Item -Path $OutsideRoot -ItemType Directory -Force | Out-Null
 
-# Share level permissions are what restrict the private shares; NTFS stays open
-# so the accounts can write everywhere they are allowed to connect.
-icacls $Root /grant 'testuser1:(OI)(CI)F' 'testuser2:(OI)(CI)F' /T /Q | Out-Null
+# Both accounts share the common directories.
+foreach ($name in @('share', 'share-encrypted', 'dfs', 'public', 'users')) {
+    icacls (Join-Path $Root $name) /grant 'testuser1:(OI)(CI)F' 'testuser2:(OI)(CI)F' /T /Q | Out-Null
+}
 icacls $OutsideRoot /grant 'testuser1:(OI)(CI)F' 'testuser2:(OI)(CI)F' /T /Q | Out-Null
+
+# The private directories are private at the NTFS layer as well as the share
+# layer, the way a real deployment would restrict them. Inheritance is turned off
+# first: a grant applied with /T leaves an explicit ACE that /inheritance:r would
+# not remove.
+foreach ($user in $testUsers) {
+    $privatePath = Join-Path $Root "${user}private"
+    icacls $privatePath /inheritance:r /Q | Out-Null
+    icacls $privatePath /grant 'BUILTIN\Administrators:(OI)(CI)F' 'NT AUTHORITY\SYSTEM:(OI)(CI)F' "${user}:(OI)(CI)F" /T /Q | Out-Null
+}
 
 Write-Host 'Creating SMB shares'
 $sharedByBoth = @('share', 'dfs', 'public', 'users')
@@ -136,6 +147,11 @@ Set-NetFirewallRule -Name FPS-SMB-In-TCP -Enabled True
 Set-Service -Name LanmanServer -StartupType Automatic -Status Running
 
 Write-Host ''
+Write-Host 'NTFS permissions on the private shares:'
+foreach ($user in $testUsers) {
+    icacls (Join-Path $Root "${user}private") | Out-String | Write-Host
+}
+
 Write-Host 'Share permissions as configured:'
 Get-SmbShare | Where-Object { $_.Name -ne 'IPC$' } | Get-SmbShareAccess |
     Format-Table -AutoSize ScaleOut, Name, AccountName, AccessControlType, AccessRight | Out-String | Write-Host
