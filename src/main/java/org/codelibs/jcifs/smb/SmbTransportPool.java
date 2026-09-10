@@ -135,7 +135,7 @@ public interface SmbTransportPool {
      * valid, the method will return without throwing an exception. See the
      * last <a href="../../../faq.html">FAQ</a> question.
      * <p>
-     * See also the <code>org.codelibs.jcifs.smb.impl.client.logonShare</code> property.
+     * See also the <code>jcifs.client.logonShare</code> property.
      *
      * @param dc the domain controller address
      * @param tc the CIFS context containing credentials
@@ -155,7 +155,7 @@ public interface SmbTransportPool {
      * valid, the method will return without throwing an exception. See the
      * last <a href="../../../faq.html">FAQ</a> question.
      * <p>
-     * See also the <code>org.codelibs.jcifs.smb.impl.client.logonShare</code> property.
+     * See also the <code>jcifs.client.logonShare</code> property.
      *
      * @param dc the domain controller address
      * @param port the port number

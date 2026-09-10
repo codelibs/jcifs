@@ -55,7 +55,10 @@ src/main/java/org/codelibs/jcifs/
 
 ## Configuration
 
-Prefix: `jcifs.smb.client.` - see `Configuration` interface for all properties and defaults
+Prefix: `jcifs.client.` (plus `jcifs.netbios.`, `jcifs.http.` and a few bare `jcifs.` keys) -
+see `Configuration` interface for all properties and defaults. The keys actually read live in
+`PropertyConfiguration`; treat that file as the source of truth. The `.smb` segment used by
+2.x (`jcifs.smb.client.*`) was dropped in 3.0.0 and old keys are ignored.
 
 ## Code Conventions
 
@@ -112,4 +115,4 @@ CIFSContext → SmbTransportPool → SmbTransport → SmbSession → SmbTree →
 1. **SMB1 Code**: Legacy code in `smb1` package - avoid modifying
 2. **Internal Package**: Never depend on `internal` from external code
 3. **Thread Safety**: `CIFSContext` is thread-safe; `SmbFile` operations are not
-4. **DFS**: Paths auto-resolved; disable with `jcifs.smb.client.dfs.disabled=true`
+4. **DFS**: Paths auto-resolved; disable with `jcifs.client.dfs.disabled=true`

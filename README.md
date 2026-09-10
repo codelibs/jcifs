@@ -120,8 +120,8 @@ import org.codelibs.jcifs.smb.config.PropertyConfiguration;
 // Create context with domain credentials
 Properties props = new Properties();
 // Optional: Set SMB protocol preferences
-props.setProperty("jcifs.smb.client.minVersion", "SMB202");
-props.setProperty("jcifs.smb.client.maxVersion", "SMB311");
+props.setProperty("jcifs.client.minVersion", "SMB202");
+props.setProperty("jcifs.client.maxVersion", "SMB311");
 
 CIFSContext baseContext = new BaseContext(new PropertyConfiguration(props));
 NtlmPasswordAuthenticator auth = new NtlmPasswordAuthenticator(
@@ -192,10 +192,9 @@ try (SmbFile dir = new SmbFile("smb://server/share/monitored/", context);
 ```java
 // Advanced configuration
 Properties config = new Properties();
-config.setProperty("jcifs.smb.client.minVersion", "SMB300");  // Require SMB3+
-config.setProperty("jcifs.smb.client.maxVersion", "SMB311");
-config.setProperty("jcifs.smb.client.enableSMB2Signing", "true");  // Enable signing
-config.setProperty("jcifs.smb.client.signingPreferred", "true");
+config.setProperty("jcifs.client.minVersion", "SMB300");  // Require SMB3+
+config.setProperty("jcifs.client.maxVersion", "SMB311");
+config.setProperty("jcifs.client.signingPreferred", "true");  // Prefer signing
 config.setProperty("jcifs.resolveOrder", "LMHOSTS,DNS,WINS,BCAST");
 
 CIFSContext customContext = new BaseContext(new PropertyConfiguration(config));
@@ -306,20 +305,20 @@ try (InputStream is = smbFile.getInputStream()) {
 ### Protocol Selection
 ```java
 // For maximum performance on modern servers
-props.setProperty("jcifs.smb.client.minVersion", "SMB300");
-props.setProperty("jcifs.smb.client.maxVersion", "SMB311");
+props.setProperty("jcifs.client.minVersion", "SMB300");
+props.setProperty("jcifs.client.maxVersion", "SMB311");
 
 // For maximum compatibility (default)
-props.setProperty("jcifs.smb.client.minVersion", "SMB1");
-props.setProperty("jcifs.smb.client.maxVersion", "SMB311");
+props.setProperty("jcifs.client.minVersion", "SMB1");
+props.setProperty("jcifs.client.maxVersion", "SMB311");
 ```
 
 ## 🔒 Security Best Practices
 
 ### Authentication
 - **Use domain authentication** when possible for better security
-- **Enable SMB signing** for data integrity: `jcifs.smb.client.signingPreferred=true`
-- **Prefer SMB3** for encryption: `jcifs.smb.client.minVersion=SMB300`
+- **Enable SMB signing** for data integrity: `jcifs.client.signingPreferred=true`
+- **Prefer SMB3** for encryption: `jcifs.client.minVersion=SMB300`
 - **Rotate credentials** regularly and implement credential renewal
 
 ### Network Security
@@ -332,10 +331,9 @@ props.setProperty("jcifs.smb.client.maxVersion", "SMB311");
 ```java
 // Secure configuration example
 Properties secureConfig = new Properties();
-secureConfig.setProperty("jcifs.smb.client.minVersion", "SMB300");
-secureConfig.setProperty("jcifs.smb.client.enableSMB2Signing", "true");
-secureConfig.setProperty("jcifs.smb.client.signingPreferred", "true");
-secureConfig.setProperty("jcifs.smb.client.ipcSigningEnforced", "true");
+secureConfig.setProperty("jcifs.client.minVersion", "SMB300");
+secureConfig.setProperty("jcifs.client.signingEnforced", "true");
+secureConfig.setProperty("jcifs.client.ipcSigningEnforced", "true");
 ```
 
 ## 🛠️ Troubleshooting
@@ -345,9 +343,9 @@ secureConfig.setProperty("jcifs.smb.client.ipcSigningEnforced", "true");
 **Connection Timeouts**
 ```java
 // Increase timeout values
-props.setProperty("jcifs.smb.client.soTimeout", "35000");      // 35 seconds
-props.setProperty("jcifs.smb.client.connTimeout", "10000");    // 10 seconds
-props.setProperty("jcifs.smb.client.responseTimeout", "30000"); // 30 seconds
+props.setProperty("jcifs.client.soTimeout", "35000");      // 35 seconds
+props.setProperty("jcifs.client.connTimeout", "10000");    // 10 seconds
+props.setProperty("jcifs.client.responseTimeout", "30000"); // 30 seconds
 ```
 
 **Authentication Failures**
@@ -359,11 +357,12 @@ props.setProperty("jcifs.smb.client.responseTimeout", "30000"); // 30 seconds
 **Protocol Negotiation Issues**
 ```java
 // Debug protocol negotiation
-props.setProperty("jcifs.util.loglevel", "3");  // Enable debug logging
+// Enable debug logging through your SLF4J backend, e.g.
+//   <logger name="org.codelibs.jcifs.smb.internal.smb2" level="DEBUG"/>
 
 // Force specific protocol version if needed
-props.setProperty("jcifs.smb.client.minVersion", "SMB202");
-props.setProperty("jcifs.smb.client.maxVersion", "SMB202");
+props.setProperty("jcifs.client.minVersion", "SMB202");
+props.setProperty("jcifs.client.maxVersion", "SMB202");
 ```
 
 **Performance Issues**
@@ -390,8 +389,24 @@ JCIFS uses SLF4J for logging. Configure your logging framework accordingly:
 ### From JCIFS 2.x to 3.x
 - **Java 17+ required**: Update your runtime environment
 - **Package changes**: All classes moved to `org.codelibs.jcifs.smb`
+- **Property names changed**: the `.smb` segment was dropped from every configuration
+  key (see below). Old keys are *silently ignored*, so settings fall back to their
+  defaults until you rename them.
 - **Enhanced SMB3 support**: New encryption and signing capabilities
 - **Improved authentication**: Enhanced credential management
+
+#### Configuration property names
+
+| 2.x | 3.x |
+| --- | --- |
+| `jcifs.smb.client.<name>` | `jcifs.client.<name>` |
+| `jcifs.smb.<name>` (`lmCompatibility`, `maxBuffers`, `allowNTLMFallback`, `useRawNTLM`) | `jcifs.<name>` |
+| `jcifs.smb1.smb.client.<name>` (legacy SMB1 stack) | `jcifs.client.<name>` |
+| `jcifs.netbios.<name>`, `jcifs.http.<name>`, `jcifs.resolveOrder`, `jcifs.encoding` | unchanged |
+
+`PropertyConfiguration` logs a warning for every property it receives under one of the
+old prefixes, naming the key to use instead. The authoritative list of keys and their
+defaults is the `Configuration` interface javadoc.
 
 ### From Original JCIFS
 - **Context-based API**: Replace global configuration with contexts

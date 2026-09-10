@@ -230,29 +230,29 @@ graph TD
 
 ```properties
 # Lease configuration
-org.codelibs.jcifs.smb.impl.client.useLeases=true
-org.codelibs.jcifs.smb.impl.client.leaseTimeout=30000
+jcifs.client.useLeases=true
+jcifs.client.leaseTimeout=30000
 
 # Persistent handles
-org.codelibs.jcifs.smb.impl.client.usePersistentHandles=true
-org.codelibs.jcifs.smb.impl.client.durableTimeout=120000
+jcifs.client.usePersistentHandles=true
+jcifs.client.durableTimeout=120000
 
 # Multi-channel
-org.codelibs.jcifs.smb.impl.client.useMultiChannel=true
-org.codelibs.jcifs.smb.impl.client.maxChannels=4
-org.codelibs.jcifs.smb.impl.client.channelBindingPolicy=required
+jcifs.client.useMultiChannel=true
+jcifs.client.maxChannels=4
+jcifs.client.channelBindingPolicy=required
 
 # Directory leasing
-org.codelibs.jcifs.smb.impl.client.useDirectoryLeasing=true
-org.codelibs.jcifs.smb.impl.client.dirCacheTimeout=60000
+jcifs.client.useDirectoryLeasing=true
+jcifs.client.dirCacheTimeout=60000
 
 # RDMA
-org.codelibs.jcifs.smb.impl.client.useRDMA=auto
-org.codelibs.jcifs.smb.impl.client.rdmaProvider=disni
+jcifs.client.useRDMA=auto
+jcifs.client.rdmaProvider=disni
 
 # Witness
-org.codelibs.jcifs.smb.impl.client.useWitness=true
-org.codelibs.jcifs.smb.impl.client.witnessNotificationTimeout=5000
+jcifs.client.useWitness=true
+jcifs.client.witnessNotificationTimeout=5000
 ```
 
 ## Risk Assessment

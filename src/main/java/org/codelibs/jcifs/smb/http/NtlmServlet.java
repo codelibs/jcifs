@@ -46,7 +46,7 @@ import jakarta.servlet.http.HttpSession;
  * to protect content with NTLM HTTP Authentication. Servlets that
  * extend this abstract base class may be authenticated against an SMB
  * server or domain controller depending on how the
- * {@code org.codelibs.jcifs.smb.impl.client.domain} or {@code org.codelibs.jcifs.smb.http.domainController}
+ * {@code jcifs.client.domain} or {@code org.codelibs.jcifs.smb.http.domainController}
  * properties are be specified. <b>With later containers the
  * {@code NtlmHttpFilter} should be used</b>. For custom NTLM HTTP Authentication schemes the {@code NtlmSsp} may be
  * used.

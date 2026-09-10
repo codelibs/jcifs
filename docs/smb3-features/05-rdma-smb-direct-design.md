@@ -883,12 +883,12 @@ public static class RdmaChannelInfo {
 ### 6.1 Configuration Properties
 ```java
 // In PropertyConfiguration.java
-public static final String USE_RDMA = "org.codelibs.jcifs.smb.impl.client.useRDMA";
-public static final String RDMA_PROVIDER = "org.codelibs.jcifs.smb.impl.client.rdmaProvider";
-public static final String RDMA_READ_WRITE_THRESHOLD = "org.codelibs.jcifs.smb.impl.client.rdmaReadWriteThreshold";
-public static final String RDMA_MAX_SEND_SIZE = "org.codelibs.jcifs.smb.impl.client.rdmaMaxSendSize";
-public static final String RDMA_MAX_RECEIVE_SIZE = "org.codelibs.jcifs.smb.impl.client.rdmaMaxReceiveSize";
-public static final String RDMA_CREDITS = "org.codelibs.jcifs.smb.impl.client.rdmaCredits";
+public static final String USE_RDMA = "jcifs.client.useRDMA";
+public static final String RDMA_PROVIDER = "jcifs.client.rdmaProvider";
+public static final String RDMA_READ_WRITE_THRESHOLD = "jcifs.client.rdmaReadWriteThreshold";
+public static final String RDMA_MAX_SEND_SIZE = "jcifs.client.rdmaMaxSendSize";
+public static final String RDMA_MAX_RECEIVE_SIZE = "jcifs.client.rdmaMaxReceiveSize";
+public static final String RDMA_CREDITS = "jcifs.client.rdmaCredits";
 
 public boolean isUseRDMA() {
     String value = getProperty(USE_RDMA, "auto");
@@ -975,7 +975,7 @@ public void testRdmaBufferManager() throws Exception {
 @EnabledIfSystemProperty(named = "rdma.test.enabled", matches = "true")
 public void testRdmaLargeFileTransfer() throws Exception {
     CIFSContext context = getTestContext();
-    context.getConfig().setProperty("org.codelibs.jcifs.smb.impl.client.useRDMA", "true");
+    context.getConfig().setProperty("jcifs.client.useRDMA", "true");
     
     SmbFile file = new SmbFile("smb://server/share/largefile.dat", context);
     
@@ -1011,8 +1011,8 @@ public void testRdmaLargeFileTransfer() throws Exception {
 public void testRdmaFallbackToTcp() throws Exception {
     // Test that we properly fall back to TCP when RDMA is not available
     CIFSContext context = getTestContext();
-    context.getConfig().setProperty("org.codelibs.jcifs.smb.impl.client.useRDMA", "true");
-    context.getConfig().setProperty("org.codelibs.jcifs.smb.impl.client.rdmaProvider", "nonexistent");
+    context.getConfig().setProperty("jcifs.client.useRDMA", "true");
+    context.getConfig().setProperty("jcifs.client.rdmaProvider", "nonexistent");
     
     SmbFile file = new SmbFile("smb://server/share/test.txt", context);
     

@@ -309,7 +309,7 @@ class PropertyConfigurationTest extends BaseTest {
     void testPreserveShareCaseTrue() throws CIFSException {
         // Given
         Properties props = new Properties();
-        props.setProperty("jcifs.smb.client.preserveShareCase", "true");
+        props.setProperty("jcifs.client.preserveShareCase", "true");
 
         // When
         PropertyConfiguration testConfig = new PropertyConfiguration(props);
@@ -323,7 +323,7 @@ class PropertyConfigurationTest extends BaseTest {
     void testPreserveShareCaseFalse() throws CIFSException {
         // Given
         Properties props = new Properties();
-        props.setProperty("jcifs.smb.client.preserveShareCase", "false");
+        props.setProperty("jcifs.client.preserveShareCase", "false");
 
         // When
         PropertyConfiguration testConfig = new PropertyConfiguration(props);
@@ -344,5 +344,55 @@ class PropertyConfigurationTest extends BaseTest {
 
         // Then
         assertFalse(testConfig.isPreserveShareCase());
+    }
+
+    @Test
+    @DisplayName("Should still honour the deprecated preserveShareCase spelling")
+    void testPreserveShareCaseLegacyKey() throws CIFSException {
+        // Given
+        Properties props = new Properties();
+        props.setProperty("jcifs.smb.client.preserveShareCase", "true");
+
+        // When
+        PropertyConfiguration testConfig = new PropertyConfiguration(props);
+
+        // Then
+        assertTrue(testConfig.isPreserveShareCase());
+    }
+
+    @Test
+    @DisplayName("Should let the current preserveShareCase key win over the deprecated one")
+    void testPreserveShareCaseCurrentKeyWins() throws CIFSException {
+        // Given
+        Properties props = new Properties();
+        props.setProperty("jcifs.smb.client.preserveShareCase", "true");
+        props.setProperty("jcifs.client.preserveShareCase", "false");
+
+        // When
+        PropertyConfiguration testConfig = new PropertyConfiguration(props);
+
+        // Then
+        assertFalse(testConfig.isPreserveShareCase());
+    }
+
+    @Test
+    @DisplayName("Should ignore properties carrying a pre-3.0.0 prefix")
+    void testLegacyPrefixesAreIgnored() throws CIFSException {
+        // Given
+        Properties props = new Properties();
+        props.setProperty("jcifs.smb.client.connTimeout", "12345");
+        props.setProperty("jcifs.smb1.smb.client.soTimeout", "12345");
+        props.setProperty("org.codelibs.jcifs.smb.impl.client.responseTimeout", "12345");
+        props.setProperty("jcifs.smb.lmCompatibility", "0");
+
+        // When
+        PropertyConfiguration testConfig = new PropertyConfiguration(props);
+        PropertyConfiguration defaults = new PropertyConfiguration(new Properties());
+
+        // Then
+        assertEquals(defaults.getConnTimeout(), testConfig.getConnTimeout());
+        assertEquals(defaults.getSoTimeout(), testConfig.getSoTimeout());
+        assertEquals(defaults.getResponseTimeout(), testConfig.getResponseTimeout());
+        assertEquals(defaults.getLanManCompatibility(), testConfig.getLanManCompatibility());
     }
 }

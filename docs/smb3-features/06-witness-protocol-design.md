@@ -900,11 +900,11 @@ protected void handleConnectionLoss(IOException error) {
 ### 6.1 Configuration Properties
 ```java
 // In PropertyConfiguration.java
-public static final String USE_WITNESS = "org.codelibs.jcifs.smb.impl.client.useWitness";
-public static final String WITNESS_HEARTBEAT_TIMEOUT = "org.codelibs.jcifs.smb.impl.client.witnessHeartbeatTimeout";
-public static final String WITNESS_REGISTRATION_TIMEOUT = "org.codelibs.jcifs.smb.impl.client.witnessRegistrationTimeout";
-public static final String WITNESS_RECONNECT_DELAY = "org.codelibs.jcifs.smb.impl.client.witnessReconnectDelay";
-public static final String WITNESS_SERVICE_DISCOVERY = "org.codelibs.jcifs.smb.impl.client.witnessServiceDiscovery";
+public static final String USE_WITNESS = "jcifs.client.useWitness";
+public static final String WITNESS_HEARTBEAT_TIMEOUT = "jcifs.client.witnessHeartbeatTimeout";
+public static final String WITNESS_REGISTRATION_TIMEOUT = "jcifs.client.witnessRegistrationTimeout";
+public static final String WITNESS_RECONNECT_DELAY = "jcifs.client.witnessReconnectDelay";
+public static final String WITNESS_SERVICE_DISCOVERY = "jcifs.client.witnessServiceDiscovery";
 
 public boolean isUseWitness() {
     return getBooleanProperty(USE_WITNESS, false);  // Disabled by default
@@ -994,7 +994,7 @@ public void testWitnessClientMock() throws Exception {
 public void testWitnessFailover() throws Exception {
     // Requires cluster environment for testing
     CIFSContext context = getTestContext();
-    context.getConfig().setProperty("org.codelibs.jcifs.smb.impl.client.useWitness", "true");
+    context.getConfig().setProperty("jcifs.client.useWitness", "true");
     
     SmbFile file = new SmbFile("smb://cluster-server/share/test.txt", context);
     file.createNewFile();
@@ -1015,8 +1015,8 @@ public void testWitnessFailover() throws Exception {
 @Test
 public void testWitnessServiceDiscovery() throws Exception {
     CIFSContext context = getTestContext();
-    context.getConfig().setProperty("org.codelibs.jcifs.smb.impl.client.useWitness", "true");
-    context.getConfig().setProperty("org.codelibs.jcifs.smb.impl.client.witnessServiceDiscovery", "true");
+    context.getConfig().setProperty("jcifs.client.useWitness", "true");
+    context.getConfig().setProperty("jcifs.client.witnessServiceDiscovery", "true");
     
     SmbSession session = new SmbSession(context, transport);
     session.initializeWitnessSupport();

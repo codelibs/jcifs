@@ -560,10 +560,10 @@ private void handleIncomingMessage(ServerMessageBlock2 msg) {
 // In PropertyConfiguration.java
 public class PropertyConfiguration implements Configuration {
     // Lease configuration properties
-    public static final String USE_LEASES = "org.codelibs.jcifs.smb.impl.client.useLeases";
-    public static final String LEASE_TIMEOUT = "org.codelibs.jcifs.smb.impl.client.leaseTimeout";
-    public static final String MAX_LEASES = "org.codelibs.jcifs.smb.impl.client.maxLeases";
-    public static final String LEASE_VERSION = "org.codelibs.jcifs.smb.impl.client.leaseVersion";
+    public static final String USE_LEASES = "jcifs.client.useLeases";
+    public static final String LEASE_TIMEOUT = "jcifs.client.leaseTimeout";
+    public static final String MAX_LEASES = "jcifs.client.maxLeases";
+    public static final String LEASE_VERSION = "jcifs.client.leaseVersion";
     
     public boolean isUseLeases() {
         return getBooleanProperty(USE_LEASES, true);
@@ -641,7 +641,7 @@ public class LeaseTest {
 public void testLeaseWithRealServer() throws Exception {
     // Requires SMB3 capable server
     CIFSContext context = getTestContext();
-    context.getConfig().setProperty("org.codelibs.jcifs.smb.impl.client.useLeases", "true");
+    context.getConfig().setProperty("jcifs.client.useLeases", "true");
     
     try (SmbFile file = new SmbFile("smb://server/share/test.txt", context)) {
         // Open file with lease
