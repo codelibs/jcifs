@@ -75,6 +75,7 @@ import org.codelibs.jcifs.smb.internal.smb2.ServerMessageBlock2Request;
 import org.codelibs.jcifs.smb.internal.smb2.ServerMessageBlock2Response;
 import org.codelibs.jcifs.smb.internal.smb2.Smb2Constants;
 import org.codelibs.jcifs.smb.internal.smb2.Smb2EncryptionContext;
+import org.codelibs.jcifs.smb.internal.smb2.Smb2SymlinkErrorResponse;
 import org.codelibs.jcifs.smb.internal.smb2.Smb3KeyDerivation;
 import org.codelibs.jcifs.smb.internal.smb2.io.Smb2ReadResponse;
 import org.codelibs.jcifs.smb.internal.smb2.ioctl.Smb2IoctlRequest;
@@ -1386,6 +1387,8 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
             checkReferral(resp, path, (RequestWithPath) req);
             // checkReferral always throws and exception but put break here for clarity
             break;
+        case NtStatus.NT_STATUS_STOPPED_ON_SYMLINK:
+            throw createSymlinkException(req, resp);
         case NtStatus.NT_STATUS_BUFFER_OVERFLOW:
             if (resp instanceof Smb2ReadResponse) {
                 break;
@@ -1407,6 +1410,29 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
             throw new SMBSignatureValidationException("Signature verification failed.");
         }
         return cont;
+    }
+
+    /**
+     * Builds the exception for a STATUS_STOPPED_ON_SYMLINK response, carrying the link target the
+     * server disclosed. Falls back to a plain {@link SmbException} if that data cannot be decoded,
+     * so a malformed response never turns into something worse than the status itself.
+     *
+     * @param req the request that hit the link
+     * @param resp its response
+     * @return the exception to throw
+     */
+    private static SmbException createSymlinkException(final ServerMessageBlock2 req, final Response resp) {
+        if (resp instanceof ServerMessageBlock2) {
+            final ServerMessageBlock2 r = (ServerMessageBlock2) resp;
+            try {
+                final Smb2SymlinkErrorResponse symlink = Smb2SymlinkErrorResponse.decode(r.getErrorData(), r.getErrorContextCount());
+                final String path = req instanceof RequestWithPath ? ((RequestWithPath) req).getFullUNCPath() : null;
+                return new SmbSymlinkException(path, symlink);
+            } catch (final SMBProtocolDecodingException e) {
+                log.debug("Failed to decode symlink error data", e);
+            }
+        }
+        return new SmbException(NtStatus.NT_STATUS_STOPPED_ON_SYMLINK, null);
     }
 
     /**
