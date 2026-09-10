@@ -327,21 +327,40 @@ class SmbTreeImpl implements SmbTreeInternal {
     }
 
     /**
+     * Looks up the referral covering the given UNC path.
+     *
+     * The keys of this map are UNC paths, so a match has to end on a path element boundary: a referral for
+     * {@code \\reports} covers {@code \\reports\\q1.xlsx} but not {@code \\reports2024\\q1.xlsx}. Candidates are tried
+     * from the most specific one up, so a referral for a nested link wins over the one for its parent, and the
+     * whole tree referral - keyed by a lone separator - is the last candidate. This mirrors how
+     * {@code DfsImpl} walks up its own link cache.
+     *
      * @param path
-     * @return the treeReferral
+     *            UNC path to look up
+     * @return the treeReferral, or {@code null} if no referral covers the path
      */
     public DfsReferralData getTreeReferral(final String path) {
-        if (path != null) {
-            log.debug("Finding tree referral for path [{}]", path);
-            for (final String link : this.treeReferrals.keySet()) {
-                if (path.startsWith(link)) {
-                    final DfsReferralData referral = this.treeReferrals.get(link);
-                    log.debug("Found tree referral [{}] for path [{}]", referral, path);
-                    return this.treeReferrals.get(link);
-                }
-            }
-            log.debug("No tree referral found for path [{}]", path);
+        if (path == null || path.isEmpty()) {
+            return null;
         }
+        log.debug("Finding tree referral for path [{}]", path);
+        for (int end = path.length(); end > 0;) {
+            final DfsReferralData referral = this.treeReferrals.get(path.substring(0, end));
+            if (referral != null) {
+                log.debug("Found tree referral [{}] for path [{}]", referral, path);
+                return referral;
+            }
+            if (end == 1) {
+                break;
+            }
+            final int sep = path.lastIndexOf('\\', end - 1);
+            if (sep < 0) {
+                break;
+            }
+            // a separator at the start denotes the whole tree referral, which is the last candidate
+            end = sep == 0 ? 1 : sep;
+        }
+        log.debug("No tree referral found for path [{}]", path);
         return null;
     }
 

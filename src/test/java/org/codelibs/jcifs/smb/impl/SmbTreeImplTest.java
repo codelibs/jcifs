@@ -3,6 +3,7 @@ package org.codelibs.jcifs.smb.impl;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -342,22 +343,26 @@ class SmbTreeImplTest {
     void testGetTreeReferral_prefixMatching() {
         SmbTreeImpl tree = new SmbTreeImpl(session, "SHARE", "A:");
 
-        // Create mock referral
+        // Create mock referral. The keys of this cache are UNC paths, so the separator is a backslash.
         DfsReferralData referral = mock(DfsReferralData.class);
-        when(referral.getLink()).thenReturn("/root/dir");
+        when(referral.getLink()).thenReturn("\\root\\dir");
 
-        tree.setTreeReferral(referral, "/root/dir");
+        tree.setTreeReferral(referral, "\\root\\dir");
 
         // Exact match should work
-        assertNotNull(tree.getTreeReferral("/root/dir"));
+        assertNotNull(tree.getTreeReferral("\\root\\dir"));
 
-        // Prefix match should work (path starts with registered path)
-        assertNotNull(tree.getTreeReferral("/root/dir/subdir"));
-        assertNotNull(tree.getTreeReferral("/root/dir/subdir/file.txt"));
+        // Paths below the referral should work
+        assertNotNull(tree.getTreeReferral("\\root\\dir\\subdir"));
+        assertNotNull(tree.getTreeReferral("\\root\\dir\\subdir\\file.txt"));
 
         // Non-matching prefix should return null
-        assertNull(tree.getTreeReferral("/other/path"));
-        assertNull(tree.getTreeReferral("/root")); // Partial match of path component
+        assertNull(tree.getTreeReferral("\\other\\path"));
+        assertNull(tree.getTreeReferral("\\root")); // Partial match of path component
+
+        // A sibling that merely shares a name prefix is not below the referral
+        assertNull(tree.getTreeReferral("\\root\\dir2"));
+        assertNull(tree.getTreeReferral("\\root\\dir2024\\q1.xlsx"));
     }
 
     /**
@@ -369,21 +374,51 @@ class SmbTreeImplTest {
 
         // Create mock referrals with overlapping paths
         DfsReferralData referral1 = mock(DfsReferralData.class);
-        when(referral1.getLink()).thenReturn("/root");
+        when(referral1.getLink()).thenReturn("\\root");
         when(referral1.getServer()).thenReturn("server1");
 
         DfsReferralData referral2 = mock(DfsReferralData.class);
-        when(referral2.getLink()).thenReturn("/root/subdir");
+        when(referral2.getLink()).thenReturn("\\root\\subdir");
         when(referral2.getServer()).thenReturn("server2");
 
-        tree.setTreeReferral(referral1, "/root");
-        tree.setTreeReferral(referral2, "/root/subdir");
+        tree.setTreeReferral(referral1, "\\root");
+        tree.setTreeReferral(referral2, "\\root\\subdir");
 
-        // When multiple prefixes match, should return one of them
-        // (The implementation returns the first match found)
-        DfsReferralData result = tree.getTreeReferral("/root/subdir/file.txt");
-        assertNotNull(result);
-        assertTrue(result == referral1 || result == referral2);
+        // The most specific referral covering the path wins
+        assertSame(referral2, tree.getTreeReferral("\\root\\subdir\\file.txt"));
+        assertSame(referral2, tree.getTreeReferral("\\root\\subdir"));
+
+        // Paths that the nested referral does not cover fall back to its parent
+        assertSame(referral1, tree.getTreeReferral("\\root\\other\\file.txt"));
+        assertSame(referral1, tree.getTreeReferral("\\root"));
+
+        // A sibling of the nested link is not covered by it
+        assertSame(referral1, tree.getTreeReferral("\\root\\subdir2\\file.txt"));
+    }
+
+    /**
+     * The referral for the whole tree is keyed by a lone separator and is the last candidate.
+     */
+    @Test
+    void testGetTreeReferral_wholeTreeReferralIsFallback() {
+        SmbTreeImpl tree = new SmbTreeImpl(session, "SHARE", "A:");
+
+        DfsReferralData wholeTree = mock(DfsReferralData.class);
+        when(wholeTree.getLink()).thenReturn("\\");
+
+        DfsReferralData link = mock(DfsReferralData.class);
+        when(link.getLink()).thenReturn("\\link");
+
+        tree.setTreeReferral(wholeTree, null);
+        tree.setTreeReferral(link, "\\link");
+
+        // The more specific link wins where it applies
+        assertSame(link, tree.getTreeReferral("\\link\\file.txt"));
+
+        // Everything else falls back to the whole tree referral
+        assertSame(wholeTree, tree.getTreeReferral("\\other\\file.txt"));
+        assertSame(wholeTree, tree.getTreeReferral("\\linked\\file.txt"));
+        assertSame(wholeTree, tree.getTreeReferral("\\"));
     }
 
     /**
