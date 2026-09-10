@@ -77,7 +77,7 @@ public class Dfs {
      * @throws SmbAuthException if authentication fails
      */
     public HashMap getTrustedDomains(final NtlmPasswordAuthentication auth) throws SmbAuthException {
-        if (DISABLED || auth.domain == "?") {
+        if (DISABLED || "?".equals(auth.domain)) {
             return null;
         }
 
