@@ -9,8 +9,9 @@
 >
 > Some unused protocol constants exist for individual features (capability bits,
 > oplock levels, FSCTL codes), and `Smb2CreateRequest`/`Smb2CreateResponse` carry
-> a generic create context framework that no context type plugs into. See each
-> design document under `smb3-features/` for what is present for that feature.
+> a generic create context framework that no context type plugs into. Each design
+> document in this directory records what is present for its feature, and
+> [SMB3_SUPPORT.md](../../SMB3_SUPPORT.md) records what jcifs supports today.
 
 ## Overview
 This document outlines the implementation plan for advanced SMB3 features that are currently not implemented in JCIFS. These features are essential for enterprise-grade SMB3 support, providing enhanced performance, reliability, and scalability.

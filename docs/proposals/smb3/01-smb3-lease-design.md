@@ -15,8 +15,9 @@
 > `Smb2CreateResponse.createContext()` returns `null` for every context name, so no
 > lease context can be sent or recognised.
 >
-> See [SMB3_IMPLEMENTATION_PLAN.md](../SMB3_IMPLEMENTATION_PLAN.md) for the
-> status of all SMB3 advanced features.
+> For what jcifs actually supports today, see
+> [SMB3_SUPPORT.md](../../SMB3_SUPPORT.md). For the other unstarted proposals,
+> see [SMB3_IMPLEMENTATION_PLAN.md](SMB3_IMPLEMENTATION_PLAN.md).
 
 ## 1. Overview
 

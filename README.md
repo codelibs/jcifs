@@ -20,6 +20,10 @@ JCIFS is a comprehensive, pure Java implementation of the CIFS/SMB networking pr
   - **Automatic protocol negotiation**
   - **Transparent encryption** when required by the server, per session or per share (opt-in, see below)
 
+See **[SMB2/SMB3 support status](docs/SMB3_SUPPORT.md)** for what is and is not
+implemented, feature by feature. Leases, oplocks, durable handles, multi-channel,
+directory leasing, compression, RDMA and the witness protocol are not implemented.
+
 ### **Security & Authentication**
 - **Multi-method Authentication**: NTLMSSP, Kerberos, SPNEGO
 - **Enterprise Security**: Domain authentication with credential renewal
@@ -194,7 +198,7 @@ try (SmbFile dir = new SmbFile("smb://server/share/monitored/", context);
 Properties config = new Properties();
 config.setProperty("jcifs.client.minVersion", "SMB300");  // Require SMB3+
 config.setProperty("jcifs.client.maxVersion", "SMB311");
-config.setProperty("jcifs.client.signingPreferred", "true");  // Prefer signing
+config.setProperty("jcifs.client.signingEnforced", "true");  // Require signing
 config.setProperty("jcifs.resolveOrder", "LMHOSTS,DNS,WINS,BCAST");
 
 CIFSContext customContext = new BaseContext(new PropertyConfiguration(config));
@@ -375,7 +379,9 @@ props.setProperty("jcifs.client.maxVersion", "SMB311");
 
 ### Authentication
 - **Use domain authentication** when possible for better security
-- **Enable SMB signing** for data integrity: `jcifs.client.signingPreferred=true`
+- **Enable SMB signing** for data integrity: `jcifs.client.signingEnforced=true`
+  (`signingPreferred` does **not** enable signing on SMB2/SMB3 — see
+  [the support status](docs/SMB3_SUPPORT.md#jcifsclientsigningpreferred-does-not-enable-smb2-signing))
 - **Prefer SMB3** for encryption: `jcifs.client.minVersion=SMB300`
 - **Rotate credentials** regularly and implement credential renewal
 
