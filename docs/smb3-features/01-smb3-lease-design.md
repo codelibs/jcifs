@@ -1,5 +1,23 @@
 # SMB3 Lease Feature - Detailed Design Document
 
+> **Status: not implemented.**
+>
+> This document is a design proposal, not a description of the current code. The
+> feature is not available in any released version, and none of the packages,
+> classes, or configuration properties it introduces exist in the source tree.
+> Code shown below is a sketch of a possible implementation.
+>
+> What does exist is unused protocol scaffolding: the constants
+> `SMB2_OPLOCK_LEVEL_LEASE` (`Smb2CreateRequest`) and `SMB2_GLOBAL_CAP_LEASING`
+> (`Smb2Constants`), neither of which is referenced anywhere, plus the create
+> context framework described below. That framework encodes and decodes contexts
+> generically, but `Smb2CreateRequest` exposes no way to set one and
+> `Smb2CreateResponse.createContext()` returns `null` for every context name, so no
+> lease context can be sent or recognised.
+>
+> See [SMB3_IMPLEMENTATION_PLAN.md](../SMB3_IMPLEMENTATION_PLAN.md) for the
+> status of all SMB3 advanced features.
+
 ## 1. Overview
 
 SMB3 leases provide a client caching mechanism that replaces the traditional oplock mechanism. Leases enable better performance through client-side caching while maintaining cache coherency across multiple clients.

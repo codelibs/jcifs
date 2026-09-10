@@ -1,5 +1,17 @@
 # SMB3 Advanced Features Implementation Plan
 
+> **Status: not started.**
+>
+> Every phase below is a proposal. None of these features are implemented in the
+> jcifs source tree or available in any released version, and the package layouts
+> and configuration properties shown are design sketches rather than descriptions
+> of existing code.
+>
+> Some unused protocol constants exist for individual features (capability bits,
+> oplock levels, FSCTL codes), and `Smb2CreateRequest`/`Smb2CreateResponse` carry
+> a generic create context framework that no context type plugs into. See each
+> design document under `smb3-features/` for what is present for that feature.
+
 ## Overview
 This document outlines the implementation plan for advanced SMB3 features that are currently not implemented in JCIFS. These features are essential for enterprise-grade SMB3 support, providing enhanced performance, reliability, and scalability.
 
