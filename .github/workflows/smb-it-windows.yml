@@ -1,0 +1,67 @@
+# Runs the SMB integration tests against a real Windows SMB server.
+#
+# windows-latest is Windows Server 2025 and the runner has administrator rights
+# with UAC disabled, so the job can create shares, mandate encryption and install
+# the DFS Namespaces role. Nothing here needs a virtual machine.
+#
+# Runs on pull requests alongside the Samba build. windows-latest is a standard
+# GitHub-hosted runner and free on public repositories, and this job is what
+# catches behaviour only a real Windows server exhibits - encryption interop, DFS
+# referrals, reparse points. The nightly run stays so that drift in the runner
+# image surfaces even when no pull request is open.
+
+name: SMB integration tests (Windows)
+
+on:
+  push:
+    branches: [ main ]
+  # No base branch filter: a pull request stacked on another branch needs the
+  # same checks as one aimed straight at main.
+  pull_request:
+  schedule:
+    - cron: '0 17 * * *'
+  workflow_dispatch:
+
+jobs:
+  windows-smb:
+
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: maven
+
+    - name: Configure the SMB server
+      shell: pwsh
+      run: |
+        ./build_helpers/win-setup.ps1
+        "JCIFS_IT_HOST=$env:COMPUTERNAME" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+    - name: Run the integration tests
+      run: mvn -B verify --file pom.xml
+      env:
+        JCIFS_IT_BACKEND: windows
+        JCIFS_IT_USER: testuser1
+        # Throwaway credential, only valid on this runner for the life of the job.
+        JCIFS_IT_PASSWORD: 'Public-Fixture-Not-A-Secret-1!'
+        JCIFS_IT_REQUIRED: "true"
+
+    - name: Check that the integration tests actually ran
+      if: always()
+      shell: bash
+      run: python build_helpers/check-it-reports.py
+
+    - name: Upload test reports
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-smb-test-reports
+        path: |
+          target/failsafe-reports/
+          target/surefire-reports/

@@ -283,6 +283,64 @@ mvn verify
 mvn jacoco:report
 ```
 
+#### Integration tests against a real SMB server
+
+`mvn verify` also runs the `*IT` tests in `src/test/java/org/codelibs/jcifs/smb/it`,
+which talk to an actual SMB server. Two backends are supported and the same tests
+run against both.
+
+**Samba (default, no setup needed).** With Docker available, the harness builds
+and starts the container defined in `build_helpers/samba/` and points the tests at
+it. Nothing else is required:
+
+```bash
+mvn verify
+```
+
+That publishes Samba on a mapped port. A DFS referral names a host but no port,
+so the DFS tests skip unless the server answers on 445. The harness tries 445
+first and falls back, so on a machine already using that port Testcontainers logs
+one failed container start before the run continues normally. To run them anyway - on a
+machine whose own 445 is taken, for instance - put the server and the test JVM on
+the same Docker network:
+
+```bash
+./build_helpers/run-it-with-dfs.sh
+```
+
+**A real Windows server.** Run `build_helpers/win-setup.ps1` on the Windows
+machine to create the shares, symlinks and DFS namespace, then point the tests at
+it:
+
+```bash
+JCIFS_IT_BACKEND=windows \
+JCIFS_IT_HOST=<the Windows computer name> \
+JCIFS_IT_USER=testuser1 \
+JCIFS_IT_PASSWORD=<the password passed to win-setup.ps1> \
+mvn verify
+```
+
+This is what the nightly `SMB integration tests (Windows)` workflow does on a
+`windows-latest` runner, which is a Windows Server 2025 host.
+
+| Variable | Meaning |
+|---|---|
+| `JCIFS_IT_BACKEND` | `samba` or `windows`; unset starts the container |
+| `JCIFS_IT_HOST`, `JCIFS_IT_PORT` | where the server is; port defaults to 445 |
+| `JCIFS_IT_USER`, `JCIFS_IT_PASSWORD`, `JCIFS_IT_DOMAIN` | credentials |
+| `JCIFS_IT_SHARE`, `JCIFS_IT_SHARE_ENCRYPTED`, `JCIFS_IT_DFS_ROOT` | share names |
+| `JCIFS_IT_REQUIRED` | `true` makes a missing environment a failure instead of a skip |
+
+Before any test runs, a preflight check confirms the server is configured the way
+the tests assume - in particular that the encrypted share really does reject a
+client that cannot encrypt, and that a pinned dialect is actually honoured.
+Without those checks a green run would not mean much.
+
+Some tests skip by design: DFS referrals name a host but no port, so they only
+run when the server answers on 445 (a development machine that is already sharing
+files will skip them), and tests marked `@RequiresBackend` run on one backend
+only.
+
 ## ⚡ Performance Considerations
 
 ### Connection Management
