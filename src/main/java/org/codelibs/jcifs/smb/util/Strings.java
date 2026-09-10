@@ -38,7 +38,7 @@ public final class Strings {
     private static final Charset UNI_ENCODING = Charset.forName("UTF-16LE");
     private static final Charset ASCII_ENCODING = Charset.forName("US-ASCII");
 
-    private static final boolean MASK_SECRET_VALUE = System.getProperty("jcifs.maskSecretValue", "true") == "true";
+    private static final boolean MASK_SECRET_VALUE = Boolean.parseBoolean(System.getProperty("jcifs.maskSecretValue", "true"));
     private static final String SECRET_PATTERN = "^(smb.*:).*(@.*)$";
     private static final String SECRET_MASK_REPLACE = "$1******$2";
 
