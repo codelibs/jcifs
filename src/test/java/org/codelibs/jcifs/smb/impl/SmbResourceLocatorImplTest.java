@@ -445,4 +445,56 @@ class SmbResourceLocatorImplTest {
         assertEquals("\\sub\\child", base2.getUNCPath());
         assertEquals("share", base2.getShare());
     }
+
+    @Test
+    @DisplayName("resolveInContext separates the name from a context path without a trailing slash (issue #83)")
+    void testResolveInContextWithoutTrailingSlash() {
+        SmbResourceLocatorImpl base = locator("smb://server/share/nested/a.txt");
+        SmbResourceLocator context = mock(SmbResourceLocator.class);
+        when(context.getShare()).thenReturn("share");
+        when(context.getDfsReferral()).thenReturn(null);
+        // a resource obtained through resolve("nested") carries no trailing slash
+        when(context.getUNCPath()).thenReturn("\\nested");
+        when(context.getURLPath()).thenReturn("/share/nested");
+        when(context.getServer()).thenReturn("server");
+
+        base.resolveInContext(context, "a.txt");
+        assertEquals("/share/nested/a.txt", base.getURLPath());
+        assertEquals("\\nested\\a.txt", base.getUNCPath());
+        assertEquals("a.txt", base.getName());
+        assertEquals("share", base.getShare());
+    }
+
+    @Test
+    @DisplayName("resolveInContext keeps a share root context without a trailing slash separated")
+    void testResolveInContextShareRootWithoutTrailingSlash() {
+        SmbResourceLocatorImpl base = locator("smb://server/share/dir");
+        SmbResourceLocator context = mock(SmbResourceLocator.class);
+        when(context.getShare()).thenReturn("share");
+        when(context.getDfsReferral()).thenReturn(null);
+        when(context.getUNCPath()).thenReturn("\\");
+        when(context.getURLPath()).thenReturn("/share");
+        when(context.getServer()).thenReturn("server");
+
+        base.resolveInContext(context, "dir/");
+        assertEquals("/share/dir/", base.getURLPath());
+        assertEquals("\\dir\\", base.getUNCPath());
+        assertEquals("share", base.getShare());
+    }
+
+    @Test
+    @DisplayName("resolveInContext does not duplicate the separator of an absolute name")
+    void testResolveInContextAbsoluteName() {
+        SmbResourceLocatorImpl base = locator("smb://server/share/zig/zag");
+        SmbResourceLocator context = mock(SmbResourceLocator.class);
+        when(context.getShare()).thenReturn("share");
+        when(context.getDfsReferral()).thenReturn(null);
+        when(context.getUNCPath()).thenReturn("\\zig\\zag");
+        when(context.getURLPath()).thenReturn("/share/zig/zag");
+        when(context.getServer()).thenReturn("server");
+
+        base.resolveInContext(context, "/");
+        assertEquals("/share/zig/zag/", base.getURLPath());
+        assertEquals("\\zig\\zag\\", base.getUNCPath());
+    }
 }
