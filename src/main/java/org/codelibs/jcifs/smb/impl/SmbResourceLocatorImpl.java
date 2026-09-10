@@ -694,9 +694,47 @@ class SmbResourceLocatorImpl implements SmbResourceLocatorInternal, Cloneable {
      */
     @Override
     public boolean overlaps(final SmbResourceLocator other) throws CIFSException {
-        final String tp = getCanonicalURL();
-        final String op = other.getCanonicalURL();
-        return getAddress().equals(other.getAddress()) && tp.regionMatches(true, 0, op, 0, Math.min(tp.length(), op.length()));
+        if (!getAddress().equals(other.getAddress())) {
+            return false;
+        }
+        final String tp = getURLPath();
+        final String op = other.getURLPath();
+        return isSameOrAncestor(tp, op) || isSameOrAncestor(op, tp);
+    }
+
+    /**
+     * Tests whether {@code path} denotes {@code ancestor} itself or a resource below it. Both arguments are canonical
+     * URL paths; trailing separators are insignificant and the comparison is case insensitive, as SMB paths are. A
+     * shared name prefix that does not end on a path separator (for example {@code /share/file} and
+     * {@code /share/file123}) does not qualify.
+     *
+     * @param ancestor
+     *            canonical URL path of the possible ancestor
+     * @param path
+     *            canonical URL path to test
+     * @return whether path is ancestor or is contained in it
+     */
+    private static boolean isSameOrAncestor(final String ancestor, final String path) {
+        final int al = trimTrailingSeparators(ancestor);
+        final int pl = trimTrailingSeparators(path);
+        if (al > pl || !path.regionMatches(true, 0, ancestor, 0, al)) {
+            return false;
+        }
+        // equal paths, the root itself, or a separator right after the common prefix
+        return al == pl || al <= 1 || path.charAt(al) == '/';
+    }
+
+    /**
+     * @param path
+     *            path to inspect
+     * @return the length of path with any trailing separators removed, keeping a leading root separator
+     */
+    private static int trimTrailingSeparators(final String path) {
+        int len = path.length();
+        while (len > 1 && path.charAt(len - 1) == '/') {
+            len--;
+        }
+        return len;
     }
 
     /**
