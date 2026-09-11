@@ -921,22 +921,20 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
             throw new IOException("Encryption is required but session 0x" + Long.toHexString(sessionId) + " has no encryption context");
         }
 
-        final byte[] plaintext = new byte[n];
-        System.arraycopy(buffer, 4, plaintext, 0, n);
+        // Encrypt straight into the frame so that the session header and the wrapped message reach the socket in
+        // a single write, as they do on the unencrypted path.
+        final int wireLength = Smb2TransformHeader.TRANSFORM_HEADER_SIZE + n;
+        final byte[] framed = new byte[4 + wireLength];
+        framed[0] = 0;
+        framed[1] = (byte) (wireLength >> 16);
+        framed[2] = (byte) (wireLength >> 8);
+        framed[3] = (byte) wireLength;
 
-        final byte[] wire;
         try {
-            wire = encryptionContext.encryptMessage(plaintext, sessionId);
+            encryptionContext.encryptMessage(buffer, 4, n, sessionId, framed, 4);
         } catch (final CIFSException e) {
             throw new IOException("Failed to encrypt message", e);
         }
-
-        final byte[] framed = new byte[4 + wire.length];
-        framed[0] = 0;
-        framed[1] = (byte) (wire.length >> 16);
-        framed[2] = (byte) (wire.length >> 8);
-        framed[3] = (byte) wire.length;
-        System.arraycopy(wire, 0, framed, 4, wire.length);
 
         this.out.write(framed, 0, framed.length);
         this.out.flush();

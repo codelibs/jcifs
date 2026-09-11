@@ -46,13 +46,13 @@ public class Smb2TransformHeader implements Encodable {
      */
     public static final int TRANSFORM_HEADER_SIZE = 52;
 
+    /** Offset of the Signature field within the transform header. */
+    public static final int SIGNATURE_OFFSET = 4;
+
     /**
      * Offset of the Nonce field within the transform header. The additional authenticated data for the AEAD cipher
      * starts here (MS-SMB2 3.1.4.3).
      */
-    /** Offset of the Signature field within the transform header. */
-    public static final int SIGNATURE_OFFSET = 4;
-
     public static final int AAD_OFFSET = 20;
 
     /**

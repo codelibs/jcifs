@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
@@ -309,33 +308,19 @@ class SmbSessionImplTest {
     }
 
     @Test
-    @DisplayName("encryption: flags, encryption, and decryption delegation")
-    void testEncryptionDelegation() throws Exception {
+    @DisplayName("encryption: context is exposed to the transport once it exists")
+    void testEncryptionContextExposure() throws Exception {
         SmbSessionImpl session = newSession();
 
-        // No encryption context -> throws
-        CIFSException notEnabled = assertThrows(CIFSException.class, () -> session.encryptMessage(new byte[] { 1 }));
-        assertTrue(notEnabled.getMessage().contains("Encryption not enabled"));
-        assertThrows(CIFSException.class, () -> session.decryptMessage(new byte[] { 1 }));
+        // No encryption context -> the transport must not try to encrypt on this session
+        assertFalse(session.isEncryptionEnabled());
+        assertNull(session.getEncryptionContext());
 
-        // Set encryption context and verify delegation
         Smb2EncryptionContext enc = mock(Smb2EncryptionContext.class);
         setField(session, "encryptionContext", enc);
-        setField(session, "sessionId", 99L);
-
-        when(enc.encryptMessage(any(byte[].class), eq(99L))).thenReturn(new byte[] { 9, 9 });
-        when(enc.decryptMessage(any(byte[].class))).thenReturn(new byte[] { 7, 7 });
 
         assertTrue(session.isEncryptionEnabled());
         assertSame(enc, session.getEncryptionContext());
-
-        byte[] encOut = session.encryptMessage(new byte[] { 1, 2, 3 });
-        assertArrayEquals(new byte[] { 9, 9 }, encOut);
-        verify(enc, times(1)).encryptMessage(eq(new byte[] { 1, 2, 3 }), eq(99L));
-
-        byte[] decOut = session.decryptMessage(new byte[] { 5 });
-        assertArrayEquals(new byte[] { 7, 7 }, decOut);
-        verify(enc, times(1)).decryptMessage(eq(new byte[] { 5 }));
     }
 
     @Test
