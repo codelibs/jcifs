@@ -68,39 +68,75 @@ public final class Smb2SymlinkErrorResponse {
     /**
      * Decodes the symbolic link error data carried by a STATUS_STOPPED_ON_SYMLINK response.
      *
+     * <p>
+     * When the response carries error contexts, each is tried in turn: MS-SMB2 2.2.2 permits more
+     * than one, and does not promise the symbolic link context comes first. A context is accepted
+     * only if its payload carries the SYML tag, which identifies it more precisely than ErrorId
+     * would.
+     * </p>
+     *
      * @param errorData the raw ErrorData of the SMB2 error response
      * @param errorContextCount the response's ErrorContextCount; non-zero means the payload is
-     *            wrapped in an SMB2 ERROR Context, as SMB 3.1.1 does
+     *            wrapped in one or more SMB2 ERROR Contexts, as SMB 3.1.1 does
      * @return the decoded symbolic link error response
-     * @throws SMBProtocolDecodingException if the data is absent, truncated, or not a symbolic link
-     *             error response
+     * @throws SMBProtocolDecodingException if the data is absent, truncated, or carries no symbolic
+     *             link error response
      */
     public static Smb2SymlinkErrorResponse decode(final byte[] errorData, final int errorContextCount) throws SMBProtocolDecodingException {
         if (errorData == null) {
             throw new SMBProtocolDecodingException("Symlink error response carries no error data");
         }
+        if (errorContextCount <= 0) {
+            return decodeSymlinkResponse(errorData, 0, errorData.length);
+        }
 
+        SMBProtocolDecodingException failure = null;
         int bufferIndex = 0;
-        if (errorContextCount > 0) {
-            if (errorData.length < ERROR_CONTEXT_HEADER_SIZE) {
-                throw new SMBProtocolDecodingException("Truncated SMB2 error context header: " + errorData.length + " bytes");
+        for (int i = 0; i < errorContextCount; i++) {
+            if (bufferIndex > errorData.length - ERROR_CONTEXT_HEADER_SIZE) {
+                break;
             }
-            final int contextDataLength = SMBUtil.readInt4(errorData, 0);
-            bufferIndex = ERROR_CONTEXT_HEADER_SIZE;
-            if (contextDataLength < 0 || contextDataLength > errorData.length - bufferIndex) {
+            final int contextDataLength = SMBUtil.readInt4(errorData, bufferIndex);
+            final int contextDataIndex = bufferIndex + ERROR_CONTEXT_HEADER_SIZE;
+            if (contextDataLength < 0 || contextDataLength > errorData.length - contextDataIndex) {
                 throw new SMBProtocolDecodingException("SMB2 error context claims " + contextDataLength + " bytes but only "
-                        + (errorData.length - bufferIndex) + " are present");
+                        + (errorData.length - contextDataIndex) + " are present");
             }
+            try {
+                return decodeSymlinkResponse(errorData, contextDataIndex, contextDataLength);
+            } catch (final SMBProtocolDecodingException e) {
+                // not the symbolic link context, or a malformed one: keep looking
+                failure = e;
+            }
+            // each context starts on an 8 byte boundary relative to the start of the error response,
+            // which is where this buffer begins
+            bufferIndex = contextDataIndex + contextDataLength;
+            bufferIndex += (8 - bufferIndex % 8) % 8;
+        }
+        if (failure != null) {
+            throw failure;
+        }
+        throw new SMBProtocolDecodingException("No symbolic link error context in " + errorContextCount + " contexts");
+    }
+
+    /**
+     * Decodes one SMB2_SYMLINK_ERROR_RESPONSE. Every read is bounded by the declared lengths rather
+     * than by the size of the enclosing buffer, so a structure that overstates its own extent cannot
+     * reach whatever happens to follow it.
+     *
+     * @param errorData the buffer to read from
+     * @param start where the structure begins
+     * @param length how many bytes the enclosing context declares
+     */
+    private static Smb2SymlinkErrorResponse decodeSymlinkResponse(final byte[] errorData, final int start, final int length)
+            throws SMBProtocolDecodingException {
+        if (length < FIXED_SIZE) {
+            throw new SMBProtocolDecodingException("Truncated symlink error response: " + length + " bytes");
         }
 
-        final int available = errorData.length - bufferIndex;
-        if (available < FIXED_SIZE) {
-            throw new SMBProtocolDecodingException("Truncated symlink error response: " + available + " bytes");
-        }
-
-        final int symLinkLength = SMBUtil.readInt4(errorData, bufferIndex);
-        final int symLinkErrorTag = SMBUtil.readInt4(errorData, bufferIndex + 4);
-        final int reparseTag = SMBUtil.readInt4(errorData, bufferIndex + 8);
+        final int symLinkLength = SMBUtil.readInt4(errorData, start);
+        final int symLinkErrorTag = SMBUtil.readInt4(errorData, start + 4);
+        final int reparseTag = SMBUtil.readInt4(errorData, start + 8);
 
         if (symLinkErrorTag != SYMLINK_ERROR_TAG) {
             throw new SMBProtocolDecodingException(
@@ -109,27 +145,27 @@ public final class Smb2SymlinkErrorResponse {
         if (reparseTag != IO_REPARSE_TAG_SYMLINK) {
             throw new SMBProtocolDecodingException("Unsupported reparse tag 0x" + Integer.toHexString(reparseTag));
         }
-        // SymLinkLength covers everything from SymLinkErrorTag onwards
-        if (symLinkLength < FIXED_SIZE - 4 || symLinkLength > available - 4) {
-            throw new SMBProtocolDecodingException("Invalid SymLinkLength " + symLinkLength + " for " + available + " bytes");
+        // SymLinkLength covers everything from SymLinkErrorTag onwards, and bounds the rest of the read
+        if (symLinkLength < FIXED_SIZE - 4 || symLinkLength > length - 4) {
+            throw new SMBProtocolDecodingException("Invalid SymLinkLength " + symLinkLength + " for " + length + " bytes");
         }
 
-        final int reparseDataLength = SMBUtil.readInt2(errorData, bufferIndex + 12);
-        final int unparsedPathLength = SMBUtil.readInt2(errorData, bufferIndex + 14);
-        final int substituteNameOffset = SMBUtil.readInt2(errorData, bufferIndex + 16);
-        final int substituteNameLength = SMBUtil.readInt2(errorData, bufferIndex + 18);
-        final int printNameOffset = SMBUtil.readInt2(errorData, bufferIndex + 20);
-        final int printNameLength = SMBUtil.readInt2(errorData, bufferIndex + 22);
-        final int flags = SMBUtil.readInt4(errorData, bufferIndex + 24);
+        final int reparseDataLength = SMBUtil.readInt2(errorData, start + 12);
+        final int unparsedPathLength = SMBUtil.readInt2(errorData, start + 14);
+        final int substituteNameOffset = SMBUtil.readInt2(errorData, start + 16);
+        final int substituteNameLength = SMBUtil.readInt2(errorData, start + 18);
+        final int printNameOffset = SMBUtil.readInt2(errorData, start + 20);
+        final int printNameLength = SMBUtil.readInt2(errorData, start + 22);
+        final int flags = SMBUtil.readInt4(errorData, start + 24);
 
         // ReparseDataLength covers the name offset/length fields, Flags, and PathBuffer
         if (reparseDataLength < REPARSE_DATA_HEADER_SIZE) {
             throw new SMBProtocolDecodingException("Invalid ReparseDataLength " + reparseDataLength);
         }
-        final int pathBufferIndex = bufferIndex + FIXED_SIZE;
+        final int pathBufferIndex = start + FIXED_SIZE;
         final int pathBufferLength = reparseDataLength - REPARSE_DATA_HEADER_SIZE;
-        if (pathBufferLength > errorData.length - pathBufferIndex) {
-            throw new SMBProtocolDecodingException("ReparseDataLength " + reparseDataLength + " overruns the error data");
+        if (pathBufferLength > 4 + symLinkLength - FIXED_SIZE) {
+            throw new SMBProtocolDecodingException("ReparseDataLength " + reparseDataLength + " overruns the symlink error response");
         }
         if (unparsedPathLength % 2 != 0) {
             throw new SMBProtocolDecodingException("UnparsedPathLength " + unparsedPathLength + " is not a UTF-16 length");

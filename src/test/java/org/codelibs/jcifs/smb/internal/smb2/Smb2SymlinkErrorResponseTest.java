@@ -51,6 +51,20 @@ class Smb2SymlinkErrorResponseTest {
     private static final String ABSOLUTE_311 =
             "50000000000000004c00000053594d4c0c0000a04000000000001a001a001a00000000002f006500740063002f0068006f00730074006e0061006d0065002f006500740063002f0068006f00730074006e0061006d006500";
 
+    /**
+     * A response whose first error context honestly declares 68 bytes, but whose symbolic link
+     * structure inflates SymLinkLength and ReparseDataLength and points SubstituteName past its own
+     * path buffer, into the bytes that follow the context.
+     */
+    private static final String FORGED_TRAILING =
+            "44000000000000005000000053594d4c0c0000a04400000028000800140014000100000074006100720067006500740"
+                    + "02e007400780074007400610072006700650074002e007400780074004500560049004c000000000000000000";
+
+    /** Two error contexts, where the symbolic link one is second: a SHARE_REDIRECT context precedes it. */
+    private static final String SECOND_CONTEXT =
+            "0400000053526472010203040000000038000000000000003400000053594d4c0c0000a02800000000000e000e000e00"
+                    + "010000007200650061006c006400690072007200650061006c00640069007200";
+
     private static byte[] hex(final String s) {
         return HexFormat.of().parseHex(s.replace(" ", ""));
     }
@@ -154,5 +168,20 @@ class Smb2SymlinkErrorResponseTest {
         b[8 + 12] = (byte) 0x08;
         b[8 + 13] = (byte) 0x00;
         assertThrows(SMBProtocolDecodingException.class, () -> Smb2SymlinkErrorResponse.decode(b, 1));
+    }
+
+    @Test
+    @DisplayName("Bounds the payload by the declared lengths, not by whatever follows in the buffer")
+    void testRejectsNameReachingPastTheDeclaredContext() {
+        assertThrows(SMBProtocolDecodingException.class, () -> Smb2SymlinkErrorResponse.decode(hex(FORGED_TRAILING), 1),
+                "a name pointing past the declared context must not be decoded from trailing bytes");
+    }
+
+    @Test
+    @DisplayName("Finds the symbolic link context when it is not the first one")
+    void testSymlinkContextNotFirst() throws Exception {
+        final Smb2SymlinkErrorResponse r = Smb2SymlinkErrorResponse.decode(hex(SECOND_CONTEXT), 2);
+        assertEquals("realdir", r.getSubstituteName());
+        assertTrue(r.isRelative());
     }
 }

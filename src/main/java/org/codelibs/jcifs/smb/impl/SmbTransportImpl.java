@@ -1429,7 +1429,7 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
                 final String path = req instanceof RequestWithPath ? ((RequestWithPath) req).getFullUNCPath() : null;
                 return new SmbSymlinkException(path, symlink);
             } catch (final SMBProtocolDecodingException e) {
-                log.debug("Failed to decode symlink error data", e);
+                log.warn("Could not decode the symlink error data, reporting the status alone", e);
             }
         }
         return new SmbException(NtStatus.NT_STATUS_STOPPED_ON_SYMLINK, null);
