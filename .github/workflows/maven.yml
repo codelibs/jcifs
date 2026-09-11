@@ -6,8 +6,9 @@ name: Java CI with Maven
 on:
   push:
     branches: [ main ]
+  # No base branch filter: a pull request stacked on another branch needs the
+  # same checks as one aimed straight at main.
   pull_request:
-    branches: [ main ]
 
 jobs:
   build:
@@ -22,4 +23,12 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
     - name: Build with Maven
-      run: mvn -B package --file pom.xml
+      # verify also runs the *IT integration tests, which start a Samba
+      # container. JCIFS_IT_REQUIRED makes a missing or unusable environment a
+      # failure rather than a silent skip.
+      run: mvn -B verify --file pom.xml
+      env:
+        JCIFS_IT_REQUIRED: "true"
+    - name: Check that the integration tests actually ran
+      if: always()
+      run: python3 build_helpers/check-it-reports.py

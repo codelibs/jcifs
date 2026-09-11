@@ -13,7 +13,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package org.codelibs.jcifs.smb;
+package org.codelibs.jcifs.smb.it;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -28,70 +28,35 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 
-import org.codelibs.jcifs.smb.context.BaseContext;
+import org.codelibs.jcifs.smb.CIFSContext;
+import org.codelibs.jcifs.smb.CIFSException;
+import org.codelibs.jcifs.smb.SmbResource;
+import org.codelibs.jcifs.smb.impl.NtlmPasswordAuthenticator;
 import org.codelibs.jcifs.smb.impl.SmbFile;
 import org.codelibs.jcifs.smb.impl.SmbRandomAccessFile;
+import org.codelibs.jcifs.smb.it.env.RequiresBackend;
+import org.codelibs.jcifs.smb.it.env.SmbBackend;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.containers.output.Slf4jLogConsumer;
-import org.testcontainers.containers.wait.strategy.Wait;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
 
 /**
- * Integration tests for SmbFile using a real Samba server via Testcontainers.
- * These tests verify SMB2/3 protocol support and basic file operations.
+ * File operations against a real SMB server.
+ *
+ * <p>
+ * These tests predate the harness and used to start their own Samba container.
+ * They now go through {@link AbstractSmbIT}, so the same bodies run against
+ * either backend.
+ * </p>
  */
-@Testcontainers
-public class SmbFileIntegrationTest {
+class SmbFileIT extends AbstractSmbIT {
 
-    private static final Logger log = LoggerFactory.getLogger(SmbFileIntegrationTest.class);
+    private static final Logger log = LoggerFactory.getLogger(SmbFileIT.class);
 
-    private static final String SAMBA_IMAGE = "dperson/samba:latest";
     private static final String TESTUSER1 = "testuser1";
     private static final String TESTUSER2 = "testuser2";
-    private static final String PASSWORD = "test123";
-
-    @Container
-    private static final GenericContainer<?> sambaContainer =
-            new GenericContainer<>(DockerImageName.parse(SAMBA_IMAGE)).withExposedPorts(139, 445)
-                    .withCommand("-u", TESTUSER1 + ";" + PASSWORD, "-u", TESTUSER2 + ";" + PASSWORD, "-s",
-                            "public;/share/public;yes;no;yes", "-s", "users;/share/users;yes;no;no;" + TESTUSER1 + "," + TESTUSER2, "-s",
-                            "testuser1private;/share/testuser1private;yes;no;no;" + TESTUSER1, "-s",
-                            "testuser2private;/share/testuser2private;yes;no;no;" + TESTUSER2, "-p")
-                    .waitingFor(Wait.forListeningPorts(139, 445).withStartupTimeout(java.time.Duration.ofSeconds(60)))
-                    .withLogConsumer(new Slf4jLogConsumer(log).withPrefix("SAMBA"));
-
-    private static String sambaHost;
-    private static int sambaPort;
-
-    @BeforeAll
-    static void setupContainer() throws Exception {
-        sambaHost = sambaContainer.getHost();
-        sambaPort = sambaContainer.getMappedPort(445);
-        log.info("Samba container started at {}:{}", sambaHost, sambaPort);
-
-        // Wait a bit for Samba to fully initialize after ports are open
-        Thread.sleep(5000);
-
-        // Verify Samba is accessible
-        try {
-            final CIFSContext testContext = createContext(TESTUSER1, PASSWORD);
-            final String testUrl = String.format("smb://%s:%d/%s/", sambaHost, sambaPort, "users");
-            final SmbFile testFile = new SmbFile(testUrl, testContext);
-            testFile.exists();
-            log.info("Samba server is accessible and ready for tests");
-        } catch (final Exception e) {
-            log.error("Failed to verify Samba accessibility", e);
-            throw e;
-        }
-    }
 
     /**
      * Creates a CIFSContext for the specified user.
@@ -101,17 +66,8 @@ public class SmbFileIntegrationTest {
      * @return a configured CIFSContext
      */
     private static CIFSContext createContext(final String username, final String password) {
-        final Properties props = new Properties();
-        props.setProperty("jcifs.smb.client.minVersion", "SMB202");
-        props.setProperty("jcifs.smb.client.maxVersion", "SMB311");
-        props.setProperty("jcifs.smb.client.port", String.valueOf(sambaPort));
-
         try {
-            final BaseContext context = new BaseContext(new org.codelibs.jcifs.smb.config.PropertyConfiguration(props));
-            if (username != null && password != null) {
-                return context.withCredentials(new org.codelibs.jcifs.smb.impl.NtlmPasswordAuthenticator(username, password));
-            }
-            return context;
+            return server().context(username, password);
         } catch (final CIFSException e) {
             throw new RuntimeException("Failed to create CIFS context", e);
         }
@@ -125,24 +81,27 @@ public class SmbFileIntegrationTest {
      * @return the SMB URL
      */
     private String createSmbUrl(final String share, final String path) {
-        return String.format("smb://%s:%d/%s/%s", sambaHost, sambaPort, share, path);
+        return server().url(share, path);
     }
 
     @AfterEach
     void cleanup() throws Exception {
         // Clean up test files after each test
-        final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+        final CIFSContext context = createContext(TESTUSER1, password());
         cleanupShare(context, "users");
         cleanupShare(context, "testuser1private");
 
-        final CIFSContext context2 = createContext(TESTUSER2, PASSWORD);
+        final CIFSContext context2 = createContext(TESTUSER2, password());
         cleanupShare(context2, "testuser2private");
+    }
+
+    private static String password() {
+        return server().password();
     }
 
     private void cleanupShare(final CIFSContext context, final String share) {
         try {
-            final String shareUrl = String.format("smb://%s:%d/%s/", sambaHost, sambaPort, share);
-            final SmbFile shareRoot = new SmbFile(shareUrl, context);
+            final SmbFile shareRoot = new SmbFile(server().url(share), context);
             if (shareRoot.exists()) {
                 deleteRecursively(shareRoot);
             }
@@ -173,7 +132,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testConnectWithValidCredentials() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final String url = createSmbUrl("users", "");
             final SmbFile file = new SmbFile(url, context);
 
@@ -181,6 +140,9 @@ public class SmbFileIntegrationTest {
         }
 
         @Test
+        @RequiresBackend(SmbBackend.SAMBA)
+        // Windows Server 2025 and Windows 11 24H2 refuse insecure guest access by
+        // default, and the Windows fixture does not re-enable it.
         void testConnectToPublicShare() throws Exception {
             final CIFSContext context = createContext(null, null);
             final String url = createSmbUrl("public", "");
@@ -190,8 +152,12 @@ public class SmbFileIntegrationTest {
         }
 
         @Test
+        @RequiresBackend(SmbBackend.SAMBA)
+        // Samba refuses the tree connect, and exists() rethrows anything that is
+        // not a "not found" status. Windows answers differently - see
+        // AuthenticationIT.inaccessibleShareIsNotReportedAsExisting.
         void testAccessDeniedToPrivateShare() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final String url = createSmbUrl("testuser2private", "");
 
             // testuser1 should not be able to access testuser2's private share
@@ -203,7 +169,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testConnectToOwnPrivateShare() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final String url = createSmbUrl("testuser1private", "");
             final SmbFile file = new SmbFile(url, context);
 
@@ -219,7 +185,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testCreateAndDeleteTextFile() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final String url = createSmbUrl("users", "test.txt");
             final SmbFile file = new SmbFile(url, context);
 
@@ -234,7 +200,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testWriteAndReadTextFile() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final String url = createSmbUrl("users", "test.txt");
             final SmbFile file = new SmbFile(url, context);
 
@@ -256,7 +222,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testWriteAndReadBinaryFile() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final String url = createSmbUrl("users", "binary.dat");
             final SmbFile file = new SmbFile(url, context);
 
@@ -281,7 +247,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testOverwriteFile() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final String url = createSmbUrl("users", "overwrite.txt");
             final SmbFile file = new SmbFile(url, context);
 
@@ -309,7 +275,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testFileExists() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final String url = createSmbUrl("users", "exists.txt");
             final SmbFile file = new SmbFile(url, context);
 
@@ -324,7 +290,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testDeleteNonExistentFile() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final String url = createSmbUrl("users", "nonexistent.txt");
             final SmbFile file = new SmbFile(url, context);
 
@@ -350,7 +316,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testCreateAndDeleteDirectory() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final String url = createSmbUrl("users", "testdir/");
             final SmbFile dir = new SmbFile(url, context);
 
@@ -366,7 +332,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testCreateNestedDirectories() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final String url = createSmbUrl("users", "parent/child/grandchild/");
             final SmbFile dir = new SmbFile(url, context);
 
@@ -378,7 +344,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testListDirectory() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final String dirUrl = createSmbUrl("users", "listtest/");
             final SmbFile dir = new SmbFile(dirUrl, context);
             dir.mkdir();
@@ -396,7 +362,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testDeleteNonEmptyDirectory() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final String dirUrl = createSmbUrl("users", "nonempty/");
             final SmbFile dir = new SmbFile(dirUrl, context);
             dir.mkdir();
@@ -426,7 +392,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testGetFileSize() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final String url = createSmbUrl("users", "sized.txt");
             final SmbFile file = new SmbFile(url, context);
 
@@ -440,7 +406,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testGetLastModified() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final String url = createSmbUrl("users", "timestamped.txt");
             final SmbFile file = new SmbFile(url, context);
 
@@ -455,7 +421,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testIsFileAndIsDirectory() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
 
             final SmbFile file = new SmbFile(createSmbUrl("users", "testfile.txt"), context);
             file.createNewFile();
@@ -477,7 +443,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testRenameFileInSameDirectory() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final SmbFile oldFile = new SmbFile(createSmbUrl("users", "oldname.txt"), context);
             final SmbFile newFile = new SmbFile(createSmbUrl("users", "newname.txt"), context);
 
@@ -491,7 +457,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testMoveFileToSubdirectory() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final SmbFile sourceFile = new SmbFile(createSmbUrl("users", "source.txt"), context);
             final SmbFile targetDir = new SmbFile(createSmbUrl("users", "targetdir/"), context);
             final SmbFile targetFile = new SmbFile(createSmbUrl("users", "targetdir/source.txt"), context);
@@ -513,7 +479,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testInputStreamRead() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final SmbFile file = new SmbFile(createSmbUrl("users", "stream.txt"), context);
 
             final String content = "Test stream content";
@@ -533,7 +499,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testRandomAccessFile() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final SmbFile file = new SmbFile(createSmbUrl("users", "random.txt"), context);
 
             try (SmbRandomAccessFile raf = new SmbRandomAccessFile(file, "rw")) {
@@ -554,7 +520,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testUserCannotAccessOtherPrivateShare() throws Exception {
-            final CIFSContext context1 = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context1 = createContext(TESTUSER1, password());
             final String url = createSmbUrl("testuser2private", "file.txt");
 
             assertThrows(Exception.class, () -> {
@@ -565,7 +531,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testUserCanAccessOwnPrivateShare() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final SmbFile file = new SmbFile(createSmbUrl("testuser1private", "private.txt"), context);
 
             file.createNewFile();
@@ -574,8 +540,8 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testBothUsersCanAccessUsersShare() throws Exception {
-            final CIFSContext context1 = createContext(TESTUSER1, PASSWORD);
-            final CIFSContext context2 = createContext(TESTUSER2, PASSWORD);
+            final CIFSContext context1 = createContext(TESTUSER1, password());
+            final CIFSContext context2 = createContext(TESTUSER2, password());
 
             final SmbFile file1 = new SmbFile(createSmbUrl("users", "user1file.txt"), context1);
             final SmbFile file2 = new SmbFile(createSmbUrl("users", "user2file.txt"), context2);
@@ -600,7 +566,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testFileNotFoundException() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final SmbFile file = new SmbFile(createSmbUrl("users", "nonexistent.txt"), context);
 
             assertThrows(IOException.class, () -> {
@@ -610,7 +576,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testInvalidPath() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
 
             // Creating an SmbFile with invalid host doesn't throw immediately,
             // but accessing it should
@@ -629,7 +595,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testLargeFileWriteAndRead() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final SmbFile file = new SmbFile(createSmbUrl("users", "large.dat"), context);
 
             final int size = 10 * 1024 * 1024; // 10MB
@@ -667,7 +633,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testCanReadAndCanWrite() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final SmbFile file = new SmbFile(createSmbUrl("users", "rwtest.txt"), context);
 
             file.createNewFile();
@@ -679,7 +645,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testSetReadOnlyAndReadWrite() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final SmbFile file = new SmbFile(createSmbUrl("users", "readonly.txt"), context);
 
             file.createNewFile();
@@ -696,7 +662,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testGetAndSetAttributes() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final SmbFile file = new SmbFile(createSmbUrl("users", "attrtest.txt"), context);
 
             file.createNewFile();
@@ -716,7 +682,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testCreateTimeAndLastAccessTime() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final SmbFile file = new SmbFile(createSmbUrl("users", "timestest.txt"), context);
 
             final long beforeCreate = System.currentTimeMillis();
@@ -736,7 +702,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testSetLastModified() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final SmbFile file = new SmbFile(createSmbUrl("users", "modtest.txt"), context);
 
             file.createNewFile();
@@ -752,7 +718,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testSetFileTimes() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final SmbFile file = new SmbFile(createSmbUrl("users", "filetimes.txt"), context);
 
             file.createNewFile();
@@ -770,7 +736,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testSetCreateTimeAndLastAccessTime() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final SmbFile file = new SmbFile(createSmbUrl("users", "settimes.txt"), context);
 
             file.createNewFile();
@@ -790,7 +756,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testIsHidden() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final SmbFile file = new SmbFile(createSmbUrl("users", "visiblefile.txt"), context);
 
             file.createNewFile();
@@ -808,7 +774,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testCopyFileInSameDirectory() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final SmbFile source = new SmbFile(createSmbUrl("users", "source.txt"), context);
             final SmbFile dest = new SmbFile(createSmbUrl("users", "copy.txt"), context);
 
@@ -835,7 +801,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testCopyFileToDifferentDirectory() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final SmbFile source = new SmbFile(createSmbUrl("users", "original.txt"), context);
             final SmbFile destDir = new SmbFile(createSmbUrl("users", "copydir/"), context);
             final SmbFile dest = new SmbFile(createSmbUrl("users", "copydir/original.txt"), context);
@@ -856,7 +822,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testCopyLargeFile() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final SmbFile source = new SmbFile(createSmbUrl("users", "largesource.dat"), context);
             final SmbFile dest = new SmbFile(createSmbUrl("users", "largedest.dat"), context);
 
@@ -878,7 +844,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testCopyPreservesTimestampsForRegularFile() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final SmbFile source = new SmbFile(createSmbUrl("users", "timestampsource.txt"), context);
             final SmbFile dest = new SmbFile(createSmbUrl("users", "timestampdest.txt"), context);
 
@@ -925,7 +891,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testCopyPreservesTimestampsForEmptyFile() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final SmbFile source = new SmbFile(createSmbUrl("users", "emptysource.txt"), context);
             final SmbFile dest = new SmbFile(createSmbUrl("users", "emptydest.txt"), context);
 
@@ -961,7 +927,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testCopyPreservesTimestampsAcrossDirectories() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final SmbFile sourceDir = new SmbFile(createSmbUrl("users", "srcdir/"), context);
             final SmbFile destDir = new SmbFile(createSmbUrl("users", "destdir/"), context);
 
@@ -998,7 +964,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testCopyPreservesFileAttributes() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final SmbFile source = new SmbFile(createSmbUrl("users", "attrsource.txt"), context);
             final SmbFile dest = new SmbFile(createSmbUrl("users", "attrdest.txt"), context);
 
@@ -1036,7 +1002,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testCopyPreservesTimestampsForLargeFile() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final SmbFile source = new SmbFile(createSmbUrl("users", "largetimestamp.dat"), context);
             final SmbFile dest = new SmbFile(createSmbUrl("users", "largetimestampdest.dat"), context);
 
@@ -1083,7 +1049,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testZeroByteFile() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final SmbFile file = new SmbFile(createSmbUrl("users", "zerobyte.txt"), context);
 
             // Create empty file
@@ -1103,7 +1069,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testFileWithSpacesInName() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final SmbFile file = new SmbFile(createSmbUrl("users", "file with spaces.txt"), context);
 
             file.createNewFile();
@@ -1123,7 +1089,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testFileWithSpecialCharacters() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             // Test various special characters that are typically allowed in filenames
             final SmbFile file = new SmbFile(createSmbUrl("users", "file!@#$%^&()_+-=.txt"), context);
 
@@ -1133,7 +1099,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testFileWithJapaneseCharacters() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final SmbFile file = new SmbFile(createSmbUrl("users", "テストファイル.txt"), context);
 
             file.createNewFile();
@@ -1153,7 +1119,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testDeepDirectoryHierarchy() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final String deepPath = "level1/level2/level3/level4/level5/level6/level7/level8/level9/level10/";
             final SmbFile deepDir = new SmbFile(createSmbUrl("users", deepPath), context);
 
@@ -1170,7 +1136,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testManyFilesInDirectory() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final SmbFile dir = new SmbFile(createSmbUrl("users", "manyfiles/"), context);
             dir.mkdir();
 
@@ -1189,7 +1155,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testEmptyDirectory() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final SmbFile dir = new SmbFile(createSmbUrl("users", "emptydir/"), context);
             dir.mkdir();
 
@@ -1200,7 +1166,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testLongFileName() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             // Create a filename with 200 characters (within typical limits)
             final String longName = "a".repeat(200) + ".txt";
             final SmbFile file = new SmbFile(createSmbUrl("users", longName), context);
@@ -1211,7 +1177,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testMultipleConsecutiveOperations() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final SmbFile file = new SmbFile(createSmbUrl("users", "multiop.txt"), context);
 
             // Create, write, read, modify, read again
@@ -1246,7 +1212,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testGetName() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final SmbFile file = new SmbFile(createSmbUrl("users", "testfile.txt"), context);
 
             file.createNewFile();
@@ -1256,7 +1222,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testGetParent() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final SmbFile file = new SmbFile(createSmbUrl("users", "subdir/file.txt"), context);
 
             final String parent = file.getParent();
@@ -1266,7 +1232,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testGetPath() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final SmbFile file = new SmbFile(createSmbUrl("users", "testpath.txt"), context);
 
             file.createNewFile();
@@ -1278,7 +1244,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testGetUncPath() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final SmbFile file = new SmbFile(createSmbUrl("users", "unctest.txt"), context);
 
             final String uncPath = file.getUncPath();
@@ -1290,7 +1256,7 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testGetShare() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final SmbFile file = new SmbFile(createSmbUrl("users", "sharefile.txt"), context);
 
             final String share = file.getShare();
@@ -1300,17 +1266,17 @@ public class SmbFileIntegrationTest {
 
         @Test
         void testGetServer() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final SmbFile file = new SmbFile(createSmbUrl("users", "servertest.txt"), context);
 
             final String server = file.getServer();
             assertNotNull(server, "Server should not be null");
-            assertEquals(sambaHost, server, "Server should match container host");
+            assertEquals(server().host(), server, "Server should match the configured host");
         }
 
         @Test
         void testGetCanonicalPath() throws Exception {
-            final CIFSContext context = createContext(TESTUSER1, PASSWORD);
+            final CIFSContext context = createContext(TESTUSER1, password());
             final SmbFile file = new SmbFile(createSmbUrl("users", "canonical.txt"), context);
 
             file.createNewFile();

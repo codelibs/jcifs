@@ -173,6 +173,44 @@
 				</dependencies>
 			</plugin>
 			<plugin>
+				<!-- Integration tests (*IT) talk to a real SMB server and run in the
+				     verify phase. surefire only includes *Test/*Tests/*TestCase/*TestSuite,
+				     so mvn test stays offline and fast. -->
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-failsafe-plugin</artifactId>
+				<version>3.5.5</version>
+				<configuration>
+					<includes>
+						<include>**/*IT.java</include>
+					</includes>
+					<systemPropertyVariables>
+						<networkaddress.cache.ttl>-1</networkaddress.cache.ttl>
+						<networkaddress.cache.negative.ttl>-1</networkaddress.cache.negative.ttl>
+					</systemPropertyVariables>
+					<useSystemClassLoader>false</useSystemClassLoader>
+					<useModulePath>false</useModulePath>
+					<forkCount>1</forkCount>
+					<reuseForks>true</reuseForks>
+				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>integration-test</goal>
+							<goal>verify</goal>
+						</goals>
+					</execution>
+				</executions>
+				<dependencies>
+					<!-- Without this failsafe auto-detects the JUnit 4 provider and runs
+					     none of the JUnit 5 tests while still reporting success. -->
+					<dependency>
+						<groupId>org.apache.maven.surefire</groupId>
+						<artifactId>surefire-junit-platform</artifactId>
+						<version>3.5.5</version>
+					</dependency>
+				</dependencies>
+			</plugin>
+			<plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
 				<version>0.8.14</version>
@@ -210,6 +248,9 @@
 						<exclude>*.md</exclude>
 						<exclude>build.properties</exclude>
 						<exclude>src/test/**</exclude>
+						<!-- Server-side fixtures for the integration tests: Dockerfile,
+						     smb.conf and shell/PowerShell setup scripts. -->
+						<exclude>build_helpers/**</exclude>
 						<exclude>**/*.idl</exclude>
 						<exclude>**/*.css</exclude>
 						<exclude>.*</exclude>
