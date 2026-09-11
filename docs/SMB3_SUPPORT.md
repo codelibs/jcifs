@@ -195,6 +195,18 @@ additional TCP connections to the same host once a connection reaches
 sessions across more connections; `ssnLimit=1` gives one connection per session.
 These are independent connections, not bound channels of one session.
 
+### Reconnecting after a dropped connection
+
+There are no durable handles, so a dropped connection invalidates every open
+handle. A stream notices on its next operation, reopens the file by path, and
+carries on writing or reading at the position it had reached.
+
+A write stream keeps what it has already written. Before 3.0.4 the reopen used
+the create flags the stream was constructed with, so on SMB2 it came back with
+`FILE_OVERWRITE_IF`: the file was truncated and the stream wrote on at its old
+offset, leaving everything before that offset as a hole. Nothing reported it —
+the write returned normally and `close()` succeeded.
+
 ## Other features
 
 | Feature | Status | Notes |
