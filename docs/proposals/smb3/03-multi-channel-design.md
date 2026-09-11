@@ -1,5 +1,25 @@
 # Multi-Channel Feature - Detailed Design Document
 
+> **Status: not implemented.**
+>
+> This document is a design proposal, not a description of the current code. The
+> feature is not available in any released version, and none of the packages,
+> classes, or configuration properties it introduces exist in the source tree.
+> Code shown below is a sketch of a possible implementation.
+>
+> What does exist is unused protocol scaffolding: the constants
+> `SMB2_GLOBAL_CAP_MULTI_CHANNEL` (`Smb2Constants`) and
+> `FSCTL_QUERY_NETWORK_INTERFACE_INFO` (`Smb2IoctlRequest`), neither of which is
+> referenced anywhere, and `Smb2SessionSetupRequest.setSessionBinding()`, which
+> encodes the SMB2_SESSION_FLAG_BINDING flag correctly but is never called outside
+> unit tests. There is no decoder for the network interface response, the client
+> never advertises the multi-channel capability during negotiate, and a session is
+> bound to a single transport.
+>
+> For what jcifs actually supports today, see
+> [SMB3_SUPPORT.md](../../SMB3_SUPPORT.md). For the other unstarted proposals,
+> see [SMB3_IMPLEMENTATION_PLAN.md](SMB3_IMPLEMENTATION_PLAN.md).
+
 ## 1. Overview
 
 SMB3 Multi-Channel enables the use of multiple network connections between client and server, providing increased throughput, network fault tolerance, and automatic failover capabilities. This feature aggregates bandwidth across multiple NICs and provides seamless failover when network paths fail.

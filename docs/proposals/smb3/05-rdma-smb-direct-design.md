@@ -1,5 +1,21 @@
 # RDMA (SMB Direct) Feature - Detailed Design Document
 
+> **Status: not implemented.**
+>
+> This document is a design proposal, not a description of the current code. The
+> feature is not available in any released version, and none of the packages,
+> classes, or configuration properties it introduces exist in the source tree.
+> Code shown below is a sketch of a possible implementation.
+>
+> What does exist is two unused constants in `Smb2ReadRequest`,
+> `SMB2_CHANNEL_RDMA_V1` and `SMB2_CHANNEL_RDMA_V1_INVALIDATE`, neither of which is
+> referenced anywhere. There is no RDMA transport, and the build declares no RDMA
+> dependency.
+>
+> For what jcifs actually supports today, see
+> [SMB3_SUPPORT.md](../../SMB3_SUPPORT.md). For the other unstarted proposals,
+> see [SMB3_IMPLEMENTATION_PLAN.md](SMB3_IMPLEMENTATION_PLAN.md).
+
 ## 1. Overview
 
 SMB Direct enables high-performance data transfer using Remote Direct Memory Access (RDMA) technology. This provides ultra-low latency and high bandwidth data transfer by bypassing the traditional TCP/IP stack and allowing direct memory-to-memory transfers between client and server.

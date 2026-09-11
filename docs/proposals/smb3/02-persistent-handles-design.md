@@ -1,5 +1,23 @@
 # Persistent Handles Feature - Detailed Design Document
 
+> **Status: not implemented.**
+>
+> This document is a design proposal, not a description of the current code. The
+> feature is not available in any released version, and none of the packages,
+> classes, or configuration properties it introduces exist in the source tree.
+> Code shown below is a sketch of a possible implementation.
+>
+> What does exist is unused protocol scaffolding: the
+> `SMB2_GLOBAL_CAP_PERSISTENT_HANDLES` constant (`Smb2Constants`), which is not
+> referenced anywhere, plus the create context framework. That framework encodes
+> and decodes contexts generically, but `Smb2CreateRequest` exposes no way to set
+> one and `Smb2CreateResponse.createContext()` returns `null` for every context
+> name, so no durable or persistent handle context can be sent or recognised.
+>
+> For what jcifs actually supports today, see
+> [SMB3_SUPPORT.md](../../SMB3_SUPPORT.md). For the other unstarted proposals,
+> see [SMB3_IMPLEMENTATION_PLAN.md](SMB3_IMPLEMENTATION_PLAN.md).
+
 ## 1. Overview
 
 Persistent handles (also known as durable handles) allow SMB3 connections to survive network disconnections, server reboots, and client reconnections. This feature is critical for enterprise reliability and seamless failover scenarios.

@@ -1,5 +1,18 @@
 # Witness Protocol Feature - Detailed Design Document
 
+> **Status: not implemented.**
+>
+> This document is a design proposal, not a description of the current code. The
+> feature is not available in any released version, and none of the packages,
+> classes, or configuration properties it introduces exist in the source tree.
+> Code shown below is a sketch of a possible implementation.
+>
+> Nothing related to the witness protocol exists in the source tree.
+>
+> For what jcifs actually supports today, see
+> [SMB3_SUPPORT.md](../../SMB3_SUPPORT.md). For the other unstarted proposals,
+> see [SMB3_IMPLEMENTATION_PLAN.md](SMB3_IMPLEMENTATION_PLAN.md).
+
 ## 1. Overview
 
 The SMB Witness Protocol enables rapid notification of resource changes in a clustered file server environment. It provides fast failover capabilities by allowing clients to register for notifications about server node availability, share movement, and other critical cluster events.
