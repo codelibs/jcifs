@@ -27,7 +27,6 @@ import org.codelibs.jcifs.smb.impl.SmbFile;
 import org.codelibs.jcifs.smb.it.env.RequiresBackend;
 import org.codelibs.jcifs.smb.it.env.SmbBackend;
 import org.codelibs.jcifs.smb.it.env.SmbServerResolver;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -79,17 +78,20 @@ class AuthenticationIT extends AbstractSmbIT {
 
     @Test
     @RequiresBackend(SmbBackend.WINDOWS)
-    @Disabled("Measured on Windows Server 2025: exists() returns true for a share the account cannot connect to. "
-            + "The share ACL grants only the other account, listFiles() on the same share is still refused, and "
-            + "Samba rethrows the tree connect denial as exists() is documented to. Needs an issue before enabling.")
-    @DisplayName("a share the account cannot connect to is not reported as existing")
-    void inaccessibleShareIsNotReportedAsExisting() throws Exception {
+    @DisplayName("a share the account cannot read still reports that it exists")
+    void inaccessibleShareStillReportsThatItExists() throws Exception {
+        // Measured against Windows Server 2025 with the share ACL and the NTFS ACL
+        // both granting only the other account. Windows accepts the tree connect
+        // anyway and refuses at open. exists() on a share root can only report
+        // whether the tree connect succeeded, so it answers true - and the share
+        // does exist. The Samba counterpart is
+        // SmbFileIT.ConnectionAndAuthenticationTests.testAccessDeniedToPrivateShare,
+        // where the tree connect itself is refused.
         final CIFSContext context = server().context();
-        assertThrows(SmbException.class, () -> {
-            try (SmbFile share = new SmbFile(server().url("testuser2private"), context)) {
-                share.exists();
-            }
-        }, "an unreachable share must not be reported as existing");
+        try (SmbFile share = new SmbFile(server().url("testuser2private"), context)) {
+            assertTrue(share.exists(), "the share is present on the server");
+            assertThrows(SmbException.class, share::listFiles, "but testuser1 must not be able to read it");
+        }
     }
 
     @Test
