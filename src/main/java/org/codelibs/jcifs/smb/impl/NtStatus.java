@@ -176,6 +176,8 @@ public interface NtStatus {
     int NT_STATUS_IO_REPARSE_TAG_NOT_HANDLED = 0xC0000279;
     /** No more files were found matching the file specification */
     int NT_STATUS_NO_MORE_FILES = 0x80000006;
+    /** The create operation stopped after reaching a symbolic link */
+    int NT_STATUS_STOPPED_ON_SYMLINK = 0x8000002D;
 
     /** Array of all NT status codes defined in this interface */
     int[] NT_STATUS_CODES = { NT_STATUS_SUCCESS, NT_STATUS_PENDING, NT_STATUS_NOTIFY_ENUM_DIR, NT_STATUS_BUFFER_OVERFLOW,
@@ -195,7 +197,7 @@ public interface NtStatus {
             NT_STATUS_LOGON_TYPE_NOT_GRANTED, NT_STATUS_NO_TRUST_SAM_ACCOUNT, NT_STATUS_TRUSTED_DOMAIN_FAILURE,
             NT_STATUS_TRUSTED_RELATIONSHIP_FAILURE, NT_STATUS_NOLOGON_WORKSTATION_TRUST_ACCOUNT, NT_STATUS_PASSWORD_MUST_CHANGE,
             NT_STATUS_NOT_FOUND, NT_STATUS_ACCOUNT_LOCKED_OUT, NT_STATUS_CONNECTION_REFUSED, NT_STATUS_PATH_NOT_COVERED,
-            NT_STATUS_IO_REPARSE_TAG_NOT_HANDLED, NT_STATUS_NO_MORE_FILES, };
+            NT_STATUS_IO_REPARSE_TAG_NOT_HANDLED, NT_STATUS_NO_MORE_FILES, NT_STATUS_STOPPED_ON_SYMLINK, };
 
     /** Array of human-readable messages corresponding to NT_STATUS_CODES */
     String[] NT_STATUS_MESSAGES = { "The operation completed successfully.", "Request is pending",
@@ -233,5 +235,6 @@ public interface NtStatus {
             "The referenced account is currently locked out and may not be logged on to.", "Connection refused",
             "The remote system is not reachable by the transport.",
             "The layered file system driver for this I/O tag did not handle it when needed.",
-            "No more files were found that match the file specification.", };
+            "No more files were found that match the file specification.",
+            "The create operation stopped after reaching a symbolic link.", };
 }
