@@ -28,7 +28,6 @@ import java.util.Random;
 import org.codelibs.jcifs.smb.CIFSContext;
 import org.codelibs.jcifs.smb.impl.SmbFile;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -84,7 +83,6 @@ class EncryptionIT extends AbstractSmbIT {
     }
 
     @Test
-    @Disabled("#71/#70: SMB3 transform encryption is not wired up on main. The server accepts the tree connect and then never answers SMB2_CREATE, so this times out. PR #92 is the pending fix - enable this once it merges.")
     @DisplayName("small payloads round trip through the encrypted share")
     void smallPayloadRoundTrips() throws Exception {
         final CIFSContext context = server().context(encrypting());
@@ -98,7 +96,6 @@ class EncryptionIT extends AbstractSmbIT {
     }
 
     @Test
-    @Disabled("#71/#70: SMB3 transform encryption is not wired up on main. The server accepts the tree connect and then never answers SMB2_CREATE, so this times out. PR #92 is the pending fix - enable this once it merges.")
     @DisplayName("a payload larger than one transform round trips through the encrypted share")
     void largePayloadRoundTrips() throws Exception {
         final CIFSContext context = server().context(encrypting());

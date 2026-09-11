@@ -493,8 +493,8 @@ public interface Configuration {
     /**
      * Property {@code jcifs.client.encryptionEnabled} (boolean, default false)
      *
-     * This is an experimental option allowing to indicate support during protocol
-     * negotiation, SMB encryption is not implemented yet.
+     * Enables SMB3 encryption. When enabled the client advertises AES-128-GCM and AES-128-CCM during protocol
+     * negotiation and encrypts traffic on any session or share for which the server requires it.
      *
      * @return whether SMB encryption is enabled
      * @since 2.1

@@ -101,6 +101,8 @@ final class SmbSessionImpl implements SmbSessionInternal {
 
     private SMBSigningDigest digest;
     private Smb2EncryptionContext encryptionContext;
+    /** Whether the server required encryption for every message on this session (SMB2_SESSION_FLAG_ENCRYPT_DATA). */
+    private boolean encryptData;
 
     private final String targetDomain;
     private final String targetHost;
@@ -373,7 +375,14 @@ final class SmbSessionImpl implements SmbSessionInternal {
                 request.setSessionId(this.sessionId);
                 request.setUid(this.uid);
 
-                if (request.getDigest() == null) {
+                if (this.encryptData && request instanceof final ServerMessageBlock2 smb2Request) {
+                    smb2Request.setEncrypt(true);
+                }
+
+                // An encrypted message is authenticated by the AEAD tag, not by a signature (MS-SMB2 3.1.4.1), and
+                // servers do not sign inside a transform header. Signing here would make the peer reject it.
+                final boolean encrypting = request instanceof final ServerMessageBlock2 smb2Req && smb2Req.isEncrypt();
+                if (!encrypting && request.getDigest() == null) {
                     request.setDigest(getDigest());
                 }
 
@@ -556,17 +565,10 @@ final class SmbSessionImpl implements SmbSessionInternal {
                 }
 
                 if ((response.getSessionFlags() & Smb2SessionSetupResponse.SMB2_SESSION_FLAG_ENCRYPT_DATA) != 0) {
-                    // Server requires encryption - create encryption context
-                    try {
-                        if (log.isDebugEnabled()) {
-                            log.debug("Server requires encryption, creating encryption context");
-                        }
-                        SmbTransportImpl transport = getTransport();
-                        this.encryptionContext = transport.createEncryptionContext(this.sessionKey, this.preauthIntegrityHash);
-                    } catch (CIFSException e) {
-                        log.error("Failed to create encryption context", e);
-                        throw new SmbAuthException("Failed to setup required encryption", e);
-                    }
+                    // The encryption context cannot be built yet: it is keyed on the session key, which is only
+                    // available once the security context is established, and on the SMB 3.1.1 preauth hash, which
+                    // still has to absorb this request. Both happen below.
+                    this.encryptData = true;
                 }
 
                 if (preauthIntegrity) {
@@ -592,6 +594,8 @@ final class SmbSessionImpl implements SmbSessionInternal {
                     System.arraycopy(sk, 0, key, 0, Math.min(16, sk.length));
                     this.sessionKey = key;
                 }
+
+                setupEncryptionContext(negoResp, anonymous);
 
                 boolean signed = response != null && response.isSigned();
                 if (!anonymous && (isSignatureSetupRequired() || signed)) {
@@ -709,6 +713,12 @@ final class SmbSessionImpl implements SmbSessionInternal {
         long newSessId = 0;
         long curSessId = this.sessionId;
 
+        // Reauthentication is a fresh authentication sequence: for SMB 3.1.1 the preauth hash restarts from the
+        // connection hash and absorbs the new session setup exchange, exactly as it does for the initial setup.
+        // Without this the keys derived below would come from a hash the server no longer has.
+        final boolean preauthIntegrity = negoResp.getSelectedDialect().atLeast(DialectVersion.SMB311);
+        this.preauthIntegrityHash = preauthIntegrity ? trans.getPreauthIntegrityHash() : null;
+
         synchronized (trans) {
             this.credentials.refresh();
             Subject s = this.credentials.getSubject();
@@ -720,12 +730,18 @@ final class SmbSessionImpl implements SmbSessionInternal {
                     Smb2SessionSetupRequest request = new Smb2SessionSetupRequest(getContext(), negoResp.getSecurityMode(),
                             negoResp.getCommonCapabilities(), curSessId, token);
 
-                    if (chain != null) {
+                    // A session setup is always sent in the clear, and doSend decides on the head of the chain.
+                    // Compounding a request that must be encrypted onto it would put that request on the wire in
+                    // cleartext, so it is sent separately below instead.
+                    final boolean chainMustBeEncrypted =
+                            chain instanceof final ServerMessageBlock2 chainMsg && (this.encryptData || chainMsg.isEncrypt());
+                    if (chain != null && !chainMustBeEncrypted) {
                         request.chain((ServerMessageBlock2) chain);
                     }
 
                     request.setDigest(this.digest);
                     request.setSessionId(curSessId);
+                    request.retainPayload();
 
                     try {
                         response = trans.send(request, null, EnumSet.of(RequestParam.RETAIN_PAYLOAD));
@@ -754,6 +770,17 @@ final class SmbSessionImpl implements SmbSessionInternal {
                         anonymous = true;
                     }
 
+                    if (preauthIntegrity) {
+                        final byte[] reqBytes = request.getRawPayload();
+                        this.preauthIntegrityHash = trans.calculatePreauthHash(reqBytes, 0, reqBytes.length, this.preauthIntegrityHash);
+
+                        if (response.getStatus() == NtStatus.NT_STATUS_MORE_PROCESSING_REQUIRED) {
+                            final byte[] respBytes = response.getRawPayload();
+                            this.preauthIntegrityHash =
+                                    trans.calculatePreauthHash(respBytes, 0, respBytes.length, this.preauthIntegrityHash);
+                        }
+                    }
+
                     if (request.getDigest() != null) {
                         /* success - install the signing digest */
                         log.debug("Setting digest");
@@ -768,6 +795,19 @@ final class SmbSessionImpl implements SmbSessionInternal {
                 }
 
                 if (ctx.isEstablished()) {
+                    // The server derives fresh keys from the new session key (MS-SMB2 3.3.5.5.3), so a retained
+                    // encryption context would no longer match on either side.
+                    final byte[] sk = ctx.getSigningKey();
+                    if (sk != null) {
+                        final byte[] key = new byte[16];
+                        System.arraycopy(sk, 0, key, 0, Math.min(16, sk.length));
+                        this.sessionKey = key;
+                    }
+                    if (this.encryptionContext != null) {
+                        this.encryptionContext = null;
+                        setupEncryptionContext(negoResp, anonymous);
+                    }
+
                     setSessionSetup(response);
                     @SuppressWarnings("cast")
                     CommonServerMessageBlockResponse cresp = response != null ? response.getNextResponse() : null;
@@ -1095,8 +1135,15 @@ final class SmbSessionImpl implements SmbSessionInternal {
 
                 if (!inError && trans.isSMB2()) {
                     Smb2LogoffRequest request = new Smb2LogoffRequest(getConfig());
-                    request.setDigest(getDigest());
                     request.setSessionId(this.sessionId);
+                    if (this.encryptData) {
+                        // This request does not go through send(), so the marker has to be applied here. On an
+                        // encrypted session every message after session setup must be encrypted, and an encrypted
+                        // message is not signed.
+                        request.setEncrypt(true);
+                    } else {
+                        request.setDigest(getDigest());
+                    }
                     try {
                         this.transport.send(request.ignoreDisconnect(), null);
                     } catch (SmbException se) {
@@ -1124,6 +1171,9 @@ final class SmbSessionImpl implements SmbSessionInternal {
         } finally {
             this.connectionState.set(0);
             this.digest = null;
+            this.transport.unregisterSessionId(this.sessionId);
+            this.encryptionContext = null;
+            this.encryptData = false;
             this.transport.notifyAll();
         }
         return wasInUse;
@@ -1143,7 +1193,14 @@ final class SmbSessionImpl implements SmbSessionInternal {
     void setSessionSetup(Smb2SessionSetupResponse response) {
         this.extendedSecurity = true;
         this.connectionState.set(2);
+        final long previousSessionId = this.sessionId;
         this.sessionId = response.getSessionId();
+        // Index the session so the receive thread can resolve its keys from an inbound transform header.
+        // Reauthentication yields a new id, so the previous entry has to go.
+        if (previousSessionId != this.sessionId) {
+            this.transport.unregisterSessionId(previousSessionId);
+        }
+        this.transport.registerSessionId(this.sessionId, this);
     }
 
     void setSessionSetup(SmbComSessionSetupAndXResponse response) {
@@ -1204,6 +1261,51 @@ final class SmbSessionImpl implements SmbSessionInternal {
      */
     public boolean isFailed() {
         return this.transport.isFailed();
+    }
+
+    /**
+     * Builds the SMB3 encryption context once the session key and the final preauth hash are known.
+     *
+     * <p>
+     * The context is created whenever the connection negotiated encryption, not only when the server demanded it for
+     * the whole session: a share can require encryption on its own (SMB2_SHAREFLAG_ENCRYPT_DATA) while the session
+     * flag is clear.
+     * </p>
+     */
+    private void setupEncryptionContext(final Smb2NegotiateResponse negoResp, final boolean anonymous) throws CIFSException {
+        if (this.encryptionContext != null || !negoResp.isEncryptionSupported()) {
+            if (this.encryptData && this.encryptionContext == null) {
+                throw new SmbAuthException("Server requires encryption but encryption was not negotiated");
+            }
+            return;
+        }
+
+        if (this.sessionKey == null || anonymous) {
+            // Anonymous and guest sessions have no key material to derive from.
+            if (this.encryptData) {
+                throw new SmbAuthException("Server requires encryption but no session key is available");
+            }
+            return;
+        }
+
+        try (SmbTransportImpl trans = getTransport()) {
+            this.encryptionContext = trans.createEncryptionContext(this.sessionKey, this.preauthIntegrityHash);
+        } catch (final CIFSException e) {
+            if (this.encryptData) {
+                throw new SmbAuthException("Failed to setup required encryption", e);
+            }
+            log.debug("Failed to setup optional encryption context", e);
+        }
+    }
+
+    /**
+     * Whether the server requires every message on this session to be encrypted
+     * (SMB2_SESSION_FLAG_ENCRYPT_DATA). A share can require encryption on its own without this being set.
+     *
+     * @return whether the whole session is encrypted
+     */
+    boolean isEncryptData() {
+        return this.encryptData;
     }
 
     /**

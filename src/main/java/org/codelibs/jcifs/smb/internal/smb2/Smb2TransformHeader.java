@@ -32,14 +32,33 @@ import org.codelibs.jcifs.smb.internal.util.SMBUtil;
 public class Smb2TransformHeader implements Encodable {
 
     /**
-     * Transform header protocol identifier: 0xFD534D42 (0xFD 'S' 'M' 'B')
+     * Transform header protocol identifier.
+     *
+     * <p>
+     * MS-SMB2 2.2.41 defines the value as 0x424D53FD, which is 0xFD, 'S', 'M', 'B' in network order. The header is
+     * encoded little-endian, so the constant must hold the numeric value rather than the wire byte sequence.
+     * </p>
      */
-    public static final int TRANSFORM_PROTOCOL_ID = 0xFD534D42;
+    public static final int TRANSFORM_PROTOCOL_ID = 0x424D53FD;
 
     /**
      * Size of the transform header in bytes
      */
     public static final int TRANSFORM_HEADER_SIZE = 52;
+
+    /**
+     * Offset of the Nonce field within the transform header. The additional authenticated data for the AEAD cipher
+     * starts here (MS-SMB2 3.1.4.3).
+     */
+    /** Offset of the Signature field within the transform header. */
+    public static final int SIGNATURE_OFFSET = 4;
+
+    public static final int AAD_OFFSET = 20;
+
+    /**
+     * Size of the additional authenticated data: the transform header from the Nonce field to the end.
+     */
+    public static final int AAD_SIZE = TRANSFORM_HEADER_SIZE - AAD_OFFSET;
 
     private final byte[] signature = new byte[16];
     private final byte[] nonce = new byte[16];
@@ -261,20 +280,18 @@ public class Smb2TransformHeader implements Encodable {
     }
 
     /**
-     * Get the associated data for AEAD encryption (everything except signature)
+     * Get the additional authenticated data for the AEAD cipher.
      *
-     * @return byte array containing associated data
+     * <p>
+     * Per MS-SMB2 3.1.4.3 this is the transform header from the Nonce field to the end of the header, i.e. bytes 20
+     * through 51 inclusive. The ProtocolId and Signature fields are not covered.
+     * </p>
+     *
+     * @return the 32-byte additional authenticated data
      */
     public byte[] getAssociatedData() {
-        final byte[] aad = new byte[52]; // Use full header size to ensure all data fits
+        final byte[] aad = new byte[AAD_SIZE];
         int index = 0;
-
-        // Protocol ID
-        SMBUtil.writeInt4(TRANSFORM_PROTOCOL_ID, aad, index);
-        index += 4;
-
-        // Skip signature (16 bytes of zeros for AAD)
-        index += 16;
 
         // Nonce
         System.arraycopy(this.nonce, 0, aad, index, 16);

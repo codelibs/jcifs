@@ -183,8 +183,9 @@ class Smb2EncryptionContextTest {
         // Then
         assertNotNull(nonce1, "First nonce should not be null");
         assertNotNull(nonce2, "Second nonce should not be null");
-        assertEquals(16, nonce1.length, "Nonce should be 16 bytes");
-        assertEquals(16, nonce2.length, "Nonce should be 16 bytes");
+        // MS-SMB2 2.2.41: AES-CCM uses 11 bytes, AES-GCM 12; the 16-byte header field is zero-padded.
+        assertEquals(encryptionContext.getNonceLength(), nonce1.length, "Nonce should match the cipher nonce length");
+        assertEquals(encryptionContext.getNonceLength(), nonce2.length, "Nonce should match the cipher nonce length");
         assertFalse(java.util.Arrays.equals(nonce1, nonce2), "Consecutive nonces should be different");
     }
 
