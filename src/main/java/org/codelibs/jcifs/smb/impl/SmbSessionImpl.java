@@ -1322,32 +1322,4 @@ final class SmbSessionImpl implements SmbSessionInternal {
         return this.encryptionContext;
     }
 
-    /**
-     * Encrypt a message using the session's encryption context
-     *
-     * @param message the message to encrypt
-     * @return encrypted message with transform header
-     * @throws CIFSException if encryption fails or is not enabled
-     */
-    public byte[] encryptMessage(byte[] message) throws CIFSException {
-        if (this.encryptionContext == null) {
-            throw new CIFSException("Encryption not enabled for this session");
-        }
-        return this.encryptionContext.encryptMessage(message, this.sessionId);
-    }
-
-    /**
-     * Decrypt a message using the session's encryption context
-     *
-     * @param encryptedMessage the encrypted message with transform header
-     * @return decrypted message
-     * @throws CIFSException if decryption fails or encryption is not enabled
-     */
-    public byte[] decryptMessage(byte[] encryptedMessage) throws CIFSException {
-        if (this.encryptionContext == null) {
-            throw new CIFSException("Encryption not enabled for this session");
-        }
-        return this.encryptionContext.decryptMessage(encryptedMessage);
-    }
-
 }

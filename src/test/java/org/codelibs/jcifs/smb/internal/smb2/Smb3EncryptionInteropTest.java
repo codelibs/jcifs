@@ -19,7 +19,17 @@ package org.codelibs.jcifs.smb.internal.smb2;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Arrays;
+
+import org.bouncycastle.crypto.engines.AESEngine;
+import org.bouncycastle.crypto.modes.AEADBlockCipher;
+import org.bouncycastle.crypto.modes.GCMBlockCipher;
+import org.bouncycastle.crypto.params.AEADParameters;
+import org.bouncycastle.crypto.params.KeyParameter;
+import org.codelibs.jcifs.smb.CIFSException;
 import org.codelibs.jcifs.smb.DialectVersion;
 import org.codelibs.jcifs.smb.internal.smb2.nego.EncryptionNegotiateContext;
 import org.junit.jupiter.api.DisplayName;
@@ -177,5 +187,86 @@ class Smb3EncryptionInteropTest {
             }
             assertEquals(true, seen.add(sb.toString()), "nonce repeated after " + i + " messages");
         }
+    }
+
+    @Test
+    @DisplayName("encrypts into a caller-supplied buffer without disturbing the surrounding bytes")
+    void encryptsIntoCallerSuppliedBuffer() throws Exception {
+        final byte[] key = hex("000102030405060708090A0B0C0D0E0F");
+        final Smb2EncryptionContext ctx =
+                new Smb2EncryptionContext(EncryptionNegotiateContext.CIPHER_AES128_GCM, DialectVersion.SMB311, key, key);
+
+        final byte[] message = sampleMessage(101);
+        final int dstOff = 4;
+        final byte[] dst = new byte[dstOff + Smb2TransformHeader.TRANSFORM_HEADER_SIZE + message.length + 3];
+        Arrays.fill(dst, (byte) 0x7E);
+
+        final int written = ctx.encryptMessage(message, 0, message.length, 0x1122334455667788L, dst, dstOff);
+
+        assertEquals(Smb2TransformHeader.TRANSFORM_HEADER_SIZE + message.length, written, "wrapped length");
+        for (int i = 0; i < dstOff; i++) {
+            assertEquals((byte) 0x7E, dst[i], "byte " + i + " before the frame must be untouched");
+        }
+        for (int i = dstOff + written; i < dst.length; i++) {
+            assertEquals((byte) 0x7E, dst[i], "byte " + i + " after the frame must be untouched");
+        }
+        assertArrayEquals(message, ctx.decryptMessage(Arrays.copyOfRange(dst, dstOff, dstOff + written)));
+    }
+
+    @Test
+    @DisplayName("rejects a transform header whose flags do not match the negotiated dialect")
+    void rejectsUnexpectedTransformFlags() throws Exception {
+        final byte[] key = hex("000102030405060708090A0B0C0D0E0F");
+
+        // An SMB 3.0 context puts the cipher id in the field; an SMB 3.1.1 context requires SMB2_TRANSFORM_FLAG_ENCRYPTED.
+        final Smb2EncryptionContext smb300 =
+                new Smb2EncryptionContext(EncryptionNegotiateContext.CIPHER_AES128_GCM, DialectVersion.SMB300, key, key);
+        final Smb2EncryptionContext smb311 =
+                new Smb2EncryptionContext(EncryptionNegotiateContext.CIPHER_AES128_GCM, DialectVersion.SMB311, key, key);
+
+        final byte[] wire = smb300.encryptMessage(sampleMessage(32), 1L);
+
+        final CIFSException e = assertThrows(CIFSException.class, () -> smb311.decryptMessage(wire));
+        assertTrue(e.getMessage().contains("transform header flags"), e.getMessage());
+    }
+
+    @Test
+    @DisplayName("rejects an authenticated transform header whose OriginalMessageSize disagrees with the plaintext")
+    void rejectsInconsistentOriginalMessageSize() throws Exception {
+        final byte[] key = hex("000102030405060708090A0B0C0D0E0F");
+        final Smb2EncryptionContext ctx =
+                new Smb2EncryptionContext(EncryptionNegotiateContext.CIPHER_AES128_GCM, DialectVersion.SMB311, key, key);
+
+        final byte[] message = sampleMessage(48);
+        // Authentic: the tag is computed over this very header, so the mismatch cannot be caught by the AEAD tag.
+        final byte[] wire = forgeGcmTransformMessage(key, message, message.length + 1);
+
+        final CIFSException e = assertThrows(CIFSException.class, () -> ctx.decryptMessage(wire));
+        assertTrue(e.getMessage().contains("plaintext bytes"), e.getMessage());
+    }
+
+    /**
+     * Builds a correctly authenticated AES-128-GCM transform message that declares {@code declaredSize} in its
+     * OriginalMessageSize field, which a well-behaved server would never do.
+     */
+    private static byte[] forgeGcmTransformMessage(final byte[] key, final byte[] message, final int declaredSize) throws Exception {
+        final byte[] nonceField = new byte[16];
+        Arrays.fill(nonceField, 0, 12, (byte) 0x5A);
+        final Smb2TransformHeader header =
+                new Smb2TransformHeader(nonceField, declaredSize, Smb2EncryptionContext.TRANSFORM_FLAG_ENCRYPTED, 1L);
+
+        final byte[] wire = new byte[Smb2TransformHeader.TRANSFORM_HEADER_SIZE + message.length];
+        header.encode(wire, 0);
+        final byte[] aad = Arrays.copyOfRange(wire, Smb2TransformHeader.AAD_OFFSET, Smb2TransformHeader.TRANSFORM_HEADER_SIZE);
+
+        final AEADBlockCipher cipher = GCMBlockCipher.newInstance(AESEngine.newInstance());
+        cipher.init(true, new AEADParameters(new KeyParameter(key), 128, Arrays.copyOf(nonceField, 12), aad));
+        final byte[] out = new byte[cipher.getOutputSize(message.length)];
+        int len = cipher.processBytes(message, 0, message.length, out, 0);
+        len += cipher.doFinal(out, len);
+
+        System.arraycopy(out, message.length, wire, Smb2TransformHeader.SIGNATURE_OFFSET, len - message.length);
+        System.arraycopy(out, 0, wire, Smb2TransformHeader.TRANSFORM_HEADER_SIZE, message.length);
+        return wire;
     }
 }

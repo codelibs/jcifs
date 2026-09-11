@@ -137,6 +137,38 @@ public class Smb2EncryptionContext {
      *             if encryption fails
      */
     public byte[] encryptMessage(final byte[] message, final long sessionId) throws CIFSException {
+        final byte[] result = new byte[Smb2TransformHeader.TRANSFORM_HEADER_SIZE + message.length];
+        encryptMessage(message, 0, message.length, sessionId, result, 0);
+        return result;
+    }
+
+    /**
+     * Encrypt an SMB2 message into a caller-supplied buffer.
+     *
+     * <p>
+     * Lets the caller reserve room in front of the transform header, so that the NetBIOS session header and the
+     * wrapped message can be written to the socket as a single buffer.
+     * </p>
+     *
+     * @param src
+     *            buffer holding the plaintext message
+     * @param srcOff
+     *            offset of the plaintext within {@code src}
+     * @param srcLen
+     *            length of the plaintext
+     * @param sessionId
+     *            session identifier
+     * @param dst
+     *            destination buffer, which must hold {@link Smb2TransformHeader#TRANSFORM_HEADER_SIZE} +
+     *            {@code srcLen} bytes from {@code dstOff}
+     * @param dstOff
+     *            offset to write the transform header at
+     * @return the number of bytes written at {@code dstOff}
+     * @throws CIFSException
+     *             if encryption fails
+     */
+    public int encryptMessage(final byte[] src, final int srcOff, final int srcLen, final long sessionId, final byte[] dst,
+            final int dstOff) throws CIFSException {
         try {
             final byte[] nonce = generateNonce();
 
@@ -145,28 +177,26 @@ public class Smb2EncryptionContext {
             final byte[] nonceField = new byte[16];
             System.arraycopy(nonce, 0, nonceField, 0, nonce.length);
 
-            final Smb2TransformHeader transformHeader = new Smb2TransformHeader(nonceField, message.length, getTransformFlags(), sessionId);
-
-            final byte[] result = new byte[Smb2TransformHeader.TRANSFORM_HEADER_SIZE + message.length];
+            final Smb2TransformHeader transformHeader = new Smb2TransformHeader(nonceField, srcLen, getTransformFlags(), sessionId);
 
             // Encode the header first, then authenticate the bytes that actually go on the wire rather than a
             // reconstruction of the parsed fields. The signature lies before the authenticated region, so it can
             // be filled in afterwards.
-            transformHeader.encode(result, 0);
+            transformHeader.encode(dst, dstOff);
             final byte[] associatedData =
-                    Arrays.copyOfRange(result, Smb2TransformHeader.AAD_OFFSET, Smb2TransformHeader.TRANSFORM_HEADER_SIZE);
+                    Arrays.copyOfRange(dst, dstOff + Smb2TransformHeader.AAD_OFFSET, dstOff + Smb2TransformHeader.TRANSFORM_HEADER_SIZE);
 
             final AEADBlockCipher cipher = createCipher(true, nonce, associatedData);
-            final byte[] output = new byte[cipher.getOutputSize(message.length)];
-            int len = cipher.processBytes(message, 0, message.length, output, 0);
+            final byte[] output = new byte[cipher.getOutputSize(srcLen)];
+            int len = cipher.processBytes(src, srcOff, srcLen, output, 0);
             len += cipher.doFinal(output, len);
 
             final int tagLength = getAuthTagLength();
             final int ciphertextLength = len - tagLength;
-            System.arraycopy(output, ciphertextLength, result, Smb2TransformHeader.SIGNATURE_OFFSET, tagLength);
-            System.arraycopy(output, 0, result, Smb2TransformHeader.TRANSFORM_HEADER_SIZE, ciphertextLength);
+            System.arraycopy(output, ciphertextLength, dst, dstOff + Smb2TransformHeader.SIGNATURE_OFFSET, tagLength);
+            System.arraycopy(output, 0, dst, dstOff + Smb2TransformHeader.TRANSFORM_HEADER_SIZE, ciphertextLength);
 
-            return result;
+            return Smb2TransformHeader.TRANSFORM_HEADER_SIZE + ciphertextLength;
         } catch (final Exception e) {
             throw new CIFSException("Failed to encrypt message", e);
         }
@@ -188,6 +218,7 @@ public class Smb2EncryptionContext {
             }
 
             final Smb2TransformHeader transformHeader = Smb2TransformHeader.decode(encryptedMessage, 0);
+            checkTransformFlags(transformHeader.getFlags());
             final byte[] authTag = transformHeader.getSignature();
 
             // Authenticate the bytes exactly as received rather than re-encoding the parsed fields.
@@ -208,11 +239,14 @@ public class Smb2EncryptionContext {
             int len = cipher.processBytes(input, 0, input.length, output, 0);
             len += cipher.doFinal(output, len);
 
-            if (len != output.length) {
-                final byte[] exact = new byte[len];
-                System.arraycopy(output, 0, exact, 0, len);
-                return exact;
+            // MS-SMB2 3.2.5.1.1: the header has to agree with what came out of the cipher. The AEAD tag only
+            // proves the field is authentic, not that the server filled it in consistently.
+            final int originalMessageSize = transformHeader.getOriginalMessageSize();
+            if (originalMessageSize != len) {
+                throw new CIFSException(
+                        "Transform header declares " + originalMessageSize + " plaintext bytes but " + len + " were decrypted");
             }
+
             return output;
         } catch (final CIFSException e) {
             throw e;
@@ -227,6 +261,17 @@ public class Smb2EncryptionContext {
 
     private int getAuthTagLength() {
         return 16; // All SMB3 ciphers use 16-byte authentication tags
+    }
+
+    /**
+     * Rejects a transform header whose Flags/EncryptionAlgorithm field does not describe the message this context
+     * is able to decrypt (MS-SMB2 2.2.41, 3.2.5.1.1).
+     */
+    private void checkTransformFlags(final int flags) throws CIFSException {
+        final int expected = getTransformFlags();
+        if (flags != expected) {
+            throw new CIFSException(String.format("Unexpected transform header flags 0x%04x, expected 0x%04x", flags, expected));
+        }
     }
 
     private int getTransformFlags() {
