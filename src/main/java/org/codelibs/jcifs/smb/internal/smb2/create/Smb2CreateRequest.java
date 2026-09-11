@@ -405,6 +405,14 @@ public class Smb2CreateRequest extends ServerMessageBlock2Request<Smb2CreateResp
     }
 
     /**
+     * Set the create contexts to send with the request
+     * @param createContexts the create contexts, in the order they are sent
+     */
+    public void setCreateContexts(final CreateContextRequest... createContexts) {
+        this.createContexts = createContexts;
+    }
+
+    /**
      * {@inheritDoc}
      *
      * @see org.codelibs.jcifs.smb.internal.CommonServerMessageBlockRequest#size()
@@ -419,9 +427,16 @@ public class Smb2CreateRequest extends ServerMessageBlock2Request<Smb2CreateResp
 
         size += size8(nameLen);
         if (this.createContexts != null) {
+            int createContextsLength = 0;
             for (final CreateContextRequest ccr : this.createContexts) {
-                size += size8(ccr.size());
+                // every context after the first starts on an 8-byte boundary
+                createContextsLength = size8(createContextsLength);
+                // 16 byte header, then the name, then the data on an 8-byte boundary
+                final int nameEnd = 16 + ccr.getName().length;
+                final int dataLength = ccr.size();
+                createContextsLength += dataLength == 0 ? nameEnd : size8(nameEnd) + dataLength;
             }
+            size += createContextsLength;
         }
         return size8(size);
     }
@@ -484,51 +499,45 @@ public class Smb2CreateRequest extends ServerMessageBlock2Request<Smb2CreateResp
 
         dstIndex += pad8(dstIndex);
 
+        final int createContextsStart = dstIndex;
         if (this.createContexts == null || this.createContexts.length == 0) {
             SMBUtil.writeInt4(0, dst, createContextOffsetOffset);
         } else {
-            SMBUtil.writeInt4(dstIndex - getHeaderStart(), dst, createContextOffsetOffset);
-        }
-        int totalCreateContextLength = 0;
-        if (this.createContexts != null) {
+            SMBUtil.writeInt4(createContextsStart - getHeaderStart(), dst, createContextOffsetOffset);
             int lastStart = -1;
             for (final CreateContextRequest createContext : this.createContexts) {
-                final int structStart = dstIndex;
-
-                SMBUtil.writeInt4(0, dst, structStart); // Next
-                if (lastStart > 0) {
-                    // set next pointer of previous CREATE_CONTEXT
-                    SMBUtil.writeInt4(structStart - dstIndex, dst, lastStart);
+                if (lastStart >= 0) {
+                    // set next pointer of previous CREATE_CONTEXT to this one, on an 8-byte boundary
+                    dstIndex += pad8(dstIndex);
+                    SMBUtil.writeInt4(dstIndex - lastStart, dst, lastStart);
                 }
-
-                dstIndex += 4;
+                final int structStart = dstIndex;
                 final byte[] cnBytes = createContext.getName();
-                final int cnOffsetOffset = dstIndex;
-                SMBUtil.writeInt2(cnBytes.length, dst, dstIndex + 2);
-                dstIndex += 4;
 
-                final int dataOffsetOffset = dstIndex + 2;
-                dstIndex += 4;
-                final int dataLengthOffset = dstIndex;
-                dstIndex += 4;
+                SMBUtil.writeInt4(0, dst, structStart); // Next, stays 0 for the last context
+                SMBUtil.writeInt2(16, dst, structStart + 4); // NameOffset, the name follows the header
+                SMBUtil.writeInt2(cnBytes.length, dst, structStart + 6); // NameLength
+                SMBUtil.writeInt2(0, dst, structStart + 8); // Reserved
+                dstIndex += 16;
 
-                SMBUtil.writeInt2(dstIndex - structStart, dst, cnOffsetOffset);
                 System.arraycopy(cnBytes, 0, dst, dstIndex, cnBytes.length);
                 dstIndex += cnBytes.length;
-                dstIndex += pad8(dstIndex);
 
-                SMBUtil.writeInt2(dstIndex - structStart, dst, dataOffsetOffset);
-                final int len = createContext.encode(dst, dstIndex);
-                SMBUtil.writeInt4(len, dst, dataLengthOffset);
-                dstIndex += len;
-
-                final int pad = pad8(dstIndex);
-                totalCreateContextLength += len + pad;
-                dstIndex += pad;
+                // Data goes on the next 8-byte boundary, and DataOffset SHOULD be 0 when there is none (MS-SMB2 2.2.13.2).
+                // Going by what encode() wrote rather than size() lets the size check catch a context that misreports it.
+                final int dataStart = dstIndex + pad8(dstIndex);
+                final int dataLength = createContext.encode(dst, dataStart);
+                int dataOffset = 0;
+                if (dataLength > 0) {
+                    dataOffset = dataStart - structStart;
+                    dstIndex = dataStart + dataLength;
+                }
+                SMBUtil.writeInt2(dataOffset, dst, structStart + 10); // DataOffset
+                SMBUtil.writeInt4(dataLength, dst, structStart + 12); // DataLength
                 lastStart = structStart;
             }
         }
-        SMBUtil.writeInt4(totalCreateContextLength, dst, createContextLengthOffset);
+        SMBUtil.writeInt4(dstIndex - createContextsStart, dst, createContextLengthOffset);
         return dstIndex - start;
     }
 

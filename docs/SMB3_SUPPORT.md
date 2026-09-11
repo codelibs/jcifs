@@ -164,11 +164,12 @@ None of this works. It is the area most likely to be mistaken for working code.
 | SMB3 leases | Not implemented | Two unused constants. A real lease-break frame would fail the notification decode (structure size 44 vs the expected 24) and tear down the transport. |
 | Directory leasing | Not implemented | Unused capability constant; depends on leases. |
 | Durable / persistent handles | Not implemented | No DHnQ/DH2Q/DHnC/DH2C contexts, no app instance id, no handle reconnect path. |
-| Create contexts (the framework itself) | Not functional | Encoder and decoder are both present and correct, but `Smb2CreateRequest.createContexts` is private with **no setter**, and `Smb2CreateResponse.createContext()` is `return null`. No context can be sent, and none can be recognised. |
+| Create contexts (the framework itself) | Not functional | The request side encodes correctly: `Smb2CreateRequest.setCreateContexts()` lays contexts out as MS-SMB2 2.2.13.2 requires, and `CreateContextIT` checks that a real server answers each one. But nothing outside the tests calls it, and `Smb2CreateResponse.createContext()` is `return null`, so a context in a response is skipped. Before 3.0.4 no context could be sent at all — `size()` left out each context's header and name, so the request failed before it was sent — and the encoder also zeroed every `Next` and undercounted `CreateContextsLength`. |
 
 The last row is the blocker for the three above it: leases, durable handles and
-persistent handles all ride on create contexts, so they cannot be implemented
-without first opening those two dead ends.
+persistent handles all ride on create contexts. Contexts can now be sent, but a
+lease or durable handle response still cannot be recognised, so none of the three
+can be implemented without first decoding those response contexts.
 
 ## Throughput and credits
 

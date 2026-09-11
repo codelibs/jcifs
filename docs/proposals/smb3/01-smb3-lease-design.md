@@ -10,10 +10,10 @@
 > What does exist is unused protocol scaffolding: the constants
 > `SMB2_OPLOCK_LEVEL_LEASE` (`Smb2CreateRequest`) and `SMB2_GLOBAL_CAP_LEASING`
 > (`Smb2Constants`), neither of which is referenced anywhere, plus the create
-> context framework described below. That framework encodes and decodes contexts
-> generically, but `Smb2CreateRequest` exposes no way to set one and
-> `Smb2CreateResponse.createContext()` returns `null` for every context name, so no
-> lease context can be sent or recognised.
+> context framework described below. `Smb2CreateRequest.setCreateContexts()` can
+> send contexts, but no lease context exists to send, and
+> `Smb2CreateResponse.createContext()` returns `null` for every context name, so a
+> lease response could not be recognised.
 >
 > For what jcifs actually supports today, see
 > [SMB3_SUPPORT.md](../../SMB3_SUPPORT.md). For the other unstarted proposals,
