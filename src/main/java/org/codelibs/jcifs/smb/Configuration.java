@@ -493,13 +493,35 @@ public interface Configuration {
     /**
      * Property {@code jcifs.client.encryptionEnabled} (boolean, default false)
      *
-     * Enables SMB3 encryption. When enabled the client advertises AES-128-GCM and AES-128-CCM during protocol
-     * negotiation and encrypts traffic on any session or share for which the server requires it.
+     * Enables SMB3 encryption. When enabled the client advertises the ciphers given by
+     * {@link #getEncryptionCiphers()} during protocol negotiation and encrypts traffic on any session or share for
+     * which the server requires it.
      *
      * @return whether SMB encryption is enabled
      * @since 2.1
      */
     boolean isEncryptionEnabled();
+
+    /**
+     * Property {@code jcifs.client.encryptionCiphers} (comma-separated, default
+     * {@code AES-128-GCM, AES-128-CCM, AES-256-GCM, AES-256-CCM})
+     *
+     * The SMB 3.1.1 encryption ciphers to offer, in order of preference. Recognised names are
+     * {@code AES-128-CCM}, {@code AES-128-GCM}, {@code AES-256-CCM} and {@code AES-256-GCM}; an unrecognised name
+     * is an error rather than being ignored. Only consulted when {@link #isEncryptionEnabled()} is set, and only
+     * on SMB 3.1.1, which is the only dialect that negotiates a cipher in a negotiate context - SMB 3.0 and 3.0.2
+     * always use AES-128-CCM.
+     *
+     * <p>
+     * Note that this states a preference rather than a requirement. The server picks one cipher from the offered
+     * list and is free to apply its own order of preference when doing so, so listing AES-256 first does not
+     * guarantee AES-256 is what gets negotiated. Offering only the AES-256 ciphers does require them, at the cost
+     * of failing against a server that does not implement them.
+     * </p>
+     *
+     * @return the encryption cipher identifiers to offer, in preference order
+     */
+    int[] getEncryptionCiphers();
 
     /**
      *

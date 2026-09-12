@@ -439,6 +439,22 @@ class Smb3KeyDerivationTest {
      * of the BouncyCastle KDF used by production so it can pin the label constants.
      */
     private static byte[] deriveOracle(final String label, final byte[] context, final byte[] sessionKey) throws Exception {
+        return deriveOracle(label, context, sessionKey, 16);
+    }
+
+    /**
+     * The same oracle for a key of any length. {@code L} is the output length in <em>bits</em>, so a 32-byte key
+     * sets L = 256 and takes the whole HMAC-SHA256 block.
+     *
+     * <p>
+     * One block is always enough here: HMAC-SHA256 emits exactly 32 bytes per iteration, so a 32-byte key is a
+     * single pass with the counter at 1, the same as a 16-byte one. Note that L is written as a four-byte
+     * big-endian field - for 128 only the last byte is non-zero, which is why the production code could get away
+     * with writing one byte, and why 256 (0x00 0x00 0x01 0x00) cannot.
+     * </p>
+     */
+    private static byte[] deriveOracle(final String label, final byte[] context, final byte[] sessionKey, final int keyLengthBytes)
+            throws Exception {
         final byte[] ascii = label.getBytes(StandardCharsets.US_ASCII);
         final ByteArrayOutputStream fixedInput = new ByteArrayOutputStream();
         fixedInput.writeBytes(new byte[] { 0x00, 0x00, 0x00, 0x01 }); // counter i = 1 (4-byte BE, r = 32)
@@ -446,12 +462,13 @@ class Smb3KeyDerivationTest {
         fixedInput.write(0x00); // label null terminator (toCBytes)
         fixedInput.write(0x00); // 0x00 separator between label and context
         fixedInput.writeBytes(context); // context
-        fixedInput.writeBytes(new byte[] { 0x00, 0x00, 0x00, (byte) 0x80 }); // L = 128 (4-byte BE)
+        final int l = keyLengthBytes * 8;
+        fixedInput.writeBytes(new byte[] { 0x00, 0x00, (byte) (l >>> 8), (byte) l }); // L in bits (4-byte BE)
 
         final Mac mac = Mac.getInstance("HmacSHA256");
         mac.init(new SecretKeySpec(sessionKey, "HmacSHA256"));
         final byte[] full = mac.doFinal(fixedInput.toByteArray());
-        return Arrays.copyOf(full, 16);
+        return Arrays.copyOf(full, keyLengthBytes);
     }
 
     private static byte[] fixedSessionKey() {
@@ -493,5 +510,48 @@ class Smb3KeyDerivationTest {
         final byte[] decExpected = deriveOracle("SMBS2CCipherKey", preauth, sk);
         final byte[] decActual = Smb3KeyDerivation.deriveDecryptionKey(Smb2Constants.SMB2_DIALECT_0311, sk, preauth);
         assertArrayEquals(decExpected, decActual, "Decryption key must be derived with the SMBS2CCipherKey label");
+    }
+
+    @Test
+    @DisplayName("a 32-byte cipher key is a different key stream, not the 16-byte key extended")
+    void testCipherKeysCanBeDerivedAtThirtyTwoBytes() throws Exception {
+        final byte[] sk = fixedSessionKey();
+        final byte[] preauth = fixedPreauth();
+
+        final byte[] encActual = Smb3KeyDerivation.deriveEncryptionKey(Smb2Constants.SMB2_DIALECT_0311, sk, preauth, 32);
+        assertEquals(32, encActual.length, "an AES-256 cipher key must be 32 bytes");
+        assertArrayEquals(deriveOracle("SMBC2SCipherKey", preauth, sk, 32), encActual,
+                "the 32-byte encryption key must match an independent SP800-108 derivation with L = 256");
+
+        final byte[] decActual = Smb3KeyDerivation.deriveDecryptionKey(Smb2Constants.SMB2_DIALECT_0311, sk, preauth, 32);
+        assertEquals(32, decActual.length, "an AES-256 cipher key must be 32 bytes");
+        assertArrayEquals(deriveOracle("SMBS2CCipherKey", preauth, sk, 32), decActual,
+                "the 32-byte decryption key must match an independent SP800-108 derivation with L = 256");
+
+        // L is part of the MAC'd fixed input, so a longer key differs from the first byte rather than extending the
+        // shorter one. This is the assertion that catches the plausible half-fix: enlarging the output buffer while
+        // leaving L at 128 produces 32 bytes that begin with the 16-byte key, and would pass every other check here.
+        final byte[] sixteen = Smb3KeyDerivation.deriveEncryptionKey(Smb2Constants.SMB2_DIALECT_0311, sk, preauth);
+        assertFalse(Arrays.equals(Arrays.copyOf(encActual, 16), sixteen),
+                "a 32-byte key whose first half equals the 16-byte key means L was left at 128");
+    }
+
+    @Test
+    @DisplayName("the signing key stays 16 bytes even though cipher keys can now be 32")
+    void testSigningKeyIsNotWidenedWithCipherKeys() throws Exception {
+        final byte[] sk = fixedSessionKey();
+        final byte[] preauth = fixedPreauth();
+
+        // deriveSigningKey shares the same private derive() as the cipher keys, so widening that shared default
+        // would hand signing a 32-byte key. BouncyCastle's AESCMAC accepts one without complaint and still emits a
+        // 16-byte tag, so nothing here would throw and self-consistent unit tests would stay green - the damage
+        // appears only as "Signature validation failed" against a real server, and both CI backends mandate
+        // signing. This test is the guard for that, which is why it asserts the length rather than trusting it.
+        final byte[] signing = Smb3KeyDerivation.deriveSigningKey(Smb2Constants.SMB2_DIALECT_0311, sk, preauth);
+        assertEquals(16, signing.length, "the SMB 3.1.1 signing key must stay 16 bytes");
+        assertArrayEquals(deriveOracle("SMBSigningKey", preauth, sk, 16), signing, "the signing key must still be derived with L = 128");
+
+        final byte[] signing300 = Smb3KeyDerivation.deriveSigningKey(Smb2Constants.SMB2_DIALECT_0300, sk, preauth);
+        assertEquals(16, signing300.length, "the SMB 3.0 signing key must stay 16 bytes");
     }
 }

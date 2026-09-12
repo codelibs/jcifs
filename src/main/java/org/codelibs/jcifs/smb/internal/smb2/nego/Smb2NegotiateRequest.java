@@ -95,8 +95,10 @@ public class Smb2NegotiateRequest extends ServerMessageBlock2Request<Smb2Negotia
             this.preauthSalt = salt;
 
             if (config.isEncryptionEnabled()) {
-                negoContexts.add(new EncryptionNegotiateContext(config,
-                        new int[] { EncryptionNegotiateContext.CIPHER_AES128_GCM, EncryptionNegotiateContext.CIPHER_AES128_CCM }));
+                // The array order is the client's preference order on the wire, so it is taken from configuration
+                // rather than fixed here. A server picks one of these and may apply its own preference when doing
+                // so, which is why offering AES-256 first does not by itself mean AES-256 is negotiated.
+                negoContexts.add(new EncryptionNegotiateContext(config, config.getEncryptionCiphers()));
             }
         }
 

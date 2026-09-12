@@ -1,6 +1,7 @@
 package org.codelibs.jcifs.smb.config;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -147,6 +148,43 @@ class PropertyConfigurationTest extends BaseTest {
         assertTrue(testConfig.getSoTimeout() > 0);
         assertNotNull(testConfig.getMinimumVersion());
         assertNotNull(testConfig.getMaximumVersion());
+    }
+
+    @Test
+    @DisplayName("encryptionCiphers parses cipher names to ids, keeping the configured order")
+    void testEncryptionCiphersProperty() throws CIFSException {
+        final Properties props = new Properties();
+        props.setProperty("jcifs.client.encryptionCiphers", "AES-256-GCM, AES-128-CCM");
+
+        final PropertyConfiguration testConfig = new PropertyConfiguration(props);
+
+        // Order is the client's stated preference on the wire, so it has to survive parsing.
+        assertArrayEquals(new int[] { 0x4, 0x1 }, testConfig.getEncryptionCiphers(),
+                "configured cipher names must map to their MS-SMB2 ids in the configured order");
+    }
+
+    @Test
+    @DisplayName("encryptionCiphers defaults to all four ciphers with AES-128 first")
+    void testEncryptionCiphersDefault() throws CIFSException {
+        final PropertyConfiguration testConfig = new PropertyConfiguration(new Properties());
+
+        // AES-128-GCM leads deliberately: servers choose from the client's offer by their own preference, so
+        // leading with AES-128 keeps the cipher an existing deployment negotiates exactly as it is today, while
+        // still making AES-256 available to a server that prefers it.
+        assertArrayEquals(new int[] { 0x2, 0x1, 0x4, 0x3 }, testConfig.getEncryptionCiphers(),
+                "the default offer must be AES-128-GCM, AES-128-CCM, AES-256-GCM, AES-256-CCM");
+    }
+
+    @Test
+    @DisplayName("an unknown cipher name is refused rather than silently dropped")
+    void testEncryptionCiphersRejectsUnknownName() {
+        final Properties props = new Properties();
+        props.setProperty("jcifs.client.encryptionCiphers", "AES-128-GCM, AES-512-GCM");
+
+        // Dropping the unrecognised entry would leave a client quietly offering something other than what was
+        // configured - and a typo in a security setting is exactly the case that must not fail open.
+        assertThrows(CIFSException.class, () -> new PropertyConfiguration(props),
+                "an unrecognised cipher name must fail configuration rather than be ignored");
     }
 
     @Test

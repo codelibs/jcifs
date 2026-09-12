@@ -14,7 +14,9 @@ JCIFS is a comprehensive, pure Java implementation of the CIFS/SMB networking pr
 - **SMB2**: Full SMB 2.0.2, 2.1 support with enhanced performance
 - **SMB3**: Complete SMB 3.0, 3.0.2, 3.1.1 implementation featuring:
   - **AES-128-CCM encryption** (SMB 3.0/3.0.2)
-  - **AES-128-GCM encryption** (SMB 3.1.1)
+  - **AES-128-GCM and AES-128-CCM encryption** (SMB 3.1.1)
+  - **AES-256-GCM and AES-256-CCM encryption** (SMB 3.1.1), offered by default and
+    selectable with `jcifs.client.encryptionCiphers`
   - **Pre-Authentication Integrity** (SMB 3.1.1)
   - **AES-CMAC signing** for data integrity
   - **Automatic protocol negotiation**

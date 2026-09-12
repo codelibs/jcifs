@@ -36,6 +36,7 @@ import org.codelibs.jcifs.smb.Configuration;
 import org.codelibs.jcifs.smb.DialectVersion;
 import org.codelibs.jcifs.smb.ResolverType;
 import org.codelibs.jcifs.smb.SmbConstants;
+import org.codelibs.jcifs.smb.internal.smb2.nego.EncryptionNegotiateContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,6 +77,8 @@ public class BaseConfiguration implements Configuration {
     protected boolean ipcSigningEnforced = true;
     /** Whether SMB3 encryption is enabled */
     protected boolean encryptionEnabled = false;
+    /** SMB 3.1.1 encryption ciphers to offer, in preference order */
+    protected int[] encryptionCiphers;
     /** Whether to use NT status codes instead of DOS error codes */
     protected boolean useNtStatus = true;
     /** Whether to use extended security negotiation */
@@ -567,6 +570,11 @@ public class BaseConfiguration implements Configuration {
     }
 
     @Override
+    public int[] getEncryptionCiphers() {
+        return this.encryptionCiphers;
+    }
+
+    @Override
     public boolean isForceExtendedSecurity() {
         return this.forceExtendedSecurity;
     }
@@ -773,6 +781,65 @@ public class BaseConfiguration implements Configuration {
     }
 
     /**
+     * Initializes the SMB 3.1.1 encryption ciphers to offer.
+     *
+     * <p>
+     * Unlike the resolver order, an unrecognised name here is fatal rather than logged and skipped. Dropping an
+     * entry would leave the client offering something other than what was configured, and a typo in a cipher list
+     * changes what protects the data - this is the one case that must not fail open.
+     * </p>
+     *
+     * @param prop comma-separated list of cipher names, in preference order, or null for the default
+     * @throws CIFSException if a cipher name is not recognised
+     */
+    protected void initEncryptionCiphers(final String prop) throws CIFSException {
+        if (prop == null || prop.trim().isEmpty()) {
+            // AES-128-GCM leads deliberately. A server chooses one cipher from the client's offer and may apply
+            // its own preference order when doing so, so leading with AES-128 leaves the cipher an existing
+            // deployment negotiates exactly as it was, while still making AES-256 available to a server that
+            // prefers it.
+            this.encryptionCiphers = new int[] { EncryptionNegotiateContext.CIPHER_AES128_GCM, EncryptionNegotiateContext.CIPHER_AES128_CCM,
+                    EncryptionNegotiateContext.CIPHER_AES256_GCM, EncryptionNegotiateContext.CIPHER_AES256_CCM };
+            return;
+        }
+
+        final List<Integer> ciphers = new ArrayList<>();
+        final StringTokenizer st = new StringTokenizer(prop, ",");
+        while (st.hasMoreTokens()) {
+            final String name = st.nextToken().trim();
+            if (name.isEmpty()) {
+                continue;
+            }
+            ciphers.add(cipherByName(name));
+        }
+        if (ciphers.isEmpty()) {
+            throw new CIFSException("No encryption cipher named in jcifs.client.encryptionCiphers: " + prop);
+        }
+
+        this.encryptionCiphers = new int[ciphers.size()];
+        for (int i = 0; i < ciphers.size(); i++) {
+            this.encryptionCiphers[i] = ciphers.get(i);
+        }
+    }
+
+    private static int cipherByName(final String name) throws CIFSException {
+        if (name.equalsIgnoreCase("AES-128-CCM")) {
+            return EncryptionNegotiateContext.CIPHER_AES128_CCM;
+        }
+        if (name.equalsIgnoreCase("AES-128-GCM")) {
+            return EncryptionNegotiateContext.CIPHER_AES128_GCM;
+        }
+        if (name.equalsIgnoreCase("AES-256-CCM")) {
+            return EncryptionNegotiateContext.CIPHER_AES256_CCM;
+        }
+        if (name.equalsIgnoreCase("AES-256-GCM")) {
+            return EncryptionNegotiateContext.CIPHER_AES256_GCM;
+        }
+        throw new CIFSException(
+                "Unknown encryption cipher '" + name + "'; expected one of AES-128-CCM, AES-128-GCM, AES-256-CCM, AES-256-GCM");
+    }
+
+    /**
      * Initializes the disallowed compound operations based on the provided property string.
      *
      * @param prop comma-separated list of operations to disallow in compound requests
@@ -847,6 +914,12 @@ public class BaseConfiguration implements Configuration {
 
         if (this.minVersion == null || this.maxVersion == null) {
             initProtocolVersions((DialectVersion) null, null);
+        }
+
+        if (this.encryptionCiphers == null) {
+            // Every configuration needs this, not just the property-driven one: an unset array would reach
+            // EncryptionNegotiateContext as null the first time a caller enables encryption.
+            initEncryptionCiphers(null);
         }
 
         if (this.disallowCompound == null) {

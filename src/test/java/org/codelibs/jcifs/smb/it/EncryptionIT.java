@@ -16,6 +16,7 @@
 package org.codelibs.jcifs.smb.it;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -28,6 +29,7 @@ import java.util.Random;
 import org.codelibs.jcifs.smb.CIFSContext;
 import org.codelibs.jcifs.smb.DialectVersion;
 import org.codelibs.jcifs.smb.impl.SmbFile;
+import org.codelibs.jcifs.smb.impl.SmbNegotiationProbe;
 import org.codelibs.jcifs.smb.it.env.RequiresDialect;
 import org.codelibs.jcifs.smb.it.env.Smb3Matrix;
 import org.junit.jupiter.api.AfterEach;
@@ -120,6 +122,50 @@ class EncryptionIT extends AbstractSmbIT {
         try (InputStream in = file.getInputStream()) {
             assertArrayEquals(payload, in.readAllBytes(), "the encrypted payload came back different");
         }
+    }
+
+    @Test
+    @RequiresDialect(DialectVersion.SMB311)
+    @DisplayName("each offered SMB 3.1.1 cipher is the one the server actually negotiates, AES-256 included")
+    void eachCipherIsNegotiatedAndCarriesData() throws Exception {
+        // One cipher per connection, on purpose. A server picks from the client's offer by its own order of
+        // preference - measured against this fixture, Samba selects AES-128-GCM whenever it is offered at all,
+        // whatever order the client lists - so an arm offering all four would negotiate AES-128-GCM and prove
+        // nothing about AES-256. Offering exactly one makes the server's selection the assertion.
+        for (final String cipher : new String[] { "AES-128-CCM", "AES-128-GCM", "AES-256-CCM", "AES-256-GCM" }) {
+            final Properties props = encrypting();
+            props.setProperty("jcifs.client.encryptionCiphers", cipher);
+            props.setProperty("jcifs.client.minVersion", DialectVersion.SMB311.name());
+            props.setProperty("jcifs.client.maxVersion", DialectVersion.SMB311.name());
+            final CIFSContext context = server().context(props);
+
+            this.workDir = createWorkDir(context, server().encryptedShare());
+            final String contents = "encrypted round trip under " + cipher;
+            final SmbFile file = writeFile(this.workDir, "cipher.txt", contents);
+
+            // The cipher, not just the round trip: reading the payload back succeeds identically under AES-128, so
+            // a client that asked for AES-256 and silently fell back would pass a data-only assertion.
+            assertEquals(expectedCipherId(cipher), SmbNegotiationProbe.negotiatedCipher(file),
+                    "the server should have selected " + cipher + ", the only cipher offered");
+
+            try (InputStream in = file.getInputStream()) {
+                assertArrayEquals(contents.getBytes(StandardCharsets.UTF_8), in.readAllBytes(),
+                        "the payload came back different under " + cipher);
+            }
+
+            deleteQuietly(this.workDir);
+            this.workDir = null;
+        }
+    }
+
+    private static int expectedCipherId(final String cipher) {
+        return switch (cipher) {
+        case "AES-128-CCM" -> 0x1;
+        case "AES-128-GCM" -> 0x2;
+        case "AES-256-CCM" -> 0x3;
+        case "AES-256-GCM" -> 0x4;
+        default -> throw new IllegalArgumentException(cipher);
+        };
     }
 
     @Smb3Matrix

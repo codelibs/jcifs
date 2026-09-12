@@ -1,5 +1,6 @@
 package org.codelibs.jcifs.smb.internal.smb2;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -10,6 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.security.SecureRandom;
 
 import org.codelibs.jcifs.smb.DialectVersion;
+import org.codelibs.jcifs.smb.internal.smb2.nego.EncryptionNegotiateContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -130,32 +132,86 @@ class Smb2EncryptionContextTest {
     }
 
     @Test
-    @DisplayName("Should accept empty keys")
-    void testEmptyKeys() {
-        // Given
-        byte[] emptyKey = new byte[0];
+    @DisplayName("a key of the wrong length for the cipher is rejected rather than silently used")
+    void testEmptyKeysAreRejected() {
+        // A zero-length key used to be accepted here, asserted as "should accept empty keys". Nothing validated
+        // key length at all, so the test was documenting the absence of a check rather than a contract.
+        final byte[] emptyKey = new byte[0];
 
-        // When/Then
-        assertDoesNotThrow(() -> {
-            Smb2EncryptionContext context = new Smb2EncryptionContext(1, DialectVersion.SMB311, emptyKey, emptyKey);
-            assertNotNull(context, "Context should be created with empty keys");
-        }, "Should accept empty keys");
+        assertThrows(IllegalArgumentException.class,
+                () -> new Smb2EncryptionContext(EncryptionNegotiateContext.CIPHER_AES128_GCM, DialectVersion.SMB311, emptyKey, emptyKey),
+                "an empty key cannot encrypt anything and must be refused");
     }
 
     @Test
-    @DisplayName("Should accept different key sizes")
-    void testDifferentKeySizes() {
-        // Given
-        byte[] key128 = new byte[16]; // 128-bit
-        byte[] key256 = new byte[32]; // 256-bit
+    @DisplayName("a 16-byte key under an AES-256 cipher id is refused instead of encrypting as AES-128")
+    void testKeyLengthMustMatchTheCipher() {
+        final byte[] key128 = new byte[16];
+        final byte[] key256 = new byte[32];
         new SecureRandom().nextBytes(key128);
         new SecureRandom().nextBytes(key256);
 
-        // When/Then
-        assertDoesNotThrow(() -> {
-            Smb2EncryptionContext context = new Smb2EncryptionContext(1, DialectVersion.SMB311, key128, key256);
-            assertNotNull(context, "Context should be created with different key sizes");
-        }, "Should accept different key sizes");
+        // This is the defect that matters. BouncyCastle derives the AES key size from the key it is handed, so a
+        // 16-byte key under cipher id 0x4 encrypts as AES-128 and reports success - the session comes up, traffic
+        // flows, and the negotiated cipher is a lie. An abandoned attempt at AES-256 on origin/experimental
+        // (ad815cf) had this guard but never widened the KDF, so it would have thrown on every AES-256 session;
+        // the guard was right and the derivation underneath it was missing.
+        assertThrows(IllegalArgumentException.class,
+                () -> new Smb2EncryptionContext(EncryptionNegotiateContext.CIPHER_AES256_GCM, DialectVersion.SMB311, key128, key128),
+                "AES-256-GCM with a 128-bit key must be refused");
+        assertThrows(IllegalArgumentException.class,
+                () -> new Smb2EncryptionContext(EncryptionNegotiateContext.CIPHER_AES256_CCM, DialectVersion.SMB311, key128, key128),
+                "AES-256-CCM with a 128-bit key must be refused");
+        assertThrows(IllegalArgumentException.class,
+                () -> new Smb2EncryptionContext(EncryptionNegotiateContext.CIPHER_AES128_GCM, DialectVersion.SMB311, key256, key256),
+                "AES-128-GCM with a 256-bit key must be refused");
+
+        // Mismatched pairs too: the two directions are separate keys and either one being wrong is fatal.
+        assertThrows(IllegalArgumentException.class,
+                () -> new Smb2EncryptionContext(EncryptionNegotiateContext.CIPHER_AES128_GCM, DialectVersion.SMB311, key128, key256),
+                "a context whose two keys disagree in length must be refused");
+
+        assertDoesNotThrow(
+                () -> new Smb2EncryptionContext(EncryptionNegotiateContext.CIPHER_AES256_GCM, DialectVersion.SMB311, key256, key256),
+                "AES-256-GCM with 256-bit keys is the valid combination");
+    }
+
+    @Test
+    @DisplayName("the AES-256 ciphers are classified as GCM or CCM, and get the right nonce length")
+    void testAes256CiphersAreClassifiedCorrectly() {
+        final byte[] key256 = new byte[32];
+        new SecureRandom().nextBytes(key256);
+
+        // getNonceLength() is derived from the GCM/CCM classification, and the constructor uses it to size the
+        // nonce prefix - so a cipher that falls through to the CCM branch is mis-sized at construction, not just
+        // at encrypt time. MS-SMB2 2.2.41: GCM 12 bytes, CCM 11, whatever the key size.
+        assertEquals(12, new Smb2EncryptionContext(EncryptionNegotiateContext.CIPHER_AES256_GCM, DialectVersion.SMB311, key256, key256)
+                .getNonceLength(), "AES-256-GCM must use a 12-byte nonce");
+        assertEquals(11, new Smb2EncryptionContext(EncryptionNegotiateContext.CIPHER_AES256_CCM, DialectVersion.SMB311, key256, key256)
+                .getNonceLength(), "AES-256-CCM must use an 11-byte nonce");
+    }
+
+    @Test
+    @DisplayName("an AES-256-GCM message round trips through a second context holding the same keys")
+    void testAes256GcmRoundTrip() throws Exception {
+        final byte[] c2s = new byte[32];
+        final byte[] s2c = new byte[32];
+        new SecureRandom().nextBytes(c2s);
+        new SecureRandom().nextBytes(s2c);
+
+        // Two contexts with the keys swapped, so the decrypting side uses the other direction's key exactly as a
+        // server would. A single context decrypting its own output would pass even if the direction keys were
+        // crossed.
+        final Smb2EncryptionContext client =
+                new Smb2EncryptionContext(EncryptionNegotiateContext.CIPHER_AES256_GCM, DialectVersion.SMB311, c2s, s2c);
+        final Smb2EncryptionContext server =
+                new Smb2EncryptionContext(EncryptionNegotiateContext.CIPHER_AES256_GCM, DialectVersion.SMB311, s2c, c2s);
+
+        final byte[] plaintext = new byte[512];
+        new SecureRandom().nextBytes(plaintext);
+
+        final byte[] wrapped = client.encryptMessage(plaintext, 0x1122334455667788L);
+        assertArrayEquals(plaintext, server.decryptMessage(wrapped), "an AES-256-GCM message must decrypt to what went in");
     }
 
     @Test

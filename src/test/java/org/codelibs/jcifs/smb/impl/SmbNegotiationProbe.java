@@ -17,6 +17,7 @@ package org.codelibs.jcifs.smb.impl;
 
 import org.codelibs.jcifs.smb.CIFSException;
 import org.codelibs.jcifs.smb.DialectVersion;
+import org.codelibs.jcifs.smb.internal.smb2.nego.Smb2NegotiateResponse;
 
 /**
  * Test-only window onto the negotiated connection state.
@@ -61,6 +62,34 @@ public final class SmbNegotiationProbe {
                 SmbSessionImpl session = tree.getSession();
                 SmbTransportImpl transport = session.getTransport()) {
             return transport.getNegotiateResponse().isSigningNegotiated();
+        }
+    }
+
+    /**
+     * Returns the encryption cipher the server selected, or {@code -1} if the response carried no encryption
+     * negotiate context.
+     *
+     * <p>
+     * Without this a test can only assert that encrypted traffic round trips, which passes identically whichever
+     * cipher is in force - so a client that asked for AES-256 and silently got AES-128 would look correct. The
+     * cipher is the only observable that tells those two apart.
+     * </p>
+     *
+     * @param file any connected resource on the tree of interest
+     * @return the selected cipher identifier, or -1 if none was negotiated
+     * @throws CIFSException if the connection cannot be established
+     */
+    public static int negotiatedCipher(final SmbFile file) throws CIFSException {
+        try (SmbTreeHandleImpl tree = (SmbTreeHandleImpl) file.getTreeHandle();
+                SmbSessionImpl session = tree.getSession();
+                SmbTransportImpl transport = session.getTransport()) {
+            // The cipher is on the SMB2 response, not on the SmbNegotiationResponse interface, which is also what
+            // an SMB1 negotiation returns. Answering -1 there matches what the SMB2 response itself reports when
+            // no encryption context was negotiated, rather than making a cast failure the contract.
+            if (transport.getNegotiateResponse() instanceof final Smb2NegotiateResponse resp) {
+                return resp.getSelectedCipher();
+            }
+            return -1;
         }
     }
 }

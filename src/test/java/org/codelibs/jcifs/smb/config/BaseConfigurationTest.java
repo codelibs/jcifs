@@ -396,6 +396,12 @@ class BaseConfigurationTest {
         assertNotNull(testConfig.disallowCompound);
         assertTrue(testConfig.disallowCompound.contains("Smb2SessionSetupRequest"));
         assertTrue(testConfig.disallowCompound.contains("Smb2TreeConnectRequest"));
+
+        // Check encryption ciphers. Only PropertyConfiguration reads the property, so without a default here any
+        // other configuration would hand a null array to the negotiate context the first time encryption is
+        // enabled. AES-128-GCM leads, which keeps the cipher an existing deployment negotiates unchanged.
+        assertArrayEquals(new int[] { 0x2, 0x1, 0x4, 0x3 }, testConfig.getEncryptionCiphers(),
+                "initDefaults must offer AES-128-GCM, AES-128-CCM, AES-256-GCM, AES-256-CCM");
     }
 
     @Test

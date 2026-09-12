@@ -40,7 +40,7 @@ persistent handles, multi-channel, directory leasing, RDMA, witness, compression
 | SMB1 / CIFS | Supported | Legacy; also the default multi-protocol negotiate bootstrap. |
 | SMB 2.0.2, 2.1 | Supported | |
 | SMB 3.0, 3.0.2 | Supported | Signing and AES-128-CCM encryption. |
-| SMB 3.1.1 | Supported | Pre-auth integrity, negotiate contexts, AES-128-GCM encryption. |
+| SMB 3.1.1 | Supported | Pre-auth integrity, negotiate contexts, AES-128 and AES-256 encryption in GCM or CCM. |
 
 Selection is controlled by `jcifs.client.minVersion` (default `SMB1`) and
 `jcifs.client.maxVersion` (default `SMB311`), so **SMB 3.1.1 is reachable with
@@ -81,12 +81,12 @@ nothing else in the API changes.
 | Feature | Status | Notes |
 | --- | --- | --- |
 | AES-128-CCM (SMB 3.0, 3.0.2) | Supported | |
-| AES-128-GCM (SMB 3.1.1) | Supported | Preferred when the server offers both. |
-| `ENCRYPTION_CAPABILITIES` negotiation | Supported | Sent only when encryption is enabled. |
+| AES-128-GCM (SMB 3.1.1) | Supported | Listed first by default, which is what keeps the cipher an existing deployment negotiates unchanged. |
+| AES-256-GCM, AES-256-CCM (SMB 3.1.1) | Supported | Offered by default, after the AES-128 ciphers. The cipher keys are derived at 32 bytes; the signing key stays 16. |
+| `ENCRYPTION_CAPABILITIES` negotiation | Supported | Sent only when encryption is enabled. The offered ciphers, and their order, come from `jcifs.client.encryptionCiphers`. |
 | Per-session encryption (`SMB2_SESSION_FLAG_ENCRYPT_DATA`) | Supported | |
 | Per-share encryption (`SMB2_SHAREFLAG_ENCRYPT_DATA`) | Supported | Recorded on tree connect; a plaintext share on the same connection stays plaintext. |
 | Encryption of compound chains | Supported | The whole chain is wrapped in one transform header. |
-| AES-256-CCM / AES-256-GCM | Not implemented | Not negotiated. |
 
 How it behaves:
 
@@ -122,7 +122,7 @@ the fix in #92.
 | Context | Status |
 | --- | --- |
 | `PREAUTH_INTEGRITY_CAPABILITIES` (0x1) | Supported, SHA-512 only. A response without it fails the connection. |
-| `ENCRYPTION_CAPABILITIES` (0x2) | Supported, AES-128-CCM and AES-128-GCM. Sent only when encryption is enabled. |
+| `ENCRYPTION_CAPABILITIES` (0x2) | Supported, all four ciphers: AES-128-CCM, AES-128-GCM, AES-256-CCM, AES-256-GCM. Sent only when encryption is enabled. |
 | `COMPRESSION_CAPABILITIES` (0x3) | Not implemented |
 | `NETNAME_NEGOTIATE_CONTEXT_ID` (0x5) | Not implemented |
 | `TRANSPORT_CAPABILITIES` (0x6) | Not implemented |
@@ -325,6 +325,7 @@ file on its first open, as it always has.
 | `jcifs.client.ipcSigningEnforced` | `true` | Require signing on IPC$. |
 | `jcifs.client.requireSecureNegotiate` | `true` | Validate the negotiate exchange on tree connect. |
 | `jcifs.client.encryptionEnabled` | `false` | Opt in to SMB3 encryption — see [Encryption](#encryption). |
+| `jcifs.client.encryptionCiphers` | `AES-128-GCM, AES-128-CCM, AES-256-GCM, AES-256-CCM` | The SMB 3.1.1 ciphers to offer, in preference order. An unrecognised name fails configuration rather than being ignored. Note that the server chooses one from the offered list and may apply its own preference when doing so, so listing AES-256 first does not make AES-256 the negotiated cipher; offering only the AES-256 ciphers does require them. No effect below SMB 3.1.1, which does not negotiate a cipher. |
 | `jcifs.client.maxTransferSize` | `1048576` | Largest payload a single SMB2 read or write may carry. The negotiated size is the smaller of this and the server's offer. Has no effect below SMB 2.1, which cannot carry more than 64 KiB in one request. |
 | `jcifs.client.transaction_buf_size` | `65535` | Drives the transact size, and the read and write ceilings on SMB 2.0.2 and SMB1. 512 bytes are subtracted from it, giving an effective 65023. |
 | `jcifs.client.ssnLimit` | `250` | Sessions per connection before a new connection is opened. |

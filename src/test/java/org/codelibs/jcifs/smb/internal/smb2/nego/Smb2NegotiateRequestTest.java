@@ -59,6 +59,8 @@ class Smb2NegotiateRequestTest {
         // Default configuration for SMB 3.1.1 with encryption
         when(mockConfig.isDfsDisabled()).thenReturn(false);
         when(mockConfig.isEncryptionEnabled()).thenReturn(true);
+        when(mockConfig.getEncryptionCiphers())
+                .thenReturn(new int[] { EncryptionNegotiateContext.CIPHER_AES128_GCM, EncryptionNegotiateContext.CIPHER_AES128_CCM });
         when(mockConfig.getMinimumVersion()).thenReturn(DialectVersion.SMB202);
         when(mockConfig.getMaximumVersion()).thenReturn(DialectVersion.SMB311);
         when(mockConfig.getMachineId()).thenReturn(testMachineId);
@@ -205,6 +207,24 @@ class Smb2NegotiateRequestTest {
         for (byte b : guid) {
             assertEquals(0, b);
         }
+    }
+
+    @Test
+    @DisplayName("the offered ciphers are the configured ones, in the configured order")
+    void testOfferedCiphersComeFromConfiguration() {
+        when(mockConfig.getMaximumVersion()).thenReturn(DialectVersion.SMB311);
+        when(mockConfig.isEncryptionEnabled()).thenReturn(true);
+        when(mockConfig.getEncryptionCiphers())
+                .thenReturn(new int[] { EncryptionNegotiateContext.CIPHER_AES256_GCM, EncryptionNegotiateContext.CIPHER_AES128_GCM });
+
+        request = new Smb2NegotiateRequest(mockConfig, 0);
+
+        // The list used to be hardcoded to the two AES-128 ciphers, so a configured preference had nowhere to go.
+        // Asserting the contents in order matters because this array *is* the client's preference order on the
+        // wire; the existing context test only checks the context type and would pass whatever is inside it.
+        final EncryptionNegotiateContext enc = (EncryptionNegotiateContext) request.getNegotiateContexts()[1];
+        assertArrayEquals(new int[] { EncryptionNegotiateContext.CIPHER_AES256_GCM, EncryptionNegotiateContext.CIPHER_AES128_GCM },
+                enc.getCiphers(), "the negotiate context must offer exactly the configured ciphers, in order");
     }
 
     @Test
