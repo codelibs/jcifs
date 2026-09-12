@@ -145,6 +145,21 @@
 							<differenceType>7012</differenceType>
 							<method>void cancel()</method>
 						</difference>
+						<difference>
+							<className>org/codelibs/jcifs/smb/SmbRandomAccess</className>
+							<differenceType>7012</differenceType>
+							<method>void lock(long, long, boolean)</method>
+						</difference>
+						<difference>
+							<className>org/codelibs/jcifs/smb/SmbRandomAccess</className>
+							<differenceType>7012</differenceType>
+							<method>boolean tryLock(long, long, boolean)</method>
+						</difference>
+						<difference>
+							<className>org/codelibs/jcifs/smb/SmbRandomAccess</className>
+							<differenceType>7012</differenceType>
+							<method>void unlock(long, long)</method>
+						</difference>
 					</ignored>
 				</configuration>
 			</plugin>

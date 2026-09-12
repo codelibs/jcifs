@@ -40,6 +40,8 @@ import org.codelibs.jcifs.smb.internal.smb2.io.Smb2ReadRequest;
 import org.codelibs.jcifs.smb.internal.smb2.io.Smb2ReadResponse;
 import org.codelibs.jcifs.smb.internal.smb2.io.Smb2WriteRequest;
 import org.codelibs.jcifs.smb.internal.smb2.io.Smb2WriteResponse;
+import org.codelibs.jcifs.smb.internal.smb2.lock.Smb2Lock;
+import org.codelibs.jcifs.smb.internal.smb2.lock.Smb2LockRequest;
 import org.codelibs.jcifs.smb.util.Encdec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -168,6 +170,54 @@ public class SmbRandomAccessFile implements SmbRandomAccess {
      */
     public void open() throws CIFSException {
         try (SmbFileHandleImpl fh = ensureOpen()) {}
+    }
+
+    @Override
+    public void lock(final long position, final long size, final boolean shared) throws SmbException {
+        sendLock(new Smb2Lock(position, size, shared ? Smb2Lock.SMB2_LOCKFLAG_SHARED_LOCK : Smb2Lock.SMB2_LOCKFLAG_EXCLUSIVE_LOCK));
+    }
+
+    @Override
+    public boolean tryLock(final long position, final long size, final boolean shared) throws SmbException {
+        final int type = shared ? Smb2Lock.SMB2_LOCKFLAG_SHARED_LOCK : Smb2Lock.SMB2_LOCKFLAG_EXCLUSIVE_LOCK;
+        try {
+            sendLock(new Smb2Lock(position, size, type | Smb2Lock.SMB2_LOCKFLAG_FAIL_IMMEDIATELY));
+            return true;
+        } catch (final SmbException e) {
+            // A server that will not grant a lock asked to fail immediately answers STATUS_LOCK_NOT_GRANTED, and
+            // some answer STATUS_FILE_LOCK_CONFLICT instead. Either way the range is held by someone else, which is
+            // the answer this method exists to return rather than a failure to raise.
+            if (e.getNtStatus() == 0xC0000055 || e.getNtStatus() == 0xC0000054) {
+                log.debug("Range is already locked", e);
+                return false;
+            }
+            throw e;
+        }
+    }
+
+    @Override
+    public void unlock(final long position, final long size) throws SmbException {
+        sendLock(new Smb2Lock(position, size, Smb2Lock.SMB2_LOCKFLAG_UNLOCK));
+    }
+
+    /**
+     * Sends a single lock element against the open file.
+     *
+     * @param lock
+     *            the range and flags to send
+     * @throws SmbException if the request fails, or the connection is not SMB2
+     */
+    private void sendLock(final Smb2Lock lock) throws SmbException {
+        try (SmbFileHandleImpl fh = ensureOpen(); SmbTreeHandleImpl th = fh.getTree()) {
+            if (!th.isSMB2()) {
+                // SMB1 has LOCKING_ANDX, but this client only ever builds it to decode an inbound oplock break and
+                // has no outbound lock path at all, so there is nothing to fall back to here.
+                throw new SmbUnsupportedOperationException("Byte range locking requires SMB2 or later");
+            }
+            th.send(new Smb2LockRequest(th.getConfig(), fh.getFileId(), new Smb2Lock[] { lock }), RequestParam.NO_RETRY);
+        } catch (final CIFSException e) {
+            throw SmbException.wrap(e);
+        }
     }
 
     @Override

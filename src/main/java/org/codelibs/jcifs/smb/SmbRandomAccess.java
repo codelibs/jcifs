@@ -101,4 +101,52 @@ public interface SmbRandomAccess extends DataOutput, DataInput, AutoCloseable {
      */
     void setLength(long newLength) throws SmbException;
 
+    /**
+     * Lock a range of bytes, waiting for it if another open holds it
+     *
+     * A lock belongs to the open it was taken on, so ranges locked through this instance never conflict with each
+     * other, only with locks taken elsewhere. Requires SMB2 or later.
+     *
+     * @param position
+     *            first byte of the range
+     * @param size
+     *            number of bytes to lock
+     * @param shared
+     *            take a shared lock, which other shared locks of the same range are allowed alongside, rather than
+     *            an exclusive one
+     * @throws SmbException if the lock cannot be taken
+     */
+    void lock(long position, long size, boolean shared) throws SmbException;
+
+    /**
+     * Lock a range of bytes, giving up at once if another open holds it
+     *
+     * Unlike {@link #lock(long, long, boolean)} this never waits: a range that is held is reported rather than
+     * queued for. Requires SMB2 or later.
+     *
+     * @param position
+     *            first byte of the range
+     * @param size
+     *            number of bytes to lock
+     * @param shared
+     *            take a shared lock rather than an exclusive one
+     * @return whether the lock was taken
+     * @throws SmbException if the attempt fails for any reason other than the range being held
+     */
+    boolean tryLock(long position, long size, boolean shared) throws SmbException;
+
+    /**
+     * Release a range locked earlier
+     *
+     * The range has to be one that was locked: a server matches an unlock against the ranges it recorded, not
+     * against whatever bytes happen to overlap. Requires SMB2 or later.
+     *
+     * @param position
+     *            first byte of the range, as it was given to the lock
+     * @param size
+     *            number of bytes, as it was given to the lock
+     * @throws SmbException if the range was not locked or the unlock fails
+     */
+    void unlock(long position, long size) throws SmbException;
+
 }
