@@ -63,8 +63,17 @@ final class SmbEnumerationUtil {
 
     private static DcerpcHandle getHandle(final CIFSContext ctx, final SmbResourceLocator loc, final Address address, final String ep)
             throws MalformedURLException, DcerpcException {
-        return DcerpcHandle.getHandle(String.format("ncacn_np:%s[endpoint=%s,address=%s]", loc.getServer(), ep, address.getHostAddress()),
-                ctx);
+        // The binding becomes smb://<server>/IPC$/<endpoint>, so a server named
+        // without its port reaches 445 - a different server, or nothing at all,
+        // whenever the URL asked for another one. SmbFile.getShareSecurity carries
+        // the port over for the same reason. A DFS path is excluded there and here
+        // alike: the port belongs to the address the URL named, not to whatever
+        // host a referral sends the request to.
+        String server = loc.getServer();
+        if (loc.getDfsPath() == null && loc.getPort() != -1) {
+            server = server + ":" + loc.getPort();
+        }
+        return DcerpcHandle.getHandle(String.format("ncacn_np:%s[endpoint=%s,address=%s]", server, ep, address.getHostAddress()), ctx);
     }
 
     static FileEntry[] doDfsRootEnum(final CIFSContext ctx, final SmbResourceLocator loc, final Address address) throws IOException {

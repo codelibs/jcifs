@@ -82,13 +82,17 @@ public class LockingAndXRange implements Encodable, Decodable {
     public int decode(final byte[] buffer, final int bufferIndex, final int len) throws SMBProtocolDecodingException {
         if (this.largeFile) {
             this.pid = SMBUtil.readInt2(buffer, bufferIndex);
-            final int boHigh = SMBUtil.readInt4(buffer, bufferIndex + 4);
-            final int boLow = SMBUtil.readInt4(buffer, bufferIndex + 8);
+            // Widen before shifting: a shift distance of 32 on an int is masked to
+            // zero, which leaves the high half unshifted and OR'd into the low one.
+            // The low half is masked too, so its top bit cannot sign-extend over
+            // the high half.
+            final long boHigh = SMBUtil.readInt4(buffer, bufferIndex + 4) & 0xFFFFFFFFL;
+            final long boLow = SMBUtil.readInt4(buffer, bufferIndex + 8) & 0xFFFFFFFFL;
 
             this.byteOffset = boHigh << 32 | boLow;
 
-            final int lHigh = SMBUtil.readInt4(buffer, bufferIndex + 12);
-            final int lLow = SMBUtil.readInt4(buffer, bufferIndex + 16);
+            final long lHigh = SMBUtil.readInt4(buffer, bufferIndex + 12) & 0xFFFFFFFFL;
+            final long lLow = SMBUtil.readInt4(buffer, bufferIndex + 16) & 0xFFFFFFFFL;
 
             this.lengthInBytes = lHigh << 32 | lLow;
             return 20;

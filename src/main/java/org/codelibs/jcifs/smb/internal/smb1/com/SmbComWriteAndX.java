@@ -120,7 +120,10 @@ public class SmbComWriteAndX extends AndXServerMessageBlock {
 
         this.dataOffset = dstIndex - this.headerStart + 26; // 26 = off from here to pad
 
-        this.pad = (this.dataOffset - this.headerStart) % 4;
+        // dataOffset is already relative to headerStart, so subtracting it again
+        // would misalign the announced offset at any header position that is not
+        // itself a multiple of four.
+        this.pad = this.dataOffset % 4;
         this.pad = this.pad == 0 ? 0 : 4 - this.pad;
         this.dataOffset += this.pad;
 

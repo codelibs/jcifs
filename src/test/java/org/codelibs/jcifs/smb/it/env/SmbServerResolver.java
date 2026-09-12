@@ -209,7 +209,7 @@ public final class SmbServerResolver {
     /**
      * Reads a setting from {@code JCIFS_IT_<NAME>} or {@code jcifs.it.<name>}.
      */
-    private static String setting(final String name, final String fallback) {
+    static String setting(final String name, final String fallback) {
         final String fromEnv = System.getenv("JCIFS_IT_" + name);
         if (fromEnv != null && !fromEnv.isBlank()) {
             return fromEnv;

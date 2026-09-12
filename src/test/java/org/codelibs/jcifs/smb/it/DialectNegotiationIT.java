@@ -37,7 +37,10 @@ class DialectNegotiationIT extends AbstractSmbIT {
     @EnumSource(value = DialectVersion.class, names = { "SMB202", "SMB210", "SMB300", "SMB302", "SMB311" })
     @DisplayName("the negotiated dialect is the configured maximum")
     void negotiatesTheConfiguredMaximum(final DialectVersion maximum) throws Exception {
+        // Both ends, not just the ceiling: JCIFS_IT_DIALECT pins the floor as well,
+        // and leaving it in place would ask for an inverted range.
         final Properties props = new Properties();
+        props.setProperty("jcifs.client.minVersion", maximum.name());
         props.setProperty("jcifs.client.maxVersion", maximum.name());
         try (SmbFile file = new SmbFile(server().url(server().share()), server().context(props))) {
             assertEquals(maximum, SmbNegotiationProbe.negotiatedDialect(file), "server should have accepted the client's maximum dialect");
@@ -45,10 +48,13 @@ class DialectNegotiationIT extends AbstractSmbIT {
     }
 
     @Test
-    @DisplayName("the default configuration reaches SMB 3.1.1")
-    void defaultConfigurationReachesSmb311() throws Exception {
+    @DisplayName("the default configuration reaches the highest dialect the run allows")
+    void defaultConfigurationReachesTheCeiling() throws Exception {
+        // Normally SMB 3.1.1. Under JCIFS_IT_DIALECT the ceiling is the pinned
+        // dialect, and the point of the test is unchanged: whatever the suite says
+        // it can reach, the default context must actually reach.
         try (SmbFile file = new SmbFile(server().url(server().share()), server().context())) {
-            assertEquals(DialectVersion.SMB311, SmbNegotiationProbe.negotiatedDialect(file));
+            assertEquals(server().dialectCeiling(), SmbNegotiationProbe.negotiatedDialect(file));
         }
     }
 
@@ -58,6 +64,7 @@ class DialectNegotiationIT extends AbstractSmbIT {
         final Properties props = new Properties();
         props.setProperty("jcifs.client.minVersion", "SMB300");
         props.setProperty("jcifs.client.maxVersion", "SMB311");
+        // Explicit on both ends, so this one is unaffected by a suite-wide pin.
         try (SmbFile file = new SmbFile(server().url(server().share()), server().context(props))) {
             final DialectVersion negotiated = SmbNegotiationProbe.negotiatedDialect(file);
             assertTrue(negotiated.atLeast(DialectVersion.SMB300), "negotiated " + negotiated + " below the configured minimum");

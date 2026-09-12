@@ -361,6 +361,11 @@ public class SmbRandomAccessFile implements SmbRandomAccess {
                 th.send(new SmbComWrite(th.getConfig(), fh.getFid(), (int) (newLength & 0xFFFFFFFFL), 0, this.tmp, 0, 0), rsp,
                         RequestParam.NO_RETRY);
             }
+            // length() asks the resource, which serves the size from a cache that
+            // this request has just made wrong. Without this the handle keeps
+            // reporting the length the file had before it was resized, for as long
+            // as the attribute cache lives.
+            this.file.clearAttributeCache();
         } catch (final CIFSException e) {
             throw SmbException.wrap(e);
         }

@@ -26,7 +26,10 @@ import java.util.Properties;
 import java.util.Random;
 
 import org.codelibs.jcifs.smb.CIFSContext;
+import org.codelibs.jcifs.smb.DialectVersion;
 import org.codelibs.jcifs.smb.impl.SmbFile;
+import org.codelibs.jcifs.smb.it.env.RequiresDialect;
+import org.codelibs.jcifs.smb.it.env.Smb3Matrix;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -62,7 +65,10 @@ class EncryptionIT extends AbstractSmbIT {
     @Test
     @DisplayName("a client that cannot encrypt is refused by the encrypted share")
     void clientWithoutEncryptionIsRefused() throws Exception {
+        // Both ends, not just the ceiling: JCIFS_IT_DIALECT pins the floor too and
+        // leaving it in place would invert the range.
         final Properties noEncryption = new Properties();
+        noEncryption.setProperty("jcifs.client.minVersion", "SMB202");
         noEncryption.setProperty("jcifs.client.maxVersion", "SMB202");
         final CIFSContext context = server().context(noEncryption);
 
@@ -74,6 +80,7 @@ class EncryptionIT extends AbstractSmbIT {
     }
 
     @Test
+    @RequiresDialect(DialectVersion.SMB300)
     @DisplayName("the plain share is still usable with encryption enabled")
     void plainShareWorksWithEncryptionEnabled() throws Exception {
         final CIFSContext context = server().context(encrypting());
@@ -83,6 +90,7 @@ class EncryptionIT extends AbstractSmbIT {
     }
 
     @Test
+    @RequiresDialect(DialectVersion.SMB300)
     @DisplayName("small payloads round trip through the encrypted share")
     void smallPayloadRoundTrips() throws Exception {
         final CIFSContext context = server().context(encrypting());
@@ -96,6 +104,7 @@ class EncryptionIT extends AbstractSmbIT {
     }
 
     @Test
+    @RequiresDialect(DialectVersion.SMB300)
     @DisplayName("a payload larger than one transform round trips through the encrypted share")
     void largePayloadRoundTrips() throws Exception {
         final CIFSContext context = server().context(encrypting());
@@ -110,6 +119,27 @@ class EncryptionIT extends AbstractSmbIT {
         }
         try (InputStream in = file.getInputStream()) {
             assertArrayEquals(payload, in.readAllBytes(), "the encrypted payload came back different");
+        }
+    }
+
+    @Smb3Matrix
+    @DisplayName("a payload round trips through the encrypted share on every SMB3 dialect")
+    void payloadRoundTripsOnEverySmb3Dialect(final DialectVersion dialect) throws Exception {
+        // 3.0 and 3.0.2 agree the cipher through the negotiate capabilities, while
+        // 3.1.1 negotiates it in a context, so a dialect the suite never pins is a
+        // dialect whose encryption setup is never proved.
+        final Properties props = encrypting();
+        props.setProperty("jcifs.client.minVersion", dialect.name());
+        props.setProperty("jcifs.client.maxVersion", dialect.name());
+        final CIFSContext context = server().context(props);
+
+        this.workDir = createWorkDir(context, server().encryptedShare());
+        final String contents = "encrypted round trip on " + dialect;
+        final SmbFile file = writeFile(this.workDir, "dialect.txt", contents);
+
+        try (InputStream in = file.getInputStream()) {
+            assertArrayEquals(contents.getBytes(StandardCharsets.UTF_8), in.readAllBytes(),
+                    "the encrypted payload came back different on " + dialect);
         }
     }
 }
