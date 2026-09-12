@@ -420,6 +420,35 @@ class SmbTransportImplTest {
             assertEquals(EncryptionNegotiateContext.CIPHER_AES128_GCM, gcm.getCipherId());
             assertEquals(DialectVersion.SMB311, gcm.getDialect());
         }
+
+        @Test
+        @DisplayName("createEncryptionContext derives 32-byte keys when an AES-256 cipher was negotiated")
+        void createEncryptionContext_aes256DerivesLongerKeys() throws Exception {
+            byte[] sessionKey = new byte[16];
+            byte[] preauth = new byte[16];
+            setField(transport, "smb2", true);
+
+            // This is the join between negotiation and key derivation, and the place an abandoned attempt at
+            // AES-256 (ad815cf on origin/experimental) went wrong: it negotiated the cipher but never widened the
+            // KDF, so the 32-byte guard rejected the 16-byte key on every AES-256 session. The context now
+            // validates key length in its constructor, so a short key here throws rather than quietly encrypting
+            // as AES-128 - which means this test fails loudly if the two halves are ever wired up inconsistently.
+            for (int cipher : new int[] { EncryptionNegotiateContext.CIPHER_AES256_GCM, EncryptionNegotiateContext.CIPHER_AES256_CCM }) {
+                Smb2NegotiateResponse nego = new Smb2NegotiateResponse(cfg);
+                setField(nego, "selectedDialect", DialectVersion.SMB311);
+                setField(nego, "selectedCipher", cipher);
+                setField(transport, "negotiated", nego);
+
+                Smb2EncryptionContext ctxt = transport.createEncryptionContext(sessionKey, preauth);
+                assertEquals(cipher, ctxt.getCipherId());
+                assertEquals(32, Smb2EncryptionContext.keyLength(cipher), "an AES-256 cipher requires a 32-byte key");
+            }
+
+            // And the AES-128 ciphers must not have grown: the same derivation serves both, so widening it
+            // wholesale would change keys that already work against real servers.
+            assertEquals(16, Smb2EncryptionContext.keyLength(EncryptionNegotiateContext.CIPHER_AES128_GCM));
+            assertEquals(16, Smb2EncryptionContext.keyLength(EncryptionNegotiateContext.CIPHER_AES128_CCM));
+        }
     }
 
     @Test

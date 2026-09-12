@@ -62,7 +62,14 @@ public class Smb2EncryptionContext {
      * AES-128-GCM cipher identifier for SMB3.1.1 encryption
      */
     public static final int CIPHER_AES_128_GCM = EncryptionNegotiateContext.CIPHER_AES128_GCM;
-    // Note: AES-256 variants are not currently defined in the negotiate context
+    /**
+     * AES-256-CCM cipher identifier for SMB3.1.1 encryption
+     */
+    public static final int CIPHER_AES_256_CCM = EncryptionNegotiateContext.CIPHER_AES256_CCM;
+    /**
+     * AES-256-GCM cipher identifier for SMB3.1.1 encryption
+     */
+    public static final int CIPHER_AES_256_GCM = EncryptionNegotiateContext.CIPHER_AES256_GCM;
 
     /**
      * Transform header flag indicating the message is encrypted
@@ -86,8 +93,39 @@ public class Smb2EncryptionContext {
         this.dialect = dialect;
         this.encryptionKey = encryptionKey.clone();
         this.decryptionKey = decryptionKey.clone();
+        checkKeyLength("encryption", this.encryptionKey);
+        checkKeyLength("decryption", this.decryptionKey);
         this.noncePrefix = new byte[Math.max(0, getNonceLength() - Long.BYTES)];
         this.secureRandom.nextBytes(this.noncePrefix);
+    }
+
+    /**
+     * Key length in bytes required by a cipher.
+     *
+     * @param cipherId
+     *            the negotiated cipher identifier
+     * @return the required key length in bytes
+     */
+    public static int keyLength(final int cipherId) {
+        return cipherId == CIPHER_AES_256_CCM || cipherId == CIPHER_AES_256_GCM ? Smb3KeyDerivation.CIPHER_KEY_LENGTH_256
+                : Smb3KeyDerivation.CIPHER_KEY_LENGTH_128;
+    }
+
+    /**
+     * Refuses a key that is not the length the negotiated cipher calls for.
+     *
+     * <p>
+     * Nothing downstream would notice: BouncyCastle takes the AES key size from the length of the key it is
+     * handed, so a 16-byte key under an AES-256 cipher id encrypts as AES-128 and succeeds. The session comes up,
+     * traffic flows, and the cipher the client believes it negotiated is not the one protecting the data.
+     * </p>
+     */
+    private void checkKeyLength(final String which, final byte[] key) {
+        final int required = keyLength(this.cipherId);
+        if (key.length != required) {
+            throw new IllegalArgumentException(String.format("Cipher 0x%04x requires a %d-byte %s key but was given %d bytes",
+                    this.cipherId, required, which, key.length));
+        }
     }
 
     /**
@@ -256,7 +294,10 @@ public class Smb2EncryptionContext {
     }
 
     private boolean isGCMCipher() {
-        return this.cipherId == CIPHER_AES_128_GCM;
+        // Set membership rather than equality with the 128-bit id: AES-256-GCM would otherwise fall through to the
+        // CCM branch and be built as a CCM cipher with an 11-byte nonce. getNonceLength() is also called from the
+        // constructor to size the nonce prefix, so a misclassification is wrong from construction onwards.
+        return this.cipherId == CIPHER_AES_128_GCM || this.cipherId == CIPHER_AES_256_GCM;
     }
 
     private int getAuthTagLength() {

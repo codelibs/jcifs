@@ -629,6 +629,16 @@ public class DelegatingConfiguration implements Configuration {
     /**
      * {@inheritDoc}
      *
+     * @see org.codelibs.jcifs.smb.Configuration#getEncryptionCiphers()
+     */
+    @Override
+    public int[] getEncryptionCiphers() {
+        return this.delegate.getEncryptionCiphers();
+    }
+
+    /**
+     * {@inheritDoc}
+     *
      * @see org.codelibs.jcifs.smb.Configuration#getLmHostsFileName()
      */
     @Override
