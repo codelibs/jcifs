@@ -165,15 +165,68 @@ break anyway.
 | Granted oplock level | Supported | Decoded and recorded on the open, which is what decides whether a later break of it has to be acknowledged. |
 | Oplock break notification | Supported | Decoded and resolved to the open it names. Since the notification carries TreeId 0 and, on several servers, SessionId 0, the open is found by file id in the session open tables rather than from the header. A break naming an open the client does not have is ignored, as MS-SMB2 3.2.5.19.1 requires. jcifs caches nothing, so there is no cached data to discard. |
 | Oplock break acknowledgement | Supported | `Smb2OplockBreakAcknowledgment` is sent on the broken open's own tree, which is what gives it the session and tree id the server requires. A break from level II to none is not answered at all (MS-SMB2 2.2.24.1). The acknowledgement is sent off the receive thread, because it draws a reply and waiting for one there would stop the loop that reads it. |
-| SMB3 leases | Not implemented | Two unused constants; no lease is ever requested. A lease break is now decoded rather than fatal: before 3.0.4 its 44-byte body failed a decode that demanded 24, and that failure closed the socket, logged off every session and failed every request in flight on the connection. Such a break is logged and otherwise ignored, since no lease was ever held. |
-| Directory leasing | Not implemented | Unused capability constant; depends on leases. |
-| Durable / persistent handles | Not implemented | No DHnQ/DH2Q/DHnC/DH2C contexts, no app instance id, no handle reconnect path. |
+| SMB3 leases | Not implemented | Two unused constants; no lease is ever requested, and there is no lease create context to request one with. A lease break is now decoded rather than fatal: before 3.0.4 its 44-byte body failed a decode that demanded 24, and that failure closed the socket, logged off every session and failed every request in flight on the connection. Such a break is logged and otherwise ignored, since no lease was ever held — there is no lease break acknowledgement message either. A lease holding `SMB2_LEASE_HANDLE_CACHING` is one of the two ways to qualify for a durable handle; see [Why durable handles are not planned](#why-durable-handles-are-not-planned). |
+| Directory leasing | Not implemented | Unused capability constant; depends on leases. Worth knowing before planning anything on it: a directory lease may only be `R` or `R|H` (MS-SMB2 3.3.5.9.11 strips write caching for directories), and Samba 4.21 does not implement directory leases at all, so nothing is granted there whatever the client asks for. |
+| Durable / persistent handles | Not implemented, and not planned | No DHnQ/DH2Q/DHnC/DH2C contexts, no app instance id, no handle reconnect path. See [Why durable handles are not planned](#why-durable-handles-are-not-planned) for what it would take and why it is not worth it here. |
 | Create contexts (the framework itself) | Not functional | The request side encodes correctly: `Smb2CreateRequest.setCreateContexts()` lays contexts out as MS-SMB2 2.2.13.2 requires, and `CreateContextIT` checks that a real server answers each one. But nothing outside the tests calls it, and `Smb2CreateResponse.createContext()` is `return null`, so a context in a response is skipped. Before 3.0.4 no context could be sent at all — `size()` left out each context's header and name, so the request failed before it was sent — and the encoder also zeroed every `Next` and undercounted `CreateContextsLength`. |
 
 The last row is the blocker for the three above it: leases, durable handles and
 persistent handles all ride on create contexts. Contexts can now be sent, but a
-lease or durable handle response still cannot be recognised, so none of the three
-can be implemented without first decoding those response contexts.
+context in a response is still dropped. Note how little is missing there: the
+walker in `Smb2CreateResponse` is complete — it follows the `Next` chain,
+bounds-checks each entry and collects them — and only the factory that turns a
+context name into a response object is `return null`. Recognising a lease or
+durable handle response means adding those response types and a dispatch on the
+name, not writing a decoder.
+
+### Why durable handles are not planned
+
+A durable handle survives a dropped connection: the server keeps the open alive
+and the client reclaims it rather than reopening by path. This records why it is
+not planned, so the question does not have to be researched again.
+
+**The precondition is not batch oplocks alone.** MS-SMB2 3.3.5.9.6 requires
+either a batch oplock *or* a lease whose state includes
+`SMB2_LEASE_HANDLE_CACHING`. The v2 contexts say the same, in Appendix A's note
+on 3.3.5.9.10, in 3.3.7.1, and in both reconnect handlers, as do Samba — which
+tests the *granted* lease type in `source3/smbd/smb2_create.c` — and ksmbd. The
+Linux client has used the lease form by default since 2013. A request made with
+neither is **silently ignored**: the create succeeds and the response context is
+simply absent, so refusal has to be detected by that absence rather than by a
+status code.
+
+**The least disruptive qualifying state is a lease of `R|H`.** It is not broken
+by another client's open at all, read or write. It breaks only when that open
+would otherwise fail with `STATUS_SHARING_VIOLATION`, and only then does the
+other client wait — for one round trip, now that breaks are acknowledged. A
+batch oplock is broken by *every* conflicting open and makes the opener wait
+each time, and it is broken even when the same client reopens the same file,
+because only a lease carries a client-chosen key that exempts its holder. `R` is
+required: a lease asking for handle caching alone is reduced to none.
+
+**Directories cannot have one.** MS-SMB2 3.3.5.9.10 skips durability when the
+open is a directory, and Samba 4.21 blocks it twice over — its durable cookie is
+refused for directories, and it has no directory leases to qualify with. Since
+directory enumeration is much of what this library does, the feature would not
+apply to it.
+
+**What it buys is not what this client uses.** A durable handle preserves
+byte-range locks across the reconnect — the reason the Linux client implemented
+it — along with share-mode semantics and handle identity across a rename. jcifs
+takes no byte-range locks, and SMB2 reads and writes carry explicit offsets, so
+there is nothing to resume: reopening by path and continuing at the recorded
+offset loses none of it, which is what the streams already do. See
+[Reconnecting after a dropped connection](#reconnecting-after-a-dropped-connection).
+
+**And it is least reliable exactly when it would be wanted.** If another client
+opens the file while the connection is down, the server closes the durable open
+rather than keeping it (3.3.4.6 and 3.3.4.7), and a lease broken below handle
+caching makes the reconnect fail outright. The handle also expires on its own,
+typically within 60 to 180 seconds.
+
+One caveat on the evidence: that Windows grants a v2 durable handle for a lease
+with no oplock is taken from Microsoft's documented product behaviour and its
+protocol test suite, not from an observed exchange.
 
 ## Throughput and credits
 
@@ -181,7 +234,7 @@ can be implemented without first decoding those response contexts.
 | --- | --- | --- |
 | Maximum read size | **64936 bytes** | Hard cap. |
 | Maximum write size | **64904 bytes** | Hard cap. |
-| `SMB2_GLOBAL_CAP_LARGE_MTU` | Not implemented | The client never advertises it, so the server's LARGE_MTU bit is masked off during negotiate. |
+| `SMB2_GLOBAL_CAP_LARGE_MTU` | Not implemented | The constant exists and nothing reads it. The client advertises only `DFS` (and `ENCRYPTION` when enabled), and `commonCapabilities` is `serverCaps & clientCaps`, so the flag is never negotiated. Note this is **not** what caps the transfer sizes: `Smb2NegotiateResponse` clamps the sizes the server offers against `jcifs.client.transaction_buf_size` and `jcifs.client.rcv_buf_size` / `snd_buf_size` separately from the flag. Raising those alone will not get past 64 KiB either, because a larger payload has to carry a `CreditCharge` — see the next row. |
 | `creditCharge` on outgoing requests | Not functional | The field has no setter and ships as 0 on every request; `getCreditCost()` is hardcoded to 1. Credits are accounted one per request regardless of payload size. |
 | Credit accounting | Supported | Per connection. |
 | Connection pooling | Supported | See below. |
@@ -225,7 +278,7 @@ apart from a directory that holds only those entries.
 | DFS referral resolution | Supported | On by default (`jcifs.client.dfs.disabled=false`). Uses `FSCTL_DFS_GET_REFERRALS`; the `_EX` variant is not used. |
 | Server-side copy (copychunk) | Partial | `SmbFile.copyTo` uses `FSCTL_SRV_COPYCHUNK` **only when source and destination resolve to the same tree connection**. Cross-share and cross-server copies silently fall back to read/write streaming. |
 | Named pipes | Supported | Transceive and peek. |
-| Symbolic links / reparse points | Not implemented | `STATUS_STOPPED_ON_SYMLINK` does not appear in the source tree. The SMB2 error response body *is* captured into `errorData`, so the symlink target is in memory, but nothing reads it: opening a path that crosses a symlink fails with an opaque error. |
+| Symbolic links / reparse points | Partial | A path that crosses a symbolic link fails with `SmbSymlinkException`, which carries the target decoded from the `STATUS_STOPPED_ON_SYMLINK` error response: `getSubstituteName()`, `getPrintName()`, `isRelative()` and `getUnparsedPathLength()`. Links are **not followed** — there is no resolution or retry, so a caller that wants to traverse one has to act on the target itself. Which server you are talking to decides whether this comes up at all: Samba resolves a link that stays inside the share and never reports one, so the error surfaces mainly against Windows. |
 | Multi-channel | Not functional | One unused capability constant, an unused `FSCTL_QUERY_NETWORK_INTERFACE_INFO` constant with no response decoder, and `Smb2SessionSetupRequest.setSessionBinding()`, which encodes the binding flag correctly but is called only from unit tests. A session is pinned to one transport. |
 | Compression | Not implemented | No context, no transform header, no LZ77/LZNT1. |
 | RDMA (SMB Direct) | Not implemented | Two unused read-channel constants. No RDMA transport and no dependency. |
