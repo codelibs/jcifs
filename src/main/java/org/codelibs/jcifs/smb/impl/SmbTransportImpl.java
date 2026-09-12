@@ -84,6 +84,7 @@ import org.codelibs.jcifs.smb.internal.smb2.Smb3KeyDerivation;
 import org.codelibs.jcifs.smb.internal.smb2.io.Smb2ReadResponse;
 import org.codelibs.jcifs.smb.internal.smb2.ioctl.Smb2IoctlRequest;
 import org.codelibs.jcifs.smb.internal.smb2.ioctl.Smb2IoctlResponse;
+import org.codelibs.jcifs.smb.internal.smb2.lock.Smb2OplockBreakAcknowledgment;
 import org.codelibs.jcifs.smb.internal.smb2.lock.Smb2OplockBreakNotification;
 import org.codelibs.jcifs.smb.internal.smb2.nego.EncryptionNegotiateContext;
 import org.codelibs.jcifs.smb.internal.smb2.nego.Smb2NegotiateRequest;
@@ -1479,8 +1480,22 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
                 final Response notification = createNotification(key);
                 if (notification != null) {
                     log.debug("Parsing notification");
-                    doRecv(notification);
-                    handleNotification(notification);
+                    // Only a message that is not part of a compound chain is read in full before it is decoded. In a
+                    // chain, decoding stops with the rest of the chain still unread, so a failure there has to stay
+                    // fatal - carrying on would read every later message from the wrong offset.
+                    final boolean standalone = !this.isSMB2() || Encdec.dec_uint32le(this.sbuf, 4 + 20) == 0;
+                    try {
+                        doRecv(notification);
+                        handleNotification(notification);
+                    } catch (final SMBProtocolDecodingException | RuntimeException e) {
+                        if (!standalone) {
+                            throw e;
+                        }
+                        // The whole message is read before it is decoded, so the stream is already at the next one
+                        // and only this notification is lost. Nothing is waiting on it, whereas failing here would
+                        // take down the connection along with every request in flight on every session sharing it.
+                        log.warn("Ignoring a notification that could not be handled", e);
+                    }
                     return;
                 }
                 log.warn("Skipping message " + key);
@@ -1497,7 +1512,119 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
      * @param notification
      */
     protected void handleNotification(final Response notification) {
+        if (notification instanceof final Smb2OplockBreakNotification brk) {
+            handleBreak(brk);
+            return;
+        }
         log.info("Received notification " + notification);
+    }
+
+    /**
+     * Answers an oplock break, MS-SMB2 3.2.5.19.1.
+     *
+     * <p>
+     * A break names nothing but a file id. Its own header is no help - the TreeId is always zero and the SessionId is
+     * zero on several servers - so the open is found in the session open tables and the acknowledgement is sent on
+     * that open's own tree, which is what gives it the right session and tree id. A break naming an open we do not
+     * have is ignored, as the specification requires.
+     * </p>
+     *
+     * @param brk the break notification
+     */
+    private void handleBreak(final Smb2OplockBreakNotification brk) {
+        if (brk.isLeaseBreak()) {
+            // jcifs never asks for a lease, so it holds no lease state to give up.
+            log.info("Ignoring a lease break for a lease that was never requested: " + brk);
+            return;
+        }
+
+        final byte[] fileId = brk.getFileId();
+        final SmbFileHandleImpl open = findOpen(brk.getSessionId(), fileId);
+        if (open == null) {
+            log.debug("Ignoring an oplock break naming an open we do not have: " + brk);
+            return;
+        }
+
+        if (!open.hasOplock()) {
+            // 3.2.5.19.1 stops processing for an open that holds no oplock, and nothing may be recorded from the
+            // notification either: it is not authenticated, so taking a level from it would let a server raise what
+            // this open appears to hold and make the next break answerable. Every ordinary open is in this state,
+            // because jcifs asks for no oplock.
+            log.debug("Ignoring an oplock break for an open that holds no oplock: " + brk);
+            return;
+        }
+
+        final byte newOplockLevel = brk.getOplockLevel();
+        final boolean acknowledge = Smb2OplockBreakAcknowledgment.isRequired(open.getOplockLevel(), newOplockLevel);
+        open.setOplockLevel(newOplockLevel);
+        if (acknowledge) {
+            acknowledgeBreak(open, fileId, newOplockLevel);
+        } else if (log.isDebugEnabled()) {
+            log.debug("Oplock break needs no acknowledgement: " + brk);
+        }
+    }
+
+    /**
+     * Finds the open a break names.
+     *
+     * @param sessionId the session id the notification carried, which is zero on several servers
+     * @param fileId    the file id the notification named
+     * @return the open, or null if no session of this connection has it
+     */
+    private SmbFileHandleImpl findOpen(final long sessionId, final byte[] fileId) {
+        if (sessionId != 0) {
+            final SmbSessionImpl session = getSessionById(sessionId);
+            if (session != null) {
+                // The server named the session, so only its opens are candidates. File ids are unique within a
+                // session, not across them, so searching the others could match an unrelated open.
+                return session.getOpen(fileId);
+            }
+        }
+        for (final SmbSessionImpl session : this.sessionsById.values()) {
+            final SmbFileHandleImpl open = session.getOpen(fileId);
+            if (open != null) {
+                return open;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Sends the acknowledgement, off the receive thread.
+     *
+     * <p>
+     * An acknowledgement draws a reply, and waiting for one here would stop the loop that reads it; it would also
+     * hold up every other session sharing the connection while it waited. The tree is acquired here rather than in
+     * the worker so that the open cannot go away in between.
+     * </p>
+     */
+    private void acknowledgeBreak(final SmbFileHandleImpl open, final byte[] fileId, final byte oplockLevel) {
+        final SmbTreeHandleImpl tree;
+        try {
+            tree = open.getTree();
+        } catch (final RuntimeException e) {
+            log.debug("Open went away before its oplock break could be acknowledged", e);
+            return;
+        }
+
+        final Thread worker = new Thread(() -> {
+            try (SmbTreeHandleImpl th = tree) {
+                th.send(new Smb2OplockBreakAcknowledgment(getContext().getConfig(), fileId, oplockLevel), RequestParam.NO_RETRY);
+            } catch (final Exception e) {
+                // 3.2.5.19.3: an acknowledgement the server refuses leaves the open holding no oplock at all.
+                open.dropOplock();
+                log.warn("Failed to acknowledge an oplock break", e);
+            }
+        }, "jcifs-oplock-break-ack");
+        worker.setDaemon(true);
+        try {
+            worker.start();
+        } catch (final Throwable t) {
+            // The worker releases the tree once it runs. If it never runs - the machine is out of threads - nothing
+            // else would, and the tree connection would be pinned for the life of the connection.
+            tree.release();
+            throw t;
+        }
     }
 
     /**

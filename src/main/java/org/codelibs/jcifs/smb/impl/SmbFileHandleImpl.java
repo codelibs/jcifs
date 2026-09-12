@@ -45,6 +45,20 @@ class SmbFileHandleImpl implements SmbFileHandle {
     private final long tree_num; // for checking whether the tree changed
     private SmbTreeHandleImpl tree;
 
+    /**
+     * The session this open is registered with, or null when it is not registered.
+     *
+     * <p>
+     * Only an open that is in its session's table can be found again from an oplock break, which names nothing but
+     * the file id. Handles built without a session - every SMB1 handle, and anything that does not go through
+     * {@link #registerWith(SmbSessionImpl)} - simply never appear there.
+     * </p>
+     */
+    private volatile SmbSessionImpl registeredSession;
+
+    /** The oplock level the server granted, {@code SMB2_OPLOCK_LEVEL_NONE} when none was asked for. */
+    private volatile byte oplockLevel;
+
     private final AtomicLong usageCount = new AtomicLong(1);
     private final int flags;
     private final int access;
@@ -196,6 +210,7 @@ class SmbFileHandleImpl implements SmbFileHandle {
                 }
             }
         } finally {
+            unregister();
             this.open = false;
             if (t != null) {
                 // release tree usage
@@ -262,7 +277,75 @@ class SmbFileHandleImpl implements SmbFileHandle {
      *
      */
     public void markClosed() {
+        unregister();
         this.open = false;
+    }
+
+    /**
+     * Adds this open to its session's open table, so that an oplock break naming its file id can be resolved back to
+     * it.
+     *
+     * <p>
+     * Only SMB2 opens are registered; an SMB1 handle has no file id for a break to name.
+     * </p>
+     *
+     * @param session the session this open belongs to
+     */
+    void registerWith(final SmbSessionImpl session, final byte grantedOplockLevel) {
+        if (session == null || this.fileId == null) {
+            return;
+        }
+        this.oplockLevel = grantedOplockLevel;
+        this.registeredSession = session;
+        session.registerOpen(this.fileId, this);
+    }
+
+    /**
+     * The oplock level the server granted this open, which decides whether a break of it has to be acknowledged.
+     *
+     * @return the granted oplock level, {@code SMB2_OPLOCK_LEVEL_NONE} unless an oplock was asked for and granted
+     */
+    byte getOplockLevel() {
+        return this.oplockLevel;
+    }
+
+    /**
+     * Whether this open holds an oplock at all.
+     *
+     * @return true when the server granted one and it has not been given up
+     */
+    boolean hasOplock() {
+        return this.oplockLevel != 0; // SMB2_OPLOCK_LEVEL_NONE
+    }
+
+    /**
+     * Records the level a break left this open at, so that a further break of it is answered - or not - on what it
+     * actually holds now.
+     *
+     * @param oplockLevel the level the open now holds
+     */
+    void setOplockLevel(final byte oplockLevel) {
+        this.oplockLevel = oplockLevel;
+    }
+
+    /**
+     * Gives up any oplock on this open. MS-SMB2 3.2.5.19.3: an acknowledgement the server refuses leaves the open
+     * holding nothing.
+     */
+    void dropOplock() {
+        this.oplockLevel = 0; // SMB2_OPLOCK_LEVEL_NONE
+    }
+
+    /**
+     * Takes this open back out of its session's open table. Doing nothing for a handle that was never registered is
+     * what keeps this off the SMB1 path.
+     */
+    private void unregister() {
+        final SmbSessionImpl session = this.registeredSession;
+        if (session != null) {
+            this.registeredSession = null;
+            session.unregisterOpen(this.fileId);
+        }
     }
 
     /**

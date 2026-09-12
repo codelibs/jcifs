@@ -712,6 +712,11 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
                 info = resp;
                 fileSize = resp.getEndOfFile();
                 fh = new SmbFileHandleImpl(config, resp.getFileId(), h, uncPath, flags, access, 0, 0, resp.getEndOfFile());
+                // An oplock break names nothing but the file id, so the open has to be findable by it. getSession()
+                // hands out an acquired reference, hence the try-with-resources.
+                try (SmbSessionImpl session = h.getSession()) {
+                    fh.registerWith(session, resp.getOplockLevel());
+                }
             } else if (h.hasCapability(SmbConstants.CAP_NT_SMBS)) {
                 final SmbComNTCreateAndXResponse resp = new SmbComNTCreateAndXResponse(config);
                 final SmbComNTCreateAndX req = new SmbComNTCreateAndX(config, uncPath, flags, access, sharing, attrs, options, null);

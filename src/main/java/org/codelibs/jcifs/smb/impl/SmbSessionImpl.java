@@ -19,6 +19,8 @@
 package org.codelibs.jcifs.smb.impl;
 
 import java.io.IOException;
+import java.lang.ref.WeakReference;
+import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
@@ -26,8 +28,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -98,6 +102,17 @@ final class SmbSessionImpl implements SmbSessionInternal {
     private final AtomicBoolean transportAcquired = new AtomicBoolean(true);
 
     private long sessionId;
+
+    /**
+     * The opens of this session, by file id - MS-SMB2 Session.OpenTable.
+     *
+     * <p>
+     * An oplock break names only the file it breaks, so 3.2.5.19.1 has the client find the open here in order to
+     * acknowledge it: the acknowledgement has to carry the session and tree of the open, and the notification's own
+     * header carries neither (TreeId is always zero, SessionId is zero on several servers).
+     * </p>
+     */
+    private final Map<ByteBuffer, WeakReference<SmbFileHandleImpl>> opens = new ConcurrentHashMap<>();
 
     private SMBSigningDigest digest;
     private Smb2EncryptionContext encryptionContext;
@@ -1172,11 +1187,68 @@ final class SmbSessionImpl implements SmbSessionInternal {
             this.connectionState.set(0);
             this.digest = null;
             this.transport.unregisterSessionId(this.sessionId);
+            // The handles are gone with the session, and holding them here would keep them alive for the life of
+            // the connection.
+            this.opens.clear();
             this.encryptionContext = null;
             this.encryptData = false;
             this.transport.notifyAll();
         }
         return wasInUse;
+    }
+
+    /**
+     * @return this session's server-assigned id, zero until it has authenticated
+     */
+    long getSessionId() {
+        return this.sessionId;
+    }
+
+    /**
+     * Adds an open to this session's open table so a break naming it can be resolved.
+     *
+     * @param fileId the 16 byte file id the server assigned the open
+     * @param handle the open
+     */
+    void registerOpen(final byte[] fileId, final SmbFileHandleImpl handle) {
+        if (fileId != null) {
+            // Held weakly: an application that drops a handle without closing it should still have it collected and
+            // its "not properly closed" warning raised, rather than being kept alive here until the session ends.
+            this.opens.put(ByteBuffer.wrap(fileId.clone()), new WeakReference<>(handle));
+        }
+    }
+
+    /**
+     * Removes an open from this session's open table.
+     *
+     * @param fileId the 16 byte file id the open was registered under
+     */
+    void unregisterOpen(final byte[] fileId) {
+        if (fileId != null) {
+            this.opens.remove(ByteBuffer.wrap(fileId));
+        }
+    }
+
+    /**
+     * Finds an open of this session by its file id.
+     *
+     * @param fileId the file id named by a break notification
+     * @return the open, or null if this session has no such open
+     */
+    SmbFileHandleImpl getOpen(final byte[] fileId) {
+        if (fileId == null) {
+            return null;
+        }
+        final ByteBuffer key = ByteBuffer.wrap(fileId);
+        final WeakReference<SmbFileHandleImpl> reference = this.opens.get(key);
+        if (reference == null) {
+            return null;
+        }
+        final SmbFileHandleImpl open = reference.get();
+        if (open == null) {
+            this.opens.remove(key, reference);
+        }
+        return open;
     }
 
     @Override

@@ -149,19 +149,23 @@ errors.
 | LOCK | Not functional | `Smb2LockRequest` exists and is referenced nowhere. **There is no byte-range locking API** on `SmbResource`, `SmbFile` or `SmbRandomAccessFile`. |
 | ECHO | Not functional | `Smb2EchoRequest` exists and is referenced nowhere. There is no keepalive or liveness probe. |
 | CANCEL | Not functional | `Smb2CancelRequest` is fully built and wired into the send path, but `createCancel()` is never invoked. Nothing can cancel an in-flight request — including a pending CHANGE_NOTIFY, as `SmbWatchHandle`'s own javadoc notes. |
-| OPLOCK_BREAK | Not functional | See below. |
+| OPLOCK_BREAK | Partially supported | Breaks are decoded and acknowledged; nothing requests an oplock, so none arrive by default. See below. |
 
 ## Caching, oplocks and handles
 
-None of this works. It is the area most likely to be mistaken for working code.
+Oplock breaks are handled; everything else here is absent. Note what the first
+row means for the rest: nothing asks for an oplock or a lease, so on a
+conforming server none of the break handling below is reached in ordinary use.
+It matters for a caller that requests one itself, and for a server that sends a
+break anyway.
 
 | Feature | Status | Notes |
 | --- | --- | --- |
-| Oplock request on CREATE | Not functional | `setRequestedOplockLevel()` has no production caller, so **every CREATE requests oplock level NONE**. |
-| Granted oplock level | Not functional | Decoded into a field whose getter has no caller. |
-| Oplock break notification | Not functional | The notification is decoded and dispatched, but `handleNotification` is a single `log.info` line. No cache is invalidated, no handle is touched, and there is no override anywhere. |
-| Oplock break acknowledgement | Not implemented | There is no acknowledgement message class at all. The client cannot answer a break. |
-| SMB3 leases | Not implemented | Two unused constants. A real lease-break frame would fail the notification decode (structure size 44 vs the expected 24) and tear down the transport. |
+| Oplock request on CREATE | Not functional | `setRequestedOplockLevel()` has no production caller, so **every CREATE still requests oplock level NONE**. A conforming server therefore never breaks an oplock of ours (MS-SMB2 3.3.5.9), which is why the break handling below is inert in normal use. |
+| Granted oplock level | Supported | Decoded and recorded on the open, which is what decides whether a later break of it has to be acknowledged. |
+| Oplock break notification | Supported | Decoded and resolved to the open it names. Since the notification carries TreeId 0 and, on several servers, SessionId 0, the open is found by file id in the session open tables rather than from the header. A break naming an open the client does not have is ignored, as MS-SMB2 3.2.5.19.1 requires. jcifs caches nothing, so there is no cached data to discard. |
+| Oplock break acknowledgement | Supported | `Smb2OplockBreakAcknowledgment` is sent on the broken open's own tree, which is what gives it the session and tree id the server requires. A break from level II to none is not answered at all (MS-SMB2 2.2.24.1). The acknowledgement is sent off the receive thread, because it draws a reply and waiting for one there would stop the loop that reads it. |
+| SMB3 leases | Not implemented | Two unused constants; no lease is ever requested. A lease break is now decoded rather than fatal: before 3.0.4 its 44-byte body failed a decode that demanded 24, and that failure closed the socket, logged off every session and failed every request in flight on the connection. Such a break is logged and otherwise ignored, since no lease was ever held. |
 | Directory leasing | Not implemented | Unused capability constant; depends on leases. |
 | Durable / persistent handles | Not implemented | No DHnQ/DH2Q/DHnC/DH2C contexts, no app instance id, no handle reconnect path. |
 | Create contexts (the framework itself) | Not functional | The request side encodes correctly: `Smb2CreateRequest.setCreateContexts()` lays contexts out as MS-SMB2 2.2.13.2 requires, and `CreateContextIT` checks that a real server answers each one. But nothing outside the tests calls it, and `Smb2CreateResponse.createContext()` is `return null`, so a context in a response is skipped. Before 3.0.4 no context could be sent at all — `size()` left out each context's header and name, so the request failed before it was sent — and the encoder also zeroed every `Next` and undercounted `CreateContextsLength`. |
