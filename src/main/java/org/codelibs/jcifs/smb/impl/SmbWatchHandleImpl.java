@@ -44,6 +44,16 @@ class SmbWatchHandleImpl implements SmbWatchHandle {
     private final boolean recursive;
 
     /**
+     * The notify request {@link #watch()} is waiting for a response to, or null when no watch is pending.
+     *
+     * <p>
+     * A cancel has to name the request it cancels, and only the thread blocked in {@link #watch()} has it, so it is
+     * published here for {@link #cancel()} to pick up from whatever thread calls that.
+     * </p>
+     */
+    private volatile CommonServerMessageBlockRequest pending;
+
+    /**
      * @param fh
      * @param filter
      * @param recursive
@@ -89,6 +99,7 @@ class SmbWatchHandleImpl implements SmbWatchHandle {
             if (log.isTraceEnabled()) {
                 log.trace("Sending NtTransNotifyChange for " + this.handle);
             }
+            this.pending = req;
             try {
                 resp = th.send(req, resp, RequestParam.NO_TIMEOUT, RequestParam.NO_RETRY);
             } catch (final SmbException e) {
@@ -98,6 +109,8 @@ class SmbWatchHandleImpl implements SmbWatchHandle {
                     return null;
                 }
                 throw e;
+            } finally {
+                this.pending = null;
             }
             if (log.isTraceEnabled()) {
                 log.trace("Returned from NtTransNotifyChange " + resp.getErrorCode());
@@ -125,6 +138,30 @@ class SmbWatchHandleImpl implements SmbWatchHandle {
     @Override
     public List<FileNotifyInformation> call() throws CIFSException {
         return watch();
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see org.codelibs.jcifs.smb.SmbWatchHandle#cancel()
+     */
+    @Override
+    public void cancel() throws CIFSException {
+        final CommonServerMessageBlockRequest req = this.pending;
+        if (req == null || !this.handle.isValid()) {
+            return;
+        }
+        final CommonServerMessageBlockRequest cancel = req.createCancel();
+        if (cancel == null) {
+            return;
+        }
+        if (log.isDebugEnabled()) {
+            log.debug("Cancelling " + req);
+        }
+        // A cancel is not answered, so it is sent without a response to wait for
+        try (SmbTreeHandleImpl th = this.handle.getTree()) {
+            th.send(cancel, null, RequestParam.NO_RETRY);
+        }
     }
 
     /**

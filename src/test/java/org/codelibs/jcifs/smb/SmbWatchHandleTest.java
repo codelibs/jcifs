@@ -152,6 +152,11 @@ class SmbWatchHandleTest {
             }
 
             @Override
+            public void cancel() throws CIFSException {
+                // Do nothing
+            }
+
+            @Override
             public void close() throws CIFSException {
                 // Do nothing
             }
@@ -324,6 +329,11 @@ class SmbWatchHandleTest {
             }
 
             @Override
+            public void cancel() throws CIFSException {
+                // Do nothing
+            }
+
+            @Override
             public void close() throws CIFSException {
                 // Do nothing
             }
@@ -380,6 +390,11 @@ class SmbWatchHandleTest {
             @Override
             public List<FileNotifyInformation> call() throws CIFSException {
                 return watch();
+            }
+
+            @Override
+            public void cancel() throws CIFSException {
+                // Do nothing
             }
 
             @Override

@@ -10,6 +10,7 @@ import static org.mockito.Mockito.mock;
 
 import org.codelibs.jcifs.smb.Configuration;
 import org.codelibs.jcifs.smb.internal.CommonServerMessageBlockRequest;
+import org.codelibs.jcifs.smb.internal.util.SMBUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -302,5 +303,40 @@ class Smb2CancelRequestTest {
         assertEquals(negativeMid, request.getMid(), "Should handle negative MID");
         assertEquals(negativeAsyncId, request.getAsyncId(), "Should handle negative AsyncId");
         assertTrue((request.getFlags() & SMB2_FLAGS_ASYNC_COMMAND) != 0, "Async flag should be set for non-zero (negative) asyncId");
+    }
+
+    /**
+     * MS-SMB2 2.2.1.2: bytes 32-39 of the header are the AsyncId when SMB2_FLAGS_ASYNC_COMMAND is set, and reserved
+     * plus the TreeId when it is not. A server matches a cancel to the request it names by reading that field, so a
+     * cancel that sets the flag but leaves a tree id there names nothing and is dropped.
+     */
+    @Test
+    @DisplayName("An async cancel puts the AsyncId in the header, not a tree id")
+    void testAsyncCancelEncodesAsyncIdInHeader() {
+        long mid = 12345L;
+        long asyncId = 0x1122334455667788L;
+        Smb2CancelRequest request = new Smb2CancelRequest(mockConfig, mid, asyncId);
+        request.setTid(42); // the tree layer stamps this on every request it sends
+
+        byte[] buffer = new byte[256];
+        request.encode(buffer, 0);
+
+        assertTrue((SMBUtil.readInt4(buffer, 16) & SMB2_FLAGS_ASYNC_COMMAND) != 0, "the encoded flags should say async");
+        assertEquals(mid, SMBUtil.readInt8(buffer, 24), "the cancel should name the message id it cancels");
+        assertEquals(asyncId, SMBUtil.readInt8(buffer, 32), "the async id field should carry the async id");
+    }
+
+    @Test
+    @DisplayName("A cancel that is not async puts the tree id in the header")
+    void testSyncCancelEncodesTreeIdInHeader() {
+        Smb2CancelRequest request = new Smb2CancelRequest(mockConfig, 7L, 0L);
+        request.setTid(42);
+
+        byte[] buffer = new byte[256];
+        request.encode(buffer, 0);
+
+        assertFalse((SMBUtil.readInt4(buffer, 16) & SMB2_FLAGS_ASYNC_COMMAND) != 0, "the encoded flags should not say async");
+        assertEquals(7L, SMBUtil.readInt8(buffer, 24), "the cancel should name the message id it cancels");
+        assertEquals(42, SMBUtil.readInt4(buffer, 36), "the tree id field should carry the tree id");
     }
 }

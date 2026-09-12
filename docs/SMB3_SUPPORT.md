@@ -142,13 +142,13 @@ errors.
 | READ, WRITE | Supported | See [Throughput](#throughput-and-credits) for size limits. |
 | QUERY_INFO, SET_INFO | Supported | |
 | QUERY_DIRECTORY | Supported | Streaming enumeration. A listing cut short by a failure reports it rather than ending quietly — see [Reconnecting after a dropped connection](#reconnecting-after-a-dropped-connection). |
-| CHANGE_NOTIFY | Supported | Via `SmbResource.watch(int, boolean)`. Blocking. |
+| CHANGE_NOTIFY | Supported | Via `SmbResource.watch(int, boolean)`. Blocking; `SmbWatchHandle.cancel()` ends a pending call. |
 | IOCTL | Partial | Reachable FSCTLs: DFS_GET_REFERRALS, PIPE_PEEK, PIPE_TRANSCEIVE, SRV_COPYCHUNK(_WRITE), SRV_REQUEST_RESUME_KEY, VALIDATE_NEGOTIATE_INFO. The other defined FSCTL constants are never sent. |
 | Async / `STATUS_PENDING` interim responses | Supported | |
 | FLUSH | Supported | Sent by `SmbFileOutputStream.flush()`. Every write goes out as it is made, so there is no local buffer to push; what `flush()` contributes is the durability barrier, asking the server to commit what it has taken. Before 3.0.4 the method was the inherited no-op from `OutputStream`, so a caller that flushed and saw no error had no way to tell the data was still only in the server's cache. Nothing is sent on SMB1, which has no equivalent request. |
 | LOCK | Not functional | `Smb2LockRequest` exists and is referenced nowhere. **There is no byte-range locking API** on `SmbResource`, `SmbFile` or `SmbRandomAccessFile`. |
 | ECHO | Not functional | `Smb2EchoRequest` exists and is referenced nowhere. There is no keepalive or liveness probe. |
-| CANCEL | Not functional | `Smb2CancelRequest` is fully built and wired into the send path, but `createCancel()` is never invoked. Nothing can cancel an in-flight request — including a pending CHANGE_NOTIFY, as `SmbWatchHandle`'s own javadoc notes. |
+| CANCEL | Supported | Sent by `SmbWatchHandle.cancel()`, which is the only caller: CHANGE_NOTIFY is the one request the API blocks in. The cancelled `watch()` returns `null` rather than a set of changes, and the open survives, so the directory can be watched again. Closing the handle also ends a pending watch, but as a side effect of closing the open, and what the server then answers the notify with is up to it — Samba sends STATUS_NOTIFY_CLEANUP and an empty set. Actually sending one required fixing the header encoder: it chose between the async and sync header layouts from a field only ever set while decoding, so a cancel whose flags said async still carried a tree id where the server reads the AsyncId, and was discarded. |
 | OPLOCK_BREAK | Partially supported | Breaks are decoded and acknowledged; nothing requests an oplock, so none arrive by default. See below. |
 
 ## Caching, oplocks and handles
