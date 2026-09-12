@@ -19,6 +19,7 @@ import java.net.MalformedURLException;
 import org.codelibs.jcifs.smb.CIFSException;
 import org.codelibs.jcifs.smb.CloseableIterator;
 import org.codelibs.jcifs.smb.ResourceFilter;
+import org.codelibs.jcifs.smb.RuntimeCIFSException;
 import org.codelibs.jcifs.smb.SmbResource;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -84,6 +85,22 @@ class FileEntryAdapterIteratorTest {
 
         // Without filter, resource should not be closed
         verify(resource, never()).close();
+    }
+
+    @Test
+    @DisplayName("an entry already read is handed out before a failure from the delegate is reported")
+    void failureIsDeferredUntilTheEntryAlreadyReadIsReturned() {
+        // One entry to give, then a failure: what a listing does when the connection drops between pages
+        when(delegate.hasNext()).thenReturn(true);
+        when(delegate.next()).thenReturn(fileEntry).thenThrow(new RuntimeCIFSException("Enumeration failed"));
+
+        TestIterator iterator = new TestIterator(null);
+
+        assertTrue(iterator.hasNext());
+        assertSame(resource, iterator.next(), "the entry read before the failure must still be handed out");
+        assertTrue(iterator.hasNext(), "the failure is still to be reported");
+        assertThrows(RuntimeCIFSException.class, iterator::next);
+        assertFalse(iterator.hasNext(), "the iterator is exhausted once the failure has been reported");
     }
 
     @Test

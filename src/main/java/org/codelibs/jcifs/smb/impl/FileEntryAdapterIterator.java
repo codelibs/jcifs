@@ -22,6 +22,7 @@ import java.net.MalformedURLException;
 import org.codelibs.jcifs.smb.CIFSException;
 import org.codelibs.jcifs.smb.CloseableIterator;
 import org.codelibs.jcifs.smb.ResourceFilter;
+import org.codelibs.jcifs.smb.RuntimeCIFSException;
 import org.codelibs.jcifs.smb.SmbResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +35,13 @@ abstract class FileEntryAdapterIterator implements CloseableIterator<SmbResource
     private final ResourceFilter filter;
     private final SmbResource parent;
     private SmbResource next;
+
+    /**
+     * Set when the delegate reports that the listing failed, and thrown once the entry read before it has been
+     * handed out. Every public listing API comes through this class, so deferring here is what makes that guarantee
+     * visible to callers.
+     */
+    private RuntimeCIFSException failure;
 
     /**
      * @param parent
@@ -95,18 +103,36 @@ abstract class FileEntryAdapterIterator implements CloseableIterator<SmbResource
      */
     @Override
     public boolean hasNext() {
-        return this.next != null;
+        return this.next != null || this.failure != null;
     }
 
     /**
      * {@inheritDoc}
      *
+     * @throws RuntimeCIFSException if the listing could not be read to its end, thrown after every entry that was
+     *             read has been returned
      * @see java.util.Iterator#next()
      */
     @Override
     public SmbResource next() {
+        if (this.next == null) {
+            // Nothing left to hand out: report the failure that ended the listing, once, and stay exhausted
+            final RuntimeCIFSException pending = this.failure;
+            if (pending != null) {
+                this.failure = null;
+                throw pending;
+            }
+            return null;
+        }
         final SmbResource n = this.next;
-        this.next = advance();
+        try {
+            this.next = advance();
+        } catch (final RuntimeCIFSException e) {
+            // The delegate had already read this entry when the listing failed, so hand it out and report the
+            // failure on the next call rather than losing it
+            this.next = null;
+            this.failure = e;
+        }
         return n;
     }
 
