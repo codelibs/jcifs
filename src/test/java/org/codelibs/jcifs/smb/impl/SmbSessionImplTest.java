@@ -12,6 +12,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
@@ -28,6 +29,7 @@ import org.codelibs.jcifs.smb.Credentials;
 import org.codelibs.jcifs.smb.RuntimeCIFSException;
 import org.codelibs.jcifs.smb.internal.SMBSigningDigest;
 import org.codelibs.jcifs.smb.internal.smb2.Smb2EncryptionContext;
+import org.codelibs.jcifs.smb.internal.smb2.create.Smb2CreateRequest;
 import org.codelibs.jcifs.smb.internal.smb2.session.Smb2SessionSetupResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -366,5 +368,121 @@ class SmbSessionImplTest {
         // Cause the inner reauthenticate to fail at first transport call
         when(transport.getNegotiateResponse()).thenThrow(new SmbException("fail"));
         assertThrows(CIFSException.class, session::reauthenticate);
+    }
+
+    /**
+     * An oplock break names only the file it breaks. MS-SMB2 3.2.5.19.1 has the client find the open in
+     * Session.OpenTable by that file id, because the acknowledgement has to carry the session and tree of the open -
+     * the notification's own header carries TreeId 0 and, on several servers, SessionId 0.
+     */
+    @Test
+    @DisplayName("an open is found by its file id once registered")
+    void testOpenTableLookup() {
+        SmbSessionImpl session = newSession();
+        byte[] fileId = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 };
+        SmbFileHandleImpl handle = mock(SmbFileHandleImpl.class);
+
+        assertNull(session.getOpen(fileId), "nothing is registered yet");
+
+        session.registerOpen(fileId, handle);
+
+        assertSame(handle, session.getOpen(fileId));
+        assertSame(handle, session.getOpen(fileId.clone()), "lookup is by contents, not identity");
+    }
+
+    @Test
+    @DisplayName("an open is gone from the table once unregistered")
+    void testOpenTableUnregister() {
+        SmbSessionImpl session = newSession();
+        byte[] fileId = new byte[] { 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1 };
+        SmbFileHandleImpl handle = mock(SmbFileHandleImpl.class);
+        session.registerOpen(fileId, handle);
+
+        session.unregisterOpen(fileId);
+
+        assertNull(session.getOpen(fileId), "a closed open must not be left behind");
+    }
+
+    @Test
+    @DisplayName("an unknown file id resolves to nothing rather than failing")
+    void testOpenTableMiss() {
+        SmbSessionImpl session = newSession();
+        session.registerOpen(new byte[16], mock(SmbFileHandleImpl.class));
+
+        // 3.2.5.19.1: a break naming no open of ours is ignored, so a miss must be quiet
+        assertNull(session.getOpen(new byte[] { 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9 }));
+        assertNull(session.getOpen(null));
+    }
+
+    @Test
+    @DisplayName("the session id is readable for the break acknowledgement header")
+    void testSessionIdAccessor() throws Exception {
+        SmbSessionImpl session = newSession();
+        assertEquals(0L, session.getSessionId(), "a session that has not authenticated has no id yet");
+
+        setField(session, "sessionId", 0x4142434445464748L);
+
+        assertEquals(0x4142434445464748L, session.getSessionId());
+    }
+
+    private SmbTreeHandleImpl stubbedTree() {
+        SmbTreeHandleImpl tree = mock(SmbTreeHandleImpl.class);
+        lenient().when(tree.acquire()).thenReturn(tree);
+        lenient().when(tree.getTreeId()).thenReturn(7L);
+        lenient().when(tree.isConnected()).thenReturn(true);
+        lenient().when(tree.isSMB2()).thenReturn(true);
+        return tree;
+    }
+
+    @Test
+    @DisplayName("an open registers itself with its session and is found by file id")
+    void testHandleRegistersWithSession() {
+        SmbSessionImpl session = newSession();
+        byte[] fileId = new byte[] { 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32 };
+        SmbFileHandleImpl handle = new SmbFileHandleImpl(configuration, fileId, stubbedTree(), "//server/share/f", 0, 0, 0, 0, 0L);
+
+        assertNull(session.getOpen(fileId), "an unattached handle is not in the table");
+
+        handle.registerWith(session, Smb2CreateRequest.SMB2_OPLOCK_LEVEL_BATCH);
+
+        assertSame(handle, session.getOpen(fileId));
+    }
+
+    @Test
+    @DisplayName("closing an open takes it out of the session's table")
+    void testHandleUnregistersOnClose() throws Exception {
+        SmbSessionImpl session = newSession();
+        byte[] fileId = new byte[] { 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 4, 7, 11, 18, 29 };
+        SmbFileHandleImpl handle = new SmbFileHandleImpl(configuration, fileId, stubbedTree(), "//server/share/f", 0, 0, 0, 0, 0L);
+        handle.registerWith(session, Smb2CreateRequest.SMB2_OPLOCK_LEVEL_BATCH);
+
+        handle.close();
+
+        assertNull(session.getOpen(fileId), "a closed open must not be left in the table");
+    }
+
+    @Test
+    @DisplayName("an open marked closed without a close request is also taken out of the table")
+    void testHandleUnregistersOnMarkClosed() {
+        SmbSessionImpl session = newSession();
+        byte[] fileId = new byte[] { 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 48 };
+        SmbFileHandleImpl handle = new SmbFileHandleImpl(configuration, fileId, stubbedTree(), "//server/share/f", 0, 0, 0, 0, 0L);
+        handle.registerWith(session, Smb2CreateRequest.SMB2_OPLOCK_LEVEL_BATCH);
+
+        // A handle invalidated without a close request - a reconnect drops it - must not be left behind either,
+        // or the table pins it for the life of the session.
+        handle.markClosed();
+
+        assertNull(session.getOpen(fileId), "an invalidated open must not be left in the table");
+    }
+
+    @Test
+    @DisplayName("an open that was never attached to a session closes without failing")
+    void testUnattachedHandleCloses() throws Exception {
+        // Every existing caller builds handles without a session, and SMB1 handles have no file id at all.
+        SmbFileHandleImpl handle = new SmbFileHandleImpl(configuration, 42, stubbedTree(), "//server/share/f", 0, 0, 0, 0, 0L);
+
+        handle.close();
+        handle.markClosed();
     }
 }

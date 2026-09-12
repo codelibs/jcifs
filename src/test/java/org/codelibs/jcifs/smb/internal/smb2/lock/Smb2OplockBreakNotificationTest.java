@@ -1,7 +1,9 @@
 package org.codelibs.jcifs.smb.internal.smb2.lock;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -105,12 +107,12 @@ class Smb2OplockBreakNotificationTest extends BaseTest {
         void testReadInvalidStructureSize() {
             // Create buffer with invalid structure size
             byte[] buffer = new byte[64];
-            SMBUtil.writeInt2(23, buffer, 0); // Invalid size (should be 24)
+            SMBUtil.writeInt2(23, buffer, 0); // Invalid size (should be 24 for an oplock break, 44 for a lease break)
 
             SMBProtocolDecodingException exception =
                     assertThrows(SMBProtocolDecodingException.class, () -> notification.readBytesWireFormat(buffer, 0));
 
-            assertEquals("Expected structureSize = 24", exception.getMessage());
+            assertEquals("Expected structureSize = 24 or 44", exception.getMessage());
         }
 
         @ParameterizedTest
@@ -184,6 +186,102 @@ class Smb2OplockBreakNotificationTest extends BaseTest {
             SMBUtil.writeInt2(24, buffer, 0);
             buffer[2] = oplockLevel;
             System.arraycopy(fileId, 0, buffer, 8, 16);
+            return buffer;
+        }
+    }
+
+    /**
+     * MS-SMB2 puts an oplock break (2.2.23.1, structure size 24) and a lease break (2.2.23.2, structure size 44) on
+     * the same command, SMB2_OPLOCK_BREAK, and 3.2.5.19 says the two are told apart only by their structure size.
+     * The command code is all the transport knows when it builds the notification, so this one class has to decode
+     * either shape.
+     */
+    @Nested
+    @DisplayName("Break body shapes")
+    class BreakBodyTests {
+
+        @Test
+        @DisplayName("Should decode a lease break instead of rejecting it")
+        void testReadLeaseBreak() throws Exception {
+            final byte[] leaseKey = createTestData(16);
+            final byte[] buffer = createLeaseBreakBuffer(leaseKey, 0x1234, 0x01, 0x07, 0x01);
+
+            final int bytesRead = notification.readBytesWireFormat(buffer, 0);
+
+            assertEquals(44, bytesRead, "a lease break body is 44 bytes");
+            assertTrue(notification.isLeaseBreak(), "should be recognised as a lease break");
+            assertArrayEquals(leaseKey, notification.getLeaseKey());
+            assertEquals(0x1234, notification.getNewEpoch());
+            assertEquals(0x01, notification.getBreakFlags());
+            assertEquals(0x07, notification.getCurrentLeaseState());
+            assertEquals(0x01, notification.getNewLeaseState());
+        }
+
+        @Test
+        @DisplayName("Should decode a lease break at a buffer offset")
+        void testReadLeaseBreakAtOffset() throws Exception {
+            final int offset = 16;
+            final byte[] leaseKey = createTestData(16);
+            final byte[] body = createLeaseBreakBuffer(leaseKey, 0, 0, 0x03, 0x00);
+            final byte[] buffer = new byte[offset + body.length];
+            Arrays.fill(buffer, 0, offset, (byte) 0xCD);
+            System.arraycopy(body, 0, buffer, offset, body.length);
+
+            assertEquals(44, notification.readBytesWireFormat(buffer, offset));
+            assertArrayEquals(leaseKey, notification.getLeaseKey());
+            assertEquals(0x03, notification.getCurrentLeaseState());
+        }
+
+        @Test
+        @DisplayName("Should expose the oplock level and file id of an oplock break")
+        void testOplockBreakAccessors() throws Exception {
+            final byte[] fileId = createTestData(16);
+            final byte[] buffer = new byte[64];
+            SMBUtil.writeInt2(24, buffer, 0);
+            buffer[2] = 0x01;
+            System.arraycopy(fileId, 0, buffer, 8, 16);
+
+            assertEquals(24, notification.readBytesWireFormat(buffer, 0));
+
+            assertFalse(notification.isLeaseBreak(), "an oplock break is not a lease break");
+            assertEquals((byte) 0x01, notification.getOplockLevel());
+            assertArrayEquals(fileId, notification.getFileId());
+        }
+
+        @Test
+        @DisplayName("Should reject a body that is neither an oplock nor a lease break")
+        void testReadUnknownStructureSize() {
+            final byte[] buffer = new byte[64];
+            SMBUtil.writeInt2(36, buffer, 0);
+
+            final SMBProtocolDecodingException exception =
+                    assertThrows(SMBProtocolDecodingException.class, () -> notification.readBytesWireFormat(buffer, 0));
+
+            assertEquals("Expected structureSize = 24 or 44", exception.getMessage());
+        }
+
+        @Test
+        @DisplayName("a decoded lease break can be turned into a log line")
+        void testLeaseBreakIsPrintable() throws Exception {
+            final byte[] buffer = createLeaseBreakBuffer(createTestData(16), 1, 1, 0x07, 0x01);
+            notification.readBytesWireFormat(buffer, 0);
+
+            // The break path logs the notification, so one that cannot be printed takes the whole path down with it.
+            // A lease break carries a lease key and no file id, so printing it as though it had one fails.
+            final String printed = assertDoesNotThrow(notification::toString);
+            assertTrue(printed.contains("lease"), "a lease break should describe itself as one, but was: " + printed);
+        }
+
+        private byte[] createLeaseBreakBuffer(final byte[] leaseKey, final int newEpoch, final int flags, final int currentLeaseState,
+                final int newLeaseState) {
+            final byte[] buffer = new byte[44];
+            SMBUtil.writeInt2(44, buffer, 0);
+            SMBUtil.writeInt2(newEpoch, buffer, 2);
+            SMBUtil.writeInt4(flags, buffer, 4);
+            System.arraycopy(leaseKey, 0, buffer, 8, 16);
+            SMBUtil.writeInt4(currentLeaseState, buffer, 24);
+            SMBUtil.writeInt4(newLeaseState, buffer, 28);
+            // BreakReason, AccessMaskHint and ShareMaskHint are reserved and stay zero
             return buffer;
         }
     }
