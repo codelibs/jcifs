@@ -2,6 +2,7 @@ package org.codelibs.jcifs.smb.impl;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -31,6 +32,9 @@ import org.codelibs.jcifs.smb.internal.smb1.com.SmbComWriteResponse;
 import org.codelibs.jcifs.smb.internal.smb1.trans2.Trans2SetFileInformation;
 import org.codelibs.jcifs.smb.internal.smb1.trans2.Trans2SetFileInformationResponse;
 import org.codelibs.jcifs.smb.internal.smb2.info.Smb2SetInfoRequest;
+import org.codelibs.jcifs.smb.internal.smb2.lock.Smb2Lock;
+import org.codelibs.jcifs.smb.internal.smb2.lock.Smb2LockRequest;
+import org.codelibs.jcifs.smb.internal.util.SMBUtil;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -70,6 +74,121 @@ public class SmbRandomAccessFileTest {
 
         // build via package-private constructor to control unshared flag
         return new SmbRandomAccessFile(file, mode, SmbConstants.DEFAULT_SHARING, unshared);
+    }
+
+    // Helper: like newInstance, but the caller keeps the tree mock so it can pin what went onto the wire
+    private SmbRandomAccessFile newWithTree(SmbTreeHandleImpl tree, boolean smb2) throws CIFSException {
+        SmbFile file = mock(SmbFile.class);
+        Configuration cfg = mock(Configuration.class);
+        SmbFileHandleImpl fh = mock(SmbFileHandleImpl.class);
+
+        when(file.ensureTreeConnected()).thenReturn(tree);
+        when(tree.getConfig()).thenReturn(cfg);
+        when(tree.getReceiveBufferSize()).thenReturn(1024);
+        when(tree.getSendBufferSize()).thenReturn(1024);
+        when(tree.areSignaturesActive()).thenReturn(false);
+        when(tree.isSMB2()).thenReturn(smb2);
+
+        when(file.openUnshared(anyInt(), anyInt(), anyInt(), anyInt(), anyInt())).thenReturn(fh);
+        when(fh.acquire()).thenReturn(fh);
+        when(fh.isValid()).thenReturn(true);
+        when(fh.getTree()).thenReturn(tree);
+        when(fh.getFileId()).thenReturn(new byte[16]);
+        when(fh.getFid()).thenReturn(1);
+
+        return new SmbRandomAccessFile(file, "rw", SmbConstants.DEFAULT_SHARING, false);
+    }
+
+    // Helper: the encoded bytes of the single lock request that was sent. Asserting on the wire rather than on the
+    // object is deliberate - a lock element that is built correctly but laid out wrongly is exactly the defect that
+    // only shows up once a server has to read it.
+    private static byte[] sentLockRequest(SmbTreeHandleImpl tree) throws CIFSException {
+        ArgumentCaptor<Smb2LockRequest> captor = ArgumentCaptor.forClass(Smb2LockRequest.class);
+        verify(tree).send(captor.capture(), eq(RequestParam.NO_RETRY));
+        byte[] buffer = new byte[captor.getValue().size()];
+        captor.getValue().encode(buffer, 0);
+        return buffer;
+    }
+
+    // Header is 64 bytes, then StructureSize/LockCount/LockSequence/FileId take 24, so the lock element starts at 88
+    // and carries Offset(8) at 88, Length(8) at 96 and Flags(4) at 104.
+    private static final int LOCK_OFFSET = 88;
+    private static final int LOCK_LENGTH = 96;
+    private static final int LOCK_FLAGS = 104;
+
+    @Test
+    @DisplayName("lock(): locks exactly the range given, exclusively")
+    void lock_sendsExclusiveLockForTheRange() throws Exception {
+        SmbTreeHandleImpl tree = mock(SmbTreeHandleImpl.class);
+        SmbRandomAccessFile raf = newWithTree(tree, true);
+
+        raf.lock(64, 16, false);
+
+        byte[] sent = sentLockRequest(tree);
+        assertEquals(64L, SMBUtil.readInt8(sent, LOCK_OFFSET), "the lock should start where it was asked to");
+        assertEquals(16L, SMBUtil.readInt8(sent, LOCK_LENGTH), "the lock should cover the length it was asked to");
+        assertEquals(Smb2Lock.SMB2_LOCKFLAG_EXCLUSIVE_LOCK, SMBUtil.readInt4(sent, LOCK_FLAGS),
+                "a lock that is not shared goes out as an exclusive one, and must not ask to fail immediately");
+    }
+
+    @Test
+    @DisplayName("lock(shared): asks for a shared lock instead")
+    void lock_shared_sendsSharedLock() throws Exception {
+        SmbTreeHandleImpl tree = mock(SmbTreeHandleImpl.class);
+        SmbRandomAccessFile raf = newWithTree(tree, true);
+
+        raf.lock(0, 8, true);
+
+        assertEquals(Smb2Lock.SMB2_LOCKFLAG_SHARED_LOCK, SMBUtil.readInt4(sentLockRequest(tree), LOCK_FLAGS),
+                "a shared lock must not go out as an exclusive one, or it would lock other readers out");
+    }
+
+    @Test
+    @DisplayName("tryLock(): asks the server to fail immediately rather than queue the lock")
+    void tryLock_asksToFailImmediately() throws Exception {
+        SmbTreeHandleImpl tree = mock(SmbTreeHandleImpl.class);
+        SmbRandomAccessFile raf = newWithTree(tree, true);
+
+        assertTrue(raf.tryLock(0, 8, false), "a lock the server did not refuse should be reported as taken");
+
+        assertEquals(Smb2Lock.SMB2_LOCKFLAG_EXCLUSIVE_LOCK | Smb2Lock.SMB2_LOCKFLAG_FAIL_IMMEDIATELY,
+                SMBUtil.readInt4(sentLockRequest(tree), LOCK_FLAGS),
+                "without FAIL_IMMEDIATELY the server queues the request, and tryLock would block instead of returning");
+    }
+
+    @Test
+    @DisplayName("tryLock(): returns false, rather than throwing, when another open holds the range")
+    void tryLock_returnsFalseWhenTheRangeIsHeld() throws Exception {
+        SmbTreeHandleImpl tree = mock(SmbTreeHandleImpl.class);
+        SmbRandomAccessFile raf = newWithTree(tree, true);
+        // 0xC0000055 is STATUS_LOCK_NOT_GRANTED, what a server answers a FAIL_IMMEDIATELY lock it will not grant
+        doThrow(new SmbException(0xC0000055, false)).when(tree).send(any(Smb2LockRequest.class), eq(RequestParam.NO_RETRY));
+
+        assertFalse(raf.tryLock(0, 8, false), "a range another open holds is the answer tryLock exists to give, not an error");
+    }
+
+    @Test
+    @DisplayName("unlock(): releases the range with the unlock flag")
+    void unlock_sendsUnlockFlag() throws Exception {
+        SmbTreeHandleImpl tree = mock(SmbTreeHandleImpl.class);
+        SmbRandomAccessFile raf = newWithTree(tree, true);
+
+        raf.unlock(32, 8);
+
+        byte[] sent = sentLockRequest(tree);
+        assertEquals(32L, SMBUtil.readInt8(sent, LOCK_OFFSET), "the unlock has to name the range that was locked");
+        assertEquals(Smb2Lock.SMB2_LOCKFLAG_UNLOCK, SMBUtil.readInt4(sent, LOCK_FLAGS), "an unlock must carry the unlock flag alone");
+    }
+
+    @Test
+    @DisplayName("locking over SMB1 is refused rather than silently doing nothing")
+    void lock_onSmb1_refused() throws Exception {
+        SmbTreeHandleImpl tree = mock(SmbTreeHandleImpl.class);
+        SmbRandomAccessFile raf = newWithTree(tree, false);
+
+        assertThrows(SmbUnsupportedOperationException.class, () -> raf.lock(0, 8, false),
+                "this client has no SMB1 lock request, so the call has to fail rather than appear to have locked something");
+        verify(tree, never()).send(any(Smb2LockRequest.class), eq(RequestParam.NO_RETRY));
     }
 
     @Test

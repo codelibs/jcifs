@@ -146,7 +146,7 @@ errors.
 | IOCTL | Partial | Reachable FSCTLs: DFS_GET_REFERRALS, PIPE_PEEK, PIPE_TRANSCEIVE, SRV_COPYCHUNK(_WRITE), SRV_REQUEST_RESUME_KEY, VALIDATE_NEGOTIATE_INFO. The other defined FSCTL constants are never sent. |
 | Async / `STATUS_PENDING` interim responses | Supported | |
 | FLUSH | Supported | Sent by `SmbFileOutputStream.flush()`. Every write goes out as it is made, so there is no local buffer to push; what `flush()` contributes is the durability barrier, asking the server to commit what it has taken. Before 3.0.4 the method was the inherited no-op from `OutputStream`, so a caller that flushed and saw no error had no way to tell the data was still only in the server's cache. Nothing is sent on SMB1, which has no equivalent request. |
-| LOCK | Not functional | `Smb2LockRequest` exists and is referenced nowhere. **There is no byte-range locking API** on `SmbResource`, `SmbFile` or `SmbRandomAccessFile`. |
+| LOCK | Supported | Sent by `SmbRandomAccess.lock()`, `tryLock()` and `unlock()`, which a caller reaches through `SmbResource.openRandomAccess()`. `tryLock` sets `SMB2_LOCKFLAG_FAIL_IMMEDIATELY` and reports a range another open holds as `false` rather than raising: Samba answers such a request `STATUS_LOCK_NOT_GRANTED`, and a server answering `STATUS_FILE_LOCK_CONFLICT` instead is read the same way. An unlock has to name the range that was locked, because a server matches it against the ranges it recorded rather than against overlapping bytes. SMB2 only: SMB1 has LOCKING_ANDX, but this client builds it solely to decode an inbound oplock break and has no outbound lock path, so a lock over SMB1 is refused rather than silently skipped. A lock belongs to the open that took it and does not survive a reconnect; see [Why durable handles are not planned](#why-durable-handles-are-not-planned). |
 | ECHO | Not functional | `Smb2EchoRequest` exists and is referenced nowhere. There is no keepalive or liveness probe. |
 | CANCEL | Supported | Sent by `SmbWatchHandle.cancel()`, which is the only caller: CHANGE_NOTIFY is the one request the API blocks in. The cancelled `watch()` returns `null` rather than a set of changes, and the open survives, so the directory can be watched again. Closing the handle also ends a pending watch, but as a side effect of closing the open, and what the server then answers the notify with is up to it — Samba sends STATUS_NOTIFY_CLEANUP and an empty set. Actually sending one required fixing the header encoder: it chose between the async and sync header layouts from a field only ever set while decoding, so a cancel whose flags said async still carried a tree id where the server reads the AsyncId, and was discarded. |
 | OPLOCK_BREAK | Partially supported | Breaks are decoded and acknowledged; nothing requests an oplock, so none arrive by default. See below. |
@@ -210,13 +210,21 @@ refused for directories, and it has no directory leases to qualify with. Since
 directory enumeration is much of what this library does, the feature would not
 apply to it.
 
-**What it buys is not what this client uses.** A durable handle preserves
+**What it buys is mostly not what this client uses.** A durable handle preserves
 byte-range locks across the reconnect — the reason the Linux client implemented
-it — along with share-mode semantics and handle identity across a rename. jcifs
-takes no byte-range locks, and SMB2 reads and writes carry explicit offsets, so
-there is nothing to resume: reopening by path and continuing at the recorded
-offset loses none of it, which is what the streams already do. See
+it — along with share-mode semantics and handle identity across a rename. For
+reads and writes there is nothing to resume: SMB2 carries explicit offsets, so
+reopening by path and continuing at the recorded offset loses none of it, which
+is what the streams already do. See
 [Reconnecting after a dropped connection](#reconnecting-after-a-dropped-connection).
+
+Byte-range locks are the exception, now that `SmbRandomAccess` can take them. A
+lock belongs to the open that took it, and a dropped connection is recovered by
+reopening the path, which gives a new open holding no locks — so a lock taken
+before the drop is gone afterwards and nothing replays it. That is a caveat for
+callers who lock rather than an argument for durable handles, since what rules
+those out still holds: the batch oplock or `R|H` lease that a durable open has to
+qualify with cannot be requested at all today.
 
 **And it is least reliable exactly when it would be wanted.** If another client
 opens the file while the connection is down, the server closes the durable open
