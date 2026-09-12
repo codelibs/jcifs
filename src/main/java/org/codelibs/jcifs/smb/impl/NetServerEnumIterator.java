@@ -20,6 +20,7 @@ package org.codelibs.jcifs.smb.impl;
 import org.codelibs.jcifs.smb.CIFSException;
 import org.codelibs.jcifs.smb.CloseableIterator;
 import org.codelibs.jcifs.smb.ResourceNameFilter;
+import org.codelibs.jcifs.smb.RuntimeCIFSException;
 import org.codelibs.jcifs.smb.SmbConstants;
 import org.codelibs.jcifs.smb.SmbResource;
 import org.codelibs.jcifs.smb.SmbResourceLocator;
@@ -47,6 +48,12 @@ public class NetServerEnumIterator implements CloseableIterator<FileEntry> {
     private final boolean workgroup;
     private int ridx;
     private FileEntry next;
+
+    /**
+     * The failure that ended the browse, held until every entry read before it has been handed out. Null while the
+     * browse is going normally.
+     */
+    private RuntimeCIFSException failure;
 
     /**
      * Constructs a NetServerEnumIterator for enumerating network servers
@@ -157,16 +164,28 @@ public class NetServerEnumIterator implements CloseableIterator<FileEntry> {
      */
     @Override
     public boolean hasNext() {
-        return this.next != null;
+        return this.next != null || this.failure != null;
     }
 
     /**
      * {@inheritDoc}
      *
+     * @throws RuntimeCIFSException if the browse could not be read to its end, so that one cut short by a failure is
+     *             not mistaken for the end of the list. Every entry that was read is returned before it is thrown.
      * @see java.util.Iterator#next()
      */
     @Override
     public FileEntry next() {
+        if (this.next == null) {
+            // Nothing left to hand out. Report the failure that ended the browse, once, and stay exhausted: asking
+            // for another page here would go back to a server over a connection that is already gone.
+            final RuntimeCIFSException pending = this.failure;
+            if (pending != null) {
+                this.failure = null;
+                throw pending;
+            }
+            return null;
+        }
         final FileEntry n = this.next;
         try {
             final FileEntry ne = advance();
@@ -176,8 +195,11 @@ public class NetServerEnumIterator implements CloseableIterator<FileEntry> {
             }
             this.next = ne;
         } catch (final CIFSException e) {
-            log.warn("Enumeration failed", e);
+            // Ending the browse here would look exactly like a workgroup holding only the entries read so far. The
+            // failure waits until this entry, which was read before it happened, has been handed out.
             this.next = null;
+            this.failure = new RuntimeCIFSException("Enumeration failed", e);
+            doClose();
         }
         return n;
     }

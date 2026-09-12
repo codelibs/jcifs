@@ -19,9 +19,11 @@ import java.net.URL;
 import org.codelibs.jcifs.smb.CIFSException;
 import org.codelibs.jcifs.smb.Configuration;
 import org.codelibs.jcifs.smb.ResourceNameFilter;
+import org.codelibs.jcifs.smb.RuntimeCIFSException;
 import org.codelibs.jcifs.smb.SmbConstants;
 import org.codelibs.jcifs.smb.SmbResource;
 import org.codelibs.jcifs.smb.SmbResourceLocator;
+import org.codelibs.jcifs.smb.internal.CommonServerMessageBlockRequest;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -244,6 +246,103 @@ class NetServerEnumIteratorTest {
 
         // Cleanup
         iterator.close();
+    }
+
+    @Test
+    @DisplayName("A browse cut short by a failure is reported, not passed off as the end of the list")
+    void testIterator_FetchFailureIsReported() throws Exception {
+        // Given: a first page that reports more data to come, so the iterator has an entry to hand out and a reason
+        // to go back for another page
+        when(locator.getType()).thenReturn(SmbConstants.TYPE_WORKGROUP);
+        when(locator.getURL()).thenReturn(createSmbURL("smb://"));
+
+        // The iterator calls the two-argument send(request, response), which reaches the varargs overload with an
+        // empty array. A (RequestParam[]) any() matcher expects an array argument and does not match that, which is
+        // why stubbing it that way leaves the page empty.
+        final java.util.concurrent.atomic.AtomicInteger sends = new java.util.concurrent.atomic.AtomicInteger();
+        when(treeHandle.send(any(CommonServerMessageBlockRequest.class), any())).thenAnswer(invocation -> {
+            if (sends.incrementAndGet() > 1) {
+                // The second page is the one that fails - a dropped connection, a revoked session, anything
+                throw new CIFSException("browse fetch failed");
+            }
+            final Object response = invocation.getArgument(1);
+            // ERROR_MORE_DATA makes advance() yield numEntries - 1 entries and then go back for the rest
+            setPrivate(response, "status", 234); // WinError.ERROR_MORE_DATA
+            setPrivate(response, "numEntries", 2);
+            setPrivate(response, "results", new FileEntry[] { serverEntry("ALPHA"), serverEntry("BETA") });
+            return response;
+        });
+
+        NetServerEnumIterator iterator = new NetServerEnumIterator(parent, treeHandle, "*", 0, null);
+
+        // Then: the entry read before the failure is still handed out ...
+        assertTrue(iterator.hasNext());
+        assertEquals("ALPHA", iterator.next().getName());
+
+        // ... and the caller is told the browse failed, rather than seeing it end quietly at one entry
+        RuntimeCIFSException ex = assertThrows(RuntimeCIFSException.class, iterator::next);
+        assertNotNull(ex.getCause(), "the failure that ended the browse should be the cause");
+        assertEquals("browse fetch failed", ex.getCause().getMessage());
+        assertFalse(iterator.hasNext(), "the iterator is finished once it has reported the failure");
+    }
+
+    /** Sets a private field declared anywhere up the hierarchy; the transaction response keeps these package private. */
+    private static void setPrivate(Object target, String name, Object value) throws Exception {
+        for (Class<?> c = target.getClass(); c != null; c = c.getSuperclass()) {
+            try {
+                java.lang.reflect.Field f = c.getDeclaredField(name);
+                f.setAccessible(true);
+                f.set(target, value);
+                return;
+            } catch (NoSuchFieldException e) {
+                // keep walking up
+            }
+        }
+        throw new NoSuchFieldException(name);
+    }
+
+    private static FileEntry serverEntry(String name) {
+        return new FileEntry() {
+            @Override
+            public String getName() {
+                return name;
+            }
+
+            @Override
+            public int getType() {
+                return SmbConstants.TYPE_SERVER;
+            }
+
+            @Override
+            public int getAttributes() {
+                return 0;
+            }
+
+            @Override
+            public long createTime() {
+                return 0;
+            }
+
+            @Override
+            public long lastModified() {
+                return 0;
+            }
+
+            @Override
+            public long lastAccess() {
+                return 0;
+            }
+
+            @Override
+            public long length() {
+                return 0;
+            }
+
+            @Override
+            public int getFileIndex() {
+                return 0;
+            }
+        };
     }
 
     // Helper method to create SMB URLs with proper handler

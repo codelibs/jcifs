@@ -19,6 +19,7 @@ import java.io.IOException;
 import org.codelibs.jcifs.smb.CIFSException;
 import org.codelibs.jcifs.smb.Configuration;
 import org.codelibs.jcifs.smb.SmbConstants;
+import org.codelibs.jcifs.smb.internal.smb2.io.Smb2FlushRequest;
 import org.codelibs.jcifs.smb.internal.smb2.io.Smb2WriteRequest;
 import org.codelibs.jcifs.smb.internal.smb2.io.Smb2WriteResponse;
 import org.junit.jupiter.api.BeforeEach;
@@ -107,6 +108,28 @@ class SmbFileOutputStreamTest {
     }
 
     @Test
+    void testFlushSendsFlushRequest() throws IOException, CIFSException {
+        // Given
+        when(mockTreeHandle.isSMB2()).thenReturn(true);
+        when(mockTreeHandle.getSendBufferSize()).thenReturn(65536);
+        when(mockFileHandle.isValid()).thenReturn(false, true);
+        when(mockFileHandle.getFileId()).thenReturn(new byte[16]);
+        when(mockFileHandle.acquire()).thenReturn(mockFileHandle);
+        when(mockFile.openUnshared(anyInt(), anyInt(), anyInt(), anyInt(), anyInt())).thenReturn(mockFileHandle);
+
+        outputStream = new SmbFileOutputStream(mockFile, mockTreeHandle, mockFileHandle,
+                SmbConstants.O_CREAT | SmbConstants.O_WRONLY | SmbConstants.O_TRUNC, SmbConstants.FILE_WRITE_DATA,
+                SmbConstants.DEFAULT_SHARING);
+
+        // When: a write already went straight to the wire, so there is no local buffer for flush() to push. What it
+        // owes the caller is the durability barrier - without FLUSH the data may still sit in the server's cache.
+        outputStream.flush();
+
+        // Then
+        verify(mockTreeHandle).send(any(Smb2FlushRequest.class), any());
+    }
+
+    @Test
     void testWriteByteArrayWithOffset() throws IOException, CIFSException {
         // Given
         when(mockTreeHandle.isSMB2()).thenReturn(true);
@@ -139,6 +162,10 @@ class SmbFileOutputStreamTest {
         when(mockTreeHandle.isSMB2()).thenReturn(true);
         when(mockTreeHandle.getSendBufferSize()).thenReturn(65536);
         when(mockFileHandle.isValid()).thenReturn(true);
+        // ensureOpen() hands back handle.acquire() for a handle that is already open, so flush() needs this stubbed
+        // as the write tests do. SmbFileHandleImpl.acquire() always returns itself, so it is never null in practice.
+        when(mockFileHandle.acquire()).thenReturn(mockFileHandle);
+        when(mockFileHandle.getFileId()).thenReturn(new byte[16]);
 
         outputStream = new SmbFileOutputStream(mockFile, mockTreeHandle, mockFileHandle,
                 SmbConstants.O_CREAT | SmbConstants.O_WRONLY | SmbConstants.O_TRUNC, SmbConstants.FILE_WRITE_DATA,

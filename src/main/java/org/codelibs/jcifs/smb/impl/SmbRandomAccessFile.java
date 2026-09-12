@@ -108,7 +108,9 @@ public class SmbRandomAccessFile implements SmbRandomAccess {
 
         try (SmbTreeHandleInternal th = this.file.ensureTreeConnected()) {
             if (mode.equals("r")) {
-                this.openFlags = SmbConstants.O_CREAT | SmbConstants.O_RDONLY;
+                // Deliberately no O_CREAT: it becomes FILE_OPEN_IF, so opening for reading would bring a missing
+                // file into existence as an empty one instead of failing.
+                this.openFlags = SmbConstants.O_RDONLY;
                 this.access = SmbConstants.FILE_READ_DATA;
             } else if (mode.equals("rw")) {
                 this.openFlags = SmbConstants.O_CREAT | SmbConstants.O_RDWR | SmbConstants.O_APPEND;
@@ -120,6 +122,10 @@ public class SmbRandomAccessFile implements SmbRandomAccess {
             }
 
             try (SmbFileHandle h = ensureOpen()) {}
+            // The file is open by now, so a reopen after a dropped connection must not create it again: that would
+            // resurrect a file deleted in the meantime rather than failing, and ensureOpen() replays these flags as
+            // they stand.
+            this.openFlags &= ~SmbConstants.O_CREAT;
             this.readSize = th.getReceiveBufferSize() - 70;
             this.writeSize = th.getSendBufferSize() - 70;
 

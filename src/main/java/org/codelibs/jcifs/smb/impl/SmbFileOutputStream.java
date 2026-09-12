@@ -29,6 +29,7 @@ import org.codelibs.jcifs.smb.internal.smb1.com.SmbComWriteAndX;
 import org.codelibs.jcifs.smb.internal.smb1.com.SmbComWriteAndXResponse;
 import org.codelibs.jcifs.smb.internal.smb1.com.SmbComWriteResponse;
 import org.codelibs.jcifs.smb.internal.smb2.info.Smb2SetInfoRequest;
+import org.codelibs.jcifs.smb.internal.smb2.io.Smb2FlushRequest;
 import org.codelibs.jcifs.smb.internal.smb2.io.Smb2WriteRequest;
 import org.codelibs.jcifs.smb.internal.smb2.io.Smb2WriteResponse;
 import org.slf4j.Logger;
@@ -215,6 +216,34 @@ public class SmbFileOutputStream extends OutputStream {
         } finally {
             this.file.clearAttributeCache();
             this.tmp = null;
+        }
+    }
+
+    /**
+     * Asks the server to commit what has been written to stable storage.
+     *
+     * <p>
+     * Every write is sent as it is made, so there is no buffer here to push. What this does is send the durability
+     * barrier: without it the data a write returned from can still be sitting in the server's cache, and a caller
+     * that called {@code flush()} has no way to tell. Nothing is sent on SMB1, which has no equivalent request, or
+     * for a stream that is not open.
+     * </p>
+     *
+     * @throws IOException if the flush cannot be sent
+     */
+    @Override
+    public void flush() throws IOException {
+        if (!this.smb2) {
+            return;
+        }
+        try (SmbFileHandleImpl fh = ensureOpen()) {
+            // Not gated on the handle still being valid: ensureOpen() reopens a stale one, and a reconnect is
+            // exactly when the caller most wants what it wrote committed.
+            try (SmbTreeHandleImpl th = fh.getTree()) {
+                th.send(new Smb2FlushRequest(th.getConfig(), fh.getFileId()), RequestParam.NO_RETRY);
+            }
+        } catch (final CIFSException e) {
+            throw SmbException.wrap(e);
         }
     }
 
