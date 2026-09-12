@@ -25,7 +25,8 @@ support. Where that is the case below, the specific dead end is named.
 
 jcifs is a solid SMB2/SMB3 **file access** client: negotiate, authenticate, sign,
 encrypt, open, read, write, enumerate, query and set metadata, watch for changes,
-resolve DFS, and copy server-side within a share. SMB 3.1.1 is negotiated by
+resolve DFS, and copy server-side between shares on one server. SMB 3.1.1 is
+negotiated by
 default, and SMB3 signing, pre-authentication integrity and transform encryption
 all work against real servers.
 
@@ -305,7 +306,7 @@ file on its first open, as it always has.
 | Feature | Status | Notes |
 | --- | --- | --- |
 | DFS referral resolution | Supported | On by default (`jcifs.client.dfs.disabled=false`). Uses `FSCTL_DFS_GET_REFERRALS`; the `_EX` variant is not used. |
-| Server-side copy (copychunk) | Partial | `SmbFile.copyTo` uses `FSCTL_SRV_COPYCHUNK` **only when source and destination resolve to the same tree connection**. Cross-share and cross-server copies silently fall back to read/write streaming. |
+| Server-side copy (copychunk) | Supported | `SmbFile.copyTo` uses `FSCTL_SRV_COPYCHUNK` whenever both ends of the copy are reached through the same session, which covers **two shares on one server** as well as one share: the resume key taken on the source tree is resolved by the server within the session that asked for it, not within a single tree. A copy between two servers still streams the bytes through the client, as does a copy over SMB1 and a copy a server declines to perform itself — across two trees such a refusal falls back to streaming rather than failing the copy, since streaming is what those copies did before. |
 | Named pipes | Supported | Transceive and peek. |
 | Symbolic links / reparse points | Partial | A path that crosses a symbolic link fails with `SmbSymlinkException`, which carries the target decoded from the `STATUS_STOPPED_ON_SYMLINK` error response: `getSubstituteName()`, `getPrintName()`, `isRelative()` and `getUnparsedPathLength()`. Links are **not followed** — there is no resolution or retry, so a caller that wants to traverse one has to act on the target itself. Which server you are talking to decides whether this comes up at all: Samba resolves a link that stays inside the share and never reports one, so the error surfaces mainly against Windows. |
 | Multi-channel | Not functional | One unused capability constant, an unused `FSCTL_QUERY_NETWORK_INTERFACE_INFO` constant with no response decoder, and `Smb2SessionSetupRequest.setSessionBinding()`, which encodes the binding flag correctly but is called only from unit tests. A session is pinned to one transport. |

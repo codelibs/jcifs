@@ -27,6 +27,7 @@ import java.util.Random;
 
 import org.codelibs.jcifs.smb.CIFSContext;
 import org.codelibs.jcifs.smb.DialectVersion;
+import org.codelibs.jcifs.smb.impl.SmbCopyUtilProbe;
 import org.codelibs.jcifs.smb.impl.SmbFile;
 import org.codelibs.jcifs.smb.it.env.DialectMatrix;
 import org.junit.jupiter.api.AfterEach;
@@ -38,18 +39,24 @@ import org.junit.jupiter.api.Test;
  *
  * <p>
  * {@code SmbCopyUtil.copyFile} asks the server to do the copy with
- * FSCTL_SRV_COPYCHUNK only when source and destination sit on the same tree;
- * otherwise it streams the bytes through the client. Every copy test in the
- * suite used one share, so the streaming half had never run. The chunk limits
- * the client starts with - a megabyte per chunk and sixteen megabytes per
- * request - also meant that a one-megabyte fixture never exercised more than a
- * single chunk.
+ * FSCTL_SRV_COPYCHUNK when both ends are reached through the same session,
+ * which covers two shares on one server as well as one share; otherwise it
+ * streams the bytes through the client, as it also does over SMB1 and when a
+ * server declines to do the copy itself. The chunk limits the client starts
+ * with - a megabyte per chunk and sixteen megabytes per request - mean that a
+ * one-megabyte fixture never exercises more than a single chunk.
  * </p>
  */
 class CopyFallbackIT extends AbstractSmbIT {
 
     /** Past the client's 16 MB per-request limit, so the copy loop has to go round twice. */
     private static final int LARGE_SIZE = 20 * 1024 * 1024;
+
+    /**
+     * 2020-09-13, far enough in the past that a target stamped with the time of the copy cannot match it by
+     * coincidence. Whole seconds, so no server's timestamp granularity can round it away.
+     */
+    private static final long STAMP = 1600000000000L;
 
     private SmbFile sourceDir;
     private SmbFile targetDir;
@@ -83,7 +90,7 @@ class CopyFallbackIT extends AbstractSmbIT {
     }
 
     @DialectMatrix
-    @DisplayName("a copy across two shares streams through the client and keeps the bytes")
+    @DisplayName("a copy across two shares keeps the bytes")
     void copyAcrossSharesKeepsTheBytes(final DialectVersion dialect) throws Exception {
         final CIFSContext context = contextFor(dialect);
         this.sourceDir = createWorkDir(context, server().share());
@@ -129,8 +136,8 @@ class CopyFallbackIT extends AbstractSmbIT {
 
         source.copyTo(target);
 
-        assertEquals(LARGE_SIZE, target.length(), "the streamed copy should be the same length");
-        assertArrayEquals(digest(source), digest(target), "the streamed copy should be byte for byte identical");
+        assertEquals(LARGE_SIZE, target.length(), "the cross-share copy should be the same length");
+        assertArrayEquals(digest(source), digest(target), "the cross-share copy should be byte for byte identical");
     }
 
     @Test
@@ -154,5 +161,104 @@ class CopyFallbackIT extends AbstractSmbIT {
             assertArrayEquals("nested level".getBytes(StandardCharsets.UTF_8), in.readAllBytes(),
                     "the nested copy should hold the same bytes");
         }
+    }
+
+    @DialectMatrix
+    @DisplayName("a copy over a longer existing target truncates it, within a share and across two")
+    void copyOverAnExistingTargetTruncatesIt(final DialectVersion dialect) throws Exception {
+        // A copy opens its target with O_TRUNC. A server-side copy writes the bytes itself, chunk by chunk, so a
+        // path that loses the truncation leaves the tail of whatever was there before - and still reports success,
+        // with the right bytes at the front. The length catches that; the byte comparison says the result is not
+        // merely the right size.
+        final CIFSContext context = contextFor(dialect);
+        this.sourceDir = createWorkDir(context, server().share());
+        this.targetDir = createWorkDir(context, "users");
+
+        final String shortContents = "short";
+        final byte[] expected = shortContents.getBytes(StandardCharsets.UTF_8);
+        writeFile(this.sourceDir, "trunc-src.txt", shortContents);
+
+        for (final SmbFile parent : new SmbFile[] { this.sourceDir, this.targetDir }) {
+            final String where = parent == this.sourceDir ? "within a share" : "across two shares";
+            writeFile(parent, "trunc-dst.txt", "a considerably longer body that must not survive being overwritten");
+
+            // A fresh handle for the source each time: the instance a copy was made from has cached its size and
+            // attributes, and the copy reads those to stamp the target.
+            new SmbFile(this.sourceDir, "trunc-src.txt").copyTo(new SmbFile(parent, "trunc-dst.txt"));
+
+            final SmbFile fresh = new SmbFile(parent, "trunc-dst.txt");
+            assertEquals(expected.length, fresh.length(), "the copy should have truncated the existing target " + where);
+            try (InputStream in = fresh.getInputStream()) {
+                assertArrayEquals(expected, in.readAllBytes(), "the copy should hold only the source bytes " + where);
+            }
+        }
+
+        // A copy that resolved the wrong source would be invisible above: both targets would simply hold the same
+        // wrong bytes. This says the source itself was not the thing that changed.
+        final SmbFile freshSource = new SmbFile(this.sourceDir, "trunc-src.txt");
+        assertEquals(expected.length, freshSource.length(), "the copy should have left the source alone on " + dialect);
+        try (InputStream in = freshSource.getInputStream()) {
+            assertArrayEquals(expected, in.readAllBytes(), "the copy should have left the source's bytes alone on " + dialect);
+        }
+    }
+
+    @Test
+    @DisplayName("a copy across two shares on one server is handed to the server")
+    void crossShareCopyIsHandedToTheServer() throws Exception {
+        // The bytes are the same either way, so the tests above pass whichever route a copy takes. This is the
+        // one assertion that fails if cross-share copies go back to being streamed through the client.
+        final CIFSContext context = server().context();
+        this.sourceDir = createWorkDir(context, server().share());
+        this.targetDir = createWorkDir(context, "users");
+
+        final SmbFile source = writeFile(this.sourceDir, "routed.txt", "routed to the server");
+
+        assertTrue(SmbCopyUtilProbe.wouldCopyServerSide(source, new SmbFile(this.sourceDir, "routed-same.txt")),
+                "a copy within one share should be handed to the server");
+        assertTrue(SmbCopyUtilProbe.wouldCopyServerSide(source, new SmbFile(this.targetDir, "routed-cross.txt")),
+                "a copy across two shares on one server should be handed to the server");
+    }
+
+    @Test
+    @DisplayName("an empty file copies as an empty file, within a share and across two")
+    void emptyFileCopiesAsEmpty() throws Exception {
+        // Zero length takes its own branch in the server-side path: there is nothing to ask the server to copy, so
+        // it creates the target and sets its metadata instead. Routing a new pair of trees through that path runs
+        // this branch where it has never run before.
+        final CIFSContext context = server().context();
+        this.sourceDir = createWorkDir(context, server().share());
+        this.targetDir = createWorkDir(context, "users");
+
+        new SmbFile(this.sourceDir, "empty-src.txt").createNewFile();
+
+        new SmbFile(this.sourceDir, "empty-src.txt").copyTo(new SmbFile(this.sourceDir, "empty-same.txt"));
+        new SmbFile(this.sourceDir, "empty-src.txt").copyTo(new SmbFile(this.targetDir, "empty-cross.txt"));
+
+        assertTrue(new SmbFile(this.sourceDir, "empty-same.txt").exists(), "an empty copy within a share should exist");
+        assertEquals(0, new SmbFile(this.sourceDir, "empty-same.txt").length(), "an empty copy within a share should be empty");
+        assertTrue(new SmbFile(this.targetDir, "empty-cross.txt").exists(), "an empty copy across shares should exist");
+        assertEquals(0, new SmbFile(this.targetDir, "empty-cross.txt").length(), "an empty copy across shares should be empty");
+    }
+
+    @Test
+    @DisplayName("a copy carries the source's modification time, within a share and across two")
+    void copyPreservesTheModificationTime() throws Exception {
+        // Both paths set the destination's basic information from the source once the bytes are there, which is
+        // what stops a copy from looking freshly written. Asserting against a time set well in the past makes a
+        // failure unambiguous: a path that skips it leaves the target stamped with now.
+        final CIFSContext context = server().context();
+        this.sourceDir = createWorkDir(context, server().share());
+        this.targetDir = createWorkDir(context, "users");
+
+        writeFile(this.sourceDir, "stamped-src.txt", "stamped");
+        new SmbFile(this.sourceDir, "stamped-src.txt").setLastModified(STAMP);
+
+        new SmbFile(this.sourceDir, "stamped-src.txt").copyTo(new SmbFile(this.sourceDir, "stamped-same.txt"));
+        new SmbFile(this.sourceDir, "stamped-src.txt").copyTo(new SmbFile(this.targetDir, "stamped-cross.txt"));
+
+        assertEquals(STAMP, new SmbFile(this.sourceDir, "stamped-same.txt").lastModified(),
+                "a copy within a share should carry the source's modification time");
+        assertEquals(STAMP, new SmbFile(this.targetDir, "stamped-cross.txt").lastModified(),
+                "a copy across shares should carry the source's modification time");
     }
 }

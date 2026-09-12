@@ -85,6 +85,21 @@ public final class SmbCopyUtil {
     }
 
     /**
+     * Decides whether a copy can be handed to the server instead of streamed through the client.
+     *
+     * @param sh the source tree handle
+     * @param dh the destination tree handle
+     * @return whether the copy qualifies for FSCTL_SRV_COPYCHUNK
+     */
+    static boolean canServerSideCopy(final SmbTreeHandleImpl sh, final SmbTreeHandleImpl dh) {
+        // The resume key the source tree hands out is resolved by the server within the session that asked for
+        // it, not within one tree, so two shares on the same server qualify just as one share does. Different
+        // servers do not: there the key means nothing to the destination, and the bytes have to travel through
+        // the client.
+        return sh.isSMB2() && dh.isSMB2() && sh.isSameSession(dh);
+    }
+
+    /**
      * @param dest
      * @param b
      * @param bsize
@@ -98,15 +113,22 @@ public final class SmbCopyUtil {
     static void copyFile(final SmbFile src, final SmbFile dest, final byte[][] b, final int bsize, final WriterThread w,
             final SmbTreeHandleImpl sh, final SmbTreeHandleImpl dh) throws SmbException {
 
-        if (sh.isSMB2() && dh.isSMB2() && sh.isSameTree(dh)) {
+        if (canServerSideCopy(sh, dh)) {
+            final boolean sameTree = sh.isSameTree(dh);
             try {
                 serverSideCopy(src, dest, sh, dh, false);
                 return;
             } catch (final SmbUnsupportedOperationException e) {
                 log.debug("Server side copy not supported, falling back to normal copying", e);
             } catch (final CIFSException e) {
-                log.warn("Server side copy failed", e);
-                throw SmbException.wrap(e);
+                if (sameTree) {
+                    log.warn("Server side copy failed", e);
+                    throw SmbException.wrap(e);
+                }
+                // Across two trees this is newly attempted ground: such a copy always streamed before. A server
+                // that will not resolve a resume key issued on another tree answers with its own status rather
+                // than NOT_SUPPORTED, and that must not turn a copy which used to work into a failure.
+                log.debug("Server side copy across trees failed, falling back to normal copying", e);
             }
         }
 
