@@ -26,6 +26,7 @@ import org.codelibs.jcifs.smb.internal.CommonServerMessageBlock;
 import org.codelibs.jcifs.smb.internal.SMBProtocolDecodingException;
 import org.codelibs.jcifs.smb.internal.SmbNegotiationRequest;
 import org.codelibs.jcifs.smb.internal.SmbNegotiationResponse;
+import org.codelibs.jcifs.smb.internal.smb2.ServerMessageBlock2Request;
 import org.codelibs.jcifs.smb.internal.smb2.ServerMessageBlock2Response;
 import org.codelibs.jcifs.smb.internal.smb2.Smb2Constants;
 import org.codelibs.jcifs.smb.internal.smb2.io.Smb2ReadResponse;
@@ -293,11 +294,22 @@ public class Smb2NegotiateResponse extends ServerMessageBlock2Response implement
         }
 
         final int maxBufferSize = tc.getConfig().getTransactionBufferSize();
-        this.maxReadSize =
-                Math.min(maxBufferSize - Smb2ReadResponse.OVERHEAD, Math.min(tc.getConfig().getReceiveBufferSize(), this.maxReadSize))
-                        & ~0x7;
-        this.maxWriteSize =
-                Math.min(maxBufferSize - Smb2WriteRequest.OVERHEAD, Math.min(tc.getConfig().getSendBufferSize(), this.maxWriteSize)) & ~0x7;
+        if (haveCapabilitiy(Smb2Constants.SMB2_GLOBAL_CAP_LARGE_MTU)) {
+            // Multi-credit was granted, so one transfer may span several credits worth of payload. This hangs off
+            // the capability rather than off the size the server offered, because a server offers a large size
+            // whether or not it granted multi-credit - Samba offers 8 MiB either way - and without the capability
+            // there are no credits to pay for a transfer that large.
+            final int transferCeiling = tc.getConfig().getMaximumTransferSize();
+            this.maxReadSize = Math.min(transferCeiling, this.maxReadSize) & ~0x7;
+            this.maxWriteSize = Math.min(transferCeiling, this.maxWriteSize) & ~0x7;
+        } else {
+            this.maxReadSize =
+                    Math.min(maxBufferSize - Smb2ReadResponse.OVERHEAD, Math.min(tc.getConfig().getReceiveBufferSize(), this.maxReadSize))
+                            & ~0x7;
+            this.maxWriteSize =
+                    Math.min(maxBufferSize - Smb2WriteRequest.OVERHEAD, Math.min(tc.getConfig().getSendBufferSize(), this.maxWriteSize))
+                            & ~0x7;
+        }
         this.maxTransactSize = Math.min(maxBufferSize - 512, this.maxTransactSize) & ~0x7;
 
         return true;
@@ -467,6 +479,13 @@ public class Smb2NegotiateResponse extends ServerMessageBlock2Response implement
      */
     @Override
     public void setupRequest(final CommonServerMessageBlock request) {
+        if (!(request instanceof final ServerMessageBlock2Request<?> smb2Request)
+                || !haveCapabilitiy(Smb2Constants.SMB2_GLOBAL_CAP_LARGE_MTU)) {
+            // CreditCharge is reserved before SMB 2.1, and a server that did not grant multi-credit rejects a
+            // request that charges for more than one credit. It stays zero unless both ends agreed on it.
+            return;
+        }
+        smb2Request.setCreditCharge(smb2Request.getCreditCost());
     }
 
     /**

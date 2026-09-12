@@ -164,7 +164,9 @@ class BaseConfigurationTest {
     @DisplayName("Test buffer configuration getters")
     void testBufferConfigurationGetters() {
         assertEquals(0xFFFF - 512, config.getTransactionBufferSize());
-        assertEquals(0x10000, config.getMaximumBufferSize());
+        // Raised from 0x10000 so that a whole message still fits once a single read or write may carry a mebibyte:
+        // a write of that size encodes to 1048576 + 112 bytes.
+        assertEquals(0x101000, config.getMaximumBufferSize());
         assertEquals(16, config.getBufferCacheSize());
         assertEquals(200, config.getListCount());
         assertEquals(65435, config.getListSize());

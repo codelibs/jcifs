@@ -787,7 +787,12 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
 
     @Override
     protected long makeKey(final Request request) throws IOException {
-        long m = this.mid.incrementAndGet() - 1;
+        // MS-SMB2 3.2.4.1.3: a request owns one message id for every credit it charges, not one per request. Taking
+        // a single id for a multi-credit request leaves the server expecting ids that never arrive, and it stops
+        // answering once its receive window has moved past them. The charge is stamped by setupRequest before this
+        // runs, so it is already zero on a connection that never negotiated multi-credit.
+        final long charge = request instanceof final ServerMessageBlock2 smb2Request ? Math.max(1, smb2Request.getCreditCharge()) : 1;
+        long m = this.mid.getAndAdd(charge);
         if (!this.smb2) {
             m = m % 32000;
         }
@@ -878,7 +883,10 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
             // synchronize around encode and write so that the ordering for SMB1 signing can be maintained
             synchronized (this.outLock) {
                 final int n = smb.encode(buffer, 4);
-                Encdec.enc_uint32be(n & 0xFFFF, buffer, 0); /* 4 byte session message header */
+                // The direct TCP session message length is 24 bits wide (MS-SMB2 2.1). Masking it to 16 leaves a
+                // message of exactly 64 KiB announcing a length of zero, and everything after it on the connection
+                // is then read from the wrong offset.
+                Encdec.enc_uint32be(n & 0xFFFFFF, buffer, 0); /* 4 byte session message header */
                 if (log.isTraceEnabled()) {
                     do {
                         log.trace(smb.toString());

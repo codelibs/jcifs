@@ -229,6 +229,16 @@ public class DelegatingConfiguration implements Configuration {
     /**
      * {@inheritDoc}
      *
+     * @see org.codelibs.jcifs.smb.Configuration#getMaximumTransferSize()
+     */
+    @Override
+    public int getMaximumTransferSize() {
+        return this.delegate.getMaximumTransferSize();
+    }
+
+    /**
+     * {@inheritDoc}
+     *
      * @deprecated use getReceiveBufferSize instead
      */
     @Deprecated

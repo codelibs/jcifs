@@ -143,6 +143,28 @@ public abstract class ServerMessageBlock2Request<T extends ServerMessageBlock2Re
     }
 
     /**
+     * What a payload of the given size costs in credits.
+     *
+     * <p>
+     * MS-SMB2 3.2.4.1.2: a request pays for every 64 KiB it spans, counting the larger of what it sends and what it
+     * expects back. Everything that fits in 64 KiB costs the single credit an ordinary request costs, so this only
+     * differs from the default for the reads and writes that a large negotiated transfer size makes possible.
+     * </p>
+     *
+     * @param payloadSize
+     *            the larger of the send and expected response payload, in bytes
+     * @return the number of credits the payload spans, at least one
+     */
+    private static final int CREDIT_PAYLOAD_UNIT = 65536;
+
+    protected static int creditChargeForPayload(final int payloadSize) {
+        if (payloadSize <= 0) {
+            return 1;
+        }
+        return (payloadSize - 1) / CREDIT_PAYLOAD_UNIT + 1;
+    }
+
+    /**
      * {@inheritDoc}
      *
      * @see org.codelibs.jcifs.smb.util.transport.Request#setRequestCredits(int)

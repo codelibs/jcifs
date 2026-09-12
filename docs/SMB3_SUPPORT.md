@@ -232,17 +232,24 @@ protocol test suite, not from an observed exchange.
 
 | Aspect | Status | Notes |
 | --- | --- | --- |
-| Maximum read size | **64936 bytes** | Hard cap. |
-| Maximum write size | **64904 bytes** | Hard cap. |
-| `SMB2_GLOBAL_CAP_LARGE_MTU` | Not implemented | The constant exists and nothing reads it. The client advertises only `DFS` (and `ENCRYPTION` when enabled), and `commonCapabilities` is `serverCaps & clientCaps`, so the flag is never negotiated. Note this is **not** what caps the transfer sizes: `Smb2NegotiateResponse` clamps the sizes the server offers against `jcifs.client.transaction_buf_size` and `jcifs.client.rcv_buf_size` / `snd_buf_size` separately from the flag. Raising those alone will not get past 64 KiB either, because a larger payload has to carry a `CreditCharge` — see the next row. |
-| `creditCharge` on outgoing requests | Not functional | The field has no setter and ships as 0 on every request; `getCreditCost()` is hardcoded to 1. Credits are accounted one per request regardless of payload size. |
+| Maximum read size | **1048576 bytes** on SMB 2.1 and later, **64936** on SMB 2.0.2 | The smaller of `jcifs.client.maxTransferSize` and what the server offers. |
+| Maximum write size | **1048576 bytes** on SMB 2.1 and later, **64904** on SMB 2.0.2 | As above. |
+| `SMB2_GLOBAL_CAP_LARGE_MTU` | Supported | Advertised whenever the configured dialect ceiling reaches SMB 2.1, and negotiated when the server also offers it. The transfer sizes hang off this capability rather than off the size the server advertises, because a server offers a large size either way: Samba 4.21 offers 8 MiB for read, write and transact even to a client that never asked for multi-credit, and using it without the capability would spend credits the connection never had. |
+| `creditCharge` on outgoing requests | Supported | A read or write charges one credit per 64 KiB it spans (MS-SMB2 3.2.4.1.2), counting the payload it sends for a write and the payload it expects back for a read. The charge is only put on the wire once multi-credit is negotiated - the field is reserved before SMB 2.1 - and a request consumes that many message ids (MS-SMB2 3.2.4.1.3), not one. |
 | Credit accounting | Supported | Per connection. |
 | Connection pooling | Supported | See below. |
 
-The read and write ceilings follow from `jcifs.client.transaction_buf_size`
-(default `0xFFFF`, less 512 = 65023) minus per-message overhead, and apply **no
-matter what the server offers** — a Windows server typically offers 8 MiB.
-Reads and writes are chunked at exactly those sizes.
+The read and write ceilings follow from `jcifs.client.maxTransferSize` (default
+1 MiB) and the size the server offers, whichever is smaller. Reads and writes are
+chunked at exactly that size, so a transfer costs one round trip per megabyte
+rather than one per 64 KiB.
+
+Two things this deliberately does not do. It does not raise
+`jcifs.client.rcv_buf_size` or `snd_buf_size`, which are shared with SMB1: the
+SMB1 receive path refuses anything above `0xFFFF`, so raising them would make
+SMB1 issue reads whose responses it then rejects. And it does not move the
+transfer size on SMB 2.0.2, which has no multi-credit at all — there the old
+`jcifs.client.transaction_buf_size` arithmetic still applies, unchanged.
 
 ### Multiple connections to one server
 
@@ -310,7 +317,8 @@ file on its first open, as it always has.
 | `jcifs.client.ipcSigningEnforced` | `true` | Require signing on IPC$. |
 | `jcifs.client.requireSecureNegotiate` | `true` | Validate the negotiate exchange on tree connect. |
 | `jcifs.client.encryptionEnabled` | `false` | Opt in to SMB3 encryption — see [Encryption](#encryption). |
-| `jcifs.client.transaction_buf_size` | `65535` | Drives the read and write ceilings. 512 bytes are subtracted from it, giving an effective 65023. |
+| `jcifs.client.maxTransferSize` | `1048576` | Largest payload a single SMB2 read or write may carry. The negotiated size is the smaller of this and the server's offer. Has no effect below SMB 2.1, which cannot carry more than 64 KiB in one request. |
+| `jcifs.client.transaction_buf_size` | `65535` | Drives the transact size, and the read and write ceilings on SMB 2.0.2 and SMB1. 512 bytes are subtracted from it, giving an effective 65023. |
 | `jcifs.client.ssnLimit` | `250` | Sessions per connection before a new connection is opened. |
 | `jcifs.client.dfs.disabled` | `false` | Disable DFS referral resolution. |
 

@@ -169,6 +169,20 @@ public class Smb2ReadRequest extends ServerMessageBlock2Request<Smb2ReadResponse
     /**
      * {@inheritDoc}
      *
+     * <p>
+     * A read sends almost nothing and gets the payload back, so the response is what it is charged for.
+     * </p>
+     *
+     * @see org.codelibs.jcifs.smb.util.transport.Request#getCreditCost()
+     */
+    @Override
+    public int getCreditCost() {
+        return creditChargeForPayload(this.readLength);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
      * @see org.codelibs.jcifs.smb.internal.smb2.ServerMessageBlock2#writeBytesWireFormat(byte[], int)
      */
     @Override

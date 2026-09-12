@@ -52,6 +52,15 @@ public interface SmbConstants {
      */
     int DEFAULT_SND_BUF_SIZE = 0xFFFF;
     /**
+     * Default ceiling for a single SMB2 read or write, in bytes.
+     *
+     * <p>
+     * One mebibyte is what Windows and the other SMB2 clients settle on. It only applies to SMB2: the send and
+     * receive buffer sizes above still govern SMB1, whose receive path cannot carry more than 64 KiB.
+     * </p>
+     */
+    int DEFAULT_MAX_TRANSFER_SIZE = 0x100000;
+    /**
      * Default buffer size for change notification responses.
      */
     int DEFAULT_NOTIFY_BUF_SIZE = 1024;

@@ -575,6 +575,21 @@ public interface Configuration {
     int getMaximumBufferSize();
 
     /**
+     * The largest payload a single SMB2 read or write may carry.
+     *
+     * <p>
+     * Property {@code jcifs.client.maxTransferSize} (int, default 1048576). The negotiated size is the smaller of
+     * this and what the server offers. Anything above 64 KiB needs multi-credit, which the client only gets on
+     * SMB 2.1 and later; below that the server's own offer keeps the transfer at 64 KiB regardless of this value.
+     * This governs SMB2 only - {@code jcifs.client.rcv_buf_size} and {@code jcifs.client.snd_buf_size} still govern
+     * SMB1, whose receive path cannot carry more than 64 KiB.
+     * </p>
+     *
+     * @return maximum size of a single SMB2 read or write, in bytes
+     */
+    int getMaximumTransferSize();
+
+    /**
      *
      * Property {@code jcifs.client.transaction_buf_size} (int, default 65535)
      *

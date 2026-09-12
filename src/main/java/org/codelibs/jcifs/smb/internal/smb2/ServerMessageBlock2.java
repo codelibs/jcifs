@@ -295,6 +295,22 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
         return this.creditCharge;
     }
 
+    /**
+     * Sets the credit charge for this message.
+     *
+     * <p>
+     * A message whose payload exceeds 64 KiB has to pay for every 64 KiB it spans (MS-SMB2 3.2.4.1.2), and the server
+     * matches that against the credits it granted. It stays zero on a connection that did not negotiate
+     * {@code SMB2_GLOBAL_CAP_LARGE_MTU}, where the field is reserved.
+     * </p>
+     *
+     * @param creditCharge
+     *            the creditCharge to set
+     */
+    public final void setCreditCharge(final int creditCharge) {
+        this.creditCharge = creditCharge;
+    }
+
     @Override
     public void retainPayload() {
         this.retainPayload = true;
