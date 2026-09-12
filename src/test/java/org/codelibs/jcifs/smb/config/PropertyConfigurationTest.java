@@ -151,6 +151,40 @@ class PropertyConfigurationTest extends BaseTest {
     }
 
     @Test
+    @DisplayName("signingAlgorithms parses algorithm names to ids, keeping the configured order")
+    void testSigningAlgorithmsProperty() throws CIFSException {
+        final Properties props = new Properties();
+        props.setProperty("jcifs.client.signingAlgorithms", "AES-GMAC, HMAC-SHA256");
+
+        final PropertyConfiguration testConfig = new PropertyConfiguration(props);
+
+        assertArrayEquals(new int[] { 0x2, 0x0 }, testConfig.getSigningAlgorithms(),
+                "configured algorithm names must map to their MS-SMB2 ids in the configured order");
+    }
+
+    @Test
+    @DisplayName("signingAlgorithms defaults to AES-CMAC first, leaving existing behaviour unchanged")
+    void testSigningAlgorithmsDefault() throws CIFSException {
+        final PropertyConfiguration testConfig = new PropertyConfiguration(new Properties());
+
+        // AES-CMAC leads deliberately. A server picks from the client's offer by its own preference - the Samba
+        // fixture lists AES-128-GMAC first - so leading with CMAC keeps the algorithm an existing deployment
+        // negotiates exactly as it is today, while making GMAC reachable for anyone who asks for it.
+        assertArrayEquals(new int[] { 0x1, 0x2, 0x0 }, testConfig.getSigningAlgorithms(),
+                "the default offer must be AES-CMAC, AES-GMAC, HMAC-SHA256");
+    }
+
+    @Test
+    @DisplayName("an unknown signing algorithm name is refused rather than silently dropped")
+    void testSigningAlgorithmsRejectsUnknownName() {
+        final Properties props = new Properties();
+        props.setProperty("jcifs.client.signingAlgorithms", "AES-CMAC, AES-512-GMAC");
+
+        assertThrows(CIFSException.class, () -> new PropertyConfiguration(props),
+                "an unrecognised signing algorithm name must fail configuration rather than be ignored");
+    }
+
+    @Test
     @DisplayName("encryptionCiphers parses cipher names to ids, keeping the configured order")
     void testEncryptionCiphersProperty() throws CIFSException {
         final Properties props = new Properties();

@@ -524,6 +524,26 @@ public interface Configuration {
     int[] getEncryptionCiphers();
 
     /**
+     * Property {@code jcifs.client.signingAlgorithms} (comma-separated, default
+     * {@code AES-CMAC, AES-GMAC, HMAC-SHA256})
+     *
+     * The SMB 3.1.1 signing algorithms to offer, in order of preference. Recognised names are
+     * {@code HMAC-SHA256}, {@code AES-CMAC} and {@code AES-GMAC}; an unrecognised name is an error rather than
+     * being ignored. Only consulted on SMB 3.1.1, which is the only dialect that negotiates a signing algorithm
+     * in a negotiate context - SMB 3.0 and 3.0.2 always sign with AES-128-CMAC and SMB 2.x with HMAC-SHA256.
+     *
+     * <p>
+     * As with the encryption ciphers, this states a preference rather than a requirement: the server picks one
+     * algorithm from the offered list and may apply its own order when doing so. The default leads with AES-CMAC,
+     * which is what the client has always used, so the algorithm negotiated against a given server does not
+     * change unless this property does.
+     * </p>
+     *
+     * @return the signing algorithm identifiers to offer, in preference order
+     */
+    int[] getSigningAlgorithms();
+
+    /**
      *
      * Property {@code jcifs.client.forceExtendedSecurity} (boolean, default false)
      *

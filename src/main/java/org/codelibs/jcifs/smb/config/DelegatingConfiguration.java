@@ -639,6 +639,16 @@ public class DelegatingConfiguration implements Configuration {
     /**
      * {@inheritDoc}
      *
+     * @see org.codelibs.jcifs.smb.Configuration#getSigningAlgorithms()
+     */
+    @Override
+    public int[] getSigningAlgorithms() {
+        return this.delegate.getSigningAlgorithms();
+    }
+
+    /**
+     * {@inheritDoc}
+     *
      * @see org.codelibs.jcifs.smb.Configuration#getLmHostsFileName()
      */
     @Override
