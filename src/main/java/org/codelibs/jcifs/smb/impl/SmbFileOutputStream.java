@@ -146,13 +146,20 @@ public class SmbFileOutputStream extends OutputStream {
      */
     protected final void init(final SmbTreeHandleImpl th) throws CIFSException {
         final int sendBufferSize = th.getSendBufferSize();
+
+        /*
+         * A file stream is already open by the time this runs, so a reopen after a dropped connection must neither
+         * create nor truncate the file again: the stream carries on writing at the position it had reached, and
+         * truncating would leave everything before that position as a hole.
+         */
+        this.openFlags &= ~(SmbConstants.O_CREAT | SmbConstants.O_TRUNC);
+
         if (this.smb2) {
             this.writeSize = sendBufferSize;
             this.writeSizeFile = sendBufferSize;
             return;
         }
 
-        this.openFlags &= ~(SmbConstants.O_CREAT | SmbConstants.O_TRUNC); /* in case we close and reopen */
         this.writeSize = sendBufferSize - 70;
 
         this.useNTSmbs = th.hasCapability(SmbConstants.CAP_NT_SMBS);
