@@ -16,13 +16,17 @@
 package org.codelibs.jcifs.smb.it;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 import org.codelibs.jcifs.smb.CIFSContext;
+import org.codelibs.jcifs.smb.impl.SmbException;
 import org.codelibs.jcifs.smb.impl.SmbFile;
 import org.codelibs.jcifs.smb.impl.SmbRandomAccessFile;
+import org.codelibs.jcifs.smb.it.env.TcpRelay;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -37,6 +41,11 @@ import org.junit.jupiter.api.Test;
  * </p>
  */
 class ByteRangeLockIT extends AbstractSmbIT {
+
+    /** Generous, because it only bounds a wait that normally ends on the first attempt. */
+    private static final long RELEASE_TIMEOUT_SECONDS = 30;
+
+    private static final long POLL_MILLIS = 50;
 
     private SmbFile workDir;
 
@@ -89,6 +98,60 @@ class ByteRangeLockIT extends AbstractSmbIT {
             contender.unlock(0, 4);
             holder.unlock(0, 4);
         }
+    }
+
+    @Test
+    @DisplayName("a lock is gone once the connection under it drops, and the reopened handle holds no range")
+    void lockDoesNotSurviveAReconnect() throws Exception {
+        final CIFSContext context = server().context();
+        this.workDir = createWorkDir(context, server().share());
+        final SmbFile file = writeFile(this.workDir, "reconnect.bin", "0123456789");
+
+        // The holder goes through the relay so its connection can be cut; the contender goes straight to the server
+        // so it survives the cut. That also puts them on separate transports by construction rather than by
+        // configuration, which is what makes the contention real.
+        try (TcpRelay relay = TcpRelay.to(server().host(), server().port())) {
+            final String viaRelay = "smb://" + relay.host() + ":" + relay.port() + file.getURL().getPath();
+
+            try (SmbFile holderFile = new SmbFile(viaRelay, context);
+                    SmbRandomAccessFile holder = holderFile.openRandomAccess("rw");
+                    SmbFile contenderFile = otherConnection(file);
+                    SmbRandomAccessFile contender = contenderFile.openRandomAccess("rw")) {
+
+                holder.lock(0, 4, false);
+                assertFalse(contender.tryLock(0, 4, false), "the range should be held while the holder's connection is up");
+
+                relay.dropConnections();
+
+                // A lock belongs to the open that took it, and a dropped connection is recovered by reopening the
+                // path, which yields a new open holding nothing. Were the ranges replayed onto the reopened handle -
+                // which is what a durable handle buys and the obvious "fix" to reach for - this would stay refused.
+                assertTrue(awaitGranted(contender, 0, 4), "the lock should not have survived the drop");
+                contender.unlock(0, 4);
+
+                // And the holder's own reopened handle has no record of the range, so releasing it is an error
+                // rather than a no-op. This is the caveat callers have to live with, stated as a test.
+                assertThrows(SmbException.class, () -> holder.unlock(0, 4),
+                        "unlocking a range the reopened handle never locked should fail");
+            }
+        }
+    }
+
+    /**
+     * Waits for the range to become available, which needs the server to have noticed the dropped connection and
+     * torn the holder's open down. Samba does this as soon as it sees the socket close - the relay closes the
+     * server-facing side too - so this normally succeeds on the first attempt; the deadline is only insurance
+     * against a slower server.
+     */
+    private static boolean awaitGranted(final SmbRandomAccessFile contender, final long position, final long size) throws Exception {
+        final long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(RELEASE_TIMEOUT_SECONDS);
+        while (System.nanoTime() < deadline) {
+            if (contender.tryLock(position, size, false)) {
+                return true;
+            }
+            Thread.sleep(POLL_MILLIS);
+        }
+        return false;
     }
 
     /**

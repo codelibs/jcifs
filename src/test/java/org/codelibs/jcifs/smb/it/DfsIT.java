@@ -16,6 +16,7 @@
 package org.codelibs.jcifs.smb.it;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -77,9 +78,26 @@ class DfsIT extends AbstractSmbIT {
     @DisplayName("a link whose name extends another link's name resolves to its own target")
     void linkWithAnOverlappingPrefixIsNotConfusedWithTheShorterOne() throws Exception {
         final CIFSContext context = server().context();
+        final String fileName = "dfs-prefix-" + UUID.randomUUID() + ".txt";
+
+        // The two links point at different shares on purpose, so a file placed in one target is the observable that
+        // says which target a link reached. Checking only that both links resolve cannot see the defect this fixture
+        // exists to catch: a referral that maps the whole "link-extra" component to "link"'s target reaches a real
+        // share, so both links still exist. The narrower form, where "-extra" is left over and appended, was caught
+        // before; this covers the form that was not.
+        final SmbFile direct = new SmbFile(server().url(server().share(), fileName), context);
+        direct.createNewFile();
+        this.workDir = direct;
+
         try (SmbFile shorter = new SmbFile(dfsPath("link"), context); SmbFile longer = new SmbFile(dfsPath("link-extra"), context)) {
             assertTrue(shorter.exists(), "link should resolve");
             assertTrue(longer.exists(), "link-extra should resolve");
+        }
+
+        try (SmbFile viaShorter = new SmbFile(dfsPath("link") + fileName, context);
+                SmbFile viaLonger = new SmbFile(dfsPath("link-extra") + fileName, context)) {
+            assertTrue(viaShorter.exists(), "the file should be reachable through the link pointing at its share");
+            assertFalse(viaLonger.exists(), "link-extra points at a different share, so the file must not be reachable through it");
         }
     }
 
