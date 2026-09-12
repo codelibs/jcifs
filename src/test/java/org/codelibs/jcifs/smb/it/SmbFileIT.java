@@ -30,8 +30,11 @@ import java.util.Properties;
 
 import org.codelibs.jcifs.smb.CIFSContext;
 import org.codelibs.jcifs.smb.CIFSException;
+import org.codelibs.jcifs.smb.SmbConstants;
 import org.codelibs.jcifs.smb.SmbResource;
+import org.codelibs.jcifs.smb.impl.NtStatus;
 import org.codelibs.jcifs.smb.impl.NtlmPasswordAuthenticator;
+import org.codelibs.jcifs.smb.impl.SmbException;
 import org.codelibs.jcifs.smb.impl.SmbFile;
 import org.codelibs.jcifs.smb.impl.SmbRandomAccessFile;
 import org.codelibs.jcifs.smb.it.env.RequiresBackend;
@@ -297,15 +300,12 @@ class SmbFileIT extends AbstractSmbIT {
 
             assertFalse(file.exists(), "File should not exist initially");
 
-            // Deleting a non-existent file may throw exception depending on implementation
-            try {
-                file.delete();
-            } catch (final Exception e) {
-                // Expected behavior - deleting non-existent file may throw
-                log.debug("Delete non-existent file threw exception (expected): {}", e.getMessage());
-            }
-
-            assertFalse(file.exists(), "File should still not exist after delete attempt");
+            // delete() decides this itself rather than leaving it to the server: it checks existence first and
+            // raises OBJECT_NAME_NOT_FOUND. Swallowing that hid a guaranteed failure and left the test passing for
+            // any behaviour at all, including a delete that removed some other path.
+            final SmbException e = assertThrows(SmbException.class, file::delete, "deleting a file that does not exist must fail");
+            assertEquals(NtStatus.NT_STATUS_OBJECT_NAME_NOT_FOUND, e.getNtStatus(),
+                    "unexpected status: 0x" + Integer.toHexString(e.getNtStatus()));
         }
     }
 
@@ -369,19 +369,22 @@ class SmbFileIT extends AbstractSmbIT {
             dir.mkdir();
 
             // Create a file inside
-            new SmbFile(createSmbUrl("users", "nonempty/file.txt"), context).createNewFile();
+            final SmbFile child = new SmbFile(createSmbUrl("users", "nonempty/file.txt"), context);
+            child.createNewFile();
 
-            // Attempting to delete non-empty directory should fail or require recursive deletion
-            // The behavior may vary, but the directory should still exist if simple delete is used
-            try {
-                dir.delete();
-            } catch (final Exception e) {
-                // Expected if the implementation doesn't allow deleting non-empty directories
+            // delete() recurses into the directory itself, so it is the API under test here and not a step to be
+            // stood in for. Deleting the contents from the test first, as this used to, meant a delete() whose own
+            // recursion was broken still left an empty directory to remove, and the test passed either way.
+            dir.delete();
+
+            // Asked again through fresh handles, because exists() serves a cached answer for up to
+            // jcifs.client.attrExpirationPeriod (5 s by default) and only the instance that performed the delete
+            // clears its own cache, so a sibling handle can still report a deleted file as present.
+            try (SmbFile childAgain = new SmbFile(createSmbUrl("users", "nonempty/file.txt"), context);
+                    SmbFile dirAgain = new SmbFile(createSmbUrl("users", "nonempty/"), context)) {
+                assertFalse(childAgain.exists(), "delete() should have removed the directory's contents");
+                assertFalse(dirAgain.exists(), "delete() should have removed the directory itself");
             }
-
-            // Verify we can delete recursively
-            deleteRecursively(dir);
-            assertFalse(dir.exists(), "Directory should be deleted after recursive deletion");
         }
     }
 
@@ -654,6 +657,8 @@ class SmbFileIT extends AbstractSmbIT {
             // Set read-only
             file.setReadOnly();
             assertTrue(file.canRead(), "File should still be readable");
+            // Without this the read-only state itself went unchecked, so setReadOnly() doing nothing would pass
+            assertFalse(file.canWrite(), "File should not be writable while read-only");
 
             // Set back to read-write
             file.setReadWrite();
@@ -668,17 +673,18 @@ class SmbFileIT extends AbstractSmbIT {
 
             file.createNewFile();
 
-            // Get current attributes
             final int attrs = file.getAttributes();
-            assertNotNull(attrs, "Attributes should not be null");
 
-            // Note: Setting specific attributes depends on SMB server support
-            // Just verify the methods don't throw exceptions
-            try {
-                file.setAttributes(attrs);
-            } catch (final Exception e) {
-                log.debug("setAttributes threw exception (may not be fully supported): {}", e.getMessage());
-            }
+            // assertNotNull on an int is unfalsifiable once it is boxed, so this asserted nothing whatsoever: a
+            // getAttributes() returning garbage, and a setAttributes() throwing every time, both passed. What can
+            // be checked is that a bit written comes back, since ATTR_READONLY (0x01) survives both ATTR_SET_MASK
+            // and ATTR_GET_MASK, and setPathInformation expires the attribute cache so the read reaches the server.
+            file.setAttributes(attrs | SmbConstants.ATTR_READONLY);
+            assertEquals(SmbConstants.ATTR_READONLY, file.getAttributes() & SmbConstants.ATTR_READONLY,
+                    "the read-only bit should survive a round trip through the server");
+
+            file.setAttributes(attrs & ~SmbConstants.ATTR_READONLY);
+            assertEquals(0, file.getAttributes() & SmbConstants.ATTR_READONLY, "the read-only bit should have been cleared again");
         }
 
         @Test
