@@ -76,7 +76,7 @@ class RandomAccessFileIT extends AbstractSmbIT {
     }
 
     @Test
-    @Disabled("SmbRandomAccessFile.length() delegates to SmbFile.length(), whose attribute cache setLength() never "
+    @Disabled("#107: SmbRandomAccessFile.length() delegates to SmbFile.length(), whose attribute cache setLength() never "
             + "invalidates, so the handle keeps reporting the length the file had before it was truncated until the "
             + "cache expires. java.io.RandomAccessFile reports the new length immediately.")
     @DisplayName("the handle reports the new length straight after setLength")

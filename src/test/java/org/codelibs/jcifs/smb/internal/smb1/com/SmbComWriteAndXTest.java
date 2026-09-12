@@ -202,7 +202,7 @@ public class SmbComWriteAndXTest {
     }
 
     @Test
-    @Disabled("SmbComWriteAndX.writeParameterWordsWireFormat computes dataOffset as 'dstIndex - headerStart + 26', "
+    @Disabled("#110: SmbComWriteAndX.writeParameterWordsWireFormat computes dataOffset as 'dstIndex - headerStart + 26', "
             + "which is already relative to headerStart, and then pads it with '(dataOffset - headerStart) % 4', "
             + "subtracting headerStart a second time. The pad should be 'dataOffset % 4'. The bug is latent because "
             + "the transport only ever encodes at headerStart 0 or 4, both multiples of four, so the extra subtraction "

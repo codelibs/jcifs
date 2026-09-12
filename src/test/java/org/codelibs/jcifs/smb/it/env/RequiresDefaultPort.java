@@ -31,7 +31,7 @@ import org.junit.jupiter.api.extension.ExtensionContext;
  * <p>
  * Some client paths build their own connection rather than reusing the one the
  * URL opened, and drop the port while doing so. Share enumeration is the case
- * this annotation exists for: {@code SmbEnumerationUtil.getHandle} formats its
+ * this annotation exists for (issue #106): {@code SmbEnumerationUtil.getHandle} formats its
  * RPC binding from the host name alone, so against a server on a mapped port the
  * request goes to 445 on that host instead - a different server, or nothing at
  * all. Tests of those paths can only be trusted when the port is already 445.

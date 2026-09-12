@@ -166,7 +166,7 @@ public class SmbComOpenAndXResponseTest {
     }
 
     @Test
-    @Disabled("SmbComOpenAndXResponse keeps FileDataSize in an int and getSize() just widens it, so the "
+    @Disabled("#109: SmbComOpenAndXResponse keeps FileDataSize in an int and getSize() just widens it, so the "
             + "sign bit of the 32 bit unsigned wire field becomes the sign of the returned long: a file of "
             + "0xFFFFFFFF bytes is reported as a size of -1 instead of 4294967295. getSize() should mask with "
             + "0xFFFFFFFFL the way SMBUtil.readUTime does for the time field two offsets earlier.")
