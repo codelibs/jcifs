@@ -760,7 +760,11 @@ public abstract class ServerMessageBlock2 implements CommonServerMessageBlock {
         SMBUtil.writeInt4(this.nextCommand, dst, dstIndex + 20);
         SMBUtil.writeInt8(this.mid, dst, dstIndex + 24);
 
-        if (this.async) {
+        // MS-SMB2 2.2.1.2: these eight bytes are the AsyncId when SMB2_FLAGS_ASYNC_COMMAND is set, and reserved plus
+        // the TreeId when it is not, so the flag decides the layout - as it already does when one is read back. The
+        // async field is only ever set while decoding a received message, so keying on it here meant a message we
+        // sent with the flag set still carried a tree id where the peer reads the async id.
+        if ((this.flags & SMB2_FLAGS_ASYNC_COMMAND) == SMB2_FLAGS_ASYNC_COMMAND) {
             SMBUtil.writeInt8(this.asyncId, dst, dstIndex + 32);
         } else {
             // 4 reserved

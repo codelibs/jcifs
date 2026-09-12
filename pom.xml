@@ -140,6 +140,11 @@
 							<differenceType>7012</differenceType>
 							<method>void setFileTimes(long, long, long)</method>
 						</difference>
+						<difference>
+							<className>org/codelibs/jcifs/smb/SmbWatchHandle</className>
+							<differenceType>7012</differenceType>
+							<method>void cancel()</method>
+						</difference>
 					</ignored>
 				</configuration>
 			</plugin>

@@ -36,8 +36,10 @@ public interface SmbWatchHandle extends AutoCloseable, Callable<List<FileNotifyI
      * opened if it is not and should be closed with {@link #close()} when no longer
      * needed.
      *
-     * Closing the context should cancel a pending notify request, but that does not seem to work reliable in all
-     * implementations.
+     * A call blocked here is ended by {@link #cancel()}, which leaves the file open, or by {@link #close()}, which
+     * gives the open up. How the server reports a close to the waiting request is up to it, so only a cancel is
+     * reliably distinguishable: it is answered with {@code STATUS_CANCELLED} and this method then returns
+     * {@code null}.
      *
      * Changes in between these calls (as long as the file is open) are buffered by the server, so iteratively calling
      * this method should provide all changes (size of that buffer can be adjusted through
@@ -45,10 +47,24 @@ public interface SmbWatchHandle extends AutoCloseable, Callable<List<FileNotifyI
      * If the server cannot fulfill the request because the changes did not fit the buffer
      * it will return an empty list of changes.
      *
-     * @return changes since the last invocation
+     * @return changes since the last invocation, or {@code null} if the request was cancelled
      * @throws CIFSException if an error occurs retrieving file notifications
      */
     List<FileNotifyInformation> watch() throws CIFSException;
+
+    /**
+     * Cancel a pending {@link #watch()}
+     *
+     * Sends a CANCEL naming the notify request another thread is blocked in, so that {@link #watch()} returns
+     * {@code null} rather than a set of changes. The file stays open and watching can be resumed by calling
+     * {@link #watch()} again; use {@link #close()} to give the open up as well.
+     *
+     * Does nothing when no watch is pending. The server can only match a cancel to a request that has reached it, so
+     * cancelling in the same instant a watch is started may not take effect.
+     *
+     * @throws CIFSException if sending the cancel fails
+     */
+    void cancel() throws CIFSException;
 
     /**
      * {@inheritDoc}

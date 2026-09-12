@@ -8,6 +8,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -18,6 +20,11 @@ import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import org.codelibs.jcifs.smb.CIFSException;
 import org.codelibs.jcifs.smb.Configuration;
@@ -26,12 +33,15 @@ import org.codelibs.jcifs.smb.SmbConstants;
 import org.codelibs.jcifs.smb.internal.CommonServerMessageBlockRequest;
 import org.codelibs.jcifs.smb.internal.NotifyResponse;
 import org.codelibs.jcifs.smb.internal.smb1.trans.nt.NtTransNotifyChange;
+import org.codelibs.jcifs.smb.internal.smb1.trans.nt.SmbComNtCancel;
+import org.codelibs.jcifs.smb.internal.smb2.Smb2CancelRequest;
 import org.codelibs.jcifs.smb.internal.smb2.notify.Smb2ChangeNotifyRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -260,5 +270,84 @@ class SmbWatchHandleImplTest {
         assertThrows(NullPointerException.class, () -> {
             sut.watch();
         });
+    }
+
+    // Nothing is in flight, so a cancel must not even reach for the connection
+    @Test
+    @DisplayName("cancel() sends nothing when no watch is pending")
+    void cancel_noWatchPending_sendsNothing() throws Exception {
+        SmbWatchHandleImpl sut = new SmbWatchHandleImpl(handle, 0, false);
+
+        sut.cancel();
+
+        verify(handle, never()).getTree();
+    }
+
+    // The point of cancel(): while watch() is blocked in send(), a cancel naming that very request goes out
+    @ParameterizedTest(name = "smb2={0}")
+    @ValueSource(booleans = { true, false })
+    @DisplayName("cancel() sends a cancel for the request watch() is waiting on")
+    void cancel_watchPending_sendsCancelForThatRequest(boolean smb2) throws Exception {
+        NotifyResponse resp = mock(NotifyResponse.class);
+        when(resp.isReceived()).thenReturn(true);
+        when(resp.getErrorCode()).thenReturn(0);
+        when(resp.getNotifyInformation()).thenReturn(new ArrayList<>());
+        when(handle.isValid()).thenReturn(true);
+        when(handle.getTree()).thenReturn(tree);
+        when(tree.isSMB2()).thenReturn(smb2);
+        when(tree.getConfig()).thenReturn(mock(Configuration.class));
+        if (smb2) {
+            when(handle.getFileId()).thenReturn(new byte[16]);
+        } else {
+            when(tree.hasCapability(SmbConstants.CAP_NT_SMBS)).thenReturn(true);
+            when(handle.getFid()).thenReturn(42);
+        }
+
+        // The notify send blocks, as it does on the wire, so that cancel() runs against a genuinely pending request
+        CountDownLatch watchSent = new CountDownLatch(1);
+        CountDownLatch cancelDone = new CountDownLatch(1);
+        when(tree.send(any(CommonServerMessageBlockRequest.class), any(), any(), any())).thenAnswer(inv -> {
+            if (inv.getArgument(0) instanceof Smb2CancelRequest || inv.getArgument(0) instanceof SmbComNtCancel) {
+                return null;
+            }
+            watchSent.countDown();
+            assertTrue(cancelDone.await(10, TimeUnit.SECONDS), "cancel() never returned");
+            return resp;
+        });
+
+        SmbWatchHandleImpl sut = new SmbWatchHandleImpl(handle, 0, false);
+        ExecutorService worker = Executors.newSingleThreadExecutor();
+        try {
+            Future<List<FileNotifyInformation>> watching = worker.submit(sut::watch);
+            assertTrue(watchSent.await(10, TimeUnit.SECONDS), "watch() never sent its request");
+
+            sut.cancel();
+            cancelDone.countDown();
+            watching.get(10, TimeUnit.SECONDS);
+        } finally {
+            worker.shutdownNow();
+        }
+
+        ArgumentCaptor<CommonServerMessageBlockRequest> cancelCap = ArgumentCaptor.forClass(CommonServerMessageBlockRequest.class);
+        verify(tree).send(cancelCap.capture(), isNull(), eq(RequestParam.NO_RETRY));
+        Class<?> expected = smb2 ? Smb2CancelRequest.class : SmbComNtCancel.class;
+        assertTrue(expected.isInstance(cancelCap.getValue()), "unexpected cancel request: " + cancelCap.getValue());
+    }
+
+    // The request has been answered, so there is nothing left for a cancel to name
+    @Test
+    @DisplayName("cancel() sends nothing once watch() has returned")
+    void cancel_afterWatchReturned_sendsNothing() throws Exception {
+        NotifyResponse resp = mock(NotifyResponse.class);
+        when(resp.isReceived()).thenReturn(true);
+        when(resp.getErrorCode()).thenReturn(0);
+        when(resp.getNotifyInformation()).thenReturn(new ArrayList<>());
+        setupSmb2(resp, new byte[16]);
+        SmbWatchHandleImpl sut = new SmbWatchHandleImpl(handle, 0, false);
+        sut.watch();
+
+        sut.cancel();
+
+        verify(tree, never()).send(any(CommonServerMessageBlockRequest.class), isNull(), eq(RequestParam.NO_RETRY));
     }
 }

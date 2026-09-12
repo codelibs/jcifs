@@ -17,6 +17,7 @@ package org.codelibs.jcifs.smb.it;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
@@ -127,6 +128,40 @@ class ChangeNotifyIT extends AbstractSmbIT {
             assertFalse(events.isEmpty(), "the recursive watcher should have been told about the nested file");
             assertTrue(events.stream().anyMatch(e -> e.getFileName() != null && e.getFileName().endsWith("deep.txt")),
                     "no event named the nested file: " + events);
+        }
+    }
+
+    /**
+     * What separates {@code cancel()} from {@code close()}: both end a pending watch, but a cancel is answered with
+     * STATUS_CANCELLED and leaves the open in place, so the directory can still be watched afterwards. A close is
+     * answered - on Samba at least - with STATUS_NOTIFY_CLEANUP and an empty change set, and the open is gone.
+     */
+    @Test
+    @DisplayName("cancel() ends a pending watch and leaves the file open")
+    void cancelEndsAPendingWatch() throws Exception {
+        final CIFSContext context = server().context();
+        this.workDir = createWorkDir(context, server().share());
+
+        try (SmbWatchHandle handle = this.workDir.watch(FileNotifyInformation.FILE_NOTIFY_CHANGE_FILE_NAME, false)) {
+            final ExecutorService executor = Executors.newSingleThreadExecutor();
+            try {
+                final Future<List<FileNotifyInformation>> watching = executor.submit(handle::watch);
+                Thread.sleep(SETTLE_MILLIS);
+                assertFalse(watching.isDone(), "the watch already returned, so cancelling it would prove nothing");
+
+                handle.cancel();
+
+                assertNull(watching.get(TIMEOUT_SECONDS, TimeUnit.SECONDS),
+                        "a cancelled watch reports itself cancelled, it does not return a change set");
+            } finally {
+                executor.shutdownNow();
+            }
+
+            final List<FileNotifyInformation> events = watchWhile(handle, () -> {
+                writeFile(this.workDir, "after-cancel.txt", "payload");
+                return null;
+            });
+            assertFalse(events.isEmpty(), "the open should have survived the cancel and still report changes");
         }
     }
 }
