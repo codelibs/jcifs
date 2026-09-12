@@ -9,10 +9,10 @@
 >
 > What does exist is unused protocol scaffolding: the
 > `SMB2_GLOBAL_CAP_PERSISTENT_HANDLES` constant (`Smb2Constants`), which is not
-> referenced anywhere, plus the create context framework. That framework encodes
-> and decodes contexts generically, but `Smb2CreateRequest` exposes no way to set
-> one and `Smb2CreateResponse.createContext()` returns `null` for every context
-> name, so no durable or persistent handle context can be sent or recognised.
+> referenced anywhere, plus the create context framework.
+> `Smb2CreateRequest.setCreateContexts()` can send contexts, but no durable or
+> persistent handle context exists to send, and `Smb2CreateResponse.createContext()`
+> returns `null` for every context name, so no such response could be recognised.
 >
 > For what jcifs actually supports today, see
 > [SMB3_SUPPORT.md](../../SMB3_SUPPORT.md). For the other unstarted proposals,

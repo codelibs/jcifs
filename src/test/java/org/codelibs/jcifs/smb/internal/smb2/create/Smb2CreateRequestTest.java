@@ -1,17 +1,21 @@
 package org.codelibs.jcifs.smb.internal.smb2.create;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 import org.codelibs.jcifs.smb.CIFSContext;
 import org.codelibs.jcifs.smb.Configuration;
 import org.codelibs.jcifs.smb.internal.smb2.Smb2Constants;
+import org.codelibs.jcifs.smb.internal.util.SMBUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -485,5 +489,190 @@ class Smb2CreateRequestTest {
         // But getPath() adds a backslash at the beginning, so \\fourth\path\\ becomes \fourth\path\
         request.setPath("\\\\fourth\\path\\\\");
         assertEquals("\\\\fourth\\path\\", request.getPath());
+    }
+
+    @Test
+    @DisplayName("a create context carries its name at offset 16 and 8-byte aligned data, with no padding after the last one")
+    void testEncodeSingleCreateContext() {
+        request = new Smb2CreateRequest(mockConfig, "a");
+        request.setCreateContexts(new RawCreateContext(ascii("TEST"), new byte[] { 1, 2, 3, 4, 5 }));
+
+        // The 64 byte header, the 56 byte fixed body and the 2 byte name padded to 8 put the context at 128.
+        // It ends at 128 + 16 (header) + 4 (name) + 4 (padding) + 5 (data) = 157.
+        assertEquals(160, request.size());
+        final byte[] buffer = prefilledBuffer();
+        assertEquals(160, request.encode(buffer, 0));
+
+        assertCreateContexts(buffer, 128, 29);
+        assertCreateContext(buffer, 128, 0, ascii("TEST"), 24, new byte[] { 1, 2, 3, 4, 5 });
+    }
+
+    @Test
+    @DisplayName("each create context points at its 8-byte aligned successor")
+    void testEncodeChainedCreateContexts() {
+        request = new Smb2CreateRequest(mockConfig, "a");
+        request.setCreateContexts(new RawCreateContext(ascii("TEST"), new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 }),
+                new RawCreateContext(ascii("ABCD"), new byte[] { 9, 10, 11 }));
+
+        // The first context ends on a boundary at 160; the second ends at 160 + 24 + 3 = 187.
+        assertEquals(192, request.size());
+        final byte[] buffer = prefilledBuffer();
+        assertEquals(192, request.encode(buffer, 0));
+
+        assertCreateContexts(buffer, 128, 59);
+        assertCreateContext(buffer, 128, 32, ascii("TEST"), 24, new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 });
+        assertCreateContext(buffer, 160, 0, ascii("ABCD"), 24, new byte[] { 9, 10, 11 });
+    }
+
+    @Test
+    @DisplayName("a create context without data sends DataOffset 0 and is padded before its successor")
+    void testEncodeCreateContextWithoutData() {
+        request = new Smb2CreateRequest(mockConfig, "a");
+        request.setCreateContexts(new RawCreateContext(ascii("QFid"), new byte[0]),
+                new RawCreateContext(ascii("TEST"), new byte[] { 1, 2, 3, 4, 5 }));
+
+        // The first context is header and name only, ending at 148 and padded to 152.
+        // The second ends at 152 + 24 + 5 = 181.
+        assertEquals(184, request.size());
+        final byte[] buffer = prefilledBuffer();
+        assertEquals(184, request.encode(buffer, 0));
+
+        assertCreateContexts(buffer, 128, 53);
+        assertCreateContext(buffer, 128, 24, ascii("QFid"), 0, new byte[0]);
+        assertCreateContext(buffer, 152, 0, ascii("TEST"), 24, new byte[] { 1, 2, 3, 4, 5 });
+    }
+
+    @Test
+    @DisplayName("a create context named by a 16 byte GUID has its data directly after the name")
+    void testEncodeCreateContextWithGuidName() {
+        // SMB2_CREATE_APP_INSTANCE_ID is named by a GUID rather than a four character tag
+        final byte[] name = { 0x45, (byte) 0xBC, (byte) 0xA6, 0x6A, (byte) 0xEF, (byte) 0xA7, (byte) 0xF7, 0x4A, (byte) 0x90, 0x08,
+                (byte) 0xFA, 0x46, 0x2E, 0x14, 0x4D, 0x74 };
+        final byte[] data = new byte[20];
+        for (int i = 0; i < data.length; i++) {
+            data[i] = (byte) (i + 1);
+        }
+        request = new Smb2CreateRequest(mockConfig, "a");
+        request.setCreateContexts(new RawCreateContext(name, data));
+
+        // Header and name end on a boundary at 160; the data ends at 180.
+        assertEquals(184, request.size());
+        final byte[] buffer = prefilledBuffer();
+        assertEquals(184, request.encode(buffer, 0));
+
+        assertCreateContexts(buffer, 128, 52);
+        assertCreateContext(buffer, 128, 0, name, 32, data);
+    }
+
+    @Test
+    @DisplayName("a request with an empty create context list leaves the create contexts section empty")
+    void testEncodeWithEmptyCreateContexts() {
+        request = new Smb2CreateRequest(mockConfig, "a");
+        request.setCreateContexts();
+
+        final byte[] buffer = prefilledBuffer();
+        assertEquals(128, request.encode(buffer, 0));
+
+        assertCreateContexts(buffer, 0, 0);
+    }
+
+    @Test
+    @DisplayName("create context alignment is measured from the SMB2 header when the message follows a transport header")
+    void testEncodeCreateContextsAfterTransportHeader() {
+        request = new Smb2CreateRequest(mockConfig, "a");
+        request.setCreateContexts(new RawCreateContext(ascii("QFid"), new byte[0]),
+                new RawCreateContext(ascii("TEST"), new byte[] { 1, 2, 3, 4, 5 }));
+
+        // The transport writes a 4 byte header before the message. This is testEncodeCreateContextWithoutData moved by 4;
+        // aligning from the start of the buffer instead of the SMB2 header would shift the padded offsets.
+        final byte[] buffer = prefilledBuffer();
+        assertEquals(184, request.encode(buffer, 4));
+
+        assertCreateContexts(buffer, 4, 128, 53);
+        assertCreateContext(buffer, 4 + 128, 24, ascii("QFid"), 0, new byte[0]);
+        assertCreateContext(buffer, 4 + 152, 0, ascii("TEST"), 24, new byte[] { 1, 2, 3, 4, 5 });
+    }
+
+    @Test
+    @DisplayName("a create context whose size() reports no data but which writes some is refused rather than sent without it")
+    void testEncodeRefusesContextThatUnderstatesItsSize() {
+        request = new Smb2CreateRequest(mockConfig, "a");
+        request.setCreateContexts(new RawCreateContext(ascii("TEST"), new byte[] { 1, 2, 3, 4, 5 }, 0));
+
+        assertThrows(IllegalStateException.class, () -> request.encode(prefilledBuffer(), 0));
+    }
+
+    private static byte[] ascii(final String value) {
+        return value.getBytes(StandardCharsets.US_ASCII);
+    }
+
+    /**
+     * @return a buffer whose stale contents show up in any field the encoder does not write
+     */
+    private static byte[] prefilledBuffer() {
+        final byte[] buffer = new byte[512];
+        Arrays.fill(buffer, (byte) 0xAA);
+        return buffer;
+    }
+
+    private static void assertCreateContexts(final byte[] buffer, final int offset, final int length) {
+        assertCreateContexts(buffer, 0, offset, length);
+    }
+
+    private static void assertCreateContexts(final byte[] buffer, final int headerStart, final int offset, final int length) {
+        // CreateContextsOffset and CreateContextsLength are 48 and 52 bytes into the body following the 64 byte header
+        assertEquals(offset, SMBUtil.readInt4(buffer, headerStart + 64 + 48), "CreateContextsOffset");
+        assertEquals(length, SMBUtil.readInt4(buffer, headerStart + 64 + 52), "CreateContextsLength");
+    }
+
+    private static void assertCreateContext(final byte[] buffer, final int start, final int next, final byte[] name, final int dataOffset,
+            final byte[] data) {
+        assertEquals(next, SMBUtil.readInt4(buffer, start), "Next");
+        assertEquals(16, SMBUtil.readInt2(buffer, start + 4), "NameOffset");
+        assertEquals(name.length, SMBUtil.readInt2(buffer, start + 6), "NameLength");
+        assertEquals(0, SMBUtil.readInt2(buffer, start + 8), "Reserved");
+        assertEquals(dataOffset, SMBUtil.readInt2(buffer, start + 10), "DataOffset");
+        assertEquals(data.length, SMBUtil.readInt4(buffer, start + 12), "DataLength");
+        assertArrayEquals(name, Arrays.copyOfRange(buffer, start + 16, start + 16 + name.length), "Name");
+        assertArrayEquals(data, Arrays.copyOfRange(buffer, start + dataOffset, start + dataOffset + data.length), "Data");
+    }
+
+    /**
+     * A create context that sends fixed name and data bytes.
+     */
+    private static final class RawCreateContext implements CreateContextRequest {
+
+        private final byte[] name;
+        private final byte[] data;
+        private final int reportedSize;
+
+        RawCreateContext(final byte[] name, final byte[] data) {
+            this(name, data, data.length);
+        }
+
+        /**
+         * @param reportedSize what {@link #size()} returns; a well-behaved context reports its data length
+         */
+        RawCreateContext(final byte[] name, final byte[] data, final int reportedSize) {
+            this.name = name;
+            this.data = data;
+            this.reportedSize = reportedSize;
+        }
+
+        @Override
+        public byte[] getName() {
+            return this.name;
+        }
+
+        @Override
+        public int encode(final byte[] dst, final int dstIndex) {
+            System.arraycopy(this.data, 0, dst, dstIndex, this.data.length);
+            return this.data.length;
+        }
+
+        @Override
+        public int size() {
+            return this.reportedSize;
+        }
     }
 }
