@@ -32,3 +32,34 @@ jobs:
     - name: Check that the integration tests actually ran
       if: always()
       run: python3 build_helpers/check-it-reports.py
+
+  # Same idea as the Windows dialect matrix: the build above negotiates freely
+  # and settles on SMB 3.1.1, so pin the range and run the integration tests
+  # again one dialect at a time. Samba is the backend that PRs always have, so
+  # this is where a dialect regression surfaces first.
+  samba-dialects:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        dialect: [SMB202, SMB210, SMB300, SMB311]
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+    - name: Run the integration tests on ${{ matrix.dialect }}
+      # Only the integration tests talk to a server, so only they are affected
+      # by the dialect pin.
+      run: mvn -B verify -Dtest=NoSuchUnitTest -Dsurefire.failIfNoSpecifiedTests=false
+      env:
+        JCIFS_IT_REQUIRED: "true"
+        JCIFS_IT_DIALECT: ${{ matrix.dialect }}
+    - name: Check that the integration tests actually ran
+      if: always()
+      run: python3 build_helpers/check-it-reports.py

@@ -15,10 +15,12 @@
  */
 package org.codelibs.jcifs.smb.it.env;
 
+import java.util.Locale;
 import java.util.Properties;
 
 import org.codelibs.jcifs.smb.CIFSContext;
 import org.codelibs.jcifs.smb.CIFSException;
+import org.codelibs.jcifs.smb.DialectVersion;
 import org.codelibs.jcifs.smb.config.PropertyConfiguration;
 import org.codelibs.jcifs.smb.context.BaseContext;
 import org.codelibs.jcifs.smb.impl.NtlmPasswordAuthenticator;
@@ -36,6 +38,12 @@ public final class SmbServerFixture {
 
     /** The default SMB port; a URL only carries the port when it differs from this. */
     private static final int DEFAULT_SMB_PORT = 445;
+
+    /** The lowest dialect the suite ever negotiates when nothing is pinned. */
+    private static final DialectVersion DEFAULT_FLOOR = DialectVersion.SMB202;
+
+    /** The highest dialect the suite ever negotiates when nothing is pinned. */
+    private static final DialectVersion DEFAULT_CEILING = DialectVersion.SMB311;
 
     private final SmbBackend backend;
     private final String host;
@@ -224,9 +232,56 @@ public final class SmbServerFixture {
      */
     public Properties defaultProperties() {
         final Properties props = new Properties();
-        props.setProperty("jcifs.client.minVersion", "SMB202");
-        props.setProperty("jcifs.client.maxVersion", "SMB311");
+        final DialectVersion pinned = pinnedDialect();
+        if (pinned == null) {
+            props.setProperty("jcifs.client.minVersion", DEFAULT_FLOOR.name());
+            props.setProperty("jcifs.client.maxVersion", DEFAULT_CEILING.name());
+        } else {
+            props.setProperty("jcifs.client.minVersion", pinned.name());
+            props.setProperty("jcifs.client.maxVersion", pinned.name());
+        }
         return props;
+    }
+
+    /**
+     * The single dialect this run is pinned to, if any.
+     *
+     * <p>
+     * {@code JCIFS_IT_DIALECT=SMB300} (or {@code -Djcifs.it.dialect=SMB300})
+     * pins both ends of the negotiation range so that the whole suite runs on
+     * one dialect. CI uses it as a matrix axis: the same tests are proved
+     * against SMB 2.0.2, 2.1, 3.0 and 3.1.1 rather than only against whatever
+     * the two ends happen to agree on.
+     * </p>
+     *
+     * @return the pinned dialect, or null when the run negotiates freely
+     */
+    public DialectVersion pinnedDialect() {
+        final String configured = SmbServerResolver.setting("DIALECT", null);
+        if (configured == null || configured.isBlank()) {
+            return null;
+        }
+        final DialectVersion dialect;
+        try {
+            dialect = DialectVersion.valueOf(configured.trim().toUpperCase(Locale.ROOT));
+        } catch (final IllegalArgumentException e) {
+            throw new IllegalStateException("JCIFS_IT_DIALECT must name a DialectVersion, was: " + configured, e);
+        }
+        if (!dialect.isSMB2()) {
+            throw new IllegalStateException("JCIFS_IT_DIALECT must name an SMB2 or SMB3 dialect, was: " + configured
+                    + ". The integration tests do not run over SMB1; the unit tests cover it instead.");
+        }
+        return dialect;
+    }
+
+    /**
+     * The highest dialect this run is able to negotiate.
+     *
+     * @return the pinned dialect when one is set, otherwise the suite ceiling
+     */
+    public DialectVersion dialectCeiling() {
+        final DialectVersion pinned = pinnedDialect();
+        return pinned == null ? DEFAULT_CEILING : pinned;
     }
 
     @Override

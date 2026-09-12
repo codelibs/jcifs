@@ -17,9 +17,11 @@ package org.codelibs.jcifs.smb.it;
 
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Properties;
 import java.util.UUID;
 
 import org.codelibs.jcifs.smb.CIFSContext;
+import org.codelibs.jcifs.smb.DialectVersion;
 import org.codelibs.jcifs.smb.impl.SmbFile;
 import org.codelibs.jcifs.smb.it.env.SmbServerExtension;
 import org.codelibs.jcifs.smb.it.env.SmbServerFixture;
@@ -46,6 +48,27 @@ public abstract class AbstractSmbIT {
      */
     protected static SmbServerFixture server() {
         return SmbServerResolver.resolve();
+    }
+
+    /**
+     * Builds a context pinned to exactly one dialect.
+     *
+     * <p>
+     * Both ends of the negotiation range are set, so the connection either
+     * speaks this dialect or fails. That is what makes a dialect matrix test
+     * meaningful: without the floor the client would silently negotiate
+     * something higher and every row of the matrix would test the same thing.
+     * </p>
+     *
+     * @param dialect the dialect to negotiate
+     * @return a context that can only speak that dialect
+     * @throws Exception if the context cannot be built
+     */
+    protected CIFSContext contextFor(final DialectVersion dialect) throws Exception {
+        final Properties props = new Properties();
+        props.setProperty("jcifs.client.minVersion", dialect.name());
+        props.setProperty("jcifs.client.maxVersion", dialect.name());
+        return server().context(props);
     }
 
     /**

@@ -97,7 +97,10 @@ final class SmbItPreflight {
      * there and accepted on the plain share.
      */
     private static void checkEncryptedShareRejectsUnencryptedClients(final SmbServerFixture fixture) throws Exception {
+        // Both ends of the range, not just the ceiling: JCIFS_IT_DIALECT pins the
+        // floor too, and leaving it in place would invert the range.
         final Properties noEncryption = new Properties();
+        noEncryption.setProperty("jcifs.client.minVersion", "SMB202");
         noEncryption.setProperty("jcifs.client.maxVersion", "SMB202");
         final CIFSContext context = fixture.context(noEncryption);
 
@@ -128,6 +131,7 @@ final class SmbItPreflight {
      */
     private static void checkDialectSettingIsHonoured(final SmbServerFixture fixture) throws Exception {
         final Properties pinned = new Properties();
+        pinned.setProperty("jcifs.client.minVersion", "SMB210");
         pinned.setProperty("jcifs.client.maxVersion", "SMB210");
         try (SmbFile file = new SmbFile(fixture.url(fixture.share()), fixture.context(pinned))) {
             final DialectVersion negotiated = SmbNegotiationProbe.negotiatedDialect(file);

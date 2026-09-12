@@ -65,3 +65,68 @@ jobs:
         path: |
           target/failsafe-reports/
           target/surefire-reports/
+
+  # The job above lets the client and the server negotiate freely, which on this
+  # runner always settles on SMB 3.1.1. That leaves the dialects below it
+  # unproven: a request whose layout changed between 3.0 and 3.1.1, or a feature
+  # that quietly needs 3.x, would pass there and fail for a user pinned lower.
+  # JCIFS_IT_DIALECT pins both ends of the negotiation range so the same tests
+  # run again on one dialect at a time. Pull requests prove SMB 3.0, which is
+  # where encryption and secure negotiation first appear; the nightly run walks
+  # the whole range. Tests of features a pinned dialect cannot reach skip
+  # themselves through @RequiresDialect and are listed in the job summary.
+  windows-smb-dialects:
+
+    runs-on: windows-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        dialect: ${{ github.event_name == 'pull_request' && fromJSON('["SMB300"]') || fromJSON('["SMB202","SMB210","SMB300","SMB302","SMB311"]') }}
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: maven
+
+    - name: Configure the SMB server
+      shell: pwsh
+      run: |
+        ./build_helpers/win-setup.ps1
+        "JCIFS_IT_HOST=$env:COMPUTERNAME" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+    - name: Run the integration tests on ${{ matrix.dialect }}
+      # The unit tests do not talk to a server, so there is nothing for a dialect
+      # pin to change about them; skipping them keeps each matrix leg to the part
+      # that is actually being varied.
+      #
+      # bash, not the default PowerShell: PowerShell splits an unquoted
+      # -Dsurefire.failIfNoSpecifiedTests=false at the dot and Maven then reads
+      # ".failIfNoSpecifiedTests=false" as a lifecycle phase.
+      shell: bash
+      run: mvn -B verify -Dtest=NoSuchUnitTest -Dsurefire.failIfNoSpecifiedTests=false
+      env:
+        JCIFS_IT_BACKEND: windows
+        JCIFS_IT_USER: testuser1
+        # Throwaway credential, only valid on this runner for the life of the job.
+        JCIFS_IT_PASSWORD: 'Public-Fixture-Not-A-Secret-1!'
+        JCIFS_IT_REQUIRED: "true"
+        JCIFS_IT_DIALECT: ${{ matrix.dialect }}
+
+    - name: Check that the integration tests actually ran
+      if: always()
+      shell: bash
+      run: python build_helpers/check-it-reports.py
+
+    - name: Upload test reports
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-smb-test-reports-${{ matrix.dialect }}
+        path: |
+          target/failsafe-reports/

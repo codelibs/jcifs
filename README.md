@@ -334,6 +334,7 @@ This is what the nightly `SMB integration tests (Windows)` workflow does on a
 | `JCIFS_IT_USER`, `JCIFS_IT_PASSWORD`, `JCIFS_IT_DOMAIN` | credentials |
 | `JCIFS_IT_SHARE`, `JCIFS_IT_SHARE_ENCRYPTED`, `JCIFS_IT_DFS_ROOT` | share names |
 | `JCIFS_IT_REQUIRED` | `true` makes a missing environment a failure instead of a skip |
+| `JCIFS_IT_DIALECT` | pins the whole suite to one SMB2/SMB3 dialect, e.g. `SMB300` |
 
 Before any test runs, a preflight check confirms the server is configured the way
 the tests assume - in particular that the encrypted share really does reject a
@@ -344,6 +345,30 @@ Some tests skip by design: DFS referrals name a host but no port, so they only
 run when the server answers on 445 (a development machine that is already sharing
 files will skip them), and tests marked `@RequiresBackend` run on one backend
 only.
+
+### Choosing a dialect
+
+Left alone, the client and the server negotiate the highest dialect they both
+support, which for either backend means SMB 3.1.1 - so everything below it goes
+unproven. `JCIFS_IT_DIALECT` pins both ends of the negotiation range and runs the
+same tests on one dialect:
+
+```bash
+JCIFS_IT_DIALECT=SMB300 mvn verify
+```
+
+CI does this as a matrix: SMB 3.0 on every pull request and the full range
+nightly against Windows, and SMB 2.0.2 through 3.1.1 against Samba. A test of a
+feature the pinned dialect cannot reach - encryption below SMB 3.0, say - carries
+`@RequiresDialect` and skips rather than failing; the skips are listed in the job
+summary.
+
+Individual tests can sweep dialects on their own with `@DialectMatrix` (SMB 2.0.2
+through 3.1.1) or `@Smb3Matrix` (SMB 3.0, 3.0.2 and 3.1.1), taking the dialect as
+a parameter and building their context with `contextFor(dialect)`.
+
+SMB1 is deliberately out of scope here: the integration suite negotiates SMB2 and
+above, and SMB1 is covered by the unit tests, which run on every build.
 
 ## ⚡ Performance Considerations
 
