@@ -3,6 +3,7 @@ package org.codelibs.jcifs.smb.impl;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -19,6 +20,7 @@ import java.util.List;
 
 import org.codelibs.jcifs.smb.CIFSException;
 import org.codelibs.jcifs.smb.ResourceNameFilter;
+import org.codelibs.jcifs.smb.RuntimeCIFSException;
 import org.codelibs.jcifs.smb.SmbResource;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -318,7 +320,7 @@ class DirFileEntryEnumIteratorBaseTest {
     }
 
     @Test
-    @DisplayName("advance() path handles fetchMore throwing CIFSException in next()")
+    @DisplayName("fetchMore throwing CIFSException is reported from next(), not turned into the end of the listing")
     void advanceFetchMoreThrows() throws Exception {
         // Arrange
         stubAcquireReturnsSelf();
@@ -330,10 +332,33 @@ class DirFileEntryEnumIteratorBaseTest {
         // Act
         assertTrue(it.hasNext());
         assertEquals("one", it.next().getName()); // consume initial
-        // Next call should handle CIFSException and close iterator
-        assertFalse(it.hasNext()); // After error, hasNext should return false
 
-        // Assert
+        // Assert: a caller that keeps iterating is told the listing failed, rather than seeing it end
+        RuntimeCIFSException ex = assertThrows(RuntimeCIFSException.class, it::next);
+        assertNotNull(ex.getCause(), "the failure that ended the listing should be the cause");
+        assertEquals("fetchMore fail", ex.getCause().getMessage());
+        assertFalse(it.hasNext(), "the iterator is closed once it has failed");
+        verify(tree, times(1)).release();
+    }
+
+    @Test
+    @DisplayName("an iterator that has reported a failure stays exhausted instead of going back to the server")
+    void failureIsReportedOnceAndLeavesTheIteratorExhausted() throws Exception {
+        // Arrange
+        stubAcquireReturnsSelf();
+        FileEntry initial = entry("one");
+        TestIterator it =
+                TestIterator.create(tree, parent, "*", null, 0, initial, List.of(new FileEntry[][] { new FileEntry[0] })).throwOnFetch();
+
+        // Act
+        assertEquals("one", it.next().getName()); // consume initial
+        assertThrows(RuntimeCIFSException.class, it::next);
+
+        // Assert: a caller that catches the failure inside its loop must not be handed a closed iterator that
+        // claims to have more, nor may a further call reach the server over a connection that is gone
+        assertFalse(it.hasNext(), "the iterator is exhausted once the failure has been reported");
+        assertNull(it.next(), "a further next() must not go back to the server on a closed iterator");
+        assertFalse(it.hasNext(), "the iterator stays exhausted");
         verify(tree, times(1)).release();
     }
 

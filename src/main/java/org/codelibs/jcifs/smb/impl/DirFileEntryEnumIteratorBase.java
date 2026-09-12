@@ -20,6 +20,7 @@ package org.codelibs.jcifs.smb.impl;
 import org.codelibs.jcifs.smb.CIFSException;
 import org.codelibs.jcifs.smb.CloseableIterator;
 import org.codelibs.jcifs.smb.ResourceNameFilter;
+import org.codelibs.jcifs.smb.RuntimeCIFSException;
 import org.codelibs.jcifs.smb.SmbResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,6 +43,12 @@ public abstract class DirFileEntryEnumIteratorBase implements CloseableIterator<
     private final String wildcard;
     private final int searchAttributes;
     private FileEntry next;
+
+    /**
+     * Set when a page could not be fetched, and reported once every entry that was read has been handed out.
+     */
+    private RuntimeCIFSException failure;
+
     private int ridx;
 
     private boolean closed = false;
@@ -224,34 +231,60 @@ public abstract class DirFileEntryEnumIteratorBase implements CloseableIterator<
      */
     @Override
     public boolean hasNext() {
-        return this.next != null;
+        return this.next != null || this.failure != null;
     }
 
     /**
      * {@inheritDoc}
      *
+     * @throws RuntimeCIFSException if the listing could not be read to its end, so that one cut short by a failure is
+     *             not mistaken for the end of the directory. Every entry that was read is returned before it is thrown.
      * @see java.util.Iterator#next()
      */
     @Override
     public FileEntry next() {
+        if (this.next == null) {
+            // Nothing left to hand out. Report the failure that ended the listing, once, and stay exhausted: asking
+            // for another page here would go back to a server over a connection that is already gone.
+            final RuntimeCIFSException pending = this.failure;
+            if (pending != null) {
+                this.failure = null;
+                throw pending;
+            }
+            return null;
+        }
         final FileEntry n = this.next;
         try {
             final FileEntry ne = advance(false);
             if (ne == null) {
-                doClose();
+                closeAtEndOfListing();
                 return n;
             }
             this.next = ne;
         } catch (final CIFSException e) {
-            log.warn("Enumeration failed", e);
+            // Ending the listing here would look exactly like a directory holding only the entries read so far. The
+            // failure waits until this entry, which was read before it happened, has been handed out.
             this.next = null;
+            this.failure = new RuntimeCIFSException("Enumeration failed", e);
             try {
                 doClose();
             } catch (final CIFSException e1) {
-                log.debug("Failed to close enum", e);
+                this.failure.addSuppressed(e1);
             }
         }
         return n;
+    }
+
+    /**
+     * Closes at the natural end of a listing, where failing to close costs the caller nothing: every entry has been
+     * read, so there is no incomplete result to report.
+     */
+    private void closeAtEndOfListing() {
+        try {
+            doClose();
+        } catch (final CIFSException e) {
+            log.debug("Failed to close enum", e);
+        }
     }
 
     /**

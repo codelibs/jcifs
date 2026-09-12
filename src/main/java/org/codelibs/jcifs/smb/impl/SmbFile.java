@@ -33,6 +33,7 @@ import org.codelibs.jcifs.smb.CloseableIterator;
 import org.codelibs.jcifs.smb.Configuration;
 import org.codelibs.jcifs.smb.ResourceFilter;
 import org.codelibs.jcifs.smb.ResourceNameFilter;
+import org.codelibs.jcifs.smb.RuntimeCIFSException;
 import org.codelibs.jcifs.smb.SmbConstants;
 import org.codelibs.jcifs.smb.SmbFileHandle;
 import org.codelibs.jcifs.smb.SmbResource;
@@ -1477,6 +1478,14 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
                      * listFiles may generate undesirable "cannot find
                      * the file specified".
                      */
+                    log.debug("delete", se);
+                    if (se.getNtStatus() != NtStatus.NT_STATUS_NO_SUCH_FILE) {
+                        throw se;
+                    }
+                } catch (final RuntimeCIFSException e) {
+                    // A listing that failed part way through leaves entries behind, so the delete has not succeeded.
+                    // The same tolerance as above applies, since the failure can arrive either way.
+                    final SmbException se = SmbEnumerationUtil.wrapEnumerationFailure(e);
                     log.debug("delete", se);
                     if (se.getNtStatus() != NtStatus.NT_STATUS_NO_SUCH_FILE) {
                         throw se;

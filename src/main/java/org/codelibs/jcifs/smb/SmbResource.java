@@ -652,6 +652,12 @@ public interface SmbResource extends AutoCloseable {
     /**
      * Fetch all children
      *
+     * <p>
+     * A listing is fetched a page at a time. If a page cannot be fetched, the returned iterator hands out the entries
+     * it has already read and then throws {@link RuntimeCIFSException} from {@link java.util.Iterator#next()}, rather
+     * than ending as though the directory held only those entries.
+     * </p>
+     *
      * @return an iterator over the child resources
      * @throws CIFSException if an error occurs accessing the resource
      */
@@ -669,6 +675,9 @@ public interface SmbResource extends AutoCloseable {
      * it will match that many characters <i>or less</i>.
      * <p>
      * Wildcard expressions will not filter workgroup names or server names.
+     * <p>
+     * As with {@link #children()}, the returned iterator throws {@link RuntimeCIFSException} from
+     * {@link java.util.Iterator#next()} if the listing cannot be read to its end.
      *
      * @param wildcard the wildcard pattern to match
      * @return an iterator over the child resources
@@ -678,6 +687,11 @@ public interface SmbResource extends AutoCloseable {
 
     /**
      * Fetch children matching the given filter.
+     *
+     * <p>
+     * As with {@link #children()}, the returned iterator throws {@link RuntimeCIFSException} from
+     * {@link java.util.Iterator#next()} if the listing cannot be read to its end.
+     * </p>
      *
      * @param filter
      *            filter acting on file names
@@ -690,6 +704,11 @@ public interface SmbResource extends AutoCloseable {
 
     /**
      * Fetch children matching the given filter.
+     *
+     * <p>
+     * As with {@link #children()}, the returned iterator throws {@link RuntimeCIFSException} from
+     * {@link java.util.Iterator#next()} if the listing cannot be read to its end.
+     * </p>
      *
      * @param filter
      *            filter acting on SmbResource instances

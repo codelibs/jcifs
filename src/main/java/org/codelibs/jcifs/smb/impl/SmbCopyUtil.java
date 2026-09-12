@@ -22,6 +22,7 @@ import java.net.MalformedURLException;
 
 import org.codelibs.jcifs.smb.CIFSException;
 import org.codelibs.jcifs.smb.CloseableIterator;
+import org.codelibs.jcifs.smb.RuntimeCIFSException;
 import org.codelibs.jcifs.smb.SmbConstants;
 import org.codelibs.jcifs.smb.SmbResource;
 import org.codelibs.jcifs.smb.internal.fscc.FileBasicInfo;
@@ -375,6 +376,9 @@ public final class SmbCopyUtil {
             }
         } catch (final MalformedURLException mue) {
             throw new SmbException(src.getURL().toString(), mue);
+        } catch (final RuntimeCIFSException e) {
+            // A listing that failed part way through means the copy is missing entries, so it has not succeeded
+            throw SmbEnumerationUtil.wrapEnumerationFailure(e);
         }
     }
 

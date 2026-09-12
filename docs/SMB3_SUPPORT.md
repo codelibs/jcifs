@@ -141,7 +141,7 @@ errors.
 | CREATE, CLOSE | Supported | Compound (related) requests are used for open+query+close sequences. |
 | READ, WRITE | Supported | See [Throughput](#throughput-and-credits) for size limits. |
 | QUERY_INFO, SET_INFO | Supported | |
-| QUERY_DIRECTORY | Supported | Streaming enumeration. |
+| QUERY_DIRECTORY | Supported | Streaming enumeration. A listing cut short by a failure reports it rather than ending quietly — see [Reconnecting after a dropped connection](#reconnecting-after-a-dropped-connection). |
 | CHANGE_NOTIFY | Supported | Via `SmbResource.watch(int, boolean)`. Blocking. |
 | IOCTL | Partial | Reachable FSCTLs: DFS_GET_REFERRALS, PIPE_PEEK, PIPE_TRANSCEIVE, SRV_COPYCHUNK(_WRITE), SRV_REQUEST_RESUME_KEY, VALIDATE_NEGOTIATE_INFO. The other defined FSCTL constants are never sent. |
 | Async / `STATUS_PENDING` interim responses | Supported | |
@@ -206,6 +206,13 @@ the create flags the stream was constructed with, so on SMB2 it came back with
 `FILE_OVERWRITE_IF`: the file was truncated and the stream wrote on at its old
 offset, leaving everything before that offset as a hole. Nothing reported it —
 the write returned normally and `close()` succeeded.
+
+A directory listing has nothing to reopen: the open handle *is* the enumeration.
+Since 3.0.4 a listing that cannot be continued reports that. `children()` hands
+out the entries it had already read and then throws `RuntimeCIFSException` from
+the iterator; `list()`, `listFiles()`, `SmbFile.delete()` and `copyTo()` throw
+`SmbException`. Before that the listing simply ended, which a caller cannot tell
+apart from a directory that holds only those entries.
 
 ## Other features
 
