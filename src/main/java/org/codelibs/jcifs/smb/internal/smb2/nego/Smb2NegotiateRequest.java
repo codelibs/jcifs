@@ -60,6 +60,13 @@ public class Smb2NegotiateRequest extends ServerMessageBlock2Request<Smb2Negotia
             this.capabilities |= Smb2Constants.SMB2_GLOBAL_CAP_DFS;
         }
 
+        // Multi-credit - and with it the read and write sizes above 64 KiB that a server offers - arrived in SMB 2.1.
+        // A server only grants it to a client that asked (MS-SMB2 3.3.5.4), so without this the transfer sizes stay
+        // at 64 KiB however much the server was willing to give.
+        if (config.getMaximumVersion() != null && config.getMaximumVersion().atLeast(DialectVersion.SMB210)) {
+            this.capabilities |= Smb2Constants.SMB2_GLOBAL_CAP_LARGE_MTU;
+        }
+
         if (config.isEncryptionEnabled() && config.getMaximumVersion() != null
                 && config.getMaximumVersion().atLeast(DialectVersion.SMB300)) {
             this.capabilities |= Smb2Constants.SMB2_GLOBAL_CAP_ENCRYPTION;

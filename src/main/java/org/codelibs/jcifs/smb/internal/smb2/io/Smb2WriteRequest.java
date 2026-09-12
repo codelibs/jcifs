@@ -128,6 +128,21 @@ public class Smb2WriteRequest extends ServerMessageBlock2Request<Smb2WriteRespon
     /**
      * {@inheritDoc}
      *
+     * <p>
+     * A write carries the payload out and gets only a short acknowledgement back, so what it sends is what it is
+     * charged for.
+     * </p>
+     *
+     * @see org.codelibs.jcifs.smb.util.transport.Request#getCreditCost()
+     */
+    @Override
+    public int getCreditCost() {
+        return creditChargeForPayload(this.dataLength);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
      * @see org.codelibs.jcifs.smb.internal.smb2.ServerMessageBlock2#writeBytesWireFormat(byte[], int)
      */
     @Override

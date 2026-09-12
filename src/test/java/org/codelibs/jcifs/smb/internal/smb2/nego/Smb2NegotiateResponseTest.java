@@ -783,6 +783,59 @@ class Smb2NegotiateResponseTest {
         assertTrue(response.getTransactionBufferSize() <= 65536);
     }
 
+    @Test
+    @DisplayName("Should take the transfer ceiling once multi-credit is negotiated")
+    void testTransferCeilingGovernsWhenLargeMtuNegotiated() throws Exception {
+        // Given a server offering 8 MiB - which Samba does - and both ends having agreed on multi-credit
+        setResponseAsReceived(response);
+        setPrivateField(response, "dialectRevision", 0x0300);
+        setPrivateField(response, "maxReadSize", 8388608);
+        setPrivateField(response, "maxWriteSize", 8388608);
+        setPrivateField(response, "maxTransactSize", 8388608);
+        setPrivateField(response, "capabilities", Smb2Constants.SMB2_GLOBAL_CAP_LARGE_MTU);
+
+        when(mockConfig.getTransactionBufferSize()).thenReturn(65023);
+        when(mockConfig.getReceiveBufferSize()).thenReturn(65535);
+        when(mockConfig.getSendBufferSize()).thenReturn(65535);
+        when(mockConfig.getMaximumTransferSize()).thenReturn(1048576);
+        when(mockRequest.getCapabilities()).thenReturn(Smb2Constants.SMB2_GLOBAL_CAP_LARGE_MTU);
+
+        // When
+        final boolean valid = response.isValid(mockContext, mockRequest);
+
+        // Then the SMB1 buffer sizes no longer hold the transfer down
+        assertTrue(valid);
+        assertEquals(1048576, response.getReceiveBufferSize(), "the read size is the transfer ceiling, not rcv_buf_size");
+        assertEquals(1048576, response.getSendBufferSize(), "the write size is the transfer ceiling, not snd_buf_size");
+    }
+
+    @Test
+    @DisplayName("Should stay at 64 KiB when multi-credit was not negotiated")
+    void testTransferStaysAt64KiBWithoutLargeMtu() throws Exception {
+        // Samba offers 8 MiB whether or not the client asked for multi-credit, so the offer alone must not be
+        // enough to raise the transfer size - without the capability there are no credits to pay for it.
+        setResponseAsReceived(response);
+        setPrivateField(response, "dialectRevision", 0x0202);
+        setPrivateField(response, "maxReadSize", 8388608);
+        setPrivateField(response, "maxWriteSize", 8388608);
+        setPrivateField(response, "maxTransactSize", 8388608);
+        setPrivateField(response, "capabilities", 0);
+
+        when(mockConfig.getTransactionBufferSize()).thenReturn(65023);
+        when(mockConfig.getReceiveBufferSize()).thenReturn(65535);
+        when(mockConfig.getSendBufferSize()).thenReturn(65535);
+        when(mockConfig.getMaximumTransferSize()).thenReturn(1048576);
+        when(mockRequest.getCapabilities()).thenReturn(0);
+
+        // When
+        final boolean valid = response.isValid(mockContext, mockRequest);
+
+        // Then
+        assertTrue(valid);
+        assertEquals(64936, response.getReceiveBufferSize(), "without multi-credit the read size is what it always was");
+        assertEquals(64904, response.getSendBufferSize(), "without multi-credit the write size is what it always was");
+    }
+
     @ParameterizedTest
     @DisplayName("Should validate different dialect versions")
     @MethodSource("provideDialectVersions")

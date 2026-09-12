@@ -193,6 +193,7 @@ public final class PropertyConfiguration extends BaseConfiguration implements Co
         this.winsServer = Config.getInetAddressArray(p, "jcifs.netbios.wins", ",", new InetAddress[0]);
 
         this.transactionBufferSize = Config.getInt(p, "jcifs.client.transaction_buf_size", 0xFFFF) - 512;
+        this.maximumTransferSize = Config.getInt(p, "jcifs.client.maxTransferSize", SmbConstants.DEFAULT_MAX_TRANSFER_SIZE);
         this.bufferCacheSize = Config.getInt(p, "jcifs.maxBuffers", 16);
 
         this.smbListSize = Config.getInt(p, "jcifs.client.listSize", 65435);

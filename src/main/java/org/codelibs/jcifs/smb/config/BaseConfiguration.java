@@ -186,8 +186,17 @@ public class BaseConfiguration implements Configuration {
     protected InetAddress broadcastAddress;
     /** Order of name resolution methods to use */
     protected List<ResolverType> resolverOrder;
-    /** Maximum buffer size for IO operations */
-    protected int maximumBufferSize = 0x10000;
+    /**
+     * Maximum buffer size for IO operations.
+     *
+     * <p>
+     * This bounds a whole message, so it has to leave room for the largest transfer plus its headers: a write of
+     * {@link #maximumTransferSize} bytes encodes to that plus 112.
+     * </p>
+     */
+    protected int maximumBufferSize = 0x101000;
+    /** Largest payload a single SMB2 read or write may carry */
+    protected int maximumTransferSize = SmbConstants.DEFAULT_MAX_TRANSFER_SIZE;
     /** Maximum buffer size for SMB transaction operations */
     protected int transactionBufferSize = 0xFFFF - 512;
     /** Number of buffers to keep in cache */
@@ -570,6 +579,11 @@ public class BaseConfiguration implements Configuration {
     @Override
     public int getMaximumBufferSize() {
         return this.maximumBufferSize;
+    }
+
+    @Override
+    public int getMaximumTransferSize() {
+        return this.maximumTransferSize;
     }
 
     @Override
