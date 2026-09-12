@@ -29,7 +29,6 @@ import org.codelibs.jcifs.smb.SmbConstants;
 import org.codelibs.jcifs.smb.SmbResource;
 import org.codelibs.jcifs.smb.impl.SmbFile;
 import org.codelibs.jcifs.smb.it.env.DialectMatrix;
-import org.codelibs.jcifs.smb.it.env.RequiresDefaultPort;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -50,14 +49,28 @@ import org.junit.jupiter.api.Test;
  * SMB2 floor this suite negotiates.
  * </p>
  */
-@RequiresDefaultPort
 class ShareEnumerationIT extends AbstractSmbIT {
+
+    /**
+     * The server on its own, carrying the port when it is not the default. A
+     * server addressed on another port is exactly the case that catches a code
+     * path building its own connection from the host name alone.
+     *
+     * @return an SMB URL naming the server and no share
+     */
+    private String serverUrl() {
+        final StringBuilder sb = new StringBuilder("smb://").append(server().host());
+        if (server().port() != 445) {
+            sb.append(':').append(server().port());
+        }
+        return sb.append('/').toString();
+    }
 
     /**
      * @return the share names the server reports, lower-cased and without the trailing separator
      */
     private Set<String> enumerateShares(final CIFSContext context) throws Exception {
-        try (SmbFile root = new SmbFile("smb://" + server().host() + "/", context)) {
+        try (SmbFile root = new SmbFile(serverUrl(), context)) {
             return Arrays.stream(root.listFiles())
                     .map(SmbResource::getName)
                     .map(name -> name.endsWith("/") ? name.substring(0, name.length() - 1) : name)
@@ -87,8 +100,8 @@ class ShareEnumerationIT extends AbstractSmbIT {
     @Test
     @DisplayName("a server URL reports itself as a server")
     void serverUrlReportsItselfAsAServer() throws Exception {
-        try (SmbFile root = new SmbFile("smb://" + server().host() + "/", server().context())) {
-            assertEquals(SmbConstants.TYPE_SERVER, root.getType(), "a host-only URL should report TYPE_SERVER");
+        try (SmbFile root = new SmbFile(serverUrl(), server().context())) {
+            assertEquals(SmbConstants.TYPE_SERVER, root.getType(), "a share-less URL should report TYPE_SERVER");
         }
     }
 }
