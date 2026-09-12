@@ -80,6 +80,34 @@ public class SmbRandomAccessFileTest {
     }
 
     @Test
+    @DisplayName("Read-only mode does not ask the server to create the file")
+    void readOnlyMode_doesNotRequestCreate() throws Exception {
+        SmbFile file = mock(SmbFile.class);
+        SmbTreeHandleImpl tree = mock(SmbTreeHandleImpl.class);
+        Configuration cfg = mock(Configuration.class);
+        SmbFileHandleImpl fh = mock(SmbFileHandleImpl.class);
+
+        when(file.ensureTreeConnected()).thenReturn(tree);
+        when(tree.getConfig()).thenReturn(cfg);
+        when(tree.getReceiveBufferSize()).thenReturn(1024);
+        when(tree.getSendBufferSize()).thenReturn(1024);
+        when(tree.isSMB2()).thenReturn(true);
+        when(file.openUnshared(anyInt(), anyInt(), anyInt(), anyInt(), anyInt())).thenReturn(fh);
+        when(fh.acquire()).thenReturn(fh);
+        when(fh.isValid()).thenReturn(true);
+
+        new SmbRandomAccessFile(file, "r", SmbConstants.DEFAULT_SHARING, false);
+
+        // O_CREAT becomes FILE_OPEN_IF, which opens a missing file by creating an empty one. Asking for that while
+        // opening read-only is wrong on the first open, and wrong again on every reopen after a dropped connection,
+        // because the flags are replayed as they were.
+        ArgumentCaptor<Integer> flags = ArgumentCaptor.forClass(Integer.class);
+        verify(file).openUnshared(flags.capture(), anyInt(), anyInt(), anyInt(), anyInt());
+        assertEquals(0, flags.getValue() & SmbConstants.O_CREAT,
+                "read-only open must not carry O_CREAT, or a missing file comes back as an empty one");
+    }
+
+    @Test
     @DisplayName("open(): acquires and releases handle (no I/O)")
     void open_acquiresAndReleasesHandle() throws Exception {
         SmbRandomAccessFile raf = spy(newInstance("rw", false, true, false));

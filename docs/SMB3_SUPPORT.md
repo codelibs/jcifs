@@ -145,7 +145,7 @@ errors.
 | CHANGE_NOTIFY | Supported | Via `SmbResource.watch(int, boolean)`. Blocking. |
 | IOCTL | Partial | Reachable FSCTLs: DFS_GET_REFERRALS, PIPE_PEEK, PIPE_TRANSCEIVE, SRV_COPYCHUNK(_WRITE), SRV_REQUEST_RESUME_KEY, VALIDATE_NEGOTIATE_INFO. The other defined FSCTL constants are never sent. |
 | Async / `STATUS_PENDING` interim responses | Supported | |
-| FLUSH | Not functional | `Smb2FlushRequest` exists and is referenced nowhere. `SmbFileOutputStream` does not override `flush()`, so flushing is a silent no-op and no durability barrier is sent. |
+| FLUSH | Supported | Sent by `SmbFileOutputStream.flush()`. Every write goes out as it is made, so there is no local buffer to push; what `flush()` contributes is the durability barrier, asking the server to commit what it has taken. Before 3.0.4 the method was the inherited no-op from `OutputStream`, so a caller that flushed and saw no error had no way to tell the data was still only in the server's cache. Nothing is sent on SMB1, which has no equivalent request. |
 | LOCK | Not functional | `Smb2LockRequest` exists and is referenced nowhere. **There is no byte-range locking API** on `SmbResource`, `SmbFile` or `SmbRandomAccessFile`. |
 | ECHO | Not functional | `Smb2EchoRequest` exists and is referenced nowhere. There is no keepalive or liveness probe. |
 | CANCEL | Not functional | `Smb2CancelRequest` is fully built and wired into the send path, but `createCancel()` is never invoked. Nothing can cancel an in-flight request — including a pending CHANGE_NOTIFY, as `SmbWatchHandle`'s own javadoc notes. |
@@ -217,6 +217,20 @@ out the entries it had already read and then throws `RuntimeCIFSException` from
 the iterator; `list()`, `listFiles()`, `SmbFile.delete()` and `copyTo()` throw
 `SmbException`. Before that the listing simply ended, which a caller cannot tell
 apart from a directory that holds only those entries.
+
+SMB1 workgroup and server browsing is a separate code path that had the same
+problem, and since 3.0.4 it keeps the same contract: a browse cut short by a
+failure hands out the servers already read and then throws
+`RuntimeCIFSException`, instead of ending as though the workgroup held only
+those.
+
+A random access file no longer brings back a file that has gone. It is opened
+once and reopened by path whenever its handle is no longer valid, replaying the
+flags exactly as they stand — and `O_CREAT` was among them, for mode `r` as well
+as `rw`. So before 3.0.4 a reopen after a dropped connection resurrected a file
+deleted in the meantime as an empty one, and `openRandomAccess("r")` on a path
+that never existed created it rather than failing. Mode `rw` still creates the
+file on its first open, as it always has.
 
 ## Other features
 
