@@ -29,7 +29,6 @@ import org.codelibs.jcifs.smb.config.PropertyConfiguration;
 import org.codelibs.jcifs.smb.internal.smb1.ServerMessageBlock;
 import org.codelibs.jcifs.smb.internal.util.SMBUtil;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -166,10 +165,6 @@ public class SmbComOpenAndXResponseTest {
     }
 
     @Test
-    @Disabled("#109: SmbComOpenAndXResponse keeps FileDataSize in an int and getSize() just widens it, so the "
-            + "sign bit of the 32 bit unsigned wire field becomes the sign of the returned long: a file of "
-            + "0xFFFFFFFF bytes is reported as a size of -1 instead of 4294967295. getSize() should mask with "
-            + "0xFFFFFFFFL the way SMBUtil.readUTime does for the time field two offsets earlier.")
     @DisplayName("A data size that fills the unsigned 32 bit field is reported as a positive size")
     public void shouldDecodeAnUnsignedDataSize() {
         final byte[] buffer = parameterWords(0, 1, 0, 0L, 0xFFFF_FFFFL, 0, 0, 0, 0, 0L);

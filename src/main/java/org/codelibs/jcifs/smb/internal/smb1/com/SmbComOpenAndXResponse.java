@@ -78,7 +78,9 @@ public class SmbComOpenAndXResponse extends AndXServerMessageBlock implements Sm
      */
     @Override
     public long getSize() {
-        return getDataSize();
+        // FileDataSize is unsigned on the wire but held in an int, so widening it
+        // unmasked would report any file of 2 GiB or more as a negative size.
+        return getDataSize() & 0xFFFFFFFFL;
     }
 
     /**

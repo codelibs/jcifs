@@ -32,7 +32,6 @@ import org.codelibs.jcifs.smb.internal.smb1.SMB1SigningDigest;
 import org.codelibs.jcifs.smb.internal.smb1.ServerMessageBlock;
 import org.codelibs.jcifs.smb.internal.util.SMBUtil;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -202,12 +201,6 @@ public class SmbComWriteAndXTest {
     }
 
     @Test
-    @Disabled("#110: SmbComWriteAndX.writeParameterWordsWireFormat computes dataOffset as 'dstIndex - headerStart + 26', "
-            + "which is already relative to headerStart, and then pads it with '(dataOffset - headerStart) % 4', "
-            + "subtracting headerStart a second time. The pad should be 'dataOffset % 4'. The bug is latent because "
-            + "the transport only ever encodes at headerStart 0 or 4, both multiples of four, so the extra subtraction "
-            + "cancels out; at any other header position the announced DataOffset is not four byte aligned. With "
-            + "headerStart 2 and dstIndex 2 the class announces DataOffset 26 where 28 is required.")
     @DisplayName("The announced data offset is four byte aligned at any header position")
     public void shouldAlignTheDataOffsetAtAnyHeaderPosition() {
         final PositionedWriteAndX request = new PositionedWriteAndX(this.config, 1, 0L, 0, new byte[4], 0, 4);

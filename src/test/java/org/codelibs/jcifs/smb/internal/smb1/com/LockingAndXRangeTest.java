@@ -19,7 +19,6 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.codelibs.jcifs.smb.internal.util.SMBUtil;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -79,10 +78,6 @@ public class LockingAndXRangeTest {
     }
 
     @Test
-    @Disabled("#108: LockingAndXRange.decode combines the halves of a 64-bit offset with 'boHigh << 32' where boHigh is an "
-            + "int. A shift distance of 32 on an int is masked to zero, so the high half is not shifted at all and is "
-            + "OR'd straight into the low half: an offset of 0x0000000A12345678 decodes as 0x1234567A. The length is "
-            + "combined the same way. Both need the high half widened to long before the shift.")
     @DisplayName("A large-file range survives a round trip of an offset that needs more than 32 bits")
     public void shouldRoundTripLargeOffset() throws Exception {
         final long offset = 0x0000000A_12345678L;
