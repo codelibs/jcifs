@@ -100,6 +100,11 @@ public class Smb2NegotiateRequest extends ServerMessageBlock2Request<Smb2Negotia
                 // so, which is why offering AES-256 first does not by itself mean AES-256 is negotiated.
                 negoContexts.add(new EncryptionNegotiateContext(config, config.getEncryptionCiphers()));
             }
+
+            // Unconditionally, unlike the encryption context: signing is negotiated whether or not encryption is
+            // in use, and a signed but unencrypted session is the ordinary case. Without this context a 3.1.1
+            // server signs with AES-128-CMAC (MS-SMB2 3.3.5.4), which is what the client did before.
+            negoContexts.add(new SigningNegotiateContext(config, config.getSigningAlgorithms()));
         }
 
         this.negotiateContexts = negoContexts.toArray(new NegotiateContextRequest[negoContexts.size()]);

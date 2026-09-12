@@ -79,6 +79,31 @@ public final class SmbNegotiationProbe {
      * @return the selected cipher identifier, or -1 if none was negotiated
      * @throws CIFSException if the connection cannot be established
      */
+    /**
+     * Returns the signing algorithm the server selected, or {@code -1} if the response carried no
+     * SIGNING_CAPABILITIES context.
+     *
+     * <p>
+     * As with the cipher, this is the only observable that distinguishes a successful negotiation from a silent
+     * fallback: a signed session works identically under AES-CMAC and AES-GMAC, so asserting that traffic flows
+     * says nothing about which algorithm protected it.
+     * </p>
+     *
+     * @param file any connected resource on the tree of interest
+     * @return the selected signing algorithm identifier, or -1 if none was negotiated
+     * @throws CIFSException if the connection cannot be established
+     */
+    public static int negotiatedSigningAlgorithm(final SmbFile file) throws CIFSException {
+        try (SmbTreeHandleImpl tree = (SmbTreeHandleImpl) file.getTreeHandle();
+                SmbSessionImpl session = tree.getSession();
+                SmbTransportImpl transport = session.getTransport()) {
+            if (transport.getNegotiateResponse() instanceof final Smb2NegotiateResponse resp) {
+                return resp.getSelectedSigningAlgorithm();
+            }
+            return -1;
+        }
+    }
+
     public static int negotiatedCipher(final SmbFile file) throws CIFSException {
         try (SmbTreeHandleImpl tree = (SmbTreeHandleImpl) file.getTreeHandle();
                 SmbSessionImpl session = tree.getSession();

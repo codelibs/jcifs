@@ -32,6 +32,7 @@ import org.codelibs.jcifs.smb.DialectVersion;
 import org.codelibs.jcifs.smb.impl.SmbFile;
 import org.codelibs.jcifs.smb.impl.SmbNegotiationProbe;
 import org.codelibs.jcifs.smb.it.env.DialectMatrix;
+import org.codelibs.jcifs.smb.it.env.RequiresDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -96,6 +97,55 @@ class SigningIT extends AbstractSmbIT {
         try (InputStream in = file.getInputStream()) {
             assertArrayEquals(contents.getBytes(StandardCharsets.UTF_8), in.readAllBytes());
         }
+    }
+
+    @Test
+    @RequiresDialect(DialectVersion.SMB311)
+    @DisplayName("each offered SMB 3.1.1 signing algorithm is the one the server negotiates, GMAC included")
+    void eachSigningAlgorithmIsNegotiatedAndCarriesData() throws Exception {
+        // One algorithm per connection, for the same reason the cipher arms do it: a server chooses from the
+        // client's offer by its own preference - this fixture lists AES-128-GMAC first - so an arm offering
+        // several would say nothing about which one the client can actually drive. Offering exactly one makes the
+        // server's selection the assertion.
+        for (final String algorithm : new String[] { "AES-CMAC", "AES-GMAC" }) {
+            final Properties props = new Properties();
+            props.setProperty("jcifs.client.signingAlgorithms", algorithm);
+            props.setProperty("jcifs.client.signingEnforced", "true");
+            props.setProperty("jcifs.client.minVersion", DialectVersion.SMB311.name());
+            props.setProperty("jcifs.client.maxVersion", DialectVersion.SMB311.name());
+            final CIFSContext context = server().context(props);
+
+            this.workDir = createWorkDir(context, server().share());
+
+            assertEquals(expectedSigningAlgorithmId(algorithm), SmbNegotiationProbe.negotiatedSigningAlgorithm(this.workDir),
+                    "the server should have selected " + algorithm + ", the only algorithm offered");
+
+            // Several messages, because the GMAC nonce is derived per message from the message id: signing one
+            // message proves the algorithm was accepted, but not that a session can keep using it.
+            final String contents = "signed with " + algorithm;
+            for (int i = 0; i < 3; i++) {
+                final SmbFile file = writeFile(this.workDir, "algo-" + i + ".txt", contents + " #" + i);
+                try (InputStream in = file.getInputStream()) {
+                    assertArrayEquals((contents + " #" + i).getBytes(StandardCharsets.UTF_8), in.readAllBytes(),
+                            "payload " + i + " came back different under " + algorithm);
+                }
+            }
+
+            // Enumeration, which keeps issuing signed requests against one handle.
+            assertEquals(3, this.workDir.list().length, "every signed file should be listed under " + algorithm);
+
+            deleteQuietly(this.workDir);
+            this.workDir = null;
+        }
+    }
+
+    private static int expectedSigningAlgorithmId(final String algorithm) {
+        return switch (algorithm) {
+        case "HMAC-SHA256" -> 0x0;
+        case "AES-CMAC" -> 0x1;
+        case "AES-GMAC" -> 0x2;
+        default -> throw new IllegalArgumentException(algorithm);
+        };
     }
 
     @DialectMatrix

@@ -619,8 +619,10 @@ final class SmbSessionImpl implements SmbSessionInternal {
                         if (this.preauthIntegrityHash != null && log.isDebugEnabled()) {
                             log.debug("Final preauth integrity hash " + Hexdump.toHexString(this.preauthIntegrityHash));
                         }
-                        Smb2SigningDigest dgst =
-                                new Smb2SigningDigest(this.sessionKey, negoResp.getDialectRevision(), this.preauthIntegrityHash);
+                        // The signing algorithm comes from the SIGNING_CAPABILITIES context the server echoed, or
+                        // is unset when it returned none - in which case AES-128-CMAC applies, exactly as before.
+                        Smb2SigningDigest dgst = new Smb2SigningDigest(this.sessionKey, negoResp.getDialectRevision(),
+                                this.preauthIntegrityHash, negoResp.getSelectedSigningAlgorithm());
                         // verify the server signature here, this is not done automatically as we don't set the
                         // request digest
                         // Ignore a missing signature for SMB < 3.0, as

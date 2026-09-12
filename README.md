@@ -18,7 +18,8 @@ JCIFS is a comprehensive, pure Java implementation of the CIFS/SMB networking pr
   - **AES-256-GCM and AES-256-CCM encryption** (SMB 3.1.1), offered by default and
     selectable with `jcifs.client.encryptionCiphers`
   - **Pre-Authentication Integrity** (SMB 3.1.1)
-  - **AES-CMAC signing** for data integrity
+  - **AES-CMAC signing** for data integrity, with **AES-GMAC** negotiable on
+    SMB 3.1.1 via `jcifs.client.signingAlgorithms`
   - **Automatic protocol negotiation**
   - **Transparent encryption** when required by the server, per session or per share (opt-in, see below)
 

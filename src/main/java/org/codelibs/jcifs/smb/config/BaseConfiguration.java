@@ -37,6 +37,7 @@ import org.codelibs.jcifs.smb.DialectVersion;
 import org.codelibs.jcifs.smb.ResolverType;
 import org.codelibs.jcifs.smb.SmbConstants;
 import org.codelibs.jcifs.smb.internal.smb2.nego.EncryptionNegotiateContext;
+import org.codelibs.jcifs.smb.internal.smb2.nego.SigningNegotiateContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,6 +80,8 @@ public class BaseConfiguration implements Configuration {
     protected boolean encryptionEnabled = false;
     /** SMB 3.1.1 encryption ciphers to offer, in preference order */
     protected int[] encryptionCiphers;
+    /** SMB 3.1.1 signing algorithms to offer, in preference order */
+    protected int[] signingAlgorithms;
     /** Whether to use NT status codes instead of DOS error codes */
     protected boolean useNtStatus = true;
     /** Whether to use extended security negotiation */
@@ -575,6 +578,11 @@ public class BaseConfiguration implements Configuration {
     }
 
     @Override
+    public int[] getSigningAlgorithms() {
+        return this.signingAlgorithms;
+    }
+
+    @Override
     public boolean isForceExtendedSecurity() {
         return this.forceExtendedSecurity;
     }
@@ -822,6 +830,60 @@ public class BaseConfiguration implements Configuration {
         }
     }
 
+    /**
+     * Initializes the SMB 3.1.1 signing algorithms to offer.
+     *
+     * <p>
+     * An unrecognised name is fatal here for the same reason it is for the ciphers: dropping an entry would leave
+     * the client offering something other than what was configured, and this setting decides what protects
+     * message integrity.
+     * </p>
+     *
+     * @param prop comma-separated list of algorithm names, in preference order, or null for the default
+     * @throws CIFSException if an algorithm name is not recognised
+     */
+    protected void initSigningAlgorithms(final String prop) throws CIFSException {
+        if (prop == null || prop.trim().isEmpty()) {
+            // AES-CMAC leads deliberately: it is what this client has always signed with, and a server chooses
+            // from the offer by its own preference, so leading with it keeps the negotiated algorithm unchanged
+            // for every existing deployment while making GMAC available to anyone who asks for it.
+            this.signingAlgorithms = new int[] { SigningNegotiateContext.SIGNING_ALGO_AES128_CMAC,
+                    SigningNegotiateContext.SIGNING_ALGO_AES128_GMAC, SigningNegotiateContext.SIGNING_ALGO_HMAC_SHA256 };
+            return;
+        }
+
+        final List<Integer> algos = new ArrayList<>();
+        final StringTokenizer st = new StringTokenizer(prop, ",");
+        while (st.hasMoreTokens()) {
+            final String name = st.nextToken().trim();
+            if (name.isEmpty()) {
+                continue;
+            }
+            algos.add(signingAlgorithmByName(name));
+        }
+        if (algos.isEmpty()) {
+            throw new CIFSException("No signing algorithm named in jcifs.client.signingAlgorithms: " + prop);
+        }
+
+        this.signingAlgorithms = new int[algos.size()];
+        for (int i = 0; i < algos.size(); i++) {
+            this.signingAlgorithms[i] = algos.get(i);
+        }
+    }
+
+    private static int signingAlgorithmByName(final String name) throws CIFSException {
+        if (name.equalsIgnoreCase("HMAC-SHA256")) {
+            return SigningNegotiateContext.SIGNING_ALGO_HMAC_SHA256;
+        }
+        if (name.equalsIgnoreCase("AES-CMAC")) {
+            return SigningNegotiateContext.SIGNING_ALGO_AES128_CMAC;
+        }
+        if (name.equalsIgnoreCase("AES-GMAC")) {
+            return SigningNegotiateContext.SIGNING_ALGO_AES128_GMAC;
+        }
+        throw new CIFSException("Unknown signing algorithm '" + name + "'; expected one of HMAC-SHA256, AES-CMAC, AES-GMAC");
+    }
+
     private static int cipherByName(final String name) throws CIFSException {
         if (name.equalsIgnoreCase("AES-128-CCM")) {
             return EncryptionNegotiateContext.CIPHER_AES128_CCM;
@@ -920,6 +982,10 @@ public class BaseConfiguration implements Configuration {
             // Every configuration needs this, not just the property-driven one: an unset array would reach
             // EncryptionNegotiateContext as null the first time a caller enables encryption.
             initEncryptionCiphers(null);
+        }
+
+        if (this.signingAlgorithms == null) {
+            initSigningAlgorithms(null);
         }
 
         if (this.disallowCompound == null) {

@@ -61,6 +61,10 @@ class Smb2NegotiateRequestTest {
         when(mockConfig.isEncryptionEnabled()).thenReturn(true);
         when(mockConfig.getEncryptionCiphers())
                 .thenReturn(new int[] { EncryptionNegotiateContext.CIPHER_AES128_GCM, EncryptionNegotiateContext.CIPHER_AES128_CCM });
+        // A real configuration can never return null here - initDefaults fills it in - so leaving the mock
+        // unstubbed would have these tests exercising a state production cannot reach.
+        when(mockConfig.getSigningAlgorithms()).thenReturn(new int[] { SigningNegotiateContext.SIGNING_ALGO_AES128_CMAC,
+                SigningNegotiateContext.SIGNING_ALGO_AES128_GMAC, SigningNegotiateContext.SIGNING_ALGO_HMAC_SHA256 });
         when(mockConfig.getMinimumVersion()).thenReturn(DialectVersion.SMB202);
         when(mockConfig.getMaximumVersion()).thenReturn(DialectVersion.SMB311);
         when(mockConfig.getMachineId()).thenReturn(testMachineId);
@@ -210,6 +214,42 @@ class Smb2NegotiateRequestTest {
     }
 
     @Test
+    @DisplayName("the offered signing algorithms are the configured ones, in the configured order")
+    void testOfferedSigningAlgorithmsComeFromConfiguration() {
+        when(mockConfig.getMaximumVersion()).thenReturn(DialectVersion.SMB311);
+        when(mockConfig.getSigningAlgorithms()).thenReturn(
+                new int[] { SigningNegotiateContext.SIGNING_ALGO_AES128_GMAC, SigningNegotiateContext.SIGNING_ALGO_AES128_CMAC });
+
+        request = new Smb2NegotiateRequest(mockConfig, 0);
+
+        // The SIGNING_CAPABILITIES context is sent on 3.1.1 whether or not encryption is enabled - signing and
+        // encryption are separate concerns, and a signed but unencrypted session is the common case.
+        SigningNegotiateContext signing = null;
+        for (final NegotiateContextRequest ctx : request.getNegotiateContexts()) {
+            if (ctx instanceof SigningNegotiateContext) {
+                signing = (SigningNegotiateContext) ctx;
+            }
+        }
+        assertNotNull(signing, "a SIGNING_CAPABILITIES context must be offered on SMB 3.1.1");
+        assertArrayEquals(new int[] { SigningNegotiateContext.SIGNING_ALGO_AES128_GMAC, SigningNegotiateContext.SIGNING_ALGO_AES128_CMAC },
+                signing.getSigningAlgos(), "the context must offer exactly the configured algorithms, in order");
+    }
+
+    @Test
+    @DisplayName("no signing context is offered below SMB 3.1.1")
+    void testNoSigningContextBelowSmb311() {
+        // Only 3.1.1 negotiates a signing algorithm in a context; 3.0 and 3.0.2 always use AES-CMAC and 2.x
+        // HMAC-SHA256, so offering the context there would be sending a context the dialect has no place for.
+        when(mockConfig.getMaximumVersion()).thenReturn(DialectVersion.SMB302);
+
+        request = new Smb2NegotiateRequest(mockConfig, 0);
+
+        for (final NegotiateContextRequest ctx : request.getNegotiateContexts()) {
+            assertFalse(ctx instanceof SigningNegotiateContext, "no signing context below SMB 3.1.1");
+        }
+    }
+
+    @Test
     @DisplayName("the offered ciphers are the configured ones, in the configured order")
     void testOfferedCiphersComeFromConfiguration() {
         when(mockConfig.getMaximumVersion()).thenReturn(DialectVersion.SMB311);
@@ -240,7 +280,7 @@ class Smb2NegotiateRequestTest {
         // Then
         NegotiateContextRequest[] contexts = request.getNegotiateContexts();
         assertNotNull(contexts);
-        assertEquals(2, contexts.length);
+        assertEquals(3, contexts.length);
 
         // Verify preauth context
         assertTrue(contexts[0] instanceof PreauthIntegrityNegotiateContext);
@@ -250,12 +290,16 @@ class Smb2NegotiateRequestTest {
         assertTrue(contexts[1] instanceof EncryptionNegotiateContext);
         assertEquals(EncryptionNegotiateContext.NEGO_CTX_ENC_TYPE, contexts[1].getContextType());
 
+        // Verify signing context
+        assertTrue(contexts[2] instanceof SigningNegotiateContext);
+        assertEquals(SigningNegotiateContext.NEGO_CTX_SIGNING_TYPE, contexts[2].getContextType());
+
         // Verify salt was generated
         assertArrayEquals(testSalt, request.getPreauthSalt());
     }
 
     @Test
-    @DisplayName("Should add only preauth context when encryption disabled for SMB 3.1.1")
+    @DisplayName("Should omit only the encryption context when encryption disabled for SMB 3.1.1")
     void testNegotiateContextsSmb311NoEncryption() {
         // Given
         when(mockConfig.getMaximumVersion()).thenReturn(DialectVersion.SMB311);
@@ -267,10 +311,21 @@ class Smb2NegotiateRequestTest {
         // Then
         NegotiateContextRequest[] contexts = request.getNegotiateContexts();
         assertNotNull(contexts);
-        assertEquals(1, contexts.length);
 
-        // Only preauth context
-        assertTrue(contexts[0] instanceof PreauthIntegrityNegotiateContext);
+        // Asserted by type rather than by count. The point of this test is that disabling encryption drops the
+        // encryption context and nothing else - signing is negotiated independently, and a signed but unencrypted
+        // session is the ordinary case - and a bare length never actually checked which context was missing.
+        boolean preauth = false, encryption = false, signing = false;
+        for (final NegotiateContextRequest ctx : contexts) {
+            preauth |= ctx instanceof PreauthIntegrityNegotiateContext;
+            encryption |= ctx instanceof EncryptionNegotiateContext;
+            signing |= ctx instanceof SigningNegotiateContext;
+        }
+        assertTrue(preauth, "the preauth integrity context is required on SMB 3.1.1");
+        assertFalse(encryption, "no encryption context when encryption is disabled");
+        assertTrue(signing, "the signing context is offered whether or not encryption is enabled");
+        assertEquals(2, contexts.length, "preauth and signing, and nothing else");
+
         assertArrayEquals(testSalt, request.getPreauthSalt());
     }
 
@@ -412,8 +467,8 @@ class Smb2NegotiateRequestTest {
         // Then
         assertTrue(bytesWritten > 36);
 
-        // Verify negotiate context count
-        assertEquals(2, SMBUtil.readInt2(buffer, 32));
+        // Verify negotiate context count: preauth, encryption and signing
+        assertEquals(3, SMBUtil.readInt2(buffer, 32));
 
         // Verify negotiate context offset is set
         int contextOffset = SMBUtil.readInt4(buffer, 28);
@@ -532,7 +587,7 @@ class Smb2NegotiateRequestTest {
         assertEquals(16, request.getClientGuid().length);
         assertEquals(32, request.getPreauthSalt().length);
         assertTrue(request.getDialects().length > 0);
-        assertEquals(2, request.getNegotiateContexts().length);
+        assertEquals(3, request.getNegotiateContexts().length);
     }
 
     @Test

@@ -53,12 +53,12 @@ out-of-range dialect fails the connection.
 | Feature | Status | Notes |
 | --- | --- | --- |
 | Signing, HMAC-SHA256 (SMB 2.x) | Supported | |
-| Signing, AES-128-CMAC (SMB 3.x) | Supported | Via Bouncy Castle. |
+| Signing, AES-128-CMAC (SMB 3.x) | Supported | Via Bouncy Castle. The default on every SMB3 dialect, and the only option below 3.1.1. |
 | Inbound signature verification | Supported | Fail-closed: an unsigned response where a digest is in force also counts as a failure. Skipped for `STATUS_PENDING` interim responses, and for encrypted messages, which the AEAD tag authenticates instead (MS-SMB2 3.1.4.1). |
 | Pre-auth integrity, SHA-512 (SMB 3.1.1) | Supported | Chained over NEGOTIATE and every non-final SESSION_SETUP and fed into signing-key derivation, so tampering surfaces as a signature failure. Skipped for anonymous sessions. |
 | Secure negotiate (`FSCTL_VALIDATE_NEGOTIATE_INFO`) | Supported | Sent on tree connect for signed SMB 2.1–3.0.2 sessions. Security mode, capabilities, dialect and server GUID are compared, and a mismatch disconnects the transport. Not used on 3.1.1, which relies on pre-auth integrity. Knob: `jcifs.client.requireSecureNegotiate`, default `true`. |
 | Authentication: NTLMSSP, Kerberos, SPNEGO | Supported | |
-| AES-128-GMAC signing (SMB 3.1.1, optional) | Not implemented | No `SIGNING_CAPABILITIES` negotiate context either. |
+| AES-128-GMAC signing (SMB 3.1.1) | Supported | Negotiated in a `SIGNING_CAPABILITIES` context, and offered after AES-CMAC by default so the algorithm an existing deployment negotiates does not change — see `jcifs.client.signingAlgorithms`. The nonce is built per message from the MessageId plus a direction bit (MS-SMB2 3.1.4.1), so unlike CMAC the MAC is re-initialised for every message. A server that returns no context signs with AES-CMAC, as before. |
 
 ### `jcifs.client.signingPreferred` does not enable SMB2 signing
 
@@ -127,7 +127,7 @@ the fix in #92.
 | `NETNAME_NEGOTIATE_CONTEXT_ID` (0x5) | Not implemented |
 | `TRANSPORT_CAPABILITIES` (0x6) | Not implemented |
 | `RDMA_TRANSFORM_CAPABILITIES` (0x7) | Not implemented |
-| `SIGNING_CAPABILITIES` (0x8) | Not implemented |
+| `SIGNING_CAPABILITIES` (0x8) | Supported, HMAC-SHA256, AES-CMAC and AES-GMAC. Sent on every SMB 3.1.1 negotiation, whether or not encryption is enabled. A selection the client did not offer fails the connection. |
 
 Unknown context types received from a server are ignored rather than treated as
 errors.
@@ -325,6 +325,7 @@ file on its first open, as it always has.
 | `jcifs.client.ipcSigningEnforced` | `true` | Require signing on IPC$. |
 | `jcifs.client.requireSecureNegotiate` | `true` | Validate the negotiate exchange on tree connect. |
 | `jcifs.client.encryptionEnabled` | `false` | Opt in to SMB3 encryption — see [Encryption](#encryption). |
+| `jcifs.client.signingAlgorithms` | `AES-CMAC, AES-GMAC, HMAC-SHA256` | The SMB 3.1.1 signing algorithms to offer, in preference order. An unrecognised name fails configuration rather than being ignored. AES-CMAC leads because it is what this client has always signed with, and the server chooses from the offered list by its own preference — so the negotiated algorithm is unchanged unless this property is. Offering only `AES-GMAC` requires it. No effect below SMB 3.1.1, which does not negotiate a signing algorithm. |
 | `jcifs.client.encryptionCiphers` | `AES-128-GCM, AES-128-CCM, AES-256-GCM, AES-256-CCM` | The SMB 3.1.1 ciphers to offer, in preference order. An unrecognised name fails configuration rather than being ignored. Note that the server chooses one from the offered list and may apply its own preference when doing so, so listing AES-256 first does not make AES-256 the negotiated cipher; offering only the AES-256 ciphers does require them. No effect below SMB 3.1.1, which does not negotiate a cipher. |
 | `jcifs.client.maxTransferSize` | `1048576` | Largest payload a single SMB2 read or write may carry. The negotiated size is the smaller of this and the server's offer. Has no effect below SMB 2.1, which cannot carry more than 64 KiB in one request. |
 | `jcifs.client.transaction_buf_size` | `65535` | Drives the transact size, and the read and write ceilings on SMB 2.0.2 and SMB1. 512 bytes are subtracted from it, giving an effective 65023. |

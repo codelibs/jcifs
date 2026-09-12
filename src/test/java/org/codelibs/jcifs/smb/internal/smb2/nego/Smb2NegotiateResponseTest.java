@@ -678,6 +678,78 @@ class Smb2NegotiateResponseTest {
     }
 
     @Test
+    @DisplayName("a signing context in the response is parsed rather than skipped")
+    void testSigningContextIsCreated() {
+        // Without a case for 0x0008 here, createContext returns null, the decode loop leaves the slot null and
+        // checkNegotiateContexts skips it - so the client would offer algorithms and never learn which one the
+        // server chose. The negotiation would be one-way and silently so.
+        NegotiateContextResponse ctx = Smb2NegotiateResponse.createContext(SigningNegotiateContext.NEGO_CTX_SIGNING_TYPE);
+
+        assertNotNull(ctx, "a SIGNING_CAPABILITIES context must be recognised");
+        assertTrue(ctx instanceof SigningNegotiateContext);
+        assertEquals(SigningNegotiateContext.NEGO_CTX_SIGNING_TYPE, ctx.getContextType());
+    }
+
+    @Test
+    @DisplayName("the server's chosen signing algorithm is recorded")
+    void testSelectedSigningAlgorithmIsRecorded() throws Exception {
+        setResponseAsReceived(response);
+        setPrivateField(response, "dialectRevision", 0x0311);
+        setPrivateField(response, "capabilities", 0);
+
+        when(mockRequest.getCapabilities()).thenReturn(0);
+        when(mockRequest.getNegotiateContexts())
+                .thenReturn(new NegotiateContextRequest[] { createMockPreauthContext(), createMockSigningContext() });
+
+        NegotiateContextResponse[] contexts = new NegotiateContextResponse[] { createValidPreauthResponse(),
+                createValidSigningResponse(SigningNegotiateContext.SIGNING_ALGO_AES128_GMAC) };
+        setPrivateField(response, "negotiateContexts", contexts);
+
+        assertTrue(response.isValid(mockContext, mockRequest), "a response selecting an offered algorithm is valid");
+        assertEquals(SigningNegotiateContext.SIGNING_ALGO_AES128_GMAC, response.getSelectedSigningAlgorithm(),
+                "the algorithm the server chose must be recorded, so signing can use it");
+    }
+
+    @Test
+    @DisplayName("a signing algorithm the client never offered is refused")
+    void testUnofferedSigningAlgorithmIsRefused() throws Exception {
+        setResponseAsReceived(response);
+        setPrivateField(response, "dialectRevision", 0x0311);
+        setPrivateField(response, "capabilities", 0);
+
+        when(mockRequest.getCapabilities()).thenReturn(0);
+        // The client offered CMAC and GMAC only.
+        when(mockRequest.getNegotiateContexts())
+                .thenReturn(new NegotiateContextRequest[] { createMockPreauthContext(), createMockSigningContext() });
+
+        // The server answers with HMAC-SHA256, which was not offered. Accepting that would let a server steer the
+        // client onto an algorithm it deliberately did not ask for - the same reason the cipher selection is
+        // validated against the request rather than taken on trust.
+        NegotiateContextResponse[] contexts = new NegotiateContextResponse[] { createValidPreauthResponse(),
+                createValidSigningResponse(SigningNegotiateContext.SIGNING_ALGO_HMAC_SHA256) };
+        setPrivateField(response, "negotiateContexts", contexts);
+
+        assertFalse(response.isValid(mockContext, mockRequest), "an algorithm outside the offered set must fail validation");
+    }
+
+    @Test
+    @DisplayName("a response with no signing context leaves the algorithm unset")
+    void testAbsentSigningContextLeavesAlgorithmUnset() throws Exception {
+        // A 3.1.1 server that ignores the context signs with AES-128-CMAC (MS-SMB2 3.3.5.4), which is what the
+        // client did before this existed. The unset marker is what lets the digest fall back to it.
+        setResponseAsReceived(response);
+        setPrivateField(response, "dialectRevision", 0x0311);
+        setPrivateField(response, "capabilities", 0);
+
+        when(mockRequest.getCapabilities()).thenReturn(0);
+        when(mockRequest.getNegotiateContexts()).thenReturn(new NegotiateContextRequest[] { createMockPreauthContext() });
+        setPrivateField(response, "negotiateContexts", new NegotiateContextResponse[] { createValidPreauthResponse() });
+
+        assertTrue(response.isValid(mockContext, mockRequest), "a response without a signing context is still valid");
+        assertEquals(-1, response.getSelectedSigningAlgorithm(), "no signing context means no negotiated algorithm");
+    }
+
+    @Test
     @DisplayName("Should fail validation with missing negotiate contexts for SMB 3.1.1")
     void testMissingNegotiateContexts() throws Exception {
         // Given
@@ -1049,6 +1121,27 @@ class Smb2NegotiateResponseTest {
         EncryptionNegotiateContext ctx = new EncryptionNegotiateContext();
         try {
             setPrivateField(ctx, "ciphers", new int[] { EncryptionNegotiateContext.CIPHER_AES128_GCM });
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return ctx;
+    }
+
+    private NegotiateContextRequest createMockSigningContext() {
+        SigningNegotiateContext ctx = new SigningNegotiateContext();
+        try {
+            setPrivateField(ctx, "signingAlgos",
+                    new int[] { SigningNegotiateContext.SIGNING_ALGO_AES128_CMAC, SigningNegotiateContext.SIGNING_ALGO_AES128_GMAC });
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return ctx;
+    }
+
+    private SigningNegotiateContext createValidSigningResponse(final int algo) {
+        SigningNegotiateContext ctx = new SigningNegotiateContext();
+        try {
+            setPrivateField(ctx, "signingAlgos", new int[] { algo });
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

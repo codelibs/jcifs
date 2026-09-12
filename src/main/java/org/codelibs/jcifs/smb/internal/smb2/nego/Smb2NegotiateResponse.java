@@ -66,6 +66,7 @@ public class Smb2NegotiateResponse extends ServerMessageBlock2Response implement
     private boolean supportsEncryption;
     private int selectedCipher = -1;
     private int selectedPreauthHash = -1;
+    private int selectedSigningAlgorithm = -1;
 
     /**
      * Constructs an SMB2 negotiate response with the given configuration.
@@ -128,6 +129,20 @@ public class Smb2NegotiateResponse extends ServerMessageBlock2Response implement
      */
     public int getSelectedPreauthHash() {
         return this.selectedPreauthHash;
+    }
+
+    /**
+     * Gets the signing algorithm selected for SMB 3.1.1.
+     *
+     * <p>
+     * {@code -1} when the server returned no SIGNING_CAPABILITIES context, which a 3.1.1 server is free to do and
+     * which means AES-128-CMAC (MS-SMB2 3.3.5.4) - the algorithm this client used before the context was offered.
+     * </p>
+     *
+     * @return the selectedSigningAlgorithm, or -1 if none was negotiated
+     */
+    public int getSelectedSigningAlgorithm() {
+        return this.selectedSigningAlgorithm;
     }
 
     /**
@@ -321,10 +336,23 @@ public class Smb2NegotiateResponse extends ServerMessageBlock2Response implement
             return false;
         }
 
-        boolean foundPreauth = false, foundEnc = false;
+        boolean foundPreauth = false, foundEnc = false, foundSigning = false;
         for (final NegotiateContextResponse ncr : this.negotiateContexts) {
             if (ncr == null) {
                 continue;
+            }
+            if (!foundSigning && ncr.getContextType() == SigningNegotiateContext.NEGO_CTX_SIGNING_TYPE) {
+                foundSigning = true;
+                final SigningNegotiateContext sign = (SigningNegotiateContext) ncr;
+                if (!checkSigningContext(req, sign)) {
+                    return false;
+                }
+                this.selectedSigningAlgorithm = sign.getSigningAlgos()[0];
+                continue;
+            }
+            if (ncr.getContextType() == SigningNegotiateContext.NEGO_CTX_SIGNING_TYPE) {
+                log.error("Multiple signing negotiate contexts");
+                return false;
             }
             if (!foundEnc && ncr.getContextType() == EncryptionNegotiateContext.NEGO_CTX_ENC_TYPE) {
                 foundEnc = true;
@@ -388,6 +416,44 @@ public class Smb2NegotiateResponse extends ServerMessageBlock2Response implement
         }
         if (!valid) {
             log.error("Server returned invalid hash selection");
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Validates a SIGNING_CAPABILITIES context in the response.
+     *
+     * <p>
+     * An absent context is not an error - a 3.1.1 server may ignore it, and AES-128-CMAC then applies - but a
+     * context naming an algorithm the client did not offer is, for the same reason the cipher selection is checked
+     * against the request: otherwise a server could steer the client onto an algorithm it deliberately excluded.
+     * </p>
+     */
+    private static boolean checkSigningContext(final Smb2NegotiateRequest req, final SigningNegotiateContext sc) {
+        if (sc.getSigningAlgos() == null || sc.getSigningAlgos().length != 1) {
+            log.error("Server returned no signing algorithm selection");
+            return false;
+        }
+
+        SigningNegotiateContext rsc = null;
+        for (final NegotiateContextRequest rnc : req.getNegotiateContexts()) {
+            if (rnc instanceof SigningNegotiateContext) {
+                rsc = (SigningNegotiateContext) rnc;
+            }
+        }
+        if (rsc == null) {
+            return false;
+        }
+
+        boolean valid = false;
+        for (final int algo : rsc.getSigningAlgos()) {
+            if (algo == sc.getSigningAlgos()[0]) {
+                valid = true;
+            }
+        }
+        if (!valid) {
+            log.error("Server returned invalid signing algorithm selection");
             return false;
         }
         return true;
@@ -592,6 +658,8 @@ public class Smb2NegotiateResponse extends ServerMessageBlock2Response implement
             return new EncryptionNegotiateContext();
         case PreauthIntegrityNegotiateContext.NEGO_CTX_PREAUTH_TYPE:
             return new PreauthIntegrityNegotiateContext();
+        case SigningNegotiateContext.NEGO_CTX_SIGNING_TYPE:
+            return new SigningNegotiateContext();
         }
         return null;
     }
