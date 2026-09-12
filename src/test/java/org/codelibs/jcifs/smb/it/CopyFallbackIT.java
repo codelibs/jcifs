@@ -27,6 +27,7 @@ import java.util.Random;
 
 import org.codelibs.jcifs.smb.CIFSContext;
 import org.codelibs.jcifs.smb.DialectVersion;
+import org.codelibs.jcifs.smb.impl.SmbCopyUtilProbe;
 import org.codelibs.jcifs.smb.impl.SmbFile;
 import org.codelibs.jcifs.smb.it.env.DialectMatrix;
 import org.junit.jupiter.api.AfterEach;
@@ -38,12 +39,12 @@ import org.junit.jupiter.api.Test;
  *
  * <p>
  * {@code SmbCopyUtil.copyFile} asks the server to do the copy with
- * FSCTL_SRV_COPYCHUNK only when source and destination sit on the same tree;
- * otherwise it streams the bytes through the client. Every copy test in the
- * suite used one share, so the streaming half had never run. The chunk limits
- * the client starts with - a megabyte per chunk and sixteen megabytes per
- * request - also meant that a one-megabyte fixture never exercised more than a
- * single chunk.
+ * FSCTL_SRV_COPYCHUNK when both ends are reached through the same session,
+ * which covers two shares on one server as well as one share; otherwise it
+ * streams the bytes through the client, as it also does over SMB1 and when a
+ * server declines to do the copy itself. The chunk limits the client starts
+ * with - a megabyte per chunk and sixteen megabytes per request - mean that a
+ * one-megabyte fixture never exercises more than a single chunk.
  * </p>
  */
 class CopyFallbackIT extends AbstractSmbIT {
@@ -89,7 +90,7 @@ class CopyFallbackIT extends AbstractSmbIT {
     }
 
     @DialectMatrix
-    @DisplayName("a copy across two shares streams through the client and keeps the bytes")
+    @DisplayName("a copy across two shares keeps the bytes")
     void copyAcrossSharesKeepsTheBytes(final DialectVersion dialect) throws Exception {
         final CIFSContext context = contextFor(dialect);
         this.sourceDir = createWorkDir(context, server().share());
@@ -135,8 +136,8 @@ class CopyFallbackIT extends AbstractSmbIT {
 
         source.copyTo(target);
 
-        assertEquals(LARGE_SIZE, target.length(), "the streamed copy should be the same length");
-        assertArrayEquals(digest(source), digest(target), "the streamed copy should be byte for byte identical");
+        assertEquals(LARGE_SIZE, target.length(), "the cross-share copy should be the same length");
+        assertArrayEquals(digest(source), digest(target), "the cross-share copy should be byte for byte identical");
     }
 
     @Test
@@ -199,6 +200,23 @@ class CopyFallbackIT extends AbstractSmbIT {
         try (InputStream in = freshSource.getInputStream()) {
             assertArrayEquals(expected, in.readAllBytes(), "the copy should have left the source's bytes alone on " + dialect);
         }
+    }
+
+    @Test
+    @DisplayName("a copy across two shares on one server is handed to the server")
+    void crossShareCopyIsHandedToTheServer() throws Exception {
+        // The bytes are the same either way, so the tests above pass whichever route a copy takes. This is the
+        // one assertion that fails if cross-share copies go back to being streamed through the client.
+        final CIFSContext context = server().context();
+        this.sourceDir = createWorkDir(context, server().share());
+        this.targetDir = createWorkDir(context, "users");
+
+        final SmbFile source = writeFile(this.sourceDir, "routed.txt", "routed to the server");
+
+        assertTrue(SmbCopyUtilProbe.wouldCopyServerSide(source, new SmbFile(this.sourceDir, "routed-same.txt")),
+                "a copy within one share should be handed to the server");
+        assertTrue(SmbCopyUtilProbe.wouldCopyServerSide(source, new SmbFile(this.targetDir, "routed-cross.txt")),
+                "a copy across two shares on one server should be handed to the server");
     }
 
     @Test

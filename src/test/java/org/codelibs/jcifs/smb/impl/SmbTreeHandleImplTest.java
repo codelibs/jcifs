@@ -285,6 +285,28 @@ class SmbTreeHandleImplTest {
     }
 
     @Test
+    @DisplayName("isSameSession: null, one shared session, and two different ones")
+    void isSameSessionCoversBranches() {
+        // Two shares on one server are separate trees that share a session, and that is what lets a server
+        // resolve a copychunk resume key taken on one of them, so this asks about the session rather than the
+        // tree. isSameTree would answer false for that pair.
+        assertFalse(handle.isSameSession(null));
+
+        // One session, two trees: the connection hands back the same session the fixture gave this handle.
+        SmbTreeConnection sameSessionConn = mock(SmbTreeConnection.class);
+        when(sameSessionConn.acquire()).thenReturn(sameSessionConn);
+        when(sameSessionConn.getSession()).thenReturn(session);
+        assertTrue(handle.isSameSession(new SmbTreeHandleImpl(resourceLoc, sameSessionConn)));
+
+        // A different session is a different server, where a resume key means nothing.
+        SmbTreeConnection otherSessionConn = mock(SmbTreeConnection.class);
+        SmbSessionImpl otherSession = mock(SmbSessionImpl.class);
+        when(otherSessionConn.acquire()).thenReturn(otherSessionConn);
+        when(otherSessionConn.getSession()).thenReturn(otherSession);
+        assertFalse(handle.isSameSession(new SmbTreeHandleImpl(resourceLoc, otherSessionConn)));
+    }
+
+    @Test
     @DisplayName("Buffer sizes and signing flags from negotiate response")
     void bufferSizesAndSigning() throws Exception {
         // Validate buffer sizes and signing flag are read from negotiate response

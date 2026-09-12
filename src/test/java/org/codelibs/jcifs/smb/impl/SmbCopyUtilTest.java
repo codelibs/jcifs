@@ -11,6 +11,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
@@ -210,7 +211,7 @@ public class SmbCopyUtilTest {
 
             when(sh.isSMB2()).thenReturn(true);
             when(dh.isSMB2()).thenReturn(true);
-            when(sh.isSameTree(dh)).thenReturn(true);
+            when(sh.isSameSession(dh)).thenReturn(true);
 
             // Set up source file timestamps
             final long testCreateTime = 1000000L;
@@ -278,7 +279,7 @@ public class SmbCopyUtilTest {
 
             when(sh.isSMB2()).thenReturn(true);
             when(dh.isSMB2()).thenReturn(true);
-            when(sh.isSameTree(dh)).thenReturn(true);
+            when(sh.isSameSession(dh)).thenReturn(true);
 
             // Set up source file timestamps
             final long testCreateTime = 1000000L;
@@ -401,7 +402,7 @@ public class SmbCopyUtilTest {
             when(sh.isSMB2()).thenReturn(false);
             when(dh.isSMB2()).thenReturn(false);
             when(dh.hasCapability(SmbConstants.CAP_NT_SMBS)).thenReturn(false);
-            lenient().when(sh.isSameTree(dh)).thenReturn(false); // Different trees
+            lenient().when(sh.isSameSession(dh)).thenReturn(false); // Different trees
 
             // Set up source file timestamps
             final long testModifiedTime = 2000000L;
@@ -453,10 +454,10 @@ public class SmbCopyUtilTest {
             SmbTreeHandleImpl sh = mock(SmbTreeHandleImpl.class, RETURNS_DEEP_STUBS);
             SmbTreeHandleImpl dh = mock(SmbTreeHandleImpl.class, RETURNS_DEEP_STUBS);
 
-            // Force client-side copy (different trees)
+            // Force client-side copy (different sessions, so a different server)
             when(sh.isSMB2()).thenReturn(true);
             when(dh.isSMB2()).thenReturn(true);
-            when(sh.isSameTree(dh)).thenReturn(false);
+            when(sh.isSameSession(dh)).thenReturn(false);
 
             // Set up source file timestamps
             final long testCreateTime = 1000000L;
@@ -552,7 +553,93 @@ public class SmbCopyUtilTest {
         }
     }
 
-    // --- Server-side copy path (SMB2 + same tree) for zero-length files ---
+    // --- Which route a copy takes ---
+
+    @Test
+    @DisplayName("canServerSideCopy asks about the session, not the tree")
+    void canServerSideCopy_asksAboutTheSession() {
+        SmbTreeHandleImpl sh = mock(SmbTreeHandleImpl.class);
+        SmbTreeHandleImpl dh = mock(SmbTreeHandleImpl.class);
+
+        when(sh.isSMB2()).thenReturn(true);
+        when(dh.isSMB2()).thenReturn(true);
+
+        // Two shares on one server: separate trees, one session, and the server can resolve the resume key.
+        when(sh.isSameSession(dh)).thenReturn(true);
+        assertTrue(SmbCopyUtil.canServerSideCopy(sh, dh));
+
+        // A different session is a different server, where the key means nothing to the destination.
+        when(sh.isSameSession(dh)).thenReturn(false);
+        assertFalse(SmbCopyUtil.canServerSideCopy(sh, dh));
+    }
+
+    @Test
+    @DisplayName("canServerSideCopy refuses SMB1 at either end")
+    void canServerSideCopy_refusesSmb1() {
+        SmbTreeHandleImpl sh = mock(SmbTreeHandleImpl.class);
+        SmbTreeHandleImpl dh = mock(SmbTreeHandleImpl.class);
+
+        // SMB1 has no IOCTL path at all, so neither end may be legacy.
+        when(sh.isSMB2()).thenReturn(false);
+        assertFalse(SmbCopyUtil.canServerSideCopy(sh, dh));
+
+        when(sh.isSMB2()).thenReturn(true);
+        when(dh.isSMB2()).thenReturn(false);
+        assertFalse(SmbCopyUtil.canServerSideCopy(sh, dh));
+    }
+
+    @Test
+    @DisplayName("a server-side copy that fails across two trees falls back to streaming")
+    void copyFile_crossTreeServerSideFailure_fallsBackToStreaming() throws Exception {
+        // The case this defends against: a server that will not resolve a resume key issued on another tree
+        // answers with its own status rather than NOT_SUPPORTED, so the generic handler does not turn it into
+        // SmbUnsupportedOperationException. Such a copy streamed before this route existed and has to keep
+        // working, rather than becoming a failure.
+        SmbFile src = mock(SmbFile.class, RETURNS_DEEP_STUBS);
+        SmbFile dest = mock(SmbFile.class, RETURNS_DEEP_STUBS);
+
+        SmbTreeHandleImpl sh = mock(SmbTreeHandleImpl.class, RETURNS_DEEP_STUBS);
+        SmbTreeHandleImpl dh = mock(SmbTreeHandleImpl.class, RETURNS_DEEP_STUBS);
+
+        when(sh.isSMB2()).thenReturn(true);
+        when(dh.isSMB2()).thenReturn(true);
+        when(sh.isSameSession(dh)).thenReturn(true);
+        when(sh.isSameTree(dh)).thenReturn(false);
+
+        SmbFileHandleImpl sfd = mock(SmbFileHandleImpl.class, RETURNS_DEEP_STUBS);
+        when(sfd.getInitialSize()).thenReturn(1024L);
+        when(src.openUnshared(anyInt(), anyInt(), anyInt(), anyInt(), anyInt())).thenReturn(sfd);
+
+        SmbFileHandleImpl dfd = mock(SmbFileHandleImpl.class, RETURNS_DEEP_STUBS);
+        when(dest.openUnshared(anyInt(), anyInt(), anyInt(), anyInt(), anyInt())).thenReturn(dfd);
+
+        // The resume key request is refused with the status a server uses for a key it cannot resolve.
+        when(sh.send(any())).thenThrow(new SmbException(NtStatus.NT_STATUS_OBJECT_NAME_NOT_FOUND, null));
+
+        WriterThread w = mock(WriterThread.class);
+        lenient().when(w.isReady()).thenReturn(true);
+        lenient().doNothing().when(w).write(any(), anyInt(), any());
+        lenient().doNothing().when(w).checkException();
+
+        try {
+            SmbCopyUtil.copyFile(src, dest, new byte[][] { new byte[1024], new byte[1024] }, 1024, w, sh, dh);
+        } catch (Exception e) {
+            // Streaming itself cannot complete against mocks; what matters is which failure comes out.
+            assertFalse(String.valueOf(e.getMessage()).contains("Server side copy failed"),
+                    "the server-side failure must not be what propagates across two trees");
+        }
+
+        // The destination is opened only by the path that streams: the server-side attempt failed at the resume
+        // key, before it ever opened a target. That makes this the positive signal that the fallback was entered
+        // rather than the copy quietly ending.
+        verify(dest, times(1)).openUnshared(anyInt(), anyInt(), anyInt(), anyInt(), anyInt());
+
+        // The source is opened again by the streaming path, and possibly once more by the input stream, which
+        // reopens by path whenever its handle is not valid - so the exact count is deliberately not pinned.
+        verify(src, atLeast(2)).openUnshared(anyInt(), anyInt(), anyInt(), anyInt(), anyInt());
+    }
+
+    // --- Server-side copy path (SMB2 + same session) for zero-length files ---
 
     @Test
     @DisplayName("copyFile uses server-side copy for zero-length and returns")
@@ -565,7 +652,7 @@ public class SmbCopyUtilTest {
         SmbTreeHandleImpl dh = mock(SmbTreeHandleImpl.class);
         when(sh.isSMB2()).thenReturn(true);
         when(dh.isSMB2()).thenReturn(true);
-        when(sh.isSameTree(dh)).thenReturn(true);
+        when(sh.isSameSession(dh)).thenReturn(true);
 
         // Source open returns a handle that reports size 0
         SmbFileHandleImpl sfd = mock(SmbFileHandleImpl.class);

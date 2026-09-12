@@ -256,6 +256,30 @@ class SmbTreeHandleImpl implements SmbTreeHandleInternal {
         return this.treeConnection.isSame(((SmbTreeHandleImpl) th).treeConnection);
     }
 
+    /**
+     * Checks whether another handle's tree is served by the same session as this one.
+     *
+     * <p>
+     * Two shares on one server are separate trees that share a session, and a server resolves a copychunk resume
+     * key within the session that issued it - so this, rather than {@link #isSameTree(SmbTreeHandle)}, is what
+     * decides whether an open on one tree may be named by an operation sent on another. Handles reached on
+     * different servers, or with different credentials, have different sessions and are rejected, which is also
+     * the right answer once DFS has resolved two paths to different hosts.
+     * </p>
+     *
+     * @param th the tree handle to compare with
+     * @return whether both trees hang off the same session
+     */
+    boolean isSameSession(final SmbTreeHandleImpl th) {
+        if (th == null) {
+            return false;
+        }
+        // getSession() acquires, so both references have to be released again.
+        try (SmbSessionImpl mine = this.treeConnection.getSession(); SmbSessionImpl theirs = th.treeConnection.getSession()) {
+            return mine != null && mine == theirs;
+        }
+    }
+
     @Override
     public int getSendBufferSize() throws SmbException {
         try (SmbSessionImpl session = this.treeConnection.getSession(); SmbTransportImpl transport = session.getTransport()) {
