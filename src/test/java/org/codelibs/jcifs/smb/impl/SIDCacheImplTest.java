@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.doAnswer;
@@ -19,7 +20,9 @@ import org.codelibs.jcifs.smb.CIFSContext;
 import org.codelibs.jcifs.smb.dcerpc.DcerpcHandle;
 import org.codelibs.jcifs.smb.dcerpc.UnicodeString;
 import org.codelibs.jcifs.smb.dcerpc.msrpc.LsaPolicyHandle;
+import org.codelibs.jcifs.smb.dcerpc.msrpc.MsrpcGetMembersInAlias;
 import org.codelibs.jcifs.smb.dcerpc.msrpc.lsarpc;
+import org.codelibs.jcifs.smb.dcerpc.rpc.sid_t;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -27,6 +30,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -255,6 +259,37 @@ class SIDCacheImplTest {
         // Bad offset/length leads to ArrayIndexOutOfBoundsException
         org.codelibs.jcifs.smb.SID[] sids = new org.codelibs.jcifs.smb.SID[] { sid("S-1-1-0") };
         assertThrows(ArrayIndexOutOfBoundsException.class, () -> cache.resolveSids(ctx, "server", sids, 1, 2));
+    }
+
+    @Test
+    @DisplayName("getGroupMemberSids resolves the members on the server it was given, port included")
+    void getGroupMemberSids_resolvesMembersOnTheAddressedServer() throws Exception {
+        CIFSContext ctx = mock(CIFSContext.class);
+        SIDCacheImpl cache = Mockito.spy(new SIDCacheImpl(ctx));
+        DcerpcHandle handle = mock(DcerpcHandle.class);
+        // A pipe handle reports the host alone, without the port it was reached on
+        Mockito.lenient().when(handle.getServer()).thenReturn("srv");
+        Mockito.lenient().when(handle.getTransportContext()).thenReturn(ctx);
+        SID member = sid("S-1-5-21-1-2-3-1000");
+        doAnswer(inv -> {
+            if (inv.getArgument(0) instanceof MsrpcGetMembersInAlias rpc) {
+                rpc.sids.num_sids = 1;
+                rpc.sids.sids = new lsarpc.LsarSidPtr[] { new lsarpc.LsarSidPtr() };
+                rpc.sids.sids[0].sid = member.unwrap(sid_t.class);
+            }
+            return null;
+        }).when(handle).sendrecv(any());
+        Mockito.doNothing().when(cache).resolveSids(any(CIFSContext.class), any(String.class), any(org.codelibs.jcifs.smb.SID[].class));
+
+        try (MockedStatic<DcerpcHandle> handles = Mockito.mockStatic(DcerpcHandle.class)) {
+            handles.when(() -> DcerpcHandle.getHandle("ncacn_np:srv:4455[\\PIPE\\samr]", ctx)).thenReturn(handle);
+
+            SID[] members = cache.getGroupMemberSids(ctx, "srv:4455", sid("S-1-5-21-1-2-3"), 1002, SID.SID_FLAG_RESOLVE_SIDS);
+
+            assertEquals(1, members.length);
+            assertEquals(member.toString(), members[0].toString());
+            verify(cache).resolveSids(same(ctx), eq("srv:4455"), any(org.codelibs.jcifs.smb.SID[].class));
+        }
     }
 
     @Nested
