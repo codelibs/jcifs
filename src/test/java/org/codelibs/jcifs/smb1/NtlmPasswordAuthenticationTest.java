@@ -48,6 +48,25 @@ class NtlmPasswordAuthenticationTest {
         assertEquals("password", auth.getPassword());
     }
 
+    // Test constructor with an empty domain, which is what a caller with no domain configured passes
+    @Test
+    void testConstructorWithEmptyDomain() {
+        NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication("", "user", "password");
+        assertEquals("", auth.getDomain());
+        assertEquals("user", auth.getUsername());
+        assertEquals("user", auth.getName());
+    }
+
+    // Test constructor takes the domain from a DOMAIN\\user or user@domain username when none is given
+    @ParameterizedTest
+    @CsvSource({ "WNET\\alice, WNET, alice", "alice@wnet.example, wnet.example, alice" })
+    void testConstructorWithDomainInUsername(String username, String expectedDomain, String expectedUsername) {
+        NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication("", username, "password");
+        assertEquals(expectedDomain, auth.getDomain());
+        assertEquals(expectedUsername, auth.getUsername());
+        assertEquals(expectedDomain + "\\" + expectedUsername, auth.getName());
+    }
+
     // Test constructor with user info string
     @Test
     void testConstructorWithUserInfo() {
