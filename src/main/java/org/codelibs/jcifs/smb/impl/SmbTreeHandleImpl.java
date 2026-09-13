@@ -309,6 +309,19 @@ class SmbTreeHandleImpl implements SmbTreeHandleInternal {
     }
 
     /**
+     * Whether a message on this connection may arrive compressed.
+     *
+     * @return true when compression was negotiated with the server
+     * @throws SmbException if the connection cannot be established
+     */
+    boolean isCompressionNegotiated() throws SmbException {
+        try (SmbSessionImpl session = this.treeConnection.getSession(); SmbTransportImpl transport = session.getTransport()) {
+            return transport.getNegotiateResponse() instanceof final org.codelibs.jcifs.smb.internal.smb2.nego.Smb2NegotiateResponse resp
+                    && resp.isCompressionNegotiated();
+        }
+    }
+
+    /**
      * @return whether this tree handle uses SMB2
      */
     @Override

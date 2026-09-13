@@ -639,6 +639,16 @@ public class DelegatingConfiguration implements Configuration {
     /**
      * {@inheritDoc}
      *
+     * @see org.codelibs.jcifs.smb.Configuration#isCompressionEnabled()
+     */
+    @Override
+    public boolean isCompressionEnabled() {
+        return this.delegate.isCompressionEnabled();
+    }
+
+    /**
+     * {@inheritDoc}
+     *
      * @see org.codelibs.jcifs.smb.Configuration#getEncryptionCiphers()
      */
     @Override

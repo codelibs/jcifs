@@ -313,6 +313,12 @@ public class SmbFileInputStream extends InputStream {
                         request.setOffset(type == SmbConstants.TYPE_NAMED_PIPE ? 0 : this.fp);
                         request.setReadLength(r);
                         request.setRemainingBytes(len - r);
+                        if (th.isCompressionNegotiated()) {
+                            // Asked for rather than hoped for: without this flag a server decides
+                            // for itself whether to compress the reply, and both of the servers
+                            // this is tested against decide not to.
+                            request.setReadFlags(Smb2ReadRequest.SMB2_READFLAG_REQUEST_COMPRESSED);
+                        }
 
                         try {
                             final Smb2ReadResponse resp = th.send(request, RequestParam.NO_RETRY);

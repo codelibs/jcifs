@@ -846,6 +846,13 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
                 return peekTransformedKey();
             }
 
+            if (this.sbuf[0] == (byte) 0x00 && this.sbuf[4] == (byte) 0xFC && this.sbuf[5] == (byte) 'S' && this.sbuf[6] == (byte) 'M'
+                    && this.sbuf[7] == (byte) 'B') {
+                // SMB2 COMPRESSION_TRANSFORM_HEADER, for the same reason as the encrypted case: the
+                // message id is inside the compressed data.
+                return peekCompressedKey();
+            }
+
             if (this.sbuf[0] == (byte) 0x00 && this.sbuf[1] == (byte) 0x00 && this.sbuf[4] == (byte) 0xFF && this.sbuf[5] == (byte) 'S'
                     && this.sbuf[6] == (byte) 'M' && this.sbuf[7] == (byte) 'B') {
                 break; /* all good (SMB) */
@@ -1252,6 +1259,104 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
         System.arraycopy(plaintext, 0, this.sbuf, 4, Smb2Constants.SMB2_HEADER_LENGTH);
 
         return (long) Encdec.dec_uint64le(this.sbuf, 28);
+    }
+
+    /**
+     * Reads and decompresses a complete SMB2 COMPRESSION_TRANSFORM_HEADER message, then presents the original
+     * message to the normal receive path, exactly as {@link #peekTransformedKey()} does for an encrypted one.
+     *
+     * <p>
+     * Every failure here throws rather than skipping the frame. MS-SMB2 3.2.5.1.1.2 requires the connection to be
+     * dropped when a compressed message cannot be read, and the reason is the stream rather than the message: a
+     * frame that cannot be decompressed cannot be measured either, so there is no way to find where the next one
+     * begins.
+     * </p>
+     *
+     * @return the message id of the decompressed message, or null at end of stream
+     */
+    private Long peekCompressedKey() throws IOException {
+        final int headerSize = org.codelibs.jcifs.smb.internal.smb2.compress.Smb2CompressionTransformHeader.HEADER_SIZE;
+        final int size = Encdec.dec_uint16be(this.sbuf, 2) & 0xFFFF | (this.sbuf[1] & 0xFF) << 16;
+        final int maximumBufferSize = getContext().getConfig().getMaximumBufferSize();
+        if (size < headerSize + Smb2Constants.SMB2_HEADER_LENGTH || size > maximumBufferSize + headerSize) {
+            throw new IOException("Invalid compressed message size: " + size);
+        }
+
+        final byte[] wire = new byte[size];
+        // peekKey has already pulled the NetBIOS header plus the first 32 bytes of the frame.
+        System.arraycopy(this.sbuf, 4, wire, 0, SmbConstants.SMB1_HEADER_LENGTH);
+        final int remaining = size - SmbConstants.SMB1_HEADER_LENGTH;
+        if (readn(this.in, wire, SmbConstants.SMB1_HEADER_LENGTH, remaining) < remaining) {
+            return null;
+        }
+
+        final byte[] original;
+        try {
+            final org.codelibs.jcifs.smb.internal.smb2.compress.Smb2CompressionTransformHeader header =
+                    org.codelibs.jcifs.smb.internal.smb2.compress.Smb2CompressionTransformHeader.decode(wire, 0, size);
+            if (header.isChained()) {
+                throw new IOException("Server sent a chained compressed message, which this client does not negotiate");
+            }
+            if (!isNegotiatedCompression(header.getAlgorithm())) {
+                throw new IOException("Server compressed with algorithm " + header.getAlgorithm() + ", which was not negotiated");
+            }
+            if (header.getOriginalSize() > maximumBufferSize) {
+                throw new IOException("Compressed message claims to expand to " + header.getOriginalSize() + " bytes");
+            }
+
+            // Everything between the header and Offset travels uncompressed, and the
+            // compressed segment follows it. Handing the declared size to the decompressor
+            // is what makes a misreading of either field an error rather than corruption:
+            // it produces the wrong number of bytes and says so.
+            final int dataStart = headerSize + header.getOffset();
+            final byte[] segment = org.codelibs.jcifs.smb.internal.smb2.compress.PlainLz77.decompress(wire, dataStart, size - dataStart,
+                    header.getOriginalSize());
+            original = new byte[header.getOffset() + segment.length];
+            System.arraycopy(wire, headerSize, original, 0, header.getOffset());
+            System.arraycopy(segment, 0, original, header.getOffset(), segment.length);
+        } catch (final SMBProtocolDecodingException e) {
+            throw new IOException("Failed to decompress message", e);
+        }
+
+        if (original.length < Smb2Constants.SMB2_HEADER_LENGTH) {
+            throw new IOException("Decompressed message is shorter than an SMB2 header");
+        }
+        if (original[0] != (byte) 0xFE || original[1] != (byte) 'S' || original[2] != (byte) 'M' || original[3] != (byte) 'B') {
+            throw new IOException("Decompressed message is not an SMB2 message");
+        }
+
+        this.smb2 = true;
+        this.transformPayload = original;
+        this.transformPayloadOffset = Smb2Constants.SMB2_HEADER_LENGTH;
+
+        // Present it exactly as an uncompressed message would have arrived.
+        this.sbuf[0] = 0;
+        this.sbuf[1] = (byte) (original.length >> 16);
+        this.sbuf[2] = (byte) (original.length >> 8);
+        this.sbuf[3] = (byte) original.length;
+        System.arraycopy(original, 0, this.sbuf, 4, Smb2Constants.SMB2_HEADER_LENGTH);
+
+        return (long) Encdec.dec_uint64le(this.sbuf, 28);
+    }
+
+    /**
+     * Whether an inbound message may be compressed with the given algorithm.
+     *
+     * @param algorithm the algorithm named in the compression transform header
+     * @return true only when that algorithm was agreed during negotiation
+     */
+    private boolean isNegotiatedCompression(final int algorithm) throws SmbException {
+        if (getNegotiateResponse() instanceof final Smb2NegotiateResponse resp) {
+            final int[] negotiated = resp.getCompressionAlgorithms();
+            if (negotiated != null) {
+                for (final int candidate : negotiated) {
+                    if (candidate == algorithm) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     /**
