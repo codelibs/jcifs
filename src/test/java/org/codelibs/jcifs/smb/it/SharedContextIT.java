@@ -74,14 +74,8 @@ class SharedContextIT extends AbstractSmbIT {
         final BaseContext shared = new BaseContext(new PropertyConfiguration(server().defaultProperties()));
         // A crawler configured without a domain passes an empty one rather than null.
         final String domain = server().domain() == null ? "" : server().domain();
-        // Open the connection before the threads start. Threads that reach an idle pool together each open a
-        // connection of their own, because the pool does not share one that is still connecting, and Windows
-        // resets such connections under this load. That is a defect of the pool with a test of its own; this test
-        // is about sharing the connection once it exists.
-        assertTrue(
-                new SmbFile(urls.get(0),
-                        shared.withCredentials(new NtlmPasswordAuthenticator(domain, server().user(), server().password()))).exists(),
-                "the first file should be reachable before the threads start");
+        // Nothing is connected before the threads start, as when a crawler starts: they all reach an idle pool
+        // together, and have to end up on one connection rather than each opening its own.
         final ExecutorService executor = Executors.newFixedThreadPool(THREADS);
         try {
             final CountDownLatch start = new CountDownLatch(1);

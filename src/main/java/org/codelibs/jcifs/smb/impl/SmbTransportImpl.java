@@ -222,6 +222,30 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
         return super.isFailed() || s == null || s.isClosed();
     }
 
+    /**
+     * Whether this transport is still to be connected: it was just created, or another caller is connecting it now,
+     * and nothing has failed. {@link #isFailed()} is true for it as well, because it has no socket yet, but nothing
+     * is wrong with it - it simply has nothing negotiated that could be checked.
+     *
+     * @return whether the transport has not connected yet and has not failed
+     */
+    boolean isConnectionPending() {
+        final int st = this.state;
+        return (st == 0 || st == 1) && this.negotiated == null;
+    }
+
+    /**
+     * Whether a caller with this context and signing requirement would have created this transport the same way.
+     *
+     * @param tc the caller's context
+     * @param forceSigning whether the caller enforces signing
+     * @return whether the transport was created from the same configuration with the same signing requirement
+     */
+    boolean wasCreatedFor(final CIFSContext tc, final boolean forceSigning) {
+        return this.transportContext.getConfig() == tc.getConfig()
+                && this.signingEnforced == (forceSigning || tc.getConfig().isSigningEnforced());
+    }
+
     @Override
     public boolean hasCapability(final int cap) throws SmbException {
         return getNegotiateResponse().haveCapabilitiy(cap);

@@ -125,6 +125,21 @@ public class SmbTransportPoolImpl implements SmbTransportPool {
             if (conn.matches(address, port, localAddr, localPort, hostName)
                     && (tc.getConfig().getSessionLimit() == 0 || conn.getNumSessions() < tc.getConfig().getSessionLimit())) {
                 try {
+                    if (conn.isConnectionPending()) {
+                        // A transport that is still to be connected has nothing negotiated for the checks below, and
+                        // skipping it made every caller that arrived while the first one was connecting open a
+                        // connection of its own - one per thread, all from the same client, which Windows resets
+                        // under load. Share it with a caller that would have created it the same way; that caller
+                        // waits for the connect in ensureConnected rather than making another.
+                        if (connectedOnly || !conn.wasCreatedFor(tc, forceSigning)) {
+                            continue;
+                        }
+                        if (log.isTraceEnabled()) {
+                            log.trace("Sharing transport connection that is still being connected " + conn);
+                        }
+                        return conn.acquire();
+                    }
+
                     if (conn.isFailed() || connectedOnly && conn.isDisconnected()) {
                         continue;
                     }
