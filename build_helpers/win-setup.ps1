@@ -36,14 +36,14 @@ foreach ($user in $testUsers) {
 }
 
 Write-Host 'Creating share directories'
-$shareNames = @('share', 'share-encrypted', 'dfs', 'public', 'users', 'testuser1private', 'testuser2private')
+$shareNames = @('share', 'share-encrypted', 'dfs', 'public', 'users', 'testuser1private', 'testuser2private', 'symlinks')
 foreach ($name in $shareNames) {
     New-Item -Path (Join-Path $Root $name) -ItemType Directory -Force | Out-Null
 }
 New-Item -Path $OutsideRoot -ItemType Directory -Force | Out-Null
 
 # Both accounts share the common directories.
-foreach ($name in @('share', 'share-encrypted', 'dfs', 'public', 'users')) {
+foreach ($name in @('share', 'share-encrypted', 'dfs', 'public', 'users', 'symlinks')) {
     icacls (Join-Path $Root $name) /grant 'testuser1:(OI)(CI)F' 'testuser2:(OI)(CI)F' /T /Q | Out-Null
 }
 icacls $OutsideRoot /grant 'testuser1:(OI)(CI)F' 'testuser2:(OI)(CI)F' /T /Q | Out-Null
@@ -59,7 +59,7 @@ foreach ($user in $testUsers) {
 }
 
 Write-Host 'Creating SMB shares'
-$sharedByBoth = @('share', 'dfs', 'public', 'users')
+$sharedByBoth = @('share', 'dfs', 'public', 'users', 'symlinks')
 foreach ($name in $sharedByBoth) {
     if (-not (Get-SmbShare -Name $name -ErrorAction SilentlyContinue)) {
         New-SmbShare -Name $name -Path (Join-Path $Root $name) -FullAccess $testUsers -EncryptData $false | Out-Null
@@ -106,6 +106,41 @@ try {
     }
 } finally {
     Pop-Location
+}
+
+Write-Host 'Creating the fixtures for the link-reporting share'
+$symlinkPath = Join-Path $Root 'symlinks'
+[IO.File]::WriteAllText((Join-Path $symlinkPath 'target.txt'), "target file contents`n")
+New-Item -Path (Join-Path $symlinkPath 'subdir') -ItemType Directory -Force | Out-Null
+[IO.File]::WriteAllText((Join-Path $symlinkPath 'subdir\inside.txt'), "inside subdir`n")
+
+# These are made with mklink from inside the directory so the targets stay
+# relative. New-Item -ItemType SymbolicLink resolves a relative target to an
+# absolute one, and an absolute target names a path in the server's own object
+# namespace (\??\C:\...) that no client can map back to a share - so a link made
+# that way can only ever be refused, never followed. Get-Item -Force rather than
+# Test-Path, because Test-Path answers false for a link whose target is missing
+# and the script would then try to create link-broken a second time.
+Push-Location $symlinkPath
+try {
+    $relativeLinks = @(
+        @{ Name = 'link-to-file'; Command = 'mklink link-to-file target.txt' },
+        @{ Name = 'link-to-dir'; Command = 'mklink /D link-to-dir subdir' },
+        @{ Name = 'link-broken'; Command = 'mklink link-broken missing.txt' }
+    )
+    foreach ($link in $relativeLinks) {
+        if (-not (Get-Item -LiteralPath $link.Name -Force -ErrorAction SilentlyContinue)) {
+            cmd.exe /c $link.Command | Out-Null
+        }
+    }
+} finally {
+    Pop-Location
+}
+
+# Absolute on purpose: the one case a resolver has to refuse rather than follow.
+$outsideLink = Join-Path $symlinkPath 'link-outside'
+if (-not (Get-Item -LiteralPath $outsideLink -Force -ErrorAction SilentlyContinue)) {
+    New-Item -ItemType SymbolicLink -Path $outsideLink -Target (Join-Path $OutsideRoot 'outside.txt') | Out-Null
 }
 
 if (Get-Command -Name Install-WindowsFeature -ErrorAction SilentlyContinue) {

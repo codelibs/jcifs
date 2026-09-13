@@ -335,7 +335,7 @@ This is what the nightly `SMB integration tests (Windows)` workflow does on a
 | `JCIFS_IT_BACKEND` | `samba` or `windows`; unset starts the container |
 | `JCIFS_IT_HOST`, `JCIFS_IT_PORT` | where the server is; port defaults to 445 |
 | `JCIFS_IT_USER`, `JCIFS_IT_PASSWORD`, `JCIFS_IT_DOMAIN` | credentials |
-| `JCIFS_IT_SHARE`, `JCIFS_IT_SHARE_ENCRYPTED`, `JCIFS_IT_DFS_ROOT` | share names |
+| `JCIFS_IT_SHARE`, `JCIFS_IT_SHARE_ENCRYPTED`, `JCIFS_IT_DFS_ROOT`, `JCIFS_IT_SHARE_SYMLINKS` | share names |
 | `JCIFS_IT_REQUIRED` | `true` makes a missing environment a failure instead of a skip |
 | `JCIFS_IT_DIALECT` | pins the whole suite to one SMB2/SMB3 dialect, e.g. `SMB300` |
 

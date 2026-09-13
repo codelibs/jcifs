@@ -70,6 +70,7 @@ public final class SmbServerResolver {
     private static final String DEFAULT_SHARE = "share";
     private static final String DEFAULT_ENCRYPTED_SHARE = "share-encrypted";
     private static final String DEFAULT_DFS_ROOT = "dfs";
+    private static final String DEFAULT_SYMLINK_SHARE = "symlinks";
 
     private static SmbServerFixture fixture;
     private static TestAbortedException skipped;
@@ -132,7 +133,8 @@ public final class SmbServerResolver {
         }
         return new SmbServerFixture(backend, host, Integer.parseInt(setting("PORT", "445")), setting("DOMAIN", null),
                 setting("USER", DEFAULT_USER), setting("PASSWORD", DEFAULT_PASSWORD), setting("SHARE", DEFAULT_SHARE),
-                setting("SHARE_ENCRYPTED", DEFAULT_ENCRYPTED_SHARE), setting("DFS_ROOT", DEFAULT_DFS_ROOT));
+                setting("SHARE_ENCRYPTED", DEFAULT_ENCRYPTED_SHARE), setting("DFS_ROOT", DEFAULT_DFS_ROOT),
+                setting("SHARE_SYMLINKS", DEFAULT_SYMLINK_SHARE));
     }
 
     private static SmbBackend parseBackend(final String value) {
@@ -166,7 +168,7 @@ public final class SmbServerResolver {
         }
 
         return new SmbServerFixture(SmbBackend.SAMBA, container.getHost(), container.getMappedPort(445), null, DEFAULT_USER,
-                DEFAULT_PASSWORD, DEFAULT_SHARE, DEFAULT_ENCRYPTED_SHARE, DEFAULT_DFS_ROOT);
+                DEFAULT_PASSWORD, DEFAULT_SHARE, DEFAULT_ENCRYPTED_SHARE, DEFAULT_DFS_ROOT, DEFAULT_SYMLINK_SHARE);
     }
 
     private static GenericContainer<?> startSamba(final boolean bindDefaultPort) {

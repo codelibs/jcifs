@@ -54,9 +54,10 @@ public final class SmbServerFixture {
     private final String share;
     private final String encryptedShare;
     private final String dfsRoot;
+    private final String symlinkShare;
 
     SmbServerFixture(final SmbBackend backend, final String host, final int port, final String domain, final String user,
-            final String password, final String share, final String encryptedShare, final String dfsRoot) {
+            final String password, final String share, final String encryptedShare, final String dfsRoot, final String symlinkShare) {
         this.backend = backend;
         this.host = host;
         this.port = port;
@@ -66,6 +67,7 @@ public final class SmbServerFixture {
         this.share = share;
         this.encryptedShare = encryptedShare;
         this.dfsRoot = dfsRoot;
+        this.symlinkShare = symlinkShare;
     }
 
     /**
@@ -129,6 +131,23 @@ public final class SmbServerFixture {
      */
     public String dfsRoot() {
         return this.dfsRoot;
+    }
+
+    /**
+     * The share whose symbolic links are reported to the client rather than resolved
+     * on the server.
+     *
+     * <p>
+     * The plain share resolves a link inside it, which is what most servers do and
+     * what the tests there rely on. This one is configured the other way, so that
+     * the client sees STATUS_STOPPED_ON_SYMLINK and the target the server named.
+     * Samba only behaves this way from 4.22 onwards.
+     * </p>
+     *
+     * @return the name of the share that reports symbolic links
+     */
+    public String symlinkShare() {
+        return this.symlinkShare;
     }
 
     /**
@@ -287,6 +306,6 @@ public final class SmbServerFixture {
     @Override
     public String toString() {
         return "SmbServerFixture[" + this.backend + " " + this.host + ":" + this.port + " user=" + this.user + " share=" + this.share
-                + " encrypted=" + this.encryptedShare + " dfs=" + this.dfsRoot + "]";
+                + " encrypted=" + this.encryptedShare + " dfs=" + this.dfsRoot + " symlinks=" + this.symlinkShare + "]";
     }
 }
