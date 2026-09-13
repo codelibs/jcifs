@@ -167,7 +167,7 @@ break anyway.
 | Oplock break notification | Supported | Decoded and resolved to the open it names. Since the notification carries TreeId 0 and, on several servers, SessionId 0, the open is found by file id in the session open tables rather than from the header. A break naming an open the client does not have is ignored, as MS-SMB2 3.2.5.19.1 requires. jcifs caches nothing, so there is no cached data to discard. |
 | Oplock break acknowledgement | Supported | `Smb2OplockBreakAcknowledgment` is sent on the broken open's own tree, which is what gives it the session and tree id the server requires. A break from level II to none is not answered at all (MS-SMB2 2.2.24.1). The acknowledgement is sent off the receive thread, because it draws a reply and waiting for one there would stop the loop that reads it. |
 | SMB3 leases | Not implemented | Two unused constants; no lease is ever requested, and there is no lease create context to request one with. A lease break is now decoded rather than fatal: before 3.0.4 its 44-byte body failed a decode that demanded 24, and that failure closed the socket, logged off every session and failed every request in flight on the connection. Such a break is logged and otherwise ignored, since no lease was ever held — there is no lease break acknowledgement message either. A lease holding `SMB2_LEASE_HANDLE_CACHING` is one of the two ways to qualify for a durable handle; see [Why durable handles are not planned](#why-durable-handles-are-not-planned). |
-| Directory leasing | Not implemented | Unused capability constant; depends on leases. Worth knowing before planning anything on it: a directory lease may only be `R` or `R|H` (MS-SMB2 3.3.5.9.11 strips write caching for directories), and Samba 4.21 does not implement directory leases at all, so nothing is granted there whatever the client asks for. |
+| Directory leasing | Not implemented | Unused capability constant; depends on leases. Worth knowing before planning anything on it: a directory lease may only be `R` or `R|H`, because a request's write bit is cleared for a directory rather than refused (MS-FSA 2.1.5.18 asks for STATUS_INVALID_PARAMETER; Windows and Samba both just drop the bit). Samba 4.21 does not implement directory leases at all, so nothing is granted there whatever the client asks for; Samba 4.22 does, behind a `smb3 directory leases` global that defaults to `auto` - on unless the server is clustered, and only while `smb2 leases` and `oplocks` are on and `kernel oplocks` is off. The server advertises the capability only to a client that advertised it first. |
 | Durable / persistent handles | Not implemented, and not planned | No DHnQ/DH2Q/DHnC/DH2C contexts, no app instance id, no handle reconnect path. See [Why durable handles are not planned](#why-durable-handles-are-not-planned) for what it would take and why it is not worth it here. |
 | Create contexts (the framework itself) | Not functional | The request side encodes correctly: `Smb2CreateRequest.setCreateContexts()` lays contexts out as MS-SMB2 2.2.13.2 requires, and `CreateContextIT` checks that a real server answers each one. But nothing outside the tests calls it, and `Smb2CreateResponse.createContext()` is `return null`, so a context in a response is skipped. Before 3.0.4 no context could be sent at all — `size()` left out each context's header and name, so the request failed before it was sent — and the encoder also zeroed every `Next` and undercounted `CreateContextsLength`. |
 
@@ -206,10 +206,12 @@ because only a lease carries a client-chosen key that exempts its holder. `R` is
 required: a lease asking for handle caching alone is reduced to none.
 
 **Directories cannot have one.** MS-SMB2 3.3.5.9.10 skips durability when the
-open is a directory, and Samba 4.21 blocks it twice over — its durable cookie is
-refused for directories, and it has no directory leases to qualify with. Since
-directory enumeration is much of what this library does, the feature would not
-apply to it.
+open is a directory, and Samba refuses it as well. On 4.21 it is blocked twice
+over — the durable cookie is refused for directories, and there are no directory
+leases to qualify with. On 4.22 only the first block remains: a directory lease
+can now satisfy the handle-caching test, but the durable cookie still answers
+STATUS_NOT_SUPPORTED for a directory, so the result is the same. Since directory
+enumeration is much of what this library does, the feature would not apply to it.
 
 **What it buys is mostly not what this client uses.** A durable handle preserves
 byte-range locks across the reconnect — the reason the Linux client implemented
