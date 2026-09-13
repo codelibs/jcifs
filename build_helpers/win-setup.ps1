@@ -108,6 +108,27 @@ try {
     Pop-Location
 }
 
+Write-Host 'Creating the fixtures for the access-reporting tests'
+# Files the connecting account is granted less than the share is. The share
+# grants both accounts Full, and these files inherit that, so only the explicit
+# deny below tells them apart - and only the access the server computes for the
+# file itself reports it.
+$accessPath = Join-Path $sharePath 'access'
+New-Item -Path $accessPath -ItemType Directory -Force | Out-Null
+[IO.File]::WriteAllText((Join-Path $accessPath 'readable.txt'), "readable contents`n")
+[IO.File]::WriteAllText((Join-Path $accessPath 'readonly.txt'), "read-only contents`n")
+[IO.File]::WriteAllText((Join-Path $accessPath 'noaccess.txt'), "secret contents`n")
+
+# Deny the one specific right, never the generic set. A deny of (R) would also
+# deny ReadAttributes, and the attributes-only open that a client makes to stat
+# a file would then fail - the file would stop reporting that it exists at all,
+# which is a different thing from being unreadable. (RD) leaves attributes
+# visible; (WD,AD) leaves reading alone.
+foreach ($user in $testUsers) {
+    icacls (Join-Path $accessPath 'readonly.txt') /deny "${user}:(WD,AD)" /Q | Out-Null
+    icacls (Join-Path $accessPath 'noaccess.txt') /deny "${user}:(RD)" /Q | Out-Null
+}
+
 Write-Host 'Creating the fixtures for the link-reporting share'
 $symlinkPath = Join-Path $Root 'symlinks'
 [IO.File]::WriteAllText((Join-Path $symlinkPath 'target.txt'), "target file contents`n")

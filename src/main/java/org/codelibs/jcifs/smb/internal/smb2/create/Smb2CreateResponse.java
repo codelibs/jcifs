@@ -17,10 +17,12 @@
  */
 package org.codelibs.jcifs.smb.internal.smb2.create;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
 import org.codelibs.jcifs.smb.Configuration;
+import org.codelibs.jcifs.smb.impl.NtStatus;
 import org.codelibs.jcifs.smb.internal.CommonServerMessageBlockRequest;
 import org.codelibs.jcifs.smb.internal.SMBProtocolDecodingException;
 import org.codelibs.jcifs.smb.internal.SmbBasicFileInfo;
@@ -326,10 +328,39 @@ public class Smb2CreateResponse extends ServerMessageBlock2Response implements S
     }
 
     /**
-     * @param nameBytes
-     * @return
+     * The access the server reports this caller has on the file.
+     *
+     * <p>
+     * Present only when the create asked for it and the server worked it out. A
+     * server that declines, or reports a failure computing it, is indistinguishable
+     * here from one that was never asked - in each case the caller knows nothing
+     * about its access rather than knowing it has none.
+     * </p>
+     *
+     * @return the granted access mask, or {@code null} if the server reported none
+     */
+    public Integer getMaximalAccess() {
+        if (this.createContexts == null) {
+            return null;
+        }
+        for (final CreateContextResponse cc : this.createContexts) {
+            if (cc instanceof final QueryMaximalAccessResponse mxac && mxac.getQueryStatus() == NtStatus.NT_STATUS_SUCCESS) {
+                return mxac.getMaximalAccess();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Resolves a create context in a response to the type that decodes it.
+     *
+     * @param nameBytes the context name as it arrived
+     * @return a response object for it, or {@code null} for a context this client does not read
      */
     private static CreateContextResponse createContext(final byte[] nameBytes) {
+        if (Arrays.equals(QueryMaximalAccessResponse.NAME, nameBytes)) {
+            return new QueryMaximalAccessResponse();
+        }
         return null;
     }
 

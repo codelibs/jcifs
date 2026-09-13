@@ -81,6 +81,7 @@ import org.codelibs.jcifs.smb.internal.smb1.trans2.Trans2SetFileInformationRespo
 import org.codelibs.jcifs.smb.internal.smb2.ServerMessageBlock2Request;
 import org.codelibs.jcifs.smb.internal.smb2.ServerMessageBlock2Response;
 import org.codelibs.jcifs.smb.internal.smb2.Smb2Constants;
+import org.codelibs.jcifs.smb.internal.smb2.create.QueryMaximalAccessRequest;
 import org.codelibs.jcifs.smb.internal.smb2.create.Smb2CloseRequest;
 import org.codelibs.jcifs.smb.internal.smb2.create.Smb2CloseResponse;
 import org.codelibs.jcifs.smb.internal.smb2.create.Smb2CreateRequest;
@@ -377,6 +378,16 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
     private long size;
     private long sizeExpiration;
     private boolean isExists;
+
+    /**
+     * The access the server reported on the open that last read the attributes.
+     * Only meaningful while {@code grantedAccessKnown} is set: not knowing what
+     * access is granted is a different thing from being granted nothing, so the
+     * two are kept apart rather than folded into a zero mask. Both are governed
+     * by {@code attrExpiration}, the way the attributes themselves are.
+     */
+    private int grantedAccess;
+    private boolean grantedAccessKnown;
 
     private final CIFSContext transportContext;
     private SmbTreeConnection treeConnection;
@@ -771,6 +782,9 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
                 this.lastAccess = info.getLastAccessTime();
                 this.attributes = info.getAttributes() & ATTR_GET_MASK;
                 this.attrExpiration = attrTimeout;
+                // This open asked for a particular access rather than for a report of
+                // one, so what the server granted here says nothing about the rest.
+                recordGrantedAccess(null);
             }
 
             this.isExists = true;
@@ -826,6 +840,8 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
             }
             final BasicFileInformation info = response.getInfo(BasicFileInformation.class);
             this.isExists = true;
+            // SMB1 has no way to ask what access is granted.
+            recordGrantedAccess(null);
             if (info instanceof FileBasicInfo) {
                 this.attributes = info.getAttributes() & ATTR_GET_MASK;
                 this.createTime = info.getCreateTime();
@@ -849,6 +865,7 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
         }
 
         this.isExists = true;
+        recordGrantedAccess(null);
         this.attributes = response.getAttributes() & ATTR_GET_MASK;
         this.lastModified = response.getLastWriteTime();
         this.attrExpiration = System.currentTimeMillis() + th.getConfig().getAttributeCacheTimeout();
@@ -871,6 +888,7 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
         this.lastModified = 0L;
         this.lastAccess = 0L;
         this.isExists = false;
+        recordGrantedAccess(null);
 
         try {
             if (this.url.getHost().length() == 0) {} else if (this.fileLocator.getShare() == null) {
@@ -1064,7 +1082,10 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
         if (getType() == TYPE_NAMED_PIPE) { // try opening the pipe for reading?
             return true;
         }
-        return exists(); // try opening and catch sharing violation?
+        // exists() first, and not only because a file that is not there cannot be
+        // read: it is what fetches the access the server grants, so the check below
+        // has nothing to consult until it has run.
+        return exists() && grants(FILE_READ_DATA | GENERIC_READ | GENERIC_ALL);
     }
 
     @Override
@@ -1072,7 +1093,38 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
         if (getType() == TYPE_NAMED_PIPE) { // try opening the pipe for writing?
             return true;
         }
-        return exists() && (this.attributes & ATTR_READONLY) == 0;
+        return exists() && (this.attributes & ATTR_READONLY) == 0
+                && grants(FILE_WRITE_DATA | FILE_APPEND_DATA | GENERIC_WRITE | GENERIC_ALL);
+    }
+
+    /**
+     * Whether the access the server last reported includes any of the given rights.
+     *
+     * <p>
+     * A server that reported no access at all is answered {@code true}: not knowing
+     * what is granted is not the same as knowing nothing is, and reporting a file
+     * unreadable on that basis would hide files this client can in fact read. The
+     * generic rights are accepted alongside the specific ones because a server is
+     * free to answer in either form, and both servers this is tested against answer
+     * in the specific form.
+     * </p>
+     *
+     * @param access the rights to look for
+     * @return true unless the server said this caller has none of them
+     */
+    private boolean grants(final int access) {
+        return !this.grantedAccessKnown || (this.grantedAccess & access) != 0;
+    }
+
+    /**
+     * Records what the server reported about this caller's access, alongside the
+     * attributes from the same open.
+     *
+     * @param granted the reported access, or null if the server reported none
+     */
+    private void recordGrantedAccess(final Integer granted) {
+        this.grantedAccessKnown = granted != null;
+        this.grantedAccess = granted != null ? granted.intValue() : 0;
     }
 
     @Override
@@ -1733,6 +1785,11 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
             cr.setFileAttributes(fileAttributes);
             cr.setDesiredAccess(desiredAccess);
             cr.setShareAccess(shareAccess);
+            // Asked for on the open that reads the attributes, because the attributes
+            // do not carry it: a file the caller may not read looks exactly like one
+            // it may, and only the server can say which it is. It costs no round trip
+            // and a server that will not answer simply leaves it out.
+            cr.setCreateContexts(new QueryMaximalAccessRequest());
 
             ServerMessageBlock2Request<?> cur = cr;
 
@@ -1767,6 +1824,7 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
             this.lastAccess = info.getLastAccessTime();
             this.attributes = info.getAttributes() & ATTR_GET_MASK;
             this.attrExpiration = System.currentTimeMillis() + th.getConfig().getAttributeCacheTimeout();
+            recordGrantedAccess(createResp.getMaximalAccess());
 
             this.size = info.getSize();
             this.sizeExpiration = System.currentTimeMillis() + th.getConfig().getAttributeCacheTimeout();
