@@ -43,6 +43,10 @@ jobs:
         ./build_helpers/win-setup.ps1
         "JCIFS_IT_HOST=$env:COMPUTERNAME" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
+    - name: Probe which negotiate contexts the server answers
+      shell: bash
+      run: python build_helpers/negprobe.py 127.0.0.1 445 localhost
+
     - name: Run the integration tests
       run: mvn -B verify --file pom.xml
       env:
