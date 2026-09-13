@@ -63,6 +63,11 @@ public final class TcpRelay implements AutoCloseable {
 
     private volatile boolean closed;
 
+    /** Guards {@link #holdingReplies}; pumps carrying server bytes wait on it while replies are held. */
+    private final Object replyGate = new Object();
+
+    private boolean holdingReplies;
+
     private TcpRelay(final String targetHost, final int targetPort) throws IOException {
         this.targetHost = targetHost;
         this.targetPort = targetPort;
@@ -123,10 +128,36 @@ public final class TcpRelay implements AutoCloseable {
         live.forEach(TcpRelay::closeQuietly);
     }
 
+    /**
+     * Stops passing on what the server sends, on every connection, until {@link #releaseReplies()}.
+     *
+     * <p>
+     * Requests still reach the server and it still answers; the answers wait in the relay. To the client that is a
+     * server that has gone quiet with the connection still up - the one shape in which a caller can only wait,
+     * because nothing on the wire tells it to give up. New connections are held the same way.
+     * </p>
+     */
+    public void holdReplies() {
+        synchronized (this.replyGate) {
+            this.holdingReplies = true;
+        }
+    }
+
+    /**
+     * Passes on everything held back by {@link #holdReplies()}, in order, and stops holding.
+     */
+    public void releaseReplies() {
+        synchronized (this.replyGate) {
+            this.holdingReplies = false;
+            this.replyGate.notifyAll();
+        }
+    }
+
     @Override
     public void close() {
         this.closed = true;
         closeQuietly(this.listener);
+        releaseReplies();
         dropConnections();
     }
 
@@ -139,8 +170,8 @@ public final class TcpRelay implements AutoCloseable {
                 server = new Socket(this.targetHost, this.targetPort);
                 this.relayed.add(client);
                 this.relayed.add(server);
-                pump(client, server);
-                pump(server, client);
+                pump(client, server, false);
+                pump(server, client, true);
             } catch (final IOException e) {
                 closeQuietly(client);
                 closeQuietly(server);
@@ -155,7 +186,7 @@ public final class TcpRelay implements AutoCloseable {
         }
     }
 
-    private void pump(final Socket from, final Socket to) {
+    private void pump(final Socket from, final Socket to, final boolean carriesReplies) {
         final Thread pumping = new Thread(() -> {
             final byte[] buffer = new byte[BUFFER_BYTES];
             try {
@@ -163,11 +194,16 @@ public final class TcpRelay implements AutoCloseable {
                 final OutputStream out = to.getOutputStream();
                 int read;
                 while ((read = in.read(buffer)) != -1) {
+                    if (carriesReplies) {
+                        awaitReplyRelease();
+                    }
                     out.write(buffer, 0, read);
                     out.flush();
                 }
             } catch (final IOException e) {
                 log.trace("Relayed connection ended", e);
+            } catch (final InterruptedException e) {
+                Thread.currentThread().interrupt();
             } finally {
                 closeQuietly(from);
                 closeQuietly(to);
@@ -175,6 +211,14 @@ public final class TcpRelay implements AutoCloseable {
         }, "smb-it-relay-pump-" + port());
         pumping.setDaemon(true);
         pumping.start();
+    }
+
+    private void awaitReplyRelease() throws InterruptedException {
+        synchronized (this.replyGate) {
+            while (this.holdingReplies) {
+                this.replyGate.wait();
+            }
+        }
     }
 
     private static void closeQuietly(final ServerSocket socket) {

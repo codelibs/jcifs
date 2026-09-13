@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.UUID;
 
 import org.codelibs.jcifs.smb.CIFSContext;
@@ -54,6 +55,37 @@ class DfsIT extends AbstractSmbIT {
 
     private String dfsPath(final String link) {
         return server().url(server().dfsRoot(), link + "/");
+    }
+
+    @Test
+    @DisplayName("a namespace walked by listed URLs reaches a file behind a link")
+    void namespaceWalkedByListedUrlsReachesALinkedFile() throws Exception {
+        // How a crawler meets a namespace: it lists the root, queues each child's
+        // URL as text, and opens the link again from that text alone.
+        final CIFSContext context = server().context();
+        final String linkUrl;
+        try (SmbFile root = new SmbFile(server().url(server().dfsRoot()), context)) {
+            linkUrl = listedUrl(root, "link/");
+        }
+        final String fileUrl;
+        try (SmbFile link = new SmbFile(linkUrl, context)) {
+            assertTrue(link.isDirectory(), "the link " + linkUrl + " should present its target share as a directory");
+            fileUrl = listedUrl(link, "target.txt");
+        }
+        try (SmbFile file = new SmbFile(fileUrl, context); InputStream in = file.getInputStream()) {
+            assertArrayEquals("target file contents\n".getBytes(StandardCharsets.UTF_8), in.readAllBytes(),
+                    fileUrl + " should hold the target share's fixture file");
+        }
+    }
+
+    private static String listedUrl(final SmbFile dir, final String name) throws Exception {
+        final SmbFile[] children = dir.listFiles();
+        return Arrays.stream(children)
+                .filter(child -> name.equals(child.getName()))
+                .findFirst()
+                .map(child -> child.getURL().toExternalForm())
+                .orElseThrow(() -> new AssertionError(
+                        dir + " did not list " + name + ", it had " + Arrays.stream(children).map(SmbFile::getName).toList()));
     }
 
     @Test

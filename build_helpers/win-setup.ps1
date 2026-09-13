@@ -129,6 +129,23 @@ foreach ($user in $testUsers) {
     icacls (Join-Path $accessPath 'noaccess.txt') /deny "${user}:(RD)" /Q | Out-Null
 }
 
+Write-Host 'Creating the fixtures for the group-expansion tests'
+# A local group holding both accounts, granted read on one file so that the
+# group appears in that file's DACL by name.
+if (-not (Get-LocalGroup -Name 'jcifsgroup' -ErrorAction SilentlyContinue)) {
+    New-LocalGroup -Name 'jcifsgroup' -Description 'jcifs integration test group' | Out-Null
+}
+$groupMembers = @(Get-LocalGroupMember -Group 'jcifsgroup' | ForEach-Object { $_.Name.Split('\')[-1] })
+foreach ($user in $testUsers) {
+    if ($groupMembers -notcontains $user) {
+        Add-LocalGroupMember -Group 'jcifsgroup' -Member $user
+    }
+}
+$groupsPath = Join-Path $sharePath 'groups'
+New-Item -Path $groupsPath -ItemType Directory -Force | Out-Null
+[IO.File]::WriteAllText((Join-Path $groupsPath 'group.txt'), "group contents`n")
+icacls (Join-Path $groupsPath 'group.txt') /grant 'jcifsgroup:(R)' /Q | Out-Null
+
 Write-Host 'Creating the fixtures for the link-reporting share'
 $symlinkPath = Join-Path $Root 'symlinks'
 [IO.File]::WriteAllText((Join-Path $symlinkPath 'target.txt'), "target file contents`n")
