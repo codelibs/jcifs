@@ -302,6 +302,34 @@ class SmbTreeConnectionTest {
     }
 
     @Test
+    @DisplayName("send does not retry a request whose wait for a reply was interrupted")
+    void send_doesNotRetry_anInterruptedWait() throws Exception {
+        SmbTreeConnection c = spy(newConn());
+        SmbTreeImpl tree = mock(SmbTreeImpl.class);
+        when(tree.acquire(false)).thenReturn(tree);
+        setTree(c, tree);
+
+        CommonServerMessageBlockRequest req = mock(CommonServerMessageBlockRequest.class);
+        CommonServerMessageBlockResponse resp = mock(CommonServerMessageBlockResponse.class);
+        // What an interrupted Transport.sendrecv throws, as SmbTransportImpl wraps it
+        SmbException interrupted =
+                new SmbException("interrupted", new org.codelibs.jcifs.smb.util.transport.TransportException(new InterruptedException()));
+        when(tree.send(eq(req), eq(resp), anySet())).thenThrow(interrupted);
+        // Were it retried, the reconnect would hand back the same tree rather than touch the network
+        doAnswer(invocation -> {
+            setTree(c, tree);
+            return mock(SmbTreeHandleImpl.class);
+        }).when(c).connectHost(any(), anyString());
+
+        SmbException ex = assertThrows(SmbException.class,
+                () -> c.send(new SmbResourceLocatorImpl(ctx, smbUrl("smb://srv/share/p")), req, resp, EnumSet.noneOf(RequestParam.class)));
+        assertSame(interrupted, ex);
+        verify(tree, times(1)).send(eq(req), eq(resp), anySet());
+        verify(c, never()).disconnect(eq(true));
+        verify(c, never()).connectWrapException(any());
+    }
+
+    @Test
     @DisplayName("send honors NO_RETRY and propagates error immediately")
     void send_noRetry_param() throws Exception {
         SmbTreeConnection c = newConn();

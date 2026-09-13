@@ -235,7 +235,9 @@ public class SIDCacheImpl implements SidResolver {
                     }
                     final SID[] sids = new SID[rpc.sids.num_sids];
 
-                    final String origin_server = handle.getServer();
+                    // The server the caller addressed, port included: handle.getServer() is the host alone, so on any port
+                    // but 445 the members would be looked up on whatever answers there instead.
+                    final String origin_server = authorityServerName;
                     final CIFSContext origin_ctx = handle.getTransportContext();
 
                     for (int i = 0; i < sids.length; i++) {

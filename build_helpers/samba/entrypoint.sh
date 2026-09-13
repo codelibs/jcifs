@@ -26,6 +26,19 @@ for user in testuser1 testuser2; do
     smbpasswd -e "${user}"
 done
 
+# A local group holding both accounts, for the tests that expand a group named
+# in a DACL into its members. The Unix group alone is not enough: Samba answers
+# SAMR alias queries only for a group it has mapped, and it keeps alias
+# membership in its own database rather than in /etc/group.
+addgroup jcifsgroup
+for user in testuser1 testuser2; do
+    addgroup "${user}" jcifsgroup
+done
+net groupmap add unixgroup=jcifsgroup ntgroup=jcifsgroup type=local >/dev/null
+for user in testuser1 testuser2; do
+    net sam addmem jcifsgroup "${user}" >/dev/null
+done
+
 # ---------------------------------------------------------------- fixtures --
 printf 'target file contents\n' > /srv/share/target.txt
 mkdir -p /srv/share/subdir
@@ -58,6 +71,14 @@ chmod 0444 /srv/share/access/readonly.txt
 # can still stat the file: that is what keeps it reporting that it exists while
 # its contents stay unreachable.
 chmod 0600 /srv/share/access/noaccess.txt
+
+# A file whose group is the local group above, so the group appears in the
+# file's DACL by name. Owned by root for the same reason as the files above.
+mkdir -p /srv/share/groups
+printf 'group contents\n' > /srv/share/groups/group.txt
+chmod 0777 /srv/share/groups
+chown root:jcifsgroup /srv/share/groups/group.txt
+chmod 0640 /srv/share/groups/group.txt
 
 # The same shapes again in the share that reports links rather than resolving
 # them. Every in-share target is relative, which is the only form a client can

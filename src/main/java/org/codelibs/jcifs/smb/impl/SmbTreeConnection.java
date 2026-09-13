@@ -293,7 +293,9 @@ class SmbTreeConnection {
             } catch (final SmbException smbe) {
                 // Retrying only makes sense if the invalid parameter is an tree id. If we have a stale file descriptor
                 // retrying make no sense, as it will never become available again.
-                if (params.contains(RequestParam.NO_RETRY)
+                // An interrupted wait for a reply arrives as a transport error too, but the caller has asked to stop: a
+                // retry would only wait again, and the disconnect before it would drop a connection others share.
+                if (params.contains(RequestParam.NO_RETRY) || causedByInterrupt(smbe)
                         || !(smbe.getCause() instanceof TransportException) && smbe.getNtStatus() != NtStatus.NT_STATUS_INVALID_PARAMETER) {
                     log.debug("Not retrying", smbe);
                     throw smbe;
@@ -358,6 +360,21 @@ class SmbTreeConnection {
             throw last;
         }
         throw new SmbException("All attempts failed, but no exception");
+    }
+
+    /**
+     * Whether a failure was caused by the calling thread being interrupted.
+     *
+     * Only {@link InterruptedException} counts: {@link java.io.InterruptedIOException} would also match a
+     * {@link java.net.SocketTimeoutException}, which is a transport failure worth retrying.
+     */
+    private static boolean causedByInterrupt(final Throwable failure) {
+        for (Throwable cause = failure; cause != null; cause = cause.getCause()) {
+            if (cause instanceof InterruptedException) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private <T extends CommonServerMessageBlockResponse> T send0(final SmbResourceLocatorImpl loc,
