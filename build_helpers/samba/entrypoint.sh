@@ -40,6 +40,25 @@ ln -sfn missing.txt               /srv/share/link-broken
 ln -sfn /srv/outside/outside.txt  /srv/share/link-outside
 ln -sfn ./target.txt              /srv/share/link-relative
 
+# Files the connecting account is granted less than the share is. The share
+# itself is writable by both accounts, so anything that reports access from the
+# share alone reports the same answer for all three of these - only the access
+# the server computes for the file itself tells them apart. Created after the
+# blanket chmod above so it does not undo them, and owned by root, which is the
+# account none of the tests authenticate as.
+mkdir -p /srv/share/access
+printf 'readable contents\n'  > /srv/share/access/readable.txt
+printf 'read-only contents\n' > /srv/share/access/readonly.txt
+printf 'secret contents\n'    > /srv/share/access/noaccess.txt
+chmod 0777 /srv/share/access
+chmod 0666 /srv/share/access/readable.txt
+# Readable by everyone, writable only by root.
+chmod 0444 /srv/share/access/readonly.txt
+# Unreadable by anyone but root. The directory stays searchable, so the account
+# can still stat the file: that is what keeps it reporting that it exists while
+# its contents stay unreachable.
+chmod 0600 /srv/share/access/noaccess.txt
+
 # The same shapes again in the share that reports links rather than resolving
 # them. Every in-share target is relative, which is the only form a client can
 # resolve: an absolute target names a path in the server's own namespace.
