@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Properties;
 
 import org.codelibs.jcifs.smb.impl.SmbFile;
 import org.codelibs.jcifs.smb.impl.SmbSymlinkException;
@@ -234,6 +235,62 @@ class SymlinkIT extends AbstractSmbIT {
             final SmbSymlinkException e = assertThrows(SmbSymlinkException.class, link::exists);
             assertFalse(e.isRelative(), "an absolute target is in the server's own namespace and cannot be resolved against this share: "
                     + e.getSubstituteName());
+        }
+    }
+
+    // ------------------------------------------------- following turned on --
+    //
+    // Everything above holds with jcifs.client.followSymlinks off, which is the
+    // default. These show what changes when a caller opts in, and - just as
+    // importantly - what does not.
+
+    private SmbFile followingLinks(final String name) throws Exception {
+        final Properties props = new Properties();
+        props.setProperty("jcifs.client.followSymlinks", "true");
+        return new SmbFile(server().url(server().symlinkShare(), name), server().context(props));
+    }
+
+    @Test
+    @DisplayName("with following on, a link reads as the file it points at")
+    void followingResolvesALink() throws Exception {
+        try (SmbFile link = followingLinks("link-to-file")) {
+            assertTrue(link.exists());
+            assertEquals(TARGET_CONTENTS, read(link));
+        }
+    }
+
+    @Test
+    @DisplayName("with following on, a path through a link directory reaches the file")
+    void followingResolvesAPathThroughALinkDirectory() throws Exception {
+        try (SmbFile file = followingLinks("link-to-dir/inside.txt")) {
+            assertTrue(file.exists());
+            assertEquals("inside subdir\n", read(file));
+        }
+    }
+
+    @Test
+    @DisplayName("with following on, a link to a directory can be listed through")
+    void followingListsThroughALinkToADirectory() throws Exception {
+        try (SmbFile dir = followingLinks("link-to-dir/")) {
+            assertTrue(dir.isDirectory());
+            assertEquals(1, dir.list().length);
+        }
+    }
+
+    @Test
+    @DisplayName("following does not conjure a target that is not there")
+    void followingLeavesABrokenLinkMissing() throws Exception {
+        try (SmbFile link = followingLinks("link-broken")) {
+            assertFalse(link.exists(), "the link resolves, but what it points at does not exist");
+        }
+    }
+
+    @Test
+    @DisplayName("following still refuses a target outside the share")
+    void followingStillRefusesAnAbsoluteTarget() throws Exception {
+        try (SmbFile link = followingLinks("link-outside")) {
+            final SmbSymlinkException e = assertThrows(SmbSymlinkException.class, link::exists);
+            assertFalse(e.isRelative(), "an absolute target is reported, not followed: " + e.getSubstituteName());
         }
     }
 }

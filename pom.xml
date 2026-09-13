@@ -160,6 +160,11 @@
 							<differenceType>7012</differenceType>
 							<method>void unlock(long, long)</method>
 						</difference>
+						<difference>
+							<className>org/codelibs/jcifs/smb/Configuration</className>
+							<differenceType>7012</differenceType>
+							<method>boolean isFollowSymlinks()</method>
+						</difference>
 					</ignored>
 				</configuration>
 			</plugin>

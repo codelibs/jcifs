@@ -166,6 +166,7 @@ public final class PropertyConfiguration extends BaseConfiguration implements Co
         this.vcNumber = 1;
 
         this.dfsDisabled = Config.getBoolean(p, "jcifs.client.dfs.disabled", false);
+        this.followSymlinks = Config.getBoolean(p, "jcifs.client.followSymlinks", false);
         this.dfsTTL = Config.getLong(p, "jcifs.client.dfs.ttl", 300);
         this.dfsStrictView = Config.getBoolean(p, "jcifs.client.dfs.strictView", false);
         this.dfsConvertToFqdn = Config.getBoolean(p, "jcifs.client.dfs.convertToFQDN", false);
