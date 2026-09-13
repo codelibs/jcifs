@@ -126,6 +126,36 @@ class SmbTransportPoolConcurrencyTest {
         assertFalse(transports.isEmpty(), "Transports should be created");
     }
 
+    @Test
+    @DisplayName("Should hand callers that arrive together a single transport")
+    void testCallersArrivingTogetherShareOneTransport() throws Exception {
+        int threadCount = 20;
+        CountDownLatch startLatch = new CountDownLatch(1);
+        CountDownLatch doneLatch = new CountDownLatch(threadCount);
+        List<Exception> exceptions = Collections.synchronizedList(new ArrayList<>());
+        Set<SmbTransportImpl> transports = ConcurrentHashMap.newKeySet();
+
+        for (int i = 0; i < threadCount; i++) {
+            executor.submit(() -> {
+                try {
+                    startLatch.await();
+                    transports.add(pool.getSmbTransport(ctx, address, 445, false));
+                } catch (Exception e) {
+                    exceptions.add(e);
+                } finally {
+                    doneLatch.countDown();
+                }
+            });
+        }
+
+        startLatch.countDown();
+        assertTrue(doneLatch.await(10, TimeUnit.SECONDS), "All threads should complete");
+        assertTrue(exceptions.isEmpty(), "No exceptions should be thrown: " + exceptions);
+        // None of them connects, so every caller after the first finds a transport still to be connected. Each one
+        // opening a connection of its own is what made a server see as many connections as there were threads.
+        assertEquals(1, transports.size(), "callers arriving before the first connection is made should share it");
+    }
+
     @RepeatedTest(5)
     @DisplayName("Should maintain pool integrity under concurrent add/remove operations")
     void testConcurrentAddRemove() throws Exception {

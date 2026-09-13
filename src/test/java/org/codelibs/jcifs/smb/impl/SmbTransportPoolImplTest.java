@@ -102,21 +102,45 @@ class SmbTransportPoolImplTest {
     }
 
     @Test
-    @DisplayName("Should create new connections when reuse conditions are not met")
-    void testNoConnectionReuse() throws Exception {
+    @DisplayName("Should share a transport that is still to be connected")
+    void testPendingConnectionIsShared() throws Exception {
         // Given: Create a new pool for this test to ensure isolation
         SmbTransportPoolImpl testPool = new SmbTransportPoolImpl();
         when(ctx.getTransportPool()).thenReturn(testPool);
 
-        // Create an existing connection
+        // A transport its first caller has not connected yet: no socket, nothing negotiated
         SmbTransportImpl first = testPool.getSmbTransport(ctx, address, 445, false);
 
-        // When: Request another connection
-        // Note: Real SmbTransportImpl will report as disconnected without actual socket
+        // When: Another caller arrives before the connect has happened
         SmbTransportImpl second = testPool.getSmbTransport(ctx, address, 445, false);
 
-        // Then: Will create new connection since real transport has no socket
-        assertNotSame(first, second, "Should create new connection when first is disconnected");
+        // Then: It waits for that connection rather than opening one of its own
+        assertSame(first, second, "a caller arriving while the first connection is being made should share it");
+    }
+
+    @Test
+    @DisplayName("Should not share a transport that is still to be connected with a caller that enforces signing")
+    void testPendingConnectionNotSharedWithDifferentSigning() {
+        SmbTransportImpl first = pool.getSmbTransport(ctx, address, 445, false, false);
+
+        SmbTransportImpl withSigning = pool.getSmbTransport(ctx, address, 445, false, true);
+
+        assertNotSame(first, withSigning, "a transport created without enforced signing should not serve a caller that enforces it");
+    }
+
+    @Test
+    @DisplayName("Should not share a transport that is still to be connected across configurations")
+    void testPendingConnectionNotSharedAcrossConfigurations() {
+        CIFSContext otherCtx = mock(CIFSContext.class);
+        Configuration otherConfig = mock(Configuration.class);
+        when(otherCtx.getConfig()).thenReturn(otherConfig);
+        when(otherConfig.getSessionLimit()).thenReturn(10);
+
+        SmbTransportImpl first = pool.getSmbTransport(ctx, address, 445, false);
+
+        SmbTransportImpl fromOtherConfig = pool.getSmbTransport(otherCtx, address, 445, false);
+
+        assertNotSame(first, fromOtherConfig, "nothing negotiated yet can show the other configuration is compatible");
     }
 
     @Test
