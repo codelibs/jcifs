@@ -66,6 +66,28 @@ public interface Configuration {
     boolean isDfsDisabled();
 
     /**
+     *
+     * Property {@code jcifs.client.followSymlinks} (boolean, default false)
+     *
+     * <p>
+     * A server that will not follow a symbolic link on the client's behalf answers
+     * STATUS_STOPPED_ON_SYMLINK and names the target instead. With this off, which is the default,
+     * that is raised as an {@link org.codelibs.jcifs.smb.impl.SmbSymlinkException} carrying the
+     * target, and nothing is retried. With it on, a target that is relative to the directory holding
+     * the link is resolved and the request reissued against it.
+     * </p>
+     *
+     * <p>
+     * An absolute target is never followed, whichever way this is set. It is expressed in the
+     * server's own namespace - a Windows server sends forms such as {@code \??\C:\...} - which names
+     * a path this share cannot address, so there is nothing for the client to retry against.
+     * </p>
+     *
+     * @return whether symbolic links are followed
+     */
+    boolean isFollowSymlinks();
+
+    /**
      * Enable hack to make kerberos auth work with DFS sending short names
      *
      * This works by appending the domain name to the netbios short name and will fail horribly if this mapping is not

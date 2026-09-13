@@ -378,10 +378,148 @@ class SmbTreeConnection {
                 }
                 request.reset();
                 log.trace("send0", dre);
+            } catch (final SmbSymlinkException se) {
+                // A symbolic link is the same shape of answer as a referral: the server declines the
+                // path and says where to look instead. So it is retried here, against the same bound
+                // - which counts redirections rather than stack depth, and so cannot be tripped by
+                // how deeply nested the caller happens to be.
+                if (!this.ctx.getConfig().isFollowSymlinks() || !(request instanceof final RequestWithPath rpath)) {
+                    throw se;
+                }
+                final String target = resolveSymlink(se.getPath(), se.getSubstituteName(), se.isRelative(), se.getUnparsedPathLength());
+                if (target == null) {
+                    // An absolute target, or one that would climb out of the share. Report the link
+                    // exactly as it would be reported with following turned off.
+                    throw se;
+                }
+                if (log.isDebugEnabled()) {
+                    log.debug("Following symlink " + se.getPath() + " to " + target);
+                }
+                request.reset();
+                retarget(rpath, target);
             }
         }
 
-        throw new CIFSException("Loop in DFS referrals");
+        throw new CIFSException("Loop in DFS referrals or symbolic links");
+    }
+
+    /**
+     * Works out the path a symbolic link points at.
+     *
+     * <p>
+     * UnparsedPathLength counts the UTF-16 bytes of the requested path the server did not consume
+     * before it hit the link, the separator ahead of them included, so everything before that tail
+     * ends with the link itself and is what the target replaces. Measured against Samba 4.22 and
+     * Windows Server 2025, which agree.
+     * </p>
+     *
+     * @param requested the full UNC path that was asked for
+     * @param substituteName the target the server named
+     * @param relative whether that target is relative to the directory holding the link
+     * @param unparsedPathLength how much of the requested path was left unconsumed, in bytes
+     * @return the full UNC path to retry, or null when the link cannot be followed
+     */
+    static String resolveSymlink(final String requested, final String substituteName, final boolean relative,
+            final int unparsedPathLength) {
+        if (requested == null || substituteName == null || substituteName.isEmpty()) {
+            return null;
+        }
+        if (!relative) {
+            // Absolute targets are in the server's own namespace - \??\C:\... on Windows, a POSIX
+            // path on Samba - and name something this share cannot address.
+            return null;
+        }
+        if (unparsedPathLength < 0 || unparsedPathLength % 2 != 0) {
+            return null;
+        }
+        final int tail = unparsedPathLength / 2;
+        if (tail > requested.length()) {
+            return null;
+        }
+        String consumed = requested.substring(0, requested.length() - tail);
+        String remainder = requested.substring(requested.length() - tail);
+        // A directory is addressed with a trailing separator, and the server still reports nothing
+        // unconsumed. That separator belongs to the tail rather than to the link's own name: taken
+        // literally it makes the link its own parent, and the target is then appended to the link
+        // instead of replacing it.
+        while (consumed.length() > 1 && consumed.charAt(consumed.length() - 1) == '\\') {
+            consumed = consumed.substring(0, consumed.length() - 1);
+            remainder = "\\" + remainder;
+        }
+        final int lastSeparator = consumed.lastIndexOf('\\');
+        if (lastSeparator < 0) {
+            return null;
+        }
+
+        final String[] parent = consumed.substring(0, lastSeparator).split("\\\\");
+        // Each appended segment needs at least one character of the target, so this cannot overflow.
+        final String[] segments = new String[parent.length + substituteName.length()];
+        int depth = 0;
+        for (final String segment : parent) {
+            if (!segment.isEmpty()) {
+                segments[depth] = segment;
+                depth++;
+            }
+        }
+        // \server\share is the floor. A target that would climb past it leaves the share, and the
+        // client has no way to address what is on the other side.
+        final int floor = 2;
+        if (depth < floor) {
+            return null;
+        }
+        for (final String segment : substituteName.replace('/', '\\').split("\\\\")) {
+            if (segment.isEmpty() || ".".equals(segment)) {
+                continue;
+            }
+            if ("..".equals(segment)) {
+                if (depth <= floor) {
+                    return null;
+                }
+                depth--;
+                continue;
+            }
+            segments[depth] = segment;
+            depth++;
+        }
+
+        final StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < depth; i++) {
+            sb.append('\\').append(segments[i]);
+        }
+        return sb.append(remainder).toString();
+    }
+
+    /**
+     * Points a request at another path, in both of the forms a request carries: a request is sent
+     * with a share-relative path normally and with the full UNC path when DFS is in play, and which
+     * one applies is decided further down.
+     *
+     * @param request the request to retarget
+     * @param fullUncPath the full UNC path to aim it at
+     */
+    private static void retarget(final RequestWithPath request, final String fullUncPath) {
+        request.setFullUNCPath(request.getDomain(), request.getServer(), fullUncPath);
+        request.setPath(belowShare(fullUncPath));
+    }
+
+    /**
+     * Strips the server and share from a full UNC path, leaving the part a request carries when DFS
+     * is not in play.
+     *
+     * @param fullUncPath a path of the form {@code \server\share\path}
+     * @return the path below the share, or {@code \} for the share itself
+     */
+    private static String belowShare(final String fullUncPath) {
+        int separators = 0;
+        for (int i = 0; i < fullUncPath.length(); i++) {
+            if (fullUncPath.charAt(i) == '\\') {
+                separators++;
+                if (separators == 3) {
+                    return fullUncPath.substring(i);
+                }
+            }
+        }
+        return "\\";
     }
 
     /**

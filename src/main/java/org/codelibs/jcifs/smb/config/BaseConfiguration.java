@@ -148,6 +148,8 @@ public class BaseConfiguration implements Configuration {
     protected int vcNumber = 1;
     /** Whether DFS support is disabled */
     protected boolean dfsDisabled = false;
+    /** Whether a symbolic link the server refuses to follow is resolved by the client */
+    protected boolean followSymlinks = false;
     /** DFS cache time-to-live in seconds */
     protected long dfsTTL = 300;
     /** Whether to use strict DFS path resolution */
@@ -390,6 +392,11 @@ public class BaseConfiguration implements Configuration {
     @Override
     public boolean isDfsDisabled() {
         return this.dfsDisabled;
+    }
+
+    @Override
+    public boolean isFollowSymlinks() {
+        return this.followSymlinks;
     }
 
     @Override

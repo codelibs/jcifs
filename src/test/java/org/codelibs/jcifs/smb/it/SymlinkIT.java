@@ -17,12 +17,15 @@ package org.codelibs.jcifs.smb.it;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Properties;
 
 import org.codelibs.jcifs.smb.impl.SmbFile;
+import org.codelibs.jcifs.smb.impl.SmbSymlinkException;
 import org.codelibs.jcifs.smb.it.env.RequiresBackend;
 import org.codelibs.jcifs.smb.it.env.SmbBackend;
 import org.junit.jupiter.api.Disabled;
@@ -33,10 +36,17 @@ import org.junit.jupiter.api.Test;
  * Symlinks inside and across a share boundary.
  *
  * <p>
- * The two backends behave differently here and both are correct. Samba resolves
- * a symlink on the server, so the client sees an ordinary file. Windows hands
- * the reparse point back and expects the client to resolve it. That is why the
- * tests are split by backend instead of branching.
+ * On the plain share the two backends behave differently and both are correct.
+ * Samba resolves a symlink on the server, so the client sees an ordinary file.
+ * Windows hands the reparse point back and expects the client to resolve it.
+ * That is why those tests are split by backend instead of branching.
+ * </p>
+ *
+ * <p>
+ * The last group is not split, because it uses a share configured so that both
+ * backends report the link rather than resolve it. That is the only arrangement
+ * in which a client-side resolver is reachable at all, and it is what makes the
+ * behaviour testable on every backend rather than on Windows alone.
  * </p>
  */
 class SymlinkIT extends AbstractSmbIT {
@@ -125,6 +135,162 @@ class SymlinkIT extends AbstractSmbIT {
     void windowsResolvesLinkToDirectory() throws Exception {
         try (SmbFile link = new SmbFile(server().url(server().share(), "link-to-dir/"), server().context())) {
             assertTrue(link.isDirectory());
+        }
+    }
+
+    // ------------------------------------------- the link-reporting share --
+    //
+    // Everything below runs on both backends, unlike the two groups above. The
+    // share it uses is configured to hand the link back rather than resolve it,
+    // which Windows does natively and Samba does from 4.22 onwards, and its
+    // in-share links are all relative - the only form a client could ever
+    // resolve, since an absolute target names a path in the server's own
+    // namespace.
+    //
+    // These pin what a caller can rely on today. jCIFS does not follow links,
+    // so every one of them ends in SmbSymlinkException carrying the target, and
+    // that has to keep being true for any caller who has not opted into
+    // following.
+
+    private SmbFile reporting(final String name) throws Exception {
+        return new SmbFile(server().url(server().symlinkShare(), name), server().context());
+    }
+
+    @Test
+    @DisplayName("an ordinary file in the link-reporting share is unaffected")
+    void ordinaryFileIsUnaffected() throws Exception {
+        try (SmbFile file = reporting("target.txt")) {
+            assertTrue(file.exists(), "a file that is not a link should behave normally");
+            assertEquals(TARGET_CONTENTS, read(file));
+        }
+    }
+
+    @Test
+    @DisplayName("a link reports its target rather than resolving it")
+    void linkReportsItsTarget() throws Exception {
+        try (SmbFile link = reporting("link-to-file")) {
+            final SmbSymlinkException e = assertThrows(SmbSymlinkException.class, link::exists);
+            assertEquals("target.txt", e.getSubstituteName());
+            assertTrue(e.isRelative(), "an in-share target is relative");
+            assertEquals(0, e.getUnparsedPathLength(), "the link itself was requested, so nothing is left over");
+            assertTrue(e.getPath().endsWith("\\link-to-file"), "the requested path is reported: " + e.getPath());
+        }
+    }
+
+    @Test
+    @DisplayName("reading a link fails the same way as looking at it")
+    void readingALinkReportsTheTargetToo() throws Exception {
+        try (SmbFile link = reporting("link-to-file")) {
+            final SmbSymlinkException e = assertThrows(SmbSymlinkException.class, link::getInputStream);
+            assertEquals("target.txt", e.getSubstituteName());
+        }
+    }
+
+    @Test
+    @DisplayName("a link to a directory is reported, not listed through")
+    void linkToDirectoryIsReported() throws Exception {
+        try (SmbFile link = reporting("link-to-dir/")) {
+            final SmbSymlinkException e = assertThrows(SmbSymlinkException.class, link::list);
+            assertEquals("subdir", e.getSubstituteName());
+            assertTrue(e.isRelative());
+        }
+    }
+
+    @Test
+    @DisplayName("a path through a link names the tail the server did not consume")
+    void pathThroughALinkReportsTheUnconsumedTail() throws Exception {
+        try (SmbFile file = reporting("link-to-dir/inside.txt")) {
+            final SmbSymlinkException e = assertThrows(SmbSymlinkException.class, file::exists);
+            assertEquals("subdir", e.getSubstituteName(), "the target is the link's, not the whole path's");
+            // UnparsedPathLength counts UTF-16 bytes of the part the server did not reach, and the
+            // separator ahead of it counts. Resolving means replacing everything before this tail.
+            assertEquals("\\inside.txt".length() * 2, e.getUnparsedPathLength());
+        }
+    }
+
+    @Test
+    @DisplayName("a deeper path through a link reports a correspondingly longer tail")
+    void deeperPathThroughALinkReportsALongerTail() throws Exception {
+        try (SmbFile file = reporting("link-to-dir/deeper/still.txt")) {
+            final SmbSymlinkException e = assertThrows(SmbSymlinkException.class, file::exists);
+            assertEquals("subdir", e.getSubstituteName());
+            assertEquals("\\deeper\\still.txt".length() * 2, e.getUnparsedPathLength());
+        }
+    }
+
+    @Test
+    @DisplayName("a broken link is reported with its target rather than as missing")
+    void brokenLinkIsReportedWithItsTarget() throws Exception {
+        try (SmbFile link = reporting("link-broken")) {
+            final SmbSymlinkException e = assertThrows(SmbSymlinkException.class, link::exists);
+            assertEquals("missing.txt", e.getSubstituteName(), "the server names the target even though it does not exist");
+            assertTrue(e.isRelative());
+        }
+    }
+
+    @Test
+    @DisplayName("a target outside the share is reported as absolute")
+    void targetOutsideTheShareIsAbsolute() throws Exception {
+        try (SmbFile link = reporting("link-outside")) {
+            final SmbSymlinkException e = assertThrows(SmbSymlinkException.class, link::exists);
+            assertFalse(e.isRelative(), "an absolute target is in the server's own namespace and cannot be resolved against this share: "
+                    + e.getSubstituteName());
+        }
+    }
+
+    // ------------------------------------------------- following turned on --
+    //
+    // Everything above holds with jcifs.client.followSymlinks off, which is the
+    // default. These show what changes when a caller opts in, and - just as
+    // importantly - what does not.
+
+    private SmbFile followingLinks(final String name) throws Exception {
+        final Properties props = new Properties();
+        props.setProperty("jcifs.client.followSymlinks", "true");
+        return new SmbFile(server().url(server().symlinkShare(), name), server().context(props));
+    }
+
+    @Test
+    @DisplayName("with following on, a link reads as the file it points at")
+    void followingResolvesALink() throws Exception {
+        try (SmbFile link = followingLinks("link-to-file")) {
+            assertTrue(link.exists());
+            assertEquals(TARGET_CONTENTS, read(link));
+        }
+    }
+
+    @Test
+    @DisplayName("with following on, a path through a link directory reaches the file")
+    void followingResolvesAPathThroughALinkDirectory() throws Exception {
+        try (SmbFile file = followingLinks("link-to-dir/inside.txt")) {
+            assertTrue(file.exists());
+            assertEquals("inside subdir\n", read(file));
+        }
+    }
+
+    @Test
+    @DisplayName("with following on, a link to a directory can be listed through")
+    void followingListsThroughALinkToADirectory() throws Exception {
+        try (SmbFile dir = followingLinks("link-to-dir/")) {
+            assertTrue(dir.isDirectory());
+            assertEquals(1, dir.list().length);
+        }
+    }
+
+    @Test
+    @DisplayName("following does not conjure a target that is not there")
+    void followingLeavesABrokenLinkMissing() throws Exception {
+        try (SmbFile link = followingLinks("link-broken")) {
+            assertFalse(link.exists(), "the link resolves, but what it points at does not exist");
+        }
+    }
+
+    @Test
+    @DisplayName("following still refuses a target outside the share")
+    void followingStillRefusesAnAbsoluteTarget() throws Exception {
+        try (SmbFile link = followingLinks("link-outside")) {
+            final SmbSymlinkException e = assertThrows(SmbSymlinkException.class, link::exists);
+            assertFalse(e.isRelative(), "an absolute target is reported, not followed: " + e.getSubstituteName());
         }
     }
 }

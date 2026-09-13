@@ -149,6 +149,16 @@ public class DelegatingConfiguration implements Configuration {
     /**
      * {@inheritDoc}
      *
+     * @see org.codelibs.jcifs.smb.Configuration#isFollowSymlinks()
+     */
+    @Override
+    public boolean isFollowSymlinks() {
+        return this.delegate.isFollowSymlinks();
+    }
+
+    /**
+     * {@inheritDoc}
+     *
      * @see org.codelibs.jcifs.smb.Configuration#isDfsConvertToFQDN()
      */
     @Override
