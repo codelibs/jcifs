@@ -152,24 +152,45 @@ public interface SmbResource extends AutoCloseable {
     boolean isDirectory() throws CIFSException;
 
     /**
-     * Tests to see if the file this <code>SmbResource</code> represents
-     * exists and is not marked read-only. By default, resources are
-     * considered to be read-only and therefore for <code>smb://</code>,
-     * <code>smb://workgroup/</code>, and <code>smb://server/</code> resources
-     * will be read-only.
+     * Tests to see if the file this <code>SmbResource</code> represents can be
+     * written.
      *
-     * @return <code>true</code> if the resource exists is not marked
-     *         read-only
+     * <p>
+     * The resource has to exist and not be marked read-only. On SMB2 the server
+     * is also asked what access it grants this caller, on the same open that
+     * reads the attributes, and a file it will not let the caller write reports
+     * <code>false</code> even when no read-only attribute is set: a permission
+     * that denies writing does not show up in the attributes at all. Where the
+     * server reports no such access - SMB1, or a server that declines to work it
+     * out - only the attribute is consulted, as before.
+     * </p>
+     *
+     * <p>
+     * By default, resources are considered to be read-only and therefore for
+     * <code>smb://</code>, <code>smb://workgroup/</code>, and
+     * <code>smb://server/</code> resources will be read-only.
+     * </p>
+     *
+     * @return <code>true</code> if the resource exists, is not marked read-only,
+     *         and is not one the server says this caller may not write
      * @throws CIFSException if an error occurs accessing the resource
      */
     boolean canWrite() throws CIFSException;
 
     /**
      * Tests to see if the file this <code>SmbResource</code> represents can be
-     * read. Because any file, directory, or other resource can be read if it
-     * exists, this method simply calls the <code>exists</code> method.
+     * read.
      *
-     * @return <code>true</code> if the file is read-only
+     * <p>
+     * On SMB2 the server is asked what access it grants this caller, on the same
+     * open that reads the attributes, and a file whose contents it will not hand
+     * over reports <code>false</code>. Where the server reports no such access -
+     * SMB1, or a server that declines to work it out - this falls back to whether
+     * the resource exists, which is all this method used to answer.
+     * </p>
+     *
+     * @return <code>true</code> if the resource exists and the server does not
+     *         say this caller may not read it
      * @throws CIFSException if an error occurs accessing the resource
      */
     boolean canRead() throws CIFSException;

@@ -111,6 +111,24 @@ class AccessIT extends AbstractSmbIT {
     }
 
     @Test
+    @DisplayName("a file the account may not read reports that it cannot be read")
+    void unreadableFileReportsThatItCannotBeRead() throws Exception {
+        try (SmbFile file = access("noaccess.txt")) {
+            assertTrue(file.exists(), "the file should still report that it exists");
+            assertFalse(file.canRead(), "a file whose contents the server denies should not report that it can be read");
+        }
+    }
+
+    @Test
+    @DisplayName("a file the account may not write reports that it cannot be written")
+    void readOnlyFileReportsThatItCannotBeWritten() throws Exception {
+        try (SmbFile file = access("readonly.txt")) {
+            assertTrue(file.canRead(), "the file should still report that it can be read");
+            assertFalse(file.canWrite(), "a file the server will not let the account write should not report that it can be written");
+        }
+    }
+
+    @Test
     @DisplayName("a file that is not there reports neither read nor write")
     void missingFileReportsNeither() throws Exception {
         try (SmbFile file = access("missing-" + UUID.randomUUID() + ".txt")) {

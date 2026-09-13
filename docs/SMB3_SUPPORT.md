@@ -169,16 +169,37 @@ break anyway.
 | SMB3 leases | Not implemented | Two unused constants; no lease is ever requested, and there is no lease create context to request one with. A lease break is now decoded rather than fatal: before 3.0.4 its 44-byte body failed a decode that demanded 24, and that failure closed the socket, logged off every session and failed every request in flight on the connection. Such a break is logged and otherwise ignored, since no lease was ever held — there is no lease break acknowledgement message either. A lease holding `SMB2_LEASE_HANDLE_CACHING` is one of the two ways to qualify for a durable handle; see [Why durable handles are not planned](#why-durable-handles-are-not-planned). |
 | Directory leasing | Not implemented | Unused capability constant; depends on leases. Worth knowing before planning anything on it: a directory lease may only be `R` or `R|H`, because a request's write bit is cleared for a directory rather than refused (MS-FSA 2.1.5.18 asks for STATUS_INVALID_PARAMETER; Windows and Samba both just drop the bit). Samba 4.21 does not implement directory leases at all, so nothing is granted there whatever the client asks for; Samba 4.22 does, behind a `smb3 directory leases` global that defaults to `auto` - on unless the server is clustered, and only while `smb2 leases` and `oplocks` are on and `kernel oplocks` is off. The server advertises the capability only to a client that advertised it first. |
 | Durable / persistent handles | Not implemented, and not planned | No DHnQ/DH2Q/DHnC/DH2C contexts, no app instance id, no handle reconnect path. See [Why durable handles are not planned](#why-durable-handles-are-not-planned) for what it would take and why it is not worth it here. |
-| Create contexts (the framework itself) | Not functional | The request side encodes correctly: `Smb2CreateRequest.setCreateContexts()` lays contexts out as MS-SMB2 2.2.13.2 requires, and `CreateContextIT` checks that a real server answers each one. But nothing outside the tests calls it, and `Smb2CreateResponse.createContext()` is `return null`, so a context in a response is skipped. Before 3.0.4 no context could be sent at all — `size()` left out each context's header and name, so the request failed before it was sent — and the encoder also zeroed every `Next` and undercounted `CreateContextsLength`. |
+| Create contexts (the framework itself) | Partial | Both directions work, for the one context type this client uses. `Smb2CreateRequest.setCreateContexts()` lays contexts out as MS-SMB2 2.2.13.2 requires, and `Smb2CreateResponse` walks the response chain and hands each entry to a factory that resolves it by name. Only `MxAc` resolves to anything today; every other context in a response is still skipped rather than decoded. Before 3.0.4 no context could be sent at all — `size()` left out each context's header and name, so the request failed before it was sent — and the encoder also zeroed every `Next` and undercounted `CreateContextsLength`. |
+| Maximal access (`MxAc`) | Supported | Sent on the open that reads a file's attributes, which costs no extra round trip, and the reported access is what `canRead()` and `canWrite()` answer from. See [What a caller may do with a file](#what-a-caller-may-do-with-a-file). |
 
-The last row is the blocker for the three above it: leases, durable handles and
-persistent handles all ride on create contexts. Contexts can now be sent, but a
-context in a response is still dropped. Note how little is missing there: the
-walker in `Smb2CreateResponse` is complete — it follows the `Next` chain,
-bounds-checks each entry and collects them — and only the factory that turns a
-context name into a response object is `return null`. Recognising a lease or
-durable handle response means adding those response types and a dispatch on the
-name, not writing a decoder.
+Leases, durable handles and persistent handles all ride on create contexts, and
+what is missing for them is no longer the framework: the walker follows the
+`Next` chain, bounds-checks each entry and collects them, and the factory that
+turns a context name into a response object now dispatches on the name.
+Recognising a lease or durable handle response means adding those response types
+and another branch there, not writing a decoder.
+
+### What a caller may do with a file
+
+`canRead()` and `canWrite()` used to answer from the file attributes alone, and
+the attributes do not carry permissions: `canRead()` was documented as "simply
+calls the `exists` method", so a file the server would refuse to open reported
+that it could be read, and a file protected by an ACL rather than by the
+read-only attribute reported that it could be written. For a caller that walks a
+share deciding what to fetch — which is most of them — that turns a permission
+into a failure discovered one open too late.
+
+Since 3.0.4 the open that reads the attributes also carries
+`SMB2_CREATE_QUERY_MAXIMAL_ACCESS`, and the access the server reports is what
+those two methods answer from. Both are still gated on `exists()` first, and
+`canWrite()` still requires the read-only attribute to be clear as well.
+
+Where the server reports no access — SMB1, which cannot be asked, or a server
+that declines to work it out — both fall back to exactly what they answered
+before. That is deliberate: not knowing what is granted is not the same as
+knowing nothing is, and treating the two alike would hide files that are in fact
+readable. A handle opened for a specific access reports nothing about the rest,
+so an open made that way clears the recorded access rather than narrowing it.
 
 ### Why durable handles are not planned
 
