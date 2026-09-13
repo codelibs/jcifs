@@ -45,7 +45,12 @@ jobs:
 
     - name: Probe which negotiate contexts the server answers
       shell: bash
-      run: python build_helpers/negprobe.py 127.0.0.1 445 localhost
+      run: |
+        for offer in 1,2,3,4,5 1 2 3 4 5 2,3; do
+          python build_helpers/negprobe.py 127.0.0.1 445 localhost "$offer"
+        done
+        python build_helpers/negprobe.py 127.0.0.1 445 localhost 1,2,3,4,5 chained
+        python build_helpers/negprobe.py 127.0.0.1 445 localhost none
 
     - name: Run the integration tests
       run: mvn -B verify --file pom.xml

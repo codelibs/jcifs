@@ -1,10 +1,18 @@
 #!/usr/bin/env python3
 """Raw SMB2 NEGOTIATE probe.
 
-Offers preauth-integrity, encryption, compression and netname negotiate
-contexts and reports which ones the server answers with. Unauthenticated:
-NEGOTIATE is the first message on the connection, so no credentials are
+Offers a chosen set of compression algorithms alongside the preauth-integrity,
+encryption and netname contexts, and reports which contexts the server answers
+with. NEGOTIATE is the first message on the connection, so no credentials are
 involved.
+
+Usage: negprobe.py <host> [port] [netname] [algos] [chained]
+
+  algos    comma-separated compression algorithm ids, or "none" to omit the
+           compression context entirely. Default 1,2,3,4,5.
+  chained  the literal word "chained" to set SMB2_COMPRESSION_CAPABILITIES_FLAG_CHAINED.
+
+Always exits 0: it reports, it does not judge.
 """
 import socket
 import struct
@@ -31,7 +39,14 @@ CTX_NAMES = {
     CTX_POSIX: "POSIX_EXTENSIONS",
 }
 
-COMPRESSION_ALGOS = {0: "NONE", 1: "LZNT1", 2: "LZ77", 3: "LZ77+Huffman", 4: "Pattern_V1", 5: "LZ4"}
+COMPRESSION_ALGOS = {
+    0: "NONE",
+    1: "LZNT1",
+    2: "LZ77",
+    3: "LZ77+Huffman",
+    4: "Pattern_V1",
+    5: "LZ4",
+}
 
 
 def pad8(buf):
@@ -44,7 +59,7 @@ def context(ctype, data):
     return pad8(struct.pack("<HHI", ctype, len(data), 0) + data)
 
 
-def build_negotiate(netname):
+def build_negotiate(netname, algos, chained):
     dialects = [0x0202, 0x0210, 0x0300, 0x0302, 0x0311]
 
     # StructureSize, CreditCharge, Status, Command, CreditRequest, Flags,
@@ -53,6 +68,18 @@ def build_negotiate(netname):
         "<HHIHHIIQIIQ16s", 64, 0, 0, 0, 31, 0, 0, 0, 0, 0, 0, b"\x00" * 16
     )
     assert len(header) == 64, len(header)
+
+    ctxs = b""
+    ctxs += context(CTX_PREAUTH, struct.pack("<HH", 1, 32) + struct.pack("<H", 1) + b"\x11" * 32)
+    ctxs += context(CTX_ENCRYPTION, struct.pack("<H", 2) + struct.pack("<HH", 2, 1))
+    ctx_count = 2
+    if algos:
+        data = struct.pack("<HHI", len(algos), 0, 1 if chained else 0)
+        data += b"".join(struct.pack("<H", a) for a in algos)
+        ctxs += context(CTX_COMPRESSION, data)
+        ctx_count += 1
+    ctxs += context(CTX_NETNAME, netname.encode("utf-16-le"))
+    ctx_count += 1
 
     fixed_len = 36 + 2 * len(dialects)
     ctx_offset = 64 + fixed_len
@@ -67,21 +94,12 @@ def build_negotiate(netname):
         0x0000007F,  # every capability bit the spec defines
         uuid.uuid4().bytes,
         ctx_offset,
-        4,
+        ctx_count,
         0,
     )
     for d in dialects:
         body += struct.pack("<H", d)
     body = pad8(header + body)[64:]
-
-    ctxs = b""
-    ctxs += context(CTX_PREAUTH, struct.pack("<HH", 1, 32) + struct.pack("<H", 1) + b"\x11" * 32)
-    ctxs += context(CTX_ENCRYPTION, struct.pack("<H", 2) + struct.pack("<HH", 2, 1))
-    ctxs += context(
-        CTX_COMPRESSION,
-        struct.pack("<HHI", 4, 0, 0) + struct.pack("<HHHH", 1, 2, 3, 4),
-    )
-    ctxs += context(CTX_NETNAME, netname.encode("utf-16-le"))
 
     return header + body + ctxs
 
@@ -90,39 +108,45 @@ def main():
     host = sys.argv[1]
     port = int(sys.argv[2]) if len(sys.argv) > 2 else 445
     netname = sys.argv[3] if len(sys.argv) > 3 else host
+    algo_arg = sys.argv[4] if len(sys.argv) > 4 else "1,2,3,4,5"
+    chained = len(sys.argv) > 5 and sys.argv[5] == "chained"
 
-    msg = build_negotiate(netname)
-    s = socket.create_connection((host, port), timeout=10)
-    s.sendall(struct.pack(">I", len(msg)) + msg)
+    if algo_arg.lower() == "none":
+        algos = []
+    else:
+        algos = [int(a) for a in algo_arg.split(",") if a.strip()]
 
-    head = s.recv(4)
-    if len(head) < 4:
-        print("no response")
-        return 1
-    total = struct.unpack(">I", head)[0]
-    buf = b""
-    while len(buf) < total:
-        chunk = s.recv(total - len(buf))
-        if not chunk:
-            break
-        buf += chunk
-    s.close()
+    offered = [COMPRESSION_ALGOS.get(a, a) for a in algos]
+    print(f"=== offered compression {offered}{' CHAINED' if chained else ''}")
+
+    msg = build_negotiate(netname, algos, chained)
+    try:
+        s = socket.create_connection((host, port), timeout=15)
+        s.sendall(struct.pack(">I", len(msg)) + msg)
+        head = s.recv(4)
+        if len(head) < 4:
+            print("  no response")
+            return
+        total = struct.unpack(">I", head)[0]
+        buf = b""
+        while len(buf) < total:
+            chunk = s.recv(total - len(buf))
+            if not chunk:
+                break
+            buf += chunk
+        s.close()
+    except OSError as e:
+        print(f"  connection failed: {e}")
+        return
 
     status = struct.unpack("<I", buf[8:12])[0]
-    print(f"response {len(buf)} bytes, status 0x{status:08X}")
     if status != 0:
-        return 1
+        print(f"  NEGOTIATE refused, status 0x{status:08X}")
+        return
 
-    (
-        struct_size,
-        sec_mode,
-        dialect,
-        ctx_count,
-    ) = struct.unpack("<HHHH", buf[64:72])
-    caps = struct.unpack("<I", buf[88:92])[0]
+    dialect, ctx_count = struct.unpack("<H", buf[68:70])[0], struct.unpack("<H", buf[70:72])[0]
     ctx_offset = struct.unpack("<I", buf[124:128])[0]
-    print(f"dialect 0x{dialect:04X}  securityMode 0x{sec_mode:04X}  caps 0x{caps:08X}")
-    print(f"negotiate contexts returned: {ctx_count} (offset {ctx_offset})")
+    print(f"  dialect 0x{dialect:04X}, {ctx_count} contexts returned")
 
     off = ctx_offset
     for _ in range(ctx_count):
@@ -132,12 +156,11 @@ def main():
         extra = ""
         if ctype == CTX_COMPRESSION and dlen >= 8:
             count, _padding, flags = struct.unpack("<HHI", data[:8])
-            algos = struct.unpack(f"<{count}H", data[8 : 8 + 2 * count]) if count else ()
+            got = struct.unpack(f"<{count}H", data[8 : 8 + 2 * count]) if count else ()
             extra = "  count={} flags=0x{:08X} algos={}".format(
-                count, flags, [COMPRESSION_ALGOS.get(a, a) for a in algos]
+                count, flags, [COMPRESSION_ALGOS.get(a, a) for a in got]
             )
         elif ctype == CTX_ENCRYPTION and dlen >= 4:
-            count = struct.unpack("<H", data[:2])[0]
             extra = f"  cipher={struct.unpack('<H', data[2:4])[0]}"
         elif ctype == CTX_SIGNING and dlen >= 4:
             extra = f"  algo={struct.unpack('<H', data[2:4])[0]}"
@@ -145,8 +168,6 @@ def main():
         off += 8 + dlen
         off += (-off) % 8
 
-    return 0
-
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()
