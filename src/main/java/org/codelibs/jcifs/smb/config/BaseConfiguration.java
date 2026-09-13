@@ -78,6 +78,8 @@ public class BaseConfiguration implements Configuration {
     protected boolean ipcSigningEnforced = true;
     /** Whether SMB3 encryption is enabled */
     protected boolean encryptionEnabled = false;
+    /** Whether SMB3 compression is enabled */
+    protected boolean compressionEnabled = false;
     /** SMB 3.1.1 encryption ciphers to offer, in preference order */
     protected int[] encryptionCiphers;
     /** SMB 3.1.1 signing algorithms to offer, in preference order */
@@ -577,6 +579,11 @@ public class BaseConfiguration implements Configuration {
     @Override
     public boolean isEncryptionEnabled() {
         return this.encryptionEnabled;
+    }
+
+    @Override
+    public boolean isCompressionEnabled() {
+        return this.compressionEnabled;
     }
 
     @Override

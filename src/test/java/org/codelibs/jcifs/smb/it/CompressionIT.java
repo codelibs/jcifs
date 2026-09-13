@@ -17,14 +17,22 @@ package org.codelibs.jcifs.smb.it;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Properties;
 import java.util.Random;
 
 import org.codelibs.jcifs.smb.CIFSContext;
+import org.codelibs.jcifs.smb.DialectVersion;
+import org.codelibs.jcifs.smb.impl.SmbCompressionProbe;
 import org.codelibs.jcifs.smb.impl.SmbFile;
+import org.codelibs.jcifs.smb.it.env.RequiresBackend;
+import org.codelibs.jcifs.smb.it.env.RequiresDialect;
+import org.codelibs.jcifs.smb.it.env.SmbBackend;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -84,6 +92,75 @@ class CompressionIT extends AbstractSmbIT {
         assertRoundTrip("empty.txt", new byte[0]);
     }
 
+    @Test
+    @DisplayName("compression is not negotiated unless it is asked for")
+    void compressionIsOffByDefault() throws Exception {
+        final CIFSContext context = server().context();
+        this.workDir = createWorkDir(context, server().share());
+        final SmbFile file = writeFile(this.workDir, "default.txt", "default configuration");
+
+        assertFalse(SmbCompressionProbe.negotiated(file), "the default configuration should not negotiate compression");
+    }
+
+    @Test
+    @DisplayName("a payload that compresses well comes back byte for byte with compression asked for")
+    void compressiblePayloadRoundTripsWithCompressionEnabled() throws Exception {
+        assertRoundTripCompressed("compressible-on.txt", compressible(PAYLOAD));
+    }
+
+    @Test
+    @DisplayName("a payload that does not compress comes back byte for byte with compression asked for")
+    void incompressiblePayloadRoundTripsWithCompressionEnabled() throws Exception {
+        final byte[] payload = new byte[PAYLOAD];
+        new Random(13).nextBytes(payload);
+        assertRoundTripCompressed("incompressible-on.bin", payload);
+    }
+
+    @Test
+    @RequiresBackend(SmbBackend.WINDOWS)
+    @RequiresDialect(DialectVersion.SMB311)
+    @DisplayName("a server that supports compression agrees to it when asked")
+    void compressionIsNegotiatedWhereTheServerSupportsIt() throws Exception {
+        // Samba 4.22 does not implement compression at all, so only Windows can show
+        // that the offer is accepted rather than quietly ignored. Without this the
+        // round trips above would pass against a server that never compressed a byte.
+        final CIFSContext context = server().context(compressionEnabled());
+        this.workDir = createWorkDir(context, server().share());
+        final SmbFile file = writeFile(this.workDir, "negotiated.txt", "compression negotiated");
+
+        assertTrue(SmbCompressionProbe.negotiated(file), "Windows should agree to the compression algorithm that was offered");
+    }
+
+    @Test
+    @RequiresBackend(SmbBackend.SAMBA)
+    @DisplayName("a server that does not support compression is left working")
+    void offeringCompressionToASambaServerChangesNothing() throws Exception {
+        // The offer has to be harmless where it is not understood: Samba answers the
+        // negotiate without a compression context at all.
+        final CIFSContext context = server().context(compressionEnabled());
+        this.workDir = createWorkDir(context, server().share());
+        final SmbFile file = writeFile(this.workDir, "ignored.txt", "compression ignored");
+
+        assertFalse(SmbCompressionProbe.negotiated(file), "Samba should not agree to compression");
+        assertEquals("compression ignored", readBack(file));
+    }
+
+    private static Properties compressionEnabled() {
+        final Properties props = new Properties();
+        props.setProperty("jcifs.client.compressionEnabled", "true");
+        return props;
+    }
+
+    private void assertRoundTripCompressed(final String name, final byte[] payload) throws Exception {
+        assertRoundTrip(name, payload, server().context(compressionEnabled()));
+    }
+
+    private static String readBack(final SmbFile file) throws Exception {
+        try (InputStream in = file.getInputStream()) {
+            return new String(in.readAllBytes(), StandardCharsets.UTF_8);
+        }
+    }
+
     /**
      * Bytes that repeat, so that a server willing to compress has every reason to.
      */
@@ -97,7 +174,10 @@ class CompressionIT extends AbstractSmbIT {
     }
 
     private void assertRoundTrip(final String name, final byte[] payload) throws Exception {
-        final CIFSContext context = server().context();
+        assertRoundTrip(name, payload, server().context());
+    }
+
+    private void assertRoundTrip(final String name, final byte[] payload, final CIFSContext context) throws Exception {
         this.workDir = createWorkDir(context, server().share());
         final SmbFile file = new SmbFile(this.workDir, name);
 

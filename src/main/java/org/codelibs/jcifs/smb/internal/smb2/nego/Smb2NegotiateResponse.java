@@ -67,6 +67,12 @@ public class Smb2NegotiateResponse extends ServerMessageBlock2Response implement
     private int selectedCipher = -1;
     private int selectedPreauthHash = -1;
     private int selectedSigningAlgorithm = -1;
+    /**
+     * What the server agreed to compress with, empty when it declined and null when
+     * compression was never asked for. Empty and null are kept apart because only the
+     * first means the question was put and answered.
+     */
+    private int[] compressionAlgorithms;
 
     /**
      * Constructs an SMB2 negotiate response with the given configuration.
@@ -120,6 +126,25 @@ public class Smb2NegotiateResponse extends ServerMessageBlock2Response implement
      */
     public int getSelectedCipher() {
         return this.selectedCipher;
+    }
+
+    /**
+     * Gets the compression algorithms the server agreed to.
+     *
+     * @return the agreed algorithms, an empty array if the server declined, or null if
+     *         compression was not negotiated at all
+     */
+    public int[] getCompressionAlgorithms() {
+        return this.compressionAlgorithms;
+    }
+
+    /**
+     * Whether a message on this connection may arrive compressed.
+     *
+     * @return true when at least one compression algorithm was agreed
+     */
+    public boolean isCompressionNegotiated() {
+        return this.compressionAlgorithms != null && this.compressionAlgorithms.length > 0;
     }
 
     /**
@@ -336,7 +361,7 @@ public class Smb2NegotiateResponse extends ServerMessageBlock2Response implement
             return false;
         }
 
-        boolean foundPreauth = false, foundEnc = false, foundSigning = false;
+        boolean foundPreauth = false, foundEnc = false, foundSigning = false, foundCompression = false;
         for (final NegotiateContextResponse ncr : this.negotiateContexts) {
             if (ncr == null) {
                 continue;
@@ -352,6 +377,27 @@ public class Smb2NegotiateResponse extends ServerMessageBlock2Response implement
             }
             if (ncr.getContextType() == SigningNegotiateContext.NEGO_CTX_SIGNING_TYPE) {
                 log.error("Multiple signing negotiate contexts");
+                return false;
+            }
+            if (!foundCompression && ncr.getContextType() == CompressionNegotiateContext.NEGO_CTX_COMPRESSION_TYPE) {
+                foundCompression = true;
+                final CompressionNegotiateContext comp = (CompressionNegotiateContext) ncr;
+                final int[] selected = comp.getAlgorithms();
+                if (selected.length == 1 && selected[0] == CompressionNegotiateContext.COMPRESSION_NONE) {
+                    // MS-SMB2 3.2.5.2: NONE on its own is the server declining, which is not
+                    // an error. Recording it as an empty list rather than failing is what
+                    // keeps a connection to such a server working exactly as it did before.
+                    this.compressionAlgorithms = new int[0];
+                    continue;
+                }
+                if (!checkCompressionContext(req, comp)) {
+                    return false;
+                }
+                this.compressionAlgorithms = selected;
+                continue;
+            }
+            if (ncr.getContextType() == CompressionNegotiateContext.NEGO_CTX_COMPRESSION_TYPE) {
+                log.error("Multiple compression negotiate contexts");
                 return false;
             }
             if (!foundEnc && ncr.getContextType() == EncryptionNegotiateContext.NEGO_CTX_ENC_TYPE) {
@@ -484,6 +530,41 @@ public class Smb2NegotiateResponse extends ServerMessageBlock2Response implement
         if (!valid) {
             log.error("Server returned invalid cipher selection");
             return false;
+        }
+        return true;
+    }
+
+    private static boolean checkCompressionContext(final Smb2NegotiateRequest req, final CompressionNegotiateContext cc) {
+        if (cc.getAlgorithms() == null || cc.getAlgorithms().length == 0) {
+            log.error("Server returned no compression selection");
+            return false;
+        }
+
+        CompressionNegotiateContext offered = null;
+        for (final NegotiateContextRequest rnc : req.getNegotiateContexts()) {
+            if (rnc instanceof CompressionNegotiateContext) {
+                offered = (CompressionNegotiateContext) rnc;
+            }
+        }
+        if (offered == null) {
+            log.error("Server returned a compression selection that was never asked for");
+            return false;
+        }
+
+        // MS-SMB2 3.2.5.2: every algorithm named has to be one that was offered. The
+        // offer says what this client can decompress, so agreeing to anything else
+        // would be promising to read something it cannot.
+        for (final int selected : cc.getAlgorithms()) {
+            boolean offeredIt = false;
+            for (final int algorithm : offered.getAlgorithms()) {
+                if (algorithm == selected) {
+                    offeredIt = true;
+                }
+            }
+            if (!offeredIt) {
+                log.error("Server selected compression algorithm " + selected + ", which was not offered");
+                return false;
+            }
         }
         return true;
     }
@@ -654,6 +735,8 @@ public class Smb2NegotiateResponse extends ServerMessageBlock2Response implement
      */
     protected static NegotiateContextResponse createContext(final int type) {
         switch (type) {
+        case CompressionNegotiateContext.NEGO_CTX_COMPRESSION_TYPE:
+            return new CompressionNegotiateContext();
         case EncryptionNegotiateContext.NEGO_CTX_ENC_TYPE:
             return new EncryptionNegotiateContext();
         case PreauthIntegrityNegotiateContext.NEGO_CTX_PREAUTH_TYPE:

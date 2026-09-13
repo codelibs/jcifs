@@ -39,6 +39,12 @@ public class Smb2ReadRequest extends ServerMessageBlock2Request<Smb2ReadResponse
      */
     public static byte SMB2_READFLAG_READ_UNBUFFERED = 0x1;
     /**
+     * Asks the server to compress the response (SMB 3.1.1). Without this a server
+     * decides for itself whether to compress what it sends, so setting it is what
+     * makes a compressed reply something the client can rely on rather than hope for.
+     */
+    public static byte SMB2_READFLAG_REQUEST_COMPRESSED = 0x2;
+    /**
      * Channel type for standard read without RDMA
      */
     public static int SMB2_CHANNEL_NONE = 0x0;

@@ -101,6 +101,14 @@ public class Smb2NegotiateRequest extends ServerMessageBlock2Request<Smb2Negotia
                 negoContexts.add(new EncryptionNegotiateContext(config, config.getEncryptionCiphers()));
             }
 
+            if (config.isCompressionEnabled()) {
+                // Only what this client can actually decompress is offered, and that is not
+                // configurable. MS-SMB2 3.2.5.2 requires the connection to fail if the server
+                // names an algorithm that was not offered, so offering one we cannot read would
+                // turn a working connection into a broken one.
+                negoContexts.add(new CompressionNegotiateContext(config, new int[] { CompressionNegotiateContext.COMPRESSION_LZ77 }));
+            }
+
             // Unconditionally, unlike the encryption context: signing is negotiated whether or not encryption is
             // in use, and a signed but unencrypted session is the ordinary case. Without this context a 3.1.1
             // server signs with AES-128-CMAC (MS-SMB2 3.3.5.4), which is what the client did before.

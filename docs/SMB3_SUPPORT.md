@@ -124,7 +124,7 @@ the fix in #92.
 | --- | --- |
 | `PREAUTH_INTEGRITY_CAPABILITIES` (0x1) | Supported, SHA-512 only. A response without it fails the connection. |
 | `ENCRYPTION_CAPABILITIES` (0x2) | Supported, all four ciphers: AES-128-CCM, AES-128-GCM, AES-256-CCM, AES-256-GCM. Sent only when encryption is enabled. |
-| `COMPRESSION_CAPABILITIES` (0x3) | Not implemented |
+| `COMPRESSION_CAPABILITIES` (0x3) | Supported | Sent only when `jcifs.client.compressionEnabled` is set, and it offers LZ77 alone, because that is the one algorithm this client can decompress. |
 | `NETNAME_NEGOTIATE_CONTEXT_ID` (0x5) | Not implemented |
 | `TRANSPORT_CAPABILITIES` (0x6) | Not implemented |
 | `RDMA_TRANSFORM_CAPABILITIES` (0x7) | Not implemented |
@@ -333,9 +333,43 @@ file on its first open, as it always has.
 | Named pipes | Supported | Transceive and peek. |
 | Symbolic links / reparse points | Partial | A path that crosses a symbolic link fails with `SmbSymlinkException`, which carries the target decoded from the `STATUS_STOPPED_ON_SYMLINK` error response: `getSubstituteName()`, `getPrintName()`, `isRelative()` and `getUnparsedPathLength()`. Set `jcifs.client.followSymlinks=true` and a link whose target is **relative** is resolved and the request reissued against it, which covers every operation rather than just opening, because the retry sits where DFS referrals are already retried and is bounded the same way. An **absolute** target is never followed: it is expressed in the server's own namespace (`\??\C:\...` from Windows, a POSIX path from Samba) and names something this share cannot address, so it is reported exactly as it is with following off. Following is off by default, so nothing changes for a caller who does not ask for it. Which server you are talking to decides whether any of this comes up: Samba resolves a link inside the share itself unless the share sets `follow symlinks = no`, and only does that from 4.22 onwards, so the error surfaces mainly against Windows. |
 | Multi-channel | Not functional | One unused capability constant, an unused `FSCTL_QUERY_NETWORK_INTERFACE_INFO` constant with no response decoder, and `Smb2SessionSetupRequest.setSessionBinding()`, which encodes the binding flag correctly but is called only from unit tests. A session is pinned to one transport. |
-| Compression | Not implemented | No context, no transform header, no LZ77/LZNT1. |
+| Compression | Partial | Off by default. With `jcifs.client.compressionEnabled` set the client offers LZ77, asks the server to compress what it reads, and decompresses what arrives. It never compresses what it sends. See [Compression](#compression-what-is-and-is-not-done) below. |
 | RDMA (SMB Direct) | Not implemented | Two unused read-channel constants. No RDMA transport and no dependency. |
 | Witness protocol | Not implemented | Nothing in the source tree. |
+
+### Compression: what is and is not done
+
+Reading only, and off by default. Set `jcifs.client.compressionEnabled=true` and
+the client offers a compression algorithm during SMB 3.1.1 negotiation, sets
+`SMB2_READFLAG_REQUEST_COMPRESSED` on its reads, and decompresses what comes
+back. **It never compresses what it sends.** A client is not obliged to, and not
+doing so keeps the whole compressor out of the code.
+
+Only **LZ77** (XPRESS) is offered, and that is deliberately not configurable. A
+server may answer with any algorithm from the offer, and MS-SMB2 3.2.5.2
+requires the connection to fail if it names one the client did not offer — so
+the offer is a statement of what this client can actually read. A settable list
+would let a caller promise something it cannot honour and break the connection
+doing it.
+
+Two things were measured rather than read off the documentation, and one of them
+is easy to get wrong:
+
+- **Samba 4.22 does not implement compression at all.** Its `smb2_negprot.c`
+  never mentions the context, and a negotiate probe confirms it answers with
+  only the pre-auth and encryption contexts. Offering compression to it changes
+  nothing, which is what the Samba integration tests pin.
+- **Windows Server 2025 supports LZNT1, LZ77, LZ77+Huffman, Pattern_V1 and
+  LZ4** — each confirmed by offering it alone. Offering all five returns
+  `LZNT1` and `Pattern_V1`, which looks like LZ77 being unsupported and is not:
+  the server returns a subset of the offer by its own preference. Offering
+  `LZ77` alone returns `LZ77`.
+
+Chained compression is never negotiated, so the chained header is not read. A
+chained message, an algorithm that was not agreed, or data that does not
+decompress to the size the sender declared each fail the connection rather than
+being skipped, as MS-SMB2 3.2.5.1.1.2 requires: a frame that cannot be
+decompressed cannot be measured either, so there is no way to find the next one.
 
 ## Configuration knobs referenced above
 
@@ -349,6 +383,7 @@ file on its first open, as it always has.
 | `jcifs.client.ipcSigningEnforced` | `true` | Require signing on IPC$. |
 | `jcifs.client.requireSecureNegotiate` | `true` | Validate the negotiate exchange on tree connect. |
 | `jcifs.client.encryptionEnabled` | `false` | Opt in to SMB3 encryption — see [Encryption](#encryption). |
+| `jcifs.client.compressionEnabled` | `false` | Opt in to SMB 3.1.1 compression of what the client reads — see [Compression](#compression-what-is-and-is-not-done). No effect below SMB 3.1.1, and none against a server that does not implement it. |
 | `jcifs.client.signingAlgorithms` | `AES-CMAC, AES-GMAC, HMAC-SHA256` | The SMB 3.1.1 signing algorithms to offer, in preference order. An unrecognised name fails configuration rather than being ignored. AES-CMAC leads because it is what this client has always signed with, and the server chooses from the offered list by its own preference — so the negotiated algorithm is unchanged unless this property is. Offering only `AES-GMAC` requires it. No effect below SMB 3.1.1, which does not negotiate a signing algorithm. |
 | `jcifs.client.encryptionCiphers` | `AES-128-GCM, AES-128-CCM, AES-256-GCM, AES-256-CCM` | The SMB 3.1.1 ciphers to offer, in preference order. An unrecognised name fails configuration rather than being ignored. Note that the server chooses one from the offered list and may apply its own preference when doing so, so listing AES-256 first does not make AES-256 the negotiated cipher; offering only the AES-256 ciphers does require them. No effect below SMB 3.1.1, which does not negotiate a cipher. |
 | `jcifs.client.maxTransferSize` | `1048576` | Largest payload a single SMB2 read or write may carry. The negotiated size is the smaller of this and the server's offer. Has no effect below SMB 2.1, which cannot carry more than 64 KiB in one request. |

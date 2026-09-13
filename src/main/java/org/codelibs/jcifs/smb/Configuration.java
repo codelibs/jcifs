@@ -525,6 +525,28 @@ public interface Configuration {
     boolean isEncryptionEnabled();
 
     /**
+     * Property {@code jcifs.client.compressionEnabled} (boolean, default false)
+     *
+     * Enables SMB 3.1.1 compression. When enabled the client offers the compression algorithms it is able to
+     * decompress during protocol negotiation, and asks the server to compress the data it reads back. Nothing
+     * this client sends is compressed: a client is never obliged to compress, and a server does not require it.
+     *
+     * <p>
+     * Which algorithms are offered is deliberately not configurable, unlike {@link #getEncryptionCiphers()}.
+     * MS-SMB2 3.2.5.2 requires the connection to fail when a server names an algorithm the client did not
+     * offer, so the offer states what this client can actually read rather than what it would prefer - and a
+     * settable list would let a caller promise something it cannot honour.
+     * </p>
+     *
+     * <p>
+     * Has no effect below SMB 3.1.1, which has no negotiate context to carry the offer.
+     * </p>
+     *
+     * @return whether SMB3 compression is enabled
+     */
+    boolean isCompressionEnabled();
+
+    /**
      * Property {@code jcifs.client.encryptionCiphers} (comma-separated, default
      * {@code AES-128-GCM, AES-128-CCM, AES-256-GCM, AES-256-CCM})
      *

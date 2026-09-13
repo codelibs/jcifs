@@ -271,6 +271,9 @@ public class SmbRandomAccessFile implements SmbRandomAccess {
                     request.setOffset(this.fp);
                     request.setReadLength(r);
                     request.setRemainingBytes(len);
+                    if (th.isCompressionNegotiated()) {
+                        request.setReadFlags(Smb2ReadRequest.SMB2_READFLAG_REQUEST_COMPRESSED);
+                    }
                     try {
                         final Smb2ReadResponse resp = th.send(request, RequestParam.NO_RETRY);
                         n = resp.getDataLength();
