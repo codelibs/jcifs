@@ -253,6 +253,7 @@ class SmbFileHandleImpl implements SmbFileHandle {
      * @see java.lang.Object#finalize()
      */
     @Override
+    @SuppressWarnings("removal")
     protected void finalize() throws Throwable {
         if (this.usageCount.get() != 0 && this.open) {
             log.warn("File handle was not properly closed: " + this);

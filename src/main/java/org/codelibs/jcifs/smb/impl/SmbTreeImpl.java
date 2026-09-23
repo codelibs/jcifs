@@ -251,6 +251,7 @@ class SmbTreeImpl implements SmbTreeInternal {
      * @see java.lang.Object#finalize()
      */
     @Override
+    @SuppressWarnings("removal")
     protected void finalize() throws Throwable {
         if (isConnected() && this.usageCount.get() != 0) {
             log.warn("Tree was not properly released");

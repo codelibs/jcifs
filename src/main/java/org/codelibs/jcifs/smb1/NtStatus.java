@@ -30,6 +30,7 @@ public interface NtStatus {
      */
 
     /** @deprecated Use NT_STATUS_SUCCESS instead */
+    @Deprecated
     int NT_STATUS_OK = 0x00000000; // TODO: Remove this constant, use NT_STATUS_SUCCESS instead.
     /** The operation completed successfully */
     int NT_STATUS_SUCCESS = 0x00000000;

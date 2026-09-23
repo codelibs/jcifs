@@ -168,6 +168,7 @@ class SmbTreeHandleImpl implements SmbTreeHandleInternal {
      * @see java.lang.Object#finalize()
      */
     @Override
+    @SuppressWarnings("removal")
     protected void finalize() throws Throwable {
         if (this.usageCount.get() != 0) {
             log.warn("Tree handle was not properly released " + this.resourceLoc.getURL());
