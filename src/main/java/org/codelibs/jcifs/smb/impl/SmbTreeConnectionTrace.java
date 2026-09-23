@@ -34,6 +34,7 @@ class SmbTreeConnectionTrace extends SmbTreeConnection {
     }
 
     @Override
+    @SuppressWarnings("removal")
     protected void finalize() throws Throwable {
         checkRelease();
     }

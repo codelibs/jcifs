@@ -211,6 +211,7 @@ final class SmbSessionImpl implements SmbSessionInternal {
      * @see java.lang.Object#finalize()
      */
     @Override
+    @SuppressWarnings("removal")
     protected void finalize() throws Throwable {
         if (isConnected() && this.usageCount.get() != 0) {
             log.warn("Session was not properly released");
@@ -652,6 +653,7 @@ final class SmbSessionImpl implements SmbSessionInternal {
         }
     }
 
+    @SuppressWarnings("removal")
     private static byte[] createToken(final SSPContext ctx, final byte[] token, Subject s) throws CIFSException {
         if (s != null) {
             try {
@@ -677,6 +679,7 @@ final class SmbSessionImpl implements SmbSessionInternal {
      * @return
      * @throws SmbException
      */
+    @SuppressWarnings("removal")
     protected SSPContext createContext(SmbTransportImpl trans, final String tdomain, final Smb2NegotiateResponse negoResp,
             final boolean doSigning, Subject s) throws SmbException {
 
@@ -853,6 +856,7 @@ final class SmbSessionImpl implements SmbSessionInternal {
      * @param andx
      * @param andxResponse
      */
+    @SuppressWarnings("removal")
     private void sessionSetupSMB1(final SmbTransportImpl trans, final String tdomain, ServerMessageBlock andx,
             ServerMessageBlock andxResponse) throws CIFSException, GeneralSecurityException {
         SmbException ex = null;

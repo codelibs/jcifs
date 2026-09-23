@@ -168,6 +168,7 @@ public abstract class Transport implements Runnable, AutoCloseable {
      * @see java.lang.Object#finalize()
      */
     @Override
+    @SuppressWarnings("removal")
     protected void finalize() throws Throwable {
         if (!isDisconnected() && this.usageCount.get() != 0) {
             log.warn("Session was not properly released");
