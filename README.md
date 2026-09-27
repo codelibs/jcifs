@@ -1,88 +1,96 @@
 # JCIFS - Java CIFS/SMB Client Library
 
 [![Java CI with Maven](https://github.com/codelibs/jcifs/actions/workflows/maven.yml/badge.svg)](https://github.com/codelibs/jcifs/actions/workflows/maven.yml)
-[![Maven Central](https://img.shields.io/maven-central/v/org.codelibs/jcifs.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22org.codelibs%22%20AND%20a:%22jcifs%22)
+[![Maven Central](https://img.shields.io/maven-central/v/org.codelibs/jcifs.svg?label=Maven%20Central)](https://central.sonatype.com/artifact/org.codelibs/jcifs)
 [![License: LGPL v2.1](https://img.shields.io/badge/License-LGPL%20v2.1-blue.svg)](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html)
-[![Java Version](https://img.shields.io/badge/Java-17%2B-green.svg)](https://openjdk.java.net/)
+[![Java Version](https://img.shields.io/badge/Java-17%2B-green.svg)](https://openjdk.org/)
 
-JCIFS is a comprehensive, pure Java implementation of the CIFS/SMB networking protocol suite, providing seamless access to Windows file shares and SMB servers. This library enables Java applications to interact with SMB resources across all major protocol versions while maintaining excellent compatibility with legacy systems.
+JCIFS is a pure Java implementation of the CIFS/SMB client protocol suite. It lets
+Java applications access files and directories on Windows file shares, Samba and
+other SMB servers, over SMB1 as well as SMB2 and SMB3.
 
-## 🚀 Key Features
+This project continues [jcifs-ng](https://github.com/AgNO3/jcifs-ng), which in turn
+is based on the original [jCIFS](https://www.jcifs.org/) library. It is maintained by
+[CodeLibs](https://www.codelibs.org/) and used by the
+[Fess](https://github.com/codelibs/fess) search server to crawl file shares.
 
-### **Protocol Support**
-- **SMB1/CIFS**: Legacy protocol support for older devices and systems
-- **SMB2**: Full SMB 2.0.2, 2.1 support with enhanced performance
-- **SMB3**: Complete SMB 3.0, 3.0.2, 3.1.1 implementation featuring:
-  - **AES-128-CCM encryption** (SMB 3.0/3.0.2)
-  - **AES-128-GCM and AES-128-CCM encryption** (SMB 3.1.1)
-  - **AES-256-GCM and AES-256-CCM encryption** (SMB 3.1.1), offered by default and
+## Features
+
+### Protocol support
+
+- **SMB1/CIFS** for older devices and servers
+- **SMB2**: SMB 2.0.2 and 2.1
+- **SMB3**: SMB 3.0, 3.0.2 and 3.1.1, including:
+  - AES-128-CCM encryption (SMB 3.0/3.0.2)
+  - AES-128-GCM, AES-128-CCM, AES-256-GCM and AES-256-CCM encryption (SMB 3.1.1),
     selectable with `jcifs.client.encryptionCiphers`
-  - **Pre-Authentication Integrity** (SMB 3.1.1)
-  - **AES-CMAC signing** for data integrity, with **AES-GMAC** negotiable on
-    SMB 3.1.1 via `jcifs.client.signingAlgorithms`
-  - **Automatic protocol negotiation**
-  - **Transparent encryption** when required by the server, per session or per share (opt-in, see below)
+  - Pre-authentication integrity (SMB 3.1.1)
+  - AES-CMAC signing, with AES-GMAC negotiable on SMB 3.1.1 via
+    `jcifs.client.signingAlgorithms`
+  - Encryption per session or per share when the server requires it (opt-in, see
+    [Security](#security))
+- Automatic dialect negotiation within a configurable range
 
-See **[SMB2/SMB3 support status](docs/SMB3_SUPPORT.md)** for what is and is not
+See [SMB2/SMB3 support status](docs/SMB3_SUPPORT.md) for what is and is not
 implemented, feature by feature. Leases, oplocks, durable handles, multi-channel,
 directory leasing, compression, RDMA and the witness protocol are not implemented.
 
-### **Security & Authentication**
-- **Multi-method Authentication**: NTLMSSP, Kerberos, SPNEGO
-- **Enterprise Security**: Domain authentication with credential renewal
-- **Guest & Anonymous Access**: Flexible credential management
-- **Per-context Configuration**: No global state, thread-safe operations
+### Authentication
 
-### **Performance & Reliability**
-- **Large File Support**: Efficient ReadX/WriteX operations for multi-GB files
-- **Streaming Operations**: Memory-efficient directory listings and file transfers
-- **Connection Pooling**: Intelligent transport management and reuse
-- **Buffer Caching**: Optimized memory management for high-throughput scenarios
-- **DFS Support**: Distributed File System path resolution
+- NTLMSSP, Kerberos and SPNEGO
+- Domain, guest and anonymous credentials
+- Credential renewal for long-running sessions (`SmbRenewableCredentials`)
 
-### **Modern Java Integration**
-- **Java 17+ Requirement**: Modern language features and performance
-- **SLF4J Logging**: Configurable, enterprise-grade logging
-- **AutoCloseable Resources**: Proper resource management patterns
-- **Jakarta EE Support**: Compatible with modern servlet containers
+### Other
 
-## 📋 Requirements
+- Configuration and credentials held per context (`CIFSContext`) rather than in
+  global state
+- Connection pooling and reuse
+- DFS referral resolution
+- Directory change notification (see [File monitoring](#file-monitoring))
+- Logging through SLF4J
+- Optional NTLM HTTP authentication filter for Jakarta Servlet containers
+  (`org.codelibs.jcifs.smb.http`)
 
-- **Java**: 17 or higher (LTS recommended)
-- **Dependencies**: SLF4J for logging, Bouncy Castle for cryptography
-- **Network**: SMB/CIFS protocol access (typically ports 139/445)
+## Requirements
 
-## 📦 Installation
+- Java 17 or later
+- Runtime dependencies: SLF4J API and Bouncy Castle (`bcprov-jdk18on`)
+- Network access to the SMB server (TCP 445, or 139 for NetBIOS)
+
+## Installation
 
 ### Maven
+
 ```xml
 <dependency>
     <groupId>org.codelibs</groupId>
     <artifactId>jcifs</artifactId>
-    <version>3.0.0</version>
+    <version>3.0.4</version>
 </dependency>
 ```
 
 ### Gradle
+
 ```groovy
-implementation 'org.codelibs:jcifs:3.0.0'
+implementation 'org.codelibs:jcifs:3.0.4'
 ```
 
-### Latest Versions
-Check [Maven Central](https://repo1.maven.org/maven2/org/codelibs/jcifs/) for the most recent releases.
+Released versions are listed on
+[Maven Central](https://repo1.maven.org/maven2/org/codelibs/jcifs/).
 
-## 🏃‍♂️ Quick Start
+## Quick Start
 
-### Basic File Access
+### Basic file access
+
 ```java
 import org.codelibs.jcifs.smb.CIFSContext;
 import org.codelibs.jcifs.smb.context.SingletonContext;
 import org.codelibs.jcifs.smb.impl.SmbFile;
 
-// Using default context
+// Default context, configured from system properties
 CIFSContext context = SingletonContext.getInstance();
 
-// Access a file
 try (SmbFile file = new SmbFile("smb://server/share/file.txt", context)) {
     if (file.exists()) {
         System.out.println("File size: " + file.length());
@@ -91,7 +99,8 @@ try (SmbFile file = new SmbFile("smb://server/share/file.txt", context)) {
 }
 ```
 
-### Reading File Content
+### Reading file content
+
 ```java
 try (SmbFile file = new SmbFile("smb://server/share/document.txt", context);
      InputStream is = file.getInputStream();
@@ -104,7 +113,10 @@ try (SmbFile file = new SmbFile("smb://server/share/document.txt", context);
 }
 ```
 
-### Directory Listing
+### Listing a directory
+
+Directory URLs must end with `/`.
+
 ```java
 try (SmbFile dir = new SmbFile("smb://server/share/", context)) {
     for (SmbFile file : dir.listFiles()) {
@@ -116,181 +128,269 @@ try (SmbFile dir = new SmbFile("smb://server/share/", context)) {
 }
 ```
 
-## 🔐 Authentication Examples
+## Authentication
 
-### Domain Authentication
+### Domain (NTLM) authentication
+
 ```java
+import java.util.Properties;
+
+import org.codelibs.jcifs.smb.CIFSContext;
+import org.codelibs.jcifs.smb.config.PropertyConfiguration;
 import org.codelibs.jcifs.smb.context.BaseContext;
 import org.codelibs.jcifs.smb.impl.NtlmPasswordAuthenticator;
-import org.codelibs.jcifs.smb.config.PropertyConfiguration;
+import org.codelibs.jcifs.smb.impl.SmbFile;
 
-// Create context with domain credentials
 Properties props = new Properties();
-// Optional: Set SMB protocol preferences
+// Optional: restrict the negotiated dialect range
 props.setProperty("jcifs.client.minVersion", "SMB202");
 props.setProperty("jcifs.client.maxVersion", "SMB311");
 
 CIFSContext baseContext = new BaseContext(new PropertyConfiguration(props));
-NtlmPasswordAuthenticator auth = new NtlmPasswordAuthenticator(
-    "DOMAIN",           // Domain name
-    "username",         // Username
-    "password"          // Password
-);
-
+NtlmPasswordAuthenticator auth = new NtlmPasswordAuthenticator("DOMAIN", "username", "password");
 CIFSContext authContext = baseContext.withCredentials(auth);
 
-// Use authenticated context
 try (SmbFile file = new SmbFile("smb://server/share/", authContext)) {
-    // Authenticated operations...
+    // Authenticated operations
 }
 ```
 
-### Kerberos Authentication
+### Kerberos authentication
+
 ```java
 import org.codelibs.jcifs.smb.impl.JAASAuthenticator;
 
-// Kerberos authentication via JAAS login context (requires proper Kerberos/JAAS setup)
-JAASAuthenticator kerbAuth = new JAASAuthenticator("jCIFS");
-CIFSContext kerbContext = baseContext.withCredentials(kerbAuth);
+// Uses the JAAS login configuration entry named "jCIFS"; requires a working
+// Kerberos and JAAS setup (krb5.conf, keytab or ticket cache)
+JAASAuthenticator kerberosAuth = new JAASAuthenticator("jCIFS");
+CIFSContext kerberosContext = baseContext.withCredentials(kerberosAuth);
 ```
 
-### Guest Access
+### Guest and anonymous access
+
 ```java
-// Guest access for servers that allow it
 CIFSContext guestContext = baseContext.withGuestCredentials();
+CIFSContext anonymousContext = baseContext.withAnonymousCredentials();
 ```
 
-## 🔧 Advanced Usage
+## Advanced Usage
 
-### Large File Operations
+### Copying files
+
+`SmbFile.copyTo` copies a file or a directory tree between two locations on SMB
+servers:
+
 ```java
-// Efficient large file copying
 try (SmbFile source = new SmbFile("smb://server/share/largefile.zip", context);
-     SmbFile dest = new SmbFile("smb://server/backup/largefile.zip", context);
+     SmbFile dest = new SmbFile("smb://server/backup/largefile.zip", context)) {
+    source.copyTo(dest);
+}
+```
+
+To copy between SMB and a local file system, use the streams:
+
+```java
+try (SmbFile source = new SmbFile("smb://server/share/largefile.zip", context);
      InputStream is = source.getInputStream();
-     OutputStream os = dest.getOutputStream()) {
-
-    byte[] buffer = new byte[65536]; // 64KB buffer
-    int bytesRead;
-    while ((bytesRead = is.read(buffer)) != -1) {
-        os.write(buffer, 0, bytesRead);
-    }
+     OutputStream os = Files.newOutputStream(Path.of("largefile.zip"))) {
+    is.transferTo(os);
 }
 ```
 
-### File Monitoring
+### File monitoring
+
+`SmbFile.watch(int filter, boolean recursive)` opens a change notification handle
+on a directory. The filter is a combination of the `FILE_NOTIFY_CHANGE_*`
+constants in `FileNotifyInformation`, and each call to `SmbWatchHandle.watch()`
+blocks until the server reports changes:
+
 ```java
+import java.util.List;
+
+import org.codelibs.jcifs.smb.FileNotifyInformation;
 import org.codelibs.jcifs.smb.SmbWatchHandle;
+import org.codelibs.jcifs.smb.impl.SmbFile;
 
-// Monitor directory for changes
 try (SmbFile dir = new SmbFile("smb://server/share/monitored/", context);
-     SmbWatchHandle watch = dir.watch(
-         SmbConstants.FILE_NOTIFY_CHANGE_FILE_NAME |
-         SmbConstants.FILE_NOTIFY_CHANGE_SIZE, true)) {
+     SmbWatchHandle handle = dir.watch(
+         FileNotifyInformation.FILE_NOTIFY_CHANGE_FILE_NAME
+             | FileNotifyInformation.FILE_NOTIFY_CHANGE_SIZE, true)) {
 
-    FileNotifyInformation[] notifications = watch.read();
-    for (FileNotifyInformation info : notifications) {
-        System.out.println("File changed: " + info.getFileName());
+    while (true) {
+        List<FileNotifyInformation> changes = handle.watch();
+        if (changes == null) {
+            break; // cancelled with handle.cancel()
+        }
+        for (FileNotifyInformation info : changes) {
+            System.out.println("Changed: " + info.getFileName() + " (action " + info.getAction() + ")");
+        }
     }
 }
 ```
 
-### Custom Configuration
+Notes:
+
+- `watch()` returns `null` when another thread calls `cancel()` on the handle. The
+  handle stays open, and calling `watch()` again resumes monitoring.
+- Changes that occur between calls are buffered by the server while the handle is
+  open. If they do not fit in the buffer, `watch()` returns an empty list; the
+  buffer size is set with `jcifs.client.notify_buf_size`.
+- `SmbWatchHandle` implements `Callable<List<FileNotifyInformation>>`, so it can be
+  submitted to an `ExecutorService`.
+
+### Custom configuration
+
 ```java
-// Advanced configuration
 Properties config = new Properties();
-config.setProperty("jcifs.client.minVersion", "SMB300");  // Require SMB3+
+config.setProperty("jcifs.client.minVersion", "SMB300");     // require SMB 3.0 or later
 config.setProperty("jcifs.client.maxVersion", "SMB311");
-config.setProperty("jcifs.client.signingEnforced", "true");  // Require signing
-config.setProperty("jcifs.resolveOrder", "LMHOSTS,DNS,WINS,BCAST");
+config.setProperty("jcifs.client.signingEnforced", "true");  // require signing
+config.setProperty("jcifs.resolveOrder", "LMHOSTS,DNS,BCAST");
 
 CIFSContext customContext = new BaseContext(new PropertyConfiguration(config));
 ```
 
-## 🏗️ Architecture Overview
+Configuration keys use the `jcifs.client.` prefix, plus `jcifs.netbios.`,
+`jcifs.http.` and a few bare `jcifs.` keys. The `Configuration` interface javadoc
+lists every setting and its default.
 
-JCIFS follows a layered architecture designed for flexibility and performance:
+Accepted values for `jcifs.client.minVersion` and `jcifs.client.maxVersion` are
+`SMB1`, `SMB202`, `SMB210`, `SMB300`, `SMB302` and `SMB311`. When neither is set,
+the range is `SMB1` to `SMB311`.
 
-### Core Components
+## Architecture Overview
 
-**Context Layer (`org.codelibs.jcifs.smb.context`)**
-- `CIFSContext`: Main entry point encapsulating configuration and credentials
-- `BaseContext`: Primary implementation with full feature support
-- Context wrappers for credential management and configuration isolation
+The layers from context to file are:
 
-**Resource Layer (`org.codelibs.jcifs.smb.impl`)**
-- `SmbFile`: Primary implementation for files and directories
-- `SmbResource`: Interface for all SMB network resources
-- Resource locators and handles for connection management
+```
+CIFSContext -> SmbTransportPool -> SmbTransport -> SmbSession -> SmbTree -> SmbFile
+```
 
-**Protocol Implementation (`org.codelibs.jcifs.smb.internal`)**
-- `smb1/`: Legacy SMB1/CIFS protocol support
-- `smb2/`: Modern SMB2/SMB3 protocol implementation
-- Protocol-specific message handling and transport
+| Package | Contents |
+| --- | --- |
+| `org.codelibs.jcifs.smb` | Public API: `CIFSContext`, `SmbResource`, `Configuration`, `SmbWatchHandle`, ... |
+| `org.codelibs.jcifs.smb.context` | `BaseContext`, `SingletonContext` and context wrappers |
+| `org.codelibs.jcifs.smb.config` | `PropertyConfiguration` and other `Configuration` implementations |
+| `org.codelibs.jcifs.smb.impl` | `SmbFile`, streams, authenticators |
+| `org.codelibs.jcifs.smb.ntlmssp`, `.spnego`, `.pac` | Authentication mechanisms |
+| `org.codelibs.jcifs.smb.dcerpc`, `.netbios` | DCE/RPC and NetBIOS name service |
+| `org.codelibs.jcifs.smb.internal` | Protocol implementation (`smb1`, `smb2`, DFS, ...). Not public API and may change without notice |
+| `org.codelibs.jcifs.smb1` | Legacy SMB1 stack, deprecated |
 
-**Authentication (`org.codelibs.jcifs.smb.ntlmssp`, `org.codelibs.jcifs.smb.pac`, `org.codelibs.jcifs.smb.spnego`)**
-- Multiple authentication mechanisms with automatic negotiation
-- Credential management and renewal capabilities
-- Enterprise security integration
+## Security
 
-## 🔨 Development
+- **Signing.** Set `jcifs.client.signingEnforced=true` to require message signing.
+  `jcifs.client.signingPreferred` does not enable signing on SMB2/SMB3; see
+  [the support status](docs/SMB3_SUPPORT.md#jcifsclientsigningpreferred-does-not-enable-smb2-signing).
+  Signing on IPC connections is enforced by default (`jcifs.client.ipcSigningEnforced`).
+- **Encryption.** Set `jcifs.client.encryptionEnabled=true` (default `false`). Once
+  enabled, encryption is applied to any session or share the server marks as
+  requiring it. Encryption requires SMB 3.0 or later, so combine it with
+  `jcifs.client.minVersion=SMB300` if unencrypted fallback is not acceptable.
+- **Dialects.** SMB1 is allowed by default. Raise `jcifs.client.minVersion` to
+  `SMB202` or higher if your servers do not need it.
 
-### Build Requirements
-- **Java 17+**: JDK 17 or higher for building
-- **Maven 3.6+**: Build system and dependency management
+```java
+Properties secureConfig = new Properties();
+secureConfig.setProperty("jcifs.client.minVersion", "SMB300");
+secureConfig.setProperty("jcifs.client.signingEnforced", "true");
+secureConfig.setProperty("jcifs.client.encryptionEnabled", "true");
+```
 
-### Building from Source
+## Performance
+
+- Create one context per configuration and reuse it; connections are pooled per
+  context.
+- Close `SmbFile`, streams and handles with try-with-resources so connections and
+  file handles are released.
+
+## Troubleshooting
+
+### Timeouts
+
+```java
+props.setProperty("jcifs.client.connTimeout", "35000");      // connect, default 35 s
+props.setProperty("jcifs.client.soTimeout", "35000");        // idle socket, default 35 s
+props.setProperty("jcifs.client.responseTimeout", "30000");  // per request, default 30 s
+```
+
+### Authentication failures
+
+- Check the domain name, user name and password.
+- Check that the account has permission on the share.
+- Check that the server accepts the authentication method in use.
+- For Kerberos, check DNS resolution of the server name and clock synchronization.
+
+### Dialect negotiation
+
+To narrow down a negotiation problem, pin a single dialect and enable debug logging
+for the SMB2 layer:
+
+```java
+props.setProperty("jcifs.client.minVersion", "SMB202");
+props.setProperty("jcifs.client.maxVersion", "SMB202");
+```
+
+### Logging
+
+JCIFS logs through SLF4J; configure the backend of your choice. For example, with
+Logback:
+
+```xml
+<configuration>
+    <logger name="org.codelibs.jcifs.smb" level="INFO"/>
+    <logger name="org.codelibs.jcifs.smb.internal" level="WARN"/>
+    <!-- For troubleshooting -->
+    <logger name="org.codelibs.jcifs.smb.internal.smb2" level="DEBUG"/>
+</configuration>
+```
+
+## Migrating from 2.x
+
+- **Java 17 or later** is required.
+- **Package names changed.** The root package `jcifs` became
+  `org.codelibs.jcifs.smb`, and the implementation classes that were in
+  `jcifs.smb` (`SmbFile`, `NtlmPasswordAuthenticator`, ...) are now in
+  `org.codelibs.jcifs.smb.impl`. For example, `jcifs.CIFSContext` is now
+  `org.codelibs.jcifs.smb.CIFSContext`, and `jcifs.smb.SmbFile` is now
+  `org.codelibs.jcifs.smb.impl.SmbFile`.
+- **Configuration keys changed.** The `.smb` segment was dropped from every key
+  (see below). Old keys are ignored, so settings silently fall back to their
+  defaults until they are renamed.
+
+| 2.x | 3.x |
+| --- | --- |
+| `jcifs.smb.client.<name>` | `jcifs.client.<name>` |
+| `jcifs.smb.<name>` (`lmCompatibility`, `maxBuffers`, `allowNTLMFallback`, `useRawNTLM`) | `jcifs.<name>` |
+| `jcifs.smb1.smb.client.<name>` (legacy SMB1 stack) | `jcifs.client.<name>` |
+| `jcifs.netbios.<name>`, `jcifs.http.<name>`, `jcifs.resolveOrder`, `jcifs.encoding` | unchanged |
+
+`PropertyConfiguration` logs a warning for every property it receives under one of
+the old prefixes, naming the key to use instead.
+
+## Building from Source
+
+Building requires JDK 17 or later and Maven 3.6 or later.
+
 ```bash
-# Clone the repository
 git clone https://github.com/codelibs/jcifs.git
 cd jcifs
 
-# Compile the project
-mvn clean compile
-
-# Run tests
-mvn test
-
-# Create JAR file
-mvn package
-
-# Install to local repository
-mvn install
-```
-
-### Code Quality
-```bash
-# Format code according to project standards
-mvn formatter:format
-
-# Check license headers
-mvn apache-rat:check
-
-# Generate test coverage report
-mvn jacoco:report
-
-# Check API compatibility
-mvn clirr:check
-```
-
-### Testing
-The project includes comprehensive test coverage:
-
-```bash
-# Run all tests
-mvn test
-
-# Run specific test class
+mvn clean package          # compile, run unit tests and build the JAR
+mvn install                # install into the local Maven repository
 mvn test -Dtest=SmbFileTest
-
-# Run integration tests
-mvn verify
-
-# Generate coverage report (target/site/jacoco/index.html)
-mvn jacoco:report
 ```
 
-#### Integration tests against a real SMB server
+Other useful goals:
+
+```bash
+mvn formatter:format       # format sources (required before committing)
+mvn apache-rat:check       # check license headers
+mvn jacoco:report          # coverage report in target/site/jacoco/index.html
+mvn clirr:check            # API compatibility check
+```
+
+### Integration tests against a real SMB server
 
 `mvn verify` also runs the `*IT` tests in `src/test/java/org/codelibs/jcifs/smb/it`,
 which talk to an actual SMB server. Two backends are supported and the same tests
@@ -298,7 +398,7 @@ run against both.
 
 **Samba (default, no setup needed).** With Docker available, the harness builds
 and starts the container defined in `build_helpers/samba/` and points the tests at
-it. Nothing else is required:
+it:
 
 ```bash
 mvn verify
@@ -307,9 +407,9 @@ mvn verify
 That publishes Samba on a mapped port. A DFS referral names a host but no port,
 so the DFS tests skip unless the server answers on 445. The harness tries 445
 first and falls back, so on a machine already using that port Testcontainers logs
-one failed container start before the run continues normally. To run them anyway - on a
-machine whose own 445 is taken, for instance - put the server and the test JVM on
-the same Docker network:
+one failed container start before the run continues normally. To run the DFS tests
+anyway - on a machine whose own 445 is taken, for instance - put the server and the
+test JVM on the same Docker network:
 
 ```bash
 ./build_helpers/run-it-with-dfs.sh
@@ -342,19 +442,15 @@ This is what the nightly `SMB integration tests (Windows)` workflow does on a
 Before any test runs, a preflight check confirms the server is configured the way
 the tests assume - in particular that the encrypted share really does reject a
 client that cannot encrypt, and that a pinned dialect is actually honoured.
-Without those checks a green run would not mean much.
 
-Some tests skip by design: DFS referrals name a host but no port, so they only
-run when the server answers on 445 (a development machine that is already sharing
-files will skip them), and tests marked `@RequiresBackend` run on one backend
-only.
+Some tests skip by design: DFS tests only run when the server answers on 445, and
+tests marked `@RequiresBackend` run on one backend only.
 
-### Choosing a dialect
+#### Choosing a dialect
 
 Left alone, the client and the server negotiate the highest dialect they both
-support, which for either backend means SMB 3.1.1 - so everything below it goes
-unproven. `JCIFS_IT_DIALECT` pins both ends of the negotiation range and runs the
-same tests on one dialect:
+support, which for either backend means SMB 3.1.1. `JCIFS_IT_DIALECT` pins both
+ends of the negotiation range and runs the same tests on one dialect:
 
 ```bash
 JCIFS_IT_DIALECT=SMB300 mvn verify
@@ -370,181 +466,24 @@ Individual tests can sweep dialects on their own with `@DialectMatrix` (SMB 2.0.
 through 3.1.1) or `@Smb3Matrix` (SMB 3.0, 3.0.2 and 3.1.1), taking the dialect as
 a parameter and building their context with `contextFor(dialect)`.
 
-SMB1 is deliberately out of scope here: the integration suite negotiates SMB2 and
-above, and SMB1 is covered by the unit tests, which run on every build.
+SMB1 is out of scope for the integration suite, which negotiates SMB2 and above;
+SMB1 is covered by the unit tests.
 
-## ⚡ Performance Considerations
+## Contributing
 
-### Connection Management
-- **Reuse contexts**: Create one context per configuration, reuse across operations
-- **Connection pooling**: JCIFS automatically pools and reuses connections
-- **Proper cleanup**: Always use try-with-resources for automatic resource management
+Bug reports and pull requests are welcome on
+[GitHub](https://github.com/codelibs/jcifs).
 
-### Large File Operations
-```java
-// Use appropriate buffer sizes for your use case
-byte[] buffer = new byte[1024 * 1024]; // 1MB for large files
-byte[] buffer = new byte[64 * 1024];   // 64KB for general use
+1. Fork the repository and create a topic branch.
+2. Make your change with tests.
+3. Run `mvn formatter:format` and make sure `mvn clean test` passes.
+4. Update this README or the javadoc if behaviour changes.
+5. Open a pull request describing the change.
 
-// For very large files, consider streaming
-try (InputStream is = smbFile.getInputStream()) {
-    // Process in chunks to avoid memory issues
-}
-```
+New source files need the LGPL license header, and public APIs should have
+javadoc.
 
-### Protocol Selection
-```java
-// For maximum performance on modern servers
-props.setProperty("jcifs.client.minVersion", "SMB300");
-props.setProperty("jcifs.client.maxVersion", "SMB311");
+## License
 
-// For maximum compatibility (default)
-props.setProperty("jcifs.client.minVersion", "SMB1");
-props.setProperty("jcifs.client.maxVersion", "SMB311");
-```
-
-## 🔒 Security Best Practices
-
-### Authentication
-- **Use domain authentication** when possible for better security
-- **Enable SMB signing** for data integrity: `jcifs.client.signingEnforced=true`
-  (`signingPreferred` does **not** enable signing on SMB2/SMB3 — see
-  [the support status](docs/SMB3_SUPPORT.md#jcifsclientsigningpreferred-does-not-enable-smb2-signing))
-- **Prefer SMB3** for encryption: `jcifs.client.minVersion=SMB300`
-- **Rotate credentials** regularly and implement credential renewal
-
-### Network Security
-- **Use encrypted connections** when available: set `jcifs.client.encryptionEnabled=true` (default `false`).
-  Once enabled, encryption is applied automatically to any session or share the server marks as requiring it.
-- **Limit protocol versions** to minimum required for your environment
-- **Monitor failed authentication** attempts in logs
-- **Use VPN or secure networks** when accessing SMB over public networks
-
-### Configuration Security
-```java
-// Secure configuration example
-Properties secureConfig = new Properties();
-secureConfig.setProperty("jcifs.client.minVersion", "SMB300");
-secureConfig.setProperty("jcifs.client.signingEnforced", "true");
-secureConfig.setProperty("jcifs.client.ipcSigningEnforced", "true");
-```
-
-## 🛠️ Troubleshooting
-
-### Common Issues
-
-**Connection Timeouts**
-```java
-// Increase timeout values
-props.setProperty("jcifs.client.soTimeout", "35000");      // 35 seconds
-props.setProperty("jcifs.client.connTimeout", "10000");    // 10 seconds
-props.setProperty("jcifs.client.responseTimeout", "30000"); // 30 seconds
-```
-
-**Authentication Failures**
-- Verify domain name, username, and password
-- Check if the account has necessary permissions
-- Ensure the server allows the authentication method
-- For Kerberos, verify proper DNS and time synchronization
-
-**Protocol Negotiation Issues**
-```java
-// Debug protocol negotiation
-// Enable debug logging through your SLF4J backend, e.g.
-//   <logger name="org.codelibs.jcifs.smb.internal.smb2" level="DEBUG"/>
-
-// Force specific protocol version if needed
-props.setProperty("jcifs.client.minVersion", "SMB202");
-props.setProperty("jcifs.client.maxVersion", "SMB202");
-```
-
-**Performance Issues**
-- Use connection pooling (enabled by default)
-- Adjust buffer sizes for your use case
-- Consider enabling SMB3 for better performance
-- Monitor network latency and bandwidth
-
-### Logging Configuration
-JCIFS uses SLF4J for logging. Configure your logging framework accordingly:
-
-```xml
-<!-- logback.xml example -->
-<configuration>
-    <logger name="org.codelibs.jcifs.smb" level="INFO"/>
-    <logger name="org.codelibs.jcifs.smb.internal" level="WARN"/>
-    <!-- Enable debug for troubleshooting -->
-    <logger name="org.codelibs.jcifs.smb.internal.smb2" level="DEBUG"/>
-</configuration>
-```
-
-## 🔄 Migration Guide
-
-### From JCIFS 2.x to 3.x
-- **Java 17+ required**: Update your runtime environment
-- **Package changes**: All classes moved to `org.codelibs.jcifs.smb`
-- **Property names changed**: the `.smb` segment was dropped from every configuration
-  key (see below). Old keys are *silently ignored*, so settings fall back to their
-  defaults until you rename them.
-- **Enhanced SMB3 support**: New encryption and signing capabilities
-- **Improved authentication**: Enhanced credential management
-
-#### Configuration property names
-
-| 2.x | 3.x |
-| --- | --- |
-| `jcifs.smb.client.<name>` | `jcifs.client.<name>` |
-| `jcifs.smb.<name>` (`lmCompatibility`, `maxBuffers`, `allowNTLMFallback`, `useRawNTLM`) | `jcifs.<name>` |
-| `jcifs.smb1.smb.client.<name>` (legacy SMB1 stack) | `jcifs.client.<name>` |
-| `jcifs.netbios.<name>`, `jcifs.http.<name>`, `jcifs.resolveOrder`, `jcifs.encoding` | unchanged |
-
-`PropertyConfiguration` logs a warning for every property it receives under one of the
-old prefixes, naming the key to use instead. The authoritative list of keys and their
-defaults is the `Configuration` interface javadoc.
-
-### From Original JCIFS
-- **Context-based API**: Replace global configuration with contexts
-- **Modern authentication**: Update to new credential classes
-- **Resource management**: Use try-with-resources patterns
-
-## 🆚 JCIFS vs jcifs-ng
-
-### Choose JCIFS when:
-- Maximum compatibility with legacy SMB devices is required
-- SMB3 encryption and security features are needed
-- Connecting to diverse SMB implementations
-- Using in applications like [Fess](https://github.com/codelibs/fess) that need broad SMB support
-
-### Choose jcifs-ng when:
-- Only connecting to modern SMB servers
-- SMB3 encryption features are not required
-- Working in controlled environments with specific SMB devices
-
-## 🤝 Contributing
-
-We welcome contributions! Please follow these steps:
-
-1. **Fork the repository** and create a feature branch
-2. **Make your changes** with appropriate tests
-3. **Follow coding standards**: Use `mvn formatter:format`
-4. **Run tests**: Ensure `mvn clean test` passes
-5. **Update documentation** if needed
-6. **Submit a pull request** with a clear description
-
-### Development Setup
-```bash
-git clone https://github.com/your-username/jcifs.git
-cd jcifs
-mvn clean compile
-mvn test
-```
-
-### Coding Standards
-- Follow existing code style and patterns
-- Add JavaDoc comments for public APIs
-- Include unit tests for new functionality
-- Ensure all tests pass before submitting
-
-## 📜 License
-
-JCIFS is licensed under the [GNU Lesser General Public License (LGPL) v2.1](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html).
-
+JCIFS is licensed under the
+[GNU Lesser General Public License, version 2.1](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html).
