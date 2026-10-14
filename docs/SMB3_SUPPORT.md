@@ -79,6 +79,13 @@ Supported since 3.0.4, and **off by default**. Set
 applied automatically to any session or share the server marks as requiring it;
 nothing else in the API changes.
 
+A client that must not send cleartext at all - the equivalent of a Windows client
+configured with `RequireEncryption` - sets `jcifs.client.encryptionRequired=true`
+instead (default `false`). Every message is then encrypted from the start, including
+the TREE_CONNECT, whose requirement a server can only announce in its reply to it,
+and the client fails with a clear error rather than falling back to cleartext when
+the server or the negotiated dialect cannot encrypt. It implies `encryptionEnabled`.
+
 | Feature | Status | Notes |
 | --- | --- | --- |
 | AES-128-CCM (SMB 3.0, 3.0.2) | Supported | |
@@ -383,6 +390,7 @@ decompressed cannot be measured either, so there is no way to find the next one.
 | `jcifs.client.ipcSigningEnforced` | `true` | Require signing on IPC$. |
 | `jcifs.client.requireSecureNegotiate` | `true` | Validate the negotiate exchange on tree connect. |
 | `jcifs.client.encryptionEnabled` | `false` | Opt in to SMB3 encryption — see [Encryption](#encryption). |
+| `jcifs.client.encryptionRequired` | `false` | Require SMB3 encryption on every message, including the TREE_CONNECT; the client fails instead of sending cleartext when encryption is unavailable. Implies `encryptionEnabled`. |
 | `jcifs.client.compressionEnabled` | `false` | Opt in to SMB 3.1.1 compression of what the client reads — see [Compression](#compression-what-is-and-is-not-done). No effect below SMB 3.1.1, and none against a server that does not implement it. |
 | `jcifs.client.signingAlgorithms` | `AES-CMAC, AES-GMAC, HMAC-SHA256` | The SMB 3.1.1 signing algorithms to offer, in preference order. An unrecognised name fails configuration rather than being ignored. AES-CMAC leads because it is what this client has always signed with, and the server chooses from the offered list by its own preference — so the negotiated algorithm is unchanged unless this property is. Offering only `AES-GMAC` requires it. No effect below SMB 3.1.1, which does not negotiate a signing algorithm. |
 | `jcifs.client.encryptionCiphers` | `AES-128-GCM, AES-128-CCM, AES-256-GCM, AES-256-CCM` | The SMB 3.1.1 ciphers to offer, in preference order. An unrecognised name fails configuration rather than being ignored. Note that the server chooses one from the offered list and may apply its own preference when doing so, so listing AES-256 first does not make AES-256 the negotiated cipher; offering only the AES-256 ciphers does require them. No effect below SMB 3.1.1, which does not negotiate a cipher. |

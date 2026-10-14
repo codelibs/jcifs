@@ -48,6 +48,23 @@ class PropertyConfigurationTest extends BaseTest {
     }
 
     @Test
+    @DisplayName("Should require encryption when jcifs.client.encryptionRequired is set")
+    void testEncryptionRequired() throws CIFSException {
+        // Then - off by default
+        assertFalse(config.isEncryptionRequired(), "encryption must not be required by default");
+        assertFalse(config.isEncryptionEnabled());
+
+        // When
+        final Properties props = new Properties();
+        props.setProperty("jcifs.client.encryptionRequired", "true");
+        final PropertyConfiguration required = new PropertyConfiguration(props);
+
+        // Then - requiring encryption implies enabling it, so negotiation offers it
+        assertTrue(required.isEncryptionRequired());
+        assertTrue(required.isEncryptionEnabled(), "requiring encryption must enable it");
+    }
+
+    @Test
     @DisplayName("Should create configuration from Properties")
     void testConfigurationCreation() throws CIFSException {
         // Then

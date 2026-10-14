@@ -287,6 +287,10 @@ CIFSContext -> SmbTransportPool -> SmbTransport -> SmbSession -> SmbTree -> SmbF
   enabled, encryption is applied to any session or share the server marks as
   requiring it. Encryption requires SMB 3.0 or later, so combine it with
   `jcifs.client.minVersion=SMB300` if unencrypted fallback is not acceptable.
+- **Mandatory encryption.** `jcifs.client.encryptionRequired=true` (default
+  `false`) encrypts every message from the start, including the `TREE_CONNECT`,
+  and fails with a clear error instead of falling back to cleartext when the server
+  or the negotiated dialect cannot encrypt. It implies `encryptionEnabled`.
 - **Dialects.** SMB1 is allowed by default. Raise `jcifs.client.minVersion` to
   `SMB202` or higher if your servers do not need it.
 
