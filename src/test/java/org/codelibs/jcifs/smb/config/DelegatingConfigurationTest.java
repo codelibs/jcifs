@@ -351,6 +351,20 @@ class DelegatingConfigurationTest extends BaseTest {
     }
 
     @Test
+    @DisplayName("Encryption required flag should delegate correctly")
+    void testEncryptionRequiredDelegation() {
+        // Given
+        when(mockDelegate.isEncryptionRequired()).thenReturn(true);
+
+        // When
+        boolean required = delegatingConfig.isEncryptionRequired();
+
+        // Then
+        assertTrue(required, "Should delegate the encryption required setting");
+        verify(mockDelegate).isEncryptionRequired();
+    }
+
+    @Test
     @DisplayName("Encryption and security configuration should delegate correctly")
     void testEncryptionSecurityDelegation() {
         // Given

@@ -525,6 +525,24 @@ public interface Configuration {
     boolean isEncryptionEnabled();
 
     /**
+     * Property {@code jcifs.client.encryptionRequired} (boolean, default {@code false})
+     *
+     * <p>
+     * Whether SMB3 encryption is mandatory. When set, the client behaves like a Windows client configured with
+     * {@code RequireEncryption}: it announces encryption during negotiation, encrypts every message from the start
+     * - including the TREE_CONNECT, whose requirement a server can only announce in its reply - and fails with a
+     * clear error instead of sending cleartext when the server or the negotiated dialect cannot encrypt.
+     * </p>
+     *
+     * <p>
+     * Implies {@link #isEncryptionEnabled()}.
+     * </p>
+     *
+     * @return whether encryption is required
+     */
+    boolean isEncryptionRequired();
+
+    /**
      * Property {@code jcifs.client.compressionEnabled} (boolean, default false)
      *
      * Enables SMB 3.1.1 compression. When enabled the client offers the compression algorithms it is able to

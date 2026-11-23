@@ -391,7 +391,7 @@ final class SmbSessionImpl implements SmbSessionInternal {
                 request.setSessionId(this.sessionId);
                 request.setUid(this.uid);
 
-                if (this.encryptData && request instanceof final ServerMessageBlock2 smb2Request) {
+                if ((this.encryptData || getConfig().isEncryptionRequired()) && request instanceof final ServerMessageBlock2 smb2Request) {
                     smb2Request.setEncrypt(true);
                 }
 
@@ -1352,16 +1352,16 @@ final class SmbSessionImpl implements SmbSessionInternal {
      */
     private void setupEncryptionContext(final Smb2NegotiateResponse negoResp, final boolean anonymous) throws CIFSException {
         if (this.encryptionContext != null || !negoResp.isEncryptionSupported()) {
-            if (this.encryptData && this.encryptionContext == null) {
-                throw new SmbAuthException("Server requires encryption but encryption was not negotiated");
+            if ((this.encryptData || getConfig().isEncryptionRequired()) && this.encryptionContext == null) {
+                throw new SmbAuthException("Encryption is required but not available for the negotiated dialect");
             }
             return;
         }
 
         if (this.sessionKey == null || anonymous) {
             // Anonymous and guest sessions have no key material to derive from.
-            if (this.encryptData) {
-                throw new SmbAuthException("Server requires encryption but no session key is available");
+            if (this.encryptData || getConfig().isEncryptionRequired()) {
+                throw new SmbAuthException("Encryption is required but no session key is available");
             }
             return;
         }
@@ -1369,7 +1369,7 @@ final class SmbSessionImpl implements SmbSessionInternal {
         try (SmbTransportImpl trans = getTransport()) {
             this.encryptionContext = trans.createEncryptionContext(this.sessionKey, this.preauthIntegrityHash);
         } catch (final CIFSException e) {
-            if (this.encryptData) {
+            if (this.encryptData || getConfig().isEncryptionRequired()) {
                 throw new SmbAuthException("Failed to setup required encryption", e);
             }
             log.debug("Failed to setup optional encryption context", e);

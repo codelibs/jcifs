@@ -65,6 +65,44 @@ class EncryptionIT extends AbstractSmbIT {
     }
 
     @Test
+    @RequiresDialect(DialectVersion.SMB300)
+    @DisplayName("a client that requires encryption round trips on a share that does not ask for it")
+    void requiredEncryptionRoundTripsOnPlainShare() throws Exception {
+        // The plain share also accepts cleartext, so this only proves something because the client insists on
+        // encrypting: with encryptionRequired the TREE_CONNECT itself travels wrapped in a transform header,
+        // even though the share's requirement can only be learned from the reply to it.
+        final Properties props = new Properties();
+        props.setProperty("jcifs.client.encryptionRequired", "true");
+        final CIFSContext context = server().context(props);
+        this.workDir = createWorkDir(context, server().share());
+
+        final String contents = "encrypted because the client requires it";
+        final SmbFile file = writeFile(this.workDir, "required.txt", contents);
+        try (InputStream in = file.getInputStream()) {
+            assertArrayEquals(contents.getBytes(StandardCharsets.UTF_8), in.readAllBytes());
+        }
+    }
+
+    @Test
+    @DisplayName("a client that requires encryption fails instead of falling back to a cleartext dialect")
+    void requiredEncryptionFailsWithoutSmb3() throws Exception {
+        // Both ends, not just the ceiling: JCIFS_IT_DIALECT pins the floor too and leaving it in place would
+        // invert the range. Below SMB3 there is no cipher to encrypt with, so the client has to refuse rather
+        // than quietly send cleartext.
+        final Properties props = new Properties();
+        props.setProperty("jcifs.client.encryptionRequired", "true");
+        props.setProperty("jcifs.client.minVersion", DialectVersion.SMB202.name());
+        props.setProperty("jcifs.client.maxVersion", DialectVersion.SMB210.name());
+        final CIFSContext context = server().context(props);
+
+        assertThrows(Exception.class, () -> {
+            try (SmbFile share = new SmbFile(server().url(server().share()), context)) {
+                share.exists();
+            }
+        }, "a client that requires encryption must not silently send cleartext");
+    }
+
+    @Test
     @DisplayName("a client that cannot encrypt is refused by the encrypted share")
     void clientWithoutEncryptionIsRefused() throws Exception {
         // Both ends, not just the ceiling: JCIFS_IT_DIALECT pins the floor too and

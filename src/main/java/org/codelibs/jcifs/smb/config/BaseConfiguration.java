@@ -78,6 +78,8 @@ public class BaseConfiguration implements Configuration {
     protected boolean ipcSigningEnforced = true;
     /** Whether SMB3 encryption is enabled */
     protected boolean encryptionEnabled = false;
+    /** Whether SMB3 encryption is mandatory */
+    protected boolean encryptionRequired = false;
     /** Whether SMB3 compression is enabled */
     protected boolean compressionEnabled = false;
     /** SMB 3.1.1 encryption ciphers to offer, in preference order */
@@ -578,7 +580,18 @@ public class BaseConfiguration implements Configuration {
 
     @Override
     public boolean isEncryptionEnabled() {
-        return this.encryptionEnabled;
+        // Requiring encryption implies enabling it, so a configuration only has to set one of the two.
+        return this.encryptionEnabled || this.encryptionRequired;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see org.codelibs.jcifs.smb.Configuration#isEncryptionRequired()
+     */
+    @Override
+    public boolean isEncryptionRequired() {
+        return this.encryptionRequired;
     }
 
     @Override
