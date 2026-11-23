@@ -85,6 +85,10 @@ instead (default `false`). Every message is then encrypted from the start, inclu
 the TREE_CONNECT, whose requirement a server can only announce in its reply to it,
 and the client fails with a clear error rather than falling back to cleartext when
 the server or the negotiated dialect cannot encrypt. It implies `encryptionEnabled`.
+The check runs before the logon starts, and fails with `SmbUnsupportedOperationException` rather than an
+authentication error. An anonymous or guest session has no key to derive encryption from, so it is refused too.
+The requirement is enforced on SMB2 and SMB3 connections; pair it with `jcifs.client.minVersion=SMB300` so that
+the connection cannot be negotiated at SMB1 in the first place.
 
 | Feature | Status | Notes |
 | --- | --- | --- |
