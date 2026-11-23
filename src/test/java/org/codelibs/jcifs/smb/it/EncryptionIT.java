@@ -30,6 +30,7 @@ import org.codelibs.jcifs.smb.CIFSContext;
 import org.codelibs.jcifs.smb.DialectVersion;
 import org.codelibs.jcifs.smb.impl.SmbFile;
 import org.codelibs.jcifs.smb.impl.SmbNegotiationProbe;
+import org.codelibs.jcifs.smb.impl.SmbUnsupportedOperationException;
 import org.codelibs.jcifs.smb.it.env.RequiresDialect;
 import org.codelibs.jcifs.smb.it.env.Smb3Matrix;
 import org.junit.jupiter.api.AfterEach;
@@ -95,11 +96,14 @@ class EncryptionIT extends AbstractSmbIT {
         props.setProperty("jcifs.client.maxVersion", DialectVersion.SMB210.name());
         final CIFSContext context = server().context(props);
 
-        assertThrows(Exception.class, () -> {
+        // Not an SmbAuthException: nothing is wrong with the credentials, and that type would send the caller through
+        // its authentication retry.
+        final SmbUnsupportedOperationException e = assertThrows(SmbUnsupportedOperationException.class, () -> {
             try (SmbFile share = new SmbFile(server().url(server().share()), context)) {
                 share.exists();
             }
         }, "a client that requires encryption must not silently send cleartext");
+        assertTrue(e.getMessage().contains("Encryption is required"), e.getMessage());
     }
 
     @Test

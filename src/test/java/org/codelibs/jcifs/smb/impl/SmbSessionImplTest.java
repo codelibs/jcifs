@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
@@ -21,6 +22,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Field;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.codelibs.jcifs.smb.CIFSContext;
 import org.codelibs.jcifs.smb.CIFSException;
@@ -29,7 +31,11 @@ import org.codelibs.jcifs.smb.Credentials;
 import org.codelibs.jcifs.smb.RuntimeCIFSException;
 import org.codelibs.jcifs.smb.internal.SMBSigningDigest;
 import org.codelibs.jcifs.smb.internal.smb2.Smb2EncryptionContext;
+import org.codelibs.jcifs.smb.internal.smb2.Smb2SigningDigest;
 import org.codelibs.jcifs.smb.internal.smb2.create.Smb2CreateRequest;
+import org.codelibs.jcifs.smb.internal.smb2.nego.Smb2NegotiateResponse;
+import org.codelibs.jcifs.smb.internal.smb2.session.Smb2LogoffRequest;
+import org.codelibs.jcifs.smb.internal.smb2.tree.Smb2TreeConnectRequest;
 import org.codelibs.jcifs.smb.internal.smb2.session.Smb2SessionSetupResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -37,6 +43,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -484,5 +491,154 @@ class SmbSessionImplTest {
 
         handle.close();
         handle.markClosed();
+    }
+
+    private static void markConnected(final SmbSessionImpl session) {
+        try {
+            final Field f = SmbSessionImpl.class.getDeclaredField("connectionState");
+            f.setAccessible(true);
+            ((AtomicInteger) f.get(session)).set(2);
+        } catch (final Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private Smb2LogoffRequest logoffRequest(final boolean encryptionRequired) throws Exception {
+        when(configuration.isEncryptionRequired()).thenReturn(encryptionRequired);
+        when(transport.isSMB2()).thenReturn(true);
+        final SmbSessionImpl session = newSession();
+        markConnected(session);
+        setField(session, "digest", mock(Smb2SigningDigest.class));
+
+        // logoff() notifies waiters on the transport, so callers hold its monitor.
+        synchronized (transport) {
+            session.logoff(false, false);
+        }
+
+        final ArgumentCaptor<Smb2LogoffRequest> sent = ArgumentCaptor.forClass(Smb2LogoffRequest.class);
+        verify(transport).send(sent.capture(), isNull());
+        return sent.getValue();
+    }
+
+    @Test
+    @DisplayName("required encryption: LOGOFF is encrypted and not signed, though the server did not ask for encryption")
+    void testLogoffIsEncryptedWhenEncryptionIsRequired() throws Exception {
+        final Smb2LogoffRequest request = logoffRequest(true);
+
+        assertTrue(request.isEncrypt(), "a client that requires encryption must not send LOGOFF in the clear");
+        assertNull(request.getDigest(), "an encrypted message is authenticated by the AEAD tag, not signed");
+    }
+
+    @Test
+    @DisplayName("optional encryption: LOGOFF stays signed and unencrypted on a session the server did not encrypt")
+    void testLogoffIsSignedWhenEncryptionIsNotRequired() throws Exception {
+        final Smb2LogoffRequest request = logoffRequest(false);
+
+        assertFalse(request.isEncrypt());
+        assertTrue(request.getDigest() != null, "without encryption the LOGOFF is signed as before");
+    }
+
+    @Test
+    @DisplayName("required encryption: TREE_CONNECT is marked for encryption before the share's own requirement is known")
+    void testTreeConnectIsEncryptedWhenEncryptionIsRequired() throws Exception {
+        when(configuration.isEncryptionRequired()).thenReturn(true);
+        final SmbSessionImpl session = newSession();
+        markConnected(session);
+
+        final Smb2TreeConnectRequest request = new Smb2TreeConnectRequest(configuration, "\\\\server.example\\share");
+        session.send(request, null);
+
+        final ArgumentCaptor<Smb2TreeConnectRequest> sent = ArgumentCaptor.forClass(Smb2TreeConnectRequest.class);
+        verify(transport).send(sent.capture(), isNull(), any());
+        assertTrue(sent.getValue().isEncrypt());
+    }
+
+    @Test
+    @DisplayName("optional encryption: TREE_CONNECT is not marked for encryption")
+    void testTreeConnectIsNotEncryptedWhenEncryptionIsNotRequired() throws Exception {
+        final SmbSessionImpl session = newSession();
+        markConnected(session);
+
+        final Smb2TreeConnectRequest request = new Smb2TreeConnectRequest(configuration, "\\\\server.example\\share");
+        session.send(request, null);
+
+        assertFalse(request.isEncrypt());
+    }
+
+    @Test
+    @DisplayName("required encryption: a dialect that cannot encrypt is refused before any credentials are sent")
+    void testSessionSetupRefusedBeforeLogonWhenDialectCannotEncrypt() throws Exception {
+        when(configuration.isEncryptionRequired()).thenReturn(true);
+        final Smb2NegotiateResponse nego = mock(Smb2NegotiateResponse.class);
+        when(nego.isEncryptionSupported()).thenReturn(false);
+        when(transport.isSMB2()).thenReturn(true);
+        when(transport.getNegotiateResponse()).thenReturn(nego);
+        final SmbSessionImpl session = newSession();
+
+        // Not an authentication failure: nothing is wrong with the credentials, and an SmbAuthException would
+        // send the caller through its authentication retry.
+        final SmbException e = assertThrows(SmbUnsupportedOperationException.class, () -> session.sessionSetup(null, null));
+        assertTrue(e.getMessage().contains("not available for the negotiated dialect"), e.getMessage());
+        verify(transport, never()).send(any(), any());
+        verify(transport, never()).send(any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("required encryption: an anonymous logon is refused before it starts, since it has no key to encrypt with")
+    void testSessionSetupRefusedBeforeLogonWhenAnonymous() throws Exception {
+        when(configuration.isEncryptionRequired()).thenReturn(true);
+        when(credentialsInternal.isAnonymous()).thenReturn(true);
+        final Smb2NegotiateResponse nego = mock(Smb2NegotiateResponse.class);
+        when(nego.isEncryptionSupported()).thenReturn(true);
+        when(transport.isSMB2()).thenReturn(true);
+        when(transport.getNegotiateResponse()).thenReturn(nego);
+        final SmbSessionImpl session = newSession();
+
+        assertThrows(SmbUnsupportedOperationException.class, () -> session.sessionSetup(null, null));
+        verify(transport, never()).send(any(), any());
+        verify(transport, never()).send(any(), any(), any());
+    }
+
+    private void setupEncryptionContext(final SmbSessionImpl session, final boolean anonymous) throws Throwable {
+        final Smb2NegotiateResponse nego = mock(Smb2NegotiateResponse.class);
+        when(nego.isEncryptionSupported()).thenReturn(true);
+        try {
+            final java.lang.reflect.Method m =
+                    SmbSessionImpl.class.getDeclaredMethod("setupEncryptionContext", Smb2NegotiateResponse.class, boolean.class);
+            m.setAccessible(true);
+            m.invoke(session, nego, anonymous);
+        } catch (final java.lang.reflect.InvocationTargetException e) {
+            throw e.getCause();
+        }
+    }
+
+    @Test
+    @DisplayName("encryption demanded by the server only: an anonymous session still fails with SmbAuthException")
+    void testServerDemandedEncryptionFailureStaysAuthFailure() {
+        final SmbSessionImpl session = newSession();
+        setField(session, "encryptData", true);
+
+        assertThrows(SmbAuthException.class, () -> setupEncryptionContext(session, true));
+    }
+
+    @Test
+    @DisplayName("encryption required by configuration: the same failure is not an authentication failure")
+    void testRequiredEncryptionFailureIsNotAuthFailure() {
+        when(configuration.isEncryptionRequired()).thenReturn(true);
+        final SmbSessionImpl session = newSession();
+
+        final Throwable e = assertThrows(Throwable.class, () -> setupEncryptionContext(session, true));
+        assertTrue(e instanceof SmbUnsupportedOperationException, e.toString());
+        assertFalse(e instanceof SmbAuthException);
+    }
+
+    @Test
+    @DisplayName("encryption neither demanded nor required: an anonymous session is left unencrypted")
+    void testOptionalEncryptionLeavesAnonymousSessionAlone() throws Throwable {
+        final SmbSessionImpl session = newSession();
+
+        setupEncryptionContext(session, true);
+
+        assertNull(session.getEncryptionContext());
     }
 }

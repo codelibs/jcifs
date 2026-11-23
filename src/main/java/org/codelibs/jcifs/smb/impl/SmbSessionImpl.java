@@ -391,7 +391,7 @@ final class SmbSessionImpl implements SmbSessionInternal {
                 request.setSessionId(this.sessionId);
                 request.setUid(this.uid);
 
-                if ((this.encryptData || getConfig().isEncryptionRequired()) && request instanceof final ServerMessageBlock2 smb2Request) {
+                if (isEncryptionMandatory() && request instanceof final ServerMessageBlock2 smb2Request) {
                     smb2Request.setEncrypt(true);
                 }
 
@@ -518,6 +518,7 @@ final class SmbSessionImpl implements SmbSessionInternal {
     private <T extends CommonServerMessageBlock> T sessionSetupSMB2(SmbTransportImpl trans, final String tdomain,
             ServerMessageBlock2Request<?> chain, T andxResponse) throws CIFSException, GeneralSecurityException {
         final Smb2NegotiateResponse negoResp = (Smb2NegotiateResponse) trans.getNegotiateResponse();
+        checkEncryptionAvailable(negoResp);
         Smb2SessionSetupRequest request = null;
         Smb2SessionSetupResponse response = null;
         SmbException ex = null;
@@ -754,7 +755,7 @@ final class SmbSessionImpl implements SmbSessionInternal {
                     // Compounding a request that must be encrypted onto it would put that request on the wire in
                     // cleartext, so it is sent separately below instead.
                     final boolean chainMustBeEncrypted =
-                            chain instanceof final ServerMessageBlock2 chainMsg && (this.encryptData || chainMsg.isEncrypt());
+                            chain instanceof final ServerMessageBlock2 chainMsg && (isEncryptionMandatory() || chainMsg.isEncrypt());
                     if (chain != null && !chainMustBeEncrypted) {
                         request.chain((ServerMessageBlock2) chain);
                     }
@@ -1157,10 +1158,11 @@ final class SmbSessionImpl implements SmbSessionInternal {
                 if (!inError && trans.isSMB2()) {
                     Smb2LogoffRequest request = new Smb2LogoffRequest(getConfig());
                     request.setSessionId(this.sessionId);
-                    if (this.encryptData) {
+                    if (isEncryptionMandatory()) {
                         // This request does not go through send(), so the marker has to be applied here. On an
                         // encrypted session every message after session setup must be encrypted, and an encrypted
-                        // message is not signed.
+                        // message is not signed. A client that requires encryption encrypts this too, whether or
+                        // not the server asked for it.
                         request.setEncrypt(true);
                     } else {
                         request.setDigest(getDigest());
@@ -1352,16 +1354,16 @@ final class SmbSessionImpl implements SmbSessionInternal {
      */
     private void setupEncryptionContext(final Smb2NegotiateResponse negoResp, final boolean anonymous) throws CIFSException {
         if (this.encryptionContext != null || !negoResp.isEncryptionSupported()) {
-            if ((this.encryptData || getConfig().isEncryptionRequired()) && this.encryptionContext == null) {
-                throw new SmbAuthException("Encryption is required but not available for the negotiated dialect");
+            if (isEncryptionMandatory() && this.encryptionContext == null) {
+                throw encryptionFailure("Encryption is required but not available for the negotiated dialect", null);
             }
             return;
         }
 
         if (this.sessionKey == null || anonymous) {
             // Anonymous and guest sessions have no key material to derive from.
-            if (this.encryptData || getConfig().isEncryptionRequired()) {
-                throw new SmbAuthException("Encryption is required but no session key is available");
+            if (isEncryptionMandatory()) {
+                throw encryptionFailure("Encryption is required but no session key is available", null);
             }
             return;
         }
@@ -1369,10 +1371,55 @@ final class SmbSessionImpl implements SmbSessionInternal {
         try (SmbTransportImpl trans = getTransport()) {
             this.encryptionContext = trans.createEncryptionContext(this.sessionKey, this.preauthIntegrityHash);
         } catch (final CIFSException e) {
-            if (this.encryptData || getConfig().isEncryptionRequired()) {
-                throw new SmbAuthException("Failed to setup required encryption", e);
+            if (isEncryptionMandatory()) {
+                throw encryptionFailure("Failed to setup required encryption", e);
             }
             log.debug("Failed to setup optional encryption context", e);
+        }
+    }
+
+    /**
+     * Whether every message on this session after session setup must be encrypted, because the server demanded it
+     * (SMB2_SESSION_FLAG_ENCRYPT_DATA) or because this client is configured to require it.
+     */
+    private boolean isEncryptionMandatory() {
+        return this.encryptData || getConfig().isEncryptionRequired();
+    }
+
+    /**
+     * Builds the failure for a session that must be encrypted and cannot be.
+     *
+     * <p>
+     * A client that requires encryption by configuration fails with {@link SmbUnsupportedOperationException}: nothing
+     * is wrong with the credentials, and an {@link SmbAuthException} would send the caller through its authentication
+     * retry as if it were. When only the server demanded encryption the long-standing {@link SmbAuthException} is kept.
+     * </p>
+     */
+    private SmbException encryptionFailure(final String message, final Throwable cause) {
+        if (getConfig().isEncryptionRequired()) {
+            final SmbUnsupportedOperationException e = new SmbUnsupportedOperationException(message);
+            if (cause != null) {
+                e.initCause(cause);
+            }
+            return e;
+        }
+        return cause != null ? new SmbAuthException(message, cause) : new SmbAuthException(message);
+    }
+
+    /**
+     * Refuses to start a logon that could not end in an encrypted session. Session setup itself always travels in
+     * the clear, so this is not what protects the credentials; it spares the server a session that is torn down
+     * again, and gives a failure that names the cause rather than one that surfaces after the logon.
+     */
+    private void checkEncryptionAvailable(final Smb2NegotiateResponse negoResp) throws SmbException {
+        if (!getConfig().isEncryptionRequired()) {
+            return;
+        }
+        if (!negoResp.isEncryptionSupported()) {
+            throw encryptionFailure("Encryption is required but not available for the negotiated dialect", null);
+        }
+        if (this.credentials.isAnonymous()) {
+            throw encryptionFailure("Encryption is required but anonymous sessions have no key to derive it from", null);
         }
     }
 
