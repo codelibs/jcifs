@@ -181,6 +181,35 @@ class SmbTransportEncryptedReplyTest {
         }
     }
 
+    /**
+     * The message arrives as the plaintext of a transform header: encrypted, or merely decompressed. Both are read
+     * from the same buffer, so only the flag tells them apart.
+     */
+    private void arriveInsideTransformHeader(final boolean encrypted) throws Exception {
+        arrive(STATUS_SUCCESS);
+        set("in", new ByteArrayInputStream(new byte[0]));
+        set("transformPayload", new byte[] { 4, 0, 0, 0 });
+        set("transformPayloadOffset", 0);
+        set("transformEncrypted", encrypted);
+    }
+
+    @Test
+    @DisplayName("a reply that was only decompressed is not an encrypted reply")
+    void decompressedReplyToEncryptedRequestIsRefused() throws Exception {
+        arriveInsideTransformHeader(false);
+
+        final IOException e = assertThrows(IOException.class, () -> receive(response(true)));
+        assertTrue(e.getMessage().contains("arrived in the clear"), e.getMessage());
+    }
+
+    @Test
+    @DisplayName("a reply that was decrypted is accepted")
+    void decryptedReplyToEncryptedRequestIsAccepted() throws Throwable {
+        arriveInsideTransformHeader(true);
+
+        assertDoesNotThrow(() -> receive(response(true)));
+    }
+
     @Test
     @DisplayName("sending an encrypted request marks its response, an unencrypted one does not")
     void sendingMarksTheResponse() throws Exception {

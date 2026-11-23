@@ -142,6 +142,13 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
     /** NT_STATUS_NETWORK_SESSION_EXPIRED */
     private static final int STATUS_NETWORK_SESSION_EXPIRED = 0xC000035C;
 
+    /**
+     * Whether {@link #transformPayload} was decrypted, as opposed to decompressed. Both leave the plaintext message in
+     * {@link #transformPayload}, but only the first was authenticated: a compression transform header is no proof
+     * that anything encrypted the message it carried.
+     */
+    private boolean transformEncrypted;
+
     /** Read cursor into {@link #transformPayload}. */
     private int transformPayloadOffset;
 
@@ -832,6 +839,7 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
     @Override
     protected Long peekKey() throws IOException {
         this.transformPayload = null;
+        this.transformEncrypted = false;
         this.transformPayloadOffset = 0;
         do {
             if (readn(this.in, this.sbuf, 0, 4) < 4) {
@@ -1155,8 +1163,10 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
      * </p>
      *
      * <p>
-     * A server that no longer knows the session cannot encrypt, and says so in the clear; those two statuses are what
+     * A server that no longer knows the session may not be able to encrypt, and says so in the clear; those two statuses are what
      * {@link SmbSessionImpl#send} turns into a re-authentication, so they stay accepted. Neither carries a payload.
+     * That a server in that state cannot encrypt is an assumption made for compatibility, not something verified: it
+     * is the only reason these two are exempt.
      * </p>
      *
      * @param response
@@ -1321,6 +1331,7 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
 
         this.smb2 = true;
         this.transformPayload = plaintext;
+        this.transformEncrypted = true;
         this.transformPayloadOffset = Smb2Constants.SMB2_HEADER_LENGTH;
 
         // Present the plaintext exactly as an unencrypted message would have arrived.
@@ -1399,6 +1410,7 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
 
         this.smb2 = true;
         this.transformPayload = original;
+        this.transformEncrypted = false;
         this.transformPayloadOffset = Smb2Constants.SMB2_HEADER_LENGTH;
 
         // Present it exactly as an uncompressed message would have arrived.
@@ -1442,6 +1454,7 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
     private Long discardTransformedMessage() {
         this.smb2 = true;
         this.transformPayload = new byte[0];
+        this.transformEncrypted = false;
         this.transformPayloadOffset = 0;
         this.sbuf[0] = 0;
         this.sbuf[1] = 0;
@@ -1482,10 +1495,19 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
     }
 
     /**
-     * @return whether the message currently being dispatched arrived inside a transform header
+     * @return whether the message currently being dispatched arrived inside a transform header, encrypted or
+     *         compressed, and so is read from {@link #transformPayload} rather than from the stream
+     */
+    private boolean isDispatchingTransformed() {
+        return this.transformPayload != null;
+    }
+
+    /**
+     * @return whether the message currently being dispatched arrived encrypted, and so was authenticated by its AEAD
+     *         tag rather than by a signature
      */
     private boolean isDispatchingEncrypted() {
-        return this.transformPayload != null;
+        return this.transformPayload != null && this.transformEncrypted;
     }
 
     // must be synchronized with peekKey
@@ -1508,6 +1530,7 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
             throw e;
         } finally {
             this.transformPayload = null;
+            this.transformEncrypted = false;
             this.transformPayloadOffset = 0;
         }
     }
@@ -1650,6 +1673,7 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
             doSkip0(key);
         } finally {
             this.transformPayload = null;
+            this.transformEncrypted = false;
             this.transformPayloadOffset = 0;
         }
     }
@@ -1660,7 +1684,7 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
             if (size < 33 || 4 + size > this.getContext().getConfig().getReceiveBufferSize()) {
                 /* log message? */
                 log.warn("Flusing stream input");
-                if (!isDispatchingEncrypted()) {
+                if (!isDispatchingTransformed()) {
                     this.in.skip(this.in.available());
                 }
             } else {
