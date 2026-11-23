@@ -137,6 +137,18 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
     /** Decrypted payload of the transform message currently being dispatched, or null. */
     private byte[] transformPayload;
 
+    /** NT_STATUS_USER_SESSION_DELETED */
+    private static final int STATUS_USER_SESSION_DELETED = 0xC0000203;
+    /** NT_STATUS_NETWORK_SESSION_EXPIRED */
+    private static final int STATUS_NETWORK_SESSION_EXPIRED = 0xC000035C;
+
+    /**
+     * Whether {@link #transformPayload} was decrypted, as opposed to decompressed. Both leave the plaintext message in
+     * {@link #transformPayload}, but only the first was authenticated: a compression transform header is no proof
+     * that anything encrypted the message it carried.
+     */
+    private boolean transformEncrypted;
+
     /** Read cursor into {@link #transformPayload}. */
     private int transformPayloadOffset;
 
@@ -827,6 +839,7 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
     @Override
     protected Long peekKey() throws IOException {
         this.transformPayload = null;
+        this.transformEncrypted = false;
         this.transformPayloadOffset = 0;
         do {
             if (readn(this.in, this.sbuf, 0, 4) < 4) {
@@ -985,6 +998,7 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
     public <T extends CommonServerMessageBlockResponse> T sendrecv(final CommonServerMessageBlockRequest request, T response,
             final Set<RequestParam> params) throws IOException {
         response = setupResponses(request, response);
+        requireEncryptedReplies(request);
 
         CommonServerMessageBlockRequest curHead = request;
 
@@ -1125,6 +1139,50 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
         }
         return response;
 
+    }
+
+    /**
+     * Records on each response whether the request it answers goes out encrypted, so that the receive side can
+     * refuse a reply that arrives in the clear.
+     */
+    private static void requireEncryptedReplies(final CommonServerMessageBlockRequest request) {
+        for (CommonServerMessageBlockRequest cur = request; cur != null; cur = cur.getNext()) {
+            if (cur instanceof final ServerMessageBlock2 smb2Request && smb2Request.isEncrypt()
+                    && cur.getResponse() instanceof final ServerMessageBlock2Response smb2Response) {
+                smb2Response.setEncryptedReplyRequired(true);
+            }
+        }
+    }
+
+    /**
+     * Refuses a reply in the clear to a request that was sent encrypted.
+     *
+     * <p>
+     * An encrypted request carries no signature, so nothing else authenticates the reply (the signature check is
+     * skipped for it). The transport is torn down, as for a message that fails to decrypt.
+     * </p>
+     *
+     * <p>
+     * A server that no longer knows the session may not be able to encrypt, and says so in the clear; those two statuses are what
+     * {@link SmbSessionImpl#send} turns into a re-authentication, so they stay accepted. Neither carries a payload.
+     * That a server in that state cannot encrypt is an assumption made for compatibility, not something verified: it
+     * is the only reason these two are exempt.
+     * </p>
+     *
+     * @param response
+     *            the response about to be decoded
+     * @param header
+     *            its SMB2 header
+     */
+    private void checkReplyIsEncrypted(final ServerMessageBlock2Response response, final byte[] header) throws IOException {
+        if (!response.isEncryptedReplyRequired() || isDispatchingEncrypted()) {
+            return;
+        }
+        final int status = Encdec.dec_uint32le(header, 8);
+        if (status == STATUS_USER_SESSION_DELETED || status == STATUS_NETWORK_SESSION_EXPIRED) {
+            return;
+        }
+        throw new IOException(String.format("Reply 0x%08x to an encrypted request arrived in the clear (%s)", status, response));
     }
 
     private <T extends CommonServerMessageBlockResponse> T setupResponses(final CommonServerMessageBlockRequest request, T response)
@@ -1273,6 +1331,7 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
 
         this.smb2 = true;
         this.transformPayload = plaintext;
+        this.transformEncrypted = true;
         this.transformPayloadOffset = Smb2Constants.SMB2_HEADER_LENGTH;
 
         // Present the plaintext exactly as an unencrypted message would have arrived.
@@ -1351,6 +1410,7 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
 
         this.smb2 = true;
         this.transformPayload = original;
+        this.transformEncrypted = false;
         this.transformPayloadOffset = Smb2Constants.SMB2_HEADER_LENGTH;
 
         // Present it exactly as an uncompressed message would have arrived.
@@ -1394,6 +1454,7 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
     private Long discardTransformedMessage() {
         this.smb2 = true;
         this.transformPayload = new byte[0];
+        this.transformEncrypted = false;
         this.transformPayloadOffset = 0;
         this.sbuf[0] = 0;
         this.sbuf[1] = 0;
@@ -1434,10 +1495,19 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
     }
 
     /**
-     * @return whether the message currently being dispatched arrived inside a transform header
+     * @return whether the message currently being dispatched arrived inside a transform header, encrypted or
+     *         compressed, and so is read from {@link #transformPayload} rather than from the stream
+     */
+    private boolean isDispatchingTransformed() {
+        return this.transformPayload != null;
+    }
+
+    /**
+     * @return whether the message currently being dispatched arrived encrypted, and so was authenticated by its AEAD
+     *         tag rather than by a signature
      */
     private boolean isDispatchingEncrypted() {
-        return this.transformPayload != null;
+        return this.transformPayload != null && this.transformEncrypted;
     }
 
     // must be synchronized with peekKey
@@ -1460,6 +1530,7 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
             throw e;
         } finally {
             this.transformPayload = null;
+            this.transformEncrypted = false;
             this.transformPayloadOffset = 0;
         }
     }
@@ -1496,6 +1567,7 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
             System.arraycopy(this.sbuf, 4, buffer, 0, Smb2Constants.SMB2_HEADER_LENGTH);
             readMessageBytes(buffer, Smb2Constants.SMB2_HEADER_LENGTH, rl - Smb2Constants.SMB2_HEADER_LENGTH);
 
+            checkReplyIsEncrypted(cur, buffer);
             if (isDispatchingEncrypted()) {
                 // An encrypted message is authenticated by its AEAD tag and is not signed
                 // (MS-SMB2 3.1.4.1); verifying a signature over an unsigned header would fail.
@@ -1536,6 +1608,7 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
                     log.debug(String.format("Compound next command %d read size %d remain %d", nextCommand, rl, size));
                 }
 
+                checkReplyIsEncrypted(cur, buffer);
                 cur.setReadSize(rl);
                 readMessageBytes(buffer, Smb2Constants.SMB2_HEADER_LENGTH, rl - Smb2Constants.SMB2_HEADER_LENGTH);
 
@@ -1600,6 +1673,7 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
             doSkip0(key);
         } finally {
             this.transformPayload = null;
+            this.transformEncrypted = false;
             this.transformPayloadOffset = 0;
         }
     }
@@ -1610,7 +1684,7 @@ class SmbTransportImpl extends Transport implements SmbTransportInternal, SmbCon
             if (size < 33 || 4 + size > this.getContext().getConfig().getReceiveBufferSize()) {
                 /* log message? */
                 log.warn("Flusing stream input");
-                if (!isDispatchingEncrypted()) {
+                if (!isDispatchingTransformed()) {
                     this.in.skip(this.in.available());
                 }
             } else {
