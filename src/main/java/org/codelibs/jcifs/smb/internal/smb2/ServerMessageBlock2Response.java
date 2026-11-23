@@ -40,6 +40,7 @@ public abstract class ServerMessageBlock2Response extends ServerMessageBlock2 im
     private boolean verifyFailed;
     private Exception exception;
     private boolean asyncHandled;
+    private boolean encryptedReplyRequired;
 
     /**
      * Constructor for SMB2 response with configuration and command.
@@ -58,6 +59,31 @@ public abstract class ServerMessageBlock2Response extends ServerMessageBlock2 im
      */
     public ServerMessageBlock2Response(final Configuration config) {
         super(config);
+    }
+
+    /**
+     * Whether this response must arrive inside a TRANSFORM_HEADER.
+     *
+     * <p>
+     * A server encrypts the reply to a request it received encrypted. An encrypted request is not signed, so a reply
+     * that arrives in the clear is not authenticated by anything: accepting it would let anyone on the path answer
+     * in the server's place.
+     * </p>
+     *
+     * @return true if a reply in the clear must be refused
+     */
+    public boolean isEncryptedReplyRequired() {
+        return this.encryptedReplyRequired;
+    }
+
+    /**
+     * Marks that the request this response answers was sent encrypted, so the reply must be too.
+     *
+     * @param encryptedReplyRequired
+     *            whether a reply in the clear must be refused
+     */
+    public void setEncryptedReplyRequired(final boolean encryptedReplyRequired) {
+        this.encryptedReplyRequired = encryptedReplyRequired;
     }
 
     /**

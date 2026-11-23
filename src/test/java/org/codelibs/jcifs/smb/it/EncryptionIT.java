@@ -23,11 +23,18 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Properties;
 import java.util.Random;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import org.codelibs.jcifs.smb.CIFSContext;
 import org.codelibs.jcifs.smb.DialectVersion;
+import org.codelibs.jcifs.smb.FileNotifyInformation;
+import org.codelibs.jcifs.smb.SmbWatchHandle;
 import org.codelibs.jcifs.smb.impl.SmbFile;
 import org.codelibs.jcifs.smb.impl.SmbNegotiationProbe;
 import org.codelibs.jcifs.smb.it.env.RequiresDialect;
@@ -80,6 +87,29 @@ class EncryptionIT extends AbstractSmbIT {
         final SmbFile file = writeFile(this.workDir, "required.txt", contents);
         try (InputStream in = file.getInputStream()) {
             assertArrayEquals(contents.getBytes(StandardCharsets.UTF_8), in.readAllBytes());
+        }
+    }
+
+    @Test
+    @RequiresDialect(DialectVersion.SMB300)
+    @DisplayName("a client that requires encryption receives the interim and the final reply of a pending request encrypted")
+    void requiredEncryptionDeliversAPendingRequest() throws Exception {
+        // CHANGE_NOTIFY is answered twice: an interim STATUS_PENDING at once and the real reply when something changes.
+        // A client that refuses cleartext replies to an encrypted request has to find both of them encrypted.
+        final Properties props = new Properties();
+        props.setProperty("jcifs.client.encryptionRequired", "true");
+        final CIFSContext context = server().context(props);
+        this.workDir = createWorkDir(context, server().share());
+
+        final ExecutorService executor = Executors.newSingleThreadExecutor();
+        try (SmbWatchHandle handle = this.workDir.watch(FileNotifyInformation.FILE_NOTIFY_CHANGE_FILE_NAME, false)) {
+            final Future<List<FileNotifyInformation>> watching = executor.submit(handle::watch);
+            Thread.sleep(1500L); // long enough for the CHANGE_NOTIFY to reach the server
+            writeFile(this.workDir, "notified.txt", "payload");
+            final List<FileNotifyInformation> events = watching.get(60, TimeUnit.SECONDS);
+            assertTrue(events.stream().anyMatch(e -> "notified.txt".equals(e.getFileName())), "no event named the new file: " + events);
+        } finally {
+            executor.shutdownNow();
         }
     }
 
