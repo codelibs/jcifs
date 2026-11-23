@@ -598,4 +598,47 @@ class SmbSessionImplTest {
         verify(transport, never()).send(any(), any());
         verify(transport, never()).send(any(), any(), any());
     }
+
+    private void setupEncryptionContext(final SmbSessionImpl session, final boolean anonymous) throws Throwable {
+        final Smb2NegotiateResponse nego = mock(Smb2NegotiateResponse.class);
+        when(nego.isEncryptionSupported()).thenReturn(true);
+        try {
+            final java.lang.reflect.Method m =
+                    SmbSessionImpl.class.getDeclaredMethod("setupEncryptionContext", Smb2NegotiateResponse.class, boolean.class);
+            m.setAccessible(true);
+            m.invoke(session, nego, anonymous);
+        } catch (final java.lang.reflect.InvocationTargetException e) {
+            throw e.getCause();
+        }
+    }
+
+    @Test
+    @DisplayName("encryption demanded by the server only: an anonymous session still fails with SmbAuthException")
+    void testServerDemandedEncryptionFailureStaysAuthFailure() {
+        final SmbSessionImpl session = newSession();
+        setField(session, "encryptData", true);
+
+        assertThrows(SmbAuthException.class, () -> setupEncryptionContext(session, true));
+    }
+
+    @Test
+    @DisplayName("encryption required by configuration: the same failure is not an authentication failure")
+    void testRequiredEncryptionFailureIsNotAuthFailure() {
+        when(configuration.isEncryptionRequired()).thenReturn(true);
+        final SmbSessionImpl session = newSession();
+
+        final Throwable e = assertThrows(Throwable.class, () -> setupEncryptionContext(session, true));
+        assertTrue(e instanceof SmbUnsupportedOperationException, e.toString());
+        assertFalse(e instanceof SmbAuthException);
+    }
+
+    @Test
+    @DisplayName("encryption neither demanded nor required: an anonymous session is left unencrypted")
+    void testOptionalEncryptionLeavesAnonymousSessionAlone() throws Throwable {
+        final SmbSessionImpl session = newSession();
+
+        setupEncryptionContext(session, true);
+
+        assertNull(session.getEncryptionContext());
+    }
 }
