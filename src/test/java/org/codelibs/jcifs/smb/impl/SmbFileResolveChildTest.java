@@ -56,9 +56,9 @@ class SmbFileResolveChildTest {
     void testEnumeratedChildOfDirectoryWithoutTrailingSlash() throws Exception {
         try (SmbFile root = new SmbFile("smb://host/testshare/", context()); SmbFile nested = (SmbFile) root.resolve("nested")) {
             // this is what DirFileEntryAdapterIterator#adapt does for every directory entry
-            try (SmbFile file = new SmbFile(nested, "a.txt", true, SmbConstants.TYPE_FILESYSTEM, 0, 0L, 0L, 0L, 0L);
+            try (SmbFile file = new SmbFile(nested, "a.txt", true, SmbConstants.TYPE_FILESYSTEM, 0, 0L, 0L, 0L, 0L, 0L);
                     SmbFile dir = new SmbFile(nested, "level2", true, SmbConstants.TYPE_FILESYSTEM, SmbConstants.ATTR_DIRECTORY, 0L, 0L, 0L,
-                            0L)) {
+                            0L, 0L)) {
                 assertEquals("a.txt", file.getName());
                 assertEquals("\\nested\\a.txt", file.getLocator().getUNCPath());
                 assertEquals("smb://host/testshare/nested/a.txt", file.getURL().toString());

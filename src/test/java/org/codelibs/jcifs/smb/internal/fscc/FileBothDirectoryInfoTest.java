@@ -138,6 +138,21 @@ class FileBothDirectoryInfoTest {
     }
 
     @Test
+    @DisplayName("Test changeTime returns the change time, not the last write time")
+    void testChangeTime() throws SMBProtocolDecodingException {
+        byte[] buffer = createValidBuffer("file.txt", "FILE~1.TXT", true);
+        long lastWriteTime = 1_600_000_002_000L;
+        long changeTime = 1_600_000_003_000L;
+        SMBUtil.writeTime(lastWriteTime, buffer, 24);
+        SMBUtil.writeTime(changeTime, buffer, 32);
+
+        fileBothDirectoryInfo.decode(buffer, 0, buffer.length);
+
+        assertEquals(changeTime, fileBothDirectoryInfo.changeTime());
+        assertEquals(lastWriteTime, fileBothDirectoryInfo.lastModified());
+    }
+
+    @Test
     @DisplayName("Test lastAccess returns correct last access time")
     void testLastAccess() throws SMBProtocolDecodingException {
         // Prepare test data

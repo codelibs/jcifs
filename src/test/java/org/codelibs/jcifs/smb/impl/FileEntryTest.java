@@ -164,6 +164,13 @@ class FileEntryTest {
     // --- Fake implementation tests (happy path and edge cases) ---
 
     @Test
+    @DisplayName("An implementation that does not carry a change time reports 0")
+    void fakeImplementation_changeTimeDefaultsToZero() {
+        FileEntry e = new TestFileEntry("doc.pdf", 2, 0x10, 10L, 20L, 30L, 4096L, 3);
+        assertEquals(0L, e.changeTime());
+    }
+
+    @Test
     @DisplayName("Fake implementation returns provided values (happy path)")
     void fakeImplementation_happyPath() {
         // Arrange

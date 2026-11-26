@@ -108,6 +108,11 @@ public class FileBothDirectoryInfo implements FileEntry, Decodable {
     }
 
     @Override
+    public long changeTime() {
+        return this.changeTime;
+    }
+
+    @Override
     public long length() {
         return this.endOfFile;
     }

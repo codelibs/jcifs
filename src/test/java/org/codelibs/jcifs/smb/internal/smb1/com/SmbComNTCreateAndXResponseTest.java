@@ -107,6 +107,7 @@ public class SmbComNTCreateAndXResponseTest {
         assertEquals(creationTime, response.getCreationTime());
         assertEquals(lastAccessTime, response.getLastAccessTime());
         assertEquals(lastWriteTime, response.getLastWriteTime());
+        assertEquals(changeTime, response.getChangeTime());
         assertEquals(SmbConstants.ATTR_NORMAL, response.getExtFileAttributes());
         assertEquals(0x0000_1000L, response.getAllocationSize());
         assertEquals(0x0000_0ABCL, response.getEndOfFile());

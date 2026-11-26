@@ -75,6 +75,7 @@ public class SmbBasicFileInfoTest {
         Assertions.assertEquals(1_700_000_000_000L, info.getLastWriteTime(), "last write should match");
         Assertions.assertEquals(1_650_000_000_000L, info.getLastAccessTime(), "last access should match");
         Assertions.assertEquals(42L, info.getSize(), "size should match");
+        Assertions.assertEquals(0L, info.getChangeTime(), "a structure without a change time reports 0");
     }
 
     // --- Parameterized: edge and boundary values across getters ---

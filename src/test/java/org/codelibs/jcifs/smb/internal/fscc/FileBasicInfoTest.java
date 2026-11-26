@@ -124,6 +124,7 @@ class FileBasicInfoTest {
         assertEquals(TEST_CREATE_TIME, fileBasicInfo.getCreateTime());
         assertEquals(TEST_LAST_ACCESS_TIME, fileBasicInfo.getLastAccessTime());
         assertEquals(TEST_LAST_WRITE_TIME, fileBasicInfo.getLastWriteTime());
+        assertEquals(TEST_CHANGE_TIME, fileBasicInfo.getChangeTime());
         assertEquals(TEST_ATTRIBUTES, fileBasicInfo.getAttributes());
     }
 
@@ -193,6 +194,7 @@ class FileBasicInfoTest {
         assertEquals(TEST_CREATE_TIME, fileBasicInfo.getCreateTime());
         assertEquals(TEST_LAST_ACCESS_TIME, fileBasicInfo.getLastAccessTime());
         assertEquals(TEST_LAST_WRITE_TIME, fileBasicInfo.getLastWriteTime());
+        assertEquals(TEST_CHANGE_TIME, fileBasicInfo.getChangeTime());
         assertEquals(TEST_ATTRIBUTES, fileBasicInfo.getAttributes());
     }
 

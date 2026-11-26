@@ -118,6 +118,7 @@ public class Smb2CloseResponse extends ServerMessageBlock2Response implements Sm
      *
      * @return the changeTime
      */
+    @Override
     public final long getChangeTime() {
         return this.changeTime;
     }
