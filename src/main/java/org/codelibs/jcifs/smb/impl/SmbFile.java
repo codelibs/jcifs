@@ -373,6 +373,7 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
     private long createTime;
     private long lastModified;
     private long lastAccess;
+    private long changeTime;
     private int attributes;
     private long attrExpiration;
     private long size;
@@ -483,7 +484,8 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
     }
 
     SmbFile(final SmbResource context, final String name, final boolean loadedAttributes, final int type, final int attributes,
-            final long createTime, final long lastModified, final long lastAccess, final long size) throws MalformedURLException {
+            final long createTime, final long lastModified, final long lastAccess, final long changeTime, final long size)
+            throws MalformedURLException {
         this(isWorkgroup(context) ? new URL(null, "smb://" + checkName(name) + "/", context.getContext().getUrlHandler())
                 : new URL(getBaseURL(context), encodeRelativePath(checkName(name)) + ((attributes & ATTR_DIRECTORY) > 0 ? "/" : "")),
                 context.getContext());
@@ -501,6 +503,7 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
         this.createTime = createTime;
         this.lastModified = lastModified;
         this.lastAccess = lastAccess;
+        this.changeTime = changeTime;
         this.size = size;
         this.isExists = true;
 
@@ -780,6 +783,7 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
                 this.createTime = info.getCreateTime();
                 this.lastModified = info.getLastWriteTime();
                 this.lastAccess = info.getLastAccessTime();
+                this.changeTime = info.getChangeTime();
                 this.attributes = info.getAttributes() & ATTR_GET_MASK;
                 this.attrExpiration = attrTimeout;
                 // This open asked for a particular access rather than for a report of
@@ -847,6 +851,7 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
                 this.createTime = info.getCreateTime();
                 this.lastModified = info.getLastWriteTime();
                 this.lastAccess = info.getLastAccessTime();
+                this.changeTime = info.getChangeTime();
                 this.attrExpiration = System.currentTimeMillis() + th.getConfig().getAttributeCacheTimeout();
             } else if (info instanceof FileStandardInfo) {
                 this.size = info.getSize();
@@ -867,6 +872,7 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
         this.isExists = true;
         recordGrantedAccess(null);
         this.attributes = response.getAttributes() & ATTR_GET_MASK;
+        // SMB_COM_QUERY_INFORMATION carries the last write time only, so the other times keep what exists() reset them to.
         this.lastModified = response.getLastWriteTime();
         this.attrExpiration = System.currentTimeMillis() + th.getConfig().getAttributeCacheTimeout();
 
@@ -887,6 +893,7 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
         this.createTime = 0L;
         this.lastModified = 0L;
         this.lastAccess = 0L;
+        this.changeTime = 0L;
         this.isExists = false;
         recordGrantedAccess(null);
 
@@ -1185,6 +1192,34 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
         if (!this.fileLocator.isRootOrShare()) {
             exists();
             return this.lastAccess;
+        }
+        return 0L;
+    }
+
+    /**
+     * Retrieve the time this <code>SmbFile</code> was last changed, in milliseconds since 00:00:00 GMT, January 1, 1970.
+     *
+     * <p>
+     * This is the ChangeTime the server reports next to the last write time: it moves when the file's data or its
+     * metadata changes, a security descriptor included, whereas {@link #lastModified()} only follows the data. Whether a
+     * server actually moves it on a metadata-only change is up to the server: an NTFS volume does, Samba reports the last
+     * write time here instead.
+     * </p>
+     *
+     * <p>
+     * The value is read and cached together with the other attributes. {@code 0L} is returned for the root and for
+     * shares, and when the server answered with a response that does not carry a change time (the SMB1 core
+     * {@code SMB_COM_QUERY_INFORMATION} of servers without NT SMBs).
+     * </p>
+     *
+     * @return the number of milliseconds since the 00:00:00 GMT, January 1, 1970 as a <code>long</code> value
+     * @throws SmbException
+     *             if an error occurs while retrieving the attributes
+     */
+    public long changeTime() throws SmbException {
+        if (!this.fileLocator.isRootOrShare()) {
+            exists();
+            return this.changeTime;
         }
         return 0L;
     }
@@ -1822,6 +1857,7 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
             this.createTime = info.getCreateTime();
             this.lastModified = info.getLastWriteTime();
             this.lastAccess = info.getLastAccessTime();
+            this.changeTime = info.getChangeTime();
             this.attributes = info.getAttributes() & ATTR_GET_MASK;
             this.attrExpiration = System.currentTimeMillis() + th.getConfig().getAttributeCacheTimeout();
             recordGrantedAccess(createResp.getMaximalAccess());

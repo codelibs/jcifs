@@ -91,6 +91,11 @@ public class FileBasicInfo implements BasicFileInformation {
     }
 
     @Override
+    public long getChangeTime() {
+        return this.changeTime;
+    }
+
+    @Override
     public long getSize() {
         return 0L;
     }

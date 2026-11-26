@@ -387,7 +387,7 @@ public final class SmbCopyUtil {
             while (it.hasNext()) {
                 try (SmbResource r = it.next()) {
                     try (SmbFile ndest = new SmbFile(dest, r.getLocator().getName(), true, r.getLocator().getType(), r.getAttributes(),
-                            r.createTime(), r.lastModified(), r.lastAccess(), r.length())) {
+                            r.createTime(), r.lastModified(), r.lastAccess(), 0L, r.length())) {
 
                         if (r instanceof SmbFile) {
                             ((SmbFile) r).copyRecursive(ndest, b, bsize, w, sh, dh);

@@ -172,6 +172,14 @@ public class SmbComNTCreateAndXResponse extends AndXServerMessageBlock implement
     }
 
     /**
+     * @return the changeTime
+     */
+    @Override
+    public final long getChangeTime() {
+        return this.changeTime;
+    }
+
+    /**
      * Gets the allocation size.
      *
      * @return the allocationSize

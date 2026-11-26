@@ -66,6 +66,21 @@ public interface FileEntry {
     long lastAccess();
 
     /**
+     * Gets the change time, the time the entry's metadata (attributes, security descriptor, ...) or data was last
+     * changed.
+     *
+     * <p>
+     * The default implementation returns {@code 0L}, which is also what entries that do not carry a change time, such
+     * as share and server entries, report.
+     * </p>
+     *
+     * @return the change time in milliseconds since epoch, or {@code 0L} when the entry does not carry one
+     */
+    default long changeTime() {
+        return 0L;
+    }
+
+    /**
      * Gets the file size.
      *
      * @return the file size in bytes

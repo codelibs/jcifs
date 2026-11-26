@@ -42,6 +42,6 @@ class NetServerFileEntryAdapterIterator extends FileEntryAdapterIterator {
     @Override
     protected SmbResource adapt(final FileEntry e) throws MalformedURLException {
         return new SmbFile(getParent(), e.getName(), false, e.getType(), SmbConstants.ATTR_READONLY | SmbConstants.ATTR_DIRECTORY, 0L, 0L,
-                0L, 0L);
+                0L, 0L, 0L);
     }
 }

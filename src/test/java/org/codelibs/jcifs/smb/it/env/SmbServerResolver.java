@@ -25,6 +25,7 @@ import org.opentest4j.TestAbortedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.DockerClientFactory;
+import org.testcontainers.containers.Container;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
@@ -85,6 +86,27 @@ public final class SmbServerResolver {
      */
     public static String secondaryUser() {
         return SECONDARY_USER;
+    }
+
+    /**
+     * Runs a command inside the Samba container this run started.
+     *
+     * <p>
+     * For the tests that have to change something on the server side, the way an
+     * administrator would, and then observe it through the client.
+     * </p>
+     *
+     * @param command the command and its arguments
+     * @return the result of the command
+     * @throws TestAbortedException when the server is not a container started by this run
+     * @throws Exception            if the command cannot be run
+     */
+    public static Container.ExecResult execInSamba(final String... command) throws Exception {
+        resolve();
+        if (container == null) {
+            throw new TestAbortedException("Skipping: this test changes the server directly and needs the Samba container this run starts");
+        }
+        return container.execInContainer(command);
     }
 
     /**

@@ -56,6 +56,20 @@ public interface SmbBasicFileInfo {
     long getLastAccessTime();
 
     /**
+     * Gets the file change time, the time the file's metadata (attributes, security descriptor, ...) or data was last
+     * changed.
+     *
+     * <p>
+     * Not every structure carries this field; those that do not report {@code 0L}.
+     * </p>
+     *
+     * @return file change time, or {@code 0L} when this structure does not carry one
+     */
+    default long getChangeTime() {
+        return 0L;
+    }
+
+    /**
      * Gets the file size in bytes.
      *
      * @return file size

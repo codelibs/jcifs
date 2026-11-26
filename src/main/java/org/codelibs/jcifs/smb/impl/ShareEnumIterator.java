@@ -82,7 +82,7 @@ class ShareEnumIterator implements CloseableIterator<SmbResource> {
 
     private SmbResource adapt(final FileEntry e) throws MalformedURLException {
         return new SmbFile(this.parent, e.getName(), false, e.getType(), SmbConstants.ATTR_READONLY | SmbConstants.ATTR_DIRECTORY, 0L, 0L,
-                0L, 0L);
+                0L, 0L, 0L);
     }
 
     /**

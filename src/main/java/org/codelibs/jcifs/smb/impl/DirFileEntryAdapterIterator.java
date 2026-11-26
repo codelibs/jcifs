@@ -43,6 +43,6 @@ class DirFileEntryAdapterIterator extends FileEntryAdapterIterator {
     @Override
     protected SmbResource adapt(final FileEntry e) throws MalformedURLException {
         return new SmbFile(getParent(), e.getName(), true, SmbConstants.TYPE_FILESYSTEM, e.getAttributes(), e.createTime(),
-                e.lastModified(), e.lastAccess(), e.length());
+                e.lastModified(), e.lastAccess(), e.changeTime(), e.length());
     }
 }
