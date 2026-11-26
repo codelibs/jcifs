@@ -101,8 +101,12 @@ class ChangeTimeIT extends AbstractSmbIT {
     @RequiresBackend(SmbBackend.WINDOWS)
     @DisplayName("NTFS moves the change time, and not the last write time, when the DACL changes")
     void ntfsMovesChangeTimeOnDaclChange() throws Exception {
-        assumeTrue(Files.isDirectory(WINDOWS_SHARE_PATH),
-                "Skipping: the DACL is changed on the server's disk, which is only reachable on the runner that hosts the share");
+        if (!Files.isDirectory(WINDOWS_SHARE_PATH)) {
+            // the DACL is changed on the server's disk, which is only reachable on the runner that hosts the share
+            assertTrue(!SmbServerResolver.required(), "JCIFS_IT_REQUIRED is set but the share directory " + WINDOWS_SHARE_PATH
+                    + " of build_helpers/win-setup.ps1 is not on this machine");
+            assumeTrue(false, "Skipping: the share directory " + WINDOWS_SHARE_PATH + " is not on this machine");
+        }
         final CIFSContext context = server().context();
         this.workDir = createWorkDir(context, server().share());
         writeFile(this.workDir, FILE_NAME, "contents");
@@ -130,8 +134,8 @@ class ChangeTimeIT extends AbstractSmbIT {
 
     @Test
     @RequiresBackend(SmbBackend.SAMBA)
-    @DisplayName("Samba reports the last write time as the change time, so a DACL change does not move it")
-    void sambaKeepsChangeTimeOnDaclChange() throws Exception {
+    @DisplayName("a DACL change over SMB keeps the last write time on Samba; the change time is only recorded")
+    void sambaDaclChangeKeepsLastWriteTime() throws Exception {
         final CIFSContext context = server().context();
         this.workDir = createWorkDir(context, server().share());
         writeFile(this.workDir, FILE_NAME, "contents");
@@ -144,7 +148,8 @@ class ChangeTimeIT extends AbstractSmbIT {
             changeTimeBefore = before.changeTime();
             relative = before.getUncPath().substring(1).replace('\\', '/');
         }
-        assertEquals(lastModifiedBefore, changeTimeBefore, "Samba sends st_mtime as both the last write and the change time");
+        // Samba 4.22 was observed to send st_mtime as the change time; that is the server's choice, so it is logged, not asserted
+        log.info("Samba: lastModified={} changeTime={}", lastModifiedBefore, changeTimeBefore);
         final String posixPath = SAMBA_SHARE_PATH + relative;
         final String ctimeBefore = posixChangeTime(posixPath);
 
@@ -164,7 +169,7 @@ class ChangeTimeIT extends AbstractSmbIT {
     /**
      * Checks a fresh handle and a listing after the DACL of the test file gained an entry for the secondary user.
      *
-     * @param changeTimeMoves whether the server is expected to move the change time
+     * @param changeTimeMoves whether the server is expected to move the change time; when false the change time is only logged
      */
     private void assertDaclChangedOnlyMetadata(final long lastModifiedBefore, final long changeTimeBefore, final boolean changeTimeMoves)
             throws Exception {
@@ -184,8 +189,6 @@ class ChangeTimeIT extends AbstractSmbIT {
             if (changeTimeMoves) {
                 assertTrue(changeTimeAfter > changeTimeBefore,
                         "the DACL change should have moved the change time: before=" + changeTimeBefore + " after=" + changeTimeAfter);
-            } else {
-                assertEquals(changeTimeBefore, changeTimeAfter, "the change time moved although the server reports the last write time");
             }
 
             try (SmbFile listed = listed(this.workDir, FILE_NAME)) {

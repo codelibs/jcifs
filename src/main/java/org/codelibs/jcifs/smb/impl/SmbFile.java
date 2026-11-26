@@ -1202,8 +1202,8 @@ public class SmbFile extends URLConnection implements SmbResource, SmbConstants 
      * <p>
      * This is the ChangeTime the server reports next to the last write time: it moves when the file's data or its
      * metadata changes, a security descriptor included, whereas {@link #lastModified()} only follows the data. Whether a
-     * server actually moves it on a metadata-only change is up to the server: an NTFS volume does, Samba reports the last
-     * write time here instead.
+     * server actually moves it on a metadata-only change is up to the server: an NTFS volume does, while Samba (4.22 was
+     * observed) reports the last write time here instead.
      * </p>
      *
      * <p>
